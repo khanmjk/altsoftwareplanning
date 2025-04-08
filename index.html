@@ -214,6 +214,61 @@
               width: 100%;
               min-height: 100px;
           }          
+          /* Add styles for new views */
+          #organogramView, #engineerTableView {
+              max-width: 90%; /* Allow wider view */
+              margin: 20px auto;
+          }
+          
+          #organogramSvg {
+              width: 100%;
+              height: 700px; /* Adjust as needed */
+              border: 1px solid #ccc;
+              background-color: #f9f9f9; /* Light background */
+          }
+          
+          /* Styles for Organogram Nodes/Links (Example) */
+          .organogram-link {
+            fill: none;
+            stroke: #555;
+            stroke-opacity: 0.6;
+            stroke-width: 1.5px;
+          }
+          
+          .organogram-node circle { /* Example using circles */
+            stroke: steelblue;
+            stroke-width: 1.5px;
+          }
+           .organogram-node rect { /* Example using rectangles */
+            stroke: steelblue;
+            stroke-width: 1.5px;
+            fill: #fff;
+          }
+          
+          .organogram-node text {
+            font: 10px sans-serif;
+            /* Adjust text anchor and position based on layout */
+          }
+          
+           /* Styles for Engineer Table */
+           #engineerTable th, #engineerTable td {
+               border: 1px solid #ccc;
+               padding: 8px;
+               text-align: left;
+           }
+           #engineerTable th {
+               background-color: #f2f2f2;
+           }
+            #engineerTable th[data-sort-key]:hover { /* Indicate sortable */
+               background-color: #e0e0e0;
+               text-decoration: underline;
+            }
+          #engineerTable tr:nth-child(even) {
+              background-color: #f9f9f9;
+          }          
+          
+          
+          
           /* Add any additional styles as needed */          
     </style>
 </head>
@@ -232,7 +287,9 @@
 <!-- Edit System Button -->
 <div class="edit-menu" style="display: none;">
     <button id="editSystemButton" onclick="enterEditMode()">Edit System</button>
-    <button id="deleteSystemButton" onclick="deleteSystem()">Delete System</button>   
+    <button id="viewOrgChartButton" onclick="showOrganogramView()">View Org Chart</button> 
+    <button id="viewEngineerListButton" onclick="showEngineerTableView()">View Engineer List</button> 
+    <button id="deleteSystemButton" onclick="deleteSystem()">Delete System</button>
 </div>
 
 <!-- Visualization Section -->
@@ -276,16 +333,28 @@
 <!-- Team Breakdown Table -->
 <div id="teamBreakdown" style="display:none;">
     <h2>Team Breakdown</h2>
-    <table id="teamTable">
-        <tr>
-            <th>SDM</th>
-            <th>Team Identity</th>
-            <th>Team Name</th>
-            <th>PMT</th>
-            <th>Size of Team</th>
-            <th>Engineer Names</th>
-            <th>Services Owned</th>
-        </tr>
+    <p id="levelKey" style="font-size: 0.9em; color: #555; margin-bottom: 10px;"></p> <table id="teamTable">
+        <thead> <tr>
+                <th>Senior Manager</th> <th>SDM</th>
+                <th>Team Identity</th>
+                <th>Team Name</th>
+                <th>PMT</th>
+                <th>Funded HC</th>
+                <th>BIS</th>
+                <th>Gap to Goal</th> <th>Engineers (Level)</th>
+                <th>Services Owned</th>
+            </tr>
+        </thead>
+        <tbody>
+            </tbody>
+        <tfoot> <tr>
+                <th colspan="5" style="text-align: right; font-weight: bold;">Totals:</th> <td id="totalFundedHC" style="font-weight: bold;"></td>
+                <td id="totalBIS" style="font-weight: bold;"></td>
+                <td id="totalGap" style="font-weight: bold;"></td>
+                <td colspan="2"></td> </tr>
+             <tr> <td colspan="10" id="gapNote" style="text-align: right; font-style: italic; font-size: 0.9em; padding-top: 5px;"></td>
+            </tr>
+        </tfoot>
     </table>
 </div>
 
@@ -363,6 +432,32 @@
 <!-- Return to Home Button -->
 <button id="returnHomeButton" onclick="returnToHome()">Return to Home</button>
 
+<!-- added some new views 8th april 25 -->
+<div id="organogramView" style="display:none; margin-top: 20px;">
+    <h2>Organization Chart</h2>
+    <div id="organogramToolbar" style="margin-bottom: 10px;">
+        </div>
+    <div id="organogramContent" style="border: 1px solid #ccc; padding: 15px;">
+        </div>
+    </div>
+
+<div id="engineerTableView" style="display:none; margin-top: 20px;">
+    <h2 id="engineerTableHeading">Engineer Resource List</h2> <p style="font-size: 0.9em; color: #555;">Click column headers to sort.</p>
+    <table id="engineerTable" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+        <thead>
+            <tr>
+                <th data-sort-key="name" style="cursor: pointer; border: 1px solid #ccc; padding: 8px; text-align: left;">Engineer Name &#x2195;</th>
+                <th data-sort-key="level" style="cursor: pointer; border: 1px solid #ccc; padding: 8px; text-align: left;">Level &#x2195;</th>
+                <th data-sort-key="teamName" style="cursor: pointer; border: 1px solid #ccc; padding: 8px; text-align: left;">Team Name &#x2195;</th>
+                <th data-sort-key="sdmName" style="cursor: pointer; border: 1px solid #ccc; padding: 8px; text-align: left;">SDM Name &#x2195;</th>
+                <th data-sort-key="srMgrName" style="cursor: pointer; border: 1px solid #ccc; padding: 8px; text-align: left;">Senior Manager Name &#x2195;</th>
+            </tr>
+        </thead>
+        <tbody>
+            </tbody>
+    </table>
+</div>
+
 <script>
 /* JavaScript Code */
 /* global variables */
@@ -381,13 +476,39 @@ let currentMode = Modes.NAVIGATION;
 
 /** Sample Data for StreamView **/
 
+/** Define Senior Managers for StreamView **/
+const sampleSeniorManagersDataStreamView = [
+    { seniorManagerId: 'srMgr1', seniorManagerName: 'Director Dave' },
+    { seniorManagerId: 'srMgr2', seniorManagerName: 'VP Victoria' }
+];
+
+/** Updated SDMs Data for StreamView (with seniorManagerId) **/
+const sampleSDMsDataStreamView = [
+    { sdmId: 'sdm1', sdmName: 'Alice Johnson', seniorManagerId: 'srMgr1' },
+    { sdmId: 'sdm2', sdmName: 'Emily Clark', seniorManagerId: 'srMgr1' },
+    { sdmId: 'sdm3', sdmName: 'Carol Davis', seniorManagerId: 'srMgr1' },
+    { sdmId: 'sdm4', sdmName: 'Grace Lee', seniorManagerId: 'srMgr2' },
+    { sdmId: 'sdm5', sdmName: 'Ian Turner', seniorManagerId: 'srMgr2' },
+    { sdmId: 'sdm6', sdmName: 'Karen Adams', seniorManagerId: 'srMgr2' },
+    { sdmId: 'sdm7', sdmName: 'Natalie Green', seniorManagerId: 'srMgr1' },
+    { sdmId: 'sdm8', sdmName: 'Zoe King', seniorManagerId: 'srMgr2' }
+];
+
+/** Updated Teams Data for StreamView (with fundedHeadcount, buildersInSeats, engineers array) **/
 const sampleTeamsDataStreamView = [
     {
         teamId: 'team1',
         teamName: 'User Experience Team',
         teamIdentity: 'UX Avengers',
-        sizeOfTeam: 5,
-        engineerNames: 'Alice Johnson, Mark Evans, Sophia Lee, John Doe, Emma Davis',
+        fundedHeadcount: 7,
+        buildersInSeats: 5,
+        engineers: [
+            { name: 'Alice Johnson', level: 4 },
+            { name: 'Mark Evans', level: 3 },
+            { name: 'Sophia Lee', level: 3 },
+            { name: 'John Doe', level: 2 },
+            { name: 'Emma Davis', level: 1 }
+        ],
         sdmId: 'sdm1',
         pmtId: 'pmt1'
     },
@@ -395,8 +516,14 @@ const sampleTeamsDataStreamView = [
         teamId: 'team2',
         teamName: 'Streaming Team',
         teamIdentity: 'Stream Spartans',
-        sizeOfTeam: 4,
-        engineerNames: 'Emily Clark, Daniel Thompson, Olivia Brown, Liam Wilson',
+        fundedHeadcount: 5,
+        buildersInSeats: 4,
+        engineers: [
+            { name: 'Emily Clark', level: 5 },
+            { name: 'Daniel Thompson', level: 3 },
+            { name: 'Olivia Brown', level: 2 },
+            { name: 'Liam Wilson', level: 2 }
+        ],
         sdmId: 'sdm2',
         pmtId: 'pmt2'
     },
@@ -404,8 +531,13 @@ const sampleTeamsDataStreamView = [
         teamId: 'team3',
         teamName: 'Content Team',
         teamIdentity: 'Content Crusaders',
-        sizeOfTeam: 3,
-        engineerNames: 'Carol Davis, Kevin Moore, Isabella Martinez',
+        fundedHeadcount: 4,
+        buildersInSeats: 3,
+        engineers: [
+            { name: 'Carol Davis', level: 4 },
+            { name: 'Kevin Moore', level: 2 },
+            { name: 'Isabella Martinez', level: 2 }
+        ],
         sdmId: 'sdm3',
         pmtId: 'pmt2'
     },
@@ -413,8 +545,14 @@ const sampleTeamsDataStreamView = [
         teamId: 'team4',
         teamName: 'Recommendation Team',
         teamIdentity: 'Recommenders of Olympus',
-        sizeOfTeam: 4,
-        engineerNames: 'Grace Lee, Ethan Harris, Mia Turner, Noah Walker',
+        fundedHeadcount: 6,
+        buildersInSeats: 4,
+        engineers: [
+            { name: 'Grace Lee', level: 4 },
+            { name: 'Ethan Harris', level: 3 },
+            { name: 'Mia Turner', level: 2 },
+            { name: 'Noah Walker', level: 1 }
+        ],
         sdmId: 'sdm4',
         pmtId: 'pmt3'
     },
@@ -422,8 +560,13 @@ const sampleTeamsDataStreamView = [
         teamId: 'team5',
         teamName: 'Finance Team',
         teamIdentity: 'Finance Falcons',
-        sizeOfTeam: 3,
-        engineerNames: 'Ian Turner, Charlotte Adams, Benjamin Scott',
+        fundedHeadcount: 4,
+        buildersInSeats: 3,
+        engineers: [
+            { name: 'Ian Turner', level: 5 },
+            { name: 'Charlotte Adams', level: 3 },
+            { name: 'Benjamin Scott', level: 3 }
+        ],
         sdmId: 'sdm5',
         pmtId: 'pmt3'
     },
@@ -431,8 +574,12 @@ const sampleTeamsDataStreamView = [
         teamId: 'team6',
         teamName: 'Communication Team',
         teamIdentity: 'Notification Ninjas',
-        sizeOfTeam: 2,
-        engineerNames: 'Karen Adams, Lucas Wright',
+        fundedHeadcount: 3,
+        buildersInSeats: 2,
+        engineers: [
+            { name: 'Karen Adams', level: 3 },
+            { name: 'Lucas Wright', level: 2 }
+        ],
         sdmId: 'sdm6',
         pmtId: 'pmt2'
     },
@@ -440,8 +587,13 @@ const sampleTeamsDataStreamView = [
         teamId: 'team7',
         teamName: 'Analytics Team',
         teamIdentity: 'Data Dragons',
-        sizeOfTeam: 3,
-        engineerNames: 'Natalie Green, Andrew Hall, Ella Young',
+        fundedHeadcount: 5,
+        buildersInSeats: 3,
+        engineers: [
+            { name: 'Natalie Green', level: 4 },
+            { name: 'Andrew Hall', level: 3 },
+            { name: 'Ella Young', level: 2 }
+        ],
         sdmId: 'sdm7',
         pmtId: 'pmt4'
     },
@@ -449,22 +601,15 @@ const sampleTeamsDataStreamView = [
         teamId: 'team8',
         teamName: 'Search Team',
         teamIdentity: 'Search Spartans',
-        sizeOfTeam: 2,
-        engineerNames: 'Zoe King, Michael Baker',
+        fundedHeadcount: 3,
+        buildersInSeats: 2,
+        engineers: [
+            { name: 'Zoe King', level: 3 },
+            { name: 'Michael Baker', level: 2 }
+        ],
         sdmId: 'sdm8',
         pmtId: 'pmt1'
     }
-];
-
-const sampleSDMsDataStreamView = [
-    { sdmId: 'sdm1', sdmName: 'Alice Johnson' },
-    { sdmId: 'sdm2', sdmName: 'Emily Clark' },
-    { sdmId: 'sdm3', sdmName: 'Carol Davis' },
-    { sdmId: 'sdm4', sdmName: 'Grace Lee' },
-    { sdmId: 'sdm5', sdmName: 'Ian Turner' },
-    { sdmId: 'sdm6', sdmName: 'Karen Adams' },
-    { sdmId: 'sdm7', sdmName: 'Natalie Green' },
-    { sdmId: 'sdm8', sdmName: 'Zoe King' }
 ];
 
 const samplePMTsDataStreamView = [
@@ -666,23 +811,32 @@ const sampleServicesDataStreamView = [
   }
 ];
 
+/** Updated System Data for StreamView (including seniorManagers) **/
 const sampleSystemDataStreamView = {
     systemName: 'StreamView',
     systemDescription: 'StreamView is a video streaming platform that provides personalized content to users worldwide.',
+    seniorManagers: sampleSeniorManagersDataStreamView, // Added Senior Managers
     teams: sampleTeamsDataStreamView,
     sdms: sampleSDMsDataStreamView,
     pmts: samplePMTsDataStreamView,
-    services: sampleServicesDataStreamView,
-    //platformDependencies: [] // Initialize as empty array
+    services: sampleServicesDataStreamView // Assuming sampleServicesDataStreamView is defined elsewhere as before
+    // platformDependencies is now built dynamically by buildGlobalPlatformDependencies()
 };
 
 /** Sample Data for ConnectPro **/
 
+/** Define Senior Managers for ConnectPro **/
+const sampleSeniorManagersDataContactCenter = [
+    { seniorManagerId: 'srMgrCC1', seniorManagerName: 'Senior Sam' }
+    // Only one senior manager for this example
+];
+
+/** Updated SDMs Data for ConnectPro (with seniorManagerId) **/
 const contactCenterSDMsData = [
-    { sdmId: 'sdm1', sdmName: 'Alex Johnson' },         // Manages team1 and team2
-    { sdmId: 'sdm2', sdmName: 'Matthew Jackson' },      // Manages team3 and team4
-    { sdmId: 'sdm3', sdmName: 'Ryan King' },            // Manages team5 and team6
-    { sdmId: 'sdm4', sdmName: 'Laura Turner' }          // Manages team7 and team8
+    { sdmId: 'sdm1', sdmName: 'Alex Johnson', seniorManagerId: 'srMgrCC1' },
+    { sdmId: 'sdm2', sdmName: 'Matthew Jackson', seniorManagerId: 'srMgrCC1' },
+    { sdmId: 'sdm3', sdmName: 'Ryan King', seniorManagerId: 'srMgrCC1' },
+    { sdmId: 'sdm4', sdmName: 'Laura Turner', seniorManagerId: 'srMgrCC1' }
 ];
 
 const contactCenterPMTsData = [
@@ -692,13 +846,21 @@ const contactCenterPMTsData = [
     { pmtId: 'pmt4', pmtName: 'Stephanie Roberts' }     // PMT for team7
 ];
 
+/** Updated Teams Data for ConnectPro (with fundedHeadcount, buildersInSeats, engineers array) **/
 const contactCenterTeamsData = [
     {
         teamId: 'team1',
         teamName: 'Customer Experience Team',
         teamIdentity: 'CX Warriors',
-        sizeOfTeam: 5,
-        engineerNames: 'Alex Johnson, Emily Smith, David Lee, Sarah Brown, Michael Wilson',
+        fundedHeadcount: 6,
+        buildersInSeats: 5,
+        engineers: [
+            { name: 'Alex Johnson', level: 4 }, // Assuming SDM might be L4+
+            { name: 'Emily Smith', level: 3 },
+            { name: 'David Lee', level: 3 },
+            { name: 'Sarah Brown', level: 2 },
+            { name: 'Michael Wilson', level: 1 }
+        ],
         sdmId: 'sdm1',
         pmtId: 'pmt1'
     },
@@ -706,35 +868,60 @@ const contactCenterTeamsData = [
         teamId: 'team2',
         teamName: 'Case Management Team',
         teamIdentity: 'Case Titans',
-        sizeOfTeam: 4,
-        engineerNames: 'Jessica Taylor, Daniel Moore, Amy Anderson, James Thomas',
+        fundedHeadcount: 5,
+        buildersInSeats: 4,
+        engineers: [
+            { name: 'Jessica Taylor', level: 4 },
+            { name: 'Daniel Moore', level: 3 },
+            { name: 'Amy Anderson', level: 2 },
+            { name: 'James Thomas', level: 2 }
+        ],
         sdmId: 'sdm1',
         pmtId: 'pmt2'
     },
     {
         teamId: 'team3',
-        teamName: 'Routing and Agent Tools Team',
+        teamName: 'Routing and Agent Tools Team', // Note: Original had 7 names, split into team3/4
         teamIdentity: 'Routing Rangers',
-        sizeOfTeam: 7,
-        engineerNames: 'Matthew Jackson, Ashley White, Joshua Harris, Andrew Garcia, Megan Clark, Steven Lewis, Nicole Young',
+        fundedHeadcount: 5, // Adjusted
+        buildersInSeats: 4, // Adjusted
+        engineers: [
+            { name: 'Matthew Jackson', level: 5 }, // Assuming SDM L5
+            { name: 'Ashley White', level: 3 },
+            { name: 'Joshua Harris', level: 2 },
+            { name: 'Andrew Garcia', level: 2 } // Moved Andrew here
+        ],
         sdmId: 'sdm2',
         pmtId: 'pmt2'
     },
     {
         teamId: 'team4',
-        teamName: 'Agent Tools Team',
+        teamName: 'Agent Tools Team', // Note: Original had 7 names, split into team3/4
         teamIdentity: 'Agent Aces',
-        sizeOfTeam: 4,
-        engineerNames: 'Andrew Garcia, Megan Clark, Steven Lewis, Nicole Young',
-        sdmId: 'sdm2',
+        fundedHeadcount: 4, // Adjusted
+        buildersInSeats: 3, // Adjusted
+        engineers: [
+             // Andrew Garcia moved to team3
+            { name: 'Megan Clark', level: 3 },
+            { name: 'Steven Lewis', level: 2 },
+            { name: 'Nicole Young', level: 1 }
+        ],
+        sdmId: 'sdm2', // Still under Matthew Jackson
         pmtId: 'pmt3'
     },
     {
         teamId: 'team5',
         teamName: 'Communication Channels Team',
         teamIdentity: 'Comm Mandalorians',
-        sizeOfTeam: 5,
-        engineerNames: 'Ryan King, Samantha Wright, Brandon Lopez, Rachel Hill, Justin Scott',
+        fundedHeadcount: 6,
+        buildersInSeats: 5,
+        engineers: [
+            { name: 'Ryan King', level: 4 }, // Assuming SDM L4
+            { name: 'Samantha Wright', level: 3 },
+            { name: 'Brandon Lopez', level: 3 },
+            { name: 'Rachel Hill', level: 2 },
+            { name: 'Justin Scott', level: 2 }
+        ],
         sdmId: 'sdm3',
         pmtId: 'pmt3'
     },
@@ -742,30 +929,45 @@ const contactCenterTeamsData = [
         teamId: 'team6',
         teamName: 'Skills Management Team',
         teamIdentity: 'Skill Masters',
-        sizeOfTeam: 2,
-        engineerNames: 'Kimberly Adams, Jonathan Baker',
+        fundedHeadcount: 3,
+        buildersInSeats: 2,
+        engineers: [
+            { name: 'Kimberly Adams', level: 3 },
+            { name: 'Jonathan Baker', level: 2 }
+        ],
         sdmId: 'sdm3',
         pmtId: 'pmt2'
     },
     {
         teamId: 'team7',
-        teamName: 'Analytics and Configuration Team',
+        teamName: 'Analytics and Configuration Team', // Note: Original had 5 names, split into team7/8
         teamIdentity: 'Data Wizards',
-        sizeOfTeam: 5,
-        engineerNames: 'Jason Carter, Melissa Mitchell, Kevin Perez, Laura Turner, Eric Phillips',
+        fundedHeadcount: 4, // Adjusted
+        buildersInSeats: 3, // Adjusted
+        engineers: [
+            { name: 'Jason Carter', level: 4 },
+            { name: 'Melissa Mitchell', level: 3 },
+            { name: 'Kevin Perez', level: 2 }
+            // Laura Turner and Eric Phillips moved to team8
+        ],
         sdmId: 'sdm4',
         pmtId: 'pmt4'
     },
     {
         teamId: 'team8',
-        teamName: 'Configuration Team',
+        teamName: 'Configuration Team', // Note: Original had 5 names, split into team7/8
         teamIdentity: 'Config Ninjas',
-        sizeOfTeam: 2,
-        engineerNames: 'Laura Turner, Eric Phillips',
-        sdmId: 'sdm4',
+        fundedHeadcount: 3, // Adjusted
+        buildersInSeats: 2, // Adjusted
+        engineers: [
+            { name: 'Laura Turner', level: 4 }, // Assuming SDM L4
+            { name: 'Eric Phillips', level: 3 }
+        ],
+        sdmId: 'sdm4', // Still under Laura Turner
         pmtId: 'pmt1'
     }
 ];
+
 
 const sampleServicesDataConnectPro = [
     {
@@ -937,14 +1139,16 @@ const sampleServicesDataConnectPro = [
     }
 ];
 
+/** Updated System Data for ConnectPro (including seniorManagers) **/
 const sampleSystemDataContactCenter = {
     systemName: 'ConnectPro',
-    systemDescription: 'ConnectPro is a cloud-based contact center solution that streamlines customer interactions across multiple channels.',    
+    systemDescription: 'ConnectPro is a cloud-based contact center solution that streamlines customer interactions across multiple channels.',
+    seniorManagers: sampleSeniorManagersDataContactCenter, // Added Senior Managers
     teams: contactCenterTeamsData,
     sdms: contactCenterSDMsData,
     pmts: contactCenterPMTsData,
-    services: sampleServicesDataConnectPro,
-    //platformDependencies: [] // Initialize as empty array
+    services: sampleServicesDataConnectPro // Assuming sampleServicesDataConnectPro is defined elsewhere as before
+    // platformDependencies is now built dynamically by buildGlobalPlatformDependencies()
 };
 
 window.onload = function() {
@@ -1061,19 +1265,22 @@ function loadSavedSystem(systemName) {
 
     // Clear previous content
     d3.selectAll('.tooltip').remove(); // Remove any existing tooltips
-    document.getElementById('teamTable').innerHTML = `
-        <tr>
-            <th>SDM</th>
-            <th>Team Identity</th>
-            <th>Team Name</th>
-            <th>PMT</th>
-            <th>Size of Team</th>
-            <th>Engineer Names</th>
-            <th>Services Owned</th>
-        </tr>
-    `;
+    //document.getElementById('teamTable').innerHTML = `
+    //    <tr>
+     //       <th>SDM</th>
+     //       <th>Team Identity</th>
+     //       <th>Team Name</th>
+    //       <th>PMT</th>
+     //       <th>Size of Team</th>
+     //       <th>Engineer Names</th>
+     //       <th>Services Owned</th>
+     //   </tr>
+    //`;
     document.getElementById('legend').innerHTML = '';
     document.getElementById('teamLegend').innerHTML = '';
+    
+    document.getElementById('organogramView').style.display = 'none';
+    document.getElementById('engineerTableView').style.display = 'none';
 
     currentSystemData = systemData; // Store the current system data
 
@@ -1612,70 +1819,191 @@ function generateTeamVisualization(systemData) {
 }
 
 //** Generate Team Breakdown Table **/
-
+/** REVISED Generate Team Breakdown Table - Fix Engineer String Format **/
 function generateTeamTable(systemData) {
+    // **Debugging:** Log the incoming team data to check structure
+    // console.log("Generating Team Table with data:", JSON.stringify(systemData, null, 2));
+
     let teamTable = document.getElementById('teamTable');
-    // Clear existing rows except header
-    teamTable.innerHTML = `
-        <tr>
-            <th>SDM</th>
-            <th>Team Identity</th>
-            <th>Team Name</th>
-            <th>PMT</th>
-            <th>Size of Team</th>
-            <th>Engineer Names</th>
-            <th>Services Owned</th>
-        </tr>
-    `;
-
-    // Map teamId to services
-    let teamServicesMap = {};
-    systemData.services.forEach(service => {
-        let teamId = service.owningTeamId;
-        if (!teamServicesMap[teamId]) {
-            teamServicesMap[teamId] = [];
-        }
-        teamServicesMap[teamId].push(service.serviceName);
-    });
-
-    // Group teams by SDM
-    let sdmTeamsMap = {};
-    systemData.teams.forEach(team => {
-        let sdmId = team.sdmId;
-        if (!sdmTeamsMap[sdmId]) {
-            sdmTeamsMap[sdmId] = [];
-        }
-        sdmTeamsMap[sdmId].push(team);
-    });
-
-    // Populate the table grouped by SDM
-    for (let sdmId in sdmTeamsMap) {
-        let sdm = systemData.sdms.find(s => s.sdmId === sdmId);
-        let teams = sdmTeamsMap[sdmId];
-        teams.forEach((team, index) => {
-            let row = teamTable.insertRow();
-
-            // For the first team under the SDM, insert the SDM cell with rowspan
-            if (index === 0) {
-                let sdmCell = row.insertCell();
-                sdmCell.innerText = sdm ? sdm.sdmName : 'N/A';
-                sdmCell.rowSpan = teams.length;
-                sdmCell.style.verticalAlign = 'top';
-            }
-            // Do not insert any cell in the SDM column for subsequent teams
-
-            // Insert cells for team data
-            row.insertCell().innerText = team.teamIdentity;
-            row.insertCell().innerText = team.teamName;
-            let pmt = systemData.pmts.find(p => p.pmtId === team.pmtId);
-            row.insertCell().innerText = pmt ? pmt.pmtName : 'N/A';
-            row.insertCell().innerText = team.sizeOfTeam;
-            row.insertCell().innerText = team.engineerNames;
-            row.insertCell().innerText = teamServicesMap[team.teamId] ? teamServicesMap[team.teamId].join(', ') : 'None';
-            // Modify the code that populates the 'Services Owned' cell
-            //row.insertCell().innerText = team.servicesOwned ? team.servicesOwned.join(', ') : 'None';            
-        });
+    let tableBody = teamTable.querySelector('tbody');
+    if (!tableBody) {
+        tableBody = document.createElement('tbody');
+        teamTable.appendChild(tableBody);
     }
+    tableBody.innerHTML = ''; // Clear existing content from tbody only
+
+    // --- Defensive checks for core data ---
+    if (!systemData || !systemData.teams || !Array.isArray(systemData.teams)) {
+        console.error("generateTeamTable: Invalid or missing systemData.teams");
+        let row = tableBody.insertRow();
+        let cell = row.insertCell();
+        cell.colSpan = 10; // Adjusted colspan
+        cell.textContent = "Error: Team data is missing or invalid.";
+        cell.style.color = 'red';
+        return;
+    }
+    const services = systemData.services || [];
+    const sdms = systemData.sdms || [];
+    const pmts = systemData.pmts || [];
+    const seniorManagers = systemData.seniorManagers || [];
+    // --------------------------------------
+
+    // --- Totals Initialization ---
+    let totalFundedHC = 0;
+    let totalBIS = 0;
+    // ---------------------------
+
+    // --- Helper Functions for Lookups ---
+    const getSeniorManagerName = (srMgrId) => {
+        if (!srMgrId) return 'No Senior Manager';
+        const srMgr = seniorManagers.find(s => s.seniorManagerId === srMgrId);
+        return srMgr ? srMgr.seniorManagerName : `Unknown (${srMgrId})`;
+    };
+    const getSdmName = (sdmId) => {
+        if (!sdmId) return 'No SDM';
+        const sdm = sdms.find(s => s.sdmId === sdmId);
+        return sdm ? sdm.sdmName : `Unknown (${sdmId})`;
+    };
+    const getPmtName = (pmtId) => {
+        if (!pmtId) return 'N/A';
+        const pmt = pmts.find(p => p.pmtId === pmtId);
+        return pmt ? pmt.pmtName : `Unknown (${pmtId})`;
+    };
+    // -----------------------------------
+
+    // --- Map teamId to services ---
+    let teamServicesMap = {};
+    services.forEach(service => {
+        let teamId = service.owningTeamId;
+        if (teamId) {
+            if (!teamServicesMap[teamId]) teamServicesMap[teamId] = [];
+            teamServicesMap[teamId].push(service.serviceName);
+        }
+    });
+    // -----------------------------
+
+    // --- Group teams by Senior Manager -> SDM ---
+    let groupedData = {};
+    systemData.teams.forEach(team => {
+        if (!team) return;
+
+        const sdm = sdms.find(s => s.sdmId === team.sdmId);
+        const srMgrId = sdm ? (sdm.seniorManagerId || 'no-sr-mgr') : 'no-sdm';
+        const sdmId = team.sdmId || 'no-sdm';
+
+        if (!groupedData[srMgrId]) {
+            groupedData[srMgrId] = {};
+        }
+        if (!groupedData[srMgrId][sdmId]) {
+            groupedData[srMgrId][sdmId] = [];
+        }
+        groupedData[srMgrId][sdmId].push(team);
+    });
+    // -------------------------------------------
+
+    // --- Populate Table Body ---
+    for (const srMgrId in groupedData) {
+        const srMgrData = groupedData[srMgrId];
+        const srMgrNameDisplay = (srMgrId === 'no-sr-mgr' || srMgrId === 'no-sdm') ? 'No Assigned Senior Manager' : getSeniorManagerName(srMgrId);
+        let isFirstRowForSrMgr = true;
+        let srMgrRowspan = 0;
+
+        for (const sdmId in srMgrData) {
+            srMgrRowspan += srMgrData[sdmId].length;
+        }
+
+        for (const sdmId in srMgrData) {
+            const teams = srMgrData[sdmId];
+            const sdmNameDisplay = (sdmId === 'no-sdm') ? 'No Assigned SDM' : getSdmName(sdmId);
+            let isFirstRowForSdm = true;
+
+            teams.forEach((team) => {
+                if (!team) return;
+
+                let row = tableBody.insertRow();
+
+                if (isFirstRowForSrMgr) {
+                    let srMgrCell = row.insertCell();
+                    srMgrCell.innerText = srMgrNameDisplay;
+                    srMgrCell.rowSpan = srMgrRowspan;
+                    srMgrCell.style.verticalAlign = 'top';
+                    isFirstRowForSrMgr = false;
+                }
+
+                if (isFirstRowForSdm) {
+                    let sdmCell = row.insertCell();
+                    sdmCell.innerText = sdmNameDisplay;
+                    sdmCell.rowSpan = teams.length;
+                    sdmCell.style.verticalAlign = 'top';
+                    isFirstRowForSdm = false;
+                }
+
+                row.insertCell().innerText = team.teamIdentity || 'N/A';
+                row.insertCell().innerText = team.teamName || 'N/A';
+                row.insertCell().innerText = getPmtName(team.pmtId);
+
+                const funded = team.fundedHeadcount ?? 0;
+                const bis = team.buildersInSeats ?? 0;
+                const gap = funded - bis;
+                row.insertCell().innerText = funded;
+                row.insertCell().innerText = bis;
+                let gapCell = row.insertCell();
+                gapCell.innerText = gap;
+                gapCell.style.color = gap < 0 ? 'red' : (gap > 0 ? 'orange' : 'green');
+
+                totalFundedHC += funded;
+                totalBIS += bis;
+
+                // Engineers (Name and Level)
+                let engineersCell = row.insertCell();
+                if (team.engineers && Array.isArray(team.engineers) && team.engineers.length > 0) {
+                    engineersCell.innerHTML = team.engineers
+                        .map(eng => {
+                            if (typeof eng !== 'object' || eng === null) return 'Invalid Eng Data';
+                            const name = eng.name || 'Unnamed';
+                            const level = eng.level ?? '?';
+                            // --- USE STANDARD STRING CONCATENATION ---
+                            return name + ' (L' + level + ')';
+                            // -----------------------------------------
+                        })
+                        .join('<br>');
+                } else {
+                    engineersCell.innerText = 'None';
+                }
+                engineersCell.style.whiteSpace = 'pre-line';
+
+                // Services Owned
+                let servicesOwnedCell = row.insertCell();
+                servicesOwnedCell.innerText = team.teamId && teamServicesMap[team.teamId] ? teamServicesMap[team.teamId].join(', ') : 'None';
+            }); // End teams.forEach
+        } // End sdmId loop
+    } // End srMgrId loop
+    // -------------------------
+
+    // --- Populate Footer Totals ---
+    const totalGap = totalFundedHC - totalBIS;
+    document.getElementById('totalFundedHC').innerText = totalFundedHC;
+    document.getElementById('totalBIS').innerText = totalBIS;
+    document.getElementById('totalGap').innerText = totalGap;
+    document.getElementById('totalGap').style.color = totalGap < 0 ? 'red' : (totalGap > 0 ? 'orange' : 'green');
+
+    let gapNoteText = `Overall Gap: ${totalGap} engineer(s). `;
+    if (totalGap > 0) {
+        gapNoteText += `(Need to hire ${totalGap})`;
+    } else if (totalGap < 0) {
+        gapNoteText += `(Over headcount by ${Math.abs(totalGap)})`;
+    } else {
+        gapNoteText += `(Fully staffed to funded count)`;
+    }
+    document.getElementById('gapNote').innerText = gapNoteText;
+    // ---------------------------
+
+    // --- Populate Level Key ---
+    const levelKeyElement = document.getElementById('levelKey');
+    if (levelKeyElement) {
+        levelKeyElement.innerHTML = `Level Key: L1=SDE 1 (Junior), L2=SDE 2 (Intermediate), L3=SDE 3 (Senior), L4=Principal SDE, L5=Senior Principal SDE`;
+    }
+    // ------------------------
 }
 
 /** Enter Edit Mode **/
@@ -1706,6 +2034,8 @@ function showSystemEditForm(systemData) {
     document.getElementById('serviceRelationshipsVisualization').style.display = 'none';
     document.getElementById('dependencyVisualization').style.display = 'none';    
     document.getElementById('serviceDependenciesTable').style.display = 'none';    
+    document.getElementById('organogramView').style.display = 'none';
+    document.getElementById('engineerTableView').style.display = 'none';
 
     // Populate system name and description
     document.getElementById('systemNameInput').value = systemData.systemName || '';
@@ -1723,856 +2053,526 @@ function showSystemEditForm(systemData) {
 
 /** Display Teams for Editing **/
 
+/** REVISED Display Teams for Editing - Fix Engineer Reassignment Logic **/
 function displayTeamsForEditing(teams, expandedIndex = -1) {
     const teamsDiv = document.getElementById('teamsManagement');
     teamsDiv.innerHTML = ''; // Clear existing content
 
-    // Get existing SDMs and PMTs
-    const sdmNames = currentSystemData.sdms.map(sdm => sdm.sdmName);
-    const pmtNames = currentSystemData.pmts.map(pmt => pmt.pmtName);
-
-    // Get list of all services and their owning teams
-    const allServices = currentSystemData.services.map(service => ({
-        serviceName: service.serviceName,
+    // Pre-fetch global lists
+    const allServices = (currentSystemData.services || []).map(service => ({
+        value: service.serviceName,
+        text: service.serviceName,
         owningTeamId: service.owningTeamId || null
     }));
+    const allSdms = currentSystemData.sdms || [];
+    const allPmts = currentSystemData.pmts || [];
+    const allSeniorManagers = currentSystemData.seniorManagers || [];
 
-    // Get list of all engineers and their assigned teams
-    const allEngineers = [];
-    currentSystemData.teams.forEach(team => {
-        const engineers = team.engineerNames ? team.engineerNames.split(',').map(name => name.trim()) : [];
-        engineers.forEach(engineer => {
-            allEngineers.push({ engineerName: engineer, teamId: team.teamId });
+    // --- Calculate Available Engineers (names only for dual list) ---
+    let allEngineerNamesMap = new Map(); // Map name to teamId(s)
+    (currentSystemData.teams || []).forEach(t => {
+        (t.engineers || []).forEach(eng => {
+            if (eng && eng.name) {
+                if (!allEngineerNamesMap.has(eng.name)) {
+                    allEngineerNamesMap.set(eng.name, new Set());
+                }
+                allEngineerNamesMap.get(eng.name).add(t.teamId);
+            }
         });
     });
+    // ---------------------------------------------------------
 
-    // Ensure unique engineers
-    const uniqueEngineers = [...new Set(allEngineers.map(e => e.engineerName))].map(name => ({
-        engineerName: name,
-        teamId: allEngineers.find(e => e.engineerName === name).teamId
-    }));
+    (teams || []).forEach((team, index) => {
+        if (!team) {
+            console.warn("Skipping invalid team object at index", index);
+            return;
+        }
 
-    teams.forEach((team, index) => {
         let teamDiv = document.createElement('div');
         teamDiv.className = 'team-edit';
 
-        // Header
+        // Header (collapsible)
         let teamHeader = document.createElement('h4');
         teamHeader.style.cursor = 'pointer';
-
         let indicator = document.createElement('span');
         indicator.innerText = (index === expandedIndex) ? '- ' : '+ ';
         teamHeader.appendChild(indicator);
-        teamHeader.appendChild(document.createTextNode(`Team: ${team.teamIdentity || 'New Team'}`));
+        teamHeader.appendChild(document.createTextNode(`Team: ${team.teamIdentity || team.teamName || 'New Team'}`));
 
-        // Details
         let teamDetails = document.createElement('div');
         teamDetails.className = 'team-details';
         teamDetails.style.display = (index === expandedIndex) ? 'block' : 'none';
 
-        // Toggle Functionality
         teamHeader.onclick = () => {
             const isCollapsed = teamDetails.style.display === 'none' || teamDetails.style.display === '';
             teamDetails.style.display = isCollapsed ? 'block' : 'none';
             indicator.innerText = isCollapsed ? '- ' : '+ ';
         };
 
-        // **Team Identity**
-        let teamIdentityLabel = document.createElement('label');
-        teamIdentityLabel.innerText = 'Team Identity:';
-        let teamIdentityInput = document.createElement('input');
-        teamIdentityInput.type = 'text';
-        teamIdentityInput.value = team.teamIdentity || '';
-        teamIdentityInput.setAttribute('data-team-index', index);
-        teamIdentityInput.setAttribute('data-field', 'teamIdentity');
+        // --- Basic Info Inputs ---
+        teamDetails.appendChild(createInputLabelPair(`teamIdentity_${index}`, 'Team Identity:', team.teamIdentity || '', 'text', index, 'teamIdentity'));
+        teamDetails.appendChild(createInputLabelPair(`teamName_${index}`, 'Team Name:', team.teamName || '', 'text', index, 'teamName'));
+        teamDetails.appendChild(createInputLabelPair(`teamDescription_${index}`, 'Team Description:', team.teamDescription || '', 'textarea', index, 'teamDescription'));
+        // -------------------------
 
-        teamDetails.appendChild(teamIdentityLabel);
-        teamDetails.appendChild(document.createElement('br'));
-        teamDetails.appendChild(teamIdentityInput);
-        teamDetails.appendChild(document.createElement('br'));
-
-        // **Team Name**
-        let teamNameLabel = document.createElement('label');
-        teamNameLabel.innerText = 'Team Name:';
-        let teamNameInput = document.createElement('input');
-        teamNameInput.type = 'text';
-        teamNameInput.value = team.teamName || '';
-        teamNameInput.setAttribute('data-team-index', index);
-        teamNameInput.setAttribute('data-field', 'teamName');
-
-        teamDetails.appendChild(teamNameLabel);
-        teamDetails.appendChild(document.createElement('br'));
-        teamDetails.appendChild(teamNameInput);
-        teamDetails.appendChild(document.createElement('br'));
-
-        // **Services Owned - Dual Lists**
-        // Create container for services
-        let servicesContainer = document.createElement('div');
-        servicesContainer.className = 'services-container';
-
-        // Left-hand list: Current services
-        let currentServicesDiv = document.createElement('div');
-        currentServicesDiv.className = 'current-services';
-
-        let currentServicesLabel = document.createElement('label');
-        currentServicesLabel.innerText = 'Current Services Owned:';
-        currentServicesDiv.appendChild(currentServicesLabel);
-        currentServicesDiv.appendChild(document.createElement('br'));
-
-        let currentServicesSelect = document.createElement('select');
-        currentServicesSelect.setAttribute('data-team-index', index);
-        currentServicesSelect.setAttribute('data-field', 'currentServices');
-        currentServicesSelect.multiple = true;
-        currentServicesSelect.size = 5;
-
-        // Populate current services
-        allServices.forEach(service => {
-            if (service.owningTeamId === team.teamId) {
-                let option = document.createElement('option');
-                option.value = service.serviceName;
-                option.text = service.serviceName;
-                currentServicesSelect.appendChild(option);
-            }
-        });
-
-        currentServicesDiv.appendChild(currentServicesSelect);
-
-        // Buttons container
-        let servicesButtonsDiv = document.createElement('div');
-        servicesButtonsDiv.className = 'services-buttons';
-        servicesButtonsDiv.style.display = 'flex';
-        servicesButtonsDiv.style.flexDirection = 'column';
-        servicesButtonsDiv.style.alignItems = 'center';
-        servicesButtonsDiv.style.justifyContent = 'center';
-
-        // Remove Service Button
-        let removeServiceButton = document.createElement('button');
-        removeServiceButton.type = 'button';
-        removeServiceButton.innerText = '> Remove Service';
-        removeServiceButton.onclick = () => {
-            // Move selected options from currentServicesSelect to availableServicesSelect
-            Array.from(currentServicesSelect.selectedOptions).forEach(option => {
-                // Remove from currentServicesSelect
-                currentServicesSelect.removeChild(option);
-                // Add to availableServicesSelect
-                availableServicesSelect.appendChild(option);
-                // Update service's owningTeamId in currentSystemData
-                const service = currentSystemData.services.find(s => s.serviceName === option.value);
+        // --- Services Owned ---
+        const currentServices = allServices.filter(s => s.owningTeamId === team.teamId);
+        const availableServices = allServices.filter(s => s.owningTeamId !== team.teamId);
+        const servicesContainer = createDualListContainer(
+            index, 'Services Owned:', 'Available Services:',
+            currentServices, availableServices,
+            'currentServices', 'availableServices',
+            (movedOptionValue, direction) => {
+                const service = currentSystemData.services.find(s => s.serviceName === movedOptionValue);
                 if (service) {
-                    service.owningTeamId = null;
+                    service.owningTeamId = (direction === 'add') ? team.teamId : null;
                 }
-            });
-        };
-
-        servicesButtonsDiv.appendChild(removeServiceButton);
-
-        // Spacer
-        servicesButtonsDiv.appendChild(document.createElement('br'));
-
-        // Add Service Button
-        let addServiceButton = document.createElement('button');
-        addServiceButton.type = 'button';
-        addServiceButton.innerText = '< Add Service';
-        addServiceButton.onclick = () => {
-            // Move selected options from availableServicesSelect to currentServicesSelect
-            Array.from(availableServicesSelect.selectedOptions).forEach(option => {
-                // Remove from availableServicesSelect
-                availableServicesSelect.removeChild(option);
-                // Add to currentServicesSelect
-                currentServicesSelect.appendChild(option);
-        
-                // Update service's owningTeamId
-                const service = currentSystemData.services.find(s => s.serviceName === option.value);
-                if (service) {
-                    // Remove service from previous team's UI
-                    if (service.owningTeamId && service.owningTeamId !== team.teamId) {
-                        removeServiceFromPreviousTeam(service.serviceName, service.owningTeamId);
-                    }
-                    // Update service's owningTeamId
-                    service.owningTeamId = team.teamId;
-                }
-            });
-        };
-
-        servicesButtonsDiv.appendChild(addServiceButton);
-
-        // Right-hand list: Available services
-        let availableServicesDiv = document.createElement('div');
-        availableServicesDiv.className = 'available-services';
-
-        let availableServicesLabel = document.createElement('label');
-        availableServicesLabel.innerText = 'Available Services:';
-        availableServicesDiv.appendChild(availableServicesLabel);
-        availableServicesDiv.appendChild(document.createElement('br'));
-
-        let availableServicesSelect = document.createElement('select');
-        availableServicesSelect.setAttribute('data-team-index', index);
-        availableServicesSelect.setAttribute('data-field', 'availableServices');
-        availableServicesSelect.multiple = true;
-        availableServicesSelect.size = 5;
-
-        // Populate available services (services not owned by this team)
-        allServices.forEach(service => {
-            if (service.owningTeamId !== team.teamId) {
-                let option = document.createElement('option');
-                option.value = service.serviceName;
-                option.text = service.serviceName;
-                availableServicesSelect.appendChild(option);
             }
-        });
-
-        availableServicesDiv.appendChild(availableServicesSelect);
-
-        // Assemble the container
-        servicesContainer.style.display = 'flex';
-        servicesContainer.style.alignItems = 'center';
-        servicesContainer.appendChild(currentServicesDiv);
-        servicesContainer.appendChild(servicesButtonsDiv);
-        servicesContainer.appendChild(availableServicesDiv);
-
+        );
         teamDetails.appendChild(servicesContainer);
         teamDetails.appendChild(document.createElement('br'));
+        // -------------------------------------------
 
-        // **SDM Assignment**
-        /*** Begin SDM Assignment dual lists ***/
-        
-        // Create container for SDM assignment
-        let sdmsContainer = document.createElement('div');
-        sdmsContainer.className = 'sdms-container';
-        
-        // Left-hand list: Current SDM
-        let currentSdmDiv = document.createElement('div');
-        currentSdmDiv.className = 'current-sdm';
-        
-        let currentSdmLabel = document.createElement('label');
-        currentSdmLabel.innerText = 'Current SDM:';
-        currentSdmDiv.appendChild(currentSdmLabel);
-        currentSdmDiv.appendChild(document.createElement('br'));
-        
-        let currentSdmSelect = document.createElement('select');
-        currentSdmSelect.setAttribute('data-team-index', index);
-        currentSdmSelect.setAttribute('data-field', 'currentSdm');
-        currentSdmSelect.size = 5; // Adjust size as needed
-        
-        // Since only one SDM can be assigned, no 'multiple' attribute
-        
-        // Get the assigned SDM based on sdmId
-        let assignedSdm = currentSystemData.sdms.find(sdm => sdm.sdmId === team.sdmId);
-        
-        if (assignedSdm) {
-            let option = document.createElement('option');
-            option.value = assignedSdm.sdmId;
-            option.text = assignedSdm.sdmName;
-            currentSdmSelect.appendChild(option);
-        }
-        
-        currentSdmDiv.appendChild(currentSdmSelect);
-        
-        // Buttons container
-        let sdmsButtonsDiv = document.createElement('div');
-        sdmsButtonsDiv.className = 'sdms-buttons';
-        sdmsButtonsDiv.style.display = 'flex';
-        sdmsButtonsDiv.style.flexDirection = 'column';
-        sdmsButtonsDiv.style.alignItems = 'center';
-        sdmsButtonsDiv.style.justifyContent = 'center';
-        
-        // Remove SDM Button
-        let removeSdmButton = document.createElement('button');
-        removeSdmButton.type = 'button';
-        removeSdmButton.innerText = '> Remove SDM';
-        removeSdmButton.onclick = () => {
-            let option = currentSdmSelect.options[0];
-            if (option) {
-                currentSdmSelect.removeChild(option);
-                availableSdmsSelect.appendChild(option);
-                // Update team.sdmId
-                team.sdmId = null;
+        // --- SDM Assignment & Senior Manager Assignment ---
+        const sdmSection = document.createElement('div');
+        sdmSection.style.border = '1px dashed #ccc';
+        sdmSection.style.padding = '10px';
+        sdmSection.style.marginBottom = '10px';
+
+        let sdmSectionTitle = document.createElement('h5');
+        sdmSectionTitle.innerText = 'SDM Assignment';
+        sdmSection.appendChild(sdmSectionTitle);
+
+        const currentSdm = allSdms.find(sdm => sdm && sdm.sdmId === team.sdmId);
+        const sdmContainer = createDualListContainer(
+            index, 'Current SDM:', 'Available SDMs:',
+            currentSdm ? [{ value: currentSdm.sdmId, text: currentSdm.sdmName }] : [],
+            allSdms.filter(sdm => sdm && sdm.sdmId !== team.sdmId)
+                   .map(sdm => ({ value: sdm.sdmId, text: sdm.sdmName })),
+            'currentSdm', 'availableSdms',
+            (movedOptionValue, direction) => {
+                const newSdmId = (direction === 'add') ? movedOptionValue : null;
+                team.sdmId = newSdmId;
+                displaySeniorManagerAssignment(sdmSection, index, newSdmId);
+            },
+            false, true, 'Enter New SDM Name',
+            (newSdmName) => {
+                 if (!newSdmName || newSdmName.trim() === '') return null;
+                 newSdmName = newSdmName.trim();
+                 let existingSdm = allSdms.find(s => s && s.sdmName.toLowerCase() === newSdmName.toLowerCase());
+                 if (existingSdm) {
+                     alert(`SDM "${newSdmName}" already exists.`);
+                     return null;
+                 }
+                 const newSdmId = 'sdm-' + Date.now();
+                 const newSdm = { sdmId: newSdmId, sdmName: newSdmName, seniorManagerId: null };
+                 currentSystemData.sdms.push(newSdm);
+                 allSdms.push(newSdm);
+                 console.log("Added new SDM:", newSdm);
+                 return { value: newSdmId, text: newSdmName };
             }
-        };
-        
-        sdmsButtonsDiv.appendChild(removeSdmButton);
-        
-        // Spacer
-        sdmsButtonsDiv.appendChild(document.createElement('br'));
-        
-        // Add SDM Button
-        let addSdmButton = document.createElement('button');
-        addSdmButton.type = 'button';
-        addSdmButton.innerText = '< Add SDM';
-        addSdmButton.onclick = () => {
-            let selectedOption = availableSdmsSelect.options[availableSdmsSelect.selectedIndex];
-            if (selectedOption) {
-                // Remove any existing SDM from currentSdmSelect
-                while (currentSdmSelect.firstChild) {
-                    let existingOption = currentSdmSelect.firstChild;
-                    currentSdmSelect.removeChild(existingOption);
-                    availableSdmsSelect.appendChild(existingOption);
-                }
-        
-                // Remove from availableSdmsSelect
-                availableSdmsSelect.removeChild(selectedOption);
-                // Add to currentSdmSelect
-                currentSdmSelect.appendChild(selectedOption);
-        
-                // Update team.sdmId
-                team.sdmId = selectedOption.value;
-            }
-        };
-        
-        sdmsButtonsDiv.appendChild(addSdmButton);
-        
-        // Right-hand list: Available SDMs
-        let availableSdmsDiv = document.createElement('div');
-        availableSdmsDiv.className = 'available-sdms';
-        
-        let availableSdmsLabel = document.createElement('label');
-        availableSdmsLabel.innerText = 'Available SDMs:';
-        availableSdmsDiv.appendChild(availableSdmsLabel);
-        availableSdmsDiv.appendChild(document.createElement('br'));
-        
-        let availableSdmsSelect = document.createElement('select');
-        availableSdmsSelect.setAttribute('data-team-index', index);
-        availableSdmsSelect.setAttribute('data-field', 'availableSdms');
-        availableSdmsSelect.size = 5;
-        
-        // Populate available SDMs (SDMs not assigned to this team)
-        currentSystemData.sdms.forEach(sdm => {
-            if (sdm.sdmId !== team.sdmId) {
-                let option = document.createElement('option');
-                option.value = sdm.sdmId;
-                option.text = sdm.sdmName;
-                availableSdmsSelect.appendChild(option);
-            }
-        });
-        
-        availableSdmsDiv.appendChild(availableSdmsSelect);
-        
-        // Input to add new SDM
-        let newSdmInputLabel = document.createElement('label');
-        newSdmInputLabel.innerText = 'Add New SDM:';
-        let newSdmInputContainer = document.createElement('div');
-        newSdmInputContainer.style.display = 'flex';
-        newSdmInputContainer.style.alignItems = 'center';
-        
-        let newSdmInput = document.createElement('input');
-        newSdmInput.type = 'text';
-        newSdmInput.placeholder = 'Enter SDM name';
-        newSdmInput.setAttribute('data-team-index', index);
-        newSdmInput.setAttribute('data-field', 'newSdmName');
-        
-        let addNewSdmButton = document.createElement('button');
-        addNewSdmButton.type = 'button';
-        addNewSdmButton.innerText = 'Add';
-        addNewSdmButton.onclick = () => {
-            const sdmName = newSdmInput.value.trim();
-            if (sdmName !== '') {
-                // Check if SDM already exists
-                let existingSdm = currentSystemData.sdms.find(sdm => sdm.sdmName === sdmName);
-                if (!existingSdm) {
-                    // Add to currentSystemData.sdms
-                    const newSdmId = 'sdm' + (currentSystemData.sdms.length + 1);
-                    const newSdm = { sdmId: newSdmId, sdmName: sdmName };
-                    currentSystemData.sdms.push(newSdm);
-        
-                    // Remove any existing SDM from currentSdmSelect
-                    while (currentSdmSelect.firstChild) {
-                        let existingOption = currentSdmSelect.firstChild;
-                        currentSdmSelect.removeChild(existingOption);
-                        availableSdmsSelect.appendChild(existingOption);
+        );
+        sdmSection.appendChild(sdmContainer);
+
+        let srMgrAssignmentContainer = document.createElement('div');
+        srMgrAssignmentContainer.id = `srMgrAssignmentContainer_${index}`;
+        srMgrAssignmentContainer.style.marginTop = '10px';
+        sdmSection.appendChild(srMgrAssignmentContainer);
+
+        teamDetails.appendChild(sdmSection);
+        teamDetails.appendChild(document.createElement('br'));
+
+        displaySeniorManagerAssignment(sdmSection, index, team.sdmId); // Initial population
+        // ---------------------------------------------------
+
+        // --- PMT Assignment ---
+         const currentPmt = allPmts.find(pmt => pmt && pmt.pmtId === team.pmtId);
+         const pmtContainer = createDualListContainer(
+             index, 'Current PMT:', 'Available PMTs:',
+             currentPmt ? [{ value: currentPmt.pmtId, text: currentPmt.pmtName }] : [],
+             allPmts.filter(pmt => pmt && pmt.pmtId !== team.pmtId)
+                    .map(pmt => ({ value: pmt.pmtId, text: pmt.pmtName })),
+             'currentPmt', 'availablePmts',
+             (movedOptionValue, direction) => {
+                 team.pmtId = (direction === 'add') ? movedOptionValue : null;
+             },
+             false, true, 'Enter New PMT Name',
+             (newPmtName) => {
+                 if (!newPmtName || newPmtName.trim() === '') return null;
+                 newPmtName = newPmtName.trim();
+                 let existingPmt = allPmts.find(p => p && p.pmtName.toLowerCase() === newPmtName.toLowerCase());
+                 if (existingPmt) {
+                     alert(`PMT "${newPmtName}" already exists.`);
+                     return null;
+                 }
+                 const newPmtId = 'pmt-' + Date.now();
+                 const newPmt = { pmtId: newPmtId, pmtName: newPmtName };
+                 currentSystemData.pmts.push(newPmt);
+                 allPmts.push(newPmt);
+                 console.log("Added new PMT:", newPmt);
+                 return { value: newPmtId, text: newPmtName };
+             }
+         );
+         teamDetails.appendChild(pmtContainer);
+         teamDetails.appendChild(document.createElement('br'));
+        // -------------------------------------------
+
+        // --- Headcount ---
+        teamDetails.appendChild(createInputLabelPair(`fundedHeadcount_${index}`, 'Funded Headcount:', team.fundedHeadcount ?? 0, 'number', index, 'fundedHeadcount'));
+
+        let bisDiv = document.createElement('div');
+        bisDiv.style.marginTop = '10px';
+        let bisLabel = document.createElement('label');
+        bisLabel.innerText = 'Builders In Seats (BIS): ';
+        let bisValueSpan = document.createElement('span');
+        bisValueSpan.id = `bisValue_${index}`;
+        bisValueSpan.innerText = team.engineers?.length ?? 0;
+        team.buildersInSeats = team.engineers?.length ?? 0;
+        bisValueSpan.style.fontWeight = 'bold';
+        bisDiv.appendChild(bisLabel);
+        bisDiv.appendChild(bisValueSpan);
+        teamDetails.appendChild(bisDiv);
+        teamDetails.appendChild(document.createElement('br'));
+        // -----------------
+
+        // --- Engineer Assignment ---
+        let engineersSectionTitle = document.createElement('h5');
+        engineersSectionTitle.innerText = 'Engineer Assignment';
+        engineersSectionTitle.style.marginTop = '15px';
+        teamDetails.appendChild(engineersSectionTitle);
+
+        const currentEngineerOptions = (team.engineers || []).map(eng => ({ value: eng.name, text: eng.name }));
+        // Available = engineers not in the current team's list
+        const availableEngineerOptions = Array.from(allEngineerNamesMap.keys())
+                                           .filter(name => !(team.engineers || []).some(eng => eng.name === name))
+                                           .map(name => ({ value: name, text: name }));
+
+        const engineerContainer = createDualListContainer(
+            index, 'Current Engineers:', 'Available Engineers:',
+            currentEngineerOptions, availableEngineerOptions,
+            'currentEngineers', 'availableEngineers',
+            (movedEngineerName, direction, contextIndex) => { // Callback on engineer move
+                const currentTeam = currentSystemData.teams[contextIndex]; // Get the specific team
+                if (!currentTeam) return;
+
+                if (direction === 'add') { // Moved from Available to Current
+                    // *** FIX: Remove engineer from other teams first ***
+                    currentSystemData.teams.forEach(otherTeam => {
+                        if (otherTeam.teamId !== currentTeam.teamId && otherTeam.engineers) {
+                            // Filter out the engineer from the other team's array
+                            otherTeam.engineers = otherTeam.engineers.filter(eng => eng.name !== movedEngineerName);
+                            // Update BIS for the other team if needed (or rely on save)
+                            otherTeam.buildersInSeats = otherTeam.engineers.length;
+                        }
+                    });
+                    // -----------------------------------------------
+
+                    // Add engineer with default level if not already present in current team
+                    if (!currentTeam.engineers.some(eng => eng.name === movedEngineerName)) {
+                         currentTeam.engineers.push({ name: movedEngineerName, level: 1 }); // Default L1
+                         console.log(`Added ${movedEngineerName} to team ${currentTeam.teamId}`);
                     }
-        
-                    // Add new SDM to currentSdmSelect
-                    let option = document.createElement('option');
-                    option.value = newSdm.sdmId;
-                    option.text = newSdm.sdmName;
-                    currentSdmSelect.appendChild(option);
-        
-                    // Update team.sdmId
-                    team.sdmId = newSdm.sdmId;
-                } else {
-                    alert(`SDM "${sdmName}" already exists.`);
+                } else { // Moved from Current to Available (Remove)
+                    currentTeam.engineers = currentTeam.engineers.filter(eng => eng.name !== movedEngineerName);
+                     console.log(`Removed ${movedEngineerName} from team ${currentTeam.teamId}`);
                 }
-        
-                // Clear the input
-                newSdmInput.value = '';
+                // Update BIS display for the current team
+                currentTeam.buildersInSeats = currentTeam.engineers.length;
+                const bisValSpan = document.getElementById(`bisValue_${contextIndex}`);
+                if (bisValSpan) bisValSpan.innerText = currentTeam.buildersInSeats;
+            },
+            true, // multiSelectLeft = true
+            true, // Allow adding new engineers
+            'Enter New Engineer Name',
+            (newEngineerName) => { // Callback for adding new engineer
+                 if (!newEngineerName || newEngineerName.trim() === '') return null;
+                 newEngineerName = newEngineerName.trim();
+                 // Check if name exists anywhere
+                 if (allEngineerNamesMap.has(newEngineerName)) {
+                     alert(`Engineer "${newEngineerName}" already exists in the system. Assign from 'Available Engineers' list.`);
+                     return null; // Don't add duplicate by name
+                 }
+                 // Add to current team directly & update global map
+                 team.engineers.push({ name: newEngineerName, level: 1 }); // Default L1
+                 allEngineerNamesMap.set(newEngineerName, new Set([team.teamId])); // Add to map
+                 team.buildersInSeats = team.engineers.length;
+                 const bisValSpan = document.getElementById(`bisValue_${index}`);
+                 if (bisValSpan) bisValSpan.innerText = team.buildersInSeats;
+                 console.log("Added new engineer:", newEngineerName);
+                 // Manually add to left UI list
+                 const currentEngSelect = engineerContainer.querySelector("select[data-field='currentEngineers']");
+                 if(currentEngSelect) currentEngSelect.appendChild(new Option(newEngineerName, newEngineerName));
+                 return { preventAdd: true }; // Signal that we handled UI addition
             }
-        };
-        
-        newSdmInputContainer.appendChild(newSdmInput);
-        newSdmInputContainer.appendChild(addNewSdmButton);
-        
-        // Assemble the SDMs container
-        sdmsContainer.style.display = 'flex';
-        sdmsContainer.style.alignItems = 'center';
-        sdmsContainer.appendChild(currentSdmDiv);
-        sdmsContainer.appendChild(sdmsButtonsDiv);
-        sdmsContainer.appendChild(availableSdmsDiv);
-        
-        teamDetails.appendChild(sdmsContainer);
+        );
+        engineerContainer.id = `engineersList_${index}`;
+        teamDetails.appendChild(engineerContainer);
+
+        let levelEditNote = document.createElement('p');
+        levelEditNote.style.fontSize = '0.8em';
+        levelEditNote.style.color = 'grey';
+        levelEditNote.innerText = '(Note: Engineer levels default to L1 when added via list. Level editing requires further implementation.)';
+        teamDetails.appendChild(levelEditNote);
         teamDetails.appendChild(document.createElement('br'));
-        teamDetails.appendChild(newSdmInputLabel);
-        teamDetails.appendChild(document.createElement('br'));
-        teamDetails.appendChild(newSdmInputContainer);
-        teamDetails.appendChild(document.createElement('br'));
-        /*** End SDM Assignment - Dual Lists ***/
+        // -----------------------------------------
 
-        // **PMT Assignment**
-        /*** Begin PMT Assignment ***/
-        
-        // Create container for PMT assignment
-        let pmtsContainer = document.createElement('div');
-        pmtsContainer.className = 'pmts-container';
-        
-        // Left-hand list: Current PMT
-        let currentPmtDiv = document.createElement('div');
-        currentPmtDiv.className = 'current-pmt';
-        
-        let currentPmtLabel = document.createElement('label');
-        currentPmtLabel.innerText = 'Current PMT:';
-        currentPmtDiv.appendChild(currentPmtLabel);
-        currentPmtDiv.appendChild(document.createElement('br'));
-        
-        let currentPmtSelect = document.createElement('select');
-        currentPmtSelect.setAttribute('data-team-index', index);
-        currentPmtSelect.setAttribute('data-field', 'currentPmt');
-        currentPmtSelect.size = 5; // Adjust size as needed
-        
-        // Since only one PMT can be assigned, no 'multiple' attribute
-        
-        // Get the assigned PMT based on pmtId
-        let assignedPmt = currentSystemData.pmts.find(pmt => pmt.pmtId === team.pmtId);
-        
-        if (assignedPmt) {
-            let option = document.createElement('option');
-            option.value = assignedPmt.pmtId;
-            option.text = assignedPmt.pmtName;
-            currentPmtSelect.appendChild(option);
-        }
-        
-        currentPmtDiv.appendChild(currentPmtSelect);
-        
-        // Buttons container
-        let pmtsButtonsDiv = document.createElement('div');
-        pmtsButtonsDiv.className = 'pmts-buttons';
-        pmtsButtonsDiv.style.display = 'flex';
-        pmtsButtonsDiv.style.flexDirection = 'column';
-        pmtsButtonsDiv.style.alignItems = 'center';
-        pmtsButtonsDiv.style.justifyContent = 'center';
-        
-        // Remove PMT Button
-        let removePmtButton = document.createElement('button');
-        removePmtButton.type = 'button';
-        removePmtButton.innerText = '> Remove PMT';
-        removePmtButton.onclick = () => {
-            let option = currentPmtSelect.options[0];
-            if (option) {
-                currentPmtSelect.removeChild(option);
-                availablePmtsSelect.appendChild(option);
-                // Update team.pmtId
-                team.pmtId = null;
-            }
-        };
-        
-        pmtsButtonsDiv.appendChild(removePmtButton);
-        
-        // Spacer
-        pmtsButtonsDiv.appendChild(document.createElement('br'));
-        
-        // Add PMT Button
-        let addPmtButton = document.createElement('button');
-        addPmtButton.type = 'button';
-        addPmtButton.innerText = '< Add PMT';
-        addPmtButton.onclick = () => {
-            let selectedOption = availablePmtsSelect.options[availablePmtsSelect.selectedIndex];
-            if (selectedOption) {
-                // Remove any existing PMT from currentPmtSelect
-                while (currentPmtSelect.firstChild) {
-                    let existingOption = currentPmtSelect.firstChild;
-                    currentPmtSelect.removeChild(existingOption);
-                    availablePmtsSelect.appendChild(existingOption);
-                }
-        
-                // Remove from availablePmtsSelect
-                availablePmtsSelect.removeChild(selectedOption);
-                // Add to currentPmtSelect
-                currentPmtSelect.appendChild(selectedOption);
-        
-                // Update team.pmtId
-                team.pmtId = selectedOption.value;
-            }
-        };
-        
-        pmtsButtonsDiv.appendChild(addPmtButton);
-        
-        // Right-hand list: Available PMTs
-        let availablePmtsDiv = document.createElement('div');
-        availablePmtsDiv.className = 'available-pmts';
-        
-        let availablePmtsLabel = document.createElement('label');
-        availablePmtsLabel.innerText = 'Available PMTs:';
-        availablePmtsDiv.appendChild(availablePmtsLabel);
-        availablePmtsDiv.appendChild(document.createElement('br'));
-        
-        let availablePmtsSelect = document.createElement('select');
-        availablePmtsSelect.setAttribute('data-team-index', index);
-        availablePmtsSelect.setAttribute('data-field', 'availablePmts');
-        availablePmtsSelect.size = 5;
-        
-        // Populate available PMTs (PMTs not assigned to this team)
-        currentSystemData.pmts.forEach(pmt => {
-            if (pmt.pmtId !== team.pmtId) {
-                let option = document.createElement('option');
-                option.value = pmt.pmtId;
-                option.text = pmt.pmtName;
-                availablePmtsSelect.appendChild(option);
-            }
-        });
-        
-        availablePmtsDiv.appendChild(availablePmtsSelect);
-        
-        // Input to add new PMT
-        let newPmtInputLabel = document.createElement('label');
-        newPmtInputLabel.innerText = 'Add New PMT:';
-        let newPmtInputContainer = document.createElement('div');
-        newPmtInputContainer.style.display = 'flex';
-        newPmtInputContainer.style.alignItems = 'center';
-        
-        let newPmtInput = document.createElement('input');
-        newPmtInput.type = 'text';
-        newPmtInput.placeholder = 'Enter PMT name';
-        newPmtInput.setAttribute('data-team-index', index);
-        newPmtInput.setAttribute('data-field', 'newPmtName');
-        
-        let addNewPmtButton = document.createElement('button');
-        addNewPmtButton.type = 'button';
-        addNewPmtButton.innerText = 'Add';
-        addNewPmtButton.onclick = () => {
-            const pmtName = newPmtInput.value.trim();
-            if (pmtName !== '') {
-                // Check if PMT already exists
-                let existingPmt = currentSystemData.pmts.find(p => p.pmtName === pmtName);
-                if (!existingPmt) {
-                    // Add to currentSystemData.pmts
-                    const newPmtId = 'pmt' + (currentSystemData.pmts.length + 1);
-                    const newPmt = { pmtId: newPmtId, pmtName: pmtName };
-                    currentSystemData.pmts.push(newPmt);
-        
-                    // Remove any existing PMT from currentPmtSelect
-                    while (currentPmtSelect.firstChild) {
-                        let existingOption = currentPmtSelect.firstChild;
-                        currentPmtSelect.removeChild(existingOption);
-                        availablePmtsSelect.appendChild(existingOption);
-                    }
-        
-                    // Add new PMT to currentPmtSelect
-                    let option = document.createElement('option');
-                    option.value = newPmt.pmtId;
-                    option.text = newPmt.pmtName;
-                    currentPmtSelect.appendChild(option);
-        
-                    // Update team.pmtId
-                    team.pmtId = newPmt.pmtId;
-                } else {
-                    alert(`PMT "${pmtName}" already exists.`);
-                }
-        
-                // Clear the input
-                newPmtInput.value = '';
-            }
-        };
-        
-        newPmtInputContainer.appendChild(newPmtInput);
-        newPmtInputContainer.appendChild(addNewPmtButton);
-        
-        // Assemble the PMTs container
-        pmtsContainer.style.display = 'flex';
-        pmtsContainer.style.alignItems = 'center';
-        pmtsContainer.appendChild(currentPmtDiv);
-        pmtsContainer.appendChild(pmtsButtonsDiv);
-        pmtsContainer.appendChild(availablePmtsDiv);
-        
-        teamDetails.appendChild(pmtsContainer);
-        teamDetails.appendChild(document.createElement('br'));
-        teamDetails.appendChild(newPmtInputLabel);
-        teamDetails.appendChild(document.createElement('br'));
-        teamDetails.appendChild(newPmtInputContainer);
-        teamDetails.appendChild(document.createElement('br'));
-        /*** End PMT Assignment ***/        
-        
-        // **Size of Team**
-        let sizeLabel = document.createElement('label');
-        sizeLabel.innerText = 'Size of Team:';
-        let sizeInput = document.createElement('input');
-        sizeInput.type = 'number';
-        sizeInput.value = team.sizeOfTeam || 1;
-        sizeInput.setAttribute('data-team-index', index);
-        sizeInput.setAttribute('data-field', 'sizeOfTeam');
 
-        teamDetails.appendChild(sizeLabel);
-        teamDetails.appendChild(document.createElement('br'));
-        teamDetails.appendChild(sizeInput);
-        teamDetails.appendChild(document.createElement('br'));
-
-        // **Engineer Assignment - Dual Lists**
-        // Create container for engineers
-        let engineersContainer = document.createElement('div');
-        engineersContainer.className = 'engineers-container';
-
-        // Left-hand list: Current engineers
-        let currentEngineersDiv = document.createElement('div');
-        currentEngineersDiv.className = 'current-engineers';
-
-        let currentEngineersLabel = document.createElement('label');
-        currentEngineersLabel.innerText = 'Current Engineers:';
-        currentEngineersDiv.appendChild(currentEngineersLabel);
-        currentEngineersDiv.appendChild(document.createElement('br'));
-
-        let currentEngineersSelect = document.createElement('select');
-        currentEngineersSelect.setAttribute('data-team-index', index);
-        currentEngineersSelect.setAttribute('data-field', 'currentEngineers');
-        currentEngineersSelect.multiple = true;
-        currentEngineersSelect.size = 5;
-
-        // Populate current engineers
-        const teamEngineers = team.engineerNames ? team.engineerNames.split(',').map(name => name.trim()) : [];
-        teamEngineers.forEach(engineerName => {
-            let option = document.createElement('option');
-            option.value = engineerName;
-            option.text = engineerName;
-            currentEngineersSelect.appendChild(option);
-        });
-
-        currentEngineersDiv.appendChild(currentEngineersSelect);
-
-        // Buttons container
-        let engineersButtonsDiv = document.createElement('div');
-        engineersButtonsDiv.className = 'engineers-buttons';
-        engineersButtonsDiv.style.display = 'flex';
-        engineersButtonsDiv.style.flexDirection = 'column';
-        engineersButtonsDiv.style.alignItems = 'center';
-        engineersButtonsDiv.style.justifyContent = 'center';
-
-        // Remove Engineer Button
-        let removeEngineerButton = document.createElement('button');
-        removeEngineerButton.type = 'button';
-        removeEngineerButton.innerText = '> Remove Engineer';
-        removeEngineerButton.onclick = () => {
-            // Move selected options from currentEngineersSelect to availableEngineersSelect
-            Array.from(currentEngineersSelect.selectedOptions).forEach(option => {
-                // Remove from currentEngineersSelect
-                currentEngineersSelect.removeChild(option);
-                // Add to availableEngineersSelect
-                availableEngineersSelect.appendChild(option);
-        
-              // Update engineer's team assignment
-              const engineerName = option.value;
-              const engineer = uniqueEngineers.find(e => e.engineerName === engineerName);
-              if (engineer) {
-                  engineer.teamId = null;
-              }
-      
-              // **Update team.engineerNames in currentSystemData**
-              if (team.engineerNames) {
-                  let engineerList = team.engineerNames.split(',').map(name => name.trim());
-                  engineerList = engineerList.filter(name => name !== engineerName);
-                  team.engineerNames = engineerList.join(', ');
-              }
-      
-              // Update team size
-              updateTeamSize(index, currentEngineersSelect.options.length);
-          });
-        
-            // **Recalculate and Update Team Size**
-            updateTeamSize(index, currentEngineersSelect.options.length);
-        };
-
-        engineersButtonsDiv.appendChild(removeEngineerButton);
-
-        // Spacer
-        engineersButtonsDiv.appendChild(document.createElement('br'));
-
-        // Add Engineer Button
-        let addEngineerButton = document.createElement('button');
-        addEngineerButton.type = 'button';
-        addEngineerButton.innerText = '< Add Engineer';
-        addEngineerButton.onclick = () => {
-            // Move selected options from availableEngineersSelect to currentEngineersSelect
-            Array.from(availableEngineersSelect.selectedOptions).forEach(option => {
-                // Remove from availableEngineersSelect
-                availableEngineersSelect.removeChild(option);
-                // Add to currentEngineersSelect
-                currentEngineersSelect.appendChild(option);
-        
-                // Update engineer's team assignment
-                const engineerName = option.value;
-                const engineer = uniqueEngineers.find(e => e.engineerName === engineerName);
-                if (engineer) {
-                    // Remove engineer from previous team's UI...
-                    engineer.teamId = team.teamId;
-                } else {
-                    uniqueEngineers.push({ engineerName: engineerName, teamId: team.teamId });
-                }
-        
-                // **Update team.engineerNames in currentSystemData**
-                if (!team.engineerNames) {
-                    team.engineerNames = engineerName;
-                } else {
-                    const engineerList = team.engineerNames.split(',').map(name => name.trim());
-                    if (!engineerList.includes(engineerName)) {
-                        engineerList.push(engineerName);
-                        team.engineerNames = engineerList.join(', ');
-                    }
-                }
-        
-                // Update team size
-                updateTeamSize(index, currentEngineersSelect.options.length);
-            });
-        
-            // **Recalculate and Update Team Size**
-            updateTeamSize(index, currentEngineersSelect.options.length);
-        };
-
-        engineersButtonsDiv.appendChild(addEngineerButton);
-
-        // Right-hand list: Available engineers
-        let availableEngineersDiv = document.createElement('div');
-        availableEngineersDiv.className = 'available-engineers';
-
-        let availableEngineersLabel = document.createElement('label');
-        availableEngineersLabel.innerText = 'Available Engineers:';
-        availableEngineersDiv.appendChild(availableEngineersLabel);
-        availableEngineersDiv.appendChild(document.createElement('br'));
-
-        let availableEngineersSelect = document.createElement('select');
-        availableEngineersSelect.setAttribute('data-team-index', index);
-        availableEngineersSelect.setAttribute('data-field', 'availableEngineers');
-        availableEngineersSelect.multiple = true;
-        availableEngineersSelect.size = 5;
-
-        // Populate available engineers (not assigned to this team)
-        uniqueEngineers.forEach(engineer => {
-            if (engineer.teamId !== team.teamId) {
-                let option = document.createElement('option');
-                option.value = engineer.engineerName;
-                option.text = engineer.engineerName;
-                availableEngineersSelect.appendChild(option);
-            }
-        });
-
-        availableEngineersDiv.appendChild(availableEngineersSelect);
-
-        // Input to add new engineer
-        let newEngineerInputLabel = document.createElement('label');
-        newEngineerInputLabel.innerText = 'Add New Engineer:';
-        let newEngineerInputContainer = document.createElement('div');
-        newEngineerInputContainer.style.display = 'flex';
-        newEngineerInputContainer.style.alignItems = 'center';
-
-        let newEngineerInput = document.createElement('input');
-        newEngineerInput.type = 'text';
-        newEngineerInput.placeholder = 'Enter engineer name';
-        newEngineerInput.setAttribute('data-team-index', index);
-        newEngineerInput.setAttribute('data-field', 'newEngineerName');
-
-        let addNewEngineerButton = document.createElement('button');
-        addNewEngineerButton.type = 'button';
-        addNewEngineerButton.innerText = 'Add';
-        addNewEngineerButton.onclick = () => {
-        const engineerName = newEngineerInput.value.trim();
-        if (engineerName !== '') {
-            // Check if engineer already exists
-            const existingEngineer = uniqueEngineers.find(e => e.engineerName === engineerName);
-            if (existingEngineer) {
-                alert(`Engineer "${engineerName}" already exists.`);
-                newEngineerInput.value = '';
-                return;
-            }
-    
-            // Add to uniqueEngineers
-            uniqueEngineers.push({ engineerName: engineerName, teamId: team.teamId });
-    
-            // Add to currentEngineersSelect
-            let option = document.createElement('option');
-            option.value = engineerName;
-            option.text = engineerName;
-            currentEngineersSelect.appendChild(option);
-    
-            // **Update team.engineerNames in currentSystemData**
-            if (!team.engineerNames) {
-                team.engineerNames = engineerName;
-            } else {
-                const engineerList = team.engineerNames.split(',').map(name => name.trim());
-                engineerList.push(engineerName);
-                team.engineerNames = engineerList.join(', ');
-            }
-    
-            // Update team size
-            updateTeamSize(index, currentEngineersSelect.options.length);
-    
-            // Update available engineers in other teams...
-            updateAvailableEngineersInOtherTeams(engineerName, team.teamId);
-    
-            // Clear the input
-            newEngineerInput.value = '';
-        }
-    };
-
-        newEngineerInputContainer.appendChild(newEngineerInput);
-        newEngineerInputContainer.appendChild(addNewEngineerButton);
-
-        // Assemble the container
-        engineersContainer.style.display = 'flex';
-        engineersContainer.style.alignItems = 'center';
-        engineersContainer.appendChild(currentEngineersDiv);
-        engineersContainer.appendChild(engineersButtonsDiv);
-        engineersContainer.appendChild(availableEngineersDiv);
-
-        teamDetails.appendChild(engineersContainer);
-        teamDetails.appendChild(document.createElement('br'));
-        teamDetails.appendChild(newEngineerInputLabel);
-        teamDetails.appendChild(document.createElement('br'));
-        teamDetails.appendChild(newEngineerInputContainer);
-        teamDetails.appendChild(document.createElement('br'));
-
-        // **Save and Delete Buttons**
-        // Save Team Changes Button
+        // --- Action Buttons ---
         let saveButton = document.createElement('button');
         saveButton.type = 'button';
         saveButton.innerText = 'Save Team Changes';
-        saveButton.onclick = () => saveTeamChanges(index, teamHeader, team, uniqueEngineers);
-
+        saveButton.onclick = () => saveTeamChanges(index);
         teamDetails.appendChild(saveButton);
 
-        // Delete Team Button
         let deleteButton = document.createElement('button');
         deleteButton.type = 'button';
         deleteButton.innerText = 'Delete Team';
+        deleteButton.style.marginLeft = '10px';
+        deleteButton.style.color = 'red';
         deleteButton.onclick = () => deleteTeam(index);
-
         teamDetails.appendChild(deleteButton);
+        // --------------------
 
-        // Append to DOM
+
         teamDiv.appendChild(teamHeader);
         teamDiv.appendChild(teamDetails);
         teamsDiv.appendChild(teamDiv);
-    });
+    }); // End teams.forEach
 
-    // Event Listeners for Inputs
-    const inputs = teamsDiv.querySelectorAll('input, textarea, select');
-    inputs.forEach(input => {
+    // --- Helper Function Definitions --- (Keep createInputLabelPair, displaySeniorManagerAssignment, createDualListContainer from previous steps)
+     function createInputLabelPair(id, labelText, value, type = 'text', index, field) {
+        let div = document.createElement('div');
+        div.style.marginBottom = '10px';
+        let label = document.createElement('label');
+        label.htmlFor = id;
+        label.innerText = labelText;
+        label.style.display = 'block'; // Ensure label is above input
+
+        let input;
+        if (type === 'textarea') {
+             input = document.createElement('textarea');
+             input.rows = 2;
+             input.style.width = '90%';
+        } else {
+             input = document.createElement('input');
+             input.type = type;
+             if (type === 'number') {
+                 input.min = 0; // Prevent negative headcount
+             }
+             input.style.width = '90%';
+        }
+        input.id = id;
+        input.value = value;
+        input.setAttribute('data-team-index', index); // Keep team index for context
+        input.setAttribute('data-field', field);
+
         input.addEventListener('change', (event) => {
-            const index = event.target.getAttribute('data-team-index');
-            const field = event.target.getAttribute('data-field');
-            let value = event.target.value;
-
-            if (field === 'sizeOfTeam') {
-                value = parseInt(value, 10) || 1;
-            }
-
-            currentSystemData.teams[index][field] = value;
+             const teamIndex = parseInt(event.target.getAttribute('data-team-index'));
+             const fieldName = event.target.getAttribute('data-field');
+             let V = event.target.value;
+             if (event.target.type === 'number') {
+                 V = parseInt(V); // Parse as integer
+                 if (isNaN(V)) V = 0; // Default to 0 if parsing fails or empty
+             }
+             if (teamIndex >= 0 && teamIndex < (currentSystemData.teams || []).length) { // Added check for teams array
+                currentSystemData.teams[teamIndex][fieldName] = V;
+                // console.log(`Updated team ${teamIndex} field ${fieldName} to`, V); // Debug log
+             }
         });
-    });
-}
+
+        div.appendChild(label);
+        div.appendChild(input);
+        return div;
+    }
+    // -----------------------------------
+     function displaySeniorManagerAssignment(sdmSectionContainer, teamIndex, currentSdmId) {
+        // Find the specific container using teamIndex
+        let srMgrContainer = sdmSectionContainer.querySelector(`#srMgrAssignmentContainer_${teamIndex}`);
+        if (!srMgrContainer) {
+             console.error("Could not find Sr Mgr container for team index", teamIndex);
+             return;
+         }
+        srMgrContainer.innerHTML = ''; // Clear previous content
+        srMgrContainer.style.paddingLeft = '20px';
+
+        const currentSdm = allSdms.find(sdm => sdm && sdm.sdmId === currentSdmId);
+
+        if (!currentSdm) {
+            srMgrContainer.innerText = 'Assign an SDM to manage Senior Manager assignment.';
+            return; // No SDM assigned, nothing to show
+        }
+
+        let title = document.createElement('h6');
+        title.innerText = `Senior Manager for SDM: ${currentSdm.sdmName}`;
+        srMgrContainer.appendChild(title);
+
+        const currentSrMgr = allSeniorManagers.find(sr => sr && sr.seniorManagerId === currentSdm.seniorManagerId);
+
+        const srMgrDualList = createDualListContainer(
+            teamIndex, // Pass teamIndex for context if needed by callbacks
+            'Current Sr. Mgr:', 'Available Sr. Mgrs:',
+            currentSrMgr ? [{ value: currentSrMgr.seniorManagerId, text: currentSrMgr.seniorManagerName }] : [],
+            // FIX: Add .map() here
+            allSeniorManagers.filter(sr => sr && sr.seniorManagerId !== currentSdm.seniorManagerId)
+                             .map(sr => ({ value: sr.seniorManagerId, text: sr.seniorManagerName })), // Map to value/text
+            `currentSrMgr_${currentSdmId}`, // Field names specific to this SDM
+            `availableSrMgrs_${currentSdmId}`,
+            (movedSrMgrId, direction) => { // Callback on Sr Mgr move
+                // Find the SDM in the main data again to modify it
+                const sdmToUpdate = currentSystemData.sdms.find(s => s.sdmId === currentSdmId);
+                if (sdmToUpdate) {
+                     sdmToUpdate.seniorManagerId = (direction === 'add') ? movedSrMgrId : null;
+                     console.log(`Set Sr Mgr for SDM ${currentSdmId} to ${sdmToUpdate.seniorManagerId}`);
+                 }
+            },
+            false, // singleSelectLeft = true for current Sr Mgr
+            true, // Allow adding new Sr Mgrs
+            'Enter New Sr. Manager Name',
+            (newSrMgrName) => { // Callback for adding new Sr Mgr
+                if (!newSrMgrName || newSrMgrName.trim() === '') return null;
+                newSrMgrName = newSrMgrName.trim();
+                let existingSrMgr = allSeniorManagers.find(s => s && s.seniorManagerName.toLowerCase() === newSrMgrName.toLowerCase()); // check s
+                if (existingSrMgr) {
+                    alert(`Senior Manager "${newSrMgrName}" already exists.`);
+                    return null;
+                }
+                const newSrMgrId = 'srMgr-' + Date.now();
+                const newSrMgr = { seniorManagerId: newSrMgrId, seniorManagerName: newSrMgrName };
+                currentSystemData.seniorManagers.push(newSrMgr); // Add to main data
+                allSeniorManagers.push(newSrMgr); // Add to local copy
+                console.log("Added new Senior Manager:", newSrMgr);
+                return { value: newSrMgrId, text: newSrMgrName };
+            }
+        );
+        srMgrContainer.appendChild(srMgrDualList);
+     }
+    // -----------------------------------
+     function createDualListContainer(contextIndex, leftLabel, rightLabel, currentOptions, availableOptions, leftField, rightField, moveCallback, multiSelectLeft = true, allowAddNew = false, addNewPlaceholder = '', addNewCallback = null) {
+        let container = document.createElement('div');
+        container.className = 'dual-list-container'; // Add class for potential styling
+        container.style.display = 'flex';
+        container.style.alignItems = 'center'; // Align items vertically centered
+        container.style.marginBottom = '10px';
+
+        // Left List (Current)
+        let leftDiv = document.createElement('div');
+        leftDiv.style.flex = '1';
+        leftDiv.style.marginRight = '5px';
+        let currentLabel = document.createElement('label');
+        currentLabel.innerText = leftLabel;
+        currentLabel.style.display = 'block'; // Ensure label is above input
+        let currentSelect = document.createElement('select');
+        currentSelect.multiple = multiSelectLeft; // Control multi-select for left list
+        currentSelect.size = 5;
+        currentSelect.style.width = '100%';
+        currentSelect.setAttribute('data-list-context-index', contextIndex); // Use a generic index attribute
+        currentSelect.setAttribute('data-field', leftField);
+        (currentOptions || []).forEach(opt => currentSelect.appendChild(new Option(opt.text, opt.value)));
+        leftDiv.appendChild(currentLabel);
+        leftDiv.appendChild(currentSelect);
+
+        // Buttons
+        let buttonsDiv = document.createElement('div');
+        buttonsDiv.style.display = 'flex';
+        buttonsDiv.style.flexDirection = 'column';
+        buttonsDiv.style.alignItems = 'center';
+        buttonsDiv.style.margin = '0 5px'; // Margin around buttons
+        let removeBtn = document.createElement('button');
+        removeBtn.type = 'button'; removeBtn.innerHTML = '&gt;'; // Right arrow
+        removeBtn.title = 'Remove selected item(s)';
+        removeBtn.style.marginBottom = '5px'; // Space between buttons
+        let addBtn = document.createElement('button');
+        addBtn.type = 'button'; addBtn.innerHTML = '&lt;'; // Left arrow
+         addBtn.title = 'Add selected item(s)';
+
+
+        // Right List (Available)
+        let rightDiv = document.createElement('div');
+        rightDiv.style.flex = '1';
+        rightDiv.style.marginLeft = '5px';
+        let availableLabel = document.createElement('label');
+        availableLabel.innerText = rightLabel;
+        availableLabel.style.display = 'block'; // Ensure label is above input
+        let availableSelect = document.createElement('select');
+        availableSelect.multiple = true; // Available list always allows multiple selection
+        availableSelect.size = 5;
+        availableSelect.style.width = '100%';
+        availableSelect.setAttribute('data-list-context-index', contextIndex); // Use a generic index attribute
+        availableSelect.setAttribute('data-field', rightField);
+         (availableOptions || []).forEach(opt => availableSelect.appendChild(new Option(opt.text, opt.value)));
+        rightDiv.appendChild(availableLabel);
+        rightDiv.appendChild(availableSelect);
+
+         // Add New Item Input/Button (Optional - Appended Below Right List)
+         let addNewContainer = null;
+         if (allowAddNew && addNewCallback) {
+            addNewContainer = document.createElement('div');
+            addNewContainer.style.marginTop = '5px';
+            addNewContainer.style.display = 'flex'; // Align input and button
+            let addNewInput = document.createElement('input');
+            addNewInput.type = 'text';
+            addNewInput.placeholder = addNewPlaceholder;
+            addNewInput.style.flexGrow = '1'; // Input takes available space
+            addNewInput.style.marginRight = '5px';
+            let addNewBtn = document.createElement('button');
+            addNewBtn.type = 'button';
+            addNewBtn.innerText = 'Add';
+            addNewBtn.onclick = (e) => {
+                e.preventDefault(); // Prevent potential form submission
+                const newItemData = addNewCallback(addNewInput.value); // Call the specific add logic
+                if (newItemData && newItemData.value && newItemData.text) { // If callback returns a valid option object
+                     const exists = Array.from(availableSelect.options).some(opt => opt.value === newItemData.value) ||
+                                   Array.from(currentSelect.options).some(opt => opt.value === newItemData.value);
+                     if (!exists) {
+                        availableSelect.appendChild(new Option(newItemData.text, newItemData.value));
+                     } else if (!newItemData.preventAdd) {
+                        console.warn("Item already exists in lists:", newItemData.text);
+                     }
+                     addNewInput.value = '';
+                 } else if (newItemData && newItemData.preventAdd) {
+                     addNewInput.value = '';
+                 }
+            };
+            addNewContainer.appendChild(addNewInput);
+            addNewContainer.appendChild(addNewBtn);
+            rightDiv.appendChild(addNewContainer);
+         }
+
+
+        // Button Actions
+        removeBtn.onclick = (e) => {
+             e.preventDefault();
+            Array.from(currentSelect.selectedOptions).forEach(option => {
+                availableSelect.appendChild(option); // Move to available
+                moveCallback(option.value, 'remove', contextIndex); // Notify caller, pass context index
+            });
+        };
+        addBtn.onclick = (e) => {
+             e.preventDefault();
+            Array.from(availableSelect.selectedOptions).forEach(option => {
+                 if (!multiSelectLeft) { // If left list is single select
+                     while (currentSelect.options.length > 0) {
+                        let existingOption = currentSelect.options[0];
+                        availableSelect.appendChild(existingOption); // Move back to available
+                        moveCallback(existingOption.value, 'remove', contextIndex); // Notify removal
+                     }
+                 }
+                 currentSelect.appendChild(option); // Move selected to current
+                 moveCallback(option.value, 'add', contextIndex); // Notify caller, pass context index
+            });
+        };
+
+        buttonsDiv.appendChild(addBtn); // Add button (<) first visually
+        buttonsDiv.appendChild(removeBtn); // Then Remove button (>)
+        container.appendChild(leftDiv);
+        container.appendChild(buttonsDiv);
+        container.appendChild(rightDiv);
+
+        return container;
+    } // --- End createDualListContainer ---
+
+
+} // --- End displayTeamsForEditing ---
 
 function updateTeamSize(teamIndex, newSize) {
     currentSystemData.teams[teamIndex].sizeOfTeam = newSize;
@@ -2741,79 +2741,45 @@ function validateTeamChanges() {
 }
 
 
-function saveTeamChanges(index, teamHeader, team, uniqueEngineers) {
-  if (currentMode === Modes.CREATING || currentMode === Modes.EDITING) {
-      // Validate required fields
-      if (!team.teamIdentity || !team.teamName) {
-          alert('Team Identity and Team Name are required.');
-          return;
-      }
-  
-      // SDM assignment is already handled in the UI interactions
-      // Verify that team.sdmId corresponds to an existing SDM
-      if (team.sdmId) {
-          let sdm = currentSystemData.sdms.find(s => s.sdmId === team.sdmId);
-          if (!sdm) {
-              alert(`Assigned SDM with ID "${team.sdmId}" not found.`);
-              return;
-          }
-      }
-  
-      // Handle new PMT
-      // PMT assignment is already handled in the UI interactions
-      // Verify that team.pmtId corresponds to an existing PMT
-      if (team.pmtId) {
-          let pmt = currentSystemData.pmts.find(p => p.pmtId === team.pmtId);
-          if (!pmt) {
-              alert(`Assigned PMT with ID "${team.pmtId}" not found.`);
-              return;
-          }
-      } else {
-          // No PMT assigned
-          team.pmtId = null;
-      }
-  
-      const teamDiv = document.querySelectorAll('.team-edit')[index];
-      // Update services owned
-      const currentServicesSelect = teamDiv.querySelector('select[data-field="currentServices"]');
-      const teamServices = Array.from(currentServicesSelect.options).map(option => option.value);
-  
-      // Update owningTeamId for services in currentSystemData.services
-      currentSystemData.services.forEach(service => {
-          if (teamServices.includes(service.serviceName)) {
-              service.owningTeamId = team.teamId;
-          }
-      });
-      
-      // Update engineer names
-      const currentEngineersSelect = teamDiv.querySelector('select[data-field="currentEngineers"]');
-      const teamEngineers = Array.from(currentEngineersSelect.options).map(option => option.value);
-      team.engineerNames = teamEngineers.join(', ');
-  
-      // Update team size
-      team.sizeOfTeam = teamEngineers.length;
-  
-      // Update the header to reflect any changes in team identity
-      teamHeader.childNodes[1].nodeValue = `Team: ${team.teamIdentity}`;
-  
-      // **Save currentSystemData to local storage**
-      const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
-      systems[currentSystemData.systemName] = currentSystemData;
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
-  
-      alert('Team changes saved.');
-  
-      // **Update the Team Breakdown and Service Dependencies Tables**
-      generateTeamTable(currentSystemData);
-      generateServiceDependenciesTable();
-      
-      // Refresh the teams editing interface to reflect changes
-      displayTeamsForEditing(currentSystemData.teams, index);
-  } else {
-      alert('Cannot save team changes in the current mode.');
-  }
-}
+/** Updated Save Team Changes **/
+/** Updated Save Team Changes - Add Validation **/
+function saveTeamChanges(index) {
+    if (!currentSystemData || !currentSystemData.teams || index >= currentSystemData.teams.length) {
+        console.error("Cannot save team, invalid index or data:", index);
+        return;
+    }
+    const team = currentSystemData.teams[index];
 
+    // Recalculate BIS before validation/save
+    team.buildersInSeats = team.engineers ? team.engineers.length : 0;
+
+    // Validate required fields for this team
+    if (!team.teamIdentity || !team.teamName) {
+        alert('Team Identity and Team Name are required.');
+        return; // Don't proceed if basic info missing
+    }
+
+    // *** Add cross-team validation before saving system state ***
+    if (!validateEngineerAssignments()) {
+        return; // Stop saving if validation fails
+    }
+    // *********************************************************
+
+    console.log("Saving changes for team (via saveSystemChanges):", JSON.stringify(team, null, 2));
+
+    // Save the entire system data to local storage
+    saveSystemChanges(); // This function now also includes validation internally
+
+    // Update UI
+    generateTeamTable(currentSystemData);
+    generateTeamVisualization(currentSystemData);
+
+    alert(`Changes for team "${team.teamName || team.teamIdentity}" potentially saved (system state saved).`);
+
+    // Optionally collapse edit section (unchanged)
+    const teamDivs = document.querySelectorAll('#teamsManagement .team-edit');
+    if(index < teamDivs.length) { /* ... collapse logic ... */ }
+}
 
 
 /** Display Services for Editing **/
@@ -3715,35 +3681,36 @@ function deleteApi(serviceIndex, apiIndex, containerId) {
 
 /** Add New Team **/
 
+/** Updated Add New Team **/
 function addNewTeam() {
-    // Generate a unique teamId
-    const teamIds = currentSystemData.teams.map(team => team.teamId);
-    let newTeamId;
-    let idCounter = 1; // Start from 1 if no teams exist
-    do {
-        newTeamId = 'team' + idCounter++;
-    } while (teamIds.includes(newTeamId));
+    // Generate a unique teamId (simple approach for now)
+    const newTeamId = 'team-' + Date.now();
 
-    // Create a new team object with default values
+    // Create a new team object with the updated default structure
     const newTeam = {
         teamId: newTeamId,
-        teamName: '',
-        teamIdentity: '',
-        sizeOfTeam: 0,
-        engineerNames: '',
-        sdmId: '',
-        sdmName: '',
-        pmtId: '',
-        pmtName: ''
+        teamName: '', // Blank initially
+        teamIdentity: '', // Blank initially
+        teamDescription: '', // Added field
+        fundedHeadcount: 0, // Default funded HC
+        buildersInSeats: 0, // Default BIS (no engineers yet)
+        engineers: [], // Start with an empty array for engineers
+        sdmId: null, // No default SDM assigned
+        pmtId: null  // No default PMT assigned
+        // Removed sdmName, pmtName as they are derived via IDs
     };
 
     // Add to the system data
+    if (!currentSystemData.teams) {
+        currentSystemData.teams = [];
+    }
     currentSystemData.teams.push(newTeam);
 
     // Get the index of the newly added team
     const newTeamIndex = currentSystemData.teams.length - 1;
 
     // Refresh the team editing display and expand the new team
+    // Pass -1 if displayTeamsForEditing doesn't handle expansion correctly, or pass newTeamIndex
     displayTeamsForEditing(currentSystemData.teams, newTeamIndex);
 }
 
@@ -3951,6 +3918,9 @@ function exitEditMode() {
       document.getElementById('pageTitle').innerText = currentSystemData.systemName;
       document.getElementById('systemDescription').innerText = currentSystemData.systemDescription || '';
       
+      document.getElementById('organogramView').style.display = 'none';
+      document.getElementById('engineerTableView').style.display = 'none';
+      
       // Show the "Edit System" button
       document.querySelector('.edit-menu').style.display = 'block';
   
@@ -3960,82 +3930,94 @@ function exitEditMode() {
 }
 
 /** 09/28 Worked on CreateNewSystem workflows **/
-/** Function to handle "Create New Software System" button click **/
-
+/** Updated function to handle "Create New Software System" button click **/
 function createNewSystem() {
-  currentMode = Modes.CREATING;  
-  
-  // Default SDMs Data
-  const defaultSDMsData = [
-      { sdmId: 'sdm1', sdmName: 'Enter SDM Name Here' }
-  ];
-  
-  // Default PMTs Data
-  const defaultPMTsData = [
-      { pmtId: 'pmt1', pmtName: 'Enter PMT Name Here' }
-  ];
-  
-  // Default Teams Data
-  const defaultTeamsData = [
-      {
-          teamId: 'team1',
-          teamName: 'Enter Team Name Here',
-          teamIdentity: 'Enter Team Identity Here',
-          teamDescription: 'Enter Team Description Here...',
-          sizeOfTeam: 1, // Placeholder for team size
-          engineerNames: 'Enter Engineer Names Here...',
-          sdmId: 'sdm1', // Reference to the default SDM
-          pmtId: 'pmt1'  // Reference to the default PMT
-      }
-  ];
-  
-  // Default Services Data
-  const defaultServicesData = [
-      {
-          serviceName: 'Enter Service Name Here',
-          serviceDescription: 'Enter Service Description Here...',
-          owningTeamId: 'team1', // Reference to the default Team
-          apis: [
-              {
-                  apiName: 'Enter API Name Here',
-                  apiDescription: 'Enter API Description Here...',
-                  dependentApis: []
-              }
-          ],
-          serviceDependencies: [],
-          platformDependencies: ['Enter Platform Dependency Here']
-      }
-  ];
+    currentMode = Modes.CREATING;
 
-  // Default System Data
-  const defaultSystemData = {
-      systemName: 'Enter System Name Here',
-      systemDescription: 'Enter System Description Here...',
-      sdms: defaultSDMsData,
-      pmts: defaultPMTsData,
-      teams: defaultTeamsData,
-      services: defaultServicesData,
-      platformDependencies: ['Enter Platform Dependency Here']
-  };
-  
-  // Assign to currentSystemData
-  currentSystemData = defaultSystemData;
+    // Default Senior Managers Data
+    const defaultSeniorManagersData = [
+        { seniorManagerId: 'srMgr1', seniorManagerName: 'Enter Sr. Manager Name Here' }
+    ];
+
+    // Default SDMs Data (with seniorManagerId)
+    const defaultSDMsData = [
+        { sdmId: 'sdm1', sdmName: 'Enter SDM Name Here', seniorManagerId: 'srMgr1' } // Added seniorManagerId
+    ];
+
+    // Default PMTs Data
+    const defaultPMTsData = [
+        { pmtId: 'pmt1', pmtName: 'Enter PMT Name Here' }
+    ];
+
+    // Default Teams Data (using new structure)
+    const defaultTeamsData = [
+        {
+            teamId: 'team1', // Will be regenerated on save if needed, but useful for default service
+            teamName: 'Enter Team Name Here',
+            teamIdentity: 'Enter Team Identity Here',
+            teamDescription: 'Enter Team Description Here...', // Added description field based on usage elsewhere
+            fundedHeadcount: 1, // Example default
+            buildersInSeats: 1, // Matches the single default engineer
+            engineers: [ // Changed from engineerNames string to engineers array
+                { name: 'Enter Engineer Name Here', level: 2 } // Example default engineer with level
+            ],
+            sdmId: 'sdm1', // Reference to the default SDM
+            pmtId: 'pmt1'  // Reference to the default PMT
+        }
+    ];
+
+    // Default Services Data
+    const defaultServicesData = [
+        {
+            serviceName: 'Enter Service Name Here',
+            serviceDescription: 'Enter Service Description Here...',
+            owningTeamId: 'team1', // Reference to the default Team
+            apis: [
+                {
+                    apiName: 'Enter API Name Here',
+                    apiDescription: 'Enter API Description Here...',
+                    dependentApis: []
+                }
+            ],
+            serviceDependencies: [],
+            platformDependencies: ['Enter Platform Dependency Here']
+        }
+    ];
+
+    // Default System Data (including seniorManagers)
+    const defaultSystemData = {
+        systemName: '', // Start blank, user must enter in form
+        systemDescription: '', // Start blank, user must enter in form
+        seniorManagers: defaultSeniorManagersData, // Added
+        sdms: defaultSDMsData,
+        pmts: defaultPMTsData,
+        teams: defaultTeamsData,
+        services: defaultServicesData,
+        platformDependencies: ['Enter Platform Dependency Here'] // This will be rebuilt anyway
+    };
+
+    // Assign to currentSystemData
+    currentSystemData = defaultSystemData;
 
     // Clear the page title and description
     document.getElementById('pageTitle').innerText = 'Create New Software System';
-    document.getElementById('systemDescription').innerText = '';
+    document.getElementById('systemDescription').innerText = 'Define the new system details, services, and teams below.';
 
     // Hide the menu and other sections
     document.querySelector('.menu').style.display = 'none';
     document.getElementById('visualization').style.display = 'none';
     document.getElementById('teamVisualization').style.display = 'none';
     document.getElementById('teamBreakdown').style.display = 'none';
+    document.getElementById('serviceRelationshipsVisualization').style.display = 'none';
+    document.getElementById('dependencyVisualization').style.display = 'none';
+    document.getElementById('serviceDependenciesTable').style.display = 'none';
     document.querySelector('.edit-menu').style.display = 'none';
-    document.getElementById('systemEditForm').style.display = 'none';
+    document.getElementById('systemEditForm').style.display = 'none'; // Hide initially
 
-    // Display the system information for editing
-   enterEditMode(true);
-    
+    document.getElementById('organogramView').style.display = 'none';
+    document.getElementById('engineerTableView').style.display = 'none';
+    // Display the system information for editing using the standard edit mode function
+    enterEditMode(true); // Pass true flag for creation mode
 }
 
 function returnToHome() {
@@ -4051,6 +4033,9 @@ function returnToHome() {
     document.getElementById('dependencyVisualization').style.display = 'none'; // Corrected ID    
     document.getElementById('serviceDependenciesTable').style.display = 'none'; // Hide the new table
     document.querySelector('.edit-menu').style.display = 'none';
+
+    document.getElementById('organogramView').style.display = 'none';
+    document.getElementById('engineerTableView').style.display = 'none';    
 
     // Show the main menu
     document.querySelector('.menu').style.display = 'block';
@@ -4931,31 +4916,81 @@ function generateServiceDependenciesTable() {
     });
 }
 
+/** NEW Validation function to check engineer assignments */
+function validateEngineerAssignments() {
+    if (!currentSystemData || !currentSystemData.teams) {
+        console.error("Validation skipped: No team data loaded.");
+        return true; // Allow saving if no data? Or return false? Safer to allow.
+    }
+
+    const engineerAssignments = new Map(); // Key: engineerName, Value: Set<teamId>
+    let isValid = true;
+    let errorMessages = [];
+
+    currentSystemData.teams.forEach(team => {
+        if (!team || !team.teamId) return; // Skip invalid team entries
+        (team.engineers || []).forEach(engineer => {
+            if (!engineer || !engineer.name) return; // Skip invalid engineer entries
+            const name = engineer.name;
+            if (!engineerAssignments.has(name)) {
+                engineerAssignments.set(name, new Set());
+            }
+            engineerAssignments.get(name).add(team.teamId);
+        });
+    });
+
+    // Check for overallocations
+    engineerAssignments.forEach((assignedTeamIds, engineerName) => {
+        if (assignedTeamIds.size > 1) {
+            isValid = false;
+            const teamNames = Array.from(assignedTeamIds).map(tId => {
+                const team = currentSystemData.teams.find(t => t.teamId === tId);
+                return team ? (team.teamName || team.teamIdentity) : tId;
+            }).join(', ');
+            errorMessages.push(`Engineer "${engineerName}" is assigned to multiple teams: ${teamNames}.`);
+        }
+    });
+
+    if (!isValid) {
+        alert("Validation Error: Cannot save changes.\n\n" + errorMessages.join("\n"));
+    }
+
+    return isValid;
+}
+
+/** Updated Save System Changes (used by Save All/Save Team) - Add Validation **/
 function saveSystemChanges() {
-    // Get updated system name and description
+    // Get updated system name and description (if called directly, maybe redundant)
     const systemNameInput = document.getElementById('systemNameInput');
     const systemDescriptionTextarea = document.getElementById('systemDescriptionInput');
+    if (systemNameInput && systemDescriptionTextarea) { // Check if elements exist
+         currentSystemData.systemName = systemNameInput.value.trim();
+         currentSystemData.systemDescription = systemDescriptionTextarea.value.trim();
+    } else if (currentMode === Modes.CREATING || currentMode === Modes.EDITING) {
+         // If called during saveAll/saveTeam, these might not be the source of truth anymore
+         console.warn("saveSystemChanges called without direct access to system name/desc inputs. Assuming currentSystemData properties are up-to-date.");
+    }
 
-    currentSystemData.systemName = systemNameInput.value.trim();
-    currentSystemData.systemDescription = systemDescriptionTextarea.value.trim();
 
-    if (!currentSystemData.systemName) {
+    if (!currentSystemData.systemName && (currentMode === Modes.CREATING || currentMode === Modes.EDITING)) {
         alert('System name cannot be empty.');
         return;
     }
 
+    // *** Add validation before saving to local storage ***
+    if (!validateEngineerAssignments()) {
+        return; // Stop saving if validation fails
+    }
+    // *********************************************************
+
     // Save currentSystemData to local storage
     const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
-    systems[currentSystemData.systemName] = currentSystemData;
+    systems[currentSystemData.systemName] = currentSystemData; // Use potentially updated name as key
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
 
-    alert('System changes saved.');
+    console.log('System changes saved to local storage.'); // Changed alert to console log
 
-    // Update UI components
-    generateTeamTable(currentSystemData);
-    generateServiceDependenciesTable();
-    updateServiceVisualization();
-    updateDependencyVisualization();
+    // Note: UI updates are typically handled by the calling function (like saveTeamChanges or exitEditMode)
 }
 
 // Generate a unique ID for new teams
@@ -4988,6 +5023,301 @@ function deleteSystem() {
     } else {
         alert('No system is currently loaded.');
     }
+}
+
+/** Builds hierarchical data for D3 org chart */
+function buildHierarchyData() {
+    if (!currentSystemData) return null;
+
+    // Create maps for efficient lookup
+    const sdmMap = new Map((currentSystemData.sdms || []).map(sdm => [sdm.sdmId, { ...sdm, children: [] }]));
+    const srMgrMap = new Map((currentSystemData.seniorManagers || []).map(sr => [sr.seniorManagerId, { ...sr, children: [] }]));
+
+    // Nest SDMs under Senior Managers
+    sdmMap.forEach(sdm => {
+        if (sdm.seniorManagerId && srMgrMap.has(sdm.seniorManagerId)) {
+            srMgrMap.get(sdm.seniorManagerId).children.push(sdm);
+        } else {
+            // Handle SDMs without a valid Senior Manager (add to a default 'unassigned' Sr Mgr?)
+            const unassignedSrMgrKey = 'unassigned-sr-mgr';
+            if (!srMgrMap.has(unassignedSrMgrKey)) {
+                srMgrMap.set(unassignedSrMgrKey, { seniorManagerId: unassignedSrMgrKey, seniorManagerName: 'Unassigned Senior Manager', children: [] });
+            }
+             // Only add if SDM itself is valid
+            if(sdm && sdm.sdmId) srMgrMap.get(unassignedSrMgrKey).children.push(sdm);
+        }
+    });
+
+    // Nest Teams under SDMs
+    (currentSystemData.teams || []).forEach(team => {
+        const teamNode = {
+            name: team.teamIdentity || team.teamName, // Use Identity primarily
+            type: 'team',
+            details: `BIS: ${team.buildersInSeats ?? 'N/A'} / Funded: ${team.fundedHeadcount ?? 'N/A'}`,
+            children: (team.engineers || []).map(eng => ({
+                name: `${eng.name || 'Unnamed'} (L${eng.level ?? '?'})`,
+                type: 'engineer'
+            }))
+        };
+
+        if (team.sdmId && sdmMap.has(team.sdmId)) {
+            sdmMap.get(team.sdmId).children.push(teamNode);
+        } else {
+            // Handle Teams without a valid SDM
+            const unassignedSdmKey = 'unassigned-sdm';
+             if (!sdmMap.has(unassignedSdmKey)) {
+                 sdmMap.set(unassignedSdmKey, { sdmId: unassignedSdmKey, sdmName: 'Unassigned SDM', children: [] });
+                 // Add this unassigned SDM group under the unassigned Sr Mgr group for structure
+                 const unassignedSrMgrKey = 'unassigned-sr-mgr';
+                 if (!srMgrMap.has(unassignedSrMgrKey)) {
+                     srMgrMap.set(unassignedSrMgrKey, { seniorManagerId: unassignedSrMgrKey, seniorManagerName: 'Unassigned Senior Manager', children: [] });
+                 }
+                  srMgrMap.get(unassignedSrMgrKey).children.push(sdmMap.get(unassignedSdmKey));
+             }
+             // Only add team if it's valid
+            if(team && team.teamId) sdmMap.get(unassignedSdmKey).children.push(teamNode);
+        }
+    });
+
+    // Define the root node
+    const root = {
+        name: currentSystemData.systemName || 'Organization',
+        type: 'root',
+        children: Array.from(srMgrMap.values()) // Use Sr Mgrs as top-level children
+    };
+
+    return root;
+}
+
+/** Generates the Organogram using HTML structure (Replaces D3 version) */
+/** REVISED Generates the Organogram using HTML structure - Fix Team Node String */
+function generateOrganogram() {
+    const hierarchicalData = buildHierarchyData(); // Reuse data transformation
+    const container = document.getElementById('organogramContent');
+    if (!hierarchicalData || !container) {
+        console.error("No data or container for organogram HTML.");
+        if(container) container.innerHTML = '<p style="color: red;">Could not generate organogram data.</p>';
+        return;
+    }
+    container.innerHTML = ''; // Clear previous content
+
+    // Recursive function to build nested HTML (using lists for structure)
+    function buildHtmlLevel(node, level) {
+        if (!node) return '';
+
+        let html = `<div class="org-level-${level}" style="margin-left: ${level * 25}px; margin-bottom: 5px; padding: 5px; border-left: 2px solid #eee;">`; // Increased indent
+        let nodeContent = '';
+
+        // Define content based on node type
+        switch(node.type) {
+            case 'root':
+                nodeContent = `<strong>System: ${node.name || 'N/A'}</strong>`;
+                break;
+            case 'srMgr':
+                 nodeContent = `<strong style="color: #0056b3; font-size: 1.1em;">Sr. Manager: ${node.seniorManagerName || node.name || 'N/A'}</strong>`; // Slightly larger
+                break;
+            case 'sdm':
+                 nodeContent = `<strong style="color: #007bff;">SDM: ${node.sdmName || node.name || 'N/A'}</strong>`;
+                break;
+            case 'team':
+                // *** FIX: Use string concatenation instead of template literal ***
+                nodeContent = '<span style="color: #17a2b8;">Team: ' + (node.name || 'N/A') + ' (' + (node.details || '') + ')</span>';
+                // *************************************************************
+                break;
+            case 'engineer':
+                nodeContent = `<span style="font-size: 0.9em;">${node.name || 'N/A'}</span>`;
+                break;
+            default: // Handle unassigned groups etc.
+                 nodeContent = `<strong>${node.name || 'Group'}</strong>`;
+        }
+
+        html += nodeContent;
+
+        // Recursively add children
+        if (node.children && node.children.length > 0) {
+             // For teams, display engineers comma-separated below
+             if (node.type === 'team') {
+                 html += '<div style="margin-left: 15px; font-size: 0.9em; color: #555;">'; // Indent engineers slightly
+                 html += node.children.map(child => `<span>${child.name || 'N/A'}</span>`).join(', ');
+                 html += '</div>';
+             } else {
+                 // Standard recursive build for other levels
+                  node.children.forEach(child => {
+                      // Assign type if missing from buildHierarchyData
+                      if (!child.type) {
+                          if (level === 0) child.type = 'srMgr';
+                          else if (level === 1) child.type = 'sdm';
+                          else if (level === 2) child.type = 'team';
+                      }
+                     html += buildHtmlLevel(child, level + 1);
+                  });
+             }
+        }
+        html += `</div>`;
+        return html;
+    }
+
+    // Start building from the root (level 0)
+    container.innerHTML = buildHtmlLevel(hierarchicalData, 0);
+}
+
+// Global state for engineer table sorting
+let engineerSortState = { key: 'name', ascending: true };
+
+/** Generates the HTML table for engineers */
+/** REVISED Generates the HTML table for engineers - Updated Heading */
+function generateEngineerTable() {
+    if (!currentSystemData || !currentSystemData.teams) {
+        console.error("Cannot generate engineer table: No data loaded.");
+         // Clear table and show error in heading if possible
+         const heading = document.getElementById('engineerTableHeading');
+         if(heading) heading.innerText = 'Engineer Resource List (Error: No Data)';
+         const tableBody = document.querySelector('#engineerTable tbody');
+         if(tableBody) tableBody.innerHTML = '';
+        return;
+    }
+
+    const tableBody = document.querySelector('#engineerTable tbody');
+    const heading = document.getElementById('engineerTableHeading');
+    tableBody.innerHTML = ''; // Clear existing rows
+
+    // --- Data Preparation & Totals Calculation ---
+    let engineerListData = [];
+    let totalBIS = 0;
+    let totalFundedHC = 0; // Initialize Funded HC total
+    const sdmsMap = new Map((currentSystemData.sdms || []).map(s => [s.sdmId, s]));
+    const srMgrsMap = new Map((currentSystemData.seniorManagers || []).map(s => [s.seniorManagerId, s]));
+
+    currentSystemData.teams.forEach(team => {
+        const currentBIS = team.buildersInSeats ?? (team.engineers?.length ?? 0); // Use calculated BIS
+        const currentFunded = team.fundedHeadcount ?? 0; // Use funded HC
+        totalBIS += currentBIS;
+        totalFundedHC += currentFunded; // Sum Funded HC
+
+        (team.engineers || []).forEach(eng => {
+            if (!eng || !eng.name) return;
+
+            const sdm = team.sdmId ? sdmsMap.get(team.sdmId) : null;
+            const srMgr = sdm ? srMgrsMap.get(sdm.seniorManagerId) : null;
+
+            engineerListData.push({
+                name: eng.name,
+                level: eng.level ?? 'N/A',
+                teamName: team.teamName || team.teamIdentity || 'N/A',
+                sdmName: sdm ? sdm.sdmName : 'N/A',
+                srMgrName: srMgr ? srMgr.seniorManagerName : 'N/A'
+            });
+        });
+    });
+    const totalGap = totalFundedHC - totalBIS; // Calculate Gap
+    // --------------------------------------------
+
+    // --- Update Heading with All Totals ---
+    heading.innerText = `Engineer Resource List (Funded: ${totalFundedHC}, BIS: ${totalBIS}, Gap: ${totalGap})`;
+    // Optional: Style heading based on gap
+    heading.style.color = totalGap < 0 ? 'red' : (totalGap > 0 ? 'darkorange' : 'green');
+    // -------------------------------------
+
+    // --- Sorting (Unchanged from previous version) ---
+    engineerListData.sort((a, b) => {
+        const key = engineerSortState.key;
+        const ascending = engineerSortState.ascending;
+        let valA = a[key];
+        let valB = b[key];
+
+        if (key === 'level') {
+             valA = (typeof valA === 'number') ? valA : -1;
+             valB = (typeof valB === 'number') ? valB : -1;
+             return ascending ? valA - valB : valB - valA;
+         }
+
+         valA = (valA || '').toString().toLowerCase();
+         valB = (valB || '').toString().toLowerCase();
+
+         if (valA < valB) return ascending ? -1 : 1;
+         if (valA > valB) return ascending ? 1 : -1;
+         return 0;
+     });
+    // -------------
+
+    // --- Populate Table (Unchanged from previous version) ---
+    engineerListData.forEach(engData => {
+        let row = tableBody.insertRow();
+        row.insertCell().textContent = engData.name;
+        row.insertCell().textContent = engData.level;
+        row.insertCell().textContent = engData.teamName;
+        row.insertCell().textContent = engData.sdmName;
+        row.insertCell().textContent = engData.srMgrName;
+    });
+    // --------------------
+
+    // --- Add Sorting Click Handlers (Unchanged from previous version) ---
+     document.querySelectorAll('#engineerTable th[data-sort-key]').forEach(th => {
+         th.removeEventListener('click', handleSortClick);
+         th.addEventListener('click', handleSortClick);
+
+         const key = th.getAttribute('data-sort-key');
+         let indicator = ' \u2195';
+         if (key === engineerSortState.key) {
+             indicator = engineerSortState.ascending ? ' \u25B2' : ' \u25BC';
+         }
+         th.textContent = th.textContent.replace(/ [\u2195\u25B2\u25BC]/g, '') + indicator;
+     });
+    // -----------------------------
+}
+
+// Keep handleSortClick, showOrganogramView, showEngineerTableView functions as they were.
+// Make sure buildHierarchyData also still exists.
+
+/** Handles clicking on sortable table headers */
+function handleSortClick(event) {
+    const key = event.target.getAttribute('data-sort-key');
+    if (!key) return;
+
+    if (engineerSortState.key === key) {
+        engineerSortState.ascending = !engineerSortState.ascending; // Toggle direction
+    } else {
+        engineerSortState.key = key; // Change sort key
+        engineerSortState.ascending = true; // Default to ascending
+    }
+    generateEngineerTable(); // Re-generate table with new sort order
+}
+
+
+/** Shows the Organogram View */
+function showOrganogramView() {
+    // Hide other views
+    document.getElementById('visualization').style.display = 'none';
+    document.getElementById('teamVisualization').style.display = 'none';
+    document.getElementById('teamBreakdown').style.display = 'none';
+    document.getElementById('serviceRelationshipsVisualization').style.display = 'none';
+    document.getElementById('dependencyVisualization').style.display = 'none';
+    document.getElementById('serviceDependenciesTable').style.display = 'none';
+    document.getElementById('systemEditForm').style.display = 'none';
+    document.getElementById('engineerTableView').style.display = 'none'; // Hide engineer table
+
+    // Generate and show organogram
+    generateOrganogram();
+    document.getElementById('organogramView').style.display = 'block';
+    document.querySelector('.edit-menu').style.display = 'block'; // Keep view buttons visible
+}
+
+/** Shows the Engineer Table View */
+function showEngineerTableView() {
+    // Hide other views
+    document.getElementById('visualization').style.display = 'none';
+    document.getElementById('teamVisualization').style.display = 'none';
+    document.getElementById('teamBreakdown').style.display = 'none';
+    document.getElementById('serviceRelationshipsVisualization').style.display = 'none';
+    document.getElementById('dependencyVisualization').style.display = 'none';
+    document.getElementById('serviceDependenciesTable').style.display = 'none';
+    document.getElementById('systemEditForm').style.display = 'none';
+    document.getElementById('organogramView').style.display = 'none'; // Hide organogram
+
+    // Generate and show engineer table
+    generateEngineerTable(); // Generate with default sort
+    document.getElementById('engineerTableView').style.display = 'block';
+    document.querySelector('.edit-menu').style.display = 'block'; // Keep view buttons visible
 }
 
 
