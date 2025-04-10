@@ -459,6 +459,9 @@
     <h2 id="planningViewTitle">Yearly Planning View</h2>
     <div id="planningCapacitySummary" style="margin-bottom: 15px; font-weight: bold;">
         </div>
+   <div style="margin-bottom: 15px;">
+        <button type="button" id="savePlanButton" style="padding: 8px 12px; background-color: #007bff; color: white; border: none; cursor: pointer;">Save Current Plan Order & Estimates</button>
+    </div>        
     <div id="planningTableContainer">
         </div>
     <div id="addInitiativeSection" style="margin-top: 20px; padding: 15px; border: 1px solid #ccc;">
@@ -5461,7 +5464,14 @@ function showPlanningView() {
          if (addInitButton && !addInitButton.hasAttribute('data-listener-attached')) {
             addInitButton.addEventListener('click', handleAddInitiative);
             addInitButton.setAttribute('data-listener-attached', 'true'); // Prevent multiple listeners
-         }        
+         }     
+
+         // *** ADD LISTENER FOR SAVE PLAN BUTTON ***
+         const savePlanButton = document.getElementById('savePlanButton');
+         if (savePlanButton && !savePlanButton.hasAttribute('data-listener-attached')) {
+            savePlanButton.addEventListener('click', handleSavePlan);
+            savePlanButton.setAttribute('data-listener-attached', 'true');
+         }         
     } else {
         console.error("Planning view container not found!");
     }
@@ -5598,6 +5608,46 @@ function handleAddInitiative() {
     generatePlanningTable();
 }
 
+/** Handles clicking the 'Save Current Plan' button */
+function handleSavePlan() {
+    console.log("Attempting to save plan from planning view...");
+
+    if (!currentSystemData || !currentSystemData.systemName) {
+        alert("Cannot save plan: No system data loaded or system name is missing.");
+        return;
+    }
+
+    // --- Perform Pre-Save Actions ---
+    // Ensure global platform dependencies reflect assignments before saving
+    buildGlobalPlatformDependencies();
+    // Validate engineer assignments (important if edits happened elsewhere)
+    if (!validateEngineerAssignments()) {
+        // Validation function already shows an alert
+        return;
+    }
+    // Add any other planning-specific validations here if needed later
+    // --- End Pre-Save Actions ---
+
+
+    // --- Save the ENTIRE currentSystemData object to Local Storage ---
+    // The yearlyInitiatives array within currentSystemData should reflect the current order and estimates.
+    try {
+        const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
+        const systemNameKey = currentSystemData.systemName; // Use the name stored in the data
+
+        // Save the current data under its name
+        systems[systemNameKey] = currentSystemData;
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
+
+        alert(`Plan for system "${systemNameKey}" saved successfully.`);
+        console.log('System changes saved to local storage via Save Plan button.');
+
+    } catch (error) {
+        console.error("Error saving system to local storage:", error);
+        alert("An error occurred while trying to save the plan. Please check the console for details.");
+    }
+    // ---------------------------------------------------------------
+}
 
 
 // Attach functions to the global window object
