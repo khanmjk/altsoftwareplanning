@@ -266,7 +266,15 @@
           #engineerTable tr:nth-child(even) {
               background-color: #f9f9f9;
           }          
-          
+          /* Also add some basic CSS for visual feedback (place within the <style> tag) */
+          /* Add styles for drag-and-drop feedback */
+          #planningTableBody tr.dragging {
+              opacity: 0.5;
+              border: 2px dashed #ccc;
+          }
+          #planningTableBody tr.drag-over {
+              border-top: 2px solid blue; /* Highlight where it will drop */
+          }          
           
           
           /* Add any additional styles as needed */          
@@ -454,8 +462,38 @@
     <div id="planningTableContainer">
         </div>
     <div id="addInitiativeSection" style="margin-top: 20px; padding: 15px; border: 1px solid #ccc;">
+    <div id="addInitiativeSection" style="margin-top: 20px; padding: 15px; border: 1px solid #ccc;">
         <h3>Add New Initiative</h3>
-        <p>(UI for adding new initiatives will be implemented later)</p>
+        <div style="margin-bottom: 10px;">
+            <label for="newInitiativeTitle" style="display: block;">Title:</label>
+            <input type="text" id="newInitiativeTitle" placeholder="Initiative Title" style="width: 90%;">
+        </div>
+        <div style="margin-bottom: 10px;">
+            <label for="newInitiativeDescription" style="display: block;">Description:</label>
+            <textarea id="newInitiativeDescription" placeholder="Description" rows="2" style="width: 90%;"></textarea>
+        </div>
+         <div style="margin-bottom: 10px;">
+            <label for="newInitiativeGoalId" style="display: block;">Related Business Goal ID (Optional):</label>
+            <input type="text" id="newInitiativeGoalId" placeholder="Optional: Business Goal ID" style="width: 90%;">
+        </div>
+
+        <hr>
+        <h4>Team Assignments:</h4>
+        <div id="newInitiativeAssignmentsDisplay" style="margin-bottom: 10px; min-height: 30px; background-color: #f8f9fa; padding: 5px; border: 1px solid #eee;">
+            </div>
+        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+             <label for="newInitiativeTeamSelect" style="margin-right: 5px;">Team:</label>
+             <select id="newInitiativeTeamSelect" style="margin-right: 10px;">
+                 <option value="">-- Select Team --</option>
+             </select>
+             <label for="newInitiativeSdeYears" style="margin-right: 5px;">SDE Years:</label>
+             <input type="number" id="newInitiativeSdeYears" step="0.25" min="0" placeholder="e.g., 1.5" style="width: 80px; margin-right: 10px;">
+             <button type="button" id="addTeamAssignmentButton">Add Assignment</button>
+        </div>
+
+        <hr>
+        <button type="button" id="addInitiativeButton" style="padding: 10px 15px; font-size: 16px; background-color: #28a745; color: white; border: none; cursor: pointer;">Add Initiative to Plan</button>
+        </div>
     </div>
 </div>
 
@@ -5024,6 +5062,159 @@ function showEngineerTableView() {
     document.querySelector('.edit-menu').style.display = 'block'; // Keep view buttons visible
 }
 
+/*** Next sections is code for the Planning Feature **/
+
+/** Handles changes to the 'Protected' checkbox in the planning table */
+function handleProtectedChange(event) {
+    const checkbox = event.target;
+    const initiativeId = checkbox.getAttribute('data-initiative-id');
+    const isChecked = checkbox.checked;
+
+    if (!initiativeId) {
+        console.error("Could not find initiative ID on checkbox:", checkbox);
+        return;
+    }
+
+    // Find the initiative in the main data array
+    const initiative = currentSystemData.yearlyInitiatives.find(init => init.initiativeId === initiativeId);
+
+    if (initiative) {
+        // Update the data model
+        initiative.isProtected = isChecked;
+        console.log(`Updated 'isProtected' for initiative ${initiativeId} to ${isChecked}`);
+
+        // Re-generate the table to reflect the sort change
+        generatePlanningTable();
+    } else {
+        console.error("Could not find initiative data for ID:", initiativeId);
+    }
+}
+
+/** Stores the ID of the row being dragged */
+let draggedInitiativeId = null;
+let draggedRowElement = null; // Store the element itself for styling
+
+/** Handles the start of a drag operation */
+function handleDragStart(event) {
+    draggedInitiativeId = event.target.getAttribute('data-initiative-id');
+    draggedRowElement = event.target; // The TR element being dragged
+    event.dataTransfer.setData('text/plain', draggedInitiativeId);
+    event.dataTransfer.effectAllowed = 'move';
+
+    // Add visual feedback to the row being dragged
+    // Use setTimeout to allow the browser to render the drag image first
+    setTimeout(() => {
+        if(draggedRowElement) draggedRowElement.classList.add('dragging');
+    }, 0);
+    console.log(`Drag Start: ${draggedInitiativeId}`);
+}
+
+/** Handles dragging over a potential drop target */
+function handleDragOver(event) {
+    event.preventDefault(); // Necessary to allow dropping
+    event.dataTransfer.dropEffect = 'move';
+
+    const targetRow = event.target.closest('tr');
+    if (!targetRow || targetRow === draggedRowElement) return; // Don't highlight self
+
+    // Add a class to indicate drop zone (e.g., border)
+    targetRow.classList.add('drag-over');
+}
+
+/** Handles leaving a potential drop target */
+function handleDragLeave(event) {
+    const targetRow = event.target.closest('tr');
+     if (targetRow) {
+        targetRow.classList.remove('drag-over');
+    }
+}
+
+/** Handles the drop operation */
+function handleDrop(event) {
+    event.preventDefault();
+    const targetRow = event.target.closest('tr');
+    targetRow.classList.remove('drag-over'); // Clean up visual indicator
+
+    if (!targetRow || !draggedInitiativeId || targetRow.getAttribute('data-initiative-id') === draggedInitiativeId) {
+        console.log("Drop cancelled - invalid target or same item.");
+        draggedInitiativeId = null; // Reset dragged item
+        return;
+    }
+
+    const targetInitiativeId = targetRow.getAttribute('data-initiative-id');
+    console.log(`Drop: ${draggedInitiativeId} onto ${targetInitiativeId}`);
+
+    // --- Find initiatives and check protection status ---
+    const initiatives = currentSystemData.yearlyInitiatives;
+    const draggedIndex = initiatives.findIndex(init => init.initiativeId === draggedInitiativeId);
+    const targetIndex = initiatives.findIndex(init => init.initiativeId === targetInitiativeId);
+
+    if (draggedIndex === -1 || targetIndex === -1) {
+        console.error("Could not find dragged or target initiative in data array.");
+        draggedInitiativeId = null;
+        return;
+    }
+
+    const draggedInitiative = initiatives[draggedIndex];
+    const targetInitiative = initiatives[targetIndex];
+
+    // --- Apply Reordering Constraints ---
+    const draggedIsProtected = draggedInitiative.isProtected;
+    const targetIsProtected = targetInitiative.isProtected;
+
+    // Constraint 1: Cannot move non-protected above protected
+    if (!draggedIsProtected && targetIsProtected && targetIndex < draggedIndex) {
+         console.log("Move invalid: Cannot move non-protected item above protected item.");
+         alert("Cannot move a non-protected item above a protected item.");
+         draggedInitiativeId = null; // Reset
+         return;
+    }
+    // Constraint 2: Cannot move protected below non-protected
+    if (draggedIsProtected && !targetIsProtected && targetIndex > draggedIndex) {
+         console.log("Move invalid: Cannot move protected item below non-protected item.");
+          alert("Cannot move a protected item below non-protected items.");
+         draggedInitiativeId = null; // Reset
+         return;
+    }
+    // --- End Constraints ---
+
+
+    // --- Perform Reorder in the Data Array ---
+    // Remove the dragged item
+    const [movedItem] = initiatives.splice(draggedIndex, 1);
+
+    // Find the *new* index of the target item after removal
+    const newTargetIndex = initiatives.findIndex(init => init.initiativeId === targetInitiativeId);
+
+    // Insert the moved item before the target
+    initiatives.splice(newTargetIndex, 0, movedItem);
+    console.log("Reordered initiatives array:", initiatives.map(i => i.initiativeId));
+    // --- End Reorder ---
+
+
+    // --- Refresh the Table ---
+    generatePlanningTable();
+    // --- End Refresh ---
+
+    draggedInitiativeId = null; // Reset dragged item
+}
+
+/** Cleans up after drag operation ends (dropped or cancelled) */
+function handleDragEnd(event) {
+    // Remove the dragging class from the original element
+     if (draggedRowElement) {
+        draggedRowElement.classList.remove('dragging');
+    }
+    // Clean up any lingering drag-over styles just in case
+    document.querySelectorAll('#planningTableBody tr.drag-over').forEach(row => {
+        row.classList.remove('drag-over');
+    });
+
+    console.log("Drag End");
+    draggedInitiativeId = null;
+    draggedRowElement = null;
+}
+
 /** REVISED - Generates the interactive planning table with data */
 function generatePlanningTable() {
     console.log("Generating planning table...");
@@ -5059,7 +5250,7 @@ function generatePlanningTable() {
     const headerRow = document.createElement('tr');
 
     // Fixed Headers
-    const fixedHeaders = ['Protected', 'Title', 'Description', 'Total SDE Years', 'Cum. SDE Years', 'Capacity Status', 'ATL/BTL'];
+    const fixedHeaders = ['Protected', 'Title', 'ID', 'Description', 'Total SDE Years', 'Cumalative SDE Years', 'Capacity Status', 'ATL/BTL'];
     fixedHeaders.forEach(text => {
         const th = document.createElement('th');
         th.textContent = text;
@@ -5116,7 +5307,16 @@ function generatePlanningTable() {
         row.setAttribute('draggable', 'true'); // Make row draggable
         row.setAttribute('data-initiative-id', initiative.initiativeId);
         row.style.borderBottom = '1px solid #eee'; // Add faint row separators
+        // Add slight padding for easier dropping between rows
+        row.style.padding = '2px 0';
 
+        // *** ADD DRAG LISTENERS ***
+        row.addEventListener('dragstart', handleDragStart);
+        row.addEventListener('dragover', handleDragOver);
+        row.addEventListener('dragleave', handleDragLeave);
+        row.addEventListener('drop', handleDrop);
+        row.addEventListener('dragend', handleDragEnd);
+        
         // --- Fixed Cells ---
         // Protected Checkbox
         const protectedCell = row.insertCell();
@@ -5125,7 +5325,7 @@ function generatePlanningTable() {
         protectedCheckbox.checked = initiative.isProtected;
         protectedCheckbox.setAttribute('data-initiative-id', initiative.initiativeId);
         protectedCheckbox.style.cursor = 'pointer';
-        // TODO: Add event listener later in Phase 3
+        protectedCheckbox.onchange = handleProtectedChange; // Add the event listener
         protectedCell.appendChild(protectedCheckbox);
         protectedCell.style.textAlign = 'center';
 
@@ -5133,6 +5333,12 @@ function generatePlanningTable() {
         const titleCell = row.insertCell();
         titleCell.textContent = initiative.title || 'No Title';
         titleCell.style.fontWeight = initiative.isProtected ? 'bold' : 'normal';
+
+        // Id
+        const idCell = row.insertCell();
+        idCell.textContent = initiative.initiativeId;
+        idCell.style.fontSize = '0.8em'; // Make it smaller perhaps
+        idCell.style.color = '#555';    // Grey it out slightly
 
         // Description (Truncated with Tooltip)
         const descCell = row.insertCell();
@@ -5241,11 +5447,157 @@ function showPlanningView() {
         }
         // Generate the table content
         generatePlanningTable(); // Call the function to build the table
+        
+        // --- Populate Team Select & Attach Listeners (Ensure this happens AFTER elements are visible) ---
+        populateTeamSelect();
+
+        const addAssignButton = document.getElementById('addTeamAssignmentButton');
+        if (addAssignButton && !addAssignButton.hasAttribute('data-listener-attached')) {
+             addAssignButton.addEventListener('click', handleAddTeamAssignment);
+             addAssignButton.setAttribute('data-listener-attached', 'true'); // Prevent multiple listeners
+        }
+
+        const addInitButton = document.getElementById('addInitiativeButton');
+         if (addInitButton && !addInitButton.hasAttribute('data-listener-attached')) {
+            addInitButton.addEventListener('click', handleAddInitiative);
+            addInitButton.setAttribute('data-listener-attached', 'true'); // Prevent multiple listeners
+         }        
     } else {
         console.error("Planning view container not found!");
     }
     // ---------------------------
 }
+
+// --- Add New Initiative Logic ---
+
+// Store temporary assignments before adding the initiative
+let tempAssignments = [];
+
+/** Populates the team selection dropdown in the 'Add Initiative' section */
+function populateTeamSelect() {
+    const select = document.getElementById('newInitiativeTeamSelect');
+    if (!select) return;
+
+    // Clear existing options except the placeholder
+    select.length = 1; // Keep only the "-- Select Team --" option
+
+    (currentSystemData.teams || []).forEach(team => {
+        const option = document.createElement('option');
+        option.value = team.teamId;
+        option.textContent = team.teamIdentity || team.teamName || team.teamId;
+        select.appendChild(option);
+    });
+}
+
+/** Updates the display area showing temporary team assignments */
+function displayTempAssignments() {
+    const displayDiv = document.getElementById('newInitiativeAssignmentsDisplay');
+    if (!displayDiv) return;
+    displayDiv.innerHTML = ''; // Clear current display
+
+    tempAssignments.forEach((assignment, index) => {
+        const team = (currentSystemData.teams || []).find(t => t.teamId === assignment.teamId);
+        const teamName = team ? (team.teamIdentity || team.teamName) : assignment.teamId;
+        const assignmentDiv = document.createElement('div');
+        assignmentDiv.style.marginBottom = '3px';
+        assignmentDiv.textContent = `${teamName}: ${assignment.sdeYears.toFixed(2)} SDE Years `;
+
+        const removeButton = document.createElement('button');
+        removeButton.textContent = 'Remove';
+        removeButton.style.marginLeft = '10px';
+        removeButton.style.fontSize = '0.8em';
+        removeButton.onclick = () => {
+            tempAssignments.splice(index, 1); // Remove from array
+            displayTempAssignments(); // Refresh display
+        };
+        assignmentDiv.appendChild(removeButton);
+        displayDiv.appendChild(assignmentDiv);
+    });
+}
+
+/** Handles clicking the 'Add Assignment' button */
+function handleAddTeamAssignment() {
+    const teamSelect = document.getElementById('newInitiativeTeamSelect');
+    const sdeYearsInput = document.getElementById('newInitiativeSdeYears');
+    const teamId = teamSelect.value;
+    const sdeYears = parseFloat(sdeYearsInput.value);
+
+    // Validation
+    if (!teamId) {
+        alert('Please select a team.');
+        return;
+    }
+    if (isNaN(sdeYears) || sdeYears <= 0) {
+        alert('Please enter a valid positive number for SDE Years.');
+        return;
+    }
+
+    // Check if team already assigned in temp list
+    const existingIndex = tempAssignments.findIndex(a => a.teamId === teamId);
+    if (existingIndex > -1) {
+        // Update existing assignment
+        tempAssignments[existingIndex].sdeYears = sdeYears;
+        console.log(`Updated assignment for team ${teamId} to ${sdeYears}`);
+    } else {
+        // Add new assignment
+        tempAssignments.push({ teamId: teamId, sdeYears: sdeYears });
+        console.log(`Added assignment for team ${teamId}: ${sdeYears}`);
+    }
+
+    // Refresh display and clear inputs
+    displayTempAssignments();
+    teamSelect.selectedIndex = 0; // Reset dropdown
+    sdeYearsInput.value = '';
+}
+
+/** Handles clicking the 'Add Initiative to Plan' button */
+function handleAddInitiative() {
+    const titleInput = document.getElementById('newInitiativeTitle');
+    const descriptionInput = document.getElementById('newInitiativeDescription');
+    const goalIdInput = document.getElementById('newInitiativeGoalId');
+
+    const title = titleInput.value.trim();
+    const description = descriptionInput.value.trim();
+    const goalId = goalIdInput.value.trim() || null; // Use null if empty
+
+    // Validation
+    if (!title) {
+        alert('Initiative Title cannot be empty.');
+        return;
+    }
+    if (tempAssignments.length === 0) {
+        alert('Please add at least one team assignment.');
+        return;
+    }
+
+    // Create new initiative object
+    const newInitiative = {
+        initiativeId: 'init-' + Date.now() + '-' + Math.floor(Math.random() * 1000), // Simple unique ID
+        title: title,
+        description: description,
+        relatedBusinessGoalId: goalId,
+        isProtected: false, // New initiatives are not protected by default
+        assignments: [...tempAssignments] // Copy the temporary assignments
+    };
+
+    // Add to main data structure
+    if (!currentSystemData.yearlyInitiatives) {
+        currentSystemData.yearlyInitiatives = [];
+    }
+    currentSystemData.yearlyInitiatives.push(newInitiative);
+    console.log("Added new initiative:", newInitiative);
+
+    // Clear form and temporary data
+    titleInput.value = '';
+    descriptionInput.value = '';
+    goalIdInput.value = '';
+    tempAssignments = [];
+    displayTempAssignments(); // Clear display area
+
+    // Refresh the main planning table
+    generatePlanningTable();
+}
+
 
 
 // Attach functions to the global window object
