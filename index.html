@@ -417,18 +417,6 @@
     <button onclick="resetToDefaults()">Reset to Defaults</button>    
 </div>
 
-<!-- System Creation Form -->
-<div id="systemCreationForm" style="display:none;">
-    <h2>Create New Software System</h2>
-    <form id="createSystemForm">
-        <label>System Name:</label><br>
-        <input type="text" id="newSystemNameInput"><br><br>
-        <label>System Description:</label><br>
-        <textarea id="newSystemDescriptionInput" rows="3" cols="50"></textarea><br><br>
-        <button type="button" onclick="createNewSystem()">Create System</button>
-    </form>
-</div>
-
 <!-- Return to Home Button -->
 <button id="returnHomeButton" onclick="returnToHome()">Return to Home</button>
 
@@ -2051,9 +2039,205 @@ function showSystemEditForm(systemData) {
     
 }
 
-/** Display Teams for Editing **/
+/** Helper to create Label + Input pairs */
+function createInputLabelPair(id, labelText, value, type = 'text', index, field) {
+    let div = document.createElement('div');
+    div.style.marginBottom = '10px';
+    let label = document.createElement('label');
+    label.htmlFor = id;
+    label.innerText = labelText;
+    label.style.display = 'block';
 
-/** REVISED Display Teams for Editing - Fix Engineer Reassignment Logic **/
+    let input;
+    if (type === 'textarea') {
+         input = document.createElement('textarea');
+         input.rows = 2;
+         input.style.width = '90%';
+    } else {
+         input = document.createElement('input');
+         input.type = type;
+         if (type === 'number') {
+             input.min = 0;
+         }
+         input.style.width = '90%';
+    }
+    input.id = id;
+    input.value = value;
+    input.setAttribute('data-team-index', index); // Keep team index for context
+    input.setAttribute('data-field', field);
+
+    input.addEventListener('change', (event) => {
+         const teamIndex = parseInt(event.target.getAttribute('data-team-index'));
+         const fieldName = event.target.getAttribute('data-field');
+         let V = event.target.value;
+         if (event.target.type === 'number') {
+             V = parseInt(V);
+             if (isNaN(V)) V = 0;
+         }
+         // Ensure teams array and index are valid before updating
+         if (currentSystemData && currentSystemData.teams && teamIndex >= 0 && teamIndex < currentSystemData.teams.length) {
+            currentSystemData.teams[teamIndex][fieldName] = V;
+         } else {
+             console.warn(`Could not update team data for index ${teamIndex}, field ${fieldName}`);
+         }
+    });
+
+    div.appendChild(label);
+    div.appendChild(input);
+    return div;
+}
+// -----------------------------------
+
+/** Helper to display Senior Manager Assignment UI within SDM section */
+function displaySeniorManagerAssignment(sdmSectionContainer, teamIndex, currentSdmId) {
+    // Find the specific container using teamIndex (or could use sdmId if unique)
+    let srMgrContainer = sdmSectionContainer.querySelector(`#srMgrAssignmentContainer_${teamIndex}`);
+    if (!srMgrContainer) {
+         console.error("Could not find Sr Mgr container for team index", teamIndex);
+         return;
+     }
+    srMgrContainer.innerHTML = ''; // Clear previous content
+    srMgrContainer.style.paddingLeft = '20px'; // Indent slightly
+
+    // Ensure global data is available
+    const allSdms = currentSystemData.sdms || [];
+    const allSeniorManagers = currentSystemData.seniorManagers || [];
+
+    const currentSdm = allSdms.find(sdm => sdm && sdm.sdmId === currentSdmId);
+
+    if (!currentSdm) {
+        srMgrContainer.innerText = 'Assign an SDM to manage Senior Manager assignment.';
+        return; // No SDM assigned, nothing to show
+    }
+
+    let title = document.createElement('h6');
+    title.innerText = `Senior Manager for SDM: ${currentSdm.sdmName}`;
+    srMgrContainer.appendChild(title);
+
+    const currentSrMgr = allSeniorManagers.find(sr => sr && sr.seniorManagerId === currentSdm.seniorManagerId);
+
+    const srMgrDualList = createDualListContainer( // Call global helper
+        teamIndex, // Pass teamIndex for context if needed by callbacks
+        'Current Sr. Mgr:', 'Available Sr. Mgrs:',
+        currentSrMgr ? [{ value: currentSrMgr.seniorManagerId, text: currentSrMgr.seniorManagerName }] : [],
+        allSeniorManagers.filter(sr => sr && sr.seniorManagerId !== currentSdm.seniorManagerId)
+                         .map(sr => ({ value: sr.seniorManagerId, text: sr.seniorManagerName })), // Map to value/text
+        `currentSrMgr_${currentSdmId}`, // Field names specific to this SDM
+        `availableSrMgrs_${currentSdmId}`,
+        (movedSrMgrId, direction) => { // Callback on Sr Mgr move
+            // Find the SDM in the main data again to modify it
+            const sdmToUpdate = currentSystemData.sdms.find(s => s.sdmId === currentSdmId);
+            if (sdmToUpdate) {
+                 sdmToUpdate.seniorManagerId = (direction === 'add') ? movedSrMgrId : null;
+                 console.log(`Set Sr Mgr for SDM ${currentSdmId} to ${sdmToUpdate.seniorManagerId}`);
+             } else {
+                 console.warn("Could not find SDM to update Sr Mgr for:", currentSdmId);
+             }
+        },
+        false, // singleSelectLeft = true for current Sr Mgr (set multiSelectLeft to false)
+        true, // Allow adding new Sr Mgrs
+        'Enter New Sr. Manager Name',
+        (newSrMgrName) => { // Callback for adding new Sr Mgr
+            if (!newSrMgrName || newSrMgrName.trim() === '') return null;
+            newSrMgrName = newSrMgrName.trim();
+            let existingSrMgr = (currentSystemData.seniorManagers || []).find(s => s && s.seniorManagerName.toLowerCase() === newSrMgrName.toLowerCase()); // check s
+            if (existingSrMgr) {
+                alert(`Senior Manager "${newSrMgrName}" already exists.`);
+                return null;
+            }
+            const newSrMgrId = 'srMgr-' + Date.now();
+            const newSrMgr = { seniorManagerId: newSrMgrId, seniorManagerName: newSrMgrName };
+            if (!currentSystemData.seniorManagers) currentSystemData.seniorManagers = []; // Ensure array exists
+            currentSystemData.seniorManagers.push(newSrMgr); // Add to main data
+            // We might need to update the local 'allSeniorManagers' if it's used elsewhere before a full refresh
+            console.log("Added new Senior Manager:", newSrMgr);
+            return { value: newSrMgrId, text: newSrMgrName }; // Return for UI update
+        }
+    );
+    srMgrContainer.appendChild(srMgrDualList);
+ }
+// -----------------------------------
+
+/** Helper to create Dual List Selectors */
+function createDualListContainer(contextIndex, leftLabel, rightLabel, currentOptions, availableOptions, leftField, rightField, moveCallback, multiSelectLeft = true, allowAddNew = false, addNewPlaceholder = '', addNewCallback = null) {
+    let container = document.createElement('div');
+    container.className = 'dual-list-container';
+    container.style.display = 'flex';
+    container.style.alignItems = 'center';
+    container.style.marginBottom = '10px';
+
+    // Left List (Current)
+    let leftDiv = document.createElement('div');
+    leftDiv.style.flex = '1'; leftDiv.style.marginRight = '5px';
+    let currentLabel = document.createElement('label');
+    currentLabel.innerText = leftLabel; currentLabel.style.display = 'block';
+    let currentSelect = document.createElement('select');
+    currentSelect.multiple = multiSelectLeft; currentSelect.size = 5; currentSelect.style.width = '100%';
+    currentSelect.setAttribute('data-list-context-index', contextIndex);
+    currentSelect.setAttribute('data-field', leftField);
+    (currentOptions || []).forEach(opt => currentSelect.appendChild(new Option(opt.text, opt.value)));
+    leftDiv.appendChild(currentLabel); leftDiv.appendChild(currentSelect);
+
+    // Buttons
+    let buttonsDiv = document.createElement('div');
+    buttonsDiv.style.display = 'flex'; buttonsDiv.style.flexDirection = 'column'; buttonsDiv.style.alignItems = 'center'; buttonsDiv.style.margin = '0 5px';
+    let removeBtn = document.createElement('button'); removeBtn.type = 'button'; removeBtn.innerHTML = '&gt;'; removeBtn.title = 'Remove selected item(s)'; removeBtn.style.marginBottom = '5px';
+    let addBtn = document.createElement('button'); addBtn.type = 'button'; addBtn.innerHTML = '&lt;'; addBtn.title = 'Add selected item(s)';
+
+    // Right List (Available)
+    let rightDiv = document.createElement('div');
+    rightDiv.style.flex = '1'; rightDiv.style.marginLeft = '5px';
+    let availableLabel = document.createElement('label');
+    availableLabel.innerText = rightLabel; availableLabel.style.display = 'block';
+    let availableSelect = document.createElement('select');
+    availableSelect.multiple = true; availableSelect.size = 5; availableSelect.style.width = '100%';
+    availableSelect.setAttribute('data-list-context-index', contextIndex);
+    availableSelect.setAttribute('data-field', rightField);
+    (availableOptions || []).forEach(opt => availableSelect.appendChild(new Option(opt.text, opt.value)));
+    rightDiv.appendChild(availableLabel); rightDiv.appendChild(availableSelect);
+
+    // Add New Item Input/Button
+    let addNewContainer = null;
+    if (allowAddNew && addNewCallback) {
+        addNewContainer = document.createElement('div'); addNewContainer.style.marginTop = '5px'; addNewContainer.style.display = 'flex';
+        let addNewInput = document.createElement('input'); addNewInput.type = 'text'; addNewInput.placeholder = addNewPlaceholder; addNewInput.style.flexGrow = '1'; addNewInput.style.marginRight = '5px';
+        let addNewBtn = document.createElement('button'); addNewBtn.type = 'button'; addNewBtn.innerText = 'Add';
+        addNewBtn.onclick = (e) => {
+            e.preventDefault();
+            const newItemData = addNewCallback(addNewInput.value);
+            if (newItemData && newItemData.value && newItemData.text) {
+                 const exists = Array.from(availableSelect.options).some(opt => opt.value === newItemData.value) || Array.from(currentSelect.options).some(opt => opt.value === newItemData.value);
+                 if (!exists) { availableSelect.appendChild(new Option(newItemData.text, newItemData.value)); }
+                 else if (!newItemData.preventAdd) { console.warn("Item already exists in lists:", newItemData.text); }
+                 addNewInput.value = '';
+             } else if (newItemData && newItemData.preventAdd) { addNewInput.value = ''; }
+        };
+        addNewContainer.appendChild(addNewInput); addNewContainer.appendChild(addNewBtn);
+        rightDiv.appendChild(addNewContainer);
+    }
+
+    // Button Actions
+    removeBtn.onclick = (e) => {
+         e.preventDefault();
+        Array.from(currentSelect.selectedOptions).forEach(option => { availableSelect.appendChild(option); moveCallback(option.value, 'remove', contextIndex); });
+    };
+    addBtn.onclick = (e) => {
+         e.preventDefault();
+        Array.from(availableSelect.selectedOptions).forEach(option => {
+             if (!multiSelectLeft) {
+                 while (currentSelect.options.length > 0) { let existingOption = currentSelect.options[0]; availableSelect.appendChild(existingOption); moveCallback(existingOption.value, 'remove', contextIndex); }
+             }
+             currentSelect.appendChild(option); moveCallback(option.value, 'add', contextIndex);
+        });
+    };
+
+    buttonsDiv.appendChild(addBtn); buttonsDiv.appendChild(removeBtn);
+    container.appendChild(leftDiv); container.appendChild(buttonsDiv); container.appendChild(rightDiv);
+    return container;
+} // --- End createDualListContainer ---
+
+/** Display Teams for Editing **/
+/** REVISED Display Teams for Editing - Calls Global Helpers */
 function displayTeamsForEditing(teams, expandedIndex = -1) {
     const teamsDiv = document.getElementById('teamsManagement');
     teamsDiv.innerHTML = ''; // Clear existing content
@@ -2068,8 +2252,8 @@ function displayTeamsForEditing(teams, expandedIndex = -1) {
     const allPmts = currentSystemData.pmts || [];
     const allSeniorManagers = currentSystemData.seniorManagers || [];
 
-    // --- Calculate Available Engineers (names only for dual list) ---
-    let allEngineerNamesMap = new Map(); // Map name to teamId(s)
+    // Calculate Available Engineers map
+    let allEngineerNamesMap = new Map();
     (currentSystemData.teams || []).forEach(t => {
         (t.engineers || []).forEach(eng => {
             if (eng && eng.name) {
@@ -2080,7 +2264,6 @@ function displayTeamsForEditing(teams, expandedIndex = -1) {
             }
         });
     });
-    // ---------------------------------------------------------
 
     (teams || []).forEach((team, index) => {
         if (!team) {
@@ -2090,6 +2273,7 @@ function displayTeamsForEditing(teams, expandedIndex = -1) {
 
         let teamDiv = document.createElement('div');
         teamDiv.className = 'team-edit';
+        teamDiv.setAttribute('data-team-render-index', index);
 
         // Header (collapsible)
         let teamHeader = document.createElement('h4');
@@ -2103,11 +2287,39 @@ function displayTeamsForEditing(teams, expandedIndex = -1) {
         teamDetails.className = 'team-details';
         teamDetails.style.display = (index === expandedIndex) ? 'block' : 'none';
 
+        // --- Modified Onclick Handler ---
         teamHeader.onclick = () => {
-            const isCollapsed = teamDetails.style.display === 'none' || teamDetails.style.display === '';
-            teamDetails.style.display = isCollapsed ? 'block' : 'none';
-            indicator.innerText = isCollapsed ? '- ' : '+ ';
-        };
+            const content = teamDetails;
+            const isCurrentlyCollapsed = content.style.display === 'none' || content.style.display === '';
+            content.style.display = isCurrentlyCollapsed ? 'block' : 'none';
+            indicator.innerText = isCurrentlyCollapsed ? '- ' : '+ ';
+
+            // Refresh Available Services when EXPANDING
+            if (isCurrentlyCollapsed) {
+                 console.log("Refreshing available services for team:", team.teamName || team.teamIdentity);
+                 const latestAllServices = (currentSystemData.services || []).map(service => ({
+                    value: service.serviceName, text: service.serviceName, owningTeamId: service.owningTeamId || null
+                 }));
+                 const currentServicesSelect = content.querySelector("select[data-field='currentServices']");
+                 const availableServicesSelect = content.querySelector("select[data-field='availableServices']");
+
+                 if (currentServicesSelect && availableServicesSelect) {
+                    const currentlyAssignedServices = Array.from(currentServicesSelect.options).map(opt => opt.value);
+                    availableServicesSelect.innerHTML = '';
+                    latestAllServices.forEach(svcOption => {
+                        if (!currentlyAssignedServices.includes(svcOption.value)) {
+                             availableServicesSelect.appendChild(new Option(svcOption.text, svcOption.value));
+                        }
+                    });
+                    console.log("Available services list updated.");
+                 } else {
+                      console.warn("Could not find service select lists to refresh for team index", index);
+                 }
+                  // Also refresh Sr Mgr assignment display on expand, in case SDM changed
+                  displaySeniorManagerAssignment(teamDetails.querySelector(`#sdmSection_${index}`), index, team.sdmId); // Pass the SDM section container
+            }
+        }; // --- End MODIFIED Onclick Handler ---
+
 
         // --- Basic Info Inputs ---
         teamDetails.appendChild(createInputLabelPair(`teamIdentity_${index}`, 'Team Identity:', team.teamIdentity || '', 'text', index, 'teamIdentity'));
@@ -2118,14 +2330,15 @@ function displayTeamsForEditing(teams, expandedIndex = -1) {
         // --- Services Owned ---
         const currentServices = allServices.filter(s => s.owningTeamId === team.teamId);
         const availableServices = allServices.filter(s => s.owningTeamId !== team.teamId);
-        const servicesContainer = createDualListContainer(
+        const servicesContainer = createDualListContainer( // Call global helper
             index, 'Services Owned:', 'Available Services:',
             currentServices, availableServices,
             'currentServices', 'availableServices',
-            (movedOptionValue, direction) => {
+            (movedOptionValue, direction, contextIndex) => {
                 const service = currentSystemData.services.find(s => s.serviceName === movedOptionValue);
-                if (service) {
-                    service.owningTeamId = (direction === 'add') ? team.teamId : null;
+                const targetTeam = currentSystemData.teams[contextIndex];
+                if (service && targetTeam) {
+                    service.owningTeamId = (direction === 'add') ? targetTeam.teamId : null;
                 }
             }
         );
@@ -2135,444 +2348,136 @@ function displayTeamsForEditing(teams, expandedIndex = -1) {
 
         // --- SDM Assignment & Senior Manager Assignment ---
         const sdmSection = document.createElement('div');
-        sdmSection.style.border = '1px dashed #ccc';
-        sdmSection.style.padding = '10px';
-        sdmSection.style.marginBottom = '10px';
-
-        let sdmSectionTitle = document.createElement('h5');
-        sdmSectionTitle.innerText = 'SDM Assignment';
-        sdmSection.appendChild(sdmSectionTitle);
+        sdmSection.id = `sdmSection_${index}`; // Give ID for Sr Mgr refresh targeting
+        sdmSection.style.border = '1px dashed #ccc'; sdmSection.style.padding = '10px'; sdmSection.style.marginBottom = '10px';
+        let sdmSectionTitle = document.createElement('h5'); sdmSectionTitle.innerText = 'SDM Assignment'; sdmSection.appendChild(sdmSectionTitle);
 
         const currentSdm = allSdms.find(sdm => sdm && sdm.sdmId === team.sdmId);
-        const sdmContainer = createDualListContainer(
+        const sdmContainer = createDualListContainer( // Call global helper
             index, 'Current SDM:', 'Available SDMs:',
             currentSdm ? [{ value: currentSdm.sdmId, text: currentSdm.sdmName }] : [],
-            allSdms.filter(sdm => sdm && sdm.sdmId !== team.sdmId)
-                   .map(sdm => ({ value: sdm.sdmId, text: sdm.sdmName })),
+            allSdms.filter(sdm => sdm && sdm.sdmId !== team.sdmId).map(sdm => ({ value: sdm.sdmId, text: sdm.sdmName })),
             'currentSdm', 'availableSdms',
-            (movedOptionValue, direction) => {
-                const newSdmId = (direction === 'add') ? movedOptionValue : null;
-                team.sdmId = newSdmId;
-                displaySeniorManagerAssignment(sdmSection, index, newSdmId);
+            (movedOptionValue, direction, contextIndex) => {
+                 const targetTeam = currentSystemData.teams[contextIndex];
+                 if(targetTeam){
+                    const newSdmId = (direction === 'add') ? movedOptionValue : null;
+                    targetTeam.sdmId = newSdmId;
+                    // Refresh Sr. Mgr section using the specific sdmSection container
+                    displaySeniorManagerAssignment(sdmSection, contextIndex, newSdmId);
+                 }
             },
             false, true, 'Enter New SDM Name',
             (newSdmName) => {
-                 if (!newSdmName || newSdmName.trim() === '') return null;
-                 newSdmName = newSdmName.trim();
+                 if (!newSdmName || newSdmName.trim() === '') return null; newSdmName = newSdmName.trim();
                  let existingSdm = allSdms.find(s => s && s.sdmName.toLowerCase() === newSdmName.toLowerCase());
-                 if (existingSdm) {
-                     alert(`SDM "${newSdmName}" already exists.`);
-                     return null;
-                 }
-                 const newSdmId = 'sdm-' + Date.now();
-                 const newSdm = { sdmId: newSdmId, sdmName: newSdmName, seniorManagerId: null };
-                 currentSystemData.sdms.push(newSdm);
-                 allSdms.push(newSdm);
+                 if (existingSdm) { alert(`SDM "${newSdmName}" already exists.`); return null; }
+                 const newSdmId = 'sdm-' + Date.now(); const newSdm = { sdmId: newSdmId, sdmName: newSdmName, seniorManagerId: null };
+                 currentSystemData.sdms.push(newSdm); allSdms.push(newSdm); // Update local cache too
                  console.log("Added new SDM:", newSdm);
                  return { value: newSdmId, text: newSdmName };
             }
         );
         sdmSection.appendChild(sdmContainer);
 
-        let srMgrAssignmentContainer = document.createElement('div');
-        srMgrAssignmentContainer.id = `srMgrAssignmentContainer_${index}`;
-        srMgrAssignmentContainer.style.marginTop = '10px';
-        sdmSection.appendChild(srMgrAssignmentContainer);
+        let srMgrAssignmentContainer = document.createElement('div'); srMgrAssignmentContainer.id = `srMgrAssignmentContainer_${index}`; srMgrAssignmentContainer.style.marginTop = '10px';
+        sdmSection.appendChild(srMgrAssignmentContainer); // Add placeholder
 
-        teamDetails.appendChild(sdmSection);
-        teamDetails.appendChild(document.createElement('br'));
+        teamDetails.appendChild(sdmSection); teamDetails.appendChild(document.createElement('br'));
 
         displaySeniorManagerAssignment(sdmSection, index, team.sdmId); // Initial population
         // ---------------------------------------------------
 
         // --- PMT Assignment ---
          const currentPmt = allPmts.find(pmt => pmt && pmt.pmtId === team.pmtId);
-         const pmtContainer = createDualListContainer(
+         const pmtContainer = createDualListContainer( // Call global helper
              index, 'Current PMT:', 'Available PMTs:',
              currentPmt ? [{ value: currentPmt.pmtId, text: currentPmt.pmtName }] : [],
-             allPmts.filter(pmt => pmt && pmt.pmtId !== team.pmtId)
-                    .map(pmt => ({ value: pmt.pmtId, text: pmt.pmtName })),
+             allPmts.filter(pmt => pmt && pmt.pmtId !== team.pmtId).map(pmt => ({ value: pmt.pmtId, text: pmt.pmtName })),
              'currentPmt', 'availablePmts',
-             (movedOptionValue, direction) => {
-                 team.pmtId = (direction === 'add') ? movedOptionValue : null;
+             (movedOptionValue, direction, contextIndex) => {
+                 const targetTeam = currentSystemData.teams[contextIndex];
+                 if(targetTeam) targetTeam.pmtId = (direction === 'add') ? movedOptionValue : null;
              },
              false, true, 'Enter New PMT Name',
              (newPmtName) => {
-                 if (!newPmtName || newPmtName.trim() === '') return null;
-                 newPmtName = newPmtName.trim();
+                 if (!newPmtName || newPmtName.trim() === '') return null; newPmtName = newPmtName.trim();
                  let existingPmt = allPmts.find(p => p && p.pmtName.toLowerCase() === newPmtName.toLowerCase());
-                 if (existingPmt) {
-                     alert(`PMT "${newPmtName}" already exists.`);
-                     return null;
-                 }
-                 const newPmtId = 'pmt-' + Date.now();
-                 const newPmt = { pmtId: newPmtId, pmtName: newPmtName };
-                 currentSystemData.pmts.push(newPmt);
-                 allPmts.push(newPmt);
-                 console.log("Added new PMT:", newPmt);
-                 return { value: newPmtId, text: newPmtName };
+                 if (existingPmt) { alert(`PMT "${newPmtName}" already exists.`); return null; }
+                 const newPmtId = 'pmt-' + Date.now(); const newPmt = { pmtId: newPmtId, pmtName: newPmtName };
+                 currentSystemData.pmts.push(newPmt); allPmts.push(newPmt); // Update local cache
+                 console.log("Added new PMT:", newPmt); return { value: newPmtId, text: newPmtName };
              }
          );
-         teamDetails.appendChild(pmtContainer);
-         teamDetails.appendChild(document.createElement('br'));
+         teamDetails.appendChild(pmtContainer); teamDetails.appendChild(document.createElement('br'));
         // -------------------------------------------
 
         // --- Headcount ---
         teamDetails.appendChild(createInputLabelPair(`fundedHeadcount_${index}`, 'Funded Headcount:', team.fundedHeadcount ?? 0, 'number', index, 'fundedHeadcount'));
-
-        let bisDiv = document.createElement('div');
-        bisDiv.style.marginTop = '10px';
-        let bisLabel = document.createElement('label');
-        bisLabel.innerText = 'Builders In Seats (BIS): ';
-        let bisValueSpan = document.createElement('span');
-        bisValueSpan.id = `bisValue_${index}`;
-        bisValueSpan.innerText = team.engineers?.length ?? 0;
-        team.buildersInSeats = team.engineers?.length ?? 0;
-        bisValueSpan.style.fontWeight = 'bold';
-        bisDiv.appendChild(bisLabel);
-        bisDiv.appendChild(bisValueSpan);
-        teamDetails.appendChild(bisDiv);
-        teamDetails.appendChild(document.createElement('br'));
+        let bisDiv = document.createElement('div'); bisDiv.style.marginTop = '10px';
+        let bisLabel = document.createElement('label'); bisLabel.innerText = 'Builders In Seats (BIS): ';
+        let bisValueSpan = document.createElement('span'); bisValueSpan.id = `bisValue_${index}`; bisValueSpan.innerText = team.engineers?.length ?? 0; team.buildersInSeats = team.engineers?.length ?? 0; bisValueSpan.style.fontWeight = 'bold';
+        bisDiv.appendChild(bisLabel); bisDiv.appendChild(bisValueSpan);
+        teamDetails.appendChild(bisDiv); teamDetails.appendChild(document.createElement('br'));
         // -----------------
 
         // --- Engineer Assignment ---
-        let engineersSectionTitle = document.createElement('h5');
-        engineersSectionTitle.innerText = 'Engineer Assignment';
-        engineersSectionTitle.style.marginTop = '15px';
-        teamDetails.appendChild(engineersSectionTitle);
-
+        let engineersSectionTitle = document.createElement('h5'); engineersSectionTitle.innerText = 'Engineer Assignment'; engineersSectionTitle.style.marginTop = '15px'; teamDetails.appendChild(engineersSectionTitle);
         const currentEngineerOptions = (team.engineers || []).map(eng => ({ value: eng.name, text: eng.name }));
-        // Available = engineers not in the current team's list
-        const availableEngineerOptions = Array.from(allEngineerNamesMap.keys())
-                                           .filter(name => !(team.engineers || []).some(eng => eng.name === name))
-                                           .map(name => ({ value: name, text: name }));
-
-        const engineerContainer = createDualListContainer(
-            index, 'Current Engineers:', 'Available Engineers:',
-            currentEngineerOptions, availableEngineerOptions,
+        const availableEngineerOptions = Array.from(allEngineerNamesMap.keys()).filter(name => !(team.engineers || []).some(eng => eng.name === name)).map(name => ({ value: name, text: name }));
+        const engineerContainer = createDualListContainer( // Call global helper
+            index, 'Current Engineers:', 'Available Engineers:', currentEngineerOptions, availableEngineerOptions,
             'currentEngineers', 'availableEngineers',
-            (movedEngineerName, direction, contextIndex) => { // Callback on engineer move
-                const currentTeam = currentSystemData.teams[contextIndex]; // Get the specific team
-                if (!currentTeam) return;
-
-                if (direction === 'add') { // Moved from Available to Current
-                    // *** FIX: Remove engineer from other teams first ***
+            (movedEngineerName, direction, contextIndex) => {
+                const currentTeam = currentSystemData.teams[contextIndex]; if (!currentTeam) return;
+                if (direction === 'add') {
+                    // Remove engineer from other teams first
                     currentSystemData.teams.forEach(otherTeam => {
                         if (otherTeam.teamId !== currentTeam.teamId && otherTeam.engineers) {
-                            // Filter out the engineer from the other team's array
+                            const initialLength = otherTeam.engineers.length;
                             otherTeam.engineers = otherTeam.engineers.filter(eng => eng.name !== movedEngineerName);
-                            // Update BIS for the other team if needed (or rely on save)
-                            otherTeam.buildersInSeats = otherTeam.engineers.length;
+                            if (otherTeam.engineers.length < initialLength) { // If removed, update BIS
+                                otherTeam.buildersInSeats = otherTeam.engineers.length;
+                                // TODO: Optionally update the UI for the *other* team's BIS count immediately
+                                // const otherBisSpan = document.querySelector(`[data-team-render-index='${/* find other team index */}'] #bisValue_${/* other team index */}`);
+                                // if (otherBisSpan) otherBisSpan.innerText = otherTeam.buildersInSeats;
+                                console.log(`Removed ${movedEngineerName} from team ${otherTeam.teamId}`);
+                            }
                         }
                     });
-                    // -----------------------------------------------
-
-                    // Add engineer with default level if not already present in current team
-                    if (!currentTeam.engineers.some(eng => eng.name === movedEngineerName)) {
-                         currentTeam.engineers.push({ name: movedEngineerName, level: 1 }); // Default L1
-                         console.log(`Added ${movedEngineerName} to team ${currentTeam.teamId}`);
-                    }
-                } else { // Moved from Current to Available (Remove)
-                    currentTeam.engineers = currentTeam.engineers.filter(eng => eng.name !== movedEngineerName);
-                     console.log(`Removed ${movedEngineerName} from team ${currentTeam.teamId}`);
+                    // Add engineer to current team if not already present
+                    if (!currentTeam.engineers.some(eng => eng.name === movedEngineerName)) { currentTeam.engineers.push({ name: movedEngineerName, level: 1 }); console.log(`Added ${movedEngineerName} to team ${currentTeam.teamId}`); }
+                } else { // Remove from current team
+                    currentTeam.engineers = currentTeam.engineers.filter(eng => eng.name !== movedEngineerName); console.log(`Removed ${movedEngineerName} from team ${currentTeam.teamId}`);
                 }
                 // Update BIS display for the current team
-                currentTeam.buildersInSeats = currentTeam.engineers.length;
-                const bisValSpan = document.getElementById(`bisValue_${contextIndex}`);
-                if (bisValSpan) bisValSpan.innerText = currentTeam.buildersInSeats;
+                currentTeam.buildersInSeats = currentTeam.engineers.length; const bisValSpan = document.getElementById(`bisValue_${contextIndex}`); if (bisValSpan) bisValSpan.innerText = currentTeam.buildersInSeats;
             },
-            true, // multiSelectLeft = true
-            true, // Allow adding new engineers
-            'Enter New Engineer Name',
-            (newEngineerName) => { // Callback for adding new engineer
-                 if (!newEngineerName || newEngineerName.trim() === '') return null;
-                 newEngineerName = newEngineerName.trim();
-                 // Check if name exists anywhere
-                 if (allEngineerNamesMap.has(newEngineerName)) {
-                     alert(`Engineer "${newEngineerName}" already exists in the system. Assign from 'Available Engineers' list.`);
-                     return null; // Don't add duplicate by name
-                 }
-                 // Add to current team directly & update global map
-                 team.engineers.push({ name: newEngineerName, level: 1 }); // Default L1
-                 allEngineerNamesMap.set(newEngineerName, new Set([team.teamId])); // Add to map
-                 team.buildersInSeats = team.engineers.length;
-                 const bisValSpan = document.getElementById(`bisValue_${index}`);
-                 if (bisValSpan) bisValSpan.innerText = team.buildersInSeats;
-                 console.log("Added new engineer:", newEngineerName);
-                 // Manually add to left UI list
-                 const currentEngSelect = engineerContainer.querySelector("select[data-field='currentEngineers']");
-                 if(currentEngSelect) currentEngSelect.appendChild(new Option(newEngineerName, newEngineerName));
-                 return { preventAdd: true }; // Signal that we handled UI addition
+            true, true, 'Enter New Engineer Name',
+            (newEngineerName) => {
+                 if (!newEngineerName || newEngineerName.trim() === '') return null; newEngineerName = newEngineerName.trim();
+                 if (allEngineerNamesMap.has(newEngineerName)) { alert(`Engineer "${newEngineerName}" already exists...`); return null; }
+                 team.engineers.push({ name: newEngineerName, level: 1 }); allEngineerNamesMap.set(newEngineerName, new Set([team.teamId])); // Update global map
+                 team.buildersInSeats = team.engineers.length; const bisValSpan = document.getElementById(`bisValue_${index}`); if (bisValSpan) bisValSpan.innerText = team.buildersInSeats; console.log("Added new engineer:", newEngineerName);
+                 const currentEngSelect = engineerContainer.querySelector("select[data-field='currentEngineers']"); if(currentEngSelect) currentEngSelect.appendChild(new Option(newEngineerName, newEngineerName));
+                 return { preventAdd: true };
             }
         );
-        engineerContainer.id = `engineersList_${index}`;
-        teamDetails.appendChild(engineerContainer);
-
-        let levelEditNote = document.createElement('p');
-        levelEditNote.style.fontSize = '0.8em';
-        levelEditNote.style.color = 'grey';
-        levelEditNote.innerText = '(Note: Engineer levels default to L1 when added via list. Level editing requires further implementation.)';
-        teamDetails.appendChild(levelEditNote);
-        teamDetails.appendChild(document.createElement('br'));
+        engineerContainer.id = `engineersList_${index}`; teamDetails.appendChild(engineerContainer);
+        let levelEditNote = document.createElement('p'); levelEditNote.style.fontSize = '0.8em'; levelEditNote.style.color = 'grey'; levelEditNote.innerText = '(Note: Engineer levels default to L1. Level editing NYI.)';
+        teamDetails.appendChild(levelEditNote); teamDetails.appendChild(document.createElement('br'));
         // -----------------------------------------
 
 
         // --- Action Buttons ---
-        let saveButton = document.createElement('button');
-        saveButton.type = 'button';
-        saveButton.innerText = 'Save Team Changes';
-        saveButton.onclick = () => saveTeamChanges(index);
-        teamDetails.appendChild(saveButton);
-
-        let deleteButton = document.createElement('button');
-        deleteButton.type = 'button';
-        deleteButton.innerText = 'Delete Team';
-        deleteButton.style.marginLeft = '10px';
-        deleteButton.style.color = 'red';
-        deleteButton.onclick = () => deleteTeam(index);
-        teamDetails.appendChild(deleteButton);
+        let saveButton = document.createElement('button'); saveButton.type = 'button'; saveButton.innerText = 'Save Team Changes'; saveButton.onclick = () => saveTeamChanges(index); teamDetails.appendChild(saveButton);
+        let deleteButton = document.createElement('button'); deleteButton.type = 'button'; deleteButton.innerText = 'Delete Team'; deleteButton.style.marginLeft = '10px'; deleteButton.style.color = 'red'; deleteButton.onclick = () => deleteTeam(index); teamDetails.appendChild(deleteButton);
         // --------------------
 
-
-        teamDiv.appendChild(teamHeader);
-        teamDiv.appendChild(teamDetails);
-        teamsDiv.appendChild(teamDiv);
+        teamDiv.appendChild(teamHeader); teamDiv.appendChild(teamDetails); teamsDiv.appendChild(teamDiv);
     }); // End teams.forEach
-
-    // --- Helper Function Definitions --- (Keep createInputLabelPair, displaySeniorManagerAssignment, createDualListContainer from previous steps)
-     function createInputLabelPair(id, labelText, value, type = 'text', index, field) {
-        let div = document.createElement('div');
-        div.style.marginBottom = '10px';
-        let label = document.createElement('label');
-        label.htmlFor = id;
-        label.innerText = labelText;
-        label.style.display = 'block'; // Ensure label is above input
-
-        let input;
-        if (type === 'textarea') {
-             input = document.createElement('textarea');
-             input.rows = 2;
-             input.style.width = '90%';
-        } else {
-             input = document.createElement('input');
-             input.type = type;
-             if (type === 'number') {
-                 input.min = 0; // Prevent negative headcount
-             }
-             input.style.width = '90%';
-        }
-        input.id = id;
-        input.value = value;
-        input.setAttribute('data-team-index', index); // Keep team index for context
-        input.setAttribute('data-field', field);
-
-        input.addEventListener('change', (event) => {
-             const teamIndex = parseInt(event.target.getAttribute('data-team-index'));
-             const fieldName = event.target.getAttribute('data-field');
-             let V = event.target.value;
-             if (event.target.type === 'number') {
-                 V = parseInt(V); // Parse as integer
-                 if (isNaN(V)) V = 0; // Default to 0 if parsing fails or empty
-             }
-             if (teamIndex >= 0 && teamIndex < (currentSystemData.teams || []).length) { // Added check for teams array
-                currentSystemData.teams[teamIndex][fieldName] = V;
-                // console.log(`Updated team ${teamIndex} field ${fieldName} to`, V); // Debug log
-             }
-        });
-
-        div.appendChild(label);
-        div.appendChild(input);
-        return div;
-    }
-    // -----------------------------------
-     function displaySeniorManagerAssignment(sdmSectionContainer, teamIndex, currentSdmId) {
-        // Find the specific container using teamIndex
-        let srMgrContainer = sdmSectionContainer.querySelector(`#srMgrAssignmentContainer_${teamIndex}`);
-        if (!srMgrContainer) {
-             console.error("Could not find Sr Mgr container for team index", teamIndex);
-             return;
-         }
-        srMgrContainer.innerHTML = ''; // Clear previous content
-        srMgrContainer.style.paddingLeft = '20px';
-
-        const currentSdm = allSdms.find(sdm => sdm && sdm.sdmId === currentSdmId);
-
-        if (!currentSdm) {
-            srMgrContainer.innerText = 'Assign an SDM to manage Senior Manager assignment.';
-            return; // No SDM assigned, nothing to show
-        }
-
-        let title = document.createElement('h6');
-        title.innerText = `Senior Manager for SDM: ${currentSdm.sdmName}`;
-        srMgrContainer.appendChild(title);
-
-        const currentSrMgr = allSeniorManagers.find(sr => sr && sr.seniorManagerId === currentSdm.seniorManagerId);
-
-        const srMgrDualList = createDualListContainer(
-            teamIndex, // Pass teamIndex for context if needed by callbacks
-            'Current Sr. Mgr:', 'Available Sr. Mgrs:',
-            currentSrMgr ? [{ value: currentSrMgr.seniorManagerId, text: currentSrMgr.seniorManagerName }] : [],
-            // FIX: Add .map() here
-            allSeniorManagers.filter(sr => sr && sr.seniorManagerId !== currentSdm.seniorManagerId)
-                             .map(sr => ({ value: sr.seniorManagerId, text: sr.seniorManagerName })), // Map to value/text
-            `currentSrMgr_${currentSdmId}`, // Field names specific to this SDM
-            `availableSrMgrs_${currentSdmId}`,
-            (movedSrMgrId, direction) => { // Callback on Sr Mgr move
-                // Find the SDM in the main data again to modify it
-                const sdmToUpdate = currentSystemData.sdms.find(s => s.sdmId === currentSdmId);
-                if (sdmToUpdate) {
-                     sdmToUpdate.seniorManagerId = (direction === 'add') ? movedSrMgrId : null;
-                     console.log(`Set Sr Mgr for SDM ${currentSdmId} to ${sdmToUpdate.seniorManagerId}`);
-                 }
-            },
-            false, // singleSelectLeft = true for current Sr Mgr
-            true, // Allow adding new Sr Mgrs
-            'Enter New Sr. Manager Name',
-            (newSrMgrName) => { // Callback for adding new Sr Mgr
-                if (!newSrMgrName || newSrMgrName.trim() === '') return null;
-                newSrMgrName = newSrMgrName.trim();
-                let existingSrMgr = allSeniorManagers.find(s => s && s.seniorManagerName.toLowerCase() === newSrMgrName.toLowerCase()); // check s
-                if (existingSrMgr) {
-                    alert(`Senior Manager "${newSrMgrName}" already exists.`);
-                    return null;
-                }
-                const newSrMgrId = 'srMgr-' + Date.now();
-                const newSrMgr = { seniorManagerId: newSrMgrId, seniorManagerName: newSrMgrName };
-                currentSystemData.seniorManagers.push(newSrMgr); // Add to main data
-                allSeniorManagers.push(newSrMgr); // Add to local copy
-                console.log("Added new Senior Manager:", newSrMgr);
-                return { value: newSrMgrId, text: newSrMgrName };
-            }
-        );
-        srMgrContainer.appendChild(srMgrDualList);
-     }
-    // -----------------------------------
-     function createDualListContainer(contextIndex, leftLabel, rightLabel, currentOptions, availableOptions, leftField, rightField, moveCallback, multiSelectLeft = true, allowAddNew = false, addNewPlaceholder = '', addNewCallback = null) {
-        let container = document.createElement('div');
-        container.className = 'dual-list-container'; // Add class for potential styling
-        container.style.display = 'flex';
-        container.style.alignItems = 'center'; // Align items vertically centered
-        container.style.marginBottom = '10px';
-
-        // Left List (Current)
-        let leftDiv = document.createElement('div');
-        leftDiv.style.flex = '1';
-        leftDiv.style.marginRight = '5px';
-        let currentLabel = document.createElement('label');
-        currentLabel.innerText = leftLabel;
-        currentLabel.style.display = 'block'; // Ensure label is above input
-        let currentSelect = document.createElement('select');
-        currentSelect.multiple = multiSelectLeft; // Control multi-select for left list
-        currentSelect.size = 5;
-        currentSelect.style.width = '100%';
-        currentSelect.setAttribute('data-list-context-index', contextIndex); // Use a generic index attribute
-        currentSelect.setAttribute('data-field', leftField);
-        (currentOptions || []).forEach(opt => currentSelect.appendChild(new Option(opt.text, opt.value)));
-        leftDiv.appendChild(currentLabel);
-        leftDiv.appendChild(currentSelect);
-
-        // Buttons
-        let buttonsDiv = document.createElement('div');
-        buttonsDiv.style.display = 'flex';
-        buttonsDiv.style.flexDirection = 'column';
-        buttonsDiv.style.alignItems = 'center';
-        buttonsDiv.style.margin = '0 5px'; // Margin around buttons
-        let removeBtn = document.createElement('button');
-        removeBtn.type = 'button'; removeBtn.innerHTML = '&gt;'; // Right arrow
-        removeBtn.title = 'Remove selected item(s)';
-        removeBtn.style.marginBottom = '5px'; // Space between buttons
-        let addBtn = document.createElement('button');
-        addBtn.type = 'button'; addBtn.innerHTML = '&lt;'; // Left arrow
-         addBtn.title = 'Add selected item(s)';
-
-
-        // Right List (Available)
-        let rightDiv = document.createElement('div');
-        rightDiv.style.flex = '1';
-        rightDiv.style.marginLeft = '5px';
-        let availableLabel = document.createElement('label');
-        availableLabel.innerText = rightLabel;
-        availableLabel.style.display = 'block'; // Ensure label is above input
-        let availableSelect = document.createElement('select');
-        availableSelect.multiple = true; // Available list always allows multiple selection
-        availableSelect.size = 5;
-        availableSelect.style.width = '100%';
-        availableSelect.setAttribute('data-list-context-index', contextIndex); // Use a generic index attribute
-        availableSelect.setAttribute('data-field', rightField);
-         (availableOptions || []).forEach(opt => availableSelect.appendChild(new Option(opt.text, opt.value)));
-        rightDiv.appendChild(availableLabel);
-        rightDiv.appendChild(availableSelect);
-
-         // Add New Item Input/Button (Optional - Appended Below Right List)
-         let addNewContainer = null;
-         if (allowAddNew && addNewCallback) {
-            addNewContainer = document.createElement('div');
-            addNewContainer.style.marginTop = '5px';
-            addNewContainer.style.display = 'flex'; // Align input and button
-            let addNewInput = document.createElement('input');
-            addNewInput.type = 'text';
-            addNewInput.placeholder = addNewPlaceholder;
-            addNewInput.style.flexGrow = '1'; // Input takes available space
-            addNewInput.style.marginRight = '5px';
-            let addNewBtn = document.createElement('button');
-            addNewBtn.type = 'button';
-            addNewBtn.innerText = 'Add';
-            addNewBtn.onclick = (e) => {
-                e.preventDefault(); // Prevent potential form submission
-                const newItemData = addNewCallback(addNewInput.value); // Call the specific add logic
-                if (newItemData && newItemData.value && newItemData.text) { // If callback returns a valid option object
-                     const exists = Array.from(availableSelect.options).some(opt => opt.value === newItemData.value) ||
-                                   Array.from(currentSelect.options).some(opt => opt.value === newItemData.value);
-                     if (!exists) {
-                        availableSelect.appendChild(new Option(newItemData.text, newItemData.value));
-                     } else if (!newItemData.preventAdd) {
-                        console.warn("Item already exists in lists:", newItemData.text);
-                     }
-                     addNewInput.value = '';
-                 } else if (newItemData && newItemData.preventAdd) {
-                     addNewInput.value = '';
-                 }
-            };
-            addNewContainer.appendChild(addNewInput);
-            addNewContainer.appendChild(addNewBtn);
-            rightDiv.appendChild(addNewContainer);
-         }
-
-
-        // Button Actions
-        removeBtn.onclick = (e) => {
-             e.preventDefault();
-            Array.from(currentSelect.selectedOptions).forEach(option => {
-                availableSelect.appendChild(option); // Move to available
-                moveCallback(option.value, 'remove', contextIndex); // Notify caller, pass context index
-            });
-        };
-        addBtn.onclick = (e) => {
-             e.preventDefault();
-            Array.from(availableSelect.selectedOptions).forEach(option => {
-                 if (!multiSelectLeft) { // If left list is single select
-                     while (currentSelect.options.length > 0) {
-                        let existingOption = currentSelect.options[0];
-                        availableSelect.appendChild(existingOption); // Move back to available
-                        moveCallback(existingOption.value, 'remove', contextIndex); // Notify removal
-                     }
-                 }
-                 currentSelect.appendChild(option); // Move selected to current
-                 moveCallback(option.value, 'add', contextIndex); // Notify caller, pass context index
-            });
-        };
-
-        buttonsDiv.appendChild(addBtn); // Add button (<) first visually
-        buttonsDiv.appendChild(removeBtn); // Then Remove button (>)
-        container.appendChild(leftDiv);
-        container.appendChild(buttonsDiv);
-        container.appendChild(rightDiv);
-
-        return container;
-    } // --- End createDualListContainer ---
-
-
 } // --- End displayTeamsForEditing ---
+
 
 function updateTeamSize(teamIndex, newSize) {
     currentSystemData.teams[teamIndex].sizeOfTeam = newSize;
@@ -2742,15 +2647,18 @@ function validateTeamChanges() {
 
 
 /** Updated Save Team Changes **/
-/** Updated Save Team Changes - Add Validation **/
+/** Updated Save Team Changes - Includes Collapse Logic & Validation Call **/
 function saveTeamChanges(index) {
+    // Get the specific team object
     if (!currentSystemData || !currentSystemData.teams || index >= currentSystemData.teams.length) {
         console.error("Cannot save team, invalid index or data:", index);
         return;
     }
     const team = currentSystemData.teams[index];
 
-    // Recalculate BIS before validation/save
+    // --- Data is assumed to be updated by input listeners and dual-list callbacks ---
+
+    // Recalculate Builders In Seats just to be sure it matches the array
     team.buildersInSeats = team.engineers ? team.engineers.length : 0;
 
     // Validate required fields for this team
@@ -2760,160 +2668,134 @@ function saveTeamChanges(index) {
     }
 
     // *** Add cross-team validation before saving system state ***
-    if (!validateEngineerAssignments()) {
+    if (!validateEngineerAssignments()) { // Call validation function
         return; // Stop saving if validation fails
     }
     // *********************************************************
 
     console.log("Saving changes for team (via saveSystemChanges):", JSON.stringify(team, null, 2));
 
-    // Save the entire system data to local storage
+    // --- Save the entire system data to local storage ---
     saveSystemChanges(); // This function now also includes validation internally
 
-    // Update UI
-    generateTeamTable(currentSystemData);
-    generateTeamVisualization(currentSystemData);
+    // --- Update related UI elements ---
+    generateTeamTable(currentSystemData); // Update main Team Breakdown table
+    generateTeamVisualization(currentSystemData); // Update Team Visualization
 
     alert(`Changes for team "${team.teamName || team.teamIdentity}" potentially saved (system state saved).`);
 
-    // Optionally collapse edit section (unchanged)
+    // --- Collapse the edit section after saving attempt ---
     const teamDivs = document.querySelectorAll('#teamsManagement .team-edit');
-    if(index < teamDivs.length) { /* ... collapse logic ... */ }
+    if (index < teamDivs.length) {
+         const teamDiv = teamDivs[index];
+         const teamDetails = teamDiv.querySelector('.team-details');
+         const indicator = teamDiv.querySelector('h4 > span');
+         // Check if elements exist before modifying
+         if (teamDetails) teamDetails.style.display = 'none';
+         if (indicator) indicator.innerText = '+ ';
+     }
+    // -----------------------------------------------------
 }
 
 
 /** Display Services for Editing **/
 
+/** REVISED Display Services for Editing - Refresh on Add Platform Dep **/
 function displayServicesForEditing(services, containerId, expandedIndex = -1) {
     const servicesDiv = document.getElementById(containerId);
     servicesDiv.innerHTML = ''; // Clear existing content
 
     // Get a list of existing teams for the owning team selection
-    const teamOptions = currentSystemData.teams.map(team => ({
+    const teamOptions = (currentSystemData.teams || []).map(team => ({ // Added default empty array
         teamId: team.teamId,
         teamIdentity: team.teamIdentity
     }));
 
-   // Ensure platformDependencies is initialized
-   if (!currentSystemData.platformDependencies) {
-       currentSystemData.platformDependencies = [];
-   }
-    
-    // Build global platform dependencies list
-    buildGlobalPlatformDependencies();
-    
-services.forEach((service, index) => {
-    let serviceDiv = document.createElement('div');
-    serviceDiv.className = 'service-edit';
+    // Ensure platformDependencies is initialized and rebuilt
+    if (!currentSystemData.platformDependencies) {
+        currentSystemData.platformDependencies = [];
+    }
+    buildGlobalPlatformDependencies(); // Ensure the global list is up-to-date
 
-    // Create the header for the collapsible section
-    let serviceHeader = document.createElement('h4');
-    serviceHeader.innerText = `Service: ${service.serviceName || 'New Service'}`;
-    serviceHeader.style.cursor = 'pointer';
-    let indicator = document.createElement('span');
-    indicator.innerText = '+ '; // Starts with collapsed state
-    serviceHeader.insertBefore(indicator, serviceHeader.firstChild);
-    serviceHeader.onclick = () => {
-        // Toggle the visibility of the service details
-        const content = serviceDiv.querySelector('.service-details');
-        const isCollapsed = content.style.display === 'none';
-        content.style.display = isCollapsed ? 'block' : 'none';
-        indicator.innerText = isCollapsed ? '- ' : '+ ';
+    (services || []).forEach((service, index) => { // Added default empty array
+        if (!service) return; // Skip potentially null entries if array was modified externally
 
-        if (isCollapsed) {
-            // Service is being expanded
-            // Refresh Available Platform Dependencies
-            const otherDepsSelect = content.querySelector('select[data-field="availablePlatformDependencies"]');
-            const currentDepsSelect = content.querySelector('select[data-field="currentPlatformDependencies"]');
+        let serviceDiv = document.createElement('div');
+        serviceDiv.className = 'service-edit';
+        serviceDiv.setAttribute('data-service-index', index); // Add index for easier selection
 
-            // Get the current dependencies
-            const currentDeps = Array.from(currentDepsSelect.options).map(option => option.value);
+        // Header (collapsible)
+        let serviceHeader = document.createElement('h4');
+        // Ensure serviceName exists before using it
+        const headerText = service.serviceName || 'New Service';
+        serviceHeader.style.cursor = 'pointer';
+        let indicator = document.createElement('span');
+        indicator.innerText = (index === expandedIndex) ? '- ' : '+ '; // Set initial state based on expandedIndex
+        serviceHeader.appendChild(indicator);
+        serviceHeader.appendChild(document.createTextNode(`Service: ${headerText}`));
 
-            // Clear the otherDepsSelect options
-            otherDepsSelect.innerHTML = '';
-
-            // Populate other dependencies (platform dependencies not in current service)
-            currentSystemData.platformDependencies.forEach(dep => {
-                if (!currentDeps.includes(dep)) {
-                    let option = document.createElement('option');
-                    option.value = dep;
-                    option.text = dep;
-                    otherDepsSelect.appendChild(option);
-                }
-            });
-
-            // Refresh Available Service Dependencies
-            const otherServicesSelect = content.querySelector('select[data-field="availableServiceDependencies"]');
-            const currentServicesSelect = content.querySelector('select[data-field="currentServiceDependencies"]');
-
-            // Get the current service dependencies
-            const currentServiceDeps = Array.from(currentServicesSelect.options).map(option => option.value);
-
-            // Clear the otherServicesSelect options
-            otherServicesSelect.innerHTML = '';
-
-            // Populate other services (excluding the current service and current dependencies)
-            currentSystemData.services.forEach((otherService) => {
-                if (
-                    otherService.serviceName !== service.serviceName &&
-                    !currentServiceDeps.includes(otherService.serviceName)
-                ) {
-                    let option = document.createElement('option');
-                    option.value = otherService.serviceName;
-                    option.text = otherService.serviceName;
-                    otherServicesSelect.appendChild(option);
-                }
-            }); // <-- Added closing brace for forEach loop
-
-            // **Refresh Available APIs for Each API in the Service**
-            const apisContainer = content.querySelector('.apis-container');
-            const apiEditDivs = apisContainer ? apisContainer.querySelectorAll('.api-edit') : [];
-
-            service.apis.forEach((api, apiIndex) => {
-                const apiDiv = apiEditDivs[apiIndex];
-
-                // Get the select elements
-                const currentDependentApisSelect = apiDiv.querySelector('select[data-field="currentDependentApis"]');
-                const otherApisSelect = apiDiv.querySelector('select[data-field="availableApis"]');
-
-                // Get current dependent APIs
-                const currentDependentApis = Array.from(currentDependentApisSelect.options).map(option => option.value);
-
-                // Clear the otherApisSelect options
-                otherApisSelect.innerHTML = '';
-
-                // Collect all APIs across all services
-                let allApis = [];
-                currentSystemData.services.forEach(srv => {
-                    srv.apis.forEach(apiItem => {
-                        allApis.push(apiItem.apiName);
-                    });
-                });
-
-                // Populate other APIs (excluding the current API and current dependencies)
-                allApis.forEach(apiName => {
-                    if (
-                        apiName !== api.apiName &&
-                        !currentDependentApis.includes(apiName)
-                    ) {
-                        let option = document.createElement('option');
-                        option.value = apiName;
-                        option.text = apiName;
-                        otherApisSelect.appendChild(option);
-                    }
-                });
-            });
-        } // <-- Added closing brace for 'if (isCollapsed)' block
-    }; // <-- Added closing parenthesis and semicolon for 'serviceHeader.onclick' function
-
-
-        // Create the container for service details
+        // Details container
         let serviceDetails = document.createElement('div');
         serviceDetails.className = 'service-details';
-        // Set the display based on whether it's the expanded index
-        serviceDetails.style.display = (index === expandedIndex) ? 'block' : 'none';
+        serviceDetails.style.display = (index === expandedIndex) ? 'block' : 'none'; // Set initial state
 
-        // Service Name
+        // Toggle Functionality - Modified to refresh lists on expand
+        serviceHeader.onclick = () => {
+            const content = serviceDetails; // Use variable already defined
+            const isCurrentlyCollapsed = content.style.display === 'none' || content.style.display === '';
+            content.style.display = isCurrentlyCollapsed ? 'block' : 'none';
+            indicator.innerText = isCurrentlyCollapsed ? '- ' : '+ ';
+
+            // Refresh available lists only when expanding
+            if (isCurrentlyCollapsed) {
+                console.log("Refreshing lists on expand for service:", service.serviceName);
+                // Refresh Available Platform Dependencies
+                const otherPlatDepsSelect = content.querySelector('select[data-field="availablePlatformDependencies"]');
+                const currentPlatDepsSelect = content.querySelector('select[data-field="currentPlatformDependencies"]');
+                if (otherPlatDepsSelect && currentPlatDepsSelect) {
+                    const currentPlatDeps = Array.from(currentPlatDepsSelect.options).map(opt => opt.value);
+                    otherPlatDepsSelect.innerHTML = ''; // Clear
+                     (currentSystemData.platformDependencies || []).forEach(dep => {
+                        if (!currentPlatDeps.includes(dep)) {
+                            otherPlatDepsSelect.appendChild(new Option(dep, dep));
+                        }
+                    });
+                }
+
+                // Refresh Available Service Dependencies
+                const otherSvcDepsSelect = content.querySelector('select[data-field="availableServiceDependencies"]');
+                const currentSvcDepsSelect = content.querySelector('select[data-field="currentServiceDependencies"]');
+                if (otherSvcDepsSelect && currentSvcDepsSelect) {
+                    const currentSvcDeps = Array.from(currentSvcDepsSelect.options).map(opt => opt.value);
+                    otherSvcDepsSelect.innerHTML = ''; // Clear
+                     (currentSystemData.services || []).forEach(otherSvc => {
+                        if (otherSvc.serviceName !== service.serviceName && !currentSvcDeps.includes(otherSvc.serviceName)) {
+                            otherSvcDepsSelect.appendChild(new Option(otherSvc.serviceName, otherSvc.serviceName));
+                        }
+                    });
+                }
+
+                // Refresh Available APIs for each API within this service
+                const apiEditDivs = content.querySelectorAll('.api-edit');
+                const allApisList = (currentSystemData.services || []).flatMap(s => (s.apis || []).map(a => a.apiName));
+                apiEditDivs.forEach((apiDiv, apiIdx) => {
+                     const currentApiName = service.apis[apiIdx]?.apiName; // Get current API name
+                     const otherApiDepsSelect = apiDiv.querySelector('select[data-field="availableApis"]');
+                     const currentApiDepsSelect = apiDiv.querySelector('select[data-field="currentDependentApis"]');
+                     if (otherApiDepsSelect && currentApiDepsSelect && currentApiName) {
+                         const currentApiDeps = Array.from(currentApiDepsSelect.options).map(opt => opt.value);
+                         otherApiDepsSelect.innerHTML = ''; // Clear
+                         allApisList.forEach(apiName => {
+                             if (apiName !== currentApiName && !currentApiDeps.includes(apiName)) {
+                                 otherApiDepsSelect.appendChild(new Option(apiName, apiName));
+                             }
+                         });
+                     }
+                 });
+            }
+        };
+
+        // --- Service Name & Description ---
         let nameLabel = document.createElement('label');
         nameLabel.innerText = 'Service Name:';
         let nameInput = document.createElement('input');
@@ -2921,618 +2803,216 @@ services.forEach((service, index) => {
         nameInput.value = service.serviceName || '';
         nameInput.setAttribute('data-service-index', index);
         nameInput.setAttribute('data-field', 'serviceName');
+        nameInput.addEventListener('change', handleServiceInputChange); // Use shared handler
+        serviceDetails.appendChild(nameLabel); serviceDetails.appendChild(document.createElement('br'));
+        serviceDetails.appendChild(nameInput); serviceDetails.appendChild(document.createElement('br'));
 
-        serviceDetails.appendChild(nameLabel);
-        serviceDetails.appendChild(document.createElement('br'));
-        serviceDetails.appendChild(nameInput);
-        serviceDetails.appendChild(document.createElement('br'));
-
-        // Service Description
         let descLabel = document.createElement('label');
         descLabel.innerText = 'Service Description:';
         let descTextarea = document.createElement('textarea');
+        descTextarea.rows = 2; descTextarea.style.width = '90%';
         descTextarea.value = service.serviceDescription || '';
         descTextarea.setAttribute('data-service-index', index);
         descTextarea.setAttribute('data-field', 'serviceDescription');
+        descTextarea.addEventListener('change', handleServiceInputChange); // Use shared handler
+        serviceDetails.appendChild(descLabel); serviceDetails.appendChild(document.createElement('br'));
+        serviceDetails.appendChild(descTextarea); serviceDetails.appendChild(document.createElement('br'));
+        // -----------------------------------
 
-        serviceDetails.appendChild(descLabel);
-        serviceDetails.appendChild(document.createElement('br'));
-        serviceDetails.appendChild(descTextarea);
-        serviceDetails.appendChild(document.createElement('br'));
-
-        // Platform Dependencies - Two Lists Side by Side
-
-        // Create container div for platform dependencies
-        let platformDepsContainer = document.createElement('div');
-        platformDepsContainer.className = 'platform-deps-container';
-
-        // Left-hand list: Current dependencies
-        let currentDepsDiv = document.createElement('div');
-        currentDepsDiv.className = 'current-deps';
-
-        // Heading for current dependencies
-        let currentDepsLabel = document.createElement('label');
-        currentDepsLabel.innerText = 'Current Platform Dependencies:';
-        currentDepsDiv.appendChild(currentDepsLabel);
-        currentDepsDiv.appendChild(document.createElement('br'));
-
-        // Select element for current dependencies
-        let currentDepsSelect = document.createElement('select');
-        currentDepsSelect.setAttribute('data-service-index', index);
-        currentDepsSelect.setAttribute('data-field', 'currentPlatformDependencies');
-        currentDepsSelect.multiple = true;
-        currentDepsSelect.size = 5; // Adjust size as needed
-
-        // Populate current dependencies
-        (service.platformDependencies || []).forEach(dep => {
-            let option = document.createElement('option');
-            option.value = dep;
-            option.text = dep;
-            currentDepsSelect.appendChild(option);
-        });
-
-        currentDepsDiv.appendChild(currentDepsSelect);
-
-        // Buttons container
-        let buttonsDiv = document.createElement('div');
-        buttonsDiv.className = 'platform-deps-buttons';
-        buttonsDiv.style.display = 'flex';
-        buttonsDiv.style.flexDirection = 'column';
-        buttonsDiv.style.alignItems = 'center';
-        buttonsDiv.style.justifyContent = 'center';
-
-        // Remove Dependency Button
-        let removeDepButton = document.createElement('button');
-        removeDepButton.type = 'button';
-        removeDepButton.innerText = '> Remove Dependency';
-        removeDepButton.onclick = () => {
-            // Move selected options from currentDepsSelect to otherDepsSelect
-            Array.from(currentDepsSelect.selectedOptions).forEach(option => {
-                // Remove from currentDepsSelect
-                currentDepsSelect.removeChild(option);
-                // Add to otherDepsSelect
-                otherDepsSelect.appendChild(option);
-            });
-        };
-
-        buttonsDiv.appendChild(removeDepButton);
-
-        // Spacer
-        buttonsDiv.appendChild(document.createElement('br'));
-
-        // Add Dependency Button
-        let addDepButton = document.createElement('button');
-        addDepButton.type = 'button';
-        addDepButton.innerText = '< Add Dependency';
-        addDepButton.onclick = () => {
-            // Move selected options from otherDepsSelect to currentDepsSelect
-            Array.from(otherDepsSelect.selectedOptions).forEach(option => {
-                // Remove from otherDepsSelect
-                otherDepsSelect.removeChild(option);
-                // Add to currentDepsSelect
-                currentDepsSelect.appendChild(option);
-            });
-        };
-
-        buttonsDiv.appendChild(addDepButton);
-
-        // Right-hand list: Other platform dependencies
-        let otherDepsDiv = document.createElement('div');
-        otherDepsDiv.className = 'other-deps';
-
-        // Heading for other dependencies
-        let otherDepsLabel = document.createElement('label');
-        otherDepsLabel.innerText = 'Available Platform Dependencies:';
-        otherDepsDiv.appendChild(otherDepsLabel);
-        otherDepsDiv.appendChild(document.createElement('br'));
-
-        // Select element for other dependencies
-        let otherDepsSelect = document.createElement('select');
-        otherDepsSelect.setAttribute('data-service-index', index);
-        otherDepsSelect.setAttribute('data-field', 'availablePlatformDependencies');
-        otherDepsSelect.multiple = true;
-        otherDepsSelect.size = 5; // Adjust size as needed
-
-        // Populate other dependencies (platform dependencies not in current service)
-        currentSystemData.platformDependencies.forEach(dep => {
-            if (!service.platformDependencies || !service.platformDependencies.includes(dep)) {
-                let option = document.createElement('option');
-                option.value = dep;
-                option.text = dep;
-                otherDepsSelect.appendChild(option);
-            }
-        });
-
-        otherDepsDiv.appendChild(otherDepsSelect);
-
-        // Assemble the container
-        platformDepsContainer.style.display = 'flex';
-        platformDepsContainer.style.alignItems = 'center';
-        platformDepsContainer.appendChild(currentDepsDiv);
-        platformDepsContainer.appendChild(buttonsDiv);
-        platformDepsContainer.appendChild(otherDepsDiv);
-
-        serviceDetails.appendChild(platformDepsContainer);
-        serviceDetails.appendChild(document.createElement('br'));
-
-        // Input to add new platform dependency
-        let newPlatformInputLabel = document.createElement('label');
-        newPlatformInputLabel.innerText = 'Add New Platform Dependency:';
-        let newPlatformInputContainer = document.createElement('div');
-        newPlatformInputContainer.style.display = 'flex';
-        newPlatformInputContainer.style.alignItems = 'center';
-
-        let newPlatformInput = document.createElement('input');
-        newPlatformInput.type = 'text';
-        newPlatformInput.placeholder = 'Enter new platform dependency';
-        newPlatformInput.setAttribute('data-service-index', index);
-        newPlatformInput.setAttribute('data-field', 'newPlatformDependency');
-
-        let addNewPlatformButton = document.createElement('button');
-        addNewPlatformButton.type = 'button';
-        addNewPlatformButton.innerText = 'Add';
-        addNewPlatformButton.onclick = () => {
-            const newDep = newPlatformInput.value.trim();
-            if (newDep !== '') {
-                // Add to global platform dependencies if not already present
-                if (!currentSystemData.platformDependencies.includes(newDep)) {
-                    currentSystemData.platformDependencies.push(newDep);
-                     // Save the updated currentSystemData to localStorage
-                      const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
-                      systems[currentSystemData.systemName] = currentSystemData;
-                      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
-                      // Update other services' available dependencies
-                    updateAvailablePlatformDependencies(newDep);
+        // --- Platform Dependencies ---
+        const currentPlatDeps = (service.platformDependencies || []).map(dep => ({ value: dep, text: dep }));
+        const availablePlatDeps = (currentSystemData.platformDependencies || []).filter(dep => !(service.platformDependencies || []).includes(dep)).map(dep => ({ value: dep, text: dep }));
+        const platformContainer = createDualListContainer(
+            index, 'Current Platform Deps:', 'Available Platform Deps:',
+            currentPlatDeps, availablePlatDeps,
+            'currentPlatformDependencies', 'availablePlatformDependencies',
+            (movedDep, direction, serviceIdx) => { // Callback updates data model directly
+                const targetService = currentSystemData.services[serviceIdx];
+                if (!targetService.platformDependencies) targetService.platformDependencies = [];
+                if (direction === 'add') {
+                    if (!targetService.platformDependencies.includes(movedDep)) targetService.platformDependencies.push(movedDep);
+                } else {
+                    targetService.platformDependencies = targetService.platformDependencies.filter(d => d !== movedDep);
                 }
-                // Add to current service's dependencies
-                let option = document.createElement('option');
-                option.value = newDep;
-                option.text = newDep;
-                currentDepsSelect.appendChild(option);
-
-                // Remove from otherDepsSelect if present
-                let existingOption = Array.from(otherDepsSelect.options).find(opt => opt.value === newDep);
-                if (existingOption) {
-                    otherDepsSelect.removeChild(existingOption);
+            },
+            true, true, 'Enter New Platform Dependency', // multiSelectLeft = true, allowAddNew = true
+            (newDepName) => { // Add New Callback for Platform Deps
+                if (!newDepName || newDepName.trim() === '') return null;
+                newDepName = newDepName.trim();
+                // Add to global list if new
+                if (!currentSystemData.platformDependencies.includes(newDepName)) {
+                    currentSystemData.platformDependencies.push(newDepName);
+                    // Need to refresh *other* service editors' available lists!
+                     console.log("Added new global platform dep:", newDepName);
+                     // Trigger full refresh of service editors after adding global item
+                     const currentExpandedIndex = findExpandedServiceIndex();
+                     displayServicesForEditing(currentSystemData.services, containerId, currentExpandedIndex);
+                     return { preventAdd: true }; // Signal we handled the refresh
+                } else {
+                    // Return option so it can be added to the available list if not already there
+                     return { value: newDepName, text: newDepName };
                 }
-
-                // Clear the input
-                newPlatformInput.value = '';
             }
-        };
-
-        newPlatformInputContainer.appendChild(newPlatformInput);
-        newPlatformInputContainer.appendChild(addNewPlatformButton);
-
-        serviceDetails.appendChild(newPlatformInputLabel);
+        );
+        serviceDetails.appendChild(platformContainer);
         serviceDetails.appendChild(document.createElement('br'));
-        serviceDetails.appendChild(newPlatformInputContainer);
-        serviceDetails.appendChild(document.createElement('br'));
+        // ---------------------------
 
-        // Event listener for adding new platform dependency
-        newPlatformInput.addEventListener('change', (event) => {
-            const newDep = event.target.value.trim();
-            if (newDep !== '') {
-                // Add to global platform dependencies if not already present
-                if (!currentSystemData.platformDependencies.includes(newDep)) {
-                    currentSystemData.platformDependencies.push(newDep);
-                }
-                // Add to current service's dependencies
-                let option = document.createElement('option');
-                option.value = newDep;
-                option.text = newDep;
-                currentDepsSelect.appendChild(option);
+         // --- Service Dependencies ---
+         const currentSvcDeps = (service.serviceDependencies || []).map(dep => ({ value: dep, text: dep }));
+         const availableSvcDeps = (currentSystemData.services || [])
+             .filter(s => s.serviceName !== service.serviceName && !(service.serviceDependencies || []).includes(s.serviceName))
+             .map(s => ({ value: s.serviceName, text: s.serviceName }));
+         const serviceDepContainer = createDualListContainer(
+             index, 'Current Service Deps:', 'Available Services:',
+             currentSvcDeps, availableSvcDeps,
+             'currentServiceDependencies', 'availableServiceDependencies',
+             (movedSvc, direction, serviceIdx) => { // Callback updates data model directly
+                 const targetService = currentSystemData.services[serviceIdx];
+                 if (!targetService.serviceDependencies) targetService.serviceDependencies = [];
+                 if (direction === 'add') {
+                     if (!targetService.serviceDependencies.includes(movedSvc)) targetService.serviceDependencies.push(movedSvc);
+                 } else {
+                     targetService.serviceDependencies = targetService.serviceDependencies.filter(d => d !== movedSvc);
+                 }
+             },
+             true // multiSelectLeft = true
+             // Cannot add new *services* from here, only from main 'Add New Service' button
+         );
+         serviceDetails.appendChild(serviceDepContainer);
+         serviceDetails.appendChild(document.createElement('br'));
+        // ------------------------
 
-                // Remove from otherDepsSelect if present
-                let existingOption = Array.from(otherDepsSelect.options).find(opt => opt.value === newDep);
-                if (existingOption) {
-                    otherDepsSelect.removeChild(existingOption);
-                }
-
-                // Clear the input
-                event.target.value = '';
-            }
-        });
-
-        // **Service Dependencies - Two Lists Side by Side**
-
-        // Create container div for service dependencies
-        let serviceDepsContainer = document.createElement('div');
-        serviceDepsContainer.className = 'service-deps-container';
-
-        // Left-hand list: Current service dependencies
-        let currentServiceDepsDiv = document.createElement('div');
-        currentServiceDepsDiv.className = 'current-service-deps';
-
-        // Heading for current service dependencies
-        let currentServiceDepsLabel = document.createElement('label');
-        currentServiceDepsLabel.innerText = 'Current Service Dependencies:';
-        currentServiceDepsDiv.appendChild(currentServiceDepsLabel);
-        currentServiceDepsDiv.appendChild(document.createElement('br'));
-
-        // Select element for current service dependencies
-        let currentServiceDepsSelect = document.createElement('select');
-        currentServiceDepsSelect.setAttribute('data-service-index', index);
-        currentServiceDepsSelect.setAttribute('data-field', 'currentServiceDependencies');
-        currentServiceDepsSelect.multiple = true;
-        currentServiceDepsSelect.size = 5; // Adjust size as needed
-
-        // Populate current service dependencies
-        (service.serviceDependencies || []).forEach(depServiceName => {
-            let option = document.createElement('option');
-            option.value = depServiceName;
-            option.text = depServiceName;
-            currentServiceDepsSelect.appendChild(option);
-        });
-
-        currentServiceDepsDiv.appendChild(currentServiceDepsSelect);
-
-        // Buttons container
-        let serviceDepsButtonsDiv = document.createElement('div');
-        serviceDepsButtonsDiv.className = 'service-deps-buttons';
-        serviceDepsButtonsDiv.style.display = 'flex';
-        serviceDepsButtonsDiv.style.flexDirection = 'column';
-        serviceDepsButtonsDiv.style.alignItems = 'center';
-        serviceDepsButtonsDiv.style.justifyContent = 'center';
-
-        // Remove Dependency Button
-        let removeServiceDepButton = document.createElement('button');
-        removeServiceDepButton.type = 'button';
-        removeServiceDepButton.innerText = '> Remove Dependency';
-        removeServiceDepButton.onclick = () => {
-            // Move selected options from currentServiceDepsSelect to otherServicesSelect
-            Array.from(currentServiceDepsSelect.selectedOptions).forEach(option => {
-                // Remove from currentServiceDepsSelect
-                currentServiceDepsSelect.removeChild(option);
-                // Add to otherServicesSelect
-                otherServicesSelect.appendChild(option);
-            });
-        };
-
-        serviceDepsButtonsDiv.appendChild(removeServiceDepButton);
-
-        // Spacer
-        serviceDepsButtonsDiv.appendChild(document.createElement('br'));
-
-        // Add Dependency Button
-        let addServiceDepButton = document.createElement('button');
-        addServiceDepButton.type = 'button';
-        addServiceDepButton.innerText = '< Add Dependency';
-        addServiceDepButton.onclick = () => {
-            // Move selected options from otherServicesSelect to currentServiceDepsSelect
-            Array.from(otherServicesSelect.selectedOptions).forEach(option => {
-                // Remove from otherServicesSelect
-                otherServicesSelect.removeChild(option);
-                // Add to currentServiceDepsSelect
-                currentServiceDepsSelect.appendChild(option);
-            });
-        };
-
-        serviceDepsButtonsDiv.appendChild(addServiceDepButton);
-
-        // Right-hand list: Other services
-        let otherServicesDiv = document.createElement('div');
-        otherServicesDiv.className = 'other-services';
-
-        // Heading for other services
-        let otherServicesLabel = document.createElement('label');
-        otherServicesLabel.innerText = 'Available Services:';
-        otherServicesDiv.appendChild(otherServicesLabel);
-        otherServicesDiv.appendChild(document.createElement('br'));
-
-        // Select element for other services
-        let otherServicesSelect = document.createElement('select');
-        otherServicesSelect.setAttribute('data-service-index', index);
-        otherServicesSelect.setAttribute('data-field', 'availableServiceDependencies');
-        otherServicesSelect.multiple = true;
-        otherServicesSelect.size = 5; // Adjust size as needed
-
-        // Populate other services (excluding the current service and current dependencies)
-        currentSystemData.services.forEach((otherService) => {
-            if (
-                otherService.serviceName !== service.serviceName &&
-                !(service.serviceDependencies || []).includes(otherService.serviceName)
-            ) {
-                let option = document.createElement('option');
-                option.value = otherService.serviceName;
-                option.text = otherService.serviceName;
-                otherServicesSelect.appendChild(option);
-            }
-        });
-
-        otherServicesDiv.appendChild(otherServicesSelect);
-
-        // Assemble the container
-        serviceDepsContainer.style.display = 'flex';
-        serviceDepsContainer.style.alignItems = 'center';
-        serviceDepsContainer.appendChild(currentServiceDepsDiv);
-        serviceDepsContainer.appendChild(serviceDepsButtonsDiv);
-        serviceDepsContainer.appendChild(otherServicesDiv);
-
-        serviceDetails.appendChild(serviceDepsContainer);
-        serviceDetails.appendChild(document.createElement('br'));
-
-
-        // **APIs Section**
-        // Create container for APIs
+        // --- APIs Section ---
         let apisContainer = document.createElement('div');
         apisContainer.className = 'apis-container';
-
-        // Heading for APIs
         let apisLabel = document.createElement('h5');
-        apisLabel.innerText = 'APIs:';
+        apisLabel.innerText = 'APIs:'; apisLabel.style.marginTop = '15px';
         apisContainer.appendChild(apisLabel);
 
-        // Iterate over APIs
+        const allApisList = (currentSystemData.services || []).flatMap(s => (s.apis || []).map(a => a.apiName));
+
         (service.apis || []).forEach((api, apiIndex) => {
             let apiDiv = document.createElement('div');
             apiDiv.className = 'api-edit';
 
-            // API Name
-            let apiNameLabel = document.createElement('label');
-            apiNameLabel.innerText = 'API Name:';
-            let apiNameInput = document.createElement('input');
-            apiNameInput.type = 'text';
-            apiNameInput.value = api.apiName || '';
-            apiNameInput.setAttribute('data-service-index', index);
-            apiNameInput.setAttribute('data-api-index', apiIndex);
-            apiNameInput.setAttribute('data-field', 'apiName');
+            let apiNameLabel = document.createElement('label'); apiNameLabel.innerText = 'API Name:';
+            let apiNameInput = document.createElement('input'); apiNameInput.type = 'text'; apiNameInput.value = api.apiName || '';
+            apiNameInput.setAttribute('data-service-index', index); apiNameInput.setAttribute('data-api-index', apiIndex); apiNameInput.setAttribute('data-field', 'apiName');
+            apiNameInput.addEventListener('change', handleApiInputChange); // Use shared handler
+            apiDiv.appendChild(apiNameLabel); apiDiv.appendChild(document.createElement('br'));
+            apiDiv.appendChild(apiNameInput); apiDiv.appendChild(document.createElement('br'));
 
-            apiDiv.appendChild(apiNameLabel);
-            apiDiv.appendChild(document.createElement('br'));
-            apiDiv.appendChild(apiNameInput);
-            apiDiv.appendChild(document.createElement('br'));
+            let apiDescLabel = document.createElement('label'); apiDescLabel.innerText = 'API Description:';
+            let apiDescTextarea = document.createElement('textarea'); apiDescTextarea.rows = 2; apiDescTextarea.style.width = '90%'; apiDescTextarea.value = api.apiDescription || '';
+            apiDescTextarea.setAttribute('data-service-index', index); apiDescTextarea.setAttribute('data-api-index', apiIndex); apiDescTextarea.setAttribute('data-field', 'apiDescription');
+            apiDescTextarea.addEventListener('change', handleApiInputChange); // Use shared handler
+            apiDiv.appendChild(apiDescLabel); apiDiv.appendChild(document.createElement('br'));
+            apiDiv.appendChild(apiDescTextarea); apiDiv.appendChild(document.createElement('br'));
 
-            // API Description
-            let apiDescLabel = document.createElement('label');
-            apiDescLabel.innerText = 'API Description:';
-            let apiDescTextarea = document.createElement('textarea');
-            apiDescTextarea.value = api.apiDescription || '';
-            apiDescTextarea.setAttribute('data-service-index', index);
-            apiDescTextarea.setAttribute('data-api-index', apiIndex);
-            apiDescTextarea.setAttribute('data-field', 'apiDescription');
+            // API Dependencies Dual List
+            const currentApiDeps = (api.dependentApis || []).map(dep => ({ value: dep, text: dep }));
+            const availableApiDeps = allApisList
+                .filter(aName => aName !== api.apiName && !(api.dependentApis || []).includes(aName))
+                .map(aName => ({ value: aName, text: aName }));
+            const apiDepsContainer = createDualListContainer(
+                 apiIndex, // Context is the API index within the service
+                 'Current API Deps:', 'Available APIs:',
+                 currentApiDeps, availableApiDeps,
+                 'currentDependentApis', 'availableApis',
+                 (movedApi, direction, currentApiIndex) => { // Callback updates data model directly
+                     const targetService = currentSystemData.services[index]; // Outer service index
+                     const targetApi = targetService?.apis[currentApiIndex];
+                     if (targetApi) {
+                         if (!targetApi.dependentApis) targetApi.dependentApis = [];
+                         if (direction === 'add') {
+                             if (!targetApi.dependentApis.includes(movedApi)) targetApi.dependentApis.push(movedApi);
+                         } else {
+                             targetApi.dependentApis = targetApi.dependentApis.filter(d => d !== movedApi);
+                         }
+                     }
+                 },
+                 true // multiSelectLeft = true
+                 // Cannot add *new* APIs here, only via the service's 'Add New API' button
+             );
+             apiDiv.appendChild(apiDepsContainer);
+             apiDiv.appendChild(document.createElement('br'));
 
-            apiDiv.appendChild(apiDescLabel);
-            apiDiv.appendChild(document.createElement('br'));
-            apiDiv.appendChild(apiDescTextarea);
-            apiDiv.appendChild(document.createElement('br'));
 
-            // **Dependent APIs - Two Lists Side by Side**
-
-            // Create container div for dependent APIs
-            let dependentApisContainer = document.createElement('div');
-            dependentApisContainer.className = 'dependent-apis-container';
-
-            // Left-hand list: Current dependent APIs
-            let currentDependentApisDiv = document.createElement('div');
-            currentDependentApisDiv.className = 'current-dependent-apis';
-
-            // Heading for current dependent APIs
-            let currentDependentApisLabel = document.createElement('label');
-            currentDependentApisLabel.innerText = 'Current Dependent APIs:';
-            currentDependentApisDiv.appendChild(currentDependentApisLabel);
-            currentDependentApisDiv.appendChild(document.createElement('br'));
-
-            // Select element for current dependent APIs
-            let currentDependentApisSelect = document.createElement('select');
-            currentDependentApisSelect.setAttribute('data-service-index', index);
-            currentDependentApisSelect.setAttribute('data-api-index', apiIndex);
-            currentDependentApisSelect.setAttribute('data-field', 'currentDependentApis');
-            currentDependentApisSelect.multiple = true;
-            currentDependentApisSelect.size = 5; // Adjust size as needed
-
-            // Populate current dependent APIs
-            (api.dependentApis || []).forEach(depApiName => {
-                let option = document.createElement('option');
-                option.value = depApiName;
-                option.text = depApiName;
-                currentDependentApisSelect.appendChild(option);
-            });
-
-            currentDependentApisDiv.appendChild(currentDependentApisSelect);
-
-            // Buttons container
-            let dependentApisButtonsDiv = document.createElement('div');
-            dependentApisButtonsDiv.className = 'dependent-apis-buttons';
-            dependentApisButtonsDiv.style.display = 'flex';
-            dependentApisButtonsDiv.style.flexDirection = 'column';
-            dependentApisButtonsDiv.style.alignItems = 'center';
-            dependentApisButtonsDiv.style.justifyContent = 'center';
-
-            // Remove Dependency Button
-            let removeApiDepButton = document.createElement('button');
-            removeApiDepButton.type = 'button';
-            removeApiDepButton.innerText = '> Remove Dependency';
-            removeApiDepButton.onclick = () => {
-                // Move selected options from currentDependentApisSelect to otherApisSelect
-                Array.from(currentDependentApisSelect.selectedOptions).forEach(option => {
-                    // Remove from currentDependentApisSelect
-                    currentDependentApisSelect.removeChild(option);
-                    // Add to otherApisSelect
-                    otherApisSelect.appendChild(option);
-                });
-            };
-
-            dependentApisButtonsDiv.appendChild(removeApiDepButton);
-
-            // Spacer
-            dependentApisButtonsDiv.appendChild(document.createElement('br'));
-
-            // Add Dependency Button
-            let addApiDepButton = document.createElement('button');
-            addApiDepButton.type = 'button';
-            addApiDepButton.innerText = '< Add Dependency';
-            addApiDepButton.onclick = () => {
-                // Move selected options from otherApisSelect to currentDependentApisSelect
-                Array.from(otherApisSelect.selectedOptions).forEach(option => {
-                    // Remove from otherApisSelect
-                    otherApisSelect.removeChild(option);
-                    // Add to currentDependentApisSelect
-                    currentDependentApisSelect.appendChild(option);
-                });
-            };
-
-            dependentApisButtonsDiv.appendChild(addApiDepButton);
-
-            // Right-hand list: Other APIs
-            let otherApisDiv = document.createElement('div');
-            otherApisDiv.className = 'other-apis';
-
-            // Heading for other APIs
-            let otherApisLabel = document.createElement('label');
-            otherApisLabel.innerText = 'Available APIs:';
-            otherApisDiv.appendChild(otherApisLabel);
-            otherApisDiv.appendChild(document.createElement('br'));
-
-            // Select element for other APIs
-            let otherApisSelect = document.createElement('select');
-            otherApisSelect.setAttribute('data-service-index', index);
-            otherApisSelect.setAttribute('data-api-index', apiIndex);
-            otherApisSelect.setAttribute('data-field', 'availableApis');
-            otherApisSelect.multiple = true;
-            otherApisSelect.size = 5; // Adjust size as needed
-
-            // Populate other APIs (excluding the current API and current dependencies)
-            // Collect all APIs across all services
-            let allApis = [];
-            currentSystemData.services.forEach(srv => {
-                srv.apis.forEach(apiItem => {
-                    allApis.push(apiItem.apiName);
-                });
-            });
-
-            // Exclude current API and current dependencies
-            allApis.forEach(apiName => {
-                if (
-                    apiName !== api.apiName &&
-                    !(api.dependentApis || []).includes(apiName)
-                ) {
-                    let option = document.createElement('option');
-                    option.value = apiName;
-                    option.text = apiName;
-                    otherApisSelect.appendChild(option);
-                }
-            });
-
-            otherApisDiv.appendChild(otherApisSelect);
-
-            // Assemble the container
-            dependentApisContainer.style.display = 'flex';
-            dependentApisContainer.style.alignItems = 'center';
-            dependentApisContainer.appendChild(currentDependentApisDiv);
-            dependentApisContainer.appendChild(dependentApisButtonsDiv);
-            dependentApisContainer.appendChild(otherApisDiv);
-
-            apiDiv.appendChild(dependentApisContainer);
-            apiDiv.appendChild(document.createElement('br'));
-
-            // Delete API Button
-            let deleteApiButton = document.createElement('button');
-            deleteApiButton.type = 'button';
-            deleteApiButton.innerText = 'Delete API';
-            deleteApiButton.onclick = () => deleteApi(index, apiIndex, containerId);
-
+            let deleteApiButton = document.createElement('button'); deleteApiButton.type = 'button'; deleteApiButton.innerText = 'Delete API';
+            deleteApiButton.onclick = () => deleteApi(index, apiIndex, containerId); // Pass containerId
             apiDiv.appendChild(deleteApiButton);
 
             apisContainer.appendChild(apiDiv);
         });
 
-        // Add New API Button
-        let addApiButton = document.createElement('button');
-        addApiButton.type = 'button';
-        addApiButton.innerText = 'Add New API';
-        addApiButton.onclick = () => addNewApi(index, containerId);
-
+        let addApiButton = document.createElement('button'); addApiButton.type = 'button'; addApiButton.innerText = 'Add New API';
+        addApiButton.onclick = () => addNewApi(index, containerId); // Pass containerId
+        apisContainer.appendChild(addApiButton);
         serviceDetails.appendChild(apisContainer);
-        serviceDetails.appendChild(addApiButton);
         serviceDetails.appendChild(document.createElement('br'));
+        // --------------------
 
-        // Delete Service Button
-        let deleteServiceButton = document.createElement('button');
-        deleteServiceButton.type = 'button';
-        deleteServiceButton.innerText = 'Delete Service';
-        deleteServiceButton.onclick = () => {
-            if (confirm('Are you sure you want to delete this service?')) {
-                deleteService(index, containerId);
-            }
-        };
-
+        // --- Action Buttons ---
+        let deleteServiceButton = document.createElement('button'); deleteServiceButton.type = 'button'; deleteServiceButton.innerText = 'Delete Service';
+        deleteServiceButton.style.color = 'red'; deleteServiceButton.style.marginLeft = '10px';
+        deleteServiceButton.onclick = () => { if (confirm('Are you sure?')) deleteService(index, containerId); }; // Pass containerId
         serviceDetails.appendChild(deleteServiceButton);
-        
-        //Save Service button
-        let saveServiceButton = document.createElement('button');
-        saveServiceButton.type = 'button';
-        saveServiceButton.innerText = 'Save Service Changes';
-        saveServiceButton.onclick = () => saveServiceChanges(index);
-        
-        serviceDetails.appendChild(saveServiceButton);        
 
-        // Append header and details to serviceDiv
+        let saveServiceButton = document.createElement('button'); saveServiceButton.type = 'button'; saveServiceButton.innerText = 'Save Service Changes';
+        saveServiceButton.style.marginLeft = '10px';
+        saveServiceButton.onclick = () => saveServiceChanges(index); // Saves only this service's state from currentSystemData
+        serviceDetails.appendChild(saveServiceButton);
+        // --------------------
+
         serviceDiv.appendChild(serviceHeader);
         serviceDiv.appendChild(serviceDetails);
         servicesDiv.appendChild(serviceDiv);
-    });
+    }); // End services.forEach
 
-    // Function to update other services' available dependencies when a new platform dependency is added
-    function updateAvailablePlatformDependencies(newDep) {
-        // For each service (excluding the current one), add the new dependency to the available list if not already present
-        services.forEach((service, index) => {
-            // Skip if the service is already being edited (current service)
-            const serviceEditDivs = servicesDiv.querySelectorAll('.service-edit');
-            const currentServiceDiv = serviceEditDivs[index];
-            const otherDepsSelect = currentServiceDiv.querySelector('select[data-field="availablePlatformDependencies"]');
-
-            // Check if the new dependency is already in current dependencies
-            const currentDepsSelect = currentServiceDiv.querySelector('select[data-field="currentPlatformDependencies"]');
-            const isInCurrentDeps = Array.from(currentDepsSelect.options).some(opt => opt.value === newDep);
-
-            if (!isInCurrentDeps) {
-                // Add to available dependencies if not already present
-                const isInAvailableDeps = Array.from(otherDepsSelect.options).some(opt => opt.value === newDep);
-                if (!isInAvailableDeps) {
-                    let option = document.createElement('option');
-                    option.value = newDep;
-                    option.text = newDep;
-                    otherDepsSelect.appendChild(option);
-                }
+    // --- Shared Event Handlers for Inputs ---
+    function handleServiceInputChange(event) {
+        const serviceIndex = parseInt(event.target.getAttribute('data-service-index'));
+        const field = event.target.getAttribute('data-field');
+        const value = event.target.value;
+        if (serviceIndex >= 0 && serviceIndex < currentSystemData.services.length) {
+            currentSystemData.services[serviceIndex][field] = value;
+            // If service name changed, update the header
+            if (field === 'serviceName') {
+                 const header = event.target.closest('.service-edit')?.querySelector('h4');
+                 if (header) {
+                     const indicatorSpan = header.querySelector('span');
+                     header.textContent = `Service: ${value || 'New Service'}`; // Recreate text
+                     if(indicatorSpan) header.insertBefore(indicatorSpan, header.firstChild); // Add indicator back
+                 }
             }
-        });
+        }
     }
 
-    // Add event listeners for input changes (excluding platform dependencies, which are handled separately)
-    const inputs = servicesDiv.querySelectorAll('input, textarea, select');
-    inputs.forEach(input => {
-        if (input.getAttribute('data-field') !== 'currentPlatformDependencies' && input.getAttribute('data-field') !== 'availablePlatformDependencies') {
-            input.addEventListener('change', (event) => {
-                const serviceIndex = parseInt(event.target.getAttribute('data-service-index'));
-                const apiIndex = event.target.getAttribute('data-api-index');
-                const field = event.target.getAttribute('data-field');
-                const value = event.target.value;
-
-                if (apiIndex !== null) {
-                    // Update API data
-                    if (field === 'dependentApis') {
-                        currentSystemData.services[serviceIndex].apis[apiIndex][field] = value.split(',').map(s => s.trim());
-                    } else {
-                        currentSystemData.services[serviceIndex].apis[apiIndex][field] = value;
-                    }
-                } else if (field === 'serviceName') {
-                    // Update service name and header
-                    currentSystemData.services[serviceIndex][field] = value;
-                    const serviceHeader = servicesDiv.querySelectorAll('.service-edit')[serviceIndex].querySelector('h4');
-                    serviceHeader.innerText = `Service: ${value || 'New Service'}`;
-                    serviceHeader.insertBefore(serviceHeader.querySelector('span'), serviceHeader.firstChild);
-                } else if (field === 'serviceDependencies') {
-                    // Get selected options
-                    const selectedOptions = Array.from(event.target.selectedOptions).map(option => option.value);
-                    currentSystemData.services[serviceIndex][field] = selectedOptions;
-                } else {
-                    currentSystemData.services[serviceIndex][field] = value;
-                }
-            });
+     function handleApiInputChange(event) {
+        const serviceIndex = parseInt(event.target.getAttribute('data-service-index'));
+        const apiIndex = parseInt(event.target.getAttribute('data-api-index'));
+        const field = event.target.getAttribute('data-field');
+        const value = event.target.value;
+        if (serviceIndex >= 0 && serviceIndex < currentSystemData.services.length &&
+            apiIndex >= 0 && apiIndex < currentSystemData.services[serviceIndex].apis.length) {
+            currentSystemData.services[serviceIndex].apis[apiIndex][field] = value;
         }
-    });
-}
+    }
+    // ------------------------------------
+
+     // --- Helper to find current expanded service index ---
+     function findExpandedServiceIndex() {
+         const serviceDetailDivs = servicesDiv.querySelectorAll('.service-details');
+         for (let i = 0; i < serviceDetailDivs.length; i++) {
+             if (serviceDetailDivs[i].style.display === 'block') {
+                 return i;
+             }
+         }
+         return -1; // Not found or none expanded
+     }
+
+} // --- End displayServicesForEditing ---
 
 function saveServiceChanges(serviceIndex) {
     // Perform validation (optional)
@@ -3613,12 +3093,13 @@ function addNewEditService() {
 
 /** Add New Service **/
 
+/** REVISED Add New Service - Simplified Refresh Call **/
 function addNewService() {
     // Create a new service object with default values
     const newService = {
-        serviceName: 'New Service',
+        serviceName: 'New Service ' + ((currentSystemData.services?.length || 0) + 1),
         serviceDescription: '',
-        owningTeamId: '',
+        owningTeamId: null,
         apis: [],
         serviceDependencies: [],
         platformDependencies: []
@@ -3629,12 +3110,30 @@ function addNewService() {
         currentSystemData.services = [];
     }
     currentSystemData.services.push(newService);
-    
-    // Get the index of the newly added service
-    const newServiceIndex = currentSystemData.services.length - 1;
+    console.log("Added new service to data:", newService); // Log data addition
 
-    // Refresh the service editing display and expand the new service
-    displayServicesForEditing(currentSystemData.services, 'editServicesManagement', newServiceIndex);
+    // --- Refresh BOTH Service and Team editing displays ---
+    // Call display functions WITHOUT trying to preserve expanded index for now
+    console.log("Refreshing service editors...");
+    try {
+        displayServicesForEditing(currentSystemData.services, 'editServicesManagement');
+    } catch (error) {
+         console.error("Error during displayServicesForEditing:", error);
+         alert("Error refreshing service list. Check console.");
+         return; // Stop if service display fails
+    }
+
+
+    console.log("Refreshing team editors...");
+    try {
+         displayTeamsForEditing(currentSystemData.teams);
+     } catch (error) {
+         console.error("Error during displayTeamsForEditing:", error);
+         alert("Error refreshing team list. Check console.");
+         return; // Stop if team display fails
+     }
+    console.log("UI refresh attempt complete after adding service.");
+    // ------------------------------------------------------
 }
 
 /** Delete Service **/
@@ -3653,19 +3152,33 @@ function deleteService(serviceIndex, containerId) {
 
 /** Add New API **/
 
-function addNewApi(serviceIndex) {
+/** REVISED Add New API - Refresh UI **/
+function addNewApi(serviceIndex, containerId = 'editServicesManagement') { // Added containerId parameter
+    // Find the service
+    if (!currentSystemData || !currentSystemData.services || serviceIndex >= currentSystemData.services.length) {
+        console.error("Cannot add API, invalid service index:", serviceIndex);
+        return;
+    }
+    const service = currentSystemData.services[serviceIndex];
+
     // Create a new API object with default values
     const newApi = {
-        apiName: 'New API',
+        apiName: 'New API ' + ((service.apis?.length || 0) + 1), // Slightly more unique default name
         apiDescription: '',
         dependentApis: []
     };
 
     // Add to the service's APIs
-    currentSystemData.services[serviceIndex].apis.push(newApi);
+    if (!service.apis) {
+        service.apis = [];
+    }
+    service.apis.push(newApi);
 
-    // Refresh the service editing display
-    displayServicesForEditing(currentSystemData.services, 'editServicesManagement', serviceIndex);
+    // --- Refresh the service editing display ---
+    // Re-rendering ensures all 'Available APIs' lists are updated
+    console.log(`Refreshing service editors after adding new API to service index ${serviceIndex}...`);
+    displayServicesForEditing(currentSystemData.services, containerId, serviceIndex); // Try to re-expand the current service
+    // -----------------------------------------
 }
 
 /** Delete API **/
@@ -3810,89 +3323,103 @@ function saveSystemDetails() {
 
 /** Save All Changes **/
 
+/** REVISED Save All Changes - Handles Creation and Updates */
 function saveAllChanges() {
-    if (currentMode === Modes.CREATING || currentMode === Modes.EDITING) {
-        // Validate required fields
-        if (!currentSystemData.systemName || !currentSystemData.systemDescription) {
-            alert('Please enter the System Name and System Description before saving.');
-            return;
-        }
-
-          //Save System Details just in Case
-          saveSystemDetails();
-          
-      // Update team data from inputs
-          const inputs = document.querySelectorAll('#teamsManagement input, #teamsManagement textarea, #teamsManagement select');
-          inputs.forEach(input => {
-              const index = input.getAttribute('data-team-index');
-              const field = input.getAttribute('data-field');
-              const value = input.value;
-      
-              if (field === 'sizeOfTeam') {
-                  currentSystemData.teams[index][field] = parseInt(value);
-              } else if (field === 'sdmName' || field === 'newSdmName') {
-                  // Handle SDM Name
-                  let sdmName = value.trim();
-                  if (sdmName !== '') {
-                      currentSystemData.teams[index]['sdmName'] = sdmName;
-      
-                      // Add to SDMs list if new
-                      if (!currentSystemData.sdms.some(sdm => sdm.sdmName === sdmName)) {
-                          const newSdmId = 'sdm' + (currentSystemData.sdms.length + 1);
-                          currentSystemData.sdms.push({ sdmId: newSdmId, sdmName: sdmName });
-                          currentSystemData.teams[index]['sdmId'] = newSdmId;
-                      } else {
-                          // Find existing SDM ID
-                          const existingSdm = currentSystemData.sdms.find(sdm => sdm.sdmName === sdmName);
-                          currentSystemData.teams[index]['sdmId'] = existingSdm.sdmId;
-                      }
-                  }
-              } else if (field === 'pmtName' || field === 'newPmtName') {
-                  // Handle PMT Name
-                  let pmtName = value.trim();
-                  if (pmtName !== '') {
-                      currentSystemData.teams[index]['pmtName'] = pmtName;
-      
-                      // Add to PMTs list if new
-                      if (!currentSystemData.pmts.some(pmt => pmt.pmtName === pmtName)) {
-                          const newPmtId = 'pmt' + (currentSystemData.pmts.length + 1);
-                          currentSystemData.pmts.push({ pmtId: newPmtId, pmtName: pmtName });
-                          currentSystemData.teams[index]['pmtId'] = newPmtId;
-                      } else {
-                          // Find existing PMT ID
-                          const existingPmt = currentSystemData.pmts.find(pmt => pmt.pmtName === pmtName);
-                          currentSystemData.teams[index]['pmtId'] = existingPmt.pmtId;
-                      }
-                  }
-              } else {
-                  currentSystemData.teams[index][field] = value;
-              }
-          });
-      
-          // Optional: Update service data from inputs (if necessary)
-          // If event listeners are reliable, this may not be needed.
-          // Save changes to local storage
-          saveSystemChanges();    
-      
-          // Save the updated system to local storage
-          const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
-          systems[currentSystemData.systemName] = currentSystemData;
-          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
-      
-          // If the system name has changed, handle renaming in local storage
-          const oldSystemName = currentSystemData.oldSystemName || currentSystemData.systemName;
-          if (oldSystemName && oldSystemName !== currentSystemData.systemName) {
-              delete systems[oldSystemName];
-          }
-      
-          systems[currentSystemData.systemName] = currentSystemData;
-          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
-      
-          alert('All changes saved.');
-
-      } else {
-        alert('No changes to save!');
+    if (currentMode !== Modes.CREATING && currentMode !== Modes.EDITING) {
+         alert('Not in creation or edit mode. No changes to save.');
+         return;
     }
+
+    // --- Get Final System Name and Description from Form ---
+    const systemNameInput = document.getElementById('systemNameInput');
+    const systemDescriptionTextarea = document.getElementById('systemDescriptionInput');
+    const finalSystemName = systemNameInput.value.trim();
+    const finalSystemDescription = systemDescriptionTextarea.value.trim();
+
+    if (!finalSystemName) {
+        alert('System Name cannot be empty. Please enter a name before saving.');
+        systemNameInput.focus(); // Focus the input field
+        return;
+    }
+    // Basic check for description, can be optional
+    if (!finalSystemDescription) {
+         if (!confirm('System Description is empty. Save anyway?')) {
+             systemDescriptionTextarea.focus();
+             return;
+         }
+    }
+    // --------------------------------------------------
+
+    // --- Update currentSystemData with final name/desc ---
+    // This ensures the object being saved has the correct top-level info
+    const oldSystemNameKey = currentSystemData.systemName; // Store the name *before* updating
+    currentSystemData.systemName = finalSystemName;
+    currentSystemData.systemDescription = finalSystemDescription;
+    console.log(`Attempting to save system as: "${finalSystemName}"`);
+    // -----------------------------------------------------
+
+    // --- Perform Validation ---
+    // Ensure engineer assignments are valid before saving
+    if (!validateEngineerAssignments()) {
+         // If validation fails, revert name/desc change in the data object
+         // to avoid potential mismatches if user cancels or tries again.
+         currentSystemData.systemName = oldSystemNameKey;
+         currentSystemData.systemDescription = document.getElementById('systemDescriptionInput').value; // Or revert based on how it was before validation
+         return; // Stop the save
+    }
+    // Add other validation checks here if needed (e.g., required fields for teams/services)
+    // ------------------------
+
+
+    // --- Save to Local Storage ---
+    try {
+        const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
+
+         // Check if renaming an existing system or creating a new one
+         if (currentMode === Modes.EDITING && oldSystemNameKey && oldSystemNameKey !== finalSystemName) {
+             // If the name changed during editing, remove the old entry
+             if (systems[oldSystemNameKey]) {
+                 delete systems[oldSystemNameKey];
+                 console.log(`Removed old system entry for key: "${oldSystemNameKey}" due to rename.`);
+             }
+         }
+         // Check if overwriting another system with the new name (relevant for 'Create New' if name exists)
+         if (systems[finalSystemName] && (currentMode === Modes.CREATING || oldSystemNameKey !== finalSystemName)) {
+            if (!confirm(`A system named "${finalSystemName}" already exists. Overwrite it?`)) {
+                // Revert data object name change before cancelling
+                currentSystemData.systemName = oldSystemNameKey;
+                currentSystemData.systemDescription = document.getElementById('systemDescriptionInput').value; // Revert desc too
+                return; // User cancelled overwrite
+            }
+         }
+
+
+        // Save the current data under the final name
+        systems[finalSystemName] = currentSystemData;
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
+
+        alert(`System "${finalSystemName}" saved successfully.`);
+
+        // --- Post-Save Actions ---
+        if (currentMode === Modes.CREATING) {
+             // After successfully creating, switch to Browse mode for the new system
+             currentMode = Modes.Browse;
+             // Optionally reload the view for the newly saved system
+             loadSavedSystem(finalSystemName); // Load it properly
+        } else {
+             // If editing, maybe exit edit mode or refresh views
+              exitEditMode(); // Go back to Browse mode
+        }
+        // -----------------------
+
+    } catch (error) {
+        console.error("Error saving system to local storage:", error);
+        alert("An error occurred while trying to save the system. Please check the console for details.");
+         // Revert data object name change on error
+         currentSystemData.systemName = oldSystemNameKey;
+         currentSystemData.systemDescription = document.getElementById('systemDescriptionInput').value;
+    }
+    // -------------------------
 }
 
 /** Exit Edit Mode **/
@@ -4020,29 +3547,51 @@ function createNewSystem() {
     enterEditMode(true); // Pass true flag for creation mode
 }
 
+/** REVISED Return to Home - Fix errors and hide new views */
 function returnToHome() {
+    console.log("Returning to home view..."); // Added log
     currentMode = Modes.NAVIGATION;
-    
-    // Hide all sections
-    document.getElementById('systemCreationForm').style.display = 'none';
-    document.getElementById('systemEditForm').style.display = 'none';
-    document.getElementById('visualization').style.display = 'none';
-    document.getElementById('teamVisualization').style.display = 'none';
-    document.getElementById('teamBreakdown').style.display = 'none';
-    document.getElementById('serviceRelationshipsVisualization').style.display = 'none'; // Hide the new visualization
-    document.getElementById('dependencyVisualization').style.display = 'none'; // Corrected ID    
-    document.getElementById('serviceDependenciesTable').style.display = 'none'; // Hide the new table
-    document.querySelector('.edit-menu').style.display = 'none';
+    currentSystemData = null; // Reset loaded system data
 
-    document.getElementById('organogramView').style.display = 'none';
-    document.getElementById('engineerTableView').style.display = 'none';    
+    // --- Hide ALL possible view sections ---
+    // Core Views
+    const coreViews = ['systemEditForm', 'visualization', 'teamVisualization', 'teamBreakdown', 'serviceRelationshipsVisualization', 'dependencyVisualization', 'serviceDependenciesTable'];
+    coreViews.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.style.display = 'none';
+    });
+
+     // New Views
+     const newViews = ['organogramView', 'engineerTableView'];
+     newViews.forEach(id => {
+         const element = document.getElementById(id);
+         if (element) element.style.display = 'none';
+     });
+
+     // Menus
+     const editMenu = document.querySelector('.edit-menu');
+     if (editMenu) editMenu.style.display = 'none';
+     // ----------------------------------------
 
     // Show the main menu
-    document.querySelector('.menu').style.display = 'block';
+    const mainMenu = document.querySelector('.menu');
+    if (mainMenu) mainMenu.style.display = 'block';
 
     // Update page title and description
-    document.getElementById('pageTitle').innerText = "Architecture Visualization Tool";
-    document.getElementById('systemDescription').innerText = "Load a previously saved system or create a new system...";
+    const pageTitle = document.getElementById('pageTitle');
+    if(pageTitle) pageTitle.innerText = "Architecture Visualization Tool";
+    const sysDesc = document.getElementById('systemDescription');
+    if(sysDesc) sysDesc.innerText = "Load a previously saved system or create a new system...";
+
+     // Clear any potential leftover popups (like the system list)
+     const systemListDiv = document.getElementById('systemListDiv');
+     if (systemListDiv) {
+         document.body.removeChild(systemListDiv);
+     }
+     // Remove lingering tooltips
+     d3.selectAll('.tooltip').remove();
+
+     console.log("Home view displayed.");
 }
 
 function resetToDefaults() {
