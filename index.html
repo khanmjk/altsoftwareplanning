@@ -287,8 +287,9 @@
 <!-- Edit System Button -->
 <div class="edit-menu" style="display: none;">
     <button id="editSystemButton" onclick="enterEditMode()">Edit System</button>
-    <button id="viewOrgChartButton" onclick="showOrganogramView()">View Org Chart</button> 
-    <button id="viewEngineerListButton" onclick="showEngineerTableView()">View Engineer List</button> 
+    <button id="viewOrgChartButton" onclick="showOrganogramView()">View Org Chart</button>
+    <button id="viewEngineerListButton" onclick="showEngineerTableView()">View Engineer List</button>
+    <button id="manageYearPlanButton" onclick="showPlanningView()">Manage Year Plan</button>
     <button id="deleteSystemButton" onclick="deleteSystem()">Delete System</button>
 </div>
 
@@ -446,6 +447,18 @@
     </table>
 </div>
 
+<div id="planningView" style="display:none; margin-top: 20px;">
+    <h2 id="planningViewTitle">Yearly Planning View</h2>
+    <div id="planningCapacitySummary" style="margin-bottom: 15px; font-weight: bold;">
+        </div>
+    <div id="planningTableContainer">
+        </div>
+    <div id="addInitiativeSection" style="margin-top: 20px; padding: 15px; border: 1px solid #ccc;">
+        <h3>Add New Initiative</h3>
+        <p>(UI for adding new initiatives will be implemented later)</p>
+    </div>
+</div>
+
 <script>
 /* JavaScript Code */
 /* global variables */
@@ -458,7 +471,8 @@ const Modes = {
     NAVIGATION: 'navigation',
     BROWSING: 'browsing',
     EDITING: 'editing',
-    CREATING: 'creating'
+    CREATING: 'creating',
+    PLANNING: 'planning' 
 };
 let currentMode = Modes.NAVIGATION;
 
@@ -799,16 +813,65 @@ const sampleServicesDataStreamView = [
   }
 ];
 
-/** Updated System Data for StreamView (including seniorManagers) **/
+/** Updated System Data for StreamView (including seniorManagers and yearlyInitiatives) **/
 const sampleSystemDataStreamView = {
     systemName: 'StreamView',
     systemDescription: 'StreamView is a video streaming platform that provides personalized content to users worldwide.',
-    seniorManagers: sampleSeniorManagersDataStreamView, // Added Senior Managers
+    seniorManagers: sampleSeniorManagersDataStreamView,
     teams: sampleTeamsDataStreamView,
     sdms: sampleSDMsDataStreamView,
     pmts: samplePMTsDataStreamView,
-    services: sampleServicesDataStreamView // Assuming sampleServicesDataStreamView is defined elsewhere as before
-    // platformDependencies is built dynamically by buildGlobalPlatformDependencies()
+    services: sampleServicesDataStreamView,
+    platformDependencies: [], // Will be built dynamically on load
+    yearlyInitiatives: [
+        // --- Protected Initiatives ---
+        {
+            initiativeId: 'init-sv-ktlo', title: 'KTLO / Operational Excellence', description: 'Ongoing bug fixes, refactoring, library updates, minor enhancements.', relatedBusinessGoalId: 'eng-excellence', isProtected: true,
+            assignments: [ // Assign estimate to all teams
+                { teamId: 'team1', sdeYears: 1.0 }, { teamId: 'team2', sdeYears: 1.0 }, { teamId: 'team3', sdeYears: 0.75 }, { teamId: 'team4', sdeYears: 1.25 },
+                { teamId: 'team5', sdeYears: 0.75 }, { teamId: 'team6', sdeYears: 0.5 }, { teamId: 'team7', sdeYears: 1.0 }, { teamId: 'team8', sdeYears: 0.5 }
+            ]
+        },
+        {
+            initiativeId: 'init-sv-oncall', title: 'On-Call / Production Support', description: 'Dedicated capacity for handling live site issues and production incidents.', relatedBusinessGoalId: 'ops-stability', isProtected: true,
+            assignments: [ // Assign 1 SDE Year to all teams
+                 { teamId: 'team1', sdeYears: 1.0 }, { teamId: 'team2', sdeYears: 1.0 }, { teamId: 'team3', sdeYears: 1.0 }, { teamId: 'team4', sdeYears: 1.0 },
+                 { teamId: 'team5', sdeYears: 1.0 }, { teamId: 'team6', sdeYears: 1.0 }, { teamId: 'team7', sdeYears: 1.0 }, { teamId: 'team8', sdeYears: 1.0 }
+            ]
+        },
+        {
+            initiativeId: 'init-sv-security', title: 'Mandatory Security Hardening (Compliance)', description: 'Address critical security vulnerabilities and ensure compliance (e.g., SOC2, GDPR).', relatedBusinessGoalId: 'compliance', isProtected: true,
+            assignments: [
+                { teamId: 'team1', sdeYears: 0.5 }, // User Management
+                { teamId: 'team5', sdeYears: 0.75 }, // Billing/Finance
+                // Add infra/platform team if one existed, assume team2 handles some platform aspects
+                { teamId: 'team2', sdeYears: 0.5 } // Content Delivery/Platform
+            ]
+        },
+        // --- Feature/Product Initiatives (Examples) ---
+        { initiativeId: 'init-sv-001', title: 'AV1 Codec Support', description: 'Implement AV1 codec for improved streaming efficiency.', relatedBusinessGoalId: 'user-experience', isProtected: false, assignments: [{ teamId: 'team2', sdeYears: 2.5 }, { teamId: 'team3', sdeYears: 1.0 }] },
+        { initiativeId: 'init-sv-002', title: 'Tiered Subscription Model', description: 'Launch new subscription tiers (Basic, Premium, Family).', relatedBusinessGoalId: 'revenue-growth', isProtected: false, assignments: [{ teamId: 'team5', sdeYears: 3.0 }, { teamId: 'team1', sdeYears: 1.0 }, { teamId: 'team6', sdeYears: 0.5 }] },
+        { initiativeId: 'init-sv-003', title: 'Recommendation Algorithm V3', description: 'Develop and deploy next-gen recommendation engine.', relatedBusinessGoalId: 'engagement', isProtected: false, assignments: [{ teamId: 'team4', sdeYears: 4.0 }, { teamId: 'team7', sdeYears: 1.5 }] },
+        { initiativeId: 'init-sv-004', title: 'Expand CDN to South America', description: 'Set up CDN infrastructure in SA region.', relatedBusinessGoalId: 'global-expansion', isProtected: false, assignments: [{ teamId: 'team2', sdeYears: 1.5 }] },
+        { initiativeId: 'init-sv-005', title: 'User Profile Enhancements', description: 'Add customizable avatars and viewing preferences.', relatedBusinessGoalId: 'user-experience', isProtected: false, assignments: [{ teamId: 'team1', sdeYears: 1.5 }] },
+        { initiativeId: 'init-sv-006', title: 'Content Search Facets', description: 'Improve search with filters for genre, rating, year.', relatedBusinessGoalId: 'engagement', isProtected: false, assignments: [{ teamId: 'team8', sdeYears: 1.0 }, { teamId: 'team3', sdeYears: 0.5 }] },
+        { initiativeId: 'init-sv-007', title: 'Offline Viewing Improvements', description: 'Enhance download stability and management.', relatedBusinessGoalId: 'user-experience', isProtected: false, assignments: [{ teamId: 'team2', sdeYears: 1.0 }] },
+        { initiativeId: 'init-sv-008', title: 'A/B Testing Framework', description: 'Build internal framework for feature A/B testing.', relatedBusinessGoalId: 'eng-excellence', isProtected: false, assignments: [{ teamId: 'team7', sdeYears: 2.0 }] },
+        { initiativeId: 'init-sv-009', title: 'Parental Controls V2', description: 'Granular controls per profile and content rating.', relatedBusinessGoalId: 'compliance', isProtected: false, assignments: [{ teamId: 'team1', sdeYears: 1.0 }] },
+        { initiativeId: 'init-sv-010', title: 'Interactive Content POC', description: 'Proof-of-concept for choose-your-own-adventure style content.', relatedBusinessGoalId: 'innovation', isProtected: false, assignments: [{ teamId: 'team2', sdeYears: 0.75 }, { teamId: 'team3', sdeYears: 0.5 }] },
+        { initiativeId: 'init-sv-011', title: 'Payment Gateway Integration (New Region)', description: 'Add local payment options for APAC.', relatedBusinessGoalId: 'global-expansion', isProtected: false, assignments: [{ teamId: 'team5', sdeYears: 1.5 }] },
+        { initiativeId: 'init-sv-012', title: 'Real-time Analytics Dashboard', description: 'Internal dashboard for viewing concurrency and errors.', relatedBusinessGoalId: 'ops-stability', isProtected: false, assignments: [{ teamId: 'team7', sdeYears: 1.0 }] },
+        { initiativeId: 'init-sv-013', title: 'Watch Party Feature', description: 'Allow users to watch content synchronously with friends.', relatedBusinessGoalId: 'engagement', isProtected: false, assignments: [{ teamId: 'team1', sdeYears: 1.0 }, { teamId: 'team2', sdeYears: 1.5 }, { teamId: 'team6', sdeYears: 0.5 }] },
+        { initiativeId: 'init-sv-014', title: 'Metadata Enrichment AI', description: 'Use AI to auto-tag content metadata.', relatedBusinessGoalId: 'eng-excellence', isProtected: false, assignments: [{ teamId: 'team3', sdeYears: 1.5 }, { teamId: 'team4', sdeYears: 0.5 }] },
+        { initiativeId: 'init-sv-015', title: 'GDPR Data Deletion Automation', description: 'Automate user data deletion requests for GDPR.', relatedBusinessGoalId: 'compliance', isProtected: false, assignments: [{ teamId: 'team1', sdeYears: 0.75 }, { teamId: 'team7', sdeYears: 0.25 }] },
+        { initiativeId: 'init-sv-016', title: 'Improved Subtitle Customization', description: 'Allow users to change subtitle font, size, color.', relatedBusinessGoalId: 'user-experience', isProtected: false, assignments: [{ teamId: 'team1', sdeYears: 0.5 }] },
+        { initiativeId: 'init-sv-017', title: 'Search Performance Optimization', description: 'Reduce search latency by 50%.', relatedBusinessGoalId: 'eng-excellence', isProtected: false, assignments: [{ teamId: 'team8', sdeYears: 1.0 }] },
+        { initiativeId: 'init-sv-018', title: 'Gift Subscriptions', description: 'Allow users to purchase subscriptions for others.', relatedBusinessGoalId: 'revenue-growth', isProtected: false, assignments: [{ teamId: 'team5', sdeYears: 1.0 }, { teamId: 'team6', sdeYears: 0.25 }] },
+        { initiativeId: 'init-sv-019', title: 'Video Player Accessibility Audit & Fixes', description: 'Ensure player meets WCAG AA standards.', relatedBusinessGoalId: 'compliance', isProtected: false, assignments: [{ teamId: 'team1', sdeYears: 0.75 }] },
+        { initiativeId: 'init-sv-020', title: 'Reduce Streaming Startup Time', description: 'Optimize playback start time for users.', relatedBusinessGoalId: 'user-experience', isProtected: false, assignments: [{ teamId: 'team2', sdeYears: 1.5 }] },
+        { initiativeId: 'init-sv-021', title: 'Content Partner Reporting Portal', description: 'Allow content partners to view performance data.', relatedBusinessGoalId: 'partnerships', isProtected: false, assignments: [{ teamId: 'team3', sdeYears: 0.5 }, { teamId: 'team7', sdeYears: 1.0 }] },
+        { initiativeId: 'init-sv-022', title: 'Personalized Push Notifications', description: 'Send targeted notifications based on viewing habits.', relatedBusinessGoalId: 'engagement', isProtected: false, assignments: [{ teamId: 'team6', sdeYears: 1.0 }, { teamId: 'team4', sdeYears: 0.5 }] }
+    ]
 };
 
 /** Sample Data for ConnectPro **/
@@ -1127,16 +1190,65 @@ const sampleServicesDataConnectPro = [
     }
 ];
 
-/** Updated System Data for ConnectPro (including seniorManagers) **/
+/** Updated System Data for ConnectPro (including seniorManagers and yearlyInitiatives) **/
 const sampleSystemDataContactCenter = {
     systemName: 'ConnectPro',
     systemDescription: 'ConnectPro is a cloud-based contact center solution that streamlines customer interactions across multiple channels.',
-    seniorManagers: sampleSeniorManagersDataContactCenter, // Added Senior Managers
+    seniorManagers: sampleSeniorManagersDataContactCenter,
     teams: contactCenterTeamsData,
     sdms: contactCenterSDMsData,
     pmts: contactCenterPMTsData,
-    services: sampleServicesDataConnectPro // Assuming sampleServicesDataConnectPro is defined elsewhere as before
-    // platformDependencies is now built dynamically by buildGlobalPlatformDependencies()
+    services: sampleServicesDataConnectPro,
+    platformDependencies: [], // Will be built dynamically on load
+    yearlyInitiatives: [
+        // --- Protected Initiatives ---
+        {
+            initiativeId: 'init-cc-ktlo', title: 'KTLO / Operational Excellence', description: 'Ongoing bug fixes, refactoring, library updates, minor enhancements.', relatedBusinessGoalId: 'eng-excellence', isProtected: true,
+            assignments: [ // Assign estimate to all teams
+                { teamId: 'team1', sdeYears: 1.0 }, { teamId: 'team2', sdeYears: 1.0 }, { teamId: 'team3', sdeYears: 0.75 }, { teamId: 'team4', sdeYears: 0.75 },
+                { teamId: 'team5', sdeYears: 1.25 }, { teamId: 'team6', sdeYears: 0.5 }, { teamId: 'team7', sdeYears: 1.0 }, { teamId: 'team8', sdeYears: 0.5 }
+            ]
+        },
+        {
+            initiativeId: 'init-cc-oncall', title: 'On-Call / Production Support', description: 'Dedicated capacity for handling live site issues and production incidents.', relatedBusinessGoalId: 'ops-stability', isProtected: true,
+            assignments: [ // Assign 1 SDE Year to all teams
+                 { teamId: 'team1', sdeYears: 1.0 }, { teamId: 'team2', sdeYears: 1.0 }, { teamId: 'team3', sdeYears: 1.0 }, { teamId: 'team4', sdeYears: 1.0 },
+                 { teamId: 'team5', sdeYears: 1.0 }, { teamId: 'team6', sdeYears: 1.0 }, { teamId: 'team7', sdeYears: 1.0 }, { teamId: 'team8', sdeYears: 1.0 }
+            ]
+        },
+        {
+            initiativeId: 'init-cc-security', title: 'Mandatory Security Audit & Remediation', description: 'Address findings from annual security audit and maintain compliance.', relatedBusinessGoalId: 'compliance', isProtected: true,
+            assignments: [
+                { teamId: 'team1', sdeYears: 0.5 }, // Customer Portal
+                { teamId: 'team4', sdeYears: 0.75 }, // Agent Desktop
+                { teamId: 'team5', sdeYears: 0.5 }, // Comm Channels (sensitive data)
+                { teamId: 'team8', sdeYears: 0.5 }  // Config / Infra
+            ]
+        },
+        // --- Feature/Product Initiatives (Examples) ---
+        { initiativeId: 'init-cc-001', title: 'Omnichannel Support (Chat)', description: 'Integrate live chat channel support.', relatedBusinessGoalId: 'customer-sat', isProtected: false, assignments: [{ teamId: 'team5', sdeYears: 2.0 }, { teamId: 'team4', sdeYears: 1.0 }, { teamId: 'team3', sdeYears: 0.5 }] },
+        { initiativeId: 'init-cc-002', title: 'AI-Powered Agent Assist (KB Suggestions)', description: 'Suggest relevant knowledge base articles to agents in real-time.', relatedBusinessGoalId: 'agent-efficiency', isProtected: false, assignments: [{ teamId: 'team4', sdeYears: 2.5 }, { teamId: 'team7', sdeYears: 1.0 }] },
+        { initiativeId: 'init-cc-003', title: 'Upgrade Reporting Engine', description: 'Migrate reporting to new platform for better performance.', relatedBusinessGoalId: 'eng-excellence', isProtected: false, assignments: [{ teamId: 'team7', sdeYears: 3.0 }] },
+        { initiativeId: 'init-cc-004', title: 'Salesforce CRM Integration V1', description: 'Basic integration to sync contact data and case creation.', relatedBusinessGoalId: 'integration', isProtected: false, assignments: [{ teamId: 'team2', sdeYears: 1.5 }, { teamId: 'team8', sdeYears: 0.5 }] },
+        { initiativeId: 'init-cc-005', title: 'Customer Portal Self-Service KB', description: 'Allow customers to search knowledge base via portal.', relatedBusinessGoalId: 'customer-sat', isProtected: false, assignments: [{ teamId: 'team1', sdeYears: 1.5 }] },
+        { initiativeId: 'init-cc-006', title: 'Advanced Routing Rules (Time-based)', description: 'Allow configuration of time-of-day routing.', relatedBusinessGoalId: 'ops-efficiency', isProtected: false, assignments: [{ teamId: 'team3', sdeYears: 1.0 }, { teamId: 'team8', sdeYears: 0.5 }] },
+        { initiativeId: 'init-cc-007', title: 'Agent Performance Dashboard', description: 'New dashboard in agent desktop showing key metrics.', relatedBusinessGoalId: 'agent-efficiency', isProtected: false, assignments: [{ teamId: 'team4', sdeYears: 1.0 }, { teamId: 'team7', sdeYears: 0.5 }] },
+        { initiativeId: 'init-cc-008', title: 'Skills-Based Routing Enhancements', description: 'Add proficiency levels to skill matching.', relatedBusinessGoalId: 'customer-sat', isProtected: false, assignments: [{ teamId: 'team6', sdeYears: 1.5 }, { teamId: 'team3', sdeYears: 0.5 }] },
+        { initiativeId: 'init-cc-009', title: 'Email Channel Integration', description: 'Add support for email as an interaction channel.', relatedBusinessGoalId: 'customer-sat', isProtected: false, assignments: [{ teamId: 'team5', sdeYears: 1.5 }, { teamId: 'team4', sdeYears: 0.5 }] },
+        { initiativeId: 'init-cc-010', title: 'Voice Call Recording & Playback', description: 'Implement secure call recording and retrieval.', relatedBusinessGoalId: 'compliance', isProtected: false, assignments: [{ teamId: 'team5', sdeYears: 2.0 }, { teamId: 'team8', sdeYears: 0.5 }] },
+        { initiativeId: 'init-cc-011', title: 'Case Prioritization Engine', description: 'Automatically prioritize cases based on SLA or sentiment.', relatedBusinessGoalId: 'ops-efficiency', isProtected: false, assignments: [{ teamId: 'team2', sdeYears: 1.5 }, { teamId: 'team7', sdeYears: 0.5 }] },
+        { initiativeId: 'init-cc-012', title: 'Configuration Change History', description: 'Track who changed what configuration when.', relatedBusinessGoalId: 'compliance', isProtected: false, assignments: [{ teamId: 'team8', sdeYears: 1.0 }] },
+        { initiativeId: 'init-cc-013', title: 'CTI Screen Pop Improvements', description: 'Customize screen pop data based on call context.', relatedBusinessGoalId: 'agent-efficiency', isProtected: false, assignments: [{ teamId: 'team4', sdeYears: 1.0 }, { teamId: 'team5', sdeYears: 0.5 }] },
+        { initiativeId: 'init-cc-014', title: 'Sentiment Analysis POC', description: 'Proof-of-concept for analyzing sentiment in chat/email.', relatedBusinessGoalId: 'innovation', isProtected: false, assignments: [{ teamId: 'team7', sdeYears: 1.0 }] },
+        { initiativeId: 'init-cc-015', title: 'Supervisor Barge-In/Listen-In', description: 'Allow supervisors to monitor or join live calls.', relatedBusinessGoalId: 'quality-assurance', isProtected: false, assignments: [{ teamId: 'team5', sdeYears: 1.5 }, { teamId: 'team4', sdeYears: 0.5 }] },
+        { initiativeId: 'init-cc-016', title: 'Customer Satisfaction Survey (CSAT)', description: 'Implement post-interaction CSAT surveys.', relatedBusinessGoalId: 'customer-sat', isProtected: false, assignments: [{ teamId: 'team1', sdeYears: 0.5 }, { teamId: 'team7', sdeYears: 0.5 }] },
+        { initiativeId: 'init-cc-017', title: 'Agent Skill Self-Assessment', description: 'Allow agents to update their skill profiles.', relatedBusinessGoalId: 'agent-efficiency', isProtected: false, assignments: [{ teamId: 'team6', sdeYears: 0.75 }, { teamId: 'team4', sdeYears: 0.25 }] },
+        { initiativeId: 'init-cc-018', title: 'Knowledge Base Article Versioning', description: 'Track changes and history for KB articles.', relatedBusinessGoalId: 'eng-excellence', isProtected: false, assignments: [{ teamId: 'team1', sdeYears: 0.5 }] }, // Assuming portal team owns KB UI
+        { initiativeId: 'init-cc-019', title: 'Real-time Queue Dashboard', description: 'Dashboard showing queue lengths, wait times.', relatedBusinessGoalId: 'ops-efficiency', isProtected: false, assignments: [{ teamId: 'team7', sdeYears: 1.0 }, { teamId: 'team3', sdeYears: 0.25 }] },
+        { initiativeId: 'init-cc-020', title: 'Automated Case Closure Rules', description: 'Configure rules to auto-close inactive cases.', relatedBusinessGoalId: 'ops-efficiency', isProtected: false, assignments: [{ teamId: 'team2', sdeYears: 0.75 }, { teamId: 'team8', sdeYears: 0.25 }] },
+        { initiativeId: 'init-cc-021', title: 'Bulk User Import/Update', description: 'Allow admins to manage agents in bulk.', relatedBusinessGoalId: 'ops-efficiency', isProtected: false, assignments: [{ teamId: 'team8', sdeYears: 0.5 }] },
+        { initiativeId: 'init-cc-022', title: 'PCI Compliance for Call Recordings', description: 'Ensure call recording storage meets PCI standards.', relatedBusinessGoalId: 'compliance', isProtected: false, assignments: [{ teamId: 'team5', sdeYears: 1.0 }, { teamId: 'team8', sdeYears: 0.5 }] }
+    ]
 };
 
 window.onload = function() {
@@ -3562,7 +3674,8 @@ function createNewSystem() {
         pmts: defaultPMTsData,
         teams: defaultTeamsData,
         services: defaultServicesData,
-        platformDependencies: ['Enter Platform Dependency Here'] // This will be rebuilt anyway
+        platformDependencies: [], 
+        yearlyInitiatives: []
     };
 
     // Assign to currentSystemData
@@ -3604,7 +3717,7 @@ function returnToHome() {
     });
 
      // New Views
-     const newViews = ['organogramView', 'engineerTableView'];
+     const newViews = ['organogramView', 'engineerTableView', 'planningView'];
      newViews.forEach(id => {
          const element = document.getElementById(id);
          if (element) element.style.display = 'none';
@@ -4911,12 +5024,237 @@ function showEngineerTableView() {
     document.querySelector('.edit-menu').style.display = 'block'; // Keep view buttons visible
 }
 
+/** REVISED - Generates the interactive planning table with data */
+function generatePlanningTable() {
+    console.log("Generating planning table...");
+    const container = document.getElementById('planningTableContainer');
+    const capacitySummaryDiv = document.getElementById('planningCapacitySummary');
+    container.innerHTML = ''; // Clear previous table
+    capacitySummaryDiv.innerHTML = ''; // Clear previous summary
+
+    if (!currentSystemData || !currentSystemData.yearlyInitiatives) {
+        container.innerHTML = '<p style="color: orange;">No planning data loaded or initiatives defined for this system.</p>';
+        console.warn("No currentSystemData or yearlyInitiatives found.");
+        return;
+    }
+
+    // --- 1. Calculate Capacity ---
+    let totalBIS = 0;
+    let totalFundedHC = 0;
+    (currentSystemData.teams || []).forEach(team => {
+        totalBIS += team.buildersInSeats ?? (team.engineers?.length ?? 0);
+        totalFundedHC += team.fundedHeadcount ?? 0;
+    });
+    capacitySummaryDiv.innerHTML = `Total Capacity - Funded HC: <span style="color: green;">${totalFundedHC.toFixed(2)}</span> SDE Years | BIS: <span style="color: darkorange;">${totalBIS.toFixed(2)}</span> SDE Years`;
+    console.log(`Calculated Capacity - Funded: ${totalFundedHC}, BIS: ${totalBIS}`);
+    // --- End Calculate Capacity ---
+
+    // --- 2. Prepare Table Structure ---
+    const table = document.createElement('table');
+    table.style.width = '100%';
+    table.style.borderCollapse = 'collapse';
+    table.id = 'planningTable'; // Add ID
+
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+
+    // Fixed Headers
+    const fixedHeaders = ['Protected', 'Title', 'Description', 'Total SDE Years', 'Cum. SDE Years', 'Capacity Status', 'ATL/BTL'];
+    fixedHeaders.forEach(text => {
+        const th = document.createElement('th');
+        th.textContent = text;
+        th.style.border = '1px solid #ccc'; th.style.padding = '8px'; th.style.textAlign = 'left'; th.style.backgroundColor = '#f2f2f2';
+        th.style.position = 'sticky'; th.style.top = '0'; // Make headers sticky
+        headerRow.appendChild(th);
+    });
+
+    // Dynamic Team Headers
+    const teams = currentSystemData.teams || [];
+    const teamHeaderMap = new Map(); // To easily get teamId by column index later
+    teams.forEach((team, index) => {
+        const th = document.createElement('th');
+        const teamDisplayName = team.teamIdentity || team.teamName || team.teamId;
+        th.textContent = teamDisplayName;
+        th.title = teamDisplayName; // Add tooltip for potentially long names
+        th.setAttribute('data-team-id', team.teamId);
+        th.style.border = '1px solid #ccc'; th.style.padding = '8px'; th.style.textAlign = 'center'; th.style.backgroundColor = '#e6f7ff';
+        th.style.position = 'sticky'; th.style.top = '0'; // Make headers sticky
+        th.style.writingMode = 'vertical-lr';
+        th.style.textOrientation = 'mixed';
+        th.style.whiteSpace = 'nowrap';
+        th.style.minWidth = '35px'; // Adjust width as needed
+        th.style.maxWidth = '35px';
+        headerRow.appendChild(th);
+        teamHeaderMap.set(fixedHeaders.length + index, team.teamId); // Store teamId by column index
+    });
+
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+    // --- End Table Structure ---
+
+    // --- 3. Sort Initiatives & Populate Body ---
+    const tbody = document.createElement('tbody');
+    tbody.id = 'planningTableBody';
+
+    // Sort: Protected first, then maintain original relative order (implicit via array order)
+    const sortedInitiatives = [...currentSystemData.yearlyInitiatives].sort((a, b) => {
+        if (a.isProtected && !b.isProtected) return -1;
+        if (!a.isProtected && b.isProtected) return 1;
+        return 0; // Maintain original order among protected/non-protected blocks
+        // Later, drag-drop will modify the order in currentSystemData.yearlyInitiatives directly
+    });
+
+    let cumulativeSdeTotal = 0;
+
+    sortedInitiatives.forEach((initiative, rowIndex) => {
+        if (!initiative || !initiative.initiativeId) {
+            console.warn("Skipping invalid initiative data:", initiative);
+            return;
+        }
+
+        const row = tbody.insertRow();
+        row.setAttribute('draggable', 'true'); // Make row draggable
+        row.setAttribute('data-initiative-id', initiative.initiativeId);
+        row.style.borderBottom = '1px solid #eee'; // Add faint row separators
+
+        // --- Fixed Cells ---
+        // Protected Checkbox
+        const protectedCell = row.insertCell();
+        const protectedCheckbox = document.createElement('input');
+        protectedCheckbox.type = 'checkbox';
+        protectedCheckbox.checked = initiative.isProtected;
+        protectedCheckbox.setAttribute('data-initiative-id', initiative.initiativeId);
+        protectedCheckbox.style.cursor = 'pointer';
+        // TODO: Add event listener later in Phase 3
+        protectedCell.appendChild(protectedCheckbox);
+        protectedCell.style.textAlign = 'center';
+
+        // Title
+        const titleCell = row.insertCell();
+        titleCell.textContent = initiative.title || 'No Title';
+        titleCell.style.fontWeight = initiative.isProtected ? 'bold' : 'normal';
+
+        // Description (Truncated with Tooltip)
+        const descCell = row.insertCell();
+        const descText = initiative.description || '';
+        descCell.textContent = descText.length > 50 ? descText.substring(0, 47) + '...' : descText; // Truncate
+        descCell.title = descText; // Full description on hover
+
+        // --- Calculated Cells (Placeholders first) ---
+        const totalSdeCell = row.insertCell(); totalSdeCell.style.textAlign = 'right';
+        const cumSdeCell = row.insertCell(); cumSdeCell.style.textAlign = 'right';
+        const statusCell = row.insertCell(); statusCell.style.textAlign = 'center';
+        const atlBtlCell = row.insertCell(); atlBtlCell.style.fontWeight = 'bold'; atlBtlCell.style.textAlign = 'center';
+
+        // --- Dynamic Team Cells & Calculate Initiative Total ---
+        let initiativeTotalSde = 0;
+        const assignmentsMap = new Map((initiative.assignments || []).map(a => [a.teamId, a.sdeYears]));
+
+        teamHeaderMap.forEach((teamId, colIndex) => { // Iterate using the header map order
+            const teamCell = row.insertCell();
+            const sdeYears = assignmentsMap.get(teamId) || 0;
+            teamCell.textContent = sdeYears > 0 ? sdeYears.toFixed(2) : '-'; // Show '-' for zero
+            teamCell.style.textAlign = 'center';
+            teamCell.style.backgroundColor = sdeYears > 0 ? '#fffacd' : '#fafafa'; // Highlight assigned cells
+            initiativeTotalSde += sdeYears;
+        });
+
+        // --- Populate Calculated Cells ---
+        totalSdeCell.textContent = initiativeTotalSde.toFixed(2);
+        cumulativeSdeTotal += initiativeTotalSde;
+        cumSdeCell.textContent = cumulativeSdeTotal.toFixed(2);
+
+        // Capacity Status
+        if (cumulativeSdeTotal <= totalBIS) {
+            statusCell.textContent = '✅'; // Within BIS
+            statusCell.title = `Within BIS Capacity (${totalBIS.toFixed(2)})`;
+            statusCell.style.backgroundColor = '#d4edda'; // Light green
+        } else if (cumulativeSdeTotal <= totalFundedHC) {
+            statusCell.textContent = '⚠️'; // Exceeds BIS but within Funded
+            statusCell.title = `Exceeds BIS (${totalBIS.toFixed(2)}), Within Funded HC (${totalFundedHC.toFixed(2)})`;
+            statusCell.style.backgroundColor = '#fff3cd'; // Light yellow
+        } else {
+            statusCell.textContent = '🛑'; // Exceeds Funded HC
+            statusCell.title = `Exceeds Funded HC (${totalFundedHC.toFixed(2)})`;
+            statusCell.style.backgroundColor = '#f8d7da'; // Light red
+        }
+
+        // ATL/BTL Status
+        if (cumulativeSdeTotal <= totalFundedHC) {
+            atlBtlCell.textContent = 'ATL';
+            atlBtlCell.style.color = 'green';
+        } else {
+            atlBtlCell.textContent = 'BTL';
+            atlBtlCell.style.color = 'red';
+            // Optional: Style the whole row slightly differently if BTL
+            // row.style.backgroundColor = '#ffeeee'; // Very light pink for BTL rows
+        }
+
+    }); // End sortedInitiatives.forEach
+
+    table.appendChild(tbody);
+    container.appendChild(table);
+    // --- End Populate Body ---
+
+    // --- 4. Add Drag/Drop Event Listeners (Placeholder for next step) ---
+    // TODO: Implement makeTableDraggable(table.id);
+    console.log("Placeholder: Need to implement table row drag/drop.");
+
+    // --- 5. Add Checkbox Listeners (Placeholder for next step) ---
+    // TODO: Add event listeners to 'Protected' checkboxes.
+    console.log("Placeholder: Need to implement protected checkbox logic.");
+
+} // --- End generatePlanningTable ---
+
+/** Shows the Yearly Planning View */
+function showPlanningView() {
+    console.log("Switching to Yearly Planning View...");
+    currentMode = Modes.PLANNING; // Assuming we might add a PLANNING mode
+
+    // --- Hide ALL other main view sections ---
+    const viewsToHide = [
+        'systemEditForm', 'visualization', 'teamVisualization', 'teamBreakdown',
+        'serviceRelationshipsVisualization', 'dependencyVisualization', 'serviceDependenciesTable',
+        'organogramView', 'engineerTableView'
+    ];
+    viewsToHide.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.style.display = 'none';
+    });
+    // Ensure edit menu is visible (for view switching) but main menu is hidden
+    const editMenu = document.querySelector('.edit-menu');
+    if (editMenu) editMenu.style.display = 'block';
+    const mainMenu = document.querySelector('.menu');
+    if (mainMenu) mainMenu.style.display = 'none';
+    // ----------------------------------------
+
+    // --- Show the Planning View ---
+    const planningViewDiv = document.getElementById('planningView');
+    if (planningViewDiv) {
+        planningViewDiv.style.display = 'block';
+        // Update title based on loaded system
+        const planningTitle = document.getElementById('planningViewTitle');
+        if (planningTitle && currentSystemData && currentSystemData.systemName) {
+            planningTitle.innerText = `Yearly Planning View: ${currentSystemData.systemName}`;
+        } else if (planningTitle) {
+            planningTitle.innerText = `Yearly Planning View (No System Loaded)`;
+        }
+        // Generate the table content
+        generatePlanningTable(); // Call the function to build the table
+    } else {
+        console.error("Planning view container not found!");
+    }
+    // ---------------------------
+}
+
 
 // Attach functions to the global window object
 window.showSavedSystems = showSavedSystems;
 window.createNewSystem = createNewSystem;
 window.resetToDefaults = resetToDefaults;
 window.returnToHome = returnToHome;
+window.showPlanningView = showPlanningView;
+
 </script>
 
 </body>
