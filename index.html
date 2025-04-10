@@ -808,7 +808,7 @@ const sampleSystemDataStreamView = {
     sdms: sampleSDMsDataStreamView,
     pmts: samplePMTsDataStreamView,
     services: sampleServicesDataStreamView // Assuming sampleServicesDataStreamView is defined elsewhere as before
-    // platformDependencies is now built dynamically by buildGlobalPlatformDependencies()
+    // platformDependencies is built dynamically by buildGlobalPlatformDependencies()
 };
 
 /** Sample Data for ConnectPro **/
@@ -2715,7 +2715,6 @@ function displayServicesForEditing(services, containerId, expandedIndex = -1) {
     if (!currentSystemData.platformDependencies) {
         currentSystemData.platformDependencies = [];
     }
-    buildGlobalPlatformDependencies(); // Ensure the global list is up-to-date
 
     (services || []).forEach((service, index) => { // Added default empty array
         if (!service) return; // Skip potentially null entries if array was modified externally
@@ -2836,23 +2835,54 @@ function displayServicesForEditing(services, containerId, expandedIndex = -1) {
                 }
             },
             true, true, 'Enter New Platform Dependency', // multiSelectLeft = true, allowAddNew = true
-            (newDepName) => { // Add New Callback for Platform Deps
-                if (!newDepName || newDepName.trim() === '') return null;
-                newDepName = newDepName.trim();
-                // Add to global list if new
-                if (!currentSystemData.platformDependencies.includes(newDepName)) {
-                    currentSystemData.platformDependencies.push(newDepName);
-                    // Need to refresh *other* service editors' available lists!
-                     console.log("Added new global platform dep:", newDepName);
-                     // Trigger full refresh of service editors after adding global item
-                     const currentExpandedIndex = findExpandedServiceIndex();
-                     displayServicesForEditing(currentSystemData.services, containerId, currentExpandedIndex);
-                     return { preventAdd: true }; // Signal we handled the refresh
-                } else {
-                    // Return option so it can be added to the available list if not already there
-                     return { value: newDepName, text: newDepName };
-                }
-            }
+            (newDepName) => { // Add New Callback for Platform Deps (Simplified like SDM/PMT)
+                        const textInput = platformContainer.querySelector('input[type="text"]'); // Get input relative to this dual list
+                        if (!newDepName || newDepName.trim() === '') {
+                            if(textInput) textInput.value = ''; // Clear input even if empty
+                            return null;
+                        }
+                        newDepName = newDepName.trim();
+
+                        // Ensure global platform dependencies array exists
+                        if (!currentSystemData.platformDependencies) {
+                            currentSystemData.platformDependencies = [];
+                        }
+
+                        const alreadyExistsGlobally = currentSystemData.platformDependencies.includes(newDepName);
+
+                        // Find the specific select lists for THIS service instance to check if already visible
+                        const currentPlatDepsSelect = platformContainer.querySelector('select[data-field="currentPlatformDependencies"]');
+                        const availablePlatDepsSelect = platformContainer.querySelector('select[data-field="availablePlatformDependencies"]');
+
+                        if (!currentPlatDepsSelect || !availablePlatDepsSelect) {
+                             console.error("Could not find platform dependency select lists for service index:", index);
+                             if(textInput) textInput.value = '';
+                             return null;
+                         }
+
+                        const inCurrentList = Array.from(currentPlatDepsSelect.options).some(opt => opt.value === newDepName);
+                        const inAvailableList = Array.from(availablePlatDepsSelect.options).some(opt => opt.value === newDepName);
+
+                        if (inCurrentList || inAvailableList) {
+                             alert(`Platform dependency "${newDepName}" is already listed for this service.`);
+                             if(textInput) textInput.value = '';
+                             return null; // Already present for this service, do nothing more
+                         }
+
+                        // If it doesn't exist globally, add it to the global data list
+                        if (!alreadyExistsGlobally) {
+                            currentSystemData.platformDependencies.push(newDepName);
+                            console.log("Added new global platform dependency to data:", newDepName);
+                        } else {
+                            console.log(`"${newDepName}" already exists globally.`);
+                        }
+
+                        // --- ALWAYS RETURN THE ITEM ---
+                        // Let createDualListContainer handle adding it to the 'Available' list for *this instance*.
+                        // The fact it's in currentSystemData.platformDependencies ensures it's available later.
+                        if (textInput) textInput.value = ''; // Clear the input field
+                        return { value: newDepName, text: newDepName };
+                    }
         );
         serviceDetails.appendChild(platformContainer);
         serviceDetails.appendChild(document.createElement('br'));
@@ -3001,12 +3031,25 @@ function displayServicesForEditing(services, containerId, expandedIndex = -1) {
     }
     // ------------------------------------
 
-     // --- Helper to find current expanded service index ---
-     function findExpandedServiceIndex() {
-         const serviceDetailDivs = servicesDiv.querySelectorAll('.service-details');
+    // --- Helper to find current expanded service index ---
+     function findExpandedServiceIndex(containerId = 'editServicesManagement') { // Default containerId
+         const servicesContainerDiv = document.getElementById(containerId);
+         if (!servicesContainerDiv) {
+             console.warn("findExpandedServiceIndex: Could not find container with ID:", containerId);
+             return -1;
+         }
+         const serviceDetailDivs = servicesContainerDiv.querySelectorAll('.service-details'); // Use class selector
          for (let i = 0; i < serviceDetailDivs.length; i++) {
+             // Check the display style directly
              if (serviceDetailDivs[i].style.display === 'block') {
-                 return i;
+                 // Find the parent service-edit div to get the index attribute
+                 const parentEditDiv = serviceDetailDivs[i].closest('.service-edit');
+                 if (parentEditDiv) {
+                     const indexAttr = parentEditDiv.getAttribute('data-service-index');
+                     if (indexAttr !== null) {
+                         return parseInt(indexAttr); // Return the index from the attribute
+                     }
+                 }
              }
          }
          return -1; // Not found or none expanded
@@ -3325,10 +3368,10 @@ function saveSystemDetails() {
 
 /** REVISED Save All Changes - Handles Creation and Updates */
 function saveAllChanges() {
-    if (currentMode !== Modes.CREATING && currentMode !== Modes.EDITING) {
-         alert('Not in creation or edit mode. No changes to save.');
-         return;
-    }
+//    if (currentMode !== Modes.CREATING && currentMode !== Modes.EDITING) {
+//         alert('Not in creation or edit mode. No changes to save.');
+//         return;
+//    }
 
     // --- Get Final System Name and Description from Form ---
     const systemNameInput = document.getElementById('systemNameInput');
@@ -3369,8 +3412,7 @@ function saveAllChanges() {
     }
     // Add other validation checks here if needed (e.g., required fields for teams/services)
     // ------------------------
-
-
+    
     // --- Save to Local Storage ---
     try {
         const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
@@ -3507,7 +3549,7 @@ function createNewSystem() {
                 }
             ],
             serviceDependencies: [],
-            platformDependencies: ['Enter Platform Dependency Here']
+            platformDependencies: []
         }
     ];
 
