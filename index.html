@@ -5218,6 +5218,66 @@ function handleDragEnd(event) {
     draggedRowElement = null;
 }
 
+/** Handles changes to SDE Year estimate inputs in the planning table */
+function handleEstimateChange(event) {
+    const input = event.target;
+    const initiativeId = input.getAttribute('data-initiative-id');
+    const teamId = input.getAttribute('data-team-id');
+    const newValue = parseFloat(input.value);
+
+    if (!initiativeId || !teamId) {
+        console.error("Missing initiative or team ID on estimate input:", input);
+        return;
+    }
+
+    // Validate the input value
+    const validatedValue = (!isNaN(newValue) && newValue > 0) ? newValue : 0;
+
+    // Find the initiative
+    const initiative = currentSystemData.yearlyInitiatives.find(init => init.initiativeId === initiativeId);
+    if (!initiative) {
+        console.error("Could not find initiative data for ID:", initiativeId);
+        return;
+    }
+
+    // Ensure assignments array exists
+    if (!initiative.assignments) {
+        initiative.assignments = [];
+    }
+
+    // Find existing assignment for this team
+    const assignmentIndex = initiative.assignments.findIndex(a => a.teamId === teamId);
+
+    if (validatedValue > 0) {
+        if (assignmentIndex > -1) {
+            // Update existing assignment
+            initiative.assignments[assignmentIndex].sdeYears = validatedValue;
+            console.log(`Updated estimate for ${initiativeId}, team ${teamId} to ${validatedValue}`);
+        } else {
+            // Add new assignment
+            initiative.assignments.push({ teamId: teamId, sdeYears: validatedValue });
+            console.log(`Added estimate for ${initiativeId}, team ${teamId}: ${validatedValue}`);
+        }
+        // Optionally reformat the input value after successful update
+        input.value = validatedValue.toFixed(2);
+    } else {
+        // Remove assignment if value is 0 or invalid
+        if (assignmentIndex > -1) {
+            initiative.assignments.splice(assignmentIndex, 1);
+            console.log(`Removed assignment for ${initiativeId}, team ${teamId}`);
+        }
+        // Clear the input field if the value was invalid or zero
+        input.value = '';
+    }
+
+    // --- Refresh the entire table to recalculate totals and statuses ---
+    generatePlanningTable();
+    // --- End Refresh ---
+
+    // Optional: Maintain focus if needed, though redraw might make it tricky
+    // input.focus(); // Might not work reliably after full redraw
+}
+
 /** REVISED - Generates the interactive planning table with data */
 function generatePlanningTable() {
     console.log("Generating planning table...");
@@ -5361,11 +5421,30 @@ function generatePlanningTable() {
 
         teamHeaderMap.forEach((teamId, colIndex) => { // Iterate using the header map order
             const teamCell = row.insertCell();
-            const sdeYears = assignmentsMap.get(teamId) || 0;
-            teamCell.textContent = sdeYears > 0 ? sdeYears.toFixed(2) : '-'; // Show '-' for zero
+            const currentEstimate = assignmentsMap.get(teamId) || 0;
+
+            // *** Replace textContent with an input element ***
+            const estimateInput = document.createElement('input');
+            estimateInput.type = 'number';
+            estimateInput.min = '0';
+            estimateInput.step = '0.25'; // Allow quarter SDE years
+            estimateInput.value = currentEstimate > 0 ? currentEstimate.toFixed(2) : ''; // Show empty for 0
+            estimateInput.setAttribute('data-initiative-id', initiative.initiativeId);
+            estimateInput.setAttribute('data-team-id', teamId);
+            estimateInput.style.width = '60px'; // Adjust width as needed
+            estimateInput.style.textAlign = 'right';
+            estimateInput.style.border = 'none'; // Remove border for inline feel
+            estimateInput.style.backgroundColor = 'transparent'; // Blend with cell
+            // Add listener to handle changes
+            estimateInput.addEventListener('change', handleEstimateChange);
+            // Optional: Recalculate on blur as well or instead of change
+            // estimateInput.addEventListener('blur', handleEstimateChange);
+
+            teamCell.appendChild(estimateInput);
+            
             teamCell.style.textAlign = 'center';
-            teamCell.style.backgroundColor = sdeYears > 0 ? '#fffacd' : '#fafafa'; // Highlight assigned cells
-            initiativeTotalSde += sdeYears;
+            teamCell.style.backgroundColor = currentEstimate > 0 ? '#fffacd' : '#fafafa'; // Highlight assigned cells
+            initiativeTotalSde += currentEstimate;
         });
 
         // --- Populate Calculated Cells ---
