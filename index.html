@@ -552,6 +552,7 @@ const sampleTeamsDataStreamView = [
             { name: 'John Doe', level: 2 },
             { name: 'Emma Davis', level: 1 }
         ],
+        awayTeamMembers: [],
         sdmId: 'sdm1',
         pmtId: 'pmt1'
     },
@@ -567,6 +568,9 @@ const sampleTeamsDataStreamView = [
             { name: 'Olivia Brown', level: 2 },
             { name: 'Liam Wilson', level: 2 }
         ],
+        awayTeamMembers: [
+            { name: 'Borrowed Betty', level: 3, sourceTeam: 'External Partner X' }
+        ], // Example away team member
         sdmId: 'sdm2',
         pmtId: 'pmt2'
     },
@@ -581,6 +585,7 @@ const sampleTeamsDataStreamView = [
             { name: 'Kevin Moore', level: 2 },
             { name: 'Isabella Martinez', level: 2 }
         ],
+        awayTeamMembers: [],
         sdmId: 'sdm3',
         pmtId: 'pmt2'
     },
@@ -596,6 +601,10 @@ const sampleTeamsDataStreamView = [
             { name: 'Mia Turner', level: 2 },
             { name: 'Noah Walker', level: 1 }
         ],
+        awayTeamMembers: [
+            { name: 'Loaned Larry', level: 4, sourceTeam: 'Core Platform BU' },
+            { name: 'Visiting Vinny', level: 2, sourceTeam: 'Data Science Org' }
+        ], // Example away team members
         sdmId: 'sdm4',
         pmtId: 'pmt3'
     },
@@ -610,6 +619,7 @@ const sampleTeamsDataStreamView = [
             { name: 'Charlotte Adams', level: 3 },
             { name: 'Benjamin Scott', level: 3 }
         ],
+        awayTeamMembers: [],
         sdmId: 'sdm5',
         pmtId: 'pmt3'
     },
@@ -623,6 +633,7 @@ const sampleTeamsDataStreamView = [
             { name: 'Karen Adams', level: 3 },
             { name: 'Lucas Wright', level: 2 }
         ],
+        awayTeamMembers: [],
         sdmId: 'sdm6',
         pmtId: 'pmt2'
     },
@@ -637,6 +648,7 @@ const sampleTeamsDataStreamView = [
             { name: 'Andrew Hall', level: 3 },
             { name: 'Ella Young', level: 2 }
         ],
+        awayTeamMembers: [],
         sdmId: 'sdm7',
         pmtId: 'pmt4'
     },
@@ -650,6 +662,7 @@ const sampleTeamsDataStreamView = [
             { name: 'Zoe King', level: 3 },
             { name: 'Michael Baker', level: 2 }
         ],
+        awayTeamMembers: [],
         sdmId: 'sdm8',
         pmtId: 'pmt1'
     }
@@ -953,6 +966,7 @@ const contactCenterTeamsData = [
             { name: 'Sarah Brown', level: 2 },
             { name: 'Michael Wilson', level: 1 }
         ],
+        awayTeamMembers: [],
         sdmId: 'sdm1',
         pmtId: 'pmt1'
     },
@@ -968,6 +982,7 @@ const contactCenterTeamsData = [
             { name: 'Amy Anderson', level: 2 },
             { name: 'James Thomas', level: 2 }
         ],
+        awayTeamMembers: [],
         sdmId: 'sdm1',
         pmtId: 'pmt2'
     },
@@ -983,6 +998,9 @@ const contactCenterTeamsData = [
             { name: 'Joshua Harris', level: 2 },
             { name: 'Andrew Garcia', level: 2 } // Moved Andrew here
         ],
+        awayTeamMembers: [
+            { name: 'Helping Hannah', level: 2, sourceTeam: 'AI Research Division' }
+        ], // Example away team member
         sdmId: 'sdm2',
         pmtId: 'pmt2'
     },
@@ -998,6 +1016,7 @@ const contactCenterTeamsData = [
             { name: 'Steven Lewis', level: 2 },
             { name: 'Nicole Young', level: 1 }
         ],
+        awayTeamMembers: [],
         sdmId: 'sdm2', // Still under Matthew Jackson
         pmtId: 'pmt3'
     },
@@ -1014,6 +1033,9 @@ const contactCenterTeamsData = [
             { name: 'Rachel Hill', level: 2 },
             { name: 'Justin Scott', level: 2 }
         ],
+        awayTeamMembers: [
+            { name: 'Support Sam', level: 3, sourceTeam: 'Sister Company Ops' }
+        ], // Example away team member
         sdmId: 'sdm3',
         pmtId: 'pmt3'
     },
@@ -1027,6 +1049,7 @@ const contactCenterTeamsData = [
             { name: 'Kimberly Adams', level: 3 },
             { name: 'Jonathan Baker', level: 2 }
         ],
+        awayTeamMembers: [],
         sdmId: 'sdm3',
         pmtId: 'pmt2'
     },
@@ -1042,6 +1065,7 @@ const contactCenterTeamsData = [
             { name: 'Kevin Perez', level: 2 }
             // Laura Turner and Eric Phillips moved to team8
         ],
+        awayTeamMembers: [],
         sdmId: 'sdm4',
         pmtId: 'pmt4'
     },
@@ -1055,6 +1079,7 @@ const contactCenterTeamsData = [
             { name: 'Laura Turner', level: 4 }, // Assuming SDM L4
             { name: 'Eric Phillips', level: 3 }
         ],
+        awayTeamMembers: [],
         sdmId: 'sdm4', // Still under Laura Turner
         pmtId: 'pmt1'
     }
@@ -1960,60 +1985,106 @@ function generateTeamVisualization(systemData) {
 }
 
 //** Generate Team Breakdown Table **/
-/** REVISED Generate Team Breakdown Table - Fix Engineer String Format **/
+/** REVISED Generate Team Breakdown Table - Incorporates Away-Team, New Columns & Calculations */
 function generateTeamTable(systemData) {
-    // **Debugging:** Log the incoming team data to check structure
-    // console.log("Generating Team Table with data:", JSON.stringify(systemData, null, 2));
+    console.log("Generating Team Table - Enhanced Version..."); // Log function start
 
     let teamTable = document.getElementById('teamTable');
     let tableBody = teamTable.querySelector('tbody');
-    if (!tableBody) {
-        tableBody = document.createElement('tbody');
-        teamTable.appendChild(tableBody);
+    let tableHead = teamTable.querySelector('thead'); // Get the thead element
+    let tableFoot = teamTable.querySelector('tfoot'); // Get the tfoot element
+
+    if (!tableBody || !tableHead || !tableFoot) {
+        console.error("generateTeamTable: Could not find required table elements (thead, tbody, tfoot).");
+        // Basic error display if table structure is broken
+        if (document.getElementById('teamTable')) {
+             document.getElementById('teamTable').innerHTML = '<tr><td colspan="12" style="color:red;">Error: Table structure incomplete.</td></tr>';
+        }
+        return;
     }
     tableBody.innerHTML = ''; // Clear existing content from tbody only
 
-    // --- Defensive checks for core data ---
+    // --- 1. Update Column Headers ---
+    const headerRow = tableHead.querySelector('tr');
+    headerRow.innerHTML = ''; // Clear existing headers to rebuild in order
+
+    // Define headers with new names, order, and tooltips
+    const headersConfig = [
+        { text: 'Senior Manager', title: 'Senior Manager overseeing the SDM(s).' },
+        { text: 'SDM', title: 'Software Development Manager for the team(s).' },
+        { text: 'Team Identity', title: 'Unique identifier or codename for the team.' },
+        { text: 'Team Name', title: 'Official name of the team.' },
+        { text: 'PMT', title: 'Product Management counterpart for the team.' },
+        { text: 'Team BIS', title: 'Builders In Seats: Count of actual engineers assigned to this team.' }, // NEW
+        { text: 'Finance Approved Funding', title: 'Official budgeted headcount allocated by finance.' }, // RENAMED
+        { text: 'Effective BIS to deliver initiatives', title: 'Total building capacity including team members and away-team resources (Team BIS + Away-Team BIS).' }, // RENAMED
+        { text: 'BIS Hiring Gap', title: 'Gap between Finance Approved Funding and actual Team BIS (Funded - Team BIS). Shows hiring need.' }, // RENAMED & RECALCULATED
+        { text: 'Engineers (Level)', title: 'List of engineers assigned to this team and their level.' },
+        { text: 'Away-Team Members', title: 'List of engineers borrowed from other teams/orgs, their level, and source.' }, // NEW
+        { text: 'Services Owned', title: 'List of services this team owns.' }
+    ];
+
+    headersConfig.forEach(config => {
+        const th = document.createElement('th');
+        th.textContent = config.text;
+        th.title = config.title; // Add tooltip
+        th.style.border = '1px solid #ccc';
+        th.style.padding = '8px';
+        th.style.textAlign = 'left';
+        th.style.backgroundColor = '#f2f2f2';
+        th.style.position = 'sticky'; // Keep headers sticky
+        th.style.top = '0';
+        th.style.zIndex = '1'; // Ensure headers stay above scrolling content
+        headerRow.appendChild(th);
+    });
+    // --- End Header Update ---
+
+
+    // --- 2. Defensive checks for core data ---
     if (!systemData || !systemData.teams || !Array.isArray(systemData.teams)) {
         console.error("generateTeamTable: Invalid or missing systemData.teams");
-        let row = tableBody.insertRow();
-        let cell = row.insertCell();
-        cell.colSpan = 10; // Adjusted colspan
+        let errRow = tableBody.insertRow();
+        let cell = errRow.insertCell();
+        cell.colSpan = headersConfig.length; // Use dynamic colspan
         cell.textContent = "Error: Team data is missing or invalid.";
         cell.style.color = 'red';
+        // Clear footer totals if error occurs
+        tableFoot.querySelectorAll('td').forEach(td => td.innerText = 'ERR'); // Clear all footer cells
+        document.getElementById('gapNote').innerText = 'Error loading team data.';
         return;
     }
     const services = systemData.services || [];
     const sdms = systemData.sdms || [];
     const pmts = systemData.pmts || [];
     const seniorManagers = systemData.seniorManagers || [];
-    // --------------------------------------
+    // --- End Defensive Checks ---
 
-    // --- Totals Initialization ---
+    // --- 3. Totals Initialization ---
     let totalFundedHC = 0;
-    let totalBIS = 0;
-    // ---------------------------
+    let totalTeamBIS = 0; // NEW: Track total actual team members
+    let totalEffectiveBIS = 0; // Track total effective capacity
+    // --- End Totals Init ---
 
-    // --- Helper Functions for Lookups ---
-    const getSeniorManagerName = (srMgrId) => {
+    // --- 4. Helper Functions (Keep as before) ---
+    const getSeniorManagerName = (srMgrId) => { /* ... no changes ... */
         if (!srMgrId) return 'No Senior Manager';
         const srMgr = seniorManagers.find(s => s.seniorManagerId === srMgrId);
         return srMgr ? srMgr.seniorManagerName : `Unknown (${srMgrId})`;
-    };
-    const getSdmName = (sdmId) => {
+     };
+    const getSdmName = (sdmId) => { /* ... no changes ... */
         if (!sdmId) return 'No SDM';
         const sdm = sdms.find(s => s.sdmId === sdmId);
         return sdm ? sdm.sdmName : `Unknown (${sdmId})`;
     };
-    const getPmtName = (pmtId) => {
+    const getPmtName = (pmtId) => { /* ... no changes ... */
         if (!pmtId) return 'N/A';
         const pmt = pmts.find(p => p.pmtId === pmtId);
         return pmt ? pmt.pmtName : `Unknown (${pmtId})`;
     };
-    // -----------------------------------
+    // --- End Helpers ---
 
-    // --- Map teamId to services ---
-    let teamServicesMap = {};
+    // --- 5. Map teamId to services (Keep as before) ---
+    let teamServicesMap = {}; /* ... no changes ... */
     services.forEach(service => {
         let teamId = service.owningTeamId;
         if (teamId) {
@@ -2021,37 +2092,28 @@ function generateTeamTable(systemData) {
             teamServicesMap[teamId].push(service.serviceName);
         }
     });
-    // -----------------------------
+    // --- End Service Map ---
 
-    // --- Group teams by Senior Manager -> SDM ---
-    let groupedData = {};
+    // --- 6. Group teams by Senior Manager -> SDM (Keep as before) ---
+    let groupedData = {}; /* ... no changes ... */
     systemData.teams.forEach(team => {
         if (!team) return;
-
         const sdm = sdms.find(s => s.sdmId === team.sdmId);
         const srMgrId = sdm ? (sdm.seniorManagerId || 'no-sr-mgr') : 'no-sdm';
         const sdmId = team.sdmId || 'no-sdm';
-
-        if (!groupedData[srMgrId]) {
-            groupedData[srMgrId] = {};
-        }
-        if (!groupedData[srMgrId][sdmId]) {
-            groupedData[srMgrId][sdmId] = [];
-        }
+        if (!groupedData[srMgrId]) groupedData[srMgrId] = {};
+        if (!groupedData[srMgrId][sdmId]) groupedData[srMgrId][sdmId] = [];
         groupedData[srMgrId][sdmId].push(team);
     });
-    // -------------------------------------------
+    // --- End Grouping ---
 
-    // --- Populate Table Body ---
+    // --- 7. Populate Table Body (Major Changes Here) ---
     for (const srMgrId in groupedData) {
         const srMgrData = groupedData[srMgrId];
         const srMgrNameDisplay = (srMgrId === 'no-sr-mgr' || srMgrId === 'no-sdm') ? 'No Assigned Senior Manager' : getSeniorManagerName(srMgrId);
         let isFirstRowForSrMgr = true;
         let srMgrRowspan = 0;
-
-        for (const sdmId in srMgrData) {
-            srMgrRowspan += srMgrData[sdmId].length;
-        }
+        for (const sdmId in srMgrData) { srMgrRowspan += srMgrData[sdmId].length; }
 
         for (const sdmId in srMgrData) {
             const teams = srMgrData[sdmId];
@@ -2060,91 +2122,190 @@ function generateTeamTable(systemData) {
 
             teams.forEach((team) => {
                 if (!team) return;
-
                 let row = tableBody.insertRow();
 
+                // --- Standard Grouping Cells ---
                 if (isFirstRowForSrMgr) {
-                    let srMgrCell = row.insertCell();
-                    srMgrCell.innerText = srMgrNameDisplay;
-                    srMgrCell.rowSpan = srMgrRowspan;
-                    srMgrCell.style.verticalAlign = 'top';
-                    isFirstRowForSrMgr = false;
+                    let srMgrCell = row.insertCell(); srMgrCell.innerText = srMgrNameDisplay; srMgrCell.rowSpan = srMgrRowspan; srMgrCell.style.verticalAlign = 'top'; isFirstRowForSrMgr = false;
                 }
-
                 if (isFirstRowForSdm) {
-                    let sdmCell = row.insertCell();
-                    sdmCell.innerText = sdmNameDisplay;
-                    sdmCell.rowSpan = teams.length;
-                    sdmCell.style.verticalAlign = 'top';
-                    isFirstRowForSdm = false;
+                    let sdmCell = row.insertCell(); sdmCell.innerText = sdmNameDisplay; sdmCell.rowSpan = teams.length; sdmCell.style.verticalAlign = 'top'; isFirstRowForSdm = false;
                 }
-
                 row.insertCell().innerText = team.teamIdentity || 'N/A';
                 row.insertCell().innerText = team.teamName || 'N/A';
                 row.insertCell().innerText = getPmtName(team.pmtId);
+                // --- End Standard Grouping ---
 
-                const funded = team.fundedHeadcount ?? 0;
-                const bis = team.buildersInSeats ?? 0;
-                const gap = funded - bis;
-                row.insertCell().innerText = funded;
-                row.insertCell().innerText = bis;
-                let gapCell = row.insertCell();
-                gapCell.innerText = gap;
-                gapCell.style.color = gap < 0 ? 'red' : (gap > 0 ? 'orange' : 'green');
+                // *** NEW/REVISED Capacity Calculations & Cells ***
+                const fundedHC = team.fundedHeadcount ?? 0;
+                const teamBIS = team.engineers?.length ?? 0; // Actual team members
+                const awayTeamBIS = team.awayTeamMembers?.length ?? 0; // Borrowed members
+                const effectiveBIS = teamBIS + awayTeamBIS; // Total capacity
+                const hiringGap = fundedHC - teamBIS; // Gap based on ACTUAL team members vs funding
 
-                totalFundedHC += funded;
-                totalBIS += bis;
+                // NEW: Team BIS Cell
+                const teamBISCell = row.insertCell();
+                teamBISCell.innerText = teamBIS;
+                teamBISCell.style.textAlign = 'center';
 
-                // Engineers (Name and Level)
-                let engineersCell = row.insertCell();
+                // RENAMED: Finance Approved Funding Cell
+                row.insertCell().innerText = fundedHC;
+
+                // RENAMED: Effective BIS Cell
+                const effectiveBISCell = row.insertCell();
+                effectiveBISCell.innerText = effectiveBIS;
+                effectiveBISCell.title = `Team BIS: ${teamBIS}, Away-Team BIS: ${awayTeamBIS}`; // Tooltip explaining breakdown
+                effectiveBISCell.style.textAlign = 'center'; // Center align numerical columns
+                if (awayTeamBIS > 0) effectiveBISCell.style.fontWeight = 'bold'; // Highlight if away team contributes
+
+                // RENAMED & RECALCULATED: BIS Hiring Gap Cell
+                let hiringGapCell = row.insertCell();
+                hiringGapCell.innerText = hiringGap;
+                hiringGapCell.style.color = hiringGap < 0 ? 'blue' : (hiringGap > 0 ? 'orange' : 'green'); // Blue if overstaffed, Orange if hiring needed
+                hiringGapCell.style.textAlign = 'center';
+                 if (hiringGap < 0) {
+                    hiringGapCell.title = `Team BIS (${teamBIS}) exceeds Funded HC (${fundedHC}) by ${Math.abs(hiringGap)}`;
+                    hiringGapCell.style.fontWeight = 'bold';
+                 } else if (hiringGap > 0) {
+                    hiringGapCell.title = `Need to hire ${hiringGap} to reach Funded HC (${fundedHC})`;
+                 } else {
+                     hiringGapCell.title = `Team BIS matches Funded HC`;
+                 }
+
+                // Accumulate Totals
+                totalFundedHC += fundedHC;
+                totalTeamBIS += teamBIS; // Accumulate actual team BIS
+                totalEffectiveBIS += effectiveBIS; // Accumulate effective BIS
+                // *** END NEW/REVISED Capacity Cells ***
+
+                // Engineers (Level) Cell
+                let engineersCell = row.insertCell(); /* ... no changes in content generation ... */
                 if (team.engineers && Array.isArray(team.engineers) && team.engineers.length > 0) {
-                    engineersCell.innerHTML = team.engineers
+                     engineersCell.innerHTML = team.engineers
                         .map(eng => {
-                            if (typeof eng !== 'object' || eng === null) return 'Invalid Eng Data';
-                            const name = eng.name || 'Unnamed';
-                            const level = eng.level ?? '?';
-                            // --- USE STANDARD STRING CONCATENATION ---
-                            return name + ' (L' + level + ')';
-                            // -----------------------------------------
+                             if (typeof eng !== 'object' || eng === null) return 'Invalid Eng Data';
+                             const name = eng.name || 'Unnamed';
+                             const level = eng.level ?? '?';
+                             return name + ' (L' + level + ')';
+                        })
+                        .join('<br>');
+                 } else {
+                    engineersCell.innerText = 'None';
+                 }
+                engineersCell.style.whiteSpace = 'pre-line';
+
+                // NEW: Away-Team Members Cell
+                let awayTeamCell = row.insertCell();
+                if (team.awayTeamMembers && Array.isArray(team.awayTeamMembers) && team.awayTeamMembers.length > 0) {
+                    awayTeamCell.innerHTML = team.awayTeamMembers
+                        .map(awayEng => {
+                            if (typeof awayEng !== 'object' || awayEng === null) return 'Invalid Away Data';
+                            const name = awayEng.name || 'Unnamed';
+                            const level = awayEng.level ?? '?';
+                            const source = awayEng.sourceTeam || 'Unknown Source';
+                            // Format: Name (Level) - SourceTeam
+                            return `${name} (L${level}) - ${source}`;
                         })
                         .join('<br>');
                 } else {
-                    engineersCell.innerText = 'None';
+                    awayTeamCell.innerText = 'None';
                 }
-                engineersCell.style.whiteSpace = 'pre-line';
+                awayTeamCell.style.whiteSpace = 'pre-line';
+                awayTeamCell.style.fontSize = '0.9em'; // Slightly smaller text
+                awayTeamCell.style.color = '#333';
 
-                // Services Owned
-                let servicesOwnedCell = row.insertCell();
+                // Services Owned Cell
+                let servicesOwnedCell = row.insertCell(); /* ... no changes ... */
                 servicesOwnedCell.innerText = team.teamId && teamServicesMap[team.teamId] ? teamServicesMap[team.teamId].join(', ') : 'None';
+
             }); // End teams.forEach
         } // End sdmId loop
     } // End srMgrId loop
-    // -------------------------
+    // --- End Populate Body ---
 
-    // --- Populate Footer Totals ---
-    const totalGap = totalFundedHC - totalBIS;
-    document.getElementById('totalFundedHC').innerText = totalFundedHC;
-    document.getElementById('totalBIS').innerText = totalBIS;
-    document.getElementById('totalGap').innerText = totalGap;
-    document.getElementById('totalGap').style.color = totalGap < 0 ? 'red' : (totalGap > 0 ? 'orange' : 'green');
+    // --- 8. Populate Footer Totals ---
+    const totalHiringGap = totalFundedHC - totalTeamBIS; // Calculate total hiring gap
 
-    let gapNoteText = `Overall Gap: ${totalGap} engineer(s). `;
-    if (totalGap > 0) {
-        gapNoteText += `(Need to hire ${totalGap})`;
-    } else if (totalGap < 0) {
-        gapNoteText += `(Over headcount by ${Math.abs(totalGap)})`;
+    // Ensure the tfoot row exists and has the correct number of cells
+    let footerRow = tableFoot.querySelector('tr:first-of-type'); // Get the main totals row
+    let footerCells = footerRow.querySelectorAll('td, th');
+
+    // Adjust colspan for the initial text cell + add placeholders for new total cells
+    const expectedFooterCells = headersConfig.length; // Number of columns
+    const labelColspan = 5; // SrMgr, SDM, Identity, Name, PMT
+    if (footerCells.length > 0) {
+        footerCells[0].colSpan = labelColspan; // First cell spans the label columns
+        // Ensure enough cells exist, add if needed
+        while(footerCells.length < expectedFooterCells - labelColspan + 1) { // +1 because first cell replaces multiple
+            footerRow.insertCell();
+            footerCells = footerRow.querySelectorAll('td, th'); // Refresh node list
+        }
     } else {
-        gapNoteText += `(Fully staffed to funded count)`;
+         // Handle case where footer row might be missing (though unlikely with current HTML)
+         console.error("Footer row not found or empty!");
+         return;
     }
-    document.getElementById('gapNote').innerText = gapNoteText;
-    // ---------------------------
 
-    // --- Populate Level Key ---
+    // Update footer cells by expected position (adjust indices carefully)
+    // Indices are relative to the start of the TD elements in the footer row
+    const footerDataCells = Array.from(footerCells).slice(1); // Skip the initial colspan cell
+
+    if (footerDataCells.length >= 7) { // Check we have enough cells for all totals
+        footerDataCells[0].id = 'totalTeamBIS'; // NEW: Cell for Total Team BIS
+        footerDataCells[0].textContent = totalTeamBIS;
+        footerDataCells[0].style.fontWeight = 'bold';
+        footerDataCells[0].style.textAlign = 'center';
+
+
+        footerDataCells[1].id = 'totalFundedHC'; // Cell for Total Funded HC
+        footerDataCells[1].textContent = totalFundedHC;
+        footerDataCells[1].style.fontWeight = 'bold';
+
+        footerDataCells[2].id = 'totalEffectiveBIS'; // Cell for Total Effective BIS
+        footerDataCells[2].textContent = totalEffectiveBIS;
+        footerDataCells[2].style.fontWeight = 'bold';
+        footerDataCells[2].style.textAlign = 'center';
+
+
+        footerDataCells[3].id = 'totalHiringGap'; // Cell for Total Hiring Gap
+        footerDataCells[3].textContent = totalHiringGap;
+        footerDataCells[3].style.fontWeight = 'bold';
+        footerDataCells[3].style.textAlign = 'center';
+        footerDataCells[3].style.color = totalHiringGap < 0 ? 'blue' : (totalHiringGap > 0 ? 'orange' : 'green');
+
+        // Add empty cells for the engineer/away-team/service columns in the footer
+         footerDataCells[4].textContent = ''; // Engineers
+         footerDataCells[5].textContent = ''; // Away-Team
+         footerDataCells[6].textContent = ''; // Services
+    } else {
+        console.error("Footer row does not have enough cells for totals!");
+    }
+
+
+    // Update Gap Note
+    let gapNoteText = `Overall BIS Hiring Gap: ${totalHiringGap} (Finance Approved Funding vs Team BIS). `;
+    if (totalHiringGap > 0) {
+        gapNoteText += `Need to hire ${totalHiringGap}.`;
+    } else if (totalHiringGap < 0) {
+        gapNoteText += `Over hiring target by ${Math.abs(totalHiringGap)}.`;
+    } else {
+        gapNoteText += `At hiring target.`;
+    }
+     // Add note about effective capacity if away teams exist
+     if (totalEffectiveBIS > totalTeamBIS) {
+        gapNoteText += ` Effective capacity boosted to ${totalEffectiveBIS} by away-teams.`
+     }
+
+    document.getElementById('gapNote').innerText = gapNoteText;
+    // --- End Footer ---
+
+    // --- 9. Populate Level Key (Keep as before) ---
     const levelKeyElement = document.getElementById('levelKey');
     if (levelKeyElement) {
         levelKeyElement.innerHTML = `Level Key: L1=SDE 1 (Junior), L2=SDE 2 (Intermediate), L3=SDE 3 (Senior), L4=Principal SDE, L5=Senior Principal SDE`;
     }
-    // ------------------------
+    // --- End Level Key ---
+    console.log("Finished generating Enhanced Team Table."); // Log function end
 }
 
 /** Enter Edit Mode **/
@@ -2192,54 +2353,91 @@ function showSystemEditForm(systemData) {
     
 }
 
-/** Helper to create Label + Input pairs */
-function createInputLabelPair(id, labelText, value, type = 'text', index, field) {
+/** Helper to create Label + Input pairs (Revised for BIS display update) */
+function createInputLabelPair(id, labelText, value, type = 'text', index, field, isReadOnly = false, tooltip = null) {
     let div = document.createElement('div');
     div.style.marginBottom = '10px';
     let label = document.createElement('label');
     label.htmlFor = id;
     label.innerText = labelText;
     label.style.display = 'block';
-
-    let input;
-    if (type === 'textarea') {
-         input = document.createElement('textarea');
-         input.rows = 2;
-         input.style.width = '90%';
-    } else {
-         input = document.createElement('input');
-         input.type = type;
-         if (type === 'number') {
-             input.min = 0;
-         }
-         input.style.width = '90%';
+    if (tooltip) {
+        label.title = tooltip; // Add tooltip to label if provided
     }
-    input.id = id;
-    input.value = value;
-    input.setAttribute('data-team-index', index); // Keep team index for context
-    input.setAttribute('data-field', field);
 
-    input.addEventListener('change', (event) => {
-         const teamIndex = parseInt(event.target.getAttribute('data-team-index'));
-         const fieldName = event.target.getAttribute('data-field');
-         let V = event.target.value;
-         if (event.target.type === 'number') {
-             V = parseInt(V);
-             if (isNaN(V)) V = 0;
-         }
-         // Ensure teams array and index are valid before updating
-         if (currentSystemData && currentSystemData.teams && teamIndex >= 0 && teamIndex < currentSystemData.teams.length) {
-            currentSystemData.teams[teamIndex][fieldName] = V;
-         } else {
-             console.warn(`Could not update team data for index ${teamIndex}, field ${fieldName}`);
-         }
-    });
+    let inputElement; // Could be input, textarea, or span
+
+    if (isReadOnly) {
+        inputElement = document.createElement('span');
+        inputElement.id = id;
+        inputElement.textContent = value;
+        inputElement.style.fontWeight = 'bold'; // Make read-only values stand out
+        if (tooltip) {
+            inputElement.title = tooltip; // Add tooltip to value span as well
+        }
+    } else if (type === 'textarea') {
+        inputElement = document.createElement('textarea');
+        inputElement.rows = 2;
+        inputElement.style.width = '90%';
+        inputElement.id = id;
+        inputElement.value = value;
+        inputElement.setAttribute('data-team-index', index);
+        inputElement.setAttribute('data-field', field);
+        inputElement.addEventListener('change', handleTeamInputChange); // Use generic handler
+    } else { // Default to input
+        inputElement = document.createElement('input');
+        inputElement.type = type;
+        if (type === 'number') {
+            inputElement.min = 0;
+             // Add step=1 for integer headcount fields if needed
+             if (field === 'fundedHeadcount') inputElement.step = 1;
+        }
+        inputElement.style.width = '90%';
+        inputElement.id = id;
+        inputElement.value = value;
+        inputElement.setAttribute('data-team-index', index);
+        inputElement.setAttribute('data-field', field);
+        inputElement.addEventListener('change', handleTeamInputChange); // Use generic handler
+    }
 
     div.appendChild(label);
-    div.appendChild(input);
+    div.appendChild(inputElement);
     return div;
 }
-// -----------------------------------
+
+// Add a generic handler for team input changes (if not already present)
+// This replaces the specific listeners previously inside createInputLabelPair
+function handleTeamInputChange(event) {
+    const input = event.target;
+    const teamIndex = parseInt(input.getAttribute('data-team-index'));
+    const fieldName = input.getAttribute('data-field');
+    let value = input.value;
+
+    if (input.type === 'number') {
+        value = parseInt(value);
+        if (isNaN(value)) value = 0;
+    }
+
+    if (currentSystemData && currentSystemData.teams && teamIndex >= 0 && teamIndex < currentSystemData.teams.length) {
+        currentSystemData.teams[teamIndex][fieldName] = value;
+        console.log(`Updated team[${teamIndex}].${fieldName} to:`, value);
+
+        // If team identity or name changed, update the header
+        if (fieldName === 'teamIdentity' || fieldName === 'teamName') {
+            const teamDiv = input.closest('.team-edit');
+            const header = teamDiv?.querySelector('h4');
+            if (header) {
+                 const indicator = header.querySelector('span');
+                 const teamData = currentSystemData.teams[teamIndex];
+                 header.textContent = `Team: ${teamData.teamIdentity || teamData.teamName || 'New Team'}`;
+                 if(indicator) header.insertBefore(indicator, header.firstChild);
+            }
+        }
+    } else {
+        console.warn(`Could not update team data for index ${teamIndex}, field ${fieldName}`);
+    }
+}
+
 
 /** Helper to display Senior Manager Assignment UI within SDM section */
 function displaySeniorManagerAssignment(sdmSectionContainer, teamIndex, currentSdmId) {
@@ -2390,45 +2588,26 @@ function createDualListContainer(contextIndex, leftLabel, rightLabel, currentOpt
 } // --- End createDualListContainer ---
 
 /** Display Teams for Editing **/
-/** REVISED Display Teams for Editing - Calls Global Helpers */
+/** REVISED Display Teams for Editing - Adds Away-Team Management Section */
 function displayTeamsForEditing(teams, expandedIndex = -1) {
     const teamsDiv = document.getElementById('teamsManagement');
     teamsDiv.innerHTML = ''; // Clear existing content
 
-    // Pre-fetch global lists
-    const allServices = (currentSystemData.services || []).map(service => ({
-        value: service.serviceName,
-        text: service.serviceName,
-        owningTeamId: service.owningTeamId || null
-    }));
+    // Pre-fetch global lists (keep as before)
+    const allServices = (currentSystemData.services || []).map(service => ({ value: service.serviceName, text: service.serviceName, owningTeamId: service.owningTeamId || null }));
     const allSdms = currentSystemData.sdms || [];
     const allPmts = currentSystemData.pmts || [];
     const allSeniorManagers = currentSystemData.seniorManagers || [];
-
-    // Calculate Available Engineers map
-    let allEngineerNamesMap = new Map();
-    (currentSystemData.teams || []).forEach(t => {
-        (t.engineers || []).forEach(eng => {
-            if (eng && eng.name) {
-                if (!allEngineerNamesMap.has(eng.name)) {
-                    allEngineerNamesMap.set(eng.name, new Set());
-                }
-                allEngineerNamesMap.get(eng.name).add(t.teamId);
-            }
-        });
-    });
+    // Note: Away-team list is per-team, not global selection here
 
     (teams || []).forEach((team, index) => {
-        if (!team) {
-            console.warn("Skipping invalid team object at index", index);
-            return;
-        }
+        if (!team) { console.warn("Skipping invalid team object at index", index); return; }
 
         let teamDiv = document.createElement('div');
         teamDiv.className = 'team-edit';
-        teamDiv.setAttribute('data-team-render-index', index);
+        teamDiv.setAttribute('data-team-render-index', index); // Keep render index if needed
 
-        // Header (collapsible)
+        // --- Header (Collapsible) - No Change ---
         let teamHeader = document.createElement('h4');
         teamHeader.style.cursor = 'pointer';
         let indicator = document.createElement('span');
@@ -2440,196 +2619,443 @@ function displayTeamsForEditing(teams, expandedIndex = -1) {
         teamDetails.className = 'team-details';
         teamDetails.style.display = (index === expandedIndex) ? 'block' : 'none';
 
-        // --- Modified Onclick Handler ---
+        // Toggle Functionality (Keep as before, but refresh away-team list too)
         teamHeader.onclick = () => {
             const content = teamDetails;
             const isCurrentlyCollapsed = content.style.display === 'none' || content.style.display === '';
             content.style.display = isCurrentlyCollapsed ? 'block' : 'none';
             indicator.innerText = isCurrentlyCollapsed ? '- ' : '+ ';
-
-            // Refresh Available Services when EXPANDING
             if (isCurrentlyCollapsed) {
-                 console.log("Refreshing available services for team:", team.teamName || team.teamIdentity);
-                 const latestAllServices = (currentSystemData.services || []).map(service => ({
-                    value: service.serviceName, text: service.serviceName, owningTeamId: service.owningTeamId || null
-                 }));
-                 const currentServicesSelect = content.querySelector("select[data-field='currentServices']");
-                 const availableServicesSelect = content.querySelector("select[data-field='availableServices']");
-
-                 if (currentServicesSelect && availableServicesSelect) {
-                    const currentlyAssignedServices = Array.from(currentServicesSelect.options).map(opt => opt.value);
-                    availableServicesSelect.innerHTML = '';
-                    latestAllServices.forEach(svcOption => {
-                        if (!currentlyAssignedServices.includes(svcOption.value)) {
-                             availableServicesSelect.appendChild(new Option(svcOption.text, svcOption.value));
-                        }
-                    });
-                    console.log("Available services list updated.");
-                 } else {
-                      console.warn("Could not find service select lists to refresh for team index", index);
-                 }
-                  // Also refresh Sr Mgr assignment display on expand, in case SDM changed
-                  displaySeniorManagerAssignment(teamDetails.querySelector(`#sdmSection_${index}`), index, team.sdmId); // Pass the SDM section container
+                 // Refresh Available Services
+                 refreshAvailableListsInDualList(content, 'currentServices', 'availableServices',
+                    (currentSystemData.services || []).map(s => ({ value: s.serviceName, text: s.serviceName, owningTeamId: s.owningTeamId || null })),
+                    team.teamId
+                 );
+                 // Refresh Sr Mgr display
+                 displaySeniorManagerAssignment(content.querySelector(`#sdmSection_${index}`), index, team.sdmId);
+                 // Refresh Away-Team List Display (in case data changed elsewhere)
+                 displayAwayTeamMembers(team.awayTeamMembers || [], index);
+                 // Refresh Effective BIS display
+                 updateEffectiveBISDisplay(index);
             }
-        }; // --- End MODIFIED Onclick Handler ---
+        };
+        // --- End Header ---
 
-
-        // --- Basic Info Inputs ---
+        // --- Basic Info Inputs (Using revised helper) ---
         teamDetails.appendChild(createInputLabelPair(`teamIdentity_${index}`, 'Team Identity:', team.teamIdentity || '', 'text', index, 'teamIdentity'));
         teamDetails.appendChild(createInputLabelPair(`teamName_${index}`, 'Team Name:', team.teamName || '', 'text', index, 'teamName'));
         teamDetails.appendChild(createInputLabelPair(`teamDescription_${index}`, 'Team Description:', team.teamDescription || '', 'textarea', index, 'teamDescription'));
-        // -------------------------
+        // --- End Basic Info ---
 
-        // --- Services Owned ---
+        // --- Services Owned Dual List (Keep as before) ---
         const currentServices = allServices.filter(s => s.owningTeamId === team.teamId);
         const availableServices = allServices.filter(s => s.owningTeamId !== team.teamId);
-        const servicesContainer = createDualListContainer( // Call global helper
-            index, 'Services Owned:', 'Available Services:',
-            currentServices, availableServices,
-            'currentServices', 'availableServices',
-            (movedOptionValue, direction, contextIndex) => {
+        const servicesContainer = createDualListContainer(
+             index, 'Services Owned:', 'Available Services:',
+             currentServices, availableServices,
+             'currentServices', 'availableServices',
+             (movedOptionValue, direction, contextIndex) => { /* ... service move callback (no change) ... */
                 const service = currentSystemData.services.find(s => s.serviceName === movedOptionValue);
                 const targetTeam = currentSystemData.teams[contextIndex];
                 if (service && targetTeam) {
                     service.owningTeamId = (direction === 'add') ? targetTeam.teamId : null;
                 }
-            }
+             }
         );
         teamDetails.appendChild(servicesContainer);
         teamDetails.appendChild(document.createElement('br'));
-        // -------------------------------------------
+        // --- End Services ---
 
-        // --- SDM Assignment & Senior Manager Assignment ---
-        const sdmSection = document.createElement('div');
-        sdmSection.id = `sdmSection_${index}`; // Give ID for Sr Mgr refresh targeting
-        sdmSection.style.border = '1px dashed #ccc'; sdmSection.style.padding = '10px'; sdmSection.style.marginBottom = '10px';
+        // --- SDM Assignment & Senior Manager Assignment (Keep as before) ---
+        const sdmSection = document.createElement('div'); /* ... sdm section setup (no change) ... */
+        sdmSection.id = `sdmSection_${index}`; sdmSection.style.border = '1px dashed #ccc'; sdmSection.style.padding = '10px'; sdmSection.style.marginBottom = '10px';
         let sdmSectionTitle = document.createElement('h5'); sdmSectionTitle.innerText = 'SDM Assignment'; sdmSection.appendChild(sdmSectionTitle);
-
         const currentSdm = allSdms.find(sdm => sdm && sdm.sdmId === team.sdmId);
-        const sdmContainer = createDualListContainer( // Call global helper
+        const sdmContainer = createDualListContainer( /* ... sdm dual list setup (no change) ... */
             index, 'Current SDM:', 'Available SDMs:',
             currentSdm ? [{ value: currentSdm.sdmId, text: currentSdm.sdmName }] : [],
             allSdms.filter(sdm => sdm && sdm.sdmId !== team.sdmId).map(sdm => ({ value: sdm.sdmId, text: sdm.sdmName })),
             'currentSdm', 'availableSdms',
-            (movedOptionValue, direction, contextIndex) => {
-                 const targetTeam = currentSystemData.teams[contextIndex];
-                 if(targetTeam){
+            (movedOptionValue, direction, contextIndex) => { // SDM Move Callback
+                const targetTeam = currentSystemData.teams[contextIndex];
+                if(targetTeam){
                     const newSdmId = (direction === 'add') ? movedOptionValue : null;
                     targetTeam.sdmId = newSdmId;
                     // Refresh Sr. Mgr section using the specific sdmSection container
                     displaySeniorManagerAssignment(sdmSection, contextIndex, newSdmId);
-                 }
+                }
             },
-            false, true, 'Enter New SDM Name',
-            (newSdmName) => {
-                 if (!newSdmName || newSdmName.trim() === '') return null; newSdmName = newSdmName.trim();
-                 let existingSdm = allSdms.find(s => s && s.sdmName.toLowerCase() === newSdmName.toLowerCase());
-                 if (existingSdm) { alert(`SDM "${newSdmName}" already exists.`); return null; }
-                 const newSdmId = 'sdm-' + Date.now(); const newSdm = { sdmId: newSdmId, sdmName: newSdmName, seniorManagerId: null };
-                 currentSystemData.sdms.push(newSdm); allSdms.push(newSdm); // Update local cache too
-                 console.log("Added new SDM:", newSdm);
-                 return { value: newSdmId, text: newSdmName };
-            }
+            false, true, 'Enter New SDM Name', // Single select left, allow add new
+            (newSdmName) => { /* ... add new sdm callback (no change) ... */
+                if (!newSdmName || newSdmName.trim() === '') return null; newSdmName = newSdmName.trim();
+                let existingSdm = allSdms.find(s => s && s.sdmName.toLowerCase() === newSdmName.toLowerCase());
+                if (existingSdm) { alert(`SDM "${newSdmName}" already exists.`); return null; }
+                const newSdmId = 'sdm-' + Date.now(); const newSdm = { sdmId: newSdmId, sdmName: newSdmName, seniorManagerId: null };
+                currentSystemData.sdms.push(newSdm); allSdms.push(newSdm); // Update local cache too
+                console.log("Added new SDM:", newSdm); return { value: newSdmId, text: newSdmName };
+             }
         );
         sdmSection.appendChild(sdmContainer);
-
         let srMgrAssignmentContainer = document.createElement('div'); srMgrAssignmentContainer.id = `srMgrAssignmentContainer_${index}`; srMgrAssignmentContainer.style.marginTop = '10px';
-        sdmSection.appendChild(srMgrAssignmentContainer); // Add placeholder
-
+        sdmSection.appendChild(srMgrAssignmentContainer);
         teamDetails.appendChild(sdmSection); teamDetails.appendChild(document.createElement('br'));
+        // Initial population of Sr Mgr (will also happen on expand)
+        if (teamDetails.style.display === 'block') {
+            displaySeniorManagerAssignment(sdmSection, index, team.sdmId);
+        }
+        // --- End SDM/SrMgr ---
 
-        displaySeniorManagerAssignment(sdmSection, index, team.sdmId); // Initial population
-        // ---------------------------------------------------
-
-        // --- PMT Assignment ---
-         const currentPmt = allPmts.find(pmt => pmt && pmt.pmtId === team.pmtId);
-         const pmtContainer = createDualListContainer( // Call global helper
-             index, 'Current PMT:', 'Available PMTs:',
-             currentPmt ? [{ value: currentPmt.pmtId, text: currentPmt.pmtName }] : [],
-             allPmts.filter(pmt => pmt && pmt.pmtId !== team.pmtId).map(pmt => ({ value: pmt.pmtId, text: pmt.pmtName })),
-             'currentPmt', 'availablePmts',
-             (movedOptionValue, direction, contextIndex) => {
-                 const targetTeam = currentSystemData.teams[contextIndex];
-                 if(targetTeam) targetTeam.pmtId = (direction === 'add') ? movedOptionValue : null;
-             },
-             false, true, 'Enter New PMT Name',
-             (newPmtName) => {
+        // --- PMT Assignment (Keep as before) ---
+        const currentPmt = allPmts.find(pmt => pmt && pmt.pmtId === team.pmtId);
+        const pmtContainer = createDualListContainer(/* ... pmt dual list setup (no change) ... */
+            index, 'Current PMT:', 'Available PMTs:',
+            currentPmt ? [{ value: currentPmt.pmtId, text: currentPmt.pmtName }] : [],
+            allPmts.filter(pmt => pmt && pmt.pmtId !== team.pmtId).map(pmt => ({ value: pmt.pmtId, text: pmt.pmtName })),
+            'currentPmt', 'availablePmts',
+            (movedOptionValue, direction, contextIndex) => { // PMT Move Callback
+                const targetTeam = currentSystemData.teams[contextIndex];
+                if(targetTeam) targetTeam.pmtId = (direction === 'add') ? movedOptionValue : null;
+            },
+            false, true, 'Enter New PMT Name', // Single select left, allow add new
+             (newPmtName) => { /* ... add new pmt callback (no change) ... */
                  if (!newPmtName || newPmtName.trim() === '') return null; newPmtName = newPmtName.trim();
                  let existingPmt = allPmts.find(p => p && p.pmtName.toLowerCase() === newPmtName.toLowerCase());
                  if (existingPmt) { alert(`PMT "${newPmtName}" already exists.`); return null; }
                  const newPmtId = 'pmt-' + Date.now(); const newPmt = { pmtId: newPmtId, pmtName: newPmtName };
                  currentSystemData.pmts.push(newPmt); allPmts.push(newPmt); // Update local cache
                  console.log("Added new PMT:", newPmt); return { value: newPmtId, text: newPmtName };
-             }
-         );
-         teamDetails.appendChild(pmtContainer); teamDetails.appendChild(document.createElement('br'));
-        // -------------------------------------------
+              }
+        );
+        teamDetails.appendChild(pmtContainer); teamDetails.appendChild(document.createElement('br'));
+        // --- End PMT ---
 
-        // --- Headcount ---
-        teamDetails.appendChild(createInputLabelPair(`fundedHeadcount_${index}`, 'Funded Headcount:', team.fundedHeadcount ?? 0, 'number', index, 'fundedHeadcount'));
-        let bisDiv = document.createElement('div'); bisDiv.style.marginTop = '10px';
-        let bisLabel = document.createElement('label'); bisLabel.innerText = 'Builders In Seats (BIS): ';
-        let bisValueSpan = document.createElement('span'); bisValueSpan.id = `bisValue_${index}`; bisValueSpan.innerText = team.engineers?.length ?? 0; team.buildersInSeats = team.engineers?.length ?? 0; bisValueSpan.style.fontWeight = 'bold';
-        bisDiv.appendChild(bisLabel); bisDiv.appendChild(bisValueSpan);
-        teamDetails.appendChild(bisDiv); teamDetails.appendChild(document.createElement('br'));
-        // -----------------
+        // --- Headcount Section ---
+        teamDetails.appendChild(createInputLabelPair(`fundedHeadcount_${index}`, 'Finance Approved Funding:', team.fundedHeadcount ?? 0, 'number', index, 'fundedHeadcount'));
 
-        // --- Engineer Assignment ---
-        let engineersSectionTitle = document.createElement('h5'); engineersSectionTitle.innerText = 'Engineer Assignment'; engineersSectionTitle.style.marginTop = '15px'; teamDetails.appendChild(engineersSectionTitle);
-        const currentEngineerOptions = (team.engineers || []).map(eng => ({ value: eng.name, text: eng.name }));
-        const availableEngineerOptions = Array.from(allEngineerNamesMap.keys()).filter(name => !(team.engineers || []).some(eng => eng.name === name)).map(name => ({ value: name, text: name }));
-        const engineerContainer = createDualListContainer( // Call global helper
+        // ** UPDATED: Display Effective BIS (Read Only) **
+        const teamBIS = team.engineers?.length ?? 0;
+        const awayTeamBIS = team.awayTeamMembers?.length ?? 0;
+        const effectiveBIS = teamBIS + awayTeamBIS;
+        const bisTooltip = `Team BIS: ${teamBIS}, Away-Team BIS: ${awayTeamBIS}`;
+        teamDetails.appendChild(
+            createInputLabelPair(`effectiveBIS_${index}`, 'Effective BIS:', effectiveBIS, 'text', index, 'effectiveBIS', true, bisTooltip) // isReadOnly = true
+        );
+        teamDetails.appendChild(document.createElement('br'));
+        // --- End Headcount ---
+
+        // --- Engineer Assignment (Keep as before) ---
+        let engineersSectionTitle = document.createElement('h5'); /* ... engineer section setup (no change) ... */
+        engineersSectionTitle.innerText = 'Team Engineer Assignment'; engineersSectionTitle.style.marginTop = '15px'; teamDetails.appendChild(engineersSectionTitle);
+        const currentEngineerOptions = (team.engineers || []).map(eng => ({ value: eng.name, text: `${eng.name} (L${eng.level ?? '?'})` })); // Show level in list
+        // Available needs to be calculated carefully now
+        let allEngineerNamesMap = new Map();
+        (currentSystemData.teams || []).forEach(t => { (t.engineers || []).forEach(eng => { if (eng?.name) allEngineerNamesMap.set(eng.name, t.teamId); }); });
+        const availableEngineerOptions = Array.from(allEngineerNamesMap.keys()).filter(name => allEngineerNamesMap.get(name) !== team.teamId).map(name => ({ value: name, text: name }));
+
+        const engineerContainer = createDualListContainer( /* ... engineer dual list setup (no change in basic structure) ... */
             index, 'Current Engineers:', 'Available Engineers:', currentEngineerOptions, availableEngineerOptions,
             'currentEngineers', 'availableEngineers',
-            (movedEngineerName, direction, contextIndex) => {
-                const currentTeam = currentSystemData.teams[contextIndex]; if (!currentTeam) return;
-                if (direction === 'add') {
-                    // Remove engineer from other teams first
+            (movedEngineerName, direction, contextIndex) => { // Engineer Move Callback
+                 const currentTeam = currentSystemData.teams[contextIndex]; if (!currentTeam) return;
+                 if (direction === 'add') { /* ... remove from other teams, add to current (no change) ... */
+                    let engineerLevel = 1; // Default level
+                    // Try find the engineer on another team to get their level
                     currentSystemData.teams.forEach(otherTeam => {
-                        if (otherTeam.teamId !== currentTeam.teamId && otherTeam.engineers) {
-                            const initialLength = otherTeam.engineers.length;
-                            otherTeam.engineers = otherTeam.engineers.filter(eng => eng.name !== movedEngineerName);
-                            if (otherTeam.engineers.length < initialLength) { // If removed, update BIS
-                                otherTeam.buildersInSeats = otherTeam.engineers.length;
-                                // TODO: Optionally update the UI for the *other* team's BIS count immediately
-                                // const otherBisSpan = document.querySelector(`[data-team-render-index='${/* find other team index */}'] #bisValue_${/* other team index */}`);
-                                // if (otherBisSpan) otherBisSpan.innerText = otherTeam.buildersInSeats;
-                                console.log(`Removed ${movedEngineerName} from team ${otherTeam.teamId}`);
-                            }
-                        }
+                         const existingEng = (otherTeam.engineers || []).find(eng => eng.name === movedEngineerName);
+                         if (existingEng) engineerLevel = existingEng.level ?? 1;
                     });
+
+                     // Remove from *all* other teams first
+                     currentSystemData.teams.forEach((otherTeam, otherIdx) => {
+                         if (otherTeam.teamId !== currentTeam.teamId && otherTeam.engineers) {
+                             const initialLength = otherTeam.engineers.length;
+                             otherTeam.engineers = otherTeam.engineers.filter(eng => eng.name !== movedEngineerName);
+                             if (otherTeam.engineers.length < initialLength) {
+                                 updateEffectiveBISDisplay(otherIdx); // Update other team's displayed BIS
+                             }
+                         }
+                     });
                     // Add engineer to current team if not already present
-                    if (!currentTeam.engineers.some(eng => eng.name === movedEngineerName)) { currentTeam.engineers.push({ name: movedEngineerName, level: 1 }); console.log(`Added ${movedEngineerName} to team ${currentTeam.teamId}`); }
-                } else { // Remove from current team
-                    currentTeam.engineers = currentTeam.engineers.filter(eng => eng.name !== movedEngineerName); console.log(`Removed ${movedEngineerName} from team ${currentTeam.teamId}`);
-                }
-                // Update BIS display for the current team
-                currentTeam.buildersInSeats = currentTeam.engineers.length; const bisValSpan = document.getElementById(`bisValue_${contextIndex}`); if (bisValSpan) bisValSpan.innerText = currentTeam.buildersInSeats;
+                    if (!currentTeam.engineers) currentTeam.engineers = [];
+                    if (!currentTeam.engineers.some(eng => eng.name === movedEngineerName)) {
+                        currentTeam.engineers.push({ name: movedEngineerName, level: engineerLevel }); // Use found/default level
+                        console.log(`Added ${movedEngineerName} to team ${currentTeam.teamId}`);
+                    }
+                 } else { // Remove from current team
+                     if (currentTeam.engineers) {
+                        currentTeam.engineers = currentTeam.engineers.filter(eng => eng.name !== movedEngineerName);
+                        console.log(`Removed ${movedEngineerName} from team ${currentTeam.teamId}`);
+                     }
+                 }
+                 // Update Effective BIS display for the current team
+                 updateEffectiveBISDisplay(contextIndex);
+                 // Refresh available lists for *all* team editors after moving an engineer
+                 refreshAllAvailableEngineerLists();
+
             },
-            true, true, 'Enter New Engineer Name',
-            (newEngineerName) => {
-                 if (!newEngineerName || newEngineerName.trim() === '') return null; newEngineerName = newEngineerName.trim();
-                 if (allEngineerNamesMap.has(newEngineerName)) { alert(`Engineer "${newEngineerName}" already exists...`); return null; }
-                 team.engineers.push({ name: newEngineerName, level: 1 }); allEngineerNamesMap.set(newEngineerName, new Set([team.teamId])); // Update global map
-                 team.buildersInSeats = team.engineers.length; const bisValSpan = document.getElementById(`bisValue_${index}`); if (bisValSpan) bisValSpan.innerText = team.buildersInSeats; console.log("Added new engineer:", newEngineerName);
-                 const currentEngSelect = engineerContainer.querySelector("select[data-field='currentEngineers']"); if(currentEngSelect) currentEngSelect.appendChild(new Option(newEngineerName, newEngineerName));
-                 return { preventAdd: true };
-            }
+            true, false, '', null // multiSelectLeft = true, allowAddNew = false for engineers
         );
         engineerContainer.id = `engineersList_${index}`; teamDetails.appendChild(engineerContainer);
-        let levelEditNote = document.createElement('p'); levelEditNote.style.fontSize = '0.8em'; levelEditNote.style.color = 'grey'; levelEditNote.innerText = '(Note: Engineer levels default to L1. Level editing NYI.)';
-        teamDetails.appendChild(levelEditNote); teamDetails.appendChild(document.createElement('br'));
-        // -----------------------------------------
+        // --- End Engineers ---
+
+        // *** NEW: Away-Team Management Section ***
+        let awayTeamSection = document.createElement('div');
+        awayTeamSection.style.marginTop = '15px';
+        awayTeamSection.style.padding = '10px';
+        awayTeamSection.style.border = '1px solid #add8e6'; // Light blue border
+        awayTeamSection.style.backgroundColor = '#f0f8ff'; // Alice blue background
+
+        let awayTeamTitle = document.createElement('h5');
+        awayTeamTitle.innerText = 'Away-Team Members';
+        awayTeamSection.appendChild(awayTeamTitle);
+
+        // Container to display current away-team members
+        let awayMemberListDiv = document.createElement('div');
+        awayMemberListDiv.id = `awayMemberList_${index}`;
+        awayMemberListDiv.style.marginBottom = '10px';
+        awayMemberListDiv.style.maxHeight = '150px'; // Prevent excessive height
+        awayMemberListDiv.style.overflowY = 'auto'; // Add scroll if needed
+        awayMemberListDiv.style.border = '1px solid #ccc';
+        awayMemberListDiv.style.padding = '5px';
+        awayTeamSection.appendChild(awayMemberListDiv);
+        // Initial population of the list happens later in displayAwayTeamMembers
+
+        // Form to add new away-team members
+        let addAwayForm = document.createElement('div');
+        addAwayForm.style.marginTop = '10px';
+        addAwayForm.innerHTML = `
+            <label for="newAwayName_${index}" style="margin-right: 5px;">Name:</label>
+            <input type="text" id="newAwayName_${index}" placeholder="Away Member Name" style="width: 150px; margin-right: 10px;">
+            <label for="newAwayLevel_${index}" style="margin-right: 5px;">Level:</label>
+            <input type="number" id="newAwayLevel_${index}" min="1" max="5" placeholder="1-5" style="width: 50px; margin-right: 10px;">
+            <label for="newAwaySource_${index}" style="margin-right: 5px;">Source:</label>
+            <input type="text" id="newAwaySource_${index}" placeholder="Source Team/Org" style="width: 150px; margin-right: 10px;">
+            <button type="button" id="addAwayBtn_${index}">Add Away Member</button>
+        `;
+        awayTeamSection.appendChild(addAwayForm);
+
+        teamDetails.appendChild(awayTeamSection);
+        teamDetails.appendChild(document.createElement('br'));
+
+        // Attach event listener to the 'Add Away Member' button
+        // Need to do this *after* the button is added to the DOM
+         setTimeout(() => { // Use setTimeout to ensure element exists
+            const addBtn = document.getElementById(`addAwayBtn_${index}`);
+            if (addBtn) {
+                 addBtn.onclick = () => handleAddAwayTeamMember(index);
+             } else {
+                 console.warn(`Could not find Add Away button for team index ${index}`);
+             }
+             // Initial population of the away team list display
+             displayAwayTeamMembers(team.awayTeamMembers || [], index);
+         }, 0);
+        // *** END Away-Team Section ***
 
 
-        // --- Action Buttons ---
-        let saveButton = document.createElement('button'); saveButton.type = 'button'; saveButton.innerText = 'Save Team Changes'; saveButton.onclick = () => saveTeamChanges(index); teamDetails.appendChild(saveButton);
-        let deleteButton = document.createElement('button'); deleteButton.type = 'button'; deleteButton.innerText = 'Delete Team'; deleteButton.style.marginLeft = '10px'; deleteButton.style.color = 'red'; deleteButton.onclick = () => deleteTeam(index); teamDetails.appendChild(deleteButton);
-        // --------------------
+        // --- Action Buttons (Save/Delete Team) - No Change ---
+        let actionButtonsDiv = document.createElement('div');
+        actionButtonsDiv.style.marginTop = '15px';
+        let saveButton = document.createElement('button'); saveButton.type = 'button'; saveButton.innerText = 'Save Team Changes'; saveButton.onclick = () => saveTeamChanges(index); actionButtonsDiv.appendChild(saveButton);
+        let deleteButton = document.createElement('button'); deleteButton.type = 'button'; deleteButton.innerText = 'Delete Team'; deleteButton.style.marginLeft = '10px'; deleteButton.style.color = 'red'; deleteButton.onclick = () => deleteTeam(index); actionButtonsDiv.appendChild(deleteButton);
+        teamDetails.appendChild(actionButtonsDiv);
+        // --- End Actions ---
 
-        teamDiv.appendChild(teamHeader); teamDiv.appendChild(teamDetails); teamsDiv.appendChild(teamDiv);
+        teamDiv.appendChild(teamHeader);
+        teamDiv.appendChild(teamDetails);
+        teamsDiv.appendChild(teamDiv);
     }); // End teams.forEach
 } // --- End displayTeamsForEditing ---
+
+
+// *** NEW HELPER FUNCTIONS FOR AWAY TEAM MANAGEMENT ***
+
+/** Displays the list of current away team members for a specific team */
+function displayAwayTeamMembers(awayMembers, teamIndex) {
+    const listDiv = document.getElementById(`awayMemberList_${teamIndex}`);
+    if (!listDiv) {
+        console.error(`Could not find away member list div for team index ${teamIndex}`);
+        return;
+    }
+    listDiv.innerHTML = ''; // Clear current list
+
+    if (!awayMembers || awayMembers.length === 0) {
+        listDiv.innerHTML = '<em style="color: #666;">No away-team members assigned.</em>';
+        return;
+    }
+
+    awayMembers.forEach((member, memberIndex) => {
+        const itemDiv = document.createElement('div');
+        itemDiv.style.display = 'flex';
+        itemDiv.style.justifyContent = 'space-between';
+        itemDiv.style.alignItems = 'center';
+        itemDiv.style.marginBottom = '3px';
+        itemDiv.style.padding = '2px';
+        itemDiv.style.borderBottom = '1px dashed #eee';
+
+        const memberInfo = document.createElement('span');
+        memberInfo.textContent = `${member.name || 'Unnamed'} (L${member.level ?? '?'}) - ${member.sourceTeam || 'Unknown Source'}`;
+        itemDiv.appendChild(memberInfo);
+
+        const removeBtn = document.createElement('button');
+        removeBtn.textContent = 'Remove';
+        removeBtn.style.fontSize = '0.8em';
+        removeBtn.style.padding = '1px 4px';
+        removeBtn.style.cursor = 'pointer';
+        removeBtn.onclick = () => handleRemoveAwayTeamMember(teamIndex, memberIndex);
+        itemDiv.appendChild(removeBtn);
+
+        listDiv.appendChild(itemDiv);
+    });
+}
+
+/** Handles clicking the 'Add Away Member' button */
+function handleAddAwayTeamMember(teamIndex) {
+    const nameInput = document.getElementById(`newAwayName_${teamIndex}`);
+    const levelInput = document.getElementById(`newAwayLevel_${teamIndex}`);
+    const sourceInput = document.getElementById(`newAwaySource_${teamIndex}`);
+
+    const name = nameInput?.value.trim();
+    const level = parseInt(levelInput?.value);
+    const sourceTeam = sourceInput?.value.trim();
+
+    // Validation
+    if (!name) { alert('Please enter a name for the away-team member.'); return; }
+    if (isNaN(level) || level < 1 || level > 5) { alert('Please enter a valid level (1-5).'); return; }
+    if (!sourceTeam) { alert('Please enter the source team/organization.'); return; }
+
+    // Add to data model
+    const team = currentSystemData.teams[teamIndex];
+    if (!team) { console.error(`Cannot add away member, team index ${teamIndex} not found.`); return; }
+    if (!team.awayTeamMembers) { team.awayTeamMembers = []; }
+
+    // Check if member with same name already exists *in this team's away list*
+    if (team.awayTeamMembers.some(m => m.name.toLowerCase() === name.toLowerCase())) {
+        alert(`An away-team member named "${name}" is already assigned to this team.`);
+        return;
+    }
+
+    team.awayTeamMembers.push({ name, level, sourceTeam });
+    console.log(`Added away member to team ${teamIndex}:`, { name, level, sourceTeam });
+
+    // Clear inputs
+    if (nameInput) nameInput.value = '';
+    if (levelInput) levelInput.value = '';
+    if (sourceInput) sourceInput.value = '';
+
+    // Refresh display
+    displayAwayTeamMembers(team.awayTeamMembers, teamIndex);
+    updateEffectiveBISDisplay(teamIndex); // Update the read-only BIS display
+}
+
+/** Handles clicking the 'Remove' button for an away-team member */
+function handleRemoveAwayTeamMember(teamIndex, memberIndex) {
+    const team = currentSystemData.teams[teamIndex];
+    if (!team || !team.awayTeamMembers || memberIndex >= team.awayTeamMembers.length) {
+        console.error(`Cannot remove away member, invalid indices: team ${teamIndex}, member ${memberIndex}`);
+        return;
+    }
+
+    const removedMember = team.awayTeamMembers.splice(memberIndex, 1);
+    console.log(`Removed away member from team ${teamIndex}:`, removedMember);
+
+    // Refresh display
+    displayAwayTeamMembers(team.awayTeamMembers, teamIndex);
+    updateEffectiveBISDisplay(teamIndex); // Update the read-only BIS display
+}
+
+/** Helper to update the read-only Effective BIS display for a team */
+function updateEffectiveBISDisplay(teamIndex) {
+    const team = currentSystemData.teams[teamIndex];
+    if (!team) return;
+
+    const teamBIS = team.engineers?.length ?? 0;
+    const awayTeamBIS = team.awayTeamMembers?.length ?? 0;
+    const effectiveBIS = teamBIS + awayTeamBIS;
+    const bisTooltip = `Team BIS: ${teamBIS}, Away-Team BIS: ${awayTeamBIS}`;
+
+    const effectiveBISSpan = document.getElementById(`effectiveBIS_${teamIndex}`);
+    const effectiveBISLabel = effectiveBISSpan?.previousElementSibling; // Get label for tooltip update
+
+    if (effectiveBISSpan) {
+        effectiveBISSpan.textContent = effectiveBIS;
+        effectiveBISSpan.title = bisTooltip; // Update value tooltip
+    }
+     if (effectiveBISLabel) {
+        effectiveBISLabel.title = bisTooltip; // Update label tooltip
+     }
+}
+
+/** Helper to refresh available engineer lists in all open team edit sections */
+function refreshAllAvailableEngineerLists() {
+     console.log("Refreshing all available engineer lists...");
+     const allTeamEditDivs = document.querySelectorAll('#teamsManagement .team-edit');
+     let allEngineerNamesMap = new Map(); // Recalculate global map
+     (currentSystemData.teams || []).forEach(t => { (t.engineers || []).forEach(eng => { if (eng?.name) allEngineerNamesMap.set(eng.name, t.teamId); }); });
+
+     allTeamEditDivs.forEach((teamDiv, index) => {
+         // Only refresh if the details are potentially visible (no easy way to know for sure without checking style)
+         // This is a simplification; ideally, only refresh *actually* visible ones.
+         const teamData = currentSystemData.teams[index]; // Assuming render index matches data index
+         if (!teamData) return;
+
+         const availableEngineersSelect = teamDiv.querySelector('select[data-field="availableEngineers"]');
+         const currentEngineersSelect = teamDiv.querySelector('select[data-field="currentEngineers"]');
+
+         if (availableEngineersSelect && currentEngineersSelect) {
+             const currentTeamEngineers = Array.from(currentEngineersSelect.options).map(opt => opt.value);
+             availableEngineersSelect.innerHTML = ''; // Clear current options
+             Array.from(allEngineerNamesMap.keys())
+                 .filter(name => !currentTeamEngineers.includes(name)) // Filter out engineers already in the current list
+                 .forEach(name => {
+                     availableEngineersSelect.appendChild(new Option(name, name));
+                 });
+         }
+     });
+}
+
+/** Helper to refresh available options in a specific dual list (used for services) */
+function refreshAvailableListsInDualList(contentContainer, currentListField, availableListField, allOptionsData, currentTeamId) {
+    const currentSelect = contentContainer.querySelector(`select[data-field='${currentListField}']`);
+    const availableSelect = contentContainer.querySelector(`select[data-field='${availableListField}']`);
+
+    if (currentSelect && availableSelect) {
+        const currentlyAssignedValues = Array.from(currentSelect.options).map(opt => opt.value);
+        availableSelect.innerHTML = ''; // Clear
+        allOptionsData.forEach(optionData => {
+            // For services, filter out those owned by the current team OR already in the 'current' list
+             if (optionData.owningTeamId !== currentTeamId && !currentlyAssignedValues.includes(optionData.value)) {
+                 availableSelect.appendChild(new Option(optionData.text, optionData.value));
+             }
+        });
+        console.log(`Refreshed available list for field: ${availableListField}`);
+    } else {
+         console.warn(`Could not find select lists for refresh: ${currentListField} / ${availableListField}`);
+    }
+}
+
+/** NEW Helper Function: Creates a summary string of away-team sources */
+function getSourceSummary(awayTeamMembers) {
+    if (!awayTeamMembers || awayTeamMembers.length === 0) {
+        return '';
+    }
+    const sources = awayTeamMembers
+        .map(m => m.sourceTeam)
+        .filter(source => source && source.trim() !== ''); // Get non-empty sources
+
+    const uniqueSources = [...new Set(sources)]; // Get unique sources
+
+    if (uniqueSources.length === 0) {
+        return 'Unknown Source'; // Fallback if sources were empty strings
+    } else if (uniqueSources.length === 1) {
+        return uniqueSources[0];
+    } else if (uniqueSources.length === 2) {
+        return uniqueSources.join(', ');
+    } else {
+        return `${uniqueSources.slice(0, 1).join(', ')} & Others`; // Show first + others if more than 2
+    }
+}
+
+// *** END NEW HELPER FUNCTIONS ***
 
 
 function updateTeamSize(teamIndex, newSize) {
@@ -4770,35 +5196,40 @@ function deleteSystem() {
     }
 }
 
-/** Builds hierarchical data for D3 org chart */
+/** REVISED Builds hierarchical data for Organogram - Adds Away-Team Info */
 function buildHierarchyData() {
+    console.log("Building hierarchy data with away-team info...");
     if (!currentSystemData) return null;
 
     // Create maps for efficient lookup
-    const sdmMap = new Map((currentSystemData.sdms || []).map(sdm => [sdm.sdmId, { ...sdm, children: [] }]));
-    const srMgrMap = new Map((currentSystemData.seniorManagers || []).map(sr => [sr.seniorManagerId, { ...sr, children: [] }]));
+    const sdmMap = new Map((currentSystemData.sdms || []).map(sdm => [sdm.sdmId, { ...sdm, children: [], type: 'sdm' }])); // Add type
+    const srMgrMap = new Map((currentSystemData.seniorManagers || []).map(sr => [sr.seniorManagerId, { ...sr, children: [], type: 'srMgr' }])); // Add type
 
     // Nest SDMs under Senior Managers
     sdmMap.forEach(sdm => {
         if (sdm.seniorManagerId && srMgrMap.has(sdm.seniorManagerId)) {
             srMgrMap.get(sdm.seniorManagerId).children.push(sdm);
         } else {
-            // Handle SDMs without a valid Senior Manager (add to a default 'unassigned' Sr Mgr?)
+            // Handle SDMs without a valid Senior Manager
             const unassignedSrMgrKey = 'unassigned-sr-mgr';
             if (!srMgrMap.has(unassignedSrMgrKey)) {
-                srMgrMap.set(unassignedSrMgrKey, { seniorManagerId: unassignedSrMgrKey, seniorManagerName: 'Unassigned Senior Manager', children: [] });
+                srMgrMap.set(unassignedSrMgrKey, { seniorManagerId: unassignedSrMgrKey, seniorManagerName: 'Unassigned Senior Manager', children: [], type: 'srMgr' });
             }
-             // Only add if SDM itself is valid
             if(sdm && sdm.sdmId) srMgrMap.get(unassignedSrMgrKey).children.push(sdm);
         }
     });
 
     // Nest Teams under SDMs
     (currentSystemData.teams || []).forEach(team => {
+        const awayTeamCount = team.awayTeamMembers?.length ?? 0; // Calculate away team count
+        const sourceSummary = getSourceSummary(team.awayTeamMembers); // Get source summary
+
         const teamNode = {
-            name: team.teamIdentity || team.teamName, // Use Identity primarily
+            name: team.teamIdentity || team.teamName || 'Unnamed Team',
             type: 'team',
-            details: `BIS: ${team.buildersInSeats ?? 'N/A'} / Funded: ${team.fundedHeadcount ?? 'N/A'}`,
+            details: `BIS: ${team.engineers?.length ?? 0} / Funded: ${team.fundedHeadcount ?? 'N/A'}`, // Show Team BIS vs Funded here
+            awayTeamCount: awayTeamCount, // Store away team count
+            awaySourceSummary: sourceSummary, // Store source summary
             children: (team.engineers || []).map(eng => ({
                 name: `${eng.name || 'Unnamed'} (L${eng.level ?? '?'})`,
                 type: 'engineer'
@@ -4810,16 +5241,15 @@ function buildHierarchyData() {
         } else {
             // Handle Teams without a valid SDM
             const unassignedSdmKey = 'unassigned-sdm';
-             if (!sdmMap.has(unassignedSdmKey)) {
-                 sdmMap.set(unassignedSdmKey, { sdmId: unassignedSdmKey, sdmName: 'Unassigned SDM', children: [] });
-                 // Add this unassigned SDM group under the unassigned Sr Mgr group for structure
-                 const unassignedSrMgrKey = 'unassigned-sr-mgr';
-                 if (!srMgrMap.has(unassignedSrMgrKey)) {
-                     srMgrMap.set(unassignedSrMgrKey, { seniorManagerId: unassignedSrMgrKey, seniorManagerName: 'Unassigned Senior Manager', children: [] });
-                 }
-                  srMgrMap.get(unassignedSrMgrKey).children.push(sdmMap.get(unassignedSdmKey));
-             }
-             // Only add team if it's valid
+            if (!sdmMap.has(unassignedSdmKey)) {
+                sdmMap.set(unassignedSdmKey, { sdmId: unassignedSdmKey, sdmName: 'Unassigned SDM', children: [], type: 'sdm' });
+                // Add this unassigned SDM group under the unassigned Sr Mgr group
+                const unassignedSrMgrKey = 'unassigned-sr-mgr';
+                if (!srMgrMap.has(unassignedSrMgrKey)) {
+                     srMgrMap.set(unassignedSrMgrKey, { seniorManagerId: unassignedSrMgrKey, seniorManagerName: 'Unassigned Senior Manager', children: [], type: 'srMgr' });
+                }
+                srMgrMap.get(unassignedSrMgrKey).children.push(sdmMap.get(unassignedSdmKey));
+            }
             if(team && team.teamId) sdmMap.get(unassignedSdmKey).children.push(teamNode);
         }
     });
@@ -4831,13 +5261,15 @@ function buildHierarchyData() {
         children: Array.from(srMgrMap.values()) // Use Sr Mgrs as top-level children
     };
 
+    console.log("Finished building hierarchy data.");
     return root;
 }
 
-/** Generates the Organogram using HTML structure (Replaces D3 version) */
-/** REVISED Generates the Organogram using HTML structure - Fix Team Node String */
+/** REVISED Generates the Organogram using HTML structure - Displays Away-Team Annotation */
+/** REVISED Generates the Organogram using HTML structure - Fixes ReferenceError */
 function generateOrganogram() {
-    const hierarchicalData = buildHierarchyData(); // Reuse data transformation
+    console.log("Generating Organogram HTML...");
+    const hierarchicalData = buildHierarchyData(); // Get data with away-team info
     const container = document.getElementById('organogramContent');
     if (!hierarchicalData || !container) {
         console.error("No data or container for organogram HTML.");
@@ -4845,170 +5277,265 @@ function generateOrganogram() {
         return;
     }
     container.innerHTML = ''; // Clear previous content
+    container.style.fontFamily = 'Arial, sans-serif'; // Ensure consistent font
 
-    // Recursive function to build nested HTML (using lists for structure)
+    // Recursive function to build nested HTML
     function buildHtmlLevel(node, level) {
         if (!node) return '';
 
-        let html = `<div class="org-level-${level}" style="margin-left: ${level * 25}px; margin-bottom: 5px; padding: 5px; border-left: 2px solid #eee;">`; // Increased indent
+        // Indentation and Styling
+        let html = `<div class="org-level-${level}" style="margin-left: ${level * 25}px; margin-bottom: 5px; padding: 3px 5px; border-left: 2px solid #eee; position: relative;">`;
         let nodeContent = '';
+        let nodeStyle = '';
+        let detailsStyle = 'font-size: 0.8em; color: #555; margin-left: 5px;';
 
-        // Define content based on node type
+        // Define content and style based on node type
         switch(node.type) {
             case 'root':
                 nodeContent = `<strong>System: ${node.name || 'N/A'}</strong>`;
+                nodeStyle = 'font-size: 1.2em; color: #333;';
                 break;
             case 'srMgr':
-                 nodeContent = `<strong style="color: #0056b3; font-size: 1.1em;">Sr. Manager: ${node.seniorManagerName || node.name || 'N/A'}</strong>`; // Slightly larger
+                 nodeContent = `<strong title="${node.seniorManagerId || ''}">Sr. Manager: ${node.seniorManagerName || node.name || 'N/A'}</strong>`;
+                 nodeStyle = 'font-size: 1.1em; color: #0056b3;';
                 break;
             case 'sdm':
-                 nodeContent = `<strong style="color: #007bff;">SDM: ${node.sdmName || node.name || 'N/A'}</strong>`;
+                 nodeContent = `<strong title="${node.sdmId || ''}">SDM: ${node.sdmName || node.name || 'N/A'}</strong>`;
+                 nodeStyle = 'color: #007bff;';
                 break;
             case 'team':
-                // *** FIX: Use string concatenation instead of template literal ***
-                nodeContent = '<span style="color: #17a2b8;">Team: ' + (node.name || 'N/A') + ' (' + (node.details || '') + ')</span>';
-                // *************************************************************
+                // *** CORRECTED LINE: Removed title attribute using undefined 'team' variable ***
+                nodeContent = `<span style="color: #17a2b8;">Team: ${node.name || 'N/A'}</span> <span style="${detailsStyle}">(${node.details || ''})</span>`;
+                // *****************************************************************************
+                // Add Away-Team Annotation
+                if (node.awayTeamCount > 0) {
+                    const awaySourceText = node.awaySourceSummary || 'Source Unknown';
+                    // Add tooltip to the annotation itself
+                    const annotation = ` <span style="color: #dc3545; font-style: italic; font-size: 0.9em;" title="Away-Team Sources: ${awaySourceText}">(+${node.awayTeamCount} Away)</span>`;
+                    nodeContent += annotation;
+                }
                 break;
             case 'engineer':
                 nodeContent = `<span style="font-size: 0.9em;">${node.name || 'N/A'}</span>`;
                 break;
-            default: // Handle unassigned groups etc.
-                 nodeContent = `<strong>${node.name || 'Group'}</strong>`;
+            default:
+                nodeContent = `<strong>${node.name || 'Group'}</strong>`;
+                nodeStyle = 'color: #6c757d;';
         }
 
-        html += nodeContent;
+        // Apply style to a wrapper span for the main content
+        html += `<span style="${nodeStyle}">${nodeContent}</span>`;
 
-        // Recursively add children
-        if (node.children && node.children.length > 0) {
-             // For teams, display engineers comma-separated below
-             if (node.type === 'team') {
-                 html += '<div style="margin-left: 15px; font-size: 0.9em; color: #555;">'; // Indent engineers slightly
-                 html += node.children.map(child => `<span>${child.name || 'N/A'}</span>`).join(', ');
-                 html += '</div>';
-             } else {
-                 // Standard recursive build for other levels
-                  node.children.forEach(child => {
-                      // Assign type if missing from buildHierarchyData
-                      if (!child.type) {
-                          if (level === 0) child.type = 'srMgr';
-                          else if (level === 1) child.type = 'sdm';
-                          else if (level === 2) child.type = 'team';
-                      }
-                     html += buildHtmlLevel(child, level + 1);
-                  });
-             }
+        // Recursively add children (excluding engineers directly under teams)
+        if (node.children && node.children.length > 0 && node.type !== 'team') {
+            node.children.forEach(child => {
+                if (!child.type) { /* ... infer type ... */
+                    if (level === 0) child.type = 'srMgr'; else if (level === 1) child.type = 'sdm'; else if (level === 2) child.type = 'team'; else if (level === 3 && node.type === 'team') child.type = 'engineer';
+                }
+                if (child.type !== 'engineer') { html += buildHtmlLevel(child, level + 1); }
+            });
         }
+        // Optional: Explicitly list engineers under team (currently commented out)
+        /* else if (node.type === 'team' && node.children && node.children.length > 0) { ... } */
+
         html += `</div>`;
         return html;
-    }
+    } // --- End buildHtmlLevel ---
 
     // Start building from the root (level 0)
     container.innerHTML = buildHtmlLevel(hierarchicalData, 0);
+    console.log("Finished generating Organogram HTML (v2 - Fix).");
 }
 
 // Global state for engineer table sorting
 let engineerSortState = { key: 'name', ascending: true };
 
 /** Generates the HTML table for engineers */
-/** REVISED Generates the HTML table for engineers - Updated Heading */
+/** REVISED Generates the HTML table for engineers - Adds Row Counter & Away-Team Indicator */
 function generateEngineerTable() {
-    if (!currentSystemData || !currentSystemData.teams) {
-        console.error("Cannot generate engineer table: No data loaded.");
-         // Clear table and show error in heading if possible
-         const heading = document.getElementById('engineerTableHeading');
-         if(heading) heading.innerText = 'Engineer Resource List (Error: No Data)';
-         const tableBody = document.querySelector('#engineerTable tbody');
-         if(tableBody) tableBody.innerHTML = '';
-        return;
-    }
+    console.log("Generating Engineer Table with Counter & Away Indicator..."); // Log start
 
-    const tableBody = document.querySelector('#engineerTable tbody');
+    // --- Get Table Elements ---
+    const engineerTableView = document.getElementById('engineerTableView');
+    const table = document.getElementById('engineerTable');
+    const tableHead = table?.querySelector('thead'); // Get the thead
+    const tableBody = table?.querySelector('tbody');
+    const tableFoot = table?.querySelector('tfoot'); // Get tfoot (though not directly used here)
     const heading = document.getElementById('engineerTableHeading');
+
+    // --- Basic Data & Element Checks ---
+    if (!currentSystemData || !currentSystemData.teams) { /* ... no change ... */
+        console.error("Cannot generate engineer table: No system or team data loaded.");
+        if(heading) heading.innerText = 'Engineer Resource List (Error: No Data)';
+        if(tableBody) tableBody.innerHTML = '';
+        return;
+     }
+    if (!table || !tableHead || !tableBody || !heading) { /* ... no change ... */
+         console.error("Cannot generate engineer table: Required HTML elements not found (table, thead, tbody, or heading).");
+         if(engineerTableView) engineerTableView.style.display = 'none';
+         return;
+     }
     tableBody.innerHTML = ''; // Clear existing rows
 
-    // --- Data Preparation & Totals Calculation ---
+    // --- 1. Update Column Headers (Add '#' column) ---
+    const headerRow = tableHead.querySelector('tr');
+    headerRow.innerHTML = ''; // Clear existing headers
+
+    // Define headers including the new '#' column
+    const headersConfig = [
+        { text: '#', title: 'Row Number' }, // NEW Counter Column
+        { text: 'Engineer Name', title: 'Name of the engineer. (Away) indicates an away-team resource.', key: 'name'},
+        { text: 'Level', title: 'Skill level of the engineer (L1-L5).', key: 'level'},
+        { text: 'Team Name', title: 'The team the engineer is currently assigned to.', key: 'teamName'},
+        { text: 'SDM Name', title: 'Software Development Manager for the assigned team.', key: 'sdmName'},
+        { text: 'Senior Manager Name', title: 'Senior Manager overseeing the SDM.', key: 'srMgrName'}
+    ];
+
+    headersConfig.forEach(config => {
+        const th = document.createElement('th');
+        th.textContent = config.text;
+        th.title = config.title;
+        th.style.border = '1px solid #ccc';
+        th.style.padding = '8px';
+        th.style.textAlign = 'left';
+        th.style.backgroundColor = '#f2f2f2';
+        th.style.position = 'sticky';
+        th.style.top = '0';
+        th.style.zIndex = '1';
+        // Add sort key and cursor pointer if defined
+        if (config.key) {
+            th.setAttribute('data-sort-key', config.key);
+            th.style.cursor = 'pointer';
+        }
+        headerRow.appendChild(th);
+    });
+     // --- End Header Update ---
+
+    // --- 2. Calculate System-Wide Totals (No change from previous step) ---
+    let totalFundedHC = 0;
+    let totalTeamBIS = 0;
+    let totalAwayTeamBIS = 0;
+    let totalEffectiveBIS = 0;
     let engineerListData = [];
-    let totalBIS = 0;
-    let totalFundedHC = 0; // Initialize Funded HC total
+
     const sdmsMap = new Map((currentSystemData.sdms || []).map(s => [s.sdmId, s]));
     const srMgrsMap = new Map((currentSystemData.seniorManagers || []).map(s => [s.seniorManagerId, s]));
 
     currentSystemData.teams.forEach(team => {
-        const currentBIS = team.buildersInSeats ?? (team.engineers?.length ?? 0); // Use calculated BIS
-        const currentFunded = team.fundedHeadcount ?? 0; // Use funded HC
-        totalBIS += currentBIS;
-        totalFundedHC += currentFunded; // Sum Funded HC
+        const currentFunded = team.fundedHeadcount ?? 0;
+        const currentTeamBIS = team.engineers?.length ?? 0;
+        const currentAwayTeamBIS = team.awayTeamMembers?.length ?? 0;
 
-        (team.engineers || []).forEach(eng => {
-            if (!eng || !eng.name) return;
+        totalFundedHC += currentFunded;
+        totalTeamBIS += currentTeamBIS;
+        totalAwayTeamBIS += currentAwayTeamBIS;
+        totalEffectiveBIS += (currentTeamBIS + currentAwayTeamBIS);
 
-            const sdm = team.sdmId ? sdmsMap.get(team.sdmId) : null;
-            const srMgr = sdm ? srMgrsMap.get(sdm.seniorManagerId) : null;
-
-            engineerListData.push({
-                name: eng.name,
-                level: eng.level ?? 'N/A',
-                teamName: team.teamName || team.teamIdentity || 'N/A',
-                sdmName: sdm ? sdm.sdmName : 'N/A',
-                srMgrName: srMgr ? srMgr.seniorManagerName : 'N/A'
-            });
+        // Add regular engineers to list
+        (team.engineers || []).forEach(eng => { /* ... no change ... */
+             if (!eng || !eng.name) return;
+             const sdm = team.sdmId ? sdmsMap.get(team.sdmId) : null;
+             const srMgr = sdm ? srMgrsMap.get(sdm.seniorManagerId) : null;
+             engineerListData.push({
+                 name: eng.name, level: eng.level ?? 'N/A',
+                 teamName: team.teamName || team.teamIdentity || 'N/A',
+                 sdmName: sdm ? sdm.sdmName : 'N/A', srMgrName: srMgr ? srMgr.seniorManagerName : 'N/A',
+                 isAwayTeam: false // Explicitly false for regular members
+             });
+        });
+        // Add away team members to list
+        (team.awayTeamMembers || []).forEach(awayEng => { /* ... no change ... */
+              if (!awayEng || !awayEng.name) return;
+              const sdm = team.sdmId ? sdmsMap.get(team.sdmId) : null;
+              const srMgr = sdm ? srMgrsMap.get(sdm.seniorManagerId) : null;
+              engineerListData.push({
+                  name: awayEng.name, level: awayEng.level ?? 'N/A',
+                  teamName: team.teamName || team.teamIdentity || 'N/A', // Assigned team
+                  sdmName: sdm ? sdm.sdmName : 'N/A', srMgrName: srMgr ? srMgr.seniorManagerName : 'N/A',
+                  isAwayTeam: true, // Flag as away team
+                  sourceTeam: awayEng.sourceTeam || 'Unknown Source' // Include source
+              });
         });
     });
-    const totalGap = totalFundedHC - totalBIS; // Calculate Gap
-    // --------------------------------------------
 
-    // --- Update Heading with All Totals ---
-    heading.innerText = `Engineer Resource List (Funded: ${totalFundedHC}, BIS: ${totalBIS}, Gap: ${totalGap})`;
-    // Optional: Style heading based on gap
-    heading.style.color = totalGap < 0 ? 'red' : (totalGap > 0 ? 'darkorange' : 'green');
-    // -------------------------------------
+    const totalHiringGap = totalFundedHC - totalTeamBIS;
+    // --- End Total Calculations ---
 
-    // --- Sorting (Unchanged from previous version) ---
-    engineerListData.sort((a, b) => {
+    // --- 3. Update Heading Text (No change from previous step) ---
+    heading.innerText = `Engineer Resource List (Funded: ${totalFundedHC} | Team BIS: ${totalTeamBIS} | Away BIS: ${totalAwayTeamBIS} | Effective BIS: ${totalEffectiveBIS} | Hiring Gap: ${totalHiringGap})`;
+    heading.style.color = totalHiringGap < 0 ? 'blue' : (totalHiringGap > 0 ? 'darkorange' : 'green');
+    heading.title = `Finance Approved Funding: ${totalFundedHC}\nActual Team Members (BIS): ${totalTeamBIS}\nAway-Team Members: ${totalAwayTeamBIS}\nTotal Effective Capacity (Team + Away): ${totalEffectiveBIS}\nHiring Gap (Funded - Team BIS): ${totalHiringGap}`;
+    // --- End Heading Update ---
+
+    // --- 4. Sorting (No change from previous step) ---
+    engineerListData.sort((a, b) => { /* ... no changes ... */
         const key = engineerSortState.key;
         const ascending = engineerSortState.ascending;
         let valA = a[key];
         let valB = b[key];
-
         if (key === 'level') {
-             valA = (typeof valA === 'number') ? valA : -1;
-             valB = (typeof valB === 'number') ? valB : -1;
-             return ascending ? valA - valB : valB - valA;
-         }
-
-         valA = (valA || '').toString().toLowerCase();
-         valB = (valB || '').toString().toLowerCase();
-
-         if (valA < valB) return ascending ? -1 : 1;
-         if (valA > valB) return ascending ? 1 : -1;
-         return 0;
+           valA = (typeof valA === 'number') ? valA : -1;
+           valB = (typeof valB === 'number') ? valB : -1;
+           return ascending ? valA - valB : valB - valA;
+        }
+        valA = (valA || '').toString().toLowerCase();
+        valB = (valB || '').toString().toLowerCase();
+        if (valA < valB) return ascending ? -1 : 1;
+        if (valA > valB) return ascending ? 1 : -1;
+        return 0;
      });
-    // -------------
+    // --- End Sorting ---
 
-    // --- Populate Table (Unchanged from previous version) ---
+    // --- 5. Populate Table Body (Add counter and away indicator) ---
+    let rowCounter = 1; // Initialize counter
     engineerListData.forEach(engData => {
         let row = tableBody.insertRow();
-        row.insertCell().textContent = engData.name;
+
+        // NEW: Insert Counter Cell
+        const counterCell = row.insertCell();
+        counterCell.textContent = rowCounter++;
+        counterCell.style.textAlign = 'center';
+        counterCell.style.fontSize = '0.9em';
+        counterCell.style.color = '#666';
+
+        // Engineer Name Cell (with Away indicator)
+        const nameCell = row.insertCell();
+        let nameDisplay = engData.name;
+        if (engData.isAwayTeam) {
+            nameDisplay = `(Away) ${engData.name}`; // Add prefix
+            nameCell.title = `Away-Team member from: ${engData.sourceTeam}`; // Add tooltip
+            nameCell.style.fontStyle = 'italic'; // Style away team members
+            nameCell.style.color = '#0056b3'; // Example different color
+        }
+        nameCell.textContent = nameDisplay;
+
+        // Other Cells (no change in logic)
         row.insertCell().textContent = engData.level;
         row.insertCell().textContent = engData.teamName;
         row.insertCell().textContent = engData.sdmName;
         row.insertCell().textContent = engData.srMgrName;
     });
-    // --------------------
+    // --- End Populate Table ---
 
-    // --- Add Sorting Click Handlers (Unchanged from previous version) ---
-     document.querySelectorAll('#engineerTable th[data-sort-key]').forEach(th => {
-         th.removeEventListener('click', handleSortClick);
-         th.addEventListener('click', handleSortClick);
+    // --- 6. Add Sorting Click Handlers (Update sort indicators) ---
+    document.querySelectorAll('#engineerTable th[data-sort-key]').forEach(th => {
+        const handler = (event) => handleSortClick(event);
+        th.removeEventListener('click', th.__sortHandler); // Use stored handler reference
+        th.addEventListener('click', handler);
+        th.__sortHandler = handler; // Store handler reference
 
-         const key = th.getAttribute('data-sort-key');
-         let indicator = ' \u2195';
-         if (key === engineerSortState.key) {
-             indicator = engineerSortState.ascending ? ' \u25B2' : ' \u25BC';
-         }
-         th.textContent = th.textContent.replace(/ [\u2195\u25B2\u25BC]/g, '') + indicator;
-     });
-    // -----------------------------
+        // Update sort indicator
+        const key = th.getAttribute('data-sort-key');
+        let indicator = ' \u2195'; // Default: Up/Down arrow
+        // Clear any existing indicator before adding new one
+        let currentText = th.textContent.replace(/ [\u2195\u25B2\u25BC]/g, '');
+        if (key === engineerSortState.key) {
+            indicator = engineerSortState.ascending ? ' \u25B2' : ' \u25BC'; // Up or Down arrow
+        }
+        th.textContent = currentText + indicator;
+    });
+    // --- End Sorting Handlers ---
+    console.log("Finished generating Engineer Table with counter & away indicator."); // Log end
 }
 
 // Keep handleSortClick, showOrganogramView, showEngineerTableView functions as they were.
@@ -5097,15 +5624,24 @@ function handleProtectedChange(event) {
 let draggedInitiativeId = null;
 let draggedRowElement = null; // Store the element itself for styling
 
-/** Handles the start of a drag operation */
+/** REVISED Handles the start of a drag operation - Check Protection */
 function handleDragStart(event) {
-    draggedInitiativeId = event.target.getAttribute('data-initiative-id');
-    draggedRowElement = event.target; // The TR element being dragged
+    const initiativeId = event.target.getAttribute('data-initiative-id');
+    const initiative = currentSystemData.yearlyInitiatives.find(init => init.initiativeId === initiativeId);
+
+    // Double-check: Do not allow dragging protected items
+    if (!initiative || initiative.isProtected) {
+        console.log(`Preventing drag start for protected or invalid item: ${initiativeId}`);
+        event.preventDefault(); // Stop the drag operation before it starts
+        return;
+    }
+
+    draggedInitiativeId = initiativeId; // Store the ID of the item being dragged
+    draggedRowElement = event.target; // Store the element itself for styling
     event.dataTransfer.setData('text/plain', draggedInitiativeId);
     event.dataTransfer.effectAllowed = 'move';
 
-    // Add visual feedback to the row being dragged
-    // Use setTimeout to allow the browser to render the drag image first
+    // Add visual feedback (defer slightly)
     setTimeout(() => {
         if(draggedRowElement) draggedRowElement.classList.add('dragging');
     }, 0);
@@ -5132,29 +5668,29 @@ function handleDragLeave(event) {
     }
 }
 
-/** Handles the drop operation */
+/** REVISED Handles the drop operation - Adds Robust Protection Checks */
 function handleDrop(event) {
     event.preventDefault();
     const targetRow = event.target.closest('tr');
-    targetRow.classList.remove('drag-over'); // Clean up visual indicator
+    if(targetRow) targetRow.classList.remove('drag-over'); // Clean up visual indicator
 
     if (!targetRow || !draggedInitiativeId || targetRow.getAttribute('data-initiative-id') === draggedInitiativeId) {
         console.log("Drop cancelled - invalid target or same item.");
-        draggedInitiativeId = null; // Reset dragged item
+        // No need to reset draggedInitiativeId here, handleDragEnd will do it
         return;
     }
 
     const targetInitiativeId = targetRow.getAttribute('data-initiative-id');
     console.log(`Drop: ${draggedInitiativeId} onto ${targetInitiativeId}`);
 
-    // --- Find initiatives and check protection status ---
+    // --- Find initiatives and indices ---
     const initiatives = currentSystemData.yearlyInitiatives;
     const draggedIndex = initiatives.findIndex(init => init.initiativeId === draggedInitiativeId);
     const targetIndex = initiatives.findIndex(init => init.initiativeId === targetInitiativeId);
 
     if (draggedIndex === -1 || targetIndex === -1) {
-        console.error("Could not find dragged or target initiative in data array.");
-        draggedInitiativeId = null;
+        console.error("Could not find dragged or target initiative in data array during drop.");
+        // No need to reset draggedInitiativeId here, handleDragEnd will do it
         return;
     }
 
@@ -5162,44 +5698,54 @@ function handleDrop(event) {
     const targetInitiative = initiatives[targetIndex];
 
     // --- Apply Reordering Constraints ---
-    const draggedIsProtected = draggedInitiative.isProtected;
-    const targetIsProtected = targetInitiative.isProtected;
-
-    // Constraint 1: Cannot move non-protected above protected
-    if (!draggedIsProtected && targetIsProtected && targetIndex < draggedIndex) {
-         console.log("Move invalid: Cannot move non-protected item above protected item.");
-         alert("Cannot move a non-protected item above a protected item.");
-         draggedInitiativeId = null; // Reset
+    // Constraint 0: Cannot drag anything if the dragged item wasn't found or was somehow protected
+     if (!draggedInitiative || draggedInitiative.isProtected) {
+         console.log("Drop invalid: Dragged item is protected or invalid.");
+         alert("Cannot move a protected item.");
+         // handleDragEnd will reset state
          return;
+     }
+    // Constraint 1: Cannot drop ONTO a protected row (target is protected)
+    if (targetInitiative.isProtected) {
+        console.log("Drop invalid: Cannot drop onto a protected item.");
+        alert("Cannot drop an item onto a protected item.");
+         // handleDragEnd will reset state
+        return;
     }
-    // Constraint 2: Cannot move protected below non-protected
-    if (draggedIsProtected && !targetIsProtected && targetIndex > draggedIndex) {
-         console.log("Move invalid: Cannot move protected item below non-protected item.");
-          alert("Cannot move a protected item below non-protected items.");
-         draggedInitiativeId = null; // Reset
+    // Constraint 2: Check if dropping would place the non-protected item *above* any protected items.
+    // This means the new index (targetIndex) must be less than the index of the *first* non-protected item.
+    const firstNonProtectedIndex = initiatives.findIndex(init => !init.isProtected);
+    if (targetIndex < firstNonProtectedIndex && firstNonProtectedIndex !== -1) {
+         console.log("Drop invalid: Cannot move item above the protected block.");
+         alert("Cannot move items above the block of protected initiatives.");
+         // handleDragEnd will reset state
          return;
     }
     // --- End Constraints ---
 
 
     // --- Perform Reorder in the Data Array ---
-    // Remove the dragged item
     const [movedItem] = initiatives.splice(draggedIndex, 1);
+    const newTargetIndex = initiatives.findIndex(init => init.initiativeId === targetInitiativeId); // Recalculate index after splice
+    // Determine insert position based on drop position relative to target row middle
+     const rect = targetRow.getBoundingClientRect();
+     const dropY = event.clientY;
+     const insertBefore = dropY < rect.top + rect.height / 2;
 
-    // Find the *new* index of the target item after removal
-    const newTargetIndex = initiatives.findIndex(init => init.initiativeId === targetInitiativeId);
+     if (insertBefore) {
+         initiatives.splice(newTargetIndex, 0, movedItem); // Insert before target
+     } else {
+         initiatives.splice(newTargetIndex + 1, 0, movedItem); // Insert after target
+     }
 
-    // Insert the moved item before the target
-    initiatives.splice(newTargetIndex, 0, movedItem);
     console.log("Reordered initiatives array:", initiatives.map(i => i.initiativeId));
     // --- End Reorder ---
 
 
     // --- Refresh the Table ---
+    // The draggedInitiativeId is reset in handleDragEnd
     generatePlanningTable();
     // --- End Refresh ---
-
-    draggedInitiativeId = null; // Reset dragged item
 }
 
 /** Cleans up after drag operation ends (dropped or cancelled) */
@@ -5278,109 +5824,98 @@ function handleEstimateChange(event) {
     // input.focus(); // Might not work reliably after full redraw
 }
 
-/** REVISED - Generates the interactive planning table with data */
+/** REVISED - Generates planning table - Restore Fixed Cells, Keep Radio/DragDrop Fixes */
 function generatePlanningTable() {
-    console.log("Generating planning table...");
+    console.log("Generating planning table (Attempting Stable Version)...");
     const container = document.getElementById('planningTableContainer');
     const capacitySummaryDiv = document.getElementById('planningCapacitySummary');
-    container.innerHTML = ''; // Clear previous table
-    capacitySummaryDiv.innerHTML = ''; // Clear previous summary
+    const scenarioControlDivId = 'planningScenarioControl';
+    let scenarioControlDiv = document.getElementById(scenarioControlDivId);
+
+    // Clear previous table content ONLY
+    container.innerHTML = '';
+    // Clear summary content ONLY
+    capacitySummaryDiv.innerHTML = '';
 
     if (!currentSystemData || !currentSystemData.yearlyInitiatives) {
-        container.innerHTML = '<p style="color: orange;">No planning data loaded or initiatives defined for this system.</p>';
-        console.warn("No currentSystemData or yearlyInitiatives found.");
-        return;
+        container.innerHTML = '<p style="color: orange;">No planning data loaded...</p>'; return;
     }
 
-    // --- 1. Calculate Capacity ---
-    let totalBIS = 0;
-    let totalFundedHC = 0;
-    (currentSystemData.teams || []).forEach(team => {
-        totalBIS += team.buildersInSeats ?? (team.engineers?.length ?? 0);
-        totalFundedHC += team.fundedHeadcount ?? 0;
-    });
-    capacitySummaryDiv.innerHTML = `Total Capacity - Funded HC: <span style="color: green;">${totalFundedHC.toFixed(2)}</span> SDE Years | BIS: <span style="color: darkorange;">${totalBIS.toFixed(2)}</span> SDE Years`;
-    console.log(`Calculated Capacity - Funded: ${totalFundedHC}, BIS: ${totalBIS}`);
+    // --- 1. Calculate Detailed Capacity ---
+    let totalFundedHC = 0; let totalTeamBIS = 0; let totalAwayTeamBIS = 0;
+    (currentSystemData.teams || []).forEach(team => { totalFundedHC += team.fundedHeadcount ?? 0; totalTeamBIS += team.engineers?.length ?? 0; totalAwayTeamBIS += team.awayTeamMembers?.length ?? 0; });
+    const totalEffectiveBIS = totalTeamBIS + totalAwayTeamBIS;
     // --- End Calculate Capacity ---
 
-    // --- 2. Prepare Table Structure ---
-    const table = document.createElement('table');
-    table.style.width = '100%';
-    table.style.borderCollapse = 'collapse';
-    table.id = 'planningTable'; // Add ID
+    // --- 2. Update Capacity Summary Display ---
+    capacitySummaryDiv.innerHTML = `
+        <span title="Finance Approved Headcount">Funded HC: <strong style="color: #28a745;">${totalFundedHC.toFixed(2)}</strong></span> |
+        <span title="Actual Team Members">Team BIS: <strong style="color: #17a2b8;">${totalTeamBIS.toFixed(2)}</strong></span> |
+        <span title="Borrowed / Away-Team Members">Away BIS: <strong style="color: #ffc107;">${totalAwayTeamBIS.toFixed(2)}</strong></span> |
+        <span title="Total Effective Capacity (Team + Away)">Effective BIS: <strong style="color: #007bff;">${totalEffectiveBIS.toFixed(2)}</strong></span>
+    `;
+    // --- End Summary Display ---
 
-    const thead = document.createElement('thead');
-    const headerRow = document.createElement('tr');
+    // --- 3. Add/Update Scenario Toggle UI (Keep Radio Button Fix) ---
+    let isCreatingScenarioDiv = false;
+    if (!scenarioControlDiv) {
+        isCreatingScenarioDiv = true;
+        scenarioControlDiv = document.createElement('div');
+        scenarioControlDiv.id = scenarioControlDivId; scenarioControlDiv.style.marginBottom = '15px'; scenarioControlDiv.style.padding = '5px'; scenarioControlDiv.style.backgroundColor = '#f8f9fa'; scenarioControlDiv.style.border = '1px solid #dee2e6';
+        capacitySummaryDiv.parentNode.insertBefore(scenarioControlDiv, capacitySummaryDiv.nextSibling);
+    }
+    // Set/Update innerHTML with current totals in tooltips
+    scenarioControlDiv.innerHTML = `
+        <strong style="margin-right: 10px;">Calculate ATL/BTL based on:</strong>
+        <input type="radio" id="scenarioEffectiveBIS" name="capacityScenario" value="effective" onchange="generatePlanningTable()">
+        <label for="scenarioEffectiveBIS" style="margin-right: 15px;" title="Use Effective BIS (${totalEffectiveBIS.toFixed(2)}) for ATL/BTL line">Effective BIS</label>
+        <input type="radio" id="scenarioFundedHC" name="capacityScenario" value="funded" onchange="generatePlanningTable()">
+        <label for="scenarioFundedHC" title="Use Funded HC (${totalFundedHC.toFixed(2)}) for ATL/BTL line">Funded HC</label>
+    `;
+    // Read/Set checked state correctly
+    let selectedScenarioValue = 'effective'; const scenarioEffectiveRadio = document.getElementById('scenarioEffectiveBIS'); const scenarioFundedRadio = document.getElementById('scenarioFundedHC');
+    if (!isCreatingScenarioDiv) { if (scenarioFundedRadio?.checked) { selectedScenarioValue = 'funded'; } else { if(scenarioEffectiveRadio) scenarioEffectiveRadio.checked = true; selectedScenarioValue = 'effective'; } } else { if(scenarioEffectiveRadio) scenarioEffectiveRadio.checked = true; }
+    const atlBtlCapacityLimit = (selectedScenarioValue === 'funded') ? totalFundedHC : totalEffectiveBIS;
+    console.log(`Using capacity limit for ATL/BTL: ${atlBtlCapacityLimit.toFixed(2)} (Scenario: ${selectedScenarioValue})`);
+    // --- End Scenario Toggle ---
 
-    // Fixed Headers
-    const fixedHeaders = ['Protected', 'Title', 'ID', 'Description', 'Total SDE Years', 'Cumalative SDE Years', 'Capacity Status', 'ATL/BTL'];
-    fixedHeaders.forEach(text => {
-        const th = document.createElement('th');
-        th.textContent = text;
-        th.style.border = '1px solid #ccc'; th.style.padding = '8px'; th.style.textAlign = 'left'; th.style.backgroundColor = '#f2f2f2';
-        th.style.position = 'sticky'; th.style.top = '0'; // Make headers sticky
-        headerRow.appendChild(th);
-    });
-
-    // Dynamic Team Headers
-    const teams = currentSystemData.teams || [];
-    const teamHeaderMap = new Map(); // To easily get teamId by column index later
-    teams.forEach((team, index) => {
-        const th = document.createElement('th');
-        const teamDisplayName = team.teamIdentity || team.teamName || team.teamId;
-        th.textContent = teamDisplayName;
-        th.title = teamDisplayName; // Add tooltip for potentially long names
-        th.setAttribute('data-team-id', team.teamId);
-        th.style.border = '1px solid #ccc'; th.style.padding = '8px'; th.style.textAlign = 'center'; th.style.backgroundColor = '#e6f7ff';
-        th.style.position = 'sticky'; th.style.top = '0'; // Make headers sticky
-        th.style.writingMode = 'vertical-lr';
-        th.style.textOrientation = 'mixed';
-        th.style.whiteSpace = 'nowrap';
-        th.style.minWidth = '35px'; // Adjust width as needed
-        th.style.maxWidth = '35px';
-        headerRow.appendChild(th);
-        teamHeaderMap.set(fixedHeaders.length + index, team.teamId); // Store teamId by column index
-    });
-
-    thead.appendChild(headerRow);
-    table.appendChild(thead);
+    // --- 4. Prepare Table Structure ---
+    const table = document.createElement('table'); table.style.width = '100%'; table.style.borderCollapse = 'collapse'; table.id = 'planningTable';
+    const thead = document.createElement('thead'); const headerRow = document.createElement('tr');
+    const fixedHeaders = ['Protected', 'Title', 'ID', 'Description', 'Total SDE Years', 'Cumulative SDE Years', 'Capacity Status', 'ATL/BTL'];
+    fixedHeaders.forEach(text => { /* ... create fixed th ... */ const th = document.createElement('th'); th.textContent = text; th.style.border = '1px solid #ccc'; th.style.padding = '8px'; th.style.textAlign = 'left'; th.style.backgroundColor = '#f2f2f2'; th.style.position = 'sticky'; th.style.top = '0'; th.style.zIndex = '1'; headerRow.appendChild(th); });
+    const teams = currentSystemData.teams || []; const teamHeaderMap = new Map();
+    teams.forEach((team, index) => { /* ... create dynamic team th ... */ const th = document.createElement('th'); const teamDisplayName = team.teamIdentity || team.teamName || team.teamId; th.textContent = teamDisplayName; th.title = teamDisplayName; th.setAttribute('data-team-id', team.teamId); th.style.border = '1px solid #ccc'; th.style.padding = '8px'; th.style.textAlign = 'center'; th.style.backgroundColor = '#e6f7ff'; th.style.position = 'sticky'; th.style.top = '0'; th.style.zIndex = '1'; th.style.writingMode = 'vertical-lr'; th.style.textOrientation = 'mixed'; th.style.whiteSpace = 'nowrap'; th.style.minWidth = '35px'; th.style.maxWidth = '35px'; headerRow.appendChild(th); teamHeaderMap.set(fixedHeaders.length + index, team.teamId); });
+    thead.appendChild(headerRow); table.appendChild(thead);
     // --- End Table Structure ---
 
-    // --- 3. Sort Initiatives & Populate Body ---
-    const tbody = document.createElement('tbody');
-    tbody.id = 'planningTableBody';
-
-    // Sort: Protected first, then maintain original relative order (implicit via array order)
-    const sortedInitiatives = [...currentSystemData.yearlyInitiatives].sort((a, b) => {
-        if (a.isProtected && !b.isProtected) return -1;
-        if (!a.isProtected && b.isProtected) return 1;
-        return 0; // Maintain original order among protected/non-protected blocks
-        // Later, drag-drop will modify the order in currentSystemData.yearlyInitiatives directly
-    });
-
+    // --- 5. Sort Initiatives & Populate Body ---
+    const tbody = document.createElement('tbody'); tbody.id = 'planningTableBody';
+    const sortedInitiatives = [...currentSystemData.yearlyInitiatives].sort((a, b) => { if (a.isProtected && !b.isProtected) return -1; if (!a.isProtected && b.isProtected) return 1; return 0; });
     let cumulativeSdeTotal = 0;
 
     sortedInitiatives.forEach((initiative, rowIndex) => {
-        if (!initiative || !initiative.initiativeId) {
-            console.warn("Skipping invalid initiative data:", initiative);
-            return;
-        }
-
+        if (!initiative || !initiative.initiativeId) { return; }
         const row = tbody.insertRow();
-        row.setAttribute('draggable', 'true'); // Make row draggable
         row.setAttribute('data-initiative-id', initiative.initiativeId);
-        row.style.borderBottom = '1px solid #eee'; // Add faint row separators
-        // Add slight padding for easier dropping between rows
-        row.style.padding = '2px 0';
+        row.style.borderBottom = '1px solid #eee'; row.style.padding = '2px 0';
+        if (initiative.isProtected) { row.style.backgroundColor = '#f8f9fa'; }
 
-        // *** ADD DRAG LISTENERS ***
-        row.addEventListener('dragstart', handleDragStart);
+        // *** Add Drag Listeners (Using Fixed Logic) ***
+        row.setAttribute('draggable', !initiative.isProtected);
         row.addEventListener('dragover', handleDragOver);
         row.addEventListener('dragleave', handleDragLeave);
         row.addEventListener('drop', handleDrop);
         row.addEventListener('dragend', handleDragEnd);
-        
-        // --- Fixed Cells ---
+        if (!initiative.isProtected) {
+            row.addEventListener('dragstart', handleDragStart);
+            row.style.cursor = 'move';
+        } else {
+            row.style.cursor = 'default';
+        }
+        // *** End Listeners ***
+
+        // --- Fixed Cells (Ensure Population) ---
         // Protected Checkbox
         const protectedCell = row.insertCell();
         const protectedCheckbox = document.createElement('input');
@@ -5388,95 +5923,58 @@ function generatePlanningTable() {
         protectedCheckbox.checked = initiative.isProtected;
         protectedCheckbox.setAttribute('data-initiative-id', initiative.initiativeId);
         protectedCheckbox.style.cursor = 'pointer';
-        protectedCheckbox.onchange = handleProtectedChange; // Add the event listener
+        protectedCheckbox.onchange = handleProtectedChange;
         protectedCell.appendChild(protectedCheckbox);
         protectedCell.style.textAlign = 'center';
 
         // Title
         const titleCell = row.insertCell();
-        titleCell.textContent = initiative.title || 'No Title';
+        titleCell.textContent = initiative.title || 'No Title'; // Assign textContent
         titleCell.style.fontWeight = initiative.isProtected ? 'bold' : 'normal';
 
         // Id
         const idCell = row.insertCell();
-        idCell.textContent = initiative.initiativeId;
-        idCell.style.fontSize = '0.8em'; // Make it smaller perhaps
-        idCell.style.color = '#555';    // Grey it out slightly
+        idCell.textContent = initiative.initiativeId; // Assign textContent
+        idCell.style.fontSize = '0.8em';
+        idCell.style.color = '#555';
 
         // Description (Truncated with Tooltip)
         const descCell = row.insertCell();
         const descText = initiative.description || '';
-        descCell.textContent = descText.length > 50 ? descText.substring(0, 47) + '...' : descText; // Truncate
-        descCell.title = descText; // Full description on hover
+        descCell.textContent = descText.length > 50 ? descText.substring(0, 47) + '...' : descText; // Assign textContent
+        descCell.title = descText;
+        // --- End Fixed Cells ---
 
-        // --- Calculated Cells (Placeholders first) ---
+        // --- Calculated Cells Placeholders ---
         const totalSdeCell = row.insertCell(); totalSdeCell.style.textAlign = 'right';
         const cumSdeCell = row.insertCell(); cumSdeCell.style.textAlign = 'right';
         const statusCell = row.insertCell(); statusCell.style.textAlign = 'center';
         const atlBtlCell = row.insertCell(); atlBtlCell.style.fontWeight = 'bold'; atlBtlCell.style.textAlign = 'center';
+        // --- End Placeholders ---
 
         // --- Dynamic Team Cells & Calculate Initiative Total ---
         let initiativeTotalSde = 0;
         const assignmentsMap = new Map((initiative.assignments || []).map(a => [a.teamId, a.sdeYears]));
-
-        teamHeaderMap.forEach((teamId, colIndex) => { // Iterate using the header map order
-            const teamCell = row.insertCell();
-            const currentEstimate = assignmentsMap.get(teamId) || 0;
-
-            // *** Replace textContent with an input element ***
-            const estimateInput = document.createElement('input');
-            estimateInput.type = 'number';
-            estimateInput.min = '0';
-            estimateInput.step = '0.25'; // Allow quarter SDE years
-            estimateInput.value = currentEstimate > 0 ? currentEstimate.toFixed(2) : ''; // Show empty for 0
-            estimateInput.setAttribute('data-initiative-id', initiative.initiativeId);
-            estimateInput.setAttribute('data-team-id', teamId);
-            estimateInput.style.width = '60px'; // Adjust width as needed
-            estimateInput.style.textAlign = 'right';
-            estimateInput.style.border = 'none'; // Remove border for inline feel
-            estimateInput.style.backgroundColor = 'transparent'; // Blend with cell
-            // Add listener to handle changes
-            estimateInput.addEventListener('change', handleEstimateChange);
-            // Optional: Recalculate on blur as well or instead of change
-            // estimateInput.addEventListener('blur', handleEstimateChange);
-
-            teamCell.appendChild(estimateInput);
-            
-            teamCell.style.textAlign = 'center';
-            teamCell.style.backgroundColor = currentEstimate > 0 ? '#fffacd' : '#fafafa'; // Highlight assigned cells
-            initiativeTotalSde += currentEstimate;
-        });
+        teamHeaderMap.forEach((teamId, colIndex) => {
+             const teamCell = row.insertCell(); // Ensure cell is inserted
+             const currentEstimate = assignmentsMap.get(teamId) || 0;
+             const estimateInput = document.createElement('input'); /* ... set attributes ... */
+             estimateInput.type = 'number'; estimateInput.min = '0'; estimateInput.step = '0.25'; estimateInput.value = currentEstimate > 0 ? currentEstimate.toFixed(2) : ''; estimateInput.setAttribute('data-initiative-id', initiative.initiativeId); estimateInput.setAttribute('data-team-id', teamId); estimateInput.style.width = '60px'; estimateInput.style.textAlign = 'right'; estimateInput.style.border = 'none'; estimateInput.style.backgroundColor = 'transparent'; estimateInput.addEventListener('change', handleEstimateChange);
+             teamCell.appendChild(estimateInput); // Append input to cell
+             teamCell.style.textAlign = 'center'; teamCell.style.backgroundColor = currentEstimate > 0 ? '#fffacd' : (initiative.isProtected ? '#f8f9fa' : '#fff');
+             initiativeTotalSde += currentEstimate;
+         });
+        // --- End Dynamic Cells ---
 
         // --- Populate Calculated Cells ---
         totalSdeCell.textContent = initiativeTotalSde.toFixed(2);
         cumulativeSdeTotal += initiativeTotalSde;
         cumSdeCell.textContent = cumulativeSdeTotal.toFixed(2);
-
-        // Capacity Status
-        if (cumulativeSdeTotal <= totalBIS) {
-            statusCell.textContent = '✅'; // Within BIS
-            statusCell.title = `Within BIS Capacity (${totalBIS.toFixed(2)})`;
-            statusCell.style.backgroundColor = '#d4edda'; // Light green
-        } else if (cumulativeSdeTotal <= totalFundedHC) {
-            statusCell.textContent = '⚠️'; // Exceeds BIS but within Funded
-            statusCell.title = `Exceeds BIS (${totalBIS.toFixed(2)}), Within Funded HC (${totalFundedHC.toFixed(2)})`;
-            statusCell.style.backgroundColor = '#fff3cd'; // Light yellow
-        } else {
-            statusCell.textContent = '🛑'; // Exceeds Funded HC
-            statusCell.title = `Exceeds Funded HC (${totalFundedHC.toFixed(2)})`;
-            statusCell.style.backgroundColor = '#f8d7da'; // Light red
-        }
-
-        // ATL/BTL Status
-        if (cumulativeSdeTotal <= totalFundedHC) {
-            atlBtlCell.textContent = 'ATL';
-            atlBtlCell.style.color = 'green';
-        } else {
-            atlBtlCell.textContent = 'BTL';
-            atlBtlCell.style.color = 'red';
-            // Optional: Style the whole row slightly differently if BTL
-            // row.style.backgroundColor = '#ffeeee'; // Very light pink for BTL rows
-        }
+        // Capacity Status logic...
+        if (cumulativeSdeTotal <= totalEffectiveBIS) { statusCell.textContent = '✅'; statusCell.title = `Within Effective BIS (${totalEffectiveBIS.toFixed(2)})`; statusCell.style.backgroundColor = '#d4edda';} else if (cumulativeSdeTotal <= totalFundedHC) { statusCell.textContent = '⚠️'; statusCell.title = `Exceeds Effective BIS (${totalEffectiveBIS.toFixed(2)}), Within Funded HC (${totalFundedHC.toFixed(2)})`; statusCell.style.backgroundColor = '#fff3cd'; } else { statusCell.textContent = '🛑'; statusCell.title = `Exceeds Funded HC (${totalFundedHC.toFixed(2)})`; statusCell.style.backgroundColor = '#f8d7da'; }
+        // ATL/BTL Status logic...
+        if (cumulativeSdeTotal <= atlBtlCapacityLimit) { atlBtlCell.textContent = 'ATL'; atlBtlCell.style.color = 'green'; if (selectedScenarioValue === 'effective' && cumulativeSdeTotal > totalFundedHC) { row.style.opacity = '0.8'; row.title = 'ATL (vs Effective BIS), but BTL vs Funded HC.'; } else if (selectedScenarioValue === 'funded' && cumulativeSdeTotal > totalEffectiveBIS) { row.style.opacity = '0.8'; row.title = 'ATL (vs Funded HC), but BTL vs Effective BIS.'; } else { row.style.opacity = '1'; row.title = ''; } } else { atlBtlCell.textContent = 'BTL'; atlBtlCell.style.color = 'red'; row.style.backgroundColor = '#ffeeee'; }
+        // --- End Calculated Cells ---
 
     }); // End sortedInitiatives.forEach
 
@@ -5484,32 +5982,26 @@ function generatePlanningTable() {
     container.appendChild(table);
     // --- End Populate Body ---
 
-    // --- 4. Add Drag/Drop Event Listeners (Placeholder for next step) ---
-    // TODO: Implement makeTableDraggable(table.id);
-    console.log("Placeholder: Need to implement table row drag/drop.");
-
-    // --- 5. Add Checkbox Listeners (Placeholder for next step) ---
-    // TODO: Add event listeners to 'Protected' checkboxes.
-    console.log("Placeholder: Need to implement protected checkbox logic.");
-
+    console.log("Finished generating planning table (Stable Version).");
 } // --- End generatePlanningTable ---
 
-/** Shows the Yearly Planning View */
+
+/** REVISED Shows the Yearly Planning View - REMOVES Default Radio Check */
 function showPlanningView() {
     console.log("Switching to Yearly Planning View...");
-    currentMode = Modes.PLANNING; // Assuming we might add a PLANNING mode
+    currentMode = Modes.PLANNING;
 
     // --- Hide ALL other main view sections ---
-    const viewsToHide = [
+    const viewsToHide = [ /* ... viewsToHide array as before ... */
         'systemEditForm', 'visualization', 'teamVisualization', 'teamBreakdown',
         'serviceRelationshipsVisualization', 'dependencyVisualization', 'serviceDependenciesTable',
         'organogramView', 'engineerTableView'
     ];
-    viewsToHide.forEach(id => {
+    viewsToHide.forEach(id => { /* ... hide elements logic as before ... */
         const element = document.getElementById(id);
         if (element) element.style.display = 'none';
     });
-    // Ensure edit menu is visible (for view switching) but main menu is hidden
+    // Ensure edit menu is visible and main menu is hidden
     const editMenu = document.querySelector('.edit-menu');
     if (editMenu) editMenu.style.display = 'block';
     const mainMenu = document.querySelector('.menu');
@@ -5527,30 +6019,31 @@ function showPlanningView() {
         } else if (planningTitle) {
             planningTitle.innerText = `Yearly Planning View (No System Loaded)`;
         }
-        // Generate the table content
-        generatePlanningTable(); // Call the function to build the table
-        
-        // --- Populate Team Select & Attach Listeners (Ensure this happens AFTER elements are visible) ---
+
+        // Generate the table content (this will now include radio buttons)
+        generatePlanningTable();
+
+        // *** Default radio check REMOVED from here ***
+        // It's handled on initial creation within generatePlanningTable
+
+        // --- Populate Team Select & Attach Listeners ---
         populateTeamSelect();
-
+        // Add listeners only once
         const addAssignButton = document.getElementById('addTeamAssignmentButton');
-        if (addAssignButton && !addAssignButton.hasAttribute('data-listener-attached')) {
+        if (addAssignButton && !addAssignButton.hasAttribute('data-listener-attached')) { /* ... add listener ... */
              addAssignButton.addEventListener('click', handleAddTeamAssignment);
-             addAssignButton.setAttribute('data-listener-attached', 'true'); // Prevent multiple listeners
+             addAssignButton.setAttribute('data-listener-attached', 'true');
         }
-
         const addInitButton = document.getElementById('addInitiativeButton');
-         if (addInitButton && !addInitButton.hasAttribute('data-listener-attached')) {
+        if (addInitButton && !addInitButton.hasAttribute('data-listener-attached')) { /* ... add listener ... */
             addInitButton.addEventListener('click', handleAddInitiative);
-            addInitButton.setAttribute('data-listener-attached', 'true'); // Prevent multiple listeners
-         }     
-
-         // *** ADD LISTENER FOR SAVE PLAN BUTTON ***
-         const savePlanButton = document.getElementById('savePlanButton');
-         if (savePlanButton && !savePlanButton.hasAttribute('data-listener-attached')) {
+            addInitButton.setAttribute('data-listener-attached', 'true');
+        }
+        const savePlanButton = document.getElementById('savePlanButton');
+         if (savePlanButton && !savePlanButton.hasAttribute('data-listener-attached')) { /* ... add listener ... */
             savePlanButton.addEventListener('click', handleSavePlan);
             savePlanButton.setAttribute('data-listener-attached', 'true');
-         }         
+         }
     } else {
         console.error("Planning view container not found!");
     }
