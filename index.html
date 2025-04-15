@@ -516,6 +516,7 @@ const Modes = {
     PLANNING: 'planning' 
 };
 let currentMode = Modes.NAVIGATION;
+let planningCapacityScenario = 'effective'; // Default to 'effective'
 
 /** Sample Data for StreamView **/
 
@@ -5824,9 +5825,26 @@ function handleEstimateChange(event) {
     // input.focus(); // Might not work reliably after full redraw
 }
 
-/** REVISED - Generates planning table - Restore Fixed Cells, Keep Radio/DragDrop Fixes */
+/** Sets the capacity scenario for planning and redraws the table */
+function setPlanningScenario(scenario) {
+  console.log(`Setting planning scenario to: ${scenario}`);
+  // Allow 'effective', 'funded', or 'team_bis'
+  if (scenario === 'effective' || scenario === 'funded' || scenario === 'team_bis') {
+    planningCapacityScenario = scenario;
+    // Redraw the planning table to apply the change
+    generatePlanningTable();
+  } else {
+    console.warn("Invalid planning scenario provided:", scenario);
+  }
+}
+// Make it globally accessible if not already
+window.setPlanningScenario = setPlanningScenario;
+
+
+
+/** REVISED - Generates planning table - Capacity Status based on Team/Funded */
 function generatePlanningTable() {
-    console.log("Generating planning table (Attempting Stable Version)...");
+    console.log("Generating planning table (Capacity Status Refined)...");
     const container = document.getElementById('planningTableContainer');
     const capacitySummaryDiv = document.getElementById('planningCapacitySummary');
     const scenarioControlDivId = 'planningScenarioControl';
@@ -5834,52 +5852,64 @@ function generatePlanningTable() {
 
     // Clear previous table content ONLY
     container.innerHTML = '';
-    // Clear summary content ONLY
-    capacitySummaryDiv.innerHTML = '';
+    capacitySummaryDiv.innerHTML = ''; // Clear summary
 
     if (!currentSystemData || !currentSystemData.yearlyInitiatives) {
-        container.innerHTML = '<p style="color: orange;">No planning data loaded...</p>'; return;
+        container.innerHTML = '<p style="color: orange;">No planning data loaded or no initiatives found. Use "Edit System" to load or define data.</p>';
+        capacitySummaryDiv.innerHTML = 'Load a system to see capacity.';
+        if (scenarioControlDiv) scenarioControlDiv.innerHTML = '';
+        return;
     }
 
-    // --- 1. Calculate Detailed Capacity ---
-    let totalFundedHC = 0; let totalTeamBIS = 0; let totalAwayTeamBIS = 0;
-    (currentSystemData.teams || []).forEach(team => { totalFundedHC += team.fundedHeadcount ?? 0; totalTeamBIS += team.engineers?.length ?? 0; totalAwayTeamBIS += team.awayTeamMembers?.length ?? 0; });
+    // --- 1. Calculate Detailed Capacity (No change) ---
+    let totalFundedHC = 0;
+    let totalTeamBIS = 0;
+    let totalAwayTeamBIS = 0;
+    (currentSystemData.teams || []).forEach(team => {
+        totalFundedHC += team.fundedHeadcount ?? 0;
+        totalTeamBIS += team.engineers?.length ?? 0;
+        totalAwayTeamBIS += team.awayTeamMembers?.length ?? 0;
+    });
     const totalEffectiveBIS = totalTeamBIS + totalAwayTeamBIS;
     // --- End Calculate Capacity ---
 
-    // --- 2. Update Capacity Summary Display ---
+    // --- 2. Update Capacity Summary Display (No change) ---
     capacitySummaryDiv.innerHTML = `
-        <span title="Finance Approved Headcount">Funded HC: <strong style="color: #28a745;">${totalFundedHC.toFixed(2)}</strong></span> |
-        <span title="Actual Team Members">Team BIS: <strong style="color: #17a2b8;">${totalTeamBIS.toFixed(2)}</strong></span> |
-        <span title="Borrowed / Away-Team Members">Away BIS: <strong style="color: #ffc107;">${totalAwayTeamBIS.toFixed(2)}</strong></span> |
+        <span title="Finance Approved Headcount" style="margin-right: 15px;">Funded HC: <strong style="color: #28a745;">${totalFundedHC.toFixed(2)}</strong></span> |
+        <span title="Actual Team Members" style="margin-right: 15px;">Team BIS: <strong style="color: #17a2b8;">${totalTeamBIS.toFixed(2)}</strong></span> |
+        <span title="Borrowed / Away-Team Members" style="margin-right: 15px;">Away BIS: <strong style="color: #ffc107;">${totalAwayTeamBIS.toFixed(2)}</strong></span> |
         <span title="Total Effective Capacity (Team + Away)">Effective BIS: <strong style="color: #007bff;">${totalEffectiveBIS.toFixed(2)}</strong></span>
     `;
     // --- End Summary Display ---
 
-    // --- 3. Add/Update Scenario Toggle UI (Keep Radio Button Fix) ---
-    let isCreatingScenarioDiv = false;
-    if (!scenarioControlDiv) {
-        isCreatingScenarioDiv = true;
+    // --- 3. Add/Update Scenario Toggle UI (No change) ---
+     if (!scenarioControlDiv) { /* ... create scenarioControlDiv ... */
         scenarioControlDiv = document.createElement('div');
-        scenarioControlDiv.id = scenarioControlDivId; scenarioControlDiv.style.marginBottom = '15px'; scenarioControlDiv.style.padding = '5px'; scenarioControlDiv.style.backgroundColor = '#f8f9fa'; scenarioControlDiv.style.border = '1px solid #dee2e6';
+        scenarioControlDiv.id = scenarioControlDivId;
+        scenarioControlDiv.style.marginBottom = '15px'; scenarioControlDiv.style.padding = '8px'; scenarioControlDiv.style.backgroundColor = '#f8f9fa'; scenarioControlDiv.style.border = '1px solid #dee2e6'; scenarioControlDiv.style.borderRadius = '4px';
         capacitySummaryDiv.parentNode.insertBefore(scenarioControlDiv, capacitySummaryDiv.nextSibling);
     }
-    // Set/Update innerHTML with current totals in tooltips
+    const baseButtonStyle = 'padding: 5px 10px; margin-left: 10px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; font-size: 0.9em;';
+    const activeButtonStyle = baseButtonStyle + ' background-color: #007bff; color: white; border-color: #0056b3; font-weight: bold;';
+    const inactiveButtonStyle = baseButtonStyle + ' background-color: #e9ecef; color: #495057;';
+    const effectiveButtonStyle = (planningCapacityScenario === 'effective') ? activeButtonStyle : inactiveButtonStyle;
+    const fundedButtonStyle = (planningCapacityScenario === 'funded') ? activeButtonStyle : inactiveButtonStyle;
+    const teamBisButtonStyle = (planningCapacityScenario === 'team_bis') ? activeButtonStyle : inactiveButtonStyle;
     scenarioControlDiv.innerHTML = `
-        <strong style="margin-right: 10px;">Calculate ATL/BTL based on:</strong>
-        <input type="radio" id="scenarioEffectiveBIS" name="capacityScenario" value="effective" onchange="generatePlanningTable()">
-        <label for="scenarioEffectiveBIS" style="margin-right: 15px;" title="Use Effective BIS (${totalEffectiveBIS.toFixed(2)}) for ATL/BTL line">Effective BIS</label>
-        <input type="radio" id="scenarioFundedHC" name="capacityScenario" value="funded" onchange="generatePlanningTable()">
-        <label for="scenarioFundedHC" title="Use Funded HC (${totalFundedHC.toFixed(2)}) for ATL/BTL line">Funded HC</label>
+        <strong style="margin-right: 10px;">Calculate ATL/BTL using:</strong>
+        <button type="button" id="btnEffectiveBIS" style="${effectiveButtonStyle}" title="Use Effective BIS (${totalEffectiveBIS.toFixed(2)}) = Team + Away" onclick="setPlanningScenario('effective')">Effective BIS</button>
+        <button type="button" id="btnTeamBIS" style="${teamBisButtonStyle}" title="Use Team BIS (${totalTeamBIS.toFixed(2)}) = Only Team Members" onclick="setPlanningScenario('team_bis')">Team BIS</button>
+        <button type="button" id="btnFundedHC" style="${fundedButtonStyle}" title="Use Funded HC (${totalFundedHC.toFixed(2)}) = Budgeted Headcount" onclick="setPlanningScenario('funded')">Funded HC</button>
     `;
-    // Read/Set checked state correctly
-    let selectedScenarioValue = 'effective'; const scenarioEffectiveRadio = document.getElementById('scenarioEffectiveBIS'); const scenarioFundedRadio = document.getElementById('scenarioFundedHC');
-    if (!isCreatingScenarioDiv) { if (scenarioFundedRadio?.checked) { selectedScenarioValue = 'funded'; } else { if(scenarioEffectiveRadio) scenarioEffectiveRadio.checked = true; selectedScenarioValue = 'effective'; } } else { if(scenarioEffectiveRadio) scenarioEffectiveRadio.checked = true; }
-    const atlBtlCapacityLimit = (selectedScenarioValue === 'funded') ? totalFundedHC : totalEffectiveBIS;
-    console.log(`Using capacity limit for ATL/BTL: ${atlBtlCapacityLimit.toFixed(2)} (Scenario: ${selectedScenarioValue})`);
+    let atlBtlCapacityLimit; // Determine ATL/BTL limit based on selected scenario
+    if (planningCapacityScenario === 'funded') { atlBtlCapacityLimit = totalFundedHC; }
+    else if (planningCapacityScenario === 'team_bis') { atlBtlCapacityLimit = totalTeamBIS; }
+    else { atlBtlCapacityLimit = totalEffectiveBIS; } // Default to effective
+    console.log(`Using capacity limit for ATL/BTL: ${atlBtlCapacityLimit.toFixed(2)} (Scenario: ${planningCapacityScenario})`);
     // --- End Scenario Toggle ---
 
-    // --- 4. Prepare Table Structure ---
+
+    // --- 4. Prepare Table Structure (No change) ---
     const table = document.createElement('table'); table.style.width = '100%'; table.style.borderCollapse = 'collapse'; table.id = 'planningTable';
     const thead = document.createElement('thead'); const headerRow = document.createElement('tr');
     const fixedHeaders = ['Protected', 'Title', 'ID', 'Description', 'Total SDE Years', 'Cumulative SDE Years', 'Capacity Status', 'ATL/BTL'];
@@ -5895,85 +5925,64 @@ function generatePlanningTable() {
     let cumulativeSdeTotal = 0;
 
     sortedInitiatives.forEach((initiative, rowIndex) => {
-        if (!initiative || !initiative.initiativeId) { return; }
-        const row = tbody.insertRow();
-        row.setAttribute('data-initiative-id', initiative.initiativeId);
-        row.style.borderBottom = '1px solid #eee'; row.style.padding = '2px 0';
-        if (initiative.isProtected) { row.style.backgroundColor = '#f8f9fa'; }
+        if (!initiative || !initiative.initiativeId) { console.warn("Skipping invalid initiative data at index:", rowIndex); return; }
+        const row = tbody.insertRow(); row.setAttribute('data-initiative-id', initiative.initiativeId); row.style.borderBottom = '1px solid #eee'; row.style.padding = '2px 0'; if (initiative.isProtected) { row.style.backgroundColor = '#f8f9fa'; }
+        row.setAttribute('draggable', !initiative.isProtected); row.addEventListener('dragover', handleDragOver); row.addEventListener('dragleave', handleDragLeave); row.addEventListener('drop', handleDrop); row.addEventListener('dragend', handleDragEnd); if (!initiative.isProtected) { row.addEventListener('dragstart', handleDragStart); row.style.cursor = 'move'; } else { row.style.cursor = 'default'; }
 
-        // *** Add Drag Listeners (Using Fixed Logic) ***
-        row.setAttribute('draggable', !initiative.isProtected);
-        row.addEventListener('dragover', handleDragOver);
-        row.addEventListener('dragleave', handleDragLeave);
-        row.addEventListener('drop', handleDrop);
-        row.addEventListener('dragend', handleDragEnd);
-        if (!initiative.isProtected) {
-            row.addEventListener('dragstart', handleDragStart);
-            row.style.cursor = 'move';
-        } else {
-            row.style.cursor = 'default';
-        }
-        // *** End Listeners ***
+        // Fixed Cells (No change)
+        const protectedCell = row.insertCell(); const protectedCheckbox = document.createElement('input'); protectedCheckbox.type = 'checkbox'; protectedCheckbox.checked = initiative.isProtected; protectedCheckbox.setAttribute('data-initiative-id', initiative.initiativeId); protectedCheckbox.style.cursor = 'pointer'; protectedCheckbox.onchange = handleProtectedChange; protectedCell.appendChild(protectedCheckbox); protectedCell.style.textAlign = 'center';
+        const titleCell = row.insertCell(); titleCell.textContent = initiative.title || 'No Title'; titleCell.style.fontWeight = initiative.isProtected ? 'bold' : 'normal';
+        const idCell = row.insertCell(); idCell.textContent = initiative.initiativeId; idCell.style.fontSize = '0.8em'; idCell.style.color = '#555';
+        const descCell = row.insertCell(); const descText = initiative.description || ''; descCell.textContent = descText.length > 50 ? descText.substring(0, 47) + '...' : descText; descCell.title = descText;
 
-        // --- Fixed Cells (Ensure Population) ---
-        // Protected Checkbox
-        const protectedCell = row.insertCell();
-        const protectedCheckbox = document.createElement('input');
-        protectedCheckbox.type = 'checkbox';
-        protectedCheckbox.checked = initiative.isProtected;
-        protectedCheckbox.setAttribute('data-initiative-id', initiative.initiativeId);
-        protectedCheckbox.style.cursor = 'pointer';
-        protectedCheckbox.onchange = handleProtectedChange;
-        protectedCell.appendChild(protectedCheckbox);
-        protectedCell.style.textAlign = 'center';
-
-        // Title
-        const titleCell = row.insertCell();
-        titleCell.textContent = initiative.title || 'No Title'; // Assign textContent
-        titleCell.style.fontWeight = initiative.isProtected ? 'bold' : 'normal';
-
-        // Id
-        const idCell = row.insertCell();
-        idCell.textContent = initiative.initiativeId; // Assign textContent
-        idCell.style.fontSize = '0.8em';
-        idCell.style.color = '#555';
-
-        // Description (Truncated with Tooltip)
-        const descCell = row.insertCell();
-        const descText = initiative.description || '';
-        descCell.textContent = descText.length > 50 ? descText.substring(0, 47) + '...' : descText; // Assign textContent
-        descCell.title = descText;
-        // --- End Fixed Cells ---
-
-        // --- Calculated Cells Placeholders ---
+        // Calculated Cells Placeholders
         const totalSdeCell = row.insertCell(); totalSdeCell.style.textAlign = 'right';
         const cumSdeCell = row.insertCell(); cumSdeCell.style.textAlign = 'right';
-        const statusCell = row.insertCell(); statusCell.style.textAlign = 'center';
+        const statusCell = row.insertCell(); statusCell.style.textAlign = 'center'; // Status cell defined here
         const atlBtlCell = row.insertCell(); atlBtlCell.style.fontWeight = 'bold'; atlBtlCell.style.textAlign = 'center';
-        // --- End Placeholders ---
 
-        // --- Dynamic Team Cells & Calculate Initiative Total ---
+        // Dynamic Team Cells & Calculate Initiative Total (No change)
         let initiativeTotalSde = 0;
         const assignmentsMap = new Map((initiative.assignments || []).map(a => [a.teamId, a.sdeYears]));
         teamHeaderMap.forEach((teamId, colIndex) => {
-             const teamCell = row.insertCell(); // Ensure cell is inserted
-             const currentEstimate = assignmentsMap.get(teamId) || 0;
-             const estimateInput = document.createElement('input'); /* ... set attributes ... */
-             estimateInput.type = 'number'; estimateInput.min = '0'; estimateInput.step = '0.25'; estimateInput.value = currentEstimate > 0 ? currentEstimate.toFixed(2) : ''; estimateInput.setAttribute('data-initiative-id', initiative.initiativeId); estimateInput.setAttribute('data-team-id', teamId); estimateInput.style.width = '60px'; estimateInput.style.textAlign = 'right'; estimateInput.style.border = 'none'; estimateInput.style.backgroundColor = 'transparent'; estimateInput.addEventListener('change', handleEstimateChange);
-             teamCell.appendChild(estimateInput); // Append input to cell
-             teamCell.style.textAlign = 'center'; teamCell.style.backgroundColor = currentEstimate > 0 ? '#fffacd' : (initiative.isProtected ? '#f8f9fa' : '#fff');
+             const teamCell = row.insertCell(); const currentEstimate = assignmentsMap.get(teamId) || 0; const estimateInput = document.createElement('input'); estimateInput.type = 'number'; estimateInput.min = '0'; estimateInput.step = '0.25'; estimateInput.value = currentEstimate > 0 ? currentEstimate.toFixed(2) : ''; estimateInput.setAttribute('data-initiative-id', initiative.initiativeId); estimateInput.setAttribute('data-team-id', teamId); estimateInput.style.width = '60px'; estimateInput.style.textAlign = 'right'; estimateInput.style.border = 'none'; estimateInput.style.backgroundColor = 'transparent'; estimateInput.addEventListener('change', handleEstimateChange); teamCell.appendChild(estimateInput); teamCell.style.textAlign = 'center'; teamCell.style.backgroundColor = currentEstimate > 0 ? '#fffacd' : (initiative.isProtected ? '#f8f9fa' : '#fff');
              initiativeTotalSde += currentEstimate;
          });
-        // --- End Dynamic Cells ---
 
         // --- Populate Calculated Cells ---
         totalSdeCell.textContent = initiativeTotalSde.toFixed(2);
         cumulativeSdeTotal += initiativeTotalSde;
         cumSdeCell.textContent = cumulativeSdeTotal.toFixed(2);
-        // Capacity Status logic...
-        if (cumulativeSdeTotal <= totalEffectiveBIS) { statusCell.textContent = '✅'; statusCell.title = `Within Effective BIS (${totalEffectiveBIS.toFixed(2)})`; statusCell.style.backgroundColor = '#d4edda';} else if (cumulativeSdeTotal <= totalFundedHC) { statusCell.textContent = '⚠️'; statusCell.title = `Exceeds Effective BIS (${totalEffectiveBIS.toFixed(2)}), Within Funded HC (${totalFundedHC.toFixed(2)})`; statusCell.style.backgroundColor = '#fff3cd'; } else { statusCell.textContent = '🛑'; statusCell.title = `Exceeds Funded HC (${totalFundedHC.toFixed(2)})`; statusCell.style.backgroundColor = '#f8d7da'; }
-        // ATL/BTL Status logic...
-        if (cumulativeSdeTotal <= atlBtlCapacityLimit) { atlBtlCell.textContent = 'ATL'; atlBtlCell.style.color = 'green'; if (selectedScenarioValue === 'effective' && cumulativeSdeTotal > totalFundedHC) { row.style.opacity = '0.8'; row.title = 'ATL (vs Effective BIS), but BTL vs Funded HC.'; } else if (selectedScenarioValue === 'funded' && cumulativeSdeTotal > totalEffectiveBIS) { row.style.opacity = '0.8'; row.title = 'ATL (vs Funded HC), but BTL vs Effective BIS.'; } else { row.style.opacity = '1'; row.title = ''; } } else { atlBtlCell.textContent = 'BTL'; atlBtlCell.style.color = 'red'; row.style.backgroundColor = '#ffeeee'; }
+
+        // *** REVISED Capacity Status Logic ***
+        // Compares against Team BIS and Funded HC for status icon, independent of ATL/BTL scenario
+        if (cumulativeSdeTotal <= totalTeamBIS) {
+            statusCell.textContent = '✅';
+            statusCell.title = `Within Team BIS (${totalTeamBIS.toFixed(2)})`;
+            statusCell.style.backgroundColor = '#d4edda'; // Green
+        } else if (cumulativeSdeTotal <= totalFundedHC) {
+            statusCell.textContent = '⚠️';
+            statusCell.title = `Exceeds Team BIS (${totalTeamBIS.toFixed(2)}), Within Funded HC (${totalFundedHC.toFixed(2)}). Requires hiring or away-team.`;
+            statusCell.style.backgroundColor = '#fff3cd'; // Yellow
+        } else { // Exceeds Funded HC
+            statusCell.textContent = '🛑';
+            statusCell.title = `Exceeds Funded HC (${totalFundedHC.toFixed(2)})`;
+            statusCell.style.backgroundColor = '#f8d7da'; // Red
+        }
+        // *** END REVISED Capacity Status Logic ***
+
+        // ATL/BTL Status (Uses the atlBtlCapacityLimit calculated based on selected scenario - No change here)
+        if (cumulativeSdeTotal <= atlBtlCapacityLimit) {
+            atlBtlCell.textContent = 'ATL'; atlBtlCell.style.color = 'green';
+            if (planningCapacityScenario === 'effective' && cumulativeSdeTotal > totalFundedHC) { row.style.opacity = '0.8'; row.title = 'ATL (vs Effective BIS), but BTL vs Funded HC.'; }
+            else if (planningCapacityScenario === 'team_bis' && cumulativeSdeTotal > totalEffectiveBIS) { row.style.opacity = '0.8'; row.title = 'ATL (vs Team BIS), but BTL vs Effective BIS.'; }
+            else if (planningCapacityScenario === 'team_bis' && cumulativeSdeTotal > totalFundedHC) { row.style.opacity = '0.8'; row.title = 'ATL (vs Team BIS), but BTL vs Funded HC.'; }
+            else if (planningCapacityScenario === 'funded' && cumulativeSdeTotal > totalEffectiveBIS) { row.style.opacity = '0.8'; row.title = 'ATL (vs Funded HC), but BTL vs Effective BIS.'; }
+             else { row.style.opacity = '1'; row.title = ''; }
+        } else {
+            atlBtlCell.textContent = 'BTL'; atlBtlCell.style.color = 'red';
+            row.style.backgroundColor = '#ffeeee';
+        }
         // --- End Calculated Cells ---
 
     }); // End sortedInitiatives.forEach
@@ -5982,7 +5991,7 @@ function generatePlanningTable() {
     container.appendChild(table);
     // --- End Populate Body ---
 
-    console.log("Finished generating planning table (Stable Version).");
+    console.log("Finished generating planning table (Capacity Status Refined).");
 } // --- End generatePlanningTable ---
 
 
