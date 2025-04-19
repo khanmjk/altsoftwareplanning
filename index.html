@@ -5761,23 +5761,56 @@ function showOrganogramView() {
 // Make it globally accessible (if not already done for previous edit)
 window.showOrganogramView = showOrganogramView;
 
-/** Shows the Engineer Table View */
+/** REVISED (v2) Shows the Engineer Table View - Hides nav/title/desc, Shows Back button */
 function showEngineerTableView() {
-    // Hide other views
-    document.getElementById('visualization').style.display = 'none';
-    document.getElementById('teamVisualization').style.display = 'none';
-    document.getElementById('teamBreakdown').style.display = 'none';
-    document.getElementById('serviceRelationshipsVisualization').style.display = 'none';
-    document.getElementById('dependencyVisualization').style.display = 'none';
-    document.getElementById('serviceDependenciesTable').style.display = 'none';
-    document.getElementById('systemEditForm').style.display = 'none';
-    document.getElementById('organogramView').style.display = 'none'; // Hide organogram
+    console.log("Switching to Engineer Table View (Focus Mode)...");
+    // Sticking with BROWSE mode as it's primarily viewing data.
 
-    // Generate and show engineer table
-    generateEngineerTable(); // Generate with default sort
-    document.getElementById('engineerTableView').style.display = 'block';
-    document.querySelector('.edit-menu').style.display = 'block'; // Keep view buttons visible
+    // --- Hide elements NOT needed in focused view ---
+    const mainNavBar = document.querySelector('.edit-menu');
+    const pageTitleH1 = document.getElementById('pageTitle');
+    const systemDescP = document.getElementById('systemDescription');
+    if (mainNavBar) mainNavBar.style.display = 'none'; else console.warn("Could not find .edit-menu to hide.");
+    if (pageTitleH1) pageTitleH1.style.display = 'none'; else console.warn("Could not find #pageTitle to hide.");
+    if (systemDescP) systemDescP.style.display = 'none'; else console.warn("Could not find #systemDescription to hide.");
+    // ---------------------------------------------------------
+
+    // --- Hide ALL other main view sections ---
+    const viewsToHide = [
+        'visualization', 'teamVisualization', 'teamBreakdown',
+        'serviceRelationshipsVisualization', 'dependencyVisualization', 'serviceDependenciesTable',
+        'systemEditForm', 'organogramView', 'planningView'
+        // NOTE: Do NOT hide 'engineerTableView' itself here
+    ];
+    viewsToHide.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.style.display = 'none';
+    });
+    const mainMenu = document.querySelector('.menu'); // Ensure main menu is hidden too
+    if (mainMenu) mainMenu.style.display = 'none';
+    // ----------------------------------------
+
+    // --- Generate and Show Engineer Table View ---
+    const engineerTableViewDiv = document.getElementById('engineerTableView');
+     if (engineerTableViewDiv) {
+        // Generate and show engineer table
+        generateEngineerTable(); // Generate with default sort
+        engineerTableViewDiv.style.display = 'block'; // Show the container
+     } else {
+        console.error("Engineer table view container not found!");
+     }
+    // -----------------------------------------
+
+    // --- Manage Button Visibility ---
+    const returnHomeBtn = document.getElementById('returnHomeButton');
+    const backButton = document.getElementById('backToSystemViewButton');
+    if(returnHomeBtn) returnHomeBtn.style.display = 'block'; // Keep Return Home visible
+    if(backButton) backButton.style.display = 'block'; // *** SHOW the Back button ***
+    // -----------------------------
 }
+
+// Make it globally accessible (if not already done)
+window.showEngineerTableView = showEngineerTableView;
 
 /*** Next sections is code for the Planning Feature **/
 
