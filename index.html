@@ -29,6 +29,20 @@
           font-size: 14px;
           z-index: 1000;
           }
+
+          #backToSystemViewButton {
+            position: fixed;
+            top: 20px;
+            /* Adjust 'right' value to position it left of Return Home */
+            /* Return home is at 20px, add its width + margin */
+            /* Let's estimate ~140px for Return Home + 10px margin + 10px gap */
+            right: 170px; /* Adjust this pixel value as needed */
+            padding: 10px 15px;
+            font-size: 14px;
+            z-index: 1000; /* Same stack level as Return Home */
+            display: none; /* Keep initial display none */
+          }          
+          
           .team-edit {
               margin-bottom: 15px;
               border: 1px solid #ccc;
@@ -2462,35 +2476,79 @@ function enterEditMode(creatingNewSystem) {
     showSystemEditForm(currentSystemData);
 }
 
-/** Show System Edit Form **/
-
+/** REVISED (v3) Show System Edit Form - Added Logging for Button Visibility */
 function showSystemEditForm(systemData) {
-    // Show the form
-    document.getElementById('systemEditForm').style.display = 'block';
-    // Hide other sections
-    document.getElementById('visualization').style.display = 'none';
-    document.getElementById('teamVisualization').style.display = 'none';
-    document.getElementById('teamBreakdown').style.display = 'none';
-    document.querySelector('.edit-menu').style.display = 'none';
-    document.querySelector('.menu').style.display = 'none'; 
-    document.getElementById('serviceRelationshipsVisualization').style.display = 'none';
-    document.getElementById('dependencyVisualization').style.display = 'none';    
-    document.getElementById('serviceDependenciesTable').style.display = 'none';    
-    document.getElementById('organogramView').style.display = 'none';
-    document.getElementById('engineerTableView').style.display = 'none';
+    console.log("Entering Edit System form (Focus Mode)...");
 
-    // Populate system name and description
-    document.getElementById('systemNameInput').value = systemData.systemName || '';
-    console.log("*** 0 document.getElementById('systemNameInput').value",document.getElementById('systemNameInput').value);
-    
-    document.getElementById('systemDescriptionInput').value = systemData.systemDescription || '';
+    // --- Hide elements NOT needed in focused view ---
+    const mainNavBar = document.querySelector('.edit-menu');
+    const pageTitleH1 = document.getElementById('pageTitle');
+    const systemDescP = document.getElementById('systemDescription');
+    if (mainNavBar) mainNavBar.style.display = 'none'; else console.warn("Could not find .edit-menu to hide.");
+    if (pageTitleH1) pageTitleH1.style.display = 'none'; else console.warn("Could not find #pageTitle to hide.");
+    if (systemDescP) systemDescP.style.display = 'none'; else console.warn("Could not find #systemDescription to hide.");
+    // ---------------------------------------------------------
 
-    // Populate services
-    displayServicesForEditing(systemData.services || [], 'editServicesManagement');
+    // --- Hide other main view sections ---
+    const viewsToHide = [
+        'visualization', 'teamVisualization', 'teamBreakdown',
+        'serviceRelationshipsVisualization', 'dependencyVisualization', 'serviceDependenciesTable',
+        'organogramView', 'engineerTableView', 'planningView'
+    ];
+    viewsToHide.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.style.display = 'none';
+    });
+    const mainMenu = document.querySelector('.menu'); // Ensure main menu is hidden too
+    if (mainMenu) mainMenu.style.display = 'none';
+    // ----------------------------------------
 
-    // Populate teams
-    displayTeamsForEditing(systemData.teams || []);
-    
+    // --- Show the Edit Form ---
+    const editFormDiv = document.getElementById('systemEditForm');
+    if (editFormDiv) {
+        editFormDiv.style.display = 'block';
+    } else {
+        console.error("System edit form container not found!");
+        return; // Don't proceed if form div is missing
+    }
+    // -------------------------
+
+    // --- Populate form fields (existing logic) ---
+    const nameInput = document.getElementById('systemNameInput');
+    const descInput = document.getElementById('systemDescriptionInput');
+    if(nameInput) nameInput.value = systemData?.systemName || '';
+    if(descInput) descInput.value = systemData?.systemDescription || '';
+    console.log("*** Populated form: Name=", nameInput?.value, "Desc=", descInput?.value);
+
+    // Populate services and teams (existing logic)
+    displayServicesForEditing(systemData?.services || [], 'editServicesManagement');
+    displayTeamsForEditing(systemData?.teams || []);
+    // ---------------------------------------------
+
+    // --- Manage Button Visibility (with extra logging) ---
+    console.log("Attempting to manage button visibility..."); // LOG 1
+    const returnHomeBtn = document.getElementById('returnHomeButton');
+    const backButton = document.getElementById('backToSystemViewButton');
+
+    // LOG 2: Check if buttons were found
+    console.log("Found Return Home Button:", returnHomeBtn);
+    console.log("Found Back Button:", backButton);
+
+    if(returnHomeBtn) {
+        console.log("Setting Return Home Button display to 'block'"); // LOG 3
+        returnHomeBtn.style.display = 'block';
+    } else {
+        console.warn("Return Home Button not found!"); // LOG 4
+    }
+
+    if(backButton) {
+        console.log("Setting Back Button display to 'block'"); // LOG 5
+        backButton.style.display = 'block'; // *** SHOW the Back button ***
+    } else {
+        console.warn("Back Button (#backToSystemViewButton) not found!"); // LOG 6
+    }
+    console.log("Finished managing button visibility."); // LOG 7
+    // --- End Manage Button Visibility ---
 }
 
 /** Helper to create Label + Input pairs (Revised for BIS display update) */
@@ -4183,37 +4241,18 @@ function saveAllChanges() {
     // -------------------------
 }
 
-/** Exit Edit Mode **/
-
+/** REVISED Exit Edit Mode - Calls showSystemOverview */
 function exitEditMode() {
     if (currentMode === Modes.CREATING) {
+        // If cancelling creation, go all the way home
         if (confirm('Are you sure you want to cancel creating the new system? All unsaved changes will be lost.')) {
-            currentMode = Modes.NAVIGATION;
-            currentSystemData = null;
-            // Clear the UI and return to navigation mode
-            returnToHome();
+            returnToHome(); // Calls the corrected returnToHome
         }
+        // If user cancels the confirm dialog, do nothing, stay in edit mode.
     } else {
-      // Hide the edit form
-      document.getElementById('systemEditForm').style.display = 'none';
-  
-      // Show the visualizations
-      document.getElementById('visualization').style.display = 'block';
-      document.getElementById('teamVisualization').style.display = 'block';
-      document.getElementById('teamBreakdown').style.display = 'block';
-  
-      // Update the page title and description
-      document.getElementById('pageTitle').innerText = currentSystemData.systemName;
-      document.getElementById('systemDescription').innerText = currentSystemData.systemDescription || '';
-      
-      document.getElementById('organogramView').style.display = 'none';
-      document.getElementById('engineerTableView').style.display = 'none';
-      
-      // Show the "Edit System" button
-      document.querySelector('.edit-menu').style.display = 'block';
-  
-      loadSavedSystem(currentSystemData.systemName);    
-      currentMode = Modes.BROWSING;
+        // If cancelling an edit, simply go back to the system overview
+        console.log("Exiting edit mode, returning to system overview...");
+        showSystemOverview(); // Use the dedicated function to restore the overview state
     }
 }
 
