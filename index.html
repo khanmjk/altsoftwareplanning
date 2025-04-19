@@ -321,17 +321,47 @@
               text-align: center !important; /* Use important if needed */
           }
 
-        /* --- NEW: Reduce font size and padding for planning table rows --- */
-        #planningTable tbody td {
-            padding: 2px 5px;   /* Reduce vertical padding significantly */
-            font-size: 0.85em; /* Make row font smaller than default - change font size to make the planning table more readable */
-            border: 1px solid #eee; /* Optional: keep a light border */
-            vertical-align: middle; /* Align content vertically in the middle */
+/* --- REVISED: Reduce font size and padding for BOTH planning table rows AND summary table rows --- */
+        #planningTable tbody td,
+        #teamLoadSummaryTable tbody td { /* Added summary table selector */
+            padding: 2px 3px;   /* Reduced vertical padding */
+            font-size: 0.80em; /* Smaller row font */
+            border: 1px solid #eee;
+            vertical-align: middle; /* Align content vertically */
         }
-        /* Make sure estimate inputs inside cells are also vertically aligned */
+        /* Also target inputs in the main planning table */
         #planningTable tbody td input[type="number"] {
              vertical-align: middle;
+            font-size: 0.85em; /* Smaller row font */             
         }
+        /* Style summary table footer cells similarly */
+        #teamLoadSummaryTable tfoot td {
+            padding: 2px 3px;
+            font-size: 0.80em; /* Apply same font size */
+            border: 1px solid #ccc; /* Keep slightly stronger border for footer */
+            background-color: #f8f9fa; /* Keep footer background */
+            text-align: center; /* Keep footer text centered */
+            vertical-align: middle;
+        }
+        /* Adjust the first footer cell (label) alignment */
+         #teamLoadSummaryTable tfoot td:first-child {
+            text-align: left;
+         }
+ 
+        /* --- REVISED: Control column widths for Team Load Summary Table (Attempt 2) --- */
+        #teamLoadSummaryTable thead th {
+             /* Base style if needed */
+        }
+        #teamLoadSummaryTable thead th:nth-child(1) { text-align: left; width: 10%; max-width: 30px} /* Team Name */
+        #teamLoadSummaryTable thead th:nth-child(2), /* Funded HC */
+        #teamLoadSummaryTable thead th:nth-child(3), /* Team BIS */
+        #teamLoadSummaryTable thead th:nth-child(4), /* Away BIS */
+        #teamLoadSummaryTable thead th:nth-child(5) { width: 8%; } /* Effective BIS */
+        #teamLoadSummaryTable thead th:nth-child(6) { width: 12%; max-width: 40px; } /* Assigned ATL SDEs */
+        #teamLoadSummaryTable thead th:nth-child(7) { width: 12%; max-width: 40px; } /* Scenario Capacity Limit */
+        #teamLoadSummaryTable thead th:nth-child(8) { width: 12%; max-width: 40px; } /* Remaining Capacity (ATL) */
+        #teamLoadSummaryTable thead th:nth-child(9) { width: 10%; } /* ATL Status */
+        /* -------------------------------------------------------------------------- */
 
           /* REVISED Style for clickable headers */
           #planningView h3[onclick],
@@ -545,7 +575,7 @@
         </h4>
         <div id="teamLoadSummaryContent" style="display: none; padding: 10px;">
              <p style="font-size: 0.9em; color: #555;">Shows team load based *only* on initiatives currently Above The Line (ATL) according to the selected scenario below.</p>
-             <table id="teamLoadSummaryTable" style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+             <table id="teamLoadSummaryTable" style="margin: 0 auto; border-collapse: collapse; font-size: 0.9em;">
                  <thead>
                      <tr style="background-color: #f2f2f2;">
                          <th style="border: 1px solid #ccc; padding: 5px;">Team Name</th>
