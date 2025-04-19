@@ -5707,23 +5707,59 @@ function handleSortClick(event) {
 }
 
 
-/** Shows the Organogram View */
+/** REVISED (v2) Shows the Organogram View - Hides nav/title/desc, Shows Back button */
 function showOrganogramView() {
-    // Hide other views
-    document.getElementById('visualization').style.display = 'none';
-    document.getElementById('teamVisualization').style.display = 'none';
-    document.getElementById('teamBreakdown').style.display = 'none';
-    document.getElementById('serviceRelationshipsVisualization').style.display = 'none';
-    document.getElementById('dependencyVisualization').style.display = 'none';
-    document.getElementById('serviceDependenciesTable').style.display = 'none';
-    document.getElementById('systemEditForm').style.display = 'none';
-    document.getElementById('engineerTableView').style.display = 'none'; // Hide engineer table
+    console.log("Switching to Organization Chart View (Focus Mode)...");
+    // Note: No specific mode change needed here unless required later, keep BROWSE? Or add ORG_VIEW mode?
+    // Let's stick with BROWSE for now, as it's primarily viewing data.
 
-    // Generate and show organogram
-    generateOrganogram();
-    document.getElementById('organogramView').style.display = 'block';
-    document.querySelector('.edit-menu').style.display = 'block'; // Keep view buttons visible
+    // --- Hide elements NOT needed in focused view ---
+    const mainNavBar = document.querySelector('.edit-menu');
+    const pageTitleH1 = document.getElementById('pageTitle');
+    const systemDescP = document.getElementById('systemDescription');
+    if (mainNavBar) mainNavBar.style.display = 'none'; else console.warn("Could not find .edit-menu to hide.");
+    if (pageTitleH1) pageTitleH1.style.display = 'none'; else console.warn("Could not find #pageTitle to hide.");
+    if (systemDescP) systemDescP.style.display = 'none'; else console.warn("Could not find #systemDescription to hide.");
+    // ---------------------------------------------------------
+
+    // --- Hide ALL other main view sections ---
+    const viewsToHide = [
+        'visualization', 'teamVisualization', 'teamBreakdown',
+        'serviceRelationshipsVisualization', 'dependencyVisualization', 'serviceDependenciesTable',
+        'systemEditForm', 'engineerTableView', 'planningView'
+        // NOTE: Do NOT hide 'organogramView' itself here
+    ];
+    viewsToHide.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.style.display = 'none';
+    });
+    const mainMenu = document.querySelector('.menu'); // Ensure main menu is hidden too
+    if (mainMenu) mainMenu.style.display = 'none';
+    // ----------------------------------------
+
+
+    // --- Generate and Show Organogram View ---
+    const organogramViewDiv = document.getElementById('organogramView');
+    if (organogramViewDiv) {
+         // Generate and show organogram
+         generateOrganogram(); // Call the generation function
+         organogramViewDiv.style.display = 'block'; // Show the container
+    } else {
+         console.error("Organogram view container not found!");
+    }
+    // ---------------------------------------
+
+
+    // --- Manage Button Visibility ---
+    const returnHomeBtn = document.getElementById('returnHomeButton');
+    const backButton = document.getElementById('backToSystemViewButton');
+    if(returnHomeBtn) returnHomeBtn.style.display = 'block'; // Keep Return Home visible
+    if(backButton) backButton.style.display = 'block'; // *** SHOW the Back button ***
+    // -----------------------------
 }
+
+// Make it globally accessible (if not already done for previous edit)
+window.showOrganogramView = showOrganogramView;
 
 /** Shows the Engineer Table View */
 function showEngineerTableView() {
