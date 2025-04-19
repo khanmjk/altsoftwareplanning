@@ -6439,24 +6439,32 @@ function toggleCollapsibleSection(contentId, indicatorId) {
     console.log(`Toggled section ${contentId} to ${isHidden ? 'visible' : 'hidden'}`);
 }
 
-/** REVISED Shows the Yearly Planning View **/
+/** REVISED (v7) Shows the Yearly Planning View - Hides main nav/title/desc */
 function showPlanningView() {
-    console.log("Switching to Yearly Planning View...");
-    currentMode = Modes.PLANNING;
+    console.log("Switching to Yearly Planning View (Focus Mode)...");
+    currentMode = Modes.PLANNING; // Set mode
+
+    // --- Hide elements NOT needed in focused planning view ---
+    const mainNavBar = document.querySelector('.edit-menu');
+    const pageTitleH1 = document.getElementById('pageTitle');
+    const systemDescP = document.getElementById('systemDescription');
+    if (mainNavBar) mainNavBar.style.display = 'none'; else console.warn("Could not find .edit-menu to hide.");
+    if (pageTitleH1) pageTitleH1.style.display = 'none'; else console.warn("Could not find #pageTitle to hide.");
+    if (systemDescP) systemDescP.style.display = 'none'; else console.warn("Could not find #systemDescription to hide.");
+    // ---------------------------------------------------------
 
     // --- Hide ALL other main view sections ---
-    const viewsToHide = [ /* ... viewsToHide array as before ... */
+    const viewsToHide = [
         'systemEditForm', 'visualization', 'teamVisualization', 'teamBreakdown',
         'serviceRelationshipsVisualization', 'dependencyVisualization', 'serviceDependenciesTable',
         'organogramView', 'engineerTableView'
+        // NOTE: Do NOT hide 'planningView' itself here
     ];
-    viewsToHide.forEach(id => { /* ... hide elements logic as before ... */
+    viewsToHide.forEach(id => {
         const element = document.getElementById(id);
         if (element) element.style.display = 'none';
     });
-    // Ensure edit menu is visible and main menu is hidden
-    const editMenu = document.querySelector('.edit-menu');
-    if (editMenu) editMenu.style.display = 'block';
+    // Ensure main menu is hidden (redundant if edit menu was visible, but safe)
     const mainMenu = document.querySelector('.menu');
     if (mainMenu) mainMenu.style.display = 'none';
     // ----------------------------------------
@@ -6473,36 +6481,38 @@ function showPlanningView() {
             planningTitle.innerText = `Yearly Planning View (No System Loaded)`;
         }
 
-        // Generate the table content (this will now include radio buttons)
-        generatePlanningTable();
-
-        // *** Default radio check REMOVED from here ***
-        // It's handled on initial creation within generatePlanningTable
+        // Generate the table content
+        generatePlanningTable(); // This also generates the summary table now
 
         // --- Populate Team Select & Attach Listeners ---
         populateTeamSelect();
-        // Add listeners only once
+        // Add listeners only once (using data attribute check)
         const addAssignButton = document.getElementById('addTeamAssignmentButton');
-        if (addAssignButton && !addAssignButton.hasAttribute('data-listener-attached')) { /* ... add listener ... */
-             addAssignButton.addEventListener('click', handleAddTeamAssignment);
-             addAssignButton.setAttribute('data-listener-attached', 'true');
+        if (addAssignButton && !addAssignButton.hasAttribute('data-listener-attached')) {
+            addAssignButton.addEventListener('click', handleAddTeamAssignment);
+            addAssignButton.setAttribute('data-listener-attached', 'true');
         }
         const addInitButton = document.getElementById('addInitiativeButton');
-        if (addInitButton && !addInitButton.hasAttribute('data-listener-attached')) { /* ... add listener ... */
+        if (addInitButton && !addInitButton.hasAttribute('data-listener-attached')) {
             addInitButton.addEventListener('click', handleAddInitiative);
             addInitButton.setAttribute('data-listener-attached', 'true');
         }
-        const savePlanButton = document.getElementById('savePlanButton');
-         if (savePlanButton && !savePlanButton.hasAttribute('data-listener-attached')) { /* ... add listener ... */
-            savePlanButton.addEventListener('click', handleSavePlan);
-            savePlanButton.setAttribute('data-listener-attached', 'true');
-         }
-       // *** NEW: Call height adjustment AFTER view is visible ***
-        adjustPlanningTableHeight(); 
+        // NOTE: Listener for savePlanButton is now attached within generatePlanningTable
+
+        // Adjust table height AFTER view is visible
+        adjustPlanningTableHeight();
+
     } else {
         console.error("Planning view container not found!");
     }
     // ---------------------------
+
+    // --- Ensure Return Home button is visible ---
+    // This button's visibility is usually handled when loading/creating a system,
+    // but we double-check it should be visible when any system view (like planning) is active.
+    const returnHomeBtn = document.getElementById('returnHomeButton');
+    if(returnHomeBtn) returnHomeBtn.style.display = 'block'; // Make sure it's visible
+    // --------------------------------------------
 }
 
 // --- Add New Initiative Logic ---
