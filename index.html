@@ -597,11 +597,6 @@
         </div>
     </div>
 
-
-     <div style="margin-bottom: 15px;">
-        <button type="button" id="savePlanButton" style="padding: 8px 12px; background-color: #007bff; color: white; border: none; cursor: pointer;">Save Current Plan Order &amp; Estimates</button>
-     </div>
-
     <div id="planningTableContainer">
         </div>
     <div id="addInitiativeSection" style="margin-top: 20px; padding: 15px; border: 1px solid #ccc;">
@@ -6200,8 +6195,30 @@ function generatePlanningTable() {
             <button type="button" id="btnEffectiveBIS" style="${effectiveButtonStyle}" title="Use Effective BIS (${totalEffectiveBIS.toFixed(2)}) = Team + Away" onclick="setPlanningScenario('effective')">Effective BIS</button>
             <button type="button" id="btnTeamBIS" style="${teamBisButtonStyle}" title="Use Team BIS (${totalTeamBIS.toFixed(2)}) = Only Team Members" onclick="setPlanningScenario('team_bis')">Team BIS</button>
             <button type="button" id="btnFundedHC" style="${fundedButtonStyle}" title="Use Funded HC (${totalFundedHC.toFixed(2)}) = Budgeted Headcount" onclick="setPlanningScenario('funded')">Funded HC</button>
+            <button type="button" id="savePlanButton"
+                    style="${baseButtonStyle} background-color: #dc3545; color: white; border-color: #dc3545; margin-left: 25px;"
+                    title="Save the current order and estimates for all initiatives in this plan.">
+                Save Current Plan Order & Estimates
+            </button>
         `;
-    }
+
+        // --- Re-attach listener AFTER button is added to DOM ---
+        // We need to find the button *after* innerHTML is set
+        setTimeout(() => { // Use timeout to ensure DOM update
+            const savePlanButton = document.getElementById('savePlanButton');
+            if (savePlanButton) {
+                 // Remove old listener if it exists from previous renders (safer)
+                 savePlanButton.removeEventListener('click', handleSavePlan);
+                 // Add the listener
+                 savePlanButton.addEventListener('click', handleSavePlan);
+                 console.log("Attached click listener to moved Save button.");
+            } else {
+                 console.error("Could not find moved Save button to attach listener.");
+            }
+       }, 0);
+       // --- End of setTimeout block ---    
+    
+    } // End of the if (scenarioControlDiv) block
     // Determine Overall ATL/BTL Limit based on scenario
     let atlBtlCapacityLimit;
     if (planningCapacityScenario === 'funded') { atlBtlCapacityLimit = totalFundedHC; }
