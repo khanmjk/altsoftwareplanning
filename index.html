@@ -320,7 +320,18 @@
           #planningTable td:nth-child(6) { /* Cumulative SDE Years Cell */
               text-align: center !important; /* Use important if needed */
           }
-          /* --- End Planning Table Enhancements --- */       
+
+        /* --- NEW: Reduce font size and padding for planning table rows --- */
+        #planningTable tbody td {
+            padding: 2px 5px;   /* Reduce vertical padding significantly */
+            font-size: 0.85em; /* Make row font smaller than default - change font size to make the planning table more readable */
+            border: 1px solid #eee; /* Optional: keep a light border */
+            vertical-align: middle; /* Align content vertically in the middle */
+        }
+        /* Make sure estimate inputs inside cells are also vertically aligned */
+        #planningTable tbody td input[type="number"] {
+             vertical-align: middle;
+        }
 
           /* REVISED Style for clickable headers */
           #planningView h3[onclick],
