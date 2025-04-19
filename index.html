@@ -286,14 +286,30 @@
       
           /* Make headers stick within the scrollable container */
           #planningTable thead th {
-              position: sticky;
-              top: 0;
-              z-index: 2; /* Ensure headers stay above tbody */
-              background-color: #f2f2f2; /* Ensure background is solid */
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background-color: #f2f2f2;
+            border: 1px solid #ccc;
+            text-align: left;
+            white-space: nowrap;
+            /* --- ADDED specific, reduced padding and font-size --- */
+            padding: 3px 5px;  /* Reduced vertical and horizontal padding */
+            font-size: 0.85em; /* Reduced font size */
+            /* ----------------------------------------------------- */
           }
            /* Ensure the background of the dynamic team headers is also solid */
-          #planningTable th[data-team-id] {
-              background-color: #e6f7ff; /* Match original dynamic header color */
+       #planningTable th[data-team-id] {
+            background-color: #e6f7ff;
+            writing-mode: vertical-lr;
+            text-orientation: mixed;
+            text-align: center;
+            /* --- Apply reduced padding/font AND adjust min/max width --- */
+            padding: 5px 2px;  /* Adjusted padding for vertical (more top/bottom, less left/right) */
+            font-size: 0.8em;  /* Further reduced font for vertical names */
+            min-width: 25px;   /* Reduced width */
+            max-width: 25px;   /* Reduced width */
+        
           }
       
       
@@ -629,7 +645,7 @@ const sampleTeamsDataStreamView = [
     {
         teamId: 'team1',
         teamName: 'User Experience Team',
-        teamIdentity: 'UX Avengers',
+        teamIdentity: 'Avengers',
         fundedHeadcount: 7,
         buildersInSeats: 5,
         engineers: [
@@ -646,7 +662,7 @@ const sampleTeamsDataStreamView = [
     {
         teamId: 'team2',
         teamName: 'Streaming Team',
-        teamIdentity: 'Stream Spartans',
+        teamIdentity: 'Spartans',
         fundedHeadcount: 5,
         buildersInSeats: 4,
         engineers: [
@@ -664,7 +680,7 @@ const sampleTeamsDataStreamView = [
     {
         teamId: 'team3',
         teamName: 'Content Team',
-        teamIdentity: 'Content Crusaders',
+        teamIdentity: 'Crusaders',
         fundedHeadcount: 4,
         buildersInSeats: 3,
         engineers: [
@@ -679,7 +695,7 @@ const sampleTeamsDataStreamView = [
     {
         teamId: 'team4',
         teamName: 'Recommendation Team',
-        teamIdentity: 'Recommenders of Olympus',
+        teamIdentity: 'Olympus',
         fundedHeadcount: 6,
         buildersInSeats: 4,
         engineers: [
@@ -698,7 +714,7 @@ const sampleTeamsDataStreamView = [
     {
         teamId: 'team5',
         teamName: 'Finance Team',
-        teamIdentity: 'Finance Falcons',
+        teamIdentity: 'Falcons',
         fundedHeadcount: 4,
         buildersInSeats: 3,
         engineers: [
@@ -713,7 +729,7 @@ const sampleTeamsDataStreamView = [
     {
         teamId: 'team6',
         teamName: 'Communication Team',
-        teamIdentity: 'Notification Ninjas',
+        teamIdentity: 'Ninjas',
         fundedHeadcount: 3,
         buildersInSeats: 2,
         engineers: [
@@ -727,7 +743,7 @@ const sampleTeamsDataStreamView = [
     {
         teamId: 'team7',
         teamName: 'Analytics Team',
-        teamIdentity: 'Data Dragons',
+        teamIdentity: 'Dragons',
         fundedHeadcount: 5,
         buildersInSeats: 3,
         engineers: [
@@ -742,7 +758,7 @@ const sampleTeamsDataStreamView = [
     {
         teamId: 'team8',
         teamName: 'Search Team',
-        teamIdentity: 'Search Spartans',
+        teamIdentity: 'Search',
         fundedHeadcount: 3,
         buildersInSeats: 2,
         engineers: [
@@ -6145,7 +6161,7 @@ function generatePlanningTable() {
             <button type="button" id="btnFundedHC" style="${fundedButtonStyle}" title="Use Funded HC (${totalFundedHC.toFixed(2)}) = Budgeted Headcount" onclick="setPlanningScenario('funded')">Funded HC</button>
         `;
     }
-    // Determine Overall ATL/BTL Limit based on scenario (No change)
+    // Determine Overall ATL/BTL Limit based on scenario
     let atlBtlCapacityLimit;
     if (planningCapacityScenario === 'funded') { atlBtlCapacityLimit = totalFundedHC; }
     else if (planningCapacityScenario === 'team_bis') { atlBtlCapacityLimit = totalTeamBIS; }
@@ -6154,14 +6170,30 @@ function generatePlanningTable() {
 
     generateTeamLoadSummaryTable();
 
-    // --- 4. Prepare Table Structure --- (No change)
+    // --- 4. Prepare Table Structure ---
     const tableWrapper = document.createElement('div'); tableWrapper.id = 'planningTableWrapper';
     const table = document.createElement('table'); table.style.width = '100%'; table.style.borderCollapse = 'collapse'; table.id = 'planningTable';
     const thead = document.createElement('thead'); const headerRow = document.createElement('tr');
     const fixedHeaders = ['Protected', 'Title', 'ID', 'Description', 'Total SDE Years', 'Cumulative SDE Years', 'Capacity Status', 'ATL/BTL'];
     fixedHeaders.forEach(text => { const th = document.createElement('th'); th.textContent = text; th.style.border = '1px solid #ccc'; th.style.padding = '8px'; th.style.textAlign = 'left'; th.style.whiteSpace = 'nowrap'; headerRow.appendChild(th); });
     const teamHeaderMap = new Map();
-    teams.forEach((team, index) => { const th = document.createElement('th'); const teamDisplayName = team.teamIdentity || team.teamName || team.teamId; th.textContent = teamDisplayName; th.title = `${teamDisplayName} (Funded: ${teamCapacities[team.teamId]?.fundedHC.toFixed(2)}, Team BIS: ${teamCapacities[team.teamId]?.teamBIS.toFixed(2)}, Eff. BIS: ${teamCapacities[team.teamId]?.effectiveBIS.toFixed(2)})`; th.setAttribute('data-team-id', team.teamId); th.style.border = '1px solid #ccc'; th.style.padding = '8px'; th.style.textAlign = 'center'; th.style.writingMode = 'vertical-lr'; th.style.textOrientation = 'mixed'; th.style.whiteSpace = 'nowrap'; th.style.minWidth = '35px'; th.style.maxWidth = '35px'; headerRow.appendChild(th); teamHeaderMap.set(fixedHeaders.length + index, team.teamId); });
+    teams.forEach((team, index) => { 
+      const th = document.createElement('th'); 
+      const teamDisplayIdentity = team.teamIdentity || team.teamId || 'Unknown'; // Use ID if identity missing
+      const teamFullName = team.teamName || teamDisplayIdentity; // Use full name or identity/ID for title
+      th.textContent = teamDisplayIdentity; // Display the identity
+      th.title = `Team: ${teamFullName}\nIdentity: ${teamDisplayIdentity}\n(Funded: ${teamCapacities[team.teamId]?.fundedHC.toFixed(2)}, Team BIS: ${teamCapacities[team.teamId]?.teamBIS.toFixed(2)}, Eff. BIS: ${teamCapacities[team.teamId]?.effectiveBIS.toFixed(2)})`; // Update title
+      th.setAttribute('data-team-id', team.teamId); th.style.border = '1px solid #ccc'; 
+      th.style.padding = '8px'; 
+      th.style.textAlign = 'center'; 
+      th.style.writingMode = 'vertical-lr'; 
+      th.style.textOrientation = 'mixed'; 
+      th.style.whiteSpace = 'nowrap'; 
+      th.style.minWidth = '35px'; 
+      th.style.maxWidth = '35px'; 
+      headerRow.appendChild(th); 
+      teamHeaderMap.set(fixedHeaders.length + index, team.teamId); 
+    });
     thead.appendChild(headerRow); table.appendChild(thead);
     const tbody = document.createElement('tbody'); tbody.id = 'planningTableBody';
 
