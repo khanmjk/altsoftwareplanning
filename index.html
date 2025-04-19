@@ -510,28 +510,34 @@
     <div id="planningScenarioControl" style="margin-bottom: 15px; padding: 8px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">
         </div>
 
-    <div id="teamLoadSummaryTableContainer" style="margin-bottom: 20px;">
-     <h4>Team Load Summary (for ATL Initiatives)</h4>
-        <p style="font-size: 0.9em; color: #555;">Shows team load based *only* on initiatives currently Above The Line (ATL) according to the selected scenario below.</p>
-          <table id="teamLoadSummaryTable" style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
-            <thead>
-                <tr style="background-color: #f2f2f2;">
-                    <th style="border: 1px solid #ccc; padding: 5px;">Team Name</th>
-                    <th style="border: 1px solid #ccc; padding: 5px;" title="Finance Approved Budget">Funded HC</th>
-                    <th style="border: 1px solid #ccc; padding: 5px;" title="Actual Team Members">Team BIS</th>
-                    <th style="border: 1px solid #ccc; padding: 5px;" title="Borrowed/Away Members">Away BIS</th>
-                    <th style="border: 1px solid #ccc; padding: 5px;" title="Team BIS + Away BIS">Effective BIS</th>
-                    <th style="border: 1px solid #ccc; padding: 5px;" title="SDEs assigned to this team from ATL initiatives only">Assigned ATL SDEs</th>
-                    <th style="border: 1px solid #ccc; padding: 5px;" title="Team's capacity based on selected scenario button below">Scenario Capacity Limit</th>
-                    <th style="border: 1px solid #ccc; padding: 5px;" title="Scenario Capacity Limit - Assigned ATL SDEs">Remaining Capacity (ATL)</th>
-                    <th style="border: 1px solid #ccc; padding: 5px;" title="Load status for ATL work based on Scenario Capacity Limit">ATL Status</th>
-                </tr>
-            </thead>
-            <tbody id="teamLoadSummaryTableBody">
-                </tbody>
-             <tfoot id="teamLoadSummaryTableFoot" style="font-weight: bold;">
-                 </tfoot>
-        </table>
+    <div id="teamLoadSummarySection" style="margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px;">
+        <h4 onclick="toggleCollapsibleSection('teamLoadSummaryContent', 'teamLoadSummaryToggle')"
+            style="cursor: pointer; margin: 0; padding: 10px; background-color: #e9ecef; border-bottom: 1px solid #ccc;"
+            title="Click to expand/collapse team load summary">
+            <span id="teamLoadSummaryToggle" class="toggle-indicator">(+) </span> Team Load Summary (for ATL Initiatives)
+        </h4>
+        <div id="teamLoadSummaryContent" style="display: none; padding: 10px;">
+             <p style="font-size: 0.9em; color: #555;">Shows team load based *only* on initiatives currently Above The Line (ATL) according to the selected scenario below.</p>
+             <table id="teamLoadSummaryTable" style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+                 <thead>
+                     <tr style="background-color: #f2f2f2;">
+                         <th style="border: 1px solid #ccc; padding: 5px;">Team Name</th>
+                         <th style="border: 1px solid #ccc; padding: 5px;" title="Finance Approved Budget">Funded HC</th>
+                         <th style="border: 1px solid #ccc; padding: 5px;" title="Actual Team Members">Team BIS</th>
+                         <th style="border: 1px solid #ccc; padding: 5px;" title="Borrowed/Away Members">Away BIS</th>
+                         <th style="border: 1px solid #ccc; padding: 5px;" title="Team BIS + Away BIS">Effective BIS</th>
+                         <th style="border: 1px solid #ccc; padding: 5px;" title="SDEs assigned to this team from ATL initiatives only">Assigned ATL SDEs</th>
+                         <th style="border: 1px solid #ccc; padding: 5px;" title="Team's capacity based on selected scenario button below">Scenario Capacity Limit</th>
+                         <th style="border: 1px solid #ccc; padding: 5px;" title="Scenario Capacity Limit - Assigned ATL SDEs">Remaining Capacity (ATL)</th>
+                         <th style="border: 1px solid #ccc; padding: 5px;" title="Load status for ATL work based on Scenario Capacity Limit">ATL Status</th>
+                     </tr>
+                 </thead>
+                 <tbody id="teamLoadSummaryTableBody">
+                     </tbody>
+                 <tfoot id="teamLoadSummaryTableFoot" style="font-weight: bold;">
+                      </tfoot>
+             </table>
+        </div>
     </div>
 
 
@@ -5921,33 +5927,50 @@ function setPlanningScenario(scenario) {
 window.setPlanningScenario = setPlanningScenario;
 
 /**
- * REVISED (v6.2) - Generates the Team Load Summary table - Center-aligns numbers.
+ * REVISED (v6.3) - Generates the Team Load Summary table - Fixes element selection for collapsible section.
  */
 function generateTeamLoadSummaryTable() {
-    console.log("Generating Team Load Summary Table (v6.2 - Center Align)..."); // Updated log version
+    console.log("Generating Team Load Summary Table (v6.3 - Fix Selector)...");
 
-    const summaryTableBody = document.getElementById('teamLoadSummaryTableBody');
-    const summaryTableFoot = document.getElementById('teamLoadSummaryTableFoot');
-    const summaryContainer = document.getElementById('teamLoadSummaryTableContainer');
+    // --- Get Container and Content Div ---
+    // We check for the *content* div where the table actually lives now.
+    const summaryContentDiv = document.getElementById('teamLoadSummaryContent');
+    const summaryContainer = document.getElementById('teamLoadSummarySection'); // Get the outer container too for title update
 
-    if (!summaryTableBody || !summaryTableFoot || !summaryContainer) {
-        console.error("Missing Team Load Summary table elements (tbody, tfoot, or container).");
+    if (!summaryContentDiv || !summaryContainer) {
+        console.error("Missing Team Load Summary elements (contentDiv or container). Cannot generate summary.");
+        // Avoid modifying the container if it doesn't exist properly
         return;
+    }
+
+    // --- Find tbody and tfoot *within* the contentDiv ---
+    const summaryTable = summaryContentDiv.querySelector('#teamLoadSummaryTable'); // Find table inside content
+    const summaryTableBody = summaryTable?.querySelector('#teamLoadSummaryTableBody'); // Find tbody inside table
+    const summaryTableFoot = summaryTable?.querySelector('#teamLoadSummaryTableFoot'); // Find tfoot inside table
+
+    if (!summaryTable || !summaryTableBody || !summaryTableFoot) {
+         console.error("Missing Team Load Summary table/tbody/tfoot elements *within* teamLoadSummaryContent.");
+         // Clear body/foot if they exist but maybe table is broken
+         if(summaryTableBody) summaryTableBody.innerHTML = '<tr ><td colspan="9" style="color:red;">Error: Cannot find table body.</td></tr>';
+         if(summaryTableFoot) summaryTableFoot.innerHTML = '';
+         return;
     }
     summaryTableBody.innerHTML = ''; // Clear previous rows
     summaryTableFoot.innerHTML = ''; // Clear previous footer
+    // --- End Element Selection Fix ---
 
     if (!currentSystemData || !currentSystemData.yearlyInitiatives || !currentSystemData.teams) {
-        summaryContainer.querySelector('h4').innerText = 'Team Load Summary (No System Data)';
-        summaryTableBody.innerHTML = '<tr><td colspan="9">Load a system with initiatives and teams.</td></tr>';
+        const summaryTitle = summaryContainer.querySelector('h4 > span:last-child'); // Get text part of h4
+        if(summaryTitle) summaryTitle.textContent = ' Team Load Summary (No System Data)'; // Update title text
+        summaryTableBody.innerHTML = '<tr ><td colspan="9">Load a system with initiatives and teams.</td></tr>';
         return;
     }
 
-    // --- Recalculate Capacities (Overall & Per Team) --- (No change)
+    // --- Recalculate Capacities (Overall & Per Team) ---
     let totalFundedHC = 0, totalTeamBIS = 0, totalAwayTeamBIS = 0;
-    const teamCapacities = {};
+    const teamCapacities = {}; // Store { fundedHC, teamBIS, effectiveBIS } per teamId
     const teams = currentSystemData.teams || [];
-    teams.forEach(team => { /* ... same capacity calculation and storage ... */
+    teams.forEach(team => {
         if (!team || !team.teamId) { console.warn("Skipping team with missing data during capacity calculation:", team); return; }
         const funded = team.fundedHeadcount ?? 0;
         const teamBIS = team.engineers?.length ?? 0;
@@ -5955,30 +5978,41 @@ function generateTeamLoadSummaryTable() {
         const effectiveBIS = teamBIS + awayBIS;
         totalFundedHC += funded; totalTeamBIS += teamBIS; totalAwayTeamBIS += awayBIS;
         teamCapacities[team.teamId] = { fundedHC: funded, teamBIS: teamBIS, awayBIS: awayBIS, effectiveBIS: effectiveBIS };
-     });
+    });
     const totalEffectiveBIS = totalTeamBIS + totalAwayTeamBIS;
 
-    // --- Determine Overall ATL/BTL Limit & Update Title --- (No change)
+    // --- Determine Overall ATL/BTL Limit & Update Title ---
     let atlBtlCapacityLimit; let scenarioName = '';
     if (planningCapacityScenario === 'funded') { atlBtlCapacityLimit = totalFundedHC; scenarioName = 'Funded HC'; }
     else if (planningCapacityScenario === 'team_bis') { atlBtlCapacityLimit = totalTeamBIS; scenarioName = 'Team BIS'; }
-    else { atlBtlCapacityLimit = totalEffectiveBIS; scenarioName = 'Effective BIS'; }
-    summaryContainer.querySelector('h4').innerText = `Team Load Summary (for ATL Initiatives - Scenario: ${scenarioName})`;
+    else { atlBtlCapacityLimit = totalEffectiveBIS; scenarioName = 'Effective BIS'; } // Default to effective
 
-    // --- Calculate Assigned ATL SDEs per Team --- (No change)
-    const sortedInitiatives = [...currentSystemData.yearlyInitiatives].sort((a, b) => { /* ... sort ... */ if (a.isProtected && !b.isProtected) return -1; if (!a.isProtected && b.isProtected) return 1; return 0; });
+    const summaryTitleHeader = summaryContainer.querySelector('h4'); // Get the H4 element itself
+    if (summaryTitleHeader) {
+        // Reconstruct the title content carefully
+        const toggleSpan = summaryTitleHeader.querySelector('span.toggle-indicator');
+        summaryTitleHeader.textContent = ` Team Load Summary (for ATL Initiatives - Scenario: ${scenarioName})`; // Set text content AFTER span
+        if (toggleSpan) {
+             summaryTitleHeader.insertBefore(toggleSpan, summaryTitleHeader.firstChild); // Prepend the toggle span
+        }
+    }
+
+
+    // --- Calculate Assigned ATL SDEs per Team ---
+    const sortedInitiatives = [...currentSystemData.yearlyInitiatives].sort((a, b) => { if (a.isProtected && !b.isProtected) return -1; if (!a.isProtected && b.isProtected) return 1; return 0; });
     let overallCumulativeSde = 0; let teamAtlSdeAssigned = {};
-    teams.forEach(team => { if(team && team.teamId) teamAtlSdeAssigned[team.teamId] = 0; });
-    sortedInitiatives.forEach(initiative => { /* ... same ATL SDE calculation ... */
+    teams.forEach(team => { if(team && team.teamId) teamAtlSdeAssigned[team.teamId] = 0; }); // Initialize
+    sortedInitiatives.forEach(initiative => {
         let initiativeTotalSde = 0;
         (initiative.assignments || []).forEach(a => { initiativeTotalSde += a.sdeYears; });
         overallCumulativeSde += initiativeTotalSde;
+        // Only include assignments if the initiative is considered ATL based on the *overall* limit
         if (overallCumulativeSde <= atlBtlCapacityLimit) {
             (initiative.assignments || []).forEach(assignment => {
                  if (teamAtlSdeAssigned.hasOwnProperty(assignment.teamId)) { teamAtlSdeAssigned[assignment.teamId] += assignment.sdeYears; }
-             });
+            });
         }
-     });
+    });
 
     // --- Populate Summary Table Body ---
     let totalAssignedAtlSdeOverall = 0;
@@ -5996,68 +6030,58 @@ function generateTeamLoadSummaryTable() {
         let statusText = '✅ OK'; let statusColor = 'green'; if (remainingCapacity < 0) { statusText = '🛑 Overloaded'; statusColor = 'red'; } else if (remainingCapacity < 0.5 && teamScenarioLimit > 0) { statusText = '⚠️ Near Limit'; statusColor = 'darkorange'; }
 
         const row = summaryTableBody.insertRow();
-        // Populate cells
+        // Populate cells (same as before)
         row.insertCell().textContent = team.teamIdentity || team.teamName || teamId; // Col 0
-        row.insertCell().textContent = (capacity?.fundedHC ?? 0).toFixed(2);          // Col 1
-        row.insertCell().textContent = (capacity?.teamBIS ?? 0).toFixed(2);           // Col 2
-        row.insertCell().textContent = (capacity?.awayBIS ?? 0).toFixed(2);           // Col 3
-        row.insertCell().textContent = (capacity?.effectiveBIS ?? 0).toFixed(2);      // Col 4
-        row.insertCell().textContent = assignedAtlSde.toFixed(2);                     // Col 5
-        row.insertCell().textContent = teamScenarioLimit.toFixed(2);                  // Col 6
-        const remainingCell = row.insertCell();                                       // Col 7
+        row.insertCell().textContent = (capacity?.fundedHC ?? 0).toFixed(2);        // Col 1
+        row.insertCell().textContent = (capacity?.teamBIS ?? 0).toFixed(2);         // Col 2
+        row.insertCell().textContent = (capacity?.awayBIS ?? 0).toFixed(2);         // Col 3
+        row.insertCell().textContent = (capacity?.effectiveBIS ?? 0).toFixed(2);    // Col 4
+        row.insertCell().textContent = assignedAtlSde.toFixed(2);                   // Col 5
+        row.insertCell().textContent = teamScenarioLimit.toFixed(2);                // Col 6
+        const remainingCell = row.insertCell();                                     // Col 7
               remainingCell.textContent = remainingCapacity.toFixed(2);
               remainingCell.style.color = remainingCapacity < 0 ? 'red' : 'green';
-        const statusCell = row.insertCell();                                          // Col 8
+        const statusCell = row.insertCell();                                        // Col 8
               statusCell.textContent = statusText;
               statusCell.style.color = statusColor;
 
-        // *** Apply Styling (including center alignment) ***
+        // Apply Styling (including center alignment)
         const cells = Array.from(row.cells);
         cells.forEach((cell, index) => {
             cell.style.border = '1px solid #ccc';
             cell.style.padding = '4px 6px';
-            // Default to center for numbers, specific for others
-            if (index === 0) { // Team Name
-                cell.style.textAlign = 'left';
-            } else if (index === cells.length - 1) { // Status Cell
-                 cell.style.textAlign = 'center';
-            } else { // Numerical columns
-                 cell.style.textAlign = 'center';
-            }
+             if (index === 0) { cell.style.textAlign = 'left';} // Team Name
+             else if (index === cells.length - 1) { cell.style.textAlign = 'center'; } // Status Cell
+             else { cell.style.textAlign = 'center'; } // Numerical columns
         });
     }); // End teams.forEach
 
      // --- Populate Footer ---
      const footerRow = summaryTableFoot.insertRow();
-     footerRow.insertCell().textContent = 'Totals';                     // Col 0
-     footerRow.insertCell().textContent = totalFundedHC.toFixed(2);       // Col 1
-     footerRow.insertCell().textContent = totalTeamBIS.toFixed(2);        // Col 2
-     footerRow.insertCell().textContent = totalAwayTeamBIS.toFixed(2);      // Col 3
-     footerRow.insertCell().textContent = totalEffectiveBIS.toFixed(2);   // Col 4
+     footerRow.insertCell().textContent = 'Totals';                              // Col 0
+     footerRow.insertCell().textContent = totalFundedHC.toFixed(2);              // Col 1
+     footerRow.insertCell().textContent = totalTeamBIS.toFixed(2);               // Col 2
+     footerRow.insertCell().textContent = totalAwayTeamBIS.toFixed(2);           // Col 3
+     footerRow.insertCell().textContent = totalEffectiveBIS.toFixed(2);          // Col 4
      footerRow.insertCell().textContent = totalAssignedAtlSdeOverall.toFixed(2); // Col 5
-     footerRow.insertCell().textContent = totalScenarioCapacityOverall.toFixed(2); // Col 6
-     const totalRemainingCell = footerRow.insertCell();                   // Col 7
+     footerRow.insertCell().textContent = totalScenarioCapacityOverall.toFixed(2);// Col 6
+     const totalRemainingCell = footerRow.insertCell();                         // Col 7
            totalRemainingCell.textContent = (totalScenarioCapacityOverall - totalAssignedAtlSdeOverall).toFixed(2);
            totalRemainingCell.style.color = (totalScenarioCapacityOverall - totalAssignedAtlSdeOverall) < 0 ? 'red' : 'green';
-     footerRow.insertCell().textContent = '';                           // Col 8 (Status)
+     footerRow.insertCell().textContent = '';                                     // Col 8 (Status)
 
-     // *** Apply Footer Styling (including center alignment) ***
+     // Apply Footer Styling
      const footerCells = Array.from(footerRow.cells);
      footerCells.forEach((cell, index) => {
          cell.style.border = '1px solid #ccc';
          cell.style.padding = '4px 6px';
          cell.style.backgroundColor = '#f8f9fa';
-         // Default to center for numbers, specific for others
-          if (index === 0) { // Totals label
-              cell.style.textAlign = 'left';
-          } else if (index === footerCells.length - 1) { // Status Cell (empty)
-              cell.style.textAlign = 'center'; // Or leave default
-          } else { // Numerical columns
-              cell.style.textAlign = 'center';
-          }
+         if (index === 0) { cell.style.textAlign = 'left'; } // Totals label
+         else if (index === footerCells.length - 1) { cell.style.textAlign = 'center';} // Status Cell
+         else { cell.style.textAlign = 'center'; } // Numerical columns
      });
 
-     console.log("Finished generating Team Load Summary Table (v6.2 - Center Align).");
+     console.log("Finished generating Team Load Summary Table (v6.3 - Fix Selector).");
 }
 
 
