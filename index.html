@@ -530,7 +530,8 @@
 </div>
 
 <!-- Return to Home Button -->
-<button id="returnHomeButton" onclick="returnToHome()">Return to Home</button>
+<button id="backToSystemViewButton" onclick="showSystemOverview()" style="display: none; margin-right: 10px;">Back to System Overview</button>
+<button id="returnHomeButton" onclick="returnToHome()" style="display: none;">Return to Home</button>
 
 <!-- added some new views 8th april 25 -->
 <div id="organogramView" style="display:none; margin-top: 20px;">
@@ -4308,51 +4309,62 @@ function createNewSystem() {
     enterEditMode(true); // Pass true flag for creation mode
 }
 
-/** REVISED Return to Home - Fix errors and hide new views */
+/** REVISED Return to Home - Hides Back Button Too */
 function returnToHome() {
-    console.log("Returning to home view..."); // Added log
+    console.log("Returning to home view (Clearing System)...");
+    const wasSystemLoaded = !!currentSystemData; // Check if a system *was* loaded before clearing
     currentMode = Modes.NAVIGATION;
     currentSystemData = null; // Reset loaded system data
 
     // --- Hide ALL possible view sections ---
-    // Core Views
-    const coreViews = ['systemEditForm', 'visualization', 'teamVisualization', 'teamBreakdown', 'serviceRelationshipsVisualization', 'dependencyVisualization', 'serviceDependenciesTable'];
-    coreViews.forEach(id => {
+    const allViews = [
+        'systemEditForm', 'visualization', 'teamVisualization', 'teamBreakdown',
+        'serviceRelationshipsVisualization', 'dependencyVisualization', 'serviceDependenciesTable',
+        'organogramView', 'engineerTableView', 'planningView' // Include planning view
+    ];
+    allViews.forEach(id => {
         const element = document.getElementById(id);
         if (element) element.style.display = 'none';
     });
+    // --- End Hide Views ---
 
-     // New Views
-     const newViews = ['organogramView', 'engineerTableView', 'planningView'];
-     newViews.forEach(id => {
-         const element = document.getElementById(id);
-         if (element) element.style.display = 'none';
-     });
+    // --- Restore Top Elements to Default ---
+    const pageTitleH1 = document.getElementById('pageTitle');
+    const systemDescP = document.getElementById('systemDescription');
+    const editMenu = document.querySelector('.edit-menu');
+    const mainMenu = document.querySelector('.menu'); // The initial menu
 
-     // Menus
-     const editMenu = document.querySelector('.edit-menu');
-     if (editMenu) editMenu.style.display = 'none';
-     // ----------------------------------------
+    if(pageTitleH1) {
+         pageTitleH1.innerText = "Architecture Visualization Tool"; // Default title
+         pageTitleH1.style.display = 'block'; // Make visible
+    }
+    if(systemDescP) {
+         systemDescP.innerText = "Load a previously saved system or create a new system..."; // Default text
+         systemDescP.style.display = 'block'; // Make visible
+    }
+    // Hide edit menu, show main menu
+    if (editMenu) editMenu.style.display = 'none';
+    if (mainMenu) mainMenu.style.display = 'block'; // Show main load/create menu
+     // --- End Restore Top ---
 
-    // Show the main menu
-    const mainMenu = document.querySelector('.menu');
-    if (mainMenu) mainMenu.style.display = 'block';
 
-    // Update page title and description
-    const pageTitle = document.getElementById('pageTitle');
-    if(pageTitle) pageTitle.innerText = "Architecture Visualization Tool";
-    const sysDesc = document.getElementById('systemDescription');
-    if(sysDesc) sysDesc.innerText = "Load a previously saved system or create a new system...";
+     // --- Hide BOTH Action Buttons ---
+     const returnHomeBtn = document.getElementById('returnHomeButton');
+     const backButton = document.getElementById('backToSystemViewButton'); // Get the Back button
+     if(returnHomeBtn) returnHomeBtn.style.display = 'none'; // Hide on true home screen
+     if(backButton) backButton.style.display = 'none'; // *** ADDED: Hide Back button too ***
+     // -----------------------------
 
-     // Clear any potential leftover popups (like the system list)
-     const systemListDiv = document.getElementById('systemListDiv');
-     if (systemListDiv) {
-         document.body.removeChild(systemListDiv);
-     }
-     // Remove lingering tooltips
-     d3.selectAll('.tooltip').remove();
 
-     console.log("Home view displayed.");
+    // Clear any potential leftover popups (like the system list)
+    const systemListDiv = document.getElementById('systemListDiv');
+    if (systemListDiv) {
+        document.body.removeChild(systemListDiv);
+    }
+    // Remove lingering tooltips
+    d3.selectAll('.tooltip').remove();
+
+    console.log("Home view displayed.");
 }
 
 function resetToDefaults() {
@@ -6439,7 +6451,102 @@ function toggleCollapsibleSection(contentId, indicatorId) {
     console.log(`Toggled section ${contentId} to ${isHidden ? 'visible' : 'hidden'}`);
 }
 
-/** REVISED (v7) Shows the Yearly Planning View - Hides main nav/title/desc */
+/** REVISED (v2) function to show the main system overview - Restores all views */
+function showSystemOverview() {
+    console.log("Navigating back to system overview...");
+    if (!currentSystemData) {
+        console.warn("showSystemOverview called but no system is loaded. Returning home instead.");
+        returnToHome(); // Go home if no system is loaded
+        return;
+    }
+    currentMode = Modes.Browse; // Set appropriate mode
+
+    // --- Hide ALL specific sub-view sections ---
+    // (These are views you navigate *away* from the overview to)
+    const viewsToHide = [
+        'systemEditForm',       // Edit Form
+        'organogramView',       // Org Chart View
+        'engineerTableView',    // Engineer Table View
+        'planningView'          // Planning View
+    ];
+    viewsToHide.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.style.display = 'none';
+    });
+    // --- End Hide Sub-Views ---
+
+    // --- Show System Overview Title/Desc/Nav ---
+    const pageTitleH1 = document.getElementById('pageTitle');
+    const systemDescP = document.getElementById('systemDescription');
+    const editMenu = document.querySelector('.edit-menu'); // The system-specific menu
+
+    if (pageTitleH1) {
+         pageTitleH1.innerText = currentSystemData.systemName || "System Overview";
+         pageTitleH1.style.display = 'block'; // Make visible
+    }
+    if(systemDescP) {
+         systemDescP.innerText = currentSystemData.systemDescription || "";
+         systemDescP.style.display = 'block'; // Make visible
+    }
+    // Show the edit menu
+    if (editMenu) editMenu.style.display = 'block';
+     // --- End Show Title/Desc/Nav ---
+
+    // --- *** ADDED: Show and Regenerate Overview Content *** ---
+    const viewsToShowAndGenerate = [
+        'visualization',                // System Visualization
+        'teamVisualization',            // Team Relationships Visualization
+        'teamBreakdown',                // Team Breakdown Table
+        'serviceRelationshipsVisualization', // Service Relationships Visualization
+        'dependencyVisualization',      // Service Dependency Visualization
+        'serviceDependenciesTable'      // Service Dependencies Table
+    ];
+    viewsToShowAndGenerate.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.style.display = 'block'; else console.warn(`Element not found for overview: ${id}`);
+    });
+
+    // Call generation functions (similar to loadSavedSystem)
+    try {
+        // Ensure platformDependencies are up-to-date before visualizing
+        buildGlobalPlatformDependencies();
+
+        generateVisualization(currentSystemData);
+        generateTeamVisualization(currentSystemData);
+        generateTeamTable(currentSystemData); // Regenerate team table
+        populateServiceSelection();           // Repopulate dropdowns
+        updateServiceVisualization();       // Update service viz
+        populateDependencyServiceSelection(); // Repopulate dropdowns
+        updateDependencyVisualization();    // Update dependency viz
+        generateServiceDependenciesTable();   // Regenerate dependencies table
+
+        console.log("Regenerated system overview visualizations and tables.");
+    } catch (error) {
+        console.error("Error regenerating system overview content:", error);
+        // Optionally display an error message to the user in the UI
+    }
+    // --- *** End Show and Regenerate Overview Content *** ---
+
+
+     // --- Manage Button Visibility ---
+     const backButton = document.getElementById('backToSystemViewButton');
+     const returnHomeButton = document.getElementById('returnHomeButton');
+     // We are IN system overview, so hide the "Back" button
+     if (backButton) backButton.style.display = 'none';
+     // Keep "Return Home" button visible (since a system is loaded)
+     if (returnHomeButton) returnHomeButton.style.display = 'block';
+     // -----------------------------
+
+     console.log("System overview displayed.");
+}
+
+// Make it globally accessible (if not already done)
+window.showSystemOverview = showSystemOverview;
+
+// Make it globally accessible
+window.showSystemOverview = showSystemOverview;
+
+/** REVISED (v8) Shows the Yearly Planning View - Hides nav/title/desc, Shows Back button */
 function showPlanningView() {
     console.log("Switching to Yearly Planning View (Focus Mode)...");
     currentMode = Modes.PLANNING; // Set mode
@@ -6464,8 +6571,7 @@ function showPlanningView() {
         const element = document.getElementById(id);
         if (element) element.style.display = 'none';
     });
-    // Ensure main menu is hidden (redundant if edit menu was visible, but safe)
-    const mainMenu = document.querySelector('.menu');
+    const mainMenu = document.querySelector('.menu'); // Ensure main menu is hidden too
     if (mainMenu) mainMenu.style.display = 'none';
     // ----------------------------------------
 
@@ -6507,12 +6613,12 @@ function showPlanningView() {
     }
     // ---------------------------
 
-    // --- Ensure Return Home button is visible ---
-    // This button's visibility is usually handled when loading/creating a system,
-    // but we double-check it should be visible when any system view (like planning) is active.
+    // --- Manage Button Visibility ---
     const returnHomeBtn = document.getElementById('returnHomeButton');
-    if(returnHomeBtn) returnHomeBtn.style.display = 'block'; // Make sure it's visible
-    // --------------------------------------------
+    const backButton = document.getElementById('backToSystemViewButton');
+    if(returnHomeBtn) returnHomeBtn.style.display = 'block'; // Keep Return Home visible
+    if(backButton) backButton.style.display = 'block'; // *** SHOW the Back button ***
+    // -----------------------------
 }
 
 // --- Add New Initiative Logic ---
