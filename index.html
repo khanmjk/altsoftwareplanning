@@ -30,6 +30,13 @@
           z-index: 1000;
           }
 
+          #systemDescription {
+              text-align: center; /* Add this line to center the text */
+              /* You can add other styles here too if needed, like margin */
+              margin-top: 10px;
+              margin-bottom: 20px;
+          }
+          
           #backToSystemViewButton {
             position: fixed;
             top: 20px;
@@ -439,8 +446,8 @@
 <body>
 
 <!-- Updated Heading with ID -->
-<h1 id="pageTitle">Architecture Visualization Tool</h1>
-<p id="systemDescription">Load a previously saved system or create a new system</p>
+<h1 id="pageTitle">Software Management Tools</h1>
+<p id="systemDescription">Load a previously saved system or create a new software system</p>
 
 <!-- Menu for loading systems 
 <div class="menu">
@@ -452,7 +459,7 @@
 <div class="edit-menu" style="display: none;">
     <button id="editSystemButton" onclick="enterEditMode()">Edit System</button>
     <button id="viewOrgChartButton" onclick="showOrganogramView()">View Org Chart</button>
-    <button id="viewEngineerListButton" onclick="showEngineerTableView()">View Engineer List</button>
+    <button id="viewEngineerListButton" onclick="showEngineerTableView()">View Engineers in Org</button>
     <button id="manageYearPlanButton" onclick="showPlanningView()">Manage Year Plan</button>
     <button id="deleteSystemButton" onclick="deleteSystem()">Delete System</button>
 </div>
@@ -541,7 +548,7 @@
 <!-- Menu for loading systems and creating new systems -->
 <div class="menu">
     <button onclick="showSavedSystems()">Load Saved System</button>
-    <button onclick="createNewSystem()">Create New Software System</button>
+    <button onclick="createNewSystem()">Create New System</button>
     <!-- Add the Reset to Defaults button -->
     <button onclick="resetToDefaults()">Reset to Defaults</button>    
 </div>
@@ -552,7 +559,6 @@
 
 <!-- added some new views 8th april 25 -->
 <div id="organogramView" style="display:none; margin-top: 20px;">
-    <h2>Organization Chart</h2>
     <div id="organogramToolbar" style="margin-bottom: 10px;">
         </div>
     <div id="organogramContent" style="border: 1px solid #ccc; padding: 15px;">
@@ -593,8 +599,6 @@
 </div>
 
 <div id="planningView" style="display:none; margin-top: 20px;">
-    <h2 id="planningViewTitle">Yearly Planning View</h2>
-
     <div id="planningCapacitySummary" style="margin-bottom: 15px; font-weight: bold;">
         </div>
 
@@ -1562,8 +1566,8 @@ function switchView(targetViewId, newMode = null) {
         // Update Title/Description
         if (pageTitleH1 && currentSystemData) {
             let titleSuffix = '';
-            if (targetViewId === 'planningView') titleSuffix = ' - Yearly Planning';
-            else if (targetViewId === 'organogramView') titleSuffix = ' - Organization Chart';
+            if (targetViewId === 'planningView') titleSuffix = ' - Year Plan';
+            else if (targetViewId === 'organogramView') titleSuffix = ' - Organization Overview';
             else if (targetViewId === 'engineerTableView') titleSuffix = ' - Engineer List';
             else if (targetViewId === 'systemEditForm') titleSuffix = ' - Edit System';
             else if (targetViewId === 'visualizationCarousel' || targetViewId === 'serviceDependenciesTable') titleSuffix = ' - Overview';
@@ -1606,8 +1610,8 @@ function switchView(targetViewId, newMode = null) {
         currentSystemData = null; // Clear loaded system
 
         // Restore default Title/Description
-        if (pageTitleH1) { pageTitleH1.innerText = "Architecture Visualization Tool"; pageTitleH1.style.display = 'block'; }
-        if (systemDescP) { systemDescP.innerText = "Load a previously saved system or create a new system..."; systemDescP.style.display = 'block'; }
+        if (pageTitleH1) { pageTitleH1.innerText = "Software Management Tools"; pageTitleH1.style.display = 'block'; }
+        if (systemDescP) { systemDescP.innerText = "Load a previously saved system or create a new system..."; systemDescP.style.display = 'block';}
 
         // Show main menu, hide edit menu
         if (mainMenu) mainMenu.style.display = 'block';
