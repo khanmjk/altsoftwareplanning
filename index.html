@@ -81,6 +81,45 @@
               border: 1px solid #ddd;
               padding: 10px;
           }    
+
+          /* --- Visualization Carousel Styles --- */
+          #visualizationCarousel {
+              position: relative;
+              max-width: 90%;   /* <-- Changed to match service table */
+              margin: 20px auto;
+              border: 1px solid #ddd;
+              padding: 10px;
+              display:none; /* Initially hidden */
+          }
+          
+          #visualizationCarousel .carousel-item {
+              /* display: none; */ /* Initially set in HTML, JS will manage */
+              /* Optional: Add transition effects later if desired */
+              /* transition: opacity 0.5s ease-in-out; */
+              /* opacity: 0; */
+              width: 100%; /* Ensure items take full width */
+          }
+          
+          #visualizationCarousel .carousel-item.active {
+              display: block; /* Show the active item */
+              /* opacity: 1; */
+          }
+          
+          /* Style for the central title */
+          #visualizationTitle {
+              display: inline-block; /* Allows margin */
+              min-width: 250px;      /* Give it some space */
+              text-align: center;
+          }
+          
+          /* Optional: Basic button styling */
+          #visualizationCarousel button {
+              padding: 5px 10px;
+              cursor: pointer;
+          }
+          /* --- End Carousel Styles --- */
+
+
           /* Adjust SVG size for service visualization */
           #serviceSvg {
               width: 100%;
@@ -419,60 +458,52 @@
 </div>
 
 <!-- Visualization Section -->
-<div id="visualization" style="display:none;">
-    <h2>System Visualization</h2>
-    <svg id="systemSvg" style="width: 800px; height: 800px;"></svg>
-    <!-- Legend -->
-    <div id="legend"></div>
-</div>
+<div id="visualizationCarousel" style="position: relative; max-width: 800px; margin: 20px auto; border: 1px solid #ddd; padding: 10px; display:none;"> <div style="text-align: center; margin-bottom: 10px;">
+        <button onclick="navigateVisualizations(-1)">&lt; Previous</button>
+        <span id="visualizationTitle" style="margin: 0 15px; font-weight: bold; font-size: 1.1em;">System Visualization</span> <button onclick="navigateVisualizations(1)">Next &gt;</button>
+    </div>
 
-<!-- Team Relationships Visualization -->
-<div id="teamVisualization" style="display:none;">
-    <h2>Team Relationships Visualization</h2>
-    <svg id="teamSvg" style="width: 800px; height: 800px;"></svg>
-    <!-- Legend -->
-    <div id="teamLegend"></div>
-</div>
+    <div id="visualization" class="carousel-item" style="display: block;"> <svg id="systemSvg" style="width: 100%; height: 600px; border: 1px solid #ccc;"></svg>
+        <div id="legend" class="legend"></div>
+    </div>
 
-<!-- Service Relationships Visualization -->
-<div id="serviceRelationshipsVisualization" style="display:none;">
-    <h2>Service Relationships Visualization</h2>
-    <select id="serviceSelection" onchange="updateServiceVisualization()">
-        <!-- Options will be populated dynamically -->
-    </select>
-    <svg id="serviceSvg"></svg>
-    <!-- Legend -->
-    <div id="serviceLegend"></div>
-</div>
+    <div id="teamVisualization" class="carousel-item" style="display: none;">
+        <svg id="teamSvg" style="width: 100%; height: 600px; border: 1px solid #ccc;"></svg>
+        <div id="teamLegend" class="legend"></div>
+    </div>
 
-<!-- Upstream/Downstream Visualization -->
-<div id="dependencyVisualization" style="display:none;">
-    <h2>Service Dependency Visualization</h2>
-    <select id="dependencyServiceSelection" onchange="updateDependencyVisualization()">
-        <!-- Options will be populated dynamically -->
-    </select>
-    <svg id="dependencySvg" style="width: 800px; height: 600px;"></svg>
-    <!-- Legend -->
-    <div id="dependencyLegend"></div>
-</div>
+    <div id="serviceRelationshipsVisualization" class="carousel-item" style="display: none;">
+        <select id="serviceSelection" onchange="updateServiceVisualization()" style="margin-bottom: 5px; display: block; margin-left: auto; margin-right: auto;">
+            </select>
+        <svg id="serviceSvg" style="width: 100%; height: 600px; border: 1px solid #ccc;"></svg>
+        <div id="serviceLegend" class="legend"></div>
+    </div>
 
-<div id="serviceDependenciesTable" style="display:none;">
+    <div id="dependencyVisualization" class="carousel-item" style="display: none;">
+        <select id="dependencyServiceSelection" onchange="updateDependencyVisualization()" style="margin-bottom: 5px; display: block; margin-left: auto; margin-right: auto;">
+            </select>
+        <svg id="dependencySvg" style="width: 100%; height: 600px; border: 1px solid #ccc;"></svg>
+        <div id="dependencyLegend" class="legend"></div>
+    </div>
+
+</div>
+<div id="serviceDependenciesTable" style="max-width: 90%; margin: 20px auto; display:none;">
     <h2>Service Dependencies Table</h2>
-    <table>
-        <thead>
-        <tr>
-            <th>Service Name</th>
-            <th>Description</th>
-            <th>Owning Team</th>
-            <th>Upstream Dependencies (Services Depended On)</th>
-            <th>Platform Dependencies</th>
-            <th>Downstream Dependencies (Services That Depend On This Service)</th>
-        </tr>
-        </thead>
-        <tbody>
-            <!-- Rows will be populated dynamically -->
-        </tbody>
-    </table>
+    <div style="overflow-x: auto;"> <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+            <tr>
+                <th>Service Name</th>
+                <th>Description</th>
+                <th>Owning Team</th>
+                <th>Upstream Dependencies (Services Depended On)</th>
+                <th>Platform Dependencies</th>
+                <th>Downstream Dependencies (Services That Depend On This Service)</th>
+            </tr>
+            </thead>
+            <tbody>
+                </tbody>
+        </table>
+    </div>
 </div>
 
 
@@ -658,6 +689,16 @@ const Modes = {
 };
 let currentMode = Modes.NAVIGATION;
 let planningCapacityScenario = 'effective'; // Default to 'effective'
+
+// --- Carousel State ---
+let currentVisualizationIndex = 0;
+const visualizationItems = [
+    { id: 'visualization', title: 'System Visualization' },
+    { id: 'teamVisualization', title: 'Team Relationships Visualization' },
+    { id: 'serviceRelationshipsVisualization', title: 'Service Relationships Visualization' },
+    { id: 'dependencyVisualization', title: 'Service Dependency Visualization' }
+];
+// ----------------------
 
 /** Sample Data for StreamView **/
 
@@ -1604,14 +1645,13 @@ function loadSavedSystem(systemName) {
     document.querySelector('.menu').style.display = 'none';
     document.querySelector('.edit-menu').style.display = 'block';
 
-    // --- Display ONLY the overview visualization and service sections ---
-    document.getElementById('visualization').style.display = 'block';
-    document.getElementById('teamVisualization').style.display = 'block';
-    // document.getElementById('teamBreakdown').style.display = 'block'; // *** REMOVED THIS LINE ***
-    document.getElementById('serviceRelationshipsVisualization').style.display = 'block';
-    document.getElementById('dependencyVisualization').style.display = 'block';
-    document.getElementById('serviceDependenciesTable').style.display = 'block';
-    // --- End Display Overview ---
+    // --- Show the Carousel Container and the Dependencies Table ---
+    const carouselDiv = document.getElementById('visualizationCarousel');
+    const serviceDepsTableDiv = document.getElementById('serviceDependenciesTable');
+
+    if (carouselDiv) carouselDiv.style.display = 'block'; else console.warn("Carousel container not found");
+    if (serviceDepsTableDiv) serviceDepsTableDiv.style.display = 'block'; else console.warn("Service Dependencies Table container not found");
+    // --- End Show Containers ---
 
     // --- Populate Dropdowns & Regenerate Overview Content ---
     populateServiceSelection();
@@ -1624,7 +1664,8 @@ function loadSavedSystem(systemName) {
     updateDependencyVisualization();
     generateServiceDependenciesTable();
     // --- End Regeneration ---
-
+    
+    showVisualization(0); // Show the first visualization in the carousel initially
 
     // --- Manage Buttons ---
     const returnHomeBtn = document.getElementById('returnHomeButton');
@@ -1638,57 +1679,165 @@ function loadSavedSystem(systemName) {
 // Make globally accessible
 window.loadSavedSystem = loadSavedSystem;
 
-/** Generate System Visualization **/
+/**
+ * REVISED (v2) - Shows the visualization item at the specified index and hides others.
+ * Updates the carousel title and triggers specific D3 updates *after* display.
+ * @param {number} index - The index of the visualization item to show.
+ */
+function showVisualization(index) {
+    const carouselContainer = document.getElementById('visualizationCarousel');
+    if (!carouselContainer) {
+        console.error("Carousel container #visualizationCarousel not found.");
+        return; // Exit if carousel isn't relevant
+    }
 
+    const items = carouselContainer.querySelectorAll('.carousel-item');
+    const titleElement = document.getElementById('visualizationTitle');
+
+    if (index < 0 || index >= items.length || items.length === 0) {
+        console.error("Invalid visualization index or no items:", index);
+        // Optionally hide all or show a default message
+        items.forEach(item => item.style.display = 'none');
+        if (titleElement) titleElement.textContent = 'No Visualization';
+        return;
+    }
+
+    // Hide all items first
+    items.forEach((item, i) => {
+        item.style.display = 'none'; // Ensure all are hidden initially
+        item.classList.remove('active'); // Remove active class if using transitions later
+    });
+
+    // Get the target item *before* trying to display it
+    const targetItemId = visualizationItems[index]?.id; // Safely get ID
+    const targetItem = targetItemId ? document.getElementById(targetItemId) : null;
+
+    if (targetItem) {
+         // *** Make the target item visible FIRST ***
+         targetItem.style.display = 'block';
+         targetItem.classList.add('active'); // Add active class
+
+         console.log(`Showing visualization: ${visualizationItems[index].title}`);
+
+         // Update the title
+         if (titleElement) {
+             titleElement.textContent = visualizationItems[index].title;
+         }
+
+         // *** NOW trigger the specific D3 generation/update for the VISIBLE item ***
+         // This ensures the D3 functions calculate dimensions based on the visible container
+         switch (targetItemId) {
+            case 'visualization':
+                // Assume generateVisualization was called on load/overview.
+                // If layout issues persist, uncommenting this might help, but could be slow.
+                // generateVisualization(currentSystemData);
+                console.log("System Visualization shown.");
+                break;
+            case 'teamVisualization':
+                // Assume generateTeamVisualization was called on load/overview.
+                // generateTeamVisualization(currentSystemData);
+                 console.log("Team Visualization shown.");
+                break;
+            case 'serviceRelationshipsVisualization':
+                // Repopulate dropdown and trigger D3 update for service-specific views
+                populateServiceSelection();
+                updateServiceVisualization(); // This calls generateServiceVisualization
+                console.log("Service Relationships shown & updated.");
+                break;
+            case 'dependencyVisualization':
+                 // Repopulate dropdown and trigger D3 update for service-specific views
+                populateDependencyServiceSelection();
+                updateDependencyVisualization(); // This calls generateDependencyForceVisualization
+                console.log("Dependency Visualization shown & updated.");
+                break;
+         }
+         // *** End D3 Trigger ***
+
+    } else {
+        console.error("Target visualization element not found for ID:", targetItemId);
+        if (titleElement) titleElement.textContent = 'Error';
+    }
+
+    currentVisualizationIndex = index; // Update the global index
+}
+
+/**
+ * Navigates the visualization carousel forward or backward.
+ * @param {number} direction - 1 for next, -1 for previous.
+ */
+function navigateVisualizations(direction) {
+    let newIndex = currentVisualizationIndex + direction;
+    const totalItems = visualizationItems.length;
+
+    // Wrap around
+    if (newIndex >= totalItems) {
+        newIndex = 0; // Wrap to the first item
+    } else if (newIndex < 0) {
+        newIndex = totalItems - 1; // Wrap to the last item
+    }
+
+    showVisualization(newIndex);
+}
+
+/**
+ * REVISED (v2) - Generates the main system visualization (Services, APIs, Platforms).
+ * - Fixes static graph issue by stopping drag event propagation to prevent zoom interference.
+ * - Ensures consistent use of event.subject in drag handler.
+ */
 function generateVisualization(systemData) {
     let svg = d3.select('#systemSvg');
     svg.selectAll('*').remove(); // Clear any existing content
 
-    // Set SVG dimensions
-    const width = parseInt(svg.style('width')) || 800;
+    // --- Get SVG Dimensions ---
+    const container = document.getElementById('visualization');
+    if (!container) {
+        console.error("Container #visualization not found for generateVisualization.");
+        return;
+    }
+    const svgRect = container.getBoundingClientRect();
+    const width = svgRect.width > 0 ? svgRect.width : 800;
     const height = parseInt(svg.style('height')) || 600;
+    console.log(`generateVisualization calculated width: ${width}, height: ${height}`);
+    // --- End Dimensions ---
 
-    // Append a group element that will contain all the graph elements
-    let graphGroup = svg.append('g');
+    // --- Zoom Setup ---
+    let graphGroup = svg.append('g').attr('class', 'graph-group'); // Container for zoomable elements
 
-    // Define the zoom behavior
     let zoom = d3.zoom()
-        .scaleExtent([0.5, 5])
+        .scaleExtent([0.1, 5]) // Adjusted scale extent slightly
         .on('zoom', zoomed);
 
-    // Apply the zoom behavior to the SVG
+    // Apply zoom AFTER appending graphGroup, call it on SVG element
     svg.call(zoom);
 
-    // Define the zoomed function
     function zoomed(event) {
-        graphGroup.attr('transform', event.transform);
+        graphGroup.attr('transform', event.transform); // Apply transform to the group
     }
+    // --- End Zoom Setup ---
 
     // Define node radius
     const radius = 10;
 
-    // Prepare nodes and links data
+    // --- Prepare Nodes and Links ---
     let nodes = [];
     let links = [];
     let nodeMap = {};
 
-    // Create a color scale based on teams
     const teamColorScale = d3.scaleOrdinal(d3.schemeCategory10);
-    const teamIds = systemData.teams.map(team => team.teamId);
+    const teamIds = (systemData.teams || []).map(team => team.teamId);
     teamColorScale.domain(teamIds);
 
     // Create nodes for services and APIs
-    systemData.services.forEach(service => {
+    (systemData.services || []).forEach(service => {
         let teamId = service.owningTeamId || 'unassigned';
         let nodeColor = teamColorScale(teamId);
 
         nodes.push({ id: service.serviceName, type: 'service', teamId: teamId, color: nodeColor });
         nodeMap[service.serviceName] = { id: service.serviceName, type: 'service' };
 
-        service.apis.forEach(api => {
+        (service.apis || []).forEach(api => {
             nodes.push({ id: api.apiName, type: 'api', teamId: teamId, color: nodeColor });
             nodeMap[api.apiName] = { id: api.apiName, type: 'api' };
-            // Link API to its service
             links.push({
                 source: api.apiName,
                 target: service.serviceName,
@@ -1698,13 +1847,12 @@ function generateVisualization(systemData) {
     });
 
     // Add platform dependencies as nodes
-    systemData.services.forEach(service => {
-        service.platformDependencies.forEach(platform => {
+    (systemData.services || []).forEach(service => {
+        (service.platformDependencies || []).forEach(platform => {
             if (!nodeMap[platform]) {
-                nodes.push({ id: platform, type: 'platform', color: '#a04040' }); // Platforms have their own color
+                nodes.push({ id: platform, type: 'platform', color: '#a04040' }); // Distinct platform color
                 nodeMap[platform] = { id: platform, type: 'platform' };
             }
-            // Link service to platform
             links.push({
                 source: service.serviceName,
                 target: platform,
@@ -1713,10 +1861,9 @@ function generateVisualization(systemData) {
         });
     });
 
-    // Create links based on service dependencies
-    systemData.services.forEach(service => {
-        // Service dependencies
-        service.serviceDependencies.forEach(dependency => {
+    // Create links based on dependencies
+    (systemData.services || []).forEach(service => {
+        (service.serviceDependencies || []).forEach(dependency => {
             if (nodeMap[dependency]) {
                 links.push({
                     source: service.serviceName,
@@ -1725,9 +1872,8 @@ function generateVisualization(systemData) {
                 });
             }
         });
-        // API dependencies
-        service.apis.forEach(api => {
-            api.dependentApis.forEach(depApi => {
+        (service.apis || []).forEach(api => {
+            (api.dependentApis || []).forEach(depApi => {
                 if (nodeMap[depApi]) {
                     links.push({
                         source: api.apiName,
@@ -1738,33 +1884,27 @@ function generateVisualization(systemData) {
             });
         });
     });
+    // --- End Node/Link Prep ---
 
-    // Calculate the number of nodes
+    // --- Simulation Setup ---
     const nodeCount = nodes.length;
-
-    // Adjust force strengths based on node count
     let chargeStrength = -300;
     let linkDistance = 100;
+    if (nodeCount > 100) { chargeStrength = -100; linkDistance = 30; }
+    else if (nodeCount > 50) { chargeStrength = -200; linkDistance = 50; }
 
-    if (nodeCount > 100) {
-        chargeStrength = -100;
-        linkDistance = 30;
-    } else if (nodeCount > 50) {
-        chargeStrength = -200;
-        linkDistance = 50;
-    }
-
-    // Set up the simulation
     let simulation = d3.forceSimulation(nodes)
         .force('link', d3.forceLink(links).id(d => d.id).distance(linkDistance))
         .force('charge', d3.forceManyBody().strength(chargeStrength))
         .force('center', d3.forceCenter(width / 2, height / 2))
         .force('x', d3.forceX(width / 2).strength(0.1))
         .force('y', d3.forceY(height / 2).strength(0.1))
-        .force('collide', d3.forceCollide(radius + 20));
+        .force('collide', d3.forceCollide(radius + 20)); // Increased collision radius slightly
+    // --- End Simulation ---
 
-    // Add links to the graphGroup
-    let link = graphGroup.append('g')
+    // --- Draw Elements (Append to graphGroup) ---
+    let link = graphGroup.append('g') // Append links to graphGroup
+        .attr('class', 'links')
         .attr('stroke', '#aaa')
         .selectAll('line')
         .data(links)
@@ -1778,8 +1918,8 @@ function generateVisualization(systemData) {
         })
         .attr('stroke-width', 1.5);
 
-    // Add nodes to the graphGroup
-    let node = graphGroup.append('g')
+    let node = graphGroup.append('g') // Append nodes to graphGroup
+        .attr('class', 'nodes')
         .attr('stroke', '#fff')
         .attr('stroke-width', 1.5)
         .selectAll('circle')
@@ -1787,86 +1927,87 @@ function generateVisualization(systemData) {
         .join('circle')
         .attr('r', radius)
         .attr('fill', d => d.color)
-        .call(drag(simulation));
+        .call(drag(simulation)); // Apply drag behavior
 
-    // Add labels to the graphGroup
-    let labels = graphGroup.append('g')
+    let labels = graphGroup.append('g') // Append labels to graphGroup
+        .attr('class', 'labels')
         .selectAll('text')
         .data(nodes)
         .join('text')
-        .attr('dx', 12)
-        .attr('dy', 4)
+        .attr('dx', 0) // Center horizontally over node
+        .attr('dy', -radius - 5) // Position above node
+        .attr('text-anchor', 'middle') // Center text
+        .style('font-size', '10px') // Smaller font size
+        .style('pointer-events', 'none') // Prevent text from blocking node events
         .text(d => d.id);
+    // --- End Draw Elements ---
 
-    // Tooltip
-    let tooltip = d3.select('body').append('div')
+    // --- Tooltip ---
+    let tooltip = d3.select('body').selectAll('.tooltip').data([null]).join('div') // Reuse or create tooltip
         .attr('class', 'tooltip')
         .style('opacity', 0);
 
     node.on('mouseover', function(event, d) {
         let info = '';
         if (d.type === 'service') {
-            let service = systemData.services.find(s => s.serviceName === d.id);
-            let team = systemData.teams.find(t => t.teamId === service.owningTeamId);
-            info = `<strong>Service Name:</strong> ${service.serviceName}<br>
-                    <strong>Description:</strong> ${service.serviceDescription}<br>
-                    <strong>Team:</strong> ${team ? `${team.teamName} (${team.teamIdentity})` : 'Unassigned'}`;
+            let service = (systemData.services || []).find(s => s.serviceName === d.id);
+            let team = service ? (systemData.teams || []).find(t => t.teamId === service.owningTeamId) : null;
+            info = `<strong>Service:</strong> ${d.id}<br>
+                    <strong>Team:</strong> ${team ? (team.teamName || team.teamIdentity) : 'Unassigned'}<br>
+                    <strong>Description:</strong> ${service?.serviceDescription || 'N/A'}`;
         } else if (d.type === 'api') {
-            let api;
-            let serviceName;
-            systemData.services.forEach(service => {
-                service.apis.forEach(a => {
-                    if (a.apiName === d.id) {
-                        api = a;
-                        serviceName = service.serviceName;
-                    }
+            let api, serviceName;
+            (systemData.services || []).forEach(service => {
+                (service.apis || []).forEach(a => {
+                    if (a.apiName === d.id) { api = a; serviceName = service.serviceName; }
                 });
             });
-            info = `<strong>API Name:</strong> ${api.apiName}<br>
-                    <strong>Description:</strong> ${api.apiDescription}<br>
-                    <strong>Service:</strong> ${serviceName}`;
+            info = `<strong>API:</strong> ${d.id}<br>
+                    <strong>Service:</strong> ${serviceName || 'N/A'}<br>
+                    <strong>Description:</strong> ${api?.apiDescription || 'N/A'}`;
         } else if (d.type === 'platform') {
-            info = `<strong>Platform Dependency:</strong> ${d.id}`;
+            info = `<strong>Platform:</strong> ${d.id}`;
         }
-        tooltip.transition()
-            .duration(200)
-            .style('opacity', .9);
-        tooltip.html(info)
-            .style('left', (event.pageX + 10) + 'px')
-            .style('top', (event.pageY - 28) + 'px');
+        tooltip.transition().duration(200).style('opacity', .9);
+        tooltip.html(info).style('left', (event.pageX + 10) + 'px').style('top', (event.pageY - 28) + 'px');
     }).on('mouseout', function() {
-        tooltip.transition()
-            .duration(500)
-            .style('opacity', 0);
+        tooltip.transition().duration(500).style('opacity', 0);
     });
+    // --- End Tooltip ---
 
-    // Update positions on each tick
+    // --- Simulation Tick ---
     simulation.on('tick', () => {
         node
             .attr('cx', d => d.x = Math.max(radius, Math.min(width - radius, d.x)))
             .attr('cy', d => d.y = Math.max(radius, Math.min(height - radius, d.y)));
         labels
             .attr('x', d => d.x)
-            .attr('y', d => d.y - radius - 5);
+            .attr('y', d => d.y - radius - 5); // Keep label position relative to node
         link
             .attr('x1', d => d.source.x)
             .attr('y1', d => d.source.y)
             .attr('x2', d => d.target.x)
             .attr('y2', d => d.target.y);
     });
+    // --- End Tick ---
 
-    // Drag functions
+    // --- Drag Functions (with fix) ---
     function drag(simulation) {
-        function dragstarted(event) {
+        function dragstarted(event, d) {
+            // *** FIX: Stop event propagation to prevent zoom/pan interference ***
+            if (event.sourceEvent) { // Ensure sourceEvent exists
+                 event.sourceEvent.stopPropagation();
+            }
+            // *******************************************************************
             if (!event.active) simulation.alphaTarget(0.3).restart();
-            event.subject.fx = event.subject.x;
+            event.subject.fx = event.subject.x; // Use event.subject which is the datum 'd'
             event.subject.fy = event.subject.y;
         }
-        function dragged(event) {
+        function dragged(event, d) {
             event.subject.fx = event.x;
             event.subject.fy = event.y;
         }
-        function dragended(event) {
+        function dragended(event, d) {
             if (!event.active) simulation.alphaTarget(0);
             event.subject.fx = null;
             event.subject.fy = null;
@@ -1876,36 +2017,52 @@ function generateVisualization(systemData) {
             .on('drag', dragged)
             .on('end', dragended);
     }
+    // --- End Drag Functions ---
 
-    // Add legend for teams
-    let legendData = systemData.teams.map(team => ({
-        teamIdentity: team.teamIdentity,
+    // --- Legend ---
+    d3.select('#legend').selectAll('*').remove(); // Clear previous legend in the dedicated div
+    let legendData = (systemData.teams || []).map(team => ({
+        teamIdentity: team.teamIdentity || team.teamName || team.teamId, // Use identity, fallback to name/ID
         color: teamColorScale(team.teamId)
     }));
+    // Add platform legend item
+    legendData.push({ teamIdentity: 'Platform Dependency', color: '#a04040' });
 
     let legend = d3.select('#legend').selectAll('.legend-item')
         .data(legendData)
         .enter().append('div')
-        .attr('class', 'legend-item');
+        .attr('class', 'legend-item'); // Use existing CSS class
 
     legend.append('div')
         .style('width', '12px')
         .style('height', '12px')
         .style('background-color', d => d.color)
+        .style('border-radius', '50%') // Circles for legend
         .style('margin-right', '5px');
 
     legend.append('span')
         .text(d => d.teamIdentity);
-}
-/** Generate Team Relationships Visualization **/
+    // --- End Legend ---
+} // --- End generateVisualization ---
 
+
+/** Generate Team Relationships Visualization **/
 function generateTeamVisualization(systemData) {
     let svg = d3.select('#teamSvg');
     svg.selectAll('*').remove(); // Clear any existing content
 
     // Set SVG dimensions
-    const width = parseInt(svg.style('width')) || 800;
+    // Get SVG element and its parent container
+    const container = document.getElementById('teamVisualization'); // Get the container div
+    if (!container) {
+         console.error("Container #teamVisualization not found for generateTeamVisualization.");
+         return;
+    }
+    const svgRect = container.getBoundingClientRect(); // Get dimensions of the container
+    const width = svgRect.width > 0 ? svgRect.width : 800; // Use container width or default
+    // Keep height fixed or get from container style if needed
     const height = parseInt(svg.style('height')) || 600;
+    console.log(`generateTeamVisualization calculated width: ${width}, height: ${height}`);
 
     // Define node radius
     const radius = 20;
@@ -2384,6 +2541,10 @@ function showSystemEditForm(systemData) {
         'serviceRelationshipsVisualization', 'dependencyVisualization', 'serviceDependenciesTable',
         'organogramView', 'engineerTableView', 'planningView'
     ];
+    
+    const carouselContainer = document.getElementById('visualizationCarousel');
+    if (carouselContainer) carouselContainer.style.display = 'none';    
+    
     viewsToHide.forEach(id => {
         const element = document.getElementById(id);
         if (element) element.style.display = 'none';
@@ -4234,6 +4395,10 @@ function createNewSystem() {
     document.getElementById('organogramView').style.display = 'none';
     document.getElementById('engineerTableView').style.display = 'none';
     // Display the system information for editing using the standard edit mode function
+
+    const carouselContainer = document.getElementById('visualizationCarousel');
+    if (carouselContainer) carouselContainer.style.display = 'none';    
+
     enterEditMode(true); // Pass true flag for creation mode
 }
 
@@ -4250,6 +4415,10 @@ function returnToHome() {
         'serviceRelationshipsVisualization', 'dependencyVisualization', 'serviceDependenciesTable',
         'organogramView', 'engineerTableView', 'planningView' // Include planning and organogram view
     ];
+
+    const carouselContainer = document.getElementById('visualizationCarousel');
+    if (carouselContainer) carouselContainer.style.display = 'none';
+
     allViews.forEach(id => {
         const element = document.getElementById(id);
         if (element) element.style.display = 'none';
@@ -4376,8 +4545,17 @@ function generateServiceVisualization(services, selectedServiceName) {
     let nodeMap = {};
    
     // Set SVG dimensions
-    const width = parseInt(svg.style('width')) || 800;
+    // Get SVG element and its parent container
+    const container = document.getElementById('serviceRelationshipsVisualization'); // Get the container div
+    if (!container) {
+         console.error("Container #serviceRelationshipsVisualization not found for generateServiceVisualization.");
+         return;
+    }
+    const svgRect = container.getBoundingClientRect(); // Get dimensions of the container
+    const width = svgRect.width > 0 ? svgRect.width : 800; // Use container width or default
+    // Keep height fixed or get from container style if needed
     const height = parseInt(svg.style('height')) || 600;
+    console.log(`generateServiceVisualization calculated width: ${width}, height: ${height}`);
 
     // Define node radius
     const radius = 20;
@@ -4752,300 +4930,272 @@ function buildDependencyTree(serviceName) {
     return treeData;
 }
 
-//The function uses a force-directed graph to display service dependencies, handling circular dependencies by linking back to existing nodes.
-//Nodes represent services and platforms.
-//Links represent dependencies, with arrowheads to indicate direction.
-//The graph is interactive, with zoom/pan and node dragging.
-//Labels are added to nodes, and tooltips provide additional information
+/**
+ * REVISED (v3) - Generates the force-directed graph for service dependencies.
+ * - Adds safeguard for SVG selection.
+ * - Initializes link/node/label selections early to prevent ReferenceError in ticked.
+ * - Draws legend INSIDE the main SVG element for cohesive layout.
+ */
 function generateDependencyForceVisualization(selectedServiceName) {
+    console.log(`Generating Dependency Force Viz for: ${selectedServiceName}`); // Log entry
+
     const svg = d3.select('#dependencySvg');
+
+    // --- SAFEGUARD ---
+    if (!svg || svg.empty()) {
+        console.error("generateDependencyForceVisualization: #dependencySvg element not found or is empty. Cannot generate visualization.");
+        const containerDiv = document.getElementById('dependencyVisualization');
+        if(containerDiv) {
+            containerDiv.innerHTML = '<p style="color: red; text-align: center;">Error: Could not load dependency visualization.</p>';
+        }
+        return;
+    }
+    // --- END SAFEGUARD ---
+
     svg.selectAll('*').remove(); // Clear existing content
 
-    const width = parseInt(svg.style('width')) || 800;
+    // Get SVG dimensions
+    const container = document.getElementById('dependencyVisualization');
+    if (!container) {
+        console.error("Container #dependencyVisualization not found for getting dimensions.");
+        return;
+    }
+    const svgRect = container.getBoundingClientRect();
+    const width = svgRect.width > 0 ? svgRect.width : 800;
     const height = parseInt(svg.style('height')) || 600;
+    console.log(`generateDependencyForceVisualization calculated width: ${width}, height: ${height}`);
 
-    const { nodes, links } = buildDependencyGraph(selectedServiceName);
+    // --- Initialize Selections Early ---
+    const vizContainer = svg.append('g').attr('class', 'viz-container'); // Group for zoom/pan
+
+    let link = vizContainer.append('g').attr('class', 'links').selectAll('line');
+    let node = vizContainer.append('g').attr('class', 'nodes').selectAll('circle');
+    let label = vizContainer.append('g').attr('class', 'labels').selectAll('text');
+    // --- End Initialization ---
+
+    const { nodes: graphNodes, links: graphLinks } = buildDependencyGraph(selectedServiceName);
 
     // Assign index to links
-    links.forEach((link, index) => {
-        link.index = index;
-    });
+    graphLinks.forEach((link, index) => { link.index = index; });
 
-    // Create a color scale
+    // Color scale
     const color = d3.scaleOrdinal()
         .domain(['service', 'platform'])
-        .range(['#1f77b4', '#ff7f0e']); // Customize colors as needed
+        .range(['#1f77b4', '#ff7f0e']);
 
-    // Create simulation
-    const simulation = d3.forceSimulation(nodes)
-        .force('link', d3.forceLink(links).id(d => d.id).distance(150))
-        .force('charge', d3.forceManyBody().strength(-500))
+    // --- Simulation Setup ---
+    const simulation = d3.forceSimulation(graphNodes)
+        .force('link', d3.forceLink(graphLinks).id(d => d.id).distance(150))
+        .force('charge', d3.forceManyBody().strength(-600))
         .force('center', d3.forceCenter(width / 2, height / 2))
-        .force('collide', d3.forceCollide(40))
+        .force('collide', d3.forceCollide(45))
         .on('tick', ticked);
+    // --- End Simulation Setup ---
 
-    // Add zoom and pan
-    const zoom = d3.zoom()
-        .scaleExtent([0.1, 5])
-        .on('zoom', (event) => {
-            container.attr('transform', event.transform);
-        });
-
-    svg.call(zoom);
-
-    // Create container for nodes and links
-    const container = svg.append('g');
-
-    // Define arrowheads
-    svg.append('defs').selectAll('marker')
+     // Define arrowheads
+     const defs = svg.append('defs');
+     defs.selectAll('marker')
         .data(['service-dependency', 'platform-dependency'])
-        .enter().append('marker')
-        .attr('id', d => `arrow-${d}`)
-        .attr('viewBox', '0 -5 10 10')
-        .attr('refX', 25) // Adjusted for larger arrowhead
-        .attr('refY', 0)
-        .attr('markerWidth', 10) // Increased size
-        .attr('markerHeight', 10) // Increased size
-        .attr('orient', 'auto')
+        .join('marker')
+            .attr('id', d => `arrow-${d}`)
+            .attr('viewBox', '0 -5 10 10')
+            .attr('refX', 19)
+            .attr('refY', 0)
+            .attr('markerWidth', 6)
+            .attr('markerHeight', 6)
+            .attr('orient', 'auto')
         .append('path')
-        .attr('d', 'M0,-5L10,0L0,5')
-        .attr('fill', '#999');
+            .attr('d', 'M0,-5L10,0L0,5')
+            .attr('fill', '#999');
 
-    // Define arrowheads for legend
-    svg.append('defs').selectAll('marker')
-        .data(['arrow-service-dependency', 'arrow-platform-dependency'])
-        .enter().append('marker')
-        .attr('id', d => d)
-        .attr('viewBox', '0 -5 10 10')
-        .attr('refX', 12)
-        .attr('refY', 0)
-        .attr('markerWidth', 6)
-        .attr('markerHeight', 6)
-        .attr('orient', 'auto')
-        .append('path')
-        .attr('d', 'M0,-5L10,0L0,5')
-        .attr('fill', '#999');
+    // --- Data Binding and Element Creation ---
+    link = link
+        .data(graphLinks, d => `${d.source.id}-${d.target.id}`)
+        .join('line')
+            .attr('stroke-width', 2)
+            .attr('marker-end', d => `url(#arrow-${d.type})`)
+            .attr('stroke', '#999')
+            .attr('stroke-opacity', 0.6)
+            .attr('stroke-dasharray', d => d.type === 'platform-dependency' ? '5,5' : '0');
 
-    // Add links
-    const link = container.append('g')
-        .attr('stroke', '#999')
-        .attr('stroke-opacity', 0.6)
-        .selectAll('line')
-        .data(links)
-        .enter().append('line')
-        .attr('stroke-width', 2)
-        .attr('marker-end', d => `url(#arrow-${d.type})`)
-        .attr('stroke-dasharray', d => {
-            if (d.type === 'platform-dependency') return '5,5';
-            else return '0';
+    node = node
+        .data(graphNodes, d => d.id)
+        .join('circle')
+            .attr('r', d => d.id === selectedServiceName ? 15 : 10)
+            .attr('fill', d => d.id === selectedServiceName ? 'red' : color(d.type))
+            .attr('stroke', '#fff')
+            .attr('stroke-width', d => d.id === selectedServiceName ? 3 : 1.5)
+            .call(drag(simulation))
+            .on('mouseover', handleMouseOver)
+            .on('mouseout', handleMouseOut);
+
+    label = label
+        .data(graphNodes, d => d.id)
+        .join('text')
+            .attr('dy', -15)
+            .attr('text-anchor', 'middle')
+            .text(d => d.id)
+            .attr('font-size', '10px')
+            .style('pointer-events', 'none') // Prevent labels interfering with node hover
+            .attr('font-weight', d => d.id === selectedServiceName ? 'bold' : 'normal')
+            .attr('fill', d => d.id === selectedServiceName ? 'red' : 'black');
+    // --- End Data Binding ---
+
+    // --- Zoom Setup ---
+    const zoom = d3.zoom()
+        .scaleExtent([0.1, 4])
+        .on('zoom', (event) => {
+            vizContainer.attr('transform', event.transform);
         });
+    svg.call(zoom);
+    // --- End Zoom Setup ---
 
-    // Add nodes
-    const node = container.append('g')
-        .attr('stroke', '#fff')
-        .selectAll('circle')
-        .data(nodes)
-        .enter().append('circle')
-        .attr('r', d => d.id === selectedServiceName ? 15 : 10)
-        .attr('fill', d => {
-            if (d.id === selectedServiceName) return 'red'; // Highlight selected service
-            else if (d.type === 'service') return color('service');
-            else return color('platform');
-        })
-        .attr('stroke-width', d => d.id === selectedServiceName ? 3 : 1.5)
-        .call(drag(simulation));
-
-    // Add labels
-    const label = container.append('g')
-        .selectAll('text')
-        .data(nodes)
-        .enter().append('text')
-        .attr('dy', -15)
-        .attr('text-anchor', 'middle')
-        .text(d => d.id)
-        .attr('font-weight', d => d.id === selectedServiceName ? 'bold' : 'normal')
-        .attr('fill', d => d.id === selectedServiceName ? 'red' : 'black');
-
-    // Tooltip
-    const tooltip = d3.select('body').append('div')
+    // Tooltip Element
+    const tooltip = d3.select('body').selectAll('.tooltip').data([null]).join('div')
         .attr('class', 'tooltip')
         .style('opacity', 0);
 
-    // Variables for highlighting
+    // Highlight State
     let highlightedNodes = new Set();
     let highlightedLinks = new Set();
 
-    // Node mouseover event
-    node.on('mouseover', function(event, d) {
+    // --- Event Handlers ---
+    function handleMouseOver(event, d) {
+        // Tooltip Logic (same as before)
         let info = '';
         if (d.type === 'service') {
             const service = currentSystemData.services.find(s => s.serviceName === d.id);
             if (service) {
-                // Fetch upstreams and downstreams
-                const upstreams = service.serviceDependencies;
-                const downstreams = currentSystemData.services
-                    .filter(s => s.serviceDependencies.includes(service.serviceName))
-                    .map(s => s.serviceName);
-                // Fetch platform dependencies
+                const upstreams = service.serviceDependencies || [];
+                const downstreams = currentSystemData.services.filter(s => (s.serviceDependencies || []).includes(d.id)).map(s => s.serviceName);
                 const platformDeps = service.platformDependencies || [];
-    
-                // Build the tooltip content
-                info = `<strong>Service Name:</strong> ${service.serviceName}<br>`;
-                info += `<strong>Upstreams:</strong> ${upstreams.length > 0 ? upstreams.join(', ') : 'None'}<br>`;
-                info += `<strong>Downstreams:</strong> ${downstreams.length > 0 ? downstreams.join(', ') : 'None'}<br>`;
-                info += `<strong>Platform Dependencies:</strong> ${platformDeps.length > 0 ? platformDeps.join(', ') : 'None'}`;
+                info = `<strong>Service:</strong> ${d.id}<br>`;
+                info += `<strong>Upstream:</strong> ${upstreams.length > 0 ? upstreams.join(', ') : 'None'}<br>`;
+                info += `<strong>Downstream:</strong> ${downstreams.length > 0 ? downstreams.join(', ') : 'None'}<br>`;
+                info += `<strong>Platform Deps:</strong> ${platformDeps.length > 0 ? platformDeps.join(', ') : 'None'}`;
             }
         } else if (d.type === 'platform') {
-            info = `<strong>Platform Dependency:</strong> ${d.id}`;
+            info = `<strong>Platform:</strong> ${d.id}`;
         }
-        tooltip.transition()
-            .duration(200)
-            .style('opacity', .9);
+        tooltip.transition().duration(200).style('opacity', .9);
         tooltip.html(info)
             .style('left', (event.pageX + 10) + 'px')
             .style('top', (event.pageY - 28) + 'px');
-    
-        // Highlight connected nodes and links
-        highlightConnected(d);
-    }).on('mouseout', function() {
-        tooltip.transition()
-            .duration(500)
-            .style('opacity', 0);
-    
-        // Remove highlighting
-        unhighlight();
-    });
 
-    // Function to highlight connected nodes and links
-    function highlightConnected(d) {
-        // Clear previous highlights
+        // Highlight Logic (same as before)
         highlightedNodes.clear();
         highlightedLinks.clear();
-
-        // Add the hovered node
         highlightedNodes.add(d.id);
-
-        // Highlight upstream nodes and links
-        links.forEach(link => {
-            if (link.target.id === d.id) {
-                highlightedNodes.add(link.source.id);
-                highlightedLinks.add(link.index);
-            }
+        graphLinks.forEach(link => {
+            if (link.source.id === d.id) { highlightedNodes.add(link.target.id); highlightedLinks.add(link.index); }
+            if (link.target.id === d.id) { highlightedNodes.add(link.source.id); highlightedLinks.add(link.index); }
         });
-
-        // Highlight downstream nodes and links
-        links.forEach(link => {
-            if (link.source.id === d.id) {
-                highlightedNodes.add(link.target.id);
-                highlightedLinks.add(link.index);
-            }
-        });
-
-        // Update node styles
         node.style('opacity', n => highlightedNodes.has(n.id) ? 1 : 0.1);
         label.style('opacity', n => highlightedNodes.has(n.id) ? 1 : 0.1);
-
-        // Update link styles
-        link.style('opacity', l => highlightedLinks.has(l.index) ? 1 : 0.1);
+        link.style('opacity', l => highlightedLinks.has(l.index) ? 0.9 : 0.1).attr('stroke', l => highlightedLinks.has(l.index) ? '#555' : '#999'); // Make highlighted links darker
     }
 
-    // Function to remove highlighting
-    function unhighlight() {
+    function handleMouseOut() {
+        tooltip.transition().duration(500).style('opacity', 0);
+        // Remove highlights
         node.style('opacity', 1);
         label.style('opacity', 1);
-        link.style('opacity', 1);
+        link.style('opacity', 0.6).attr('stroke', '#999'); // Restore default opacity and color
+        highlightedNodes.clear();
+        highlightedLinks.clear();
     }
+    // --- End Event Handlers ---
 
-    // Add legend
-    const legendData = [
-        { label: 'Selected Service', color: 'red', shape: 'circle' },
-        { label: 'Service', color: color('service'), shape: 'circle' },
-        { label: 'Platform', color: color('platform'), shape: 'circle' },
-        { label: 'Service Dependency', color: '#999', type: 'line', marker: 'arrow-service-dependency', dash: '0' },
-        { label: 'Platform Dependency', color: '#999', type: 'line', marker: 'arrow-platform-dependency', dash: '5,5' }
-    ];
-
-    // Create a legend container
-    const legend = svg.append('g')
-        .attr('class', 'legend')
-        .attr('transform', `translate(${20},${20})`);
-
-    // Add legend items
-    legendData.forEach((item, index) => {
-        const legendRow = legend.append('g')
-            .attr('transform', `translate(0, ${index * 20})`);
-
-        if (item.shape === 'circle') {
-            // Draw circle
-            legendRow.append('circle')
-                .attr('r', 6)
-                .attr('fill', item.color)
-                .attr('stroke', '#fff')
-                .attr('stroke-width', 1.5)
-                .attr('cx', 0)
-                .attr('cy', 0);
-        } else if (item.type === 'line') {
-            // Draw line with arrow
-            legendRow.append('line')
-                .attr('x1', -10)
-                .attr('y1', 0)
-                .attr('x2', 10)
-                .attr('y2', 0)
-                .attr('stroke', item.color)
-                .attr('stroke-width', 2)
-                .attr('stroke-dasharray', item.dash)
-                .attr('marker-end', `url(#${item.marker})`);
-        }
-
-        // Add text
-        legendRow.append('text')
-            .attr('x', 20)
-            .attr('y', 5)
-            .text(item.label)
-            .attr('text-anchor', 'start')
-            .attr('font-size', '12px');
-    });
-
-    // Tick function
+    // --- Ticked Function ---
     function ticked() {
+         if (link.empty() || node.empty() || label.empty()) return; // Safeguard
+
         link
             .attr('x1', d => d.source.x)
             .attr('y1', d => d.source.y)
             .attr('x2', d => d.target.x)
             .attr('y2', d => d.target.y);
-
         node
-            .attr('cx', d => d.x)
-            .attr('cy', d => d.y);
-
+            .attr('cx', d => d.x = Math.max(15, Math.min(width - 15, d.x))) // Adjust radius for boundary
+            .attr('cy', d => d.y = Math.max(15, Math.min(height - 15, d.y)));
         label
             .attr('x', d => d.x)
-            .attr('y', d => d.y - 15);
+            .attr('y', d => d.y - (d.id === selectedServiceName ? 20 : 15)); // Adjust label position slightly more for selected
     }
+    // --- End Ticked Function ---
 
-    // Drag functions
+    // --- Drag Functions ---
     function drag(simulation) {
-        function dragstarted(event) {
+        function dragstarted(event, d) {
+            if(event.sourceEvent) event.sourceEvent.stopPropagation(); // Prevent interference
             if (!event.active) simulation.alphaTarget(0.3).restart();
-            event.subject.fx = event.subject.x;
-            event.subject.fy = event.subject.y;
+            d.fx = d.x; d.fy = d.y;
         }
-        function dragged(event) {
-            event.subject.fx = event.x;
-            event.subject.fy = event.y;
-        }
-        function dragended(event) {
+        function dragged(event, d) { d.fx = event.x; d.fy = event.y; }
+        function dragended(event, d) {
             if (!event.active) simulation.alphaTarget(0);
-            event.subject.fx = null;
-            event.subject.fy = null;
+            d.fx = null; d.fy = null;
         }
-        return d3.drag()
-            .on('start', dragstarted)
-            .on('drag', dragged)
-            .on('end', dragended);
+        return d3.drag().on('start', dragstarted).on('drag', dragged).on('end', dragended);
     }
-}
+    // --- End Drag Functions ---
 
+    // --- Legend (REVISED: Append to SVG) ---
+    // Remove the old selection of the external div:
+    // const legendContainer = d3.select('#dependencyLegend'); // <-- REMOVE THIS LINE
+
+    // Create the legend group INSIDE the main SVG
+    const legend = svg.append('g')
+        .attr('class', 'dependency-legend-svg') // Use a class specific to SVG legend if needed
+        .attr('transform', `translate(20, 20)`); // Position the legend (e.g., top-left)
+
+    const legendItemsData = [
+        { label: 'Selected Service', color: 'red', shape: 'circle' },
+        { label: 'Other Service', color: color('service'), shape: 'circle' },
+        { label: 'Platform', color: color('platform'), shape: 'circle' },
+        { label: 'Service Dependency', color: '#999', type: 'line', marker: 'arrow-service-dependency', dash: '0' },
+        { label: 'Platform Dependency', color: '#999', type: 'line', marker: 'arrow-platform-dependency', dash: '5,5' }
+    ];
+
+    // Append legend items to the SVG group
+    legendItemsData.forEach((item, index) => {
+        const legendItem = legend.append('g')
+            .attr('transform', `translate(0, ${index * 20})`); // Vertical spacing
+
+        if (item.shape === 'circle') {
+            legendItem.append('circle')
+                .attr('r', 6)
+                .attr('cx', 0) // Center the circle at the start of the item
+                .attr('cy', 0)
+                .attr('fill', item.color)
+                .attr('stroke', item.label === 'Selected Service' ? '#fff' : '#ccc') // Outline
+                .attr('stroke-width', item.label === 'Selected Service' ? 2 : 1);
+            legendItem.append('text')
+                .attr('x', 15) // Text starts after the circle
+                .attr('y', 4) // Vertically align text
+                .text(item.label)
+                .style('font-size', '11px');
+        } else if (item.type === 'line') {
+            legendItem.append('line')
+                .attr('x1', -5) // Start line slightly left
+                .attr('y1', 0)
+                .attr('x2', 15) // End line before text
+                .attr('y2', 0)
+                .attr('stroke', item.color)
+                .attr('stroke-width', 2)
+                .attr('stroke-dasharray', item.dash)
+                .attr('marker-end', `url(#${item.marker})`); // Use marker from main defs
+            legendItem.append('text')
+                .attr('x', 25) // Text starts after the line
+                .attr('y', 4) // Vertically align text
+                .text(item.label)
+                .style('font-size', '11px');
+        }
+    });
+    // --- End Legend ---
+
+    console.log("Finished generating dependency visualization.");
+} // --- End generateDependencyForceVisualization ---
 
 //Create a function to update the visualization when a new service is selected.
 function updateDependencyVisualization() {
@@ -5656,6 +5806,10 @@ function showOrganogramView() {
         'systemEditForm', 'engineerTableView', 'planningView'
         // NOTE: Do NOT hide 'organogramView' itself here
     ];
+
+    const carouselContainer = document.getElementById('visualizationCarousel');
+    if (carouselContainer) carouselContainer.style.display = 'none';
+
     viewsToHide.forEach(id => {
         const element = document.getElementById(id);
         if (element) element.style.display = 'none';
@@ -5727,6 +5881,10 @@ function showEngineerTableView() {
         'systemEditForm', 'organogramView', 'planningView'
         // NOTE: Do NOT hide 'engineerTableView' itself here
     ];
+
+    const carouselContainer = document.getElementById('visualizationCarousel');
+    if (carouselContainer) carouselContainer.style.display = 'none';
+
     viewsToHide.forEach(id => {
         const element = document.getElementById(id);
         if (element) element.style.display = 'none';
@@ -6505,38 +6663,37 @@ function showSystemOverview() {
     if (editMenu) editMenu.style.display = 'block';
     // --- End Show Title/Desc/Nav ---
 
-    // --- Show and Regenerate Overview Content (EXCLUDING Team Table) ---
-    const viewsToShowAndGenerate = [
-        'visualization',                    // System Visualization
-        'teamVisualization',                // Team Relationships Visualization
-        'serviceRelationshipsVisualization',// Service Relationships Visualization
-        'dependencyVisualization',          // Service Dependency Visualization
-        'serviceDependenciesTable'          // Service Dependencies Table
-    ];
-    viewsToShowAndGenerate.forEach(id => {
-        const element = document.getElementById(id);
-        if (element) element.style.display = 'block'; else console.warn(`Element not found for overview: ${id}`);
-    });
+    // --- Show Containers and Regenerate Content ---
+    const carouselDiv = document.getElementById('visualizationCarousel');
+    const serviceDepsTableDiv = document.getElementById('serviceDependenciesTable');
 
-    // Call generation functions (similar to loadSavedSystem, but EXCLUDING team table)
+    if (carouselDiv) carouselDiv.style.display = 'block'; else console.warn("Carousel container not found");
+    if (serviceDepsTableDiv) serviceDepsTableDiv.style.display = 'block'; else console.warn("Service Dependencies Table container not found");
+
+    // Call generation functions for visualizations INSIDE the carousel
+    // and the separate dependencies table
     try {
-        // Ensure platformDependencies are up-to-date before visualizing
-        buildGlobalPlatformDependencies();
+        buildGlobalPlatformDependencies(); // Ensure needed data is ready
 
+        // Generate visualizations (even if initially hidden by carousel)
         generateVisualization(currentSystemData);
         generateTeamVisualization(currentSystemData);
-        // generateTeamTable(currentSystemData); // REMOVED
-        populateServiceSelection();
-        updateServiceVisualization();
-        populateDependencyServiceSelection();
-        updateDependencyVisualization();
+        // Service/Dependency ones are triggered by showVisualization later
+
+        // Generate separate dependencies table
         generateServiceDependenciesTable();
 
-        console.log("Regenerated system overview visualizations and tables (excluding team table).");
+        // Show the FIRST item in the carousel
+        showVisualization(0);
+
+        console.log("Displayed carousel/table containers and regenerated content for system overview.");
     } catch (error) {
         console.error("Error regenerating system overview content:", error);
+        // Maybe display error within the divs?
+        if(carouselDiv) carouselDiv.innerHTML = '<p style="color:red">Error loading visualizations.</p>';
+        if(serviceDepsTableDiv) serviceDepsTableDiv.innerHTML = '<p style="color:red">Error loading dependencies table.</p>';
     }
-    // --- End Show and Regenerate Overview Content ---
+    // --- End Show Containers and Regenerate Content ---
 
     // --- Manage Button Visibility ---
     const backButton = document.getElementById('backToSystemViewButton');
@@ -6573,6 +6730,10 @@ function showPlanningView() {
         'organogramView', 'engineerTableView'
         // NOTE: Do NOT hide 'planningView' itself here
     ];
+
+    const carouselContainer = document.getElementById('visualizationCarousel');
+    if (carouselContainer) carouselContainer.style.display = 'none';
+
     viewsToHide.forEach(id => {
         const element = document.getElementById(id);
         if (element) element.style.display = 'none';
