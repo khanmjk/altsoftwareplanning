@@ -1507,6 +1507,132 @@ window.onload = function() {
     // Initialize UI accordingly
 };
 
+/**
+ * REVISED (v4) - Central function to manage switching between main views.
+ * - Corrects title rendering logic.
+ * - Hides edit-menu buttons on sub-views (Org Chart, Planning, etc.).
+ * - Corrects Back button visibility on Edit System page.
+ * Hides all views, then shows the target view and manages related UI elements.
+ * @param {string | null} targetViewId - The ID of the main view container to show (e.g., 'planningView', 'organogramView'), or null/empty to show the home screen.
+ * @param {string | null} newMode - Optional: The new mode to set (e.g., Modes.PLANNING). If null, mode is typically NAVIGATION or BROWSE depending on targetViewId.
+ */
+function switchView(targetViewId, newMode = null) {
+    console.log(`Switching view to: ${targetViewId || 'Home'}, Mode: ${newMode || 'Auto'}`);
+
+    // --- 1. Define all known view container IDs ---
+    const allViewIds = [
+        'systemEditForm',
+        'visualizationCarousel', // Control the whole carousel container
+        'serviceDependenciesTable', // The table below the carousel
+        'organogramView',
+        'engineerTableView',
+        'planningView'
+    ];
+
+    // --- 2. Hide all view containers ---
+    allViewIds.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.style.display = 'none';
+        }
+    });
+
+    // --- 3. Manage Top Bar Elements & Mode ---
+    const pageTitleH1 = document.getElementById('pageTitle');
+    const systemDescP = document.getElementById('systemDescription');
+    const editMenu = document.querySelector('.edit-menu'); // System-specific actions
+    const mainMenu = document.querySelector('.menu');     // Home screen actions
+    const returnHomeBtn = document.getElementById('returnHomeButton');
+    const backButton = document.getElementById('backToSystemViewButton');
+
+    if (targetViewId) {
+        // Showing a specific system-related view
+        currentMode = newMode || Modes.BROWSE;
+
+        // Show the target view container
+        const targetElement = document.getElementById(targetViewId);
+        if (targetElement) {
+            targetElement.style.display = 'block';
+        } else {
+            console.error(`switchView: Target element with ID '${targetViewId}' not found!`);
+            returnToHome(); // Fallback to home screen
+            return;
+        }
+
+        // Update Title/Description
+        if (pageTitleH1 && currentSystemData) {
+            let titleSuffix = '';
+            if (targetViewId === 'planningView') titleSuffix = ' - Yearly Planning';
+            else if (targetViewId === 'organogramView') titleSuffix = ' - Organization Chart';
+            else if (targetViewId === 'engineerTableView') titleSuffix = ' - Engineer List';
+            else if (targetViewId === 'systemEditForm') titleSuffix = ' - Edit System';
+            else if (targetViewId === 'visualizationCarousel' || targetViewId === 'serviceDependenciesTable') titleSuffix = ' - Overview';
+            pageTitleH1.innerText = `${currentSystemData.systemName || 'System'}${titleSuffix}`;
+            pageTitleH1.style.display = 'block';
+        } else if (pageTitleH1) {
+             pageTitleH1.style.display = 'none';
+        }
+
+        if (systemDescP) {
+             const isOverview = (targetViewId === 'visualizationCarousel' || targetViewId === 'serviceDependenciesTable');
+             systemDescP.style.display = isOverview ? 'block' : 'none';
+             if(systemDescP.style.display === 'block' && currentSystemData) {
+                systemDescP.innerText = currentSystemData.systemDescription || '';
+             }
+        }
+
+        // Hide main menu, show edit menu ONLY for overview
+        if (mainMenu) mainMenu.style.display = 'none';
+        if (editMenu) {
+            const isOverview = (targetViewId === 'visualizationCarousel' || targetViewId === 'serviceDependenciesTable');
+            editMenu.style.display = isOverview ? 'block' : 'none';
+        }
+
+        // Show Return Home always when a system is loaded
+        if (returnHomeBtn) returnHomeBtn.style.display = 'block';
+
+        // *** CORRECTED LOGIC for Back Button visibility ***
+        // Show Back button ONLY if NOT on the main overview
+        const isOverviewForBackButton = (targetViewId === 'visualizationCarousel' || targetViewId === 'serviceDependenciesTable');
+        if (backButton) {
+            // Show if NOT overview, hide if overview. Edit page should show it.
+             backButton.style.display = isOverviewForBackButton ? 'none' : 'block'; // <-- Corrected logic
+        }
+        // *** END CORRECTION ***
+
+    } else {
+        // Showing the Home Screen (targetViewId is null or empty)
+        currentMode = Modes.NAVIGATION;
+        currentSystemData = null; // Clear loaded system
+
+        // Restore default Title/Description
+        if (pageTitleH1) { pageTitleH1.innerText = "Architecture Visualization Tool"; pageTitleH1.style.display = 'block'; }
+        if (systemDescP) { systemDescP.innerText = "Load a previously saved system or create a new system..."; systemDescP.style.display = 'block'; }
+
+        // Show main menu, hide edit menu
+        if (mainMenu) mainMenu.style.display = 'block';
+        if (editMenu) editMenu.style.display = 'none';
+
+        // Hide action buttons
+        if (returnHomeBtn) returnHomeBtn.style.display = 'none';
+        if (backButton) backButton.style.display = 'none';
+
+         // Clean up popups/tooltips just in case
+        const systemListDiv = document.getElementById('systemListDiv');
+        if (systemListDiv) document.body.removeChild(systemListDiv);
+        d3.selectAll('.tooltip').remove();
+    }
+
+    // Special handling for carousel visibility
+    if (targetViewId === 'visualizationCarousel') {
+        showVisualization(0); // Make sure first carousel item is shown
+    }
+
+    console.log(`View switched. Current mode: ${currentMode}`);
+}
+// Make it globally accessible
+window.switchView = switchView;
+
 /** Save Sample Systems to Local Storage **/
 
 function saveSampleSystemsToLocalStorage() {
@@ -1586,97 +1712,78 @@ function buildGlobalPlatformDependencies() {
     currentSystemData.platformDependencies = Array.from(platformDepsSet);
 }
 
-/** REVISED (v3) Load Saved System - CORRECTLY Removes Team Table Generation */
+/** REVISED (v4) Load Saved System using switchView */
 function loadSavedSystem(systemName) {
-    currentMode = Modes.BROWSING;
-
+    // --- Find System Data (No Change) ---
     const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
     const systemData = systems[systemName];
-
-    console.log('Loaded systems from local storage:', systems); // Debug log
-
-    if (!systemData) {
-        alert('System not found.');
-        return;
-    }
-
+    console.log('Loaded systems from local storage:', systems);
+    if (!systemData) { alert('System not found.'); return; }
     currentSystemData = systemData;
-    console.log('Selected system to load:', currentSystemData); // Debug log
+    console.log('Selected system to load:', currentSystemData);
+    // --- End Find System Data ---
 
-    // Remove the system list div if present
+    // --- Remove System List Popup (No Change) ---
     const systemListDiv = document.getElementById('systemListDiv');
-    if (systemListDiv) {
-        document.body.removeChild(systemListDiv);
-    }
+    if (systemListDiv) document.body.removeChild(systemListDiv);
+    // --- End Remove Popup ---
 
-    // --- Clear previous content & Hide Sub-Views ---
-    d3.selectAll('.tooltip').remove();
-    document.getElementById('legend').innerHTML = '';
-    document.getElementById('teamLegend').innerHTML = '';
-    document.getElementById('organogramView').style.display = 'none';
-    document.getElementById('engineerTableView').style.display = 'none';
-    document.getElementById('planningView').style.display = 'none';
-    document.getElementById('systemEditForm').style.display = 'none';
-    // --- End Clear/Hide ---
+    // --- Clear previous visualization content ---
+    d3.selectAll('.tooltip').remove(); // Remove any lingering tooltips
+    // Clear specific legend divs if they still exist, although switchView handles main containers
+    const legendDivs = ['legend', 'teamLegend', 'serviceLegend', 'dependencyLegend'];
+    legendDivs.forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.innerHTML = '';
+    });
+    // --- End Clear ---
 
-    // Re-initialize uniqueEngineers based on currentSystemData
-    uniqueEngineers = [];
-    currentSystemData.teams.forEach(team => {
-        // Ensure we use the correct engineer structure
-        (team.engineers || []).forEach(engineer => {
-             if (engineer && engineer.name) {
+     // --- Re-initialize uniqueEngineers and build platform deps (No Change) ---
+     uniqueEngineers = [];
+     (currentSystemData.teams || []).forEach(team => {
+         (team.engineers || []).forEach(engineer => {
+            if (engineer && engineer.name) {
                  uniqueEngineers.push({ engineerName: engineer.name, teamId: team.teamId });
              }
          });
      });
+     buildGlobalPlatformDependencies();
+     // --- End Data Prep ---
 
-
-    // Ensure platformDependencies is initialized & rebuilt
-    if (!currentSystemData.platformDependencies) {
-        currentSystemData.platformDependencies = [];
-    }
-    buildGlobalPlatformDependencies();
-
-    // Update the page title and description
-    document.getElementById('pageTitle').innerText = currentSystemData.systemName;
-    document.getElementById('systemDescription').innerText = currentSystemData.systemDescription || '';
-
-    // Hide the main menu, show the system-specific edit menu
-    document.querySelector('.menu').style.display = 'none';
-    document.querySelector('.edit-menu').style.display = 'block';
-
-    // --- Show the Carousel Container and the Dependencies Table ---
-    const carouselDiv = document.getElementById('visualizationCarousel');
+    // --- USE switchView TO SHOW OVERVIEW ---
+    // This replaces setting display styles and managing buttons/title manually
+    switchView('visualizationCarousel'); // Show the carousel (overview); this also sets mode and shows edit-menu/return-home
     const serviceDepsTableDiv = document.getElementById('serviceDependenciesTable');
+     if (serviceDepsTableDiv) serviceDepsTableDiv.style.display = 'block'; // Explicitly show table too
+    // --- End switchView ---
 
-    if (carouselDiv) carouselDiv.style.display = 'block'; else console.warn("Carousel container not found");
-    if (serviceDepsTableDiv) serviceDepsTableDiv.style.display = 'block'; else console.warn("Service Dependencies Table container not found");
-    // --- End Show Containers ---
+    // --- Regenerate Overview Content ---
+    // (Must happen AFTER switchView makes containers visible)
+    try {
+         // Populate dropdowns needed for carousel items
+         populateServiceSelection();
+         populateDependencyServiceSelection();
 
-    // --- Populate Dropdowns & Regenerate Overview Content ---
-    populateServiceSelection();
-    populateDependencyServiceSelection();
+        // Generate visualizations (even if initially hidden by carousel)
+         generateVisualization(currentSystemData);
+         generateTeamVisualization(currentSystemData);
+         // The specific service/dependency views are generated when shown by showVisualization
 
-    generateVisualization(systemData);
-    generateTeamVisualization(systemData);
-    // generateTeamTable(systemData); // *** REMOVED THIS LINE ***
-    updateServiceVisualization();
-    updateDependencyVisualization();
-    generateServiceDependenciesTable();
-    // --- End Regeneration ---
-    
-    showVisualization(0); // Show the first visualization in the carousel initially
+        // Generate separate dependencies table
+         generateServiceDependenciesTable();
 
-    // --- Manage Buttons ---
-    const returnHomeBtn = document.getElementById('returnHomeButton');
-    if (returnHomeBtn) returnHomeBtn.style.display = 'block';
-    const backButton = document.getElementById('backToSystemViewButton');
-    if (backButton) backButton.style.display = 'none'; // Hide Back button on initial overview
-    // --- End Buttons ---
+         // Show the FIRST item in the carousel - This triggers updates if needed
+         showVisualization(0);
 
-    console.log('Finished loading system:', currentSystemData.systemName); // Debug log
+        console.log("Finished loading and displaying system:", currentSystemData.systemName);
+     } catch (error) {
+         console.error("Error regenerating system overview content during load:", error);
+          const carouselDiv = document.getElementById('visualizationCarousel');
+          if(carouselDiv) carouselDiv.innerHTML = '<p style="color:red">Error loading visualizations.</p>';
+          if(serviceDepsTableDiv) serviceDepsTableDiv.innerHTML = '<p style="color:red">Error loading dependencies table.</p>';
+    }
+     // --- End Regeneration ---
 }
-// Make globally accessible
 window.loadSavedSystem = loadSavedSystem;
 
 /**
@@ -2510,96 +2617,49 @@ window.generateTeamTable = generateTeamTable;
 
 /** Enter Edit Mode **/
 
-function enterEditMode(creatingNewSystem) {
-     if (creatingNewSystem === true) {
-          currentMode = Modes.CREATING;
-     }
-      else {
-        currentMode = Modes.EDITNG;
-     }
-     
-    // Show the system edit form
+/** REVISED Enter Edit Mode - Calls showSystemEditForm which uses switchView */
+function enterEditMode(creatingNewSystem = false) { // Default creatingNewSystem to false
+    const mode = creatingNewSystem ? Modes.CREATING : Modes.EDITING;
+    console.log(`Entering mode: ${mode}`);
+    currentMode = mode; // Set the mode
+
+    if (!currentSystemData) {
+        alert("No system data to edit.");
+        returnToHome();
+        return;
+    }
+    // Show the system edit form, populated with current data
     showSystemEditForm(currentSystemData);
 }
+// No need to add enterEditMode to window, called by button onclick
 
-/** REVISED (v3) Show System Edit Form - Added Logging for Button Visibility */
+/** REVISED (v4) Show System Edit Form using switchView */
 function showSystemEditForm(systemData) {
     console.log("Entering Edit System form (Focus Mode)...");
+    if (!systemData) { console.error("showSystemEditForm called without systemData."); return; }
 
-    // --- Hide elements NOT needed in focused view ---
-    const mainNavBar = document.querySelector('.edit-menu');
-    const pageTitleH1 = document.getElementById('pageTitle');
-    const systemDescP = document.getElementById('systemDescription');
-    if (mainNavBar) mainNavBar.style.display = 'none'; else console.warn("Could not find .edit-menu to hide.");
-    if (pageTitleH1) pageTitleH1.style.display = 'none'; else console.warn("Could not find #pageTitle to hide.");
-    if (systemDescP) systemDescP.style.display = 'none'; else console.warn("Could not find #systemDescription to hide.");
-    // ---------------------------------------------------------
+    // Use switchView to handle showing the form and managing buttons/title
+    switchView('systemEditForm', Modes.EDITING); // Explicitly set EDITING mode
 
-    // --- Hide other main view sections ---
-    const viewsToHide = [
-        'visualization', 'teamVisualization', 
-        'serviceRelationshipsVisualization', 'dependencyVisualization', 'serviceDependenciesTable',
-        'organogramView', 'engineerTableView', 'planningView'
-    ];
-    
-    const carouselContainer = document.getElementById('visualizationCarousel');
-    if (carouselContainer) carouselContainer.style.display = 'none';    
-    
-    viewsToHide.forEach(id => {
-        const element = document.getElementById(id);
-        if (element) element.style.display = 'none';
-    });
-    const mainMenu = document.querySelector('.menu'); // Ensure main menu is hidden too
-    if (mainMenu) mainMenu.style.display = 'none';
-    // ----------------------------------------
-
-    // --- Show the Edit Form ---
-    const editFormDiv = document.getElementById('systemEditForm');
-    if (editFormDiv) {
-        editFormDiv.style.display = 'block';
-    } else {
-        console.error("System edit form container not found!");
-        return; // Don't proceed if form div is missing
-    }
-    // -------------------------
-
-    // --- Populate form fields (existing logic) ---
+    // --- Populate form fields ---
     const nameInput = document.getElementById('systemNameInput');
     const descInput = document.getElementById('systemDescriptionInput');
-    if(nameInput) nameInput.value = systemData?.systemName || '';
-    if(descInput) descInput.value = systemData?.systemDescription || '';
-    console.log("*** Populated form: Name=", nameInput?.value, "Desc=", descInput?.value);
+    if(nameInput) nameInput.value = systemData.systemName || '';
+    if(descInput) descInput.value = systemData.systemDescription || '';
+    console.log("Populated edit form: Name=", nameInput?.value, "Desc=", descInput?.value);
 
     // Populate services and teams (existing logic)
-    displayServicesForEditing(systemData?.services || [], 'editServicesManagement');
-    displayTeamsForEditing(systemData?.teams || []);
+    try {
+         displayServicesForEditing(systemData.services || [], 'editServicesManagement');
+         displayTeamsForEditing(systemData.teams || []);
+    } catch (error) {
+         console.error("Error populating services/teams in edit form:", error);
+          const editFormDiv = document.getElementById('systemEditForm');
+          if(editFormDiv) editFormDiv.innerHTML = `<p style="color:red;">Error populating form details. Check console.</p>`;
+    }
     // ---------------------------------------------
-
-    // --- Manage Button Visibility (with extra logging) ---
-    console.log("Attempting to manage button visibility..."); // LOG 1
-    const returnHomeBtn = document.getElementById('returnHomeButton');
-    const backButton = document.getElementById('backToSystemViewButton');
-
-    // LOG 2: Check if buttons were found
-    console.log("Found Return Home Button:", returnHomeBtn);
-    console.log("Found Back Button:", backButton);
-
-    if(returnHomeBtn) {
-        console.log("Setting Return Home Button display to 'block'"); // LOG 3
-        returnHomeBtn.style.display = 'block';
-    } else {
-        console.warn("Return Home Button not found!"); // LOG 4
-    }
-
-    if(backButton) {
-        console.log("Setting Back Button display to 'block'"); // LOG 5
-        backButton.style.display = 'block'; // *** SHOW the Back button ***
-    } else {
-        console.warn("Back Button (#backToSystemViewButton) not found!"); // LOG 6
-    }
-    console.log("Finished managing button visibility."); // LOG 7
-    // --- End Manage Button Visibility ---
 }
+// No need to add to window, it's called internally by enterEditMode
 
 /** Helper to create Label + Input pairs (Revised for BIS display update) */
 function createInputLabelPair(id, labelText, value, type = 'text', index, field, isReadOnly = false, tooltip = null) {
@@ -4291,20 +4351,21 @@ function saveAllChanges() {
     // -------------------------
 }
 
-/** REVISED Exit Edit Mode - Calls showSystemOverview */
+/** REVISED (v2) Exit Edit Mode - Calls showSystemOverview which uses switchView */
 function exitEditMode() {
     if (currentMode === Modes.CREATING) {
         // If cancelling creation, go all the way home
         if (confirm('Are you sure you want to cancel creating the new system? All unsaved changes will be lost.')) {
-            returnToHome(); // Calls the corrected returnToHome
+            returnToHome(); // Use the refactored returnToHome
         }
         // If user cancels the confirm dialog, do nothing, stay in edit mode.
     } else {
         // If cancelling an edit, simply go back to the system overview
         console.log("Exiting edit mode, returning to system overview...");
-        showSystemOverview(); // Use the dedicated function to restore the overview state
+        showSystemOverview(); // Use the refactored showSystemOverview
     }
 }
+ // No need to add exitEditMode to window, called by button onclick
 
 /** 09/28 Worked on CreateNewSystem workflows **/
 /** Updated function to handle "Create New Software System" button click **/
@@ -4377,91 +4438,16 @@ function createNewSystem() {
     // Assign to currentSystemData
     currentSystemData = defaultSystemData;
 
-    // Clear the page title and description
-    document.getElementById('pageTitle').innerText = 'Create New Software System';
-    document.getElementById('systemDescription').innerText = 'Define the new system details, services, and teams below.';
-
-    // Hide the menu and other sections
-    document.querySelector('.menu').style.display = 'none';
-    document.getElementById('visualization').style.display = 'none';
-    document.getElementById('teamVisualization').style.display = 'none';
-    //document.getElementById('teamBreakdown').style.display = 'none';
-    document.getElementById('serviceRelationshipsVisualization').style.display = 'none';
-    document.getElementById('dependencyVisualization').style.display = 'none';
-    document.getElementById('serviceDependenciesTable').style.display = 'none';
-    document.querySelector('.edit-menu').style.display = 'none';
-    document.getElementById('systemEditForm').style.display = 'none'; // Hide initially
-
-    document.getElementById('organogramView').style.display = 'none';
-    document.getElementById('engineerTableView').style.display = 'none';
-    // Display the system information for editing using the standard edit mode function
-
-    const carouselContainer = document.getElementById('visualizationCarousel');
-    if (carouselContainer) carouselContainer.style.display = 'none';    
-
+    // Use enterEditMode (which now uses switchView) to show the edit form
     enterEditMode(true); // Pass true flag for creation mode
 }
 
-/** REVISED Return to Home - Hides Back Button Too & OrganogramView */
+/** REVISED (v3) Return to Home using switchView */
 function returnToHome() {
     console.log("Returning to home view (Clearing System)...");
-    const wasSystemLoaded = !!currentSystemData; // Check if a system *was* loaded before clearing
-    currentMode = Modes.NAVIGATION;
-    currentSystemData = null; // Reset loaded system data
-
-    // --- Hide ALL possible view sections ---
-    const allViews = [
-        'systemEditForm', 'visualization', 'teamVisualization', 
-        'serviceRelationshipsVisualization', 'dependencyVisualization', 'serviceDependenciesTable',
-        'organogramView', 'engineerTableView', 'planningView' // Include planning and organogram view
-    ];
-
-    const carouselContainer = document.getElementById('visualizationCarousel');
-    if (carouselContainer) carouselContainer.style.display = 'none';
-
-    allViews.forEach(id => {
-        const element = document.getElementById(id);
-        if (element) element.style.display = 'none';
-    });
-    // --- End Hide Views ---
-
-    // --- Restore Top Elements to Default ---
-    const pageTitleH1 = document.getElementById('pageTitle');
-    const systemDescP = document.getElementById('systemDescription');
-    const editMenu = document.querySelector('.edit-menu');
-    const mainMenu = document.querySelector('.menu'); // The initial menu
-
-    if(pageTitleH1) {
-        pageTitleH1.innerText = "Architecture Visualization Tool"; // Default title
-        pageTitleH1.style.display = 'block'; // Make visible
-    }
-    if(systemDescP) {
-        systemDescP.innerText = "Load a previously saved system or create a new system..."; // Default text
-        systemDescP.style.display = 'block'; // Make visible
-    }
-    // Hide edit menu, show main menu
-    if (editMenu) editMenu.style.display = 'none';
-    if (mainMenu) mainMenu.style.display = 'block'; // Show main load/create menu
-    // --- End Restore Top ---
-
-    // --- Hide BOTH Action Buttons ---
-    const returnHomeBtn = document.getElementById('returnHomeButton');
-    const backButton = document.getElementById('backToSystemViewButton'); // Get the Back button
-    if(returnHomeBtn) returnHomeBtn.style.display = 'none'; // Hide on true home screen
-    if(backButton) backButton.style.display = 'none'; // *** ADDED: Hide Back button too ***
-    // -----------------------------
-
-    // Clear any potential leftover popups (like the system list)
-    const systemListDiv = document.getElementById('systemListDiv');
-    if (systemListDiv) {
-        document.body.removeChild(systemListDiv);
-    }
-    // Remove lingering tooltips
-    d3.selectAll('.tooltip').remove();
-
+    switchView(null); // Passing null shows the home screen and resets state
     console.log("Home view displayed.");
 }
-// Make it globally accessible (if not already done)
 window.returnToHome = returnToHome;
 
 function resetToDefaults() {
@@ -5785,55 +5771,17 @@ function handleSortClick(event) {
 }
 
 
-/** REVISED (v4) Shows the Organogram View - Makes container visible BEFORE generating content */
+/** REVISED (v5) Shows the Organogram View using switchView */
 function showOrganogramView() {
     console.log("Switching to Organization Chart View (Focus Mode) + Team Table...");
-    // BROWSE mode seems appropriate here still.
+    if (!currentSystemData) { alert("Please load a system first."); return; }
 
-    // --- Hide elements NOT needed in focused view ---
-    const mainNavBar = document.querySelector('.edit-menu');
-    const pageTitleH1 = document.getElementById('pageTitle');
-    const systemDescP = document.getElementById('systemDescription');
-    if (mainNavBar) mainNavBar.style.display = 'none'; else console.warn("Could not find .edit-menu to hide.");
-    if (pageTitleH1) pageTitleH1.style.display = 'none'; else console.warn("Could not find #pageTitle to hide.");
-    if (systemDescP) systemDescP.style.display = 'none'; else console.warn("Could not find #systemDescription to hide.");
-    // ---------------------------------------------------------
+    switchView('organogramView'); // Switch view, hides others, shows buttons
 
-    // --- Hide ALL other main view sections ---
-    const viewsToHide = [
-        'visualization', 'teamVisualization', 
-        'serviceRelationshipsVisualization', 'dependencyVisualization', 'serviceDependenciesTable',
-        'systemEditForm', 'engineerTableView', 'planningView'
-        // NOTE: Do NOT hide 'organogramView' itself here
-    ];
-
-    const carouselContainer = document.getElementById('visualizationCarousel');
-    if (carouselContainer) carouselContainer.style.display = 'none';
-
-    viewsToHide.forEach(id => {
-        const element = document.getElementById(id);
-        if (element) element.style.display = 'none';
-    });
-    const mainMenu = document.querySelector('.menu'); // Ensure main menu is hidden too
-    if (mainMenu) mainMenu.style.display = 'none';
-    // ----------------------------------------
-
-    // --- Find and SHOW the Organogram View Container FIRST ---
-    const organogramViewDiv = document.getElementById('organogramView');
-    if (!organogramViewDiv) {
-        console.error("Organogram view container (#organogramView) not found!");
-        // Potentially show an error message or return home
-        // returnToHome();
-        return;
-    }
-    // *** Make the container visible BEFORE populating ***
-    organogramViewDiv.style.display = 'block';
-    // -------------------------------------------------------
-
-    // --- Generate Content INSIDE the NOW VISIBLE container ---
+    // --- Generate Content ---
     // Generate and show organogram
     try {
-         generateOrganogram(); // Call the generation function
+        generateOrganogram(); // Call the generation function
     } catch (error) {
         console.error("Error generating Organogram:", error);
         const contentDiv = document.getElementById('organogramContent'); // Content div inside organogramView
@@ -5842,74 +5790,31 @@ function showOrganogramView() {
 
     // Generate Team Table within this view
     try {
-         generateTeamTable(currentSystemData); // Pass current system data
+        generateTeamTable(currentSystemData); // Pass current system data
     } catch (error) {
         console.error("Error generating Team Table within Organogram view:", error);
-         const teamTableContainer = document.getElementById('teamBreakdown'); // Team table container inside organogramView
-         if(teamTableContainer) teamTableContainer.innerHTML = `<p style="color:red;">Error generating team table. Check console.</p>`;
+        const teamTableContainer = document.getElementById('teamBreakdown'); // Team table container inside organogramView
+        if(teamTableContainer) teamTableContainer.innerHTML = `<p style="color:red;">Error generating team table. Check console.</p>`;
     }
     // --- End Content Generation ---
-
-    // --- Manage Button Visibility ---
-    const returnHomeBtn = document.getElementById('returnHomeButton');
-    const backButton = document.getElementById('backToSystemViewButton');
-    if(returnHomeBtn) returnHomeBtn.style.display = 'block'; // Keep Return Home visible
-    if(backButton) backButton.style.display = 'block'; // *** SHOW the Back button ***
-    // -----------------------------
 }
-// Ensure it's globally accessible
 window.showOrganogramView = showOrganogramView;
 
-/** REVISED (v2) Shows the Engineer Table View - Hides nav/title/desc, Shows Back button */
+/** REVISED (v3) Shows the Engineer Table View using switchView */
 function showEngineerTableView() {
     console.log("Switching to Engineer Table View (Focus Mode)...");
-    // Sticking with BROWSE mode as it's primarily viewing data.
+     if (!currentSystemData) { alert("Please load a system first."); return; }
 
-    // --- Hide elements NOT needed in focused view ---
-    const mainNavBar = document.querySelector('.edit-menu');
-    const pageTitleH1 = document.getElementById('pageTitle');
-    const systemDescP = document.getElementById('systemDescription');
-    if (mainNavBar) mainNavBar.style.display = 'none'; else console.warn("Could not find .edit-menu to hide.");
-    if (pageTitleH1) pageTitleH1.style.display = 'none'; else console.warn("Could not find #pageTitle to hide.");
-    if (systemDescP) systemDescP.style.display = 'none'; else console.warn("Could not find #systemDescription to hide.");
-    // ---------------------------------------------------------
+    switchView('engineerTableView'); // Switch view, hides others, shows buttons
 
-    // --- Hide ALL other main view sections ---
-    const viewsToHide = [
-        'visualization', 'teamVisualization', 
-        'serviceRelationshipsVisualization', 'dependencyVisualization', 'serviceDependenciesTable',
-        'systemEditForm', 'organogramView', 'planningView'
-        // NOTE: Do NOT hide 'engineerTableView' itself here
-    ];
-
-    const carouselContainer = document.getElementById('visualizationCarousel');
-    if (carouselContainer) carouselContainer.style.display = 'none';
-
-    viewsToHide.forEach(id => {
-        const element = document.getElementById(id);
-        if (element) element.style.display = 'none';
-    });
-    const mainMenu = document.querySelector('.menu'); // Ensure main menu is hidden too
-    if (mainMenu) mainMenu.style.display = 'none';
-    // ----------------------------------------
-
-    // --- Generate and Show Engineer Table View ---
-    const engineerTableViewDiv = document.getElementById('engineerTableView');
-     if (engineerTableViewDiv) {
-        // Generate and show engineer table
-        generateEngineerTable(); // Generate with default sort
-        engineerTableViewDiv.style.display = 'block'; // Show the container
-     } else {
-        console.error("Engineer table view container not found!");
-     }
-    // -----------------------------------------
-
-    // --- Manage Button Visibility ---
-    const returnHomeBtn = document.getElementById('returnHomeButton');
-    const backButton = document.getElementById('backToSystemViewButton');
-    if(returnHomeBtn) returnHomeBtn.style.display = 'block'; // Keep Return Home visible
-    if(backButton) backButton.style.display = 'block'; // *** SHOW the Back button ***
-    // -----------------------------
+    // Generate and show engineer table
+    try {
+         generateEngineerTable(); // Generate with default sort
+    } catch (error) {
+        console.error("Error generating Engineer Table:", error);
+         const engineerTableContainer = document.getElementById('engineerTableView');
+         if(engineerTableContainer) engineerTableContainer.innerHTML = `<p style="color:red;">Error generating engineer table. Check console.</p>`;
+    }
 }
 
 // Make it globally accessible (if not already done)
@@ -6623,7 +6528,7 @@ function toggleCollapsibleSection(contentId, indicatorId) {
     console.log(`Toggled section ${contentId} to ${isHidden ? 'visible' : 'hidden'}`);
 }
 
-/** REVISED (v3) function to show the main system overview - Restores views EXCEPT Team Table */
+/** REVISED (v4) function to show the main system overview using switchView */
 function showSystemOverview() {
     console.log("Navigating back to system overview...");
     if (!currentSystemData) {
@@ -6631,130 +6536,43 @@ function showSystemOverview() {
         returnToHome(); // Go home if no system is loaded
         return;
     }
-    currentMode = Modes.Browse; // Set appropriate mode
 
-    // --- Hide ALL specific sub-view sections ---
-    const viewsToHide = [
-        'systemEditForm',
-        'organogramView',      // Hide Org chart view
-        'engineerTableView',   // Hide Engineer table view
-        'planningView'         // Hide Planning view
-    ];
-    viewsToHide.forEach(id => {
-        const element = document.getElementById(id);
-        if (element) element.style.display = 'none';
-    });
-    // --- End Hide Sub-Views ---
-
-    // --- Show System Overview Title/Desc/Nav ---
-    const pageTitleH1 = document.getElementById('pageTitle');
-    const systemDescP = document.getElementById('systemDescription');
-    const editMenu = document.querySelector('.edit-menu'); // The system-specific menu
-
-    if (pageTitleH1) {
-        pageTitleH1.innerText = currentSystemData.systemName || "System Overview";
-        pageTitleH1.style.display = 'block'; // Make visible
-    }
-    if(systemDescP) {
-        systemDescP.innerText = currentSystemData.systemDescription || "";
-        systemDescP.style.display = 'block'; // Make visible
-    }
-    // Show the edit menu
-    if (editMenu) editMenu.style.display = 'block';
-    // --- End Show Title/Desc/Nav ---
-
-    // --- Show Containers and Regenerate Content ---
-    const carouselDiv = document.getElementById('visualizationCarousel');
+    // Use switchView to handle showing carousel/table and managing buttons/title
+    // Show BOTH the carousel and the table below it for the overview
+    switchView('visualizationCarousel'); // Shows carousel, hides others, sets mode to BROWSE
     const serviceDepsTableDiv = document.getElementById('serviceDependenciesTable');
+    if (serviceDepsTableDiv) serviceDepsTableDiv.style.display = 'block'; // Explicitly show table too
 
-    if (carouselDiv) carouselDiv.style.display = 'block'; else console.warn("Carousel container not found");
-    if (serviceDepsTableDiv) serviceDepsTableDiv.style.display = 'block'; else console.warn("Service Dependencies Table container not found");
-
-    // Call generation functions for visualizations INSIDE the carousel
-    // and the separate dependencies table
+     // Regenerate content within the (now visible) containers
     try {
-        buildGlobalPlatformDependencies(); // Ensure needed data is ready
-
-        // Generate visualizations (even if initially hidden by carousel)
+        buildGlobalPlatformDependencies();
         generateVisualization(currentSystemData);
         generateTeamVisualization(currentSystemData);
-        // Service/Dependency ones are triggered by showVisualization later
-
-        // Generate separate dependencies table
         generateServiceDependenciesTable();
+        // Service/Dependency visualizations are triggered by showVisualization(0) below
 
-        // Show the FIRST item in the carousel
-        showVisualization(0);
+         // Show the FIRST item in the carousel
+         showVisualization(0);
 
-        console.log("Displayed carousel/table containers and regenerated content for system overview.");
+        console.log("Displayed overview containers and regenerated content.");
     } catch (error) {
-        console.error("Error regenerating system overview content:", error);
-        // Maybe display error within the divs?
-        if(carouselDiv) carouselDiv.innerHTML = '<p style="color:red">Error loading visualizations.</p>';
-        if(serviceDepsTableDiv) serviceDepsTableDiv.innerHTML = '<p style="color:red">Error loading dependencies table.</p>';
-    }
-    // --- End Show Containers and Regenerate Content ---
-
-    // --- Manage Button Visibility ---
-    const backButton = document.getElementById('backToSystemViewButton');
-    const returnHomeButton = document.getElementById('returnHomeButton');
-    // We are IN system overview, so hide the "Back" button
-    if (backButton) backButton.style.display = 'none';
-    // Keep "Return Home" button visible (since a system is loaded)
-    if (returnHomeButton) returnHomeButton.style.display = 'block';
-    // -----------------------------
-
-    console.log("System overview displayed.");
+         console.error("Error regenerating system overview content:", error);
+         const carouselDiv = document.getElementById('visualizationCarousel');
+         if(carouselDiv) carouselDiv.innerHTML = '<p style="color:red">Error loading visualizations.</p>';
+         if(serviceDepsTableDiv) serviceDepsTableDiv.innerHTML = '<p style="color:red">Error loading dependencies table.</p>';
+     }
 }
-// Make it globally accessible 
 window.showSystemOverview = showSystemOverview;
 
-/** REVISED (v8) Shows the Yearly Planning View - Hides nav/title/desc, Shows Back button */
+/** REVISED (v9) Shows the Yearly Planning View using switchView */
 function showPlanningView() {
     console.log("Switching to Yearly Planning View (Focus Mode)...");
-    currentMode = Modes.PLANNING; // Set mode
+    if (!currentSystemData) { alert("Please load a system first."); return; }
 
-    // --- Hide elements NOT needed in focused planning view ---
-    const mainNavBar = document.querySelector('.edit-menu');
-    const pageTitleH1 = document.getElementById('pageTitle');
-    const systemDescP = document.getElementById('systemDescription');
-    if (mainNavBar) mainNavBar.style.display = 'none'; else console.warn("Could not find .edit-menu to hide.");
-    if (pageTitleH1) pageTitleH1.style.display = 'none'; else console.warn("Could not find #pageTitle to hide.");
-    if (systemDescP) systemDescP.style.display = 'none'; else console.warn("Could not find #systemDescription to hide.");
-    // ---------------------------------------------------------
+    switchView('planningView', Modes.PLANNING); // Switch view and set mode
 
-    // --- Hide ALL other main view sections ---
-    const viewsToHide = [
-        'systemEditForm', 'visualization', 'teamVisualization', 
-        'serviceRelationshipsVisualization', 'dependencyVisualization', 'serviceDependenciesTable',
-        'organogramView', 'engineerTableView'
-        // NOTE: Do NOT hide 'planningView' itself here
-    ];
-
-    const carouselContainer = document.getElementById('visualizationCarousel');
-    if (carouselContainer) carouselContainer.style.display = 'none';
-
-    viewsToHide.forEach(id => {
-        const element = document.getElementById(id);
-        if (element) element.style.display = 'none';
-    });
-    const mainMenu = document.querySelector('.menu'); // Ensure main menu is hidden too
-    if (mainMenu) mainMenu.style.display = 'none';
-    // ----------------------------------------
-
-    // --- Show the Planning View ---
-    const planningViewDiv = document.getElementById('planningView');
-    if (planningViewDiv) {
-        planningViewDiv.style.display = 'block';
-        // Update title based on loaded system
-        const planningTitle = document.getElementById('planningViewTitle');
-        if (planningTitle && currentSystemData && currentSystemData.systemName) {
-            planningTitle.innerText = `Yearly Planning View: ${currentSystemData.systemName}`;
-        } else if (planningTitle) {
-            planningTitle.innerText = `Yearly Planning View (No System Loaded)`;
-        }
-
-        // Generate the table content
+     try {
+         // Generate the table content
         generatePlanningTable(); // This also generates the summary table now
 
         // --- Populate Team Select & Attach Listeners ---
@@ -6770,23 +6588,18 @@ function showPlanningView() {
             addInitButton.addEventListener('click', handleAddInitiative);
             addInitButton.setAttribute('data-listener-attached', 'true');
         }
-        // NOTE: Listener for savePlanButton is now attached within generatePlanningTable
+        // Listener for savePlanButton is now attached within generatePlanningTable
 
-        // Adjust table height AFTER view is visible
+        // Adjust table height AFTER view is visible and content generated
         adjustPlanningTableHeight();
 
-    } else {
-        console.error("Planning view container not found!");
-    }
-    // ---------------------------
-
-    // --- Manage Button Visibility ---
-    const returnHomeBtn = document.getElementById('returnHomeButton');
-    const backButton = document.getElementById('backToSystemViewButton');
-    if(returnHomeBtn) returnHomeBtn.style.display = 'block'; // Keep Return Home visible
-    if(backButton) backButton.style.display = 'block'; // *** SHOW the Back button ***
-    // -----------------------------
+     } catch (error) {
+         console.error("Error generating Planning View content:", error);
+         const planningViewDiv = document.getElementById('planningView');
+         if(planningViewDiv) planningViewDiv.innerHTML = `<p style="color:red;">Error generating planning view. Check console.</p>`;
+     }
 }
+window.showPlanningView = showPlanningView; // Ensure global access
 
 // --- Add New Initiative Logic ---
 
