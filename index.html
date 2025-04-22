@@ -1653,7 +1653,9 @@ saveSampleSystemsToLocalStorage();
 
 /** Show Saved Systems **/
 
+/** REVISED (v3 - Corrected Template Literal) Show Saved Systems - Uses modal list with Load buttons */
 function showSavedSystems() {
+    console.log("Showing saved systems list (v3 - Corrected)...");
     // Retrieve the systems from local storage
     const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
     const systemNames = Object.keys(systems);
@@ -1664,27 +1666,43 @@ function showSavedSystems() {
         return;
     }
 
-    // Create a list of systems for the user to select from
+    // --- Create a modal/div to list systems for loading ---
+    // Remove any existing list first (either load or delete)
+    const existingLoadListDiv = document.getElementById('systemLoadListDiv');
+    if (existingLoadListDiv) document.body.removeChild(existingLoadListDiv);
+    const existingDeleteListDiv = document.getElementById('systemDeleteListDiv');
+    if (existingDeleteListDiv) document.body.removeChild(existingDeleteListDiv);
+
+
+    let systemListDiv = document.createElement('div');
+    systemListDiv.id = 'systemLoadListDiv'; // Use a specific ID for the load list
+
     let systemListHtml = '<h2>Select a System to Load</h2><ul>';
+    // Loop through the actual system names fetched from local storage
     systemNames.forEach(systemName => {
-        systemListHtml += `<li><a href="#" onclick="loadSavedSystem('${systemName}')">${systemName}</a></li>`;
+        // *** This template literal correctly inserts the systemName variable ***
+        systemListHtml += `
+            <li style="margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                <span>${systemName}</span>
+                <button onclick="loadSavedSystem('${systemName}')" style="margin-left: 15px; padding: 3px 8px; font-size: 0.9em;">Load</button>
+            </li>`;
+        // **********************************************************************
     });
     systemListHtml += '</ul>';
-
-    // Display the list in a modal or in a div
-    let systemListDiv = document.createElement('div');
-    systemListDiv.id = 'systemListDiv';
     systemListDiv.innerHTML = systemListHtml;
 
     // Add a close button
     let closeButton = document.createElement('button');
-    closeButton.innerText = 'Close';
+    closeButton.innerText = 'Cancel';
+    closeButton.style.marginTop = '15px';
     closeButton.onclick = function() {
-        document.body.removeChild(systemListDiv);
+        if (systemListDiv.parentNode === document.body) {
+             document.body.removeChild(systemListDiv);
+        }
     };
     systemListDiv.appendChild(closeButton);
 
-    // Style the div
+    // Style the div (consistent with delete modal)
     systemListDiv.style.position = 'fixed';
     systemListDiv.style.top = '50%';
     systemListDiv.style.left = '50%';
@@ -1692,11 +1710,19 @@ function showSavedSystems() {
     systemListDiv.style.backgroundColor = '#fff';
     systemListDiv.style.padding = '20px';
     systemListDiv.style.border = '1px solid #ccc';
-    systemListDiv.style.zIndex = '1000';
+    systemListDiv.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+    systemListDiv.style.zIndex = '1001'; // Ensure it's above other elements
+    systemListDiv.style.maxHeight = '80vh';
+    systemListDiv.style.overflowY = 'auto';
+    systemListDiv.style.minWidth = '300px';
+
 
     // Append the div to the body
     document.body.appendChild(systemListDiv);
+    console.log("Load system prompt displayed.");
 }
+// Ensure it's globally accessible if called directly via onclick
+window.showSavedSystems = showSavedSystems;
 
 function buildGlobalPlatformDependencies() {
     const platformDepsSet = new Set();
@@ -1725,9 +1751,12 @@ function loadSavedSystem(systemName) {
     console.log('Selected system to load:', currentSystemData);
     // --- End Find System Data ---
 
-    // --- Remove System List Popup (No Change) ---
-    const systemListDiv = document.getElementById('systemListDiv');
-    if (systemListDiv) document.body.removeChild(systemListDiv);
+    // --- Remove System Load List Popup ---
+    const systemLoadListDiv = document.getElementById('systemLoadListDiv'); // <-- NEW ID
+    if (systemLoadListDiv) {
+      document.body.removeChild(systemLoadListDiv);
+      console.log("Removed system load list modal.");
+    }
     // --- End Remove Popup ---
 
     // --- Clear previous visualization content ---
