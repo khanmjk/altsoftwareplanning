@@ -461,7 +461,6 @@
     <button id="viewOrgChartButton" onclick="showOrganogramView()">View Org Chart</button>
     <button id="viewEngineerListButton" onclick="showEngineerTableView()">View Engineers in Org</button>
     <button id="manageYearPlanButton" onclick="showPlanningView()">Manage Year Plan</button>
-    <button id="deleteSystemButton" onclick="deleteSystem()">Delete System</button>
 </div>
 
 <!-- Visualization Section -->
@@ -544,12 +543,11 @@
     <button type="button" onclick="exitEditMode()">Cancel</button>
 </div>
 
-<!-- 09/28 Added code for Create New system workflow -->
 <!-- Menu for loading systems and creating new systems -->
 <div class="menu">
     <button onclick="showSavedSystems()">Load Saved System</button>
     <button onclick="createNewSystem()">Create New System</button>
-    <!-- Add the Reset to Defaults button -->
+    <button id="deleteSystemButton" onclick="deleteSystem()">Delete System</button>    
     <button onclick="resetToDefaults()">Reset to Defaults</button>    
 </div>
 
@@ -5388,32 +5386,125 @@ function generateUniqueId() {
     return 'team-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
 }
 
-function deleteSystem() {
-    if (currentSystemData && currentSystemData.systemName) {
-        // Confirm deletion
-        if (confirm(`Are you sure you want to delete the system "${currentSystemData.systemName}"? This action cannot be undone.`)) {
-            // Remove from local storage
-            const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
-            delete systems[currentSystemData.systemName];
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
+/** REVISED (v2) - Delete System - Prompts user to select a system from the list */
+    function deleteSystem() {
+        console.log("Initiating system deletion process...");
+        // Retrieve the systems from local storage
+        const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
+        const systemNames = Object.keys(systems);
 
-            // Optionally, you might want to remove any other related data
-
-            // Clear current system data and reset the mode
-            const deletedSystemName = currentSystemData.systemName; // Store the name before clearing
-            currentSystemData = null;
-            currentMode = Modes.NAVIGATION;
-
-            // Clear the UI and display the main menu
-            returnToHome();
-
-            // Notify the user
-            alert(`The system "${deletedSystemName}" has been deleted.`);
+        // If no systems are saved, alert the user
+        if (systemNames.length === 0) {
+            alert('No saved systems found to delete.');
+            return;
         }
-    } else {
-        alert('No system is currently loaded.');
+
+        // --- Create a modal/div to list systems for deletion ---
+        // Remove any existing list first
+        const existingListDiv = document.getElementById('systemDeleteListDiv');
+        if (existingListDiv) {
+            document.body.removeChild(existingListDiv);
+        }
+
+        let systemListDiv = document.createElement('div');
+        systemListDiv.id = 'systemDeleteListDiv'; // Use a distinct ID
+
+        let systemListHtml = '<h2>Select a System to Delete</h2><ul>';
+        systemNames.forEach(systemName => {
+            // Use template literal for easier reading and onclick generation
+            systemListHtml += `
+                <li style="margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                    <span>${systemName}</span>
+                    <button onclick="confirmAndDeleteSystem('${systemName}')" style="margin-left: 15px; padding: 3px 8px; font-size: 0.9em; color: red; border-color: red;">Delete</button>
+                </li>`;
+        });
+        systemListHtml += '</ul>';
+        systemListDiv.innerHTML = systemListHtml;
+
+        // Add a close button
+        let closeButton = document.createElement('button');
+        closeButton.innerText = 'Cancel';
+        closeButton.style.marginTop = '15px';
+        closeButton.onclick = function() {
+             if (systemListDiv.parentNode === document.body) { // Check if still attached before removing
+                 document.body.removeChild(systemListDiv);
+            }
+        };
+        systemListDiv.appendChild(closeButton);
+
+        // Style the div (similar to showSavedSystems)
+        systemListDiv.style.position = 'fixed';
+        systemListDiv.style.top = '50%';
+        systemListDiv.style.left = '50%';
+        systemListDiv.style.transform = 'translate(-50%, -50%)';
+        systemListDiv.style.backgroundColor = '#fff';
+        systemListDiv.style.padding = '20px';
+        systemListDiv.style.border = '1px solid #ccc';
+        systemListDiv.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)'; // Add shadow
+        systemListDiv.style.zIndex = '1001'; // Ensure it's above other elements
+        systemListDiv.style.maxHeight = '80vh'; // Prevent excessive height
+        systemListDiv.style.overflowY = 'auto'; // Add scroll if needed
+        systemListDiv.style.minWidth = '300px'; // Ensure reasonable width
+
+
+        // Append the div to the body
+        document.body.appendChild(systemListDiv);
+        console.log("Delete system prompt displayed.");
     }
-}
+    // Ensure it's globally accessible if called directly via onclick
+    window.deleteSystem = deleteSystem;
+
+
+    /** NEW Helper Function: Confirms and deletes the specified system */
+    function confirmAndDeleteSystem(systemName) {
+        console.log(`Attempting to delete system: ${systemName}`);
+        if (!systemName) {
+            console.error("confirmAndDeleteSystem called without systemName.");
+            return;
+        }
+
+        if (confirm(`Are you sure you want to permanently delete the system "${systemName}"? This action cannot be undone.`)) {
+            try {
+                const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
+
+                if (systems[systemName]) {
+                    delete systems[systemName]; // Remove the system entry
+                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems)); // Save updated data
+                    console.log(`System "${systemName}" deleted successfully.`);
+                    alert(`System "${systemName}" has been deleted.`);
+
+                    // Close the delete prompt modal
+                    const listDiv = document.getElementById('systemDeleteListDiv');
+                    if (listDiv && listDiv.parentNode === document.body) {
+                        document.body.removeChild(listDiv);
+                    }
+
+                    // If the deleted system *was* the currently loaded one (unlikely from home screen, but good practice)
+                    if (currentSystemData && currentSystemData.systemName === systemName) {
+                        console.log("Deleted system was the currently loaded one. Returning to home.");
+                        returnToHome(); // Reset UI fully
+                    }
+
+                } else {
+                    console.warn(`System "${systemName}" not found in local storage for deletion.`);
+                    alert(`Error: System "${systemName}" could not be found for deletion.`);
+                    // Optionally refresh the list here if it's still visible
+                     const listDiv = document.getElementById('systemDeleteListDiv');
+                     if (listDiv) {
+                        document.body.removeChild(listDiv); // Remove the old list
+                        deleteSystem(); // Re-show the updated list
+                     }
+                }
+            } catch (error) {
+                console.error("Error deleting system from local storage:", error);
+                alert("An error occurred while deleting the system. Please check the console.");
+            }
+        } else {
+            console.log(`Deletion cancelled for system: ${systemName}`);
+        }
+    }
+    // Make helper globally accessible for onclick
+    window.confirmAndDeleteSystem = confirmAndDeleteSystem;
 
 /** REVISED Builds hierarchical data for Organogram - Adds Away-Team Info */
 function buildHierarchyData() {
