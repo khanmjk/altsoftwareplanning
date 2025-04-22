@@ -461,6 +461,7 @@
     <button id="viewOrgChartButton" onclick="showOrganogramView()">View Org Chart</button>
     <button id="viewEngineerListButton" onclick="showEngineerTableView()">View Engineers in Org</button>
     <button id="manageYearPlanButton" onclick="showPlanningView()">Manage Year Plan</button>
+    <button id="tuneCapacityButton" onclick="showCapacityConfigView()">Tune Capacity Constraints</button>    
 </div>
 
 <!-- Visualization Section -->
@@ -674,6 +675,11 @@
     </div>
 </div>
 
+<div id="capacityConfigView" style="display:none; margin-top: 20px; max-width: 90%; margin-left: auto; margin-right: auto;">
+    <h2>Tune Capacity Constraints</h2>
+    <p>Loading configuration options...</p>
+</div>
+
 <script>
 /* JavaScript Code */
 /* global variables */
@@ -739,7 +745,17 @@ const sampleTeamsDataStreamView = [
         ],
         awayTeamMembers: [],
         sdmId: 'sdm1',
-        pmtId: 'pmt1'
+        pmtId: 'pmt1',
+        teamCapacityAdjustments: {
+          leaveUptakeEstimates: [], // For Annual, Sick, Study % overrides
+          estimatedTeamLeaveDays: { // For total team days M/P/FR
+              maternity: 0,
+              paternity: 0,
+              familyResp: 0
+          },
+          teamActivities: [],
+          recurringOverhead: []
+        }        
     },
     {
         teamId: 'team2',
@@ -757,7 +773,18 @@ const sampleTeamsDataStreamView = [
             { name: 'Borrowed Betty', level: 3, sourceTeam: 'External Partner X' }
         ], // Example away team member
         sdmId: 'sdm2',
-        pmtId: 'pmt2'
+        pmtId: 'pmt2',
+        teamCapacityAdjustments: {
+          leaveUptakeEstimates: [], // For Annual, Sick, Study % overrides
+          estimatedTeamLeaveDays: { // For total team days M/P/FR
+              maternity: 0,
+              paternity: 0,
+              familyResp: 0
+          },
+          teamActivities: [],
+          recurringOverhead: []
+        }        
+
     },
     {
         teamId: 'team3',
@@ -772,7 +799,18 @@ const sampleTeamsDataStreamView = [
         ],
         awayTeamMembers: [],
         sdmId: 'sdm3',
-        pmtId: 'pmt2'
+        pmtId: 'pmt2',
+        teamCapacityAdjustments: {
+          leaveUptakeEstimates: [], // For Annual, Sick, Study % overrides
+          estimatedTeamLeaveDays: { // For total team days M/P/FR
+              maternity: 0,
+              paternity: 0,
+              familyResp: 0
+          },
+          teamActivities: [],
+          recurringOverhead: []
+        }        
+
     },
     {
         teamId: 'team4',
@@ -791,7 +829,18 @@ const sampleTeamsDataStreamView = [
             { name: 'Visiting Vinny', level: 2, sourceTeam: 'Data Science Org' }
         ], // Example away team members
         sdmId: 'sdm4',
-        pmtId: 'pmt3'
+        pmtId: 'pmt3',
+        teamCapacityAdjustments: {
+          leaveUptakeEstimates: [], // For Annual, Sick, Study % overrides
+          estimatedTeamLeaveDays: { // For total team days M/P/FR
+              maternity: 0,
+              paternity: 0,
+              familyResp: 0
+          },
+          teamActivities: [],
+          recurringOverhead: []
+        }        
+
     },
     {
         teamId: 'team5',
@@ -806,7 +855,18 @@ const sampleTeamsDataStreamView = [
         ],
         awayTeamMembers: [],
         sdmId: 'sdm5',
-        pmtId: 'pmt3'
+        pmtId: 'pmt3',
+        teamCapacityAdjustments: {
+          leaveUptakeEstimates: [], // For Annual, Sick, Study % overrides
+          estimatedTeamLeaveDays: { // For total team days M/P/FR
+              maternity: 0,
+              paternity: 0,
+              familyResp: 0
+          },
+          teamActivities: [],
+          recurringOverhead: []
+        }        
+
     },
     {
         teamId: 'team6',
@@ -820,7 +880,18 @@ const sampleTeamsDataStreamView = [
         ],
         awayTeamMembers: [],
         sdmId: 'sdm6',
-        pmtId: 'pmt2'
+        pmtId: 'pmt2',
+        teamCapacityAdjustments: {
+          leaveUptakeEstimates: [], // For Annual, Sick, Study % overrides
+          estimatedTeamLeaveDays: { // For total team days M/P/FR
+              maternity: 0,
+              paternity: 0,
+              familyResp: 0
+          },
+          teamActivities: [],
+          recurringOverhead: []
+        }        
+
     },
     {
         teamId: 'team7',
@@ -835,7 +906,18 @@ const sampleTeamsDataStreamView = [
         ],
         awayTeamMembers: [],
         sdmId: 'sdm7',
-        pmtId: 'pmt4'
+        pmtId: 'pmt4',
+        teamCapacityAdjustments: {
+          leaveUptakeEstimates: [], // For Annual, Sick, Study % overrides
+          estimatedTeamLeaveDays: { // For total team days M/P/FR
+              maternity: 0,
+              paternity: 0,
+              familyResp: 0
+          },
+          teamActivities: [],
+          recurringOverhead: []
+        }        
+
     },
     {
         teamId: 'team8',
@@ -849,7 +931,18 @@ const sampleTeamsDataStreamView = [
         ],
         awayTeamMembers: [],
         sdmId: 'sdm8',
-        pmtId: 'pmt1'
+        pmtId: 'pmt1',
+        teamCapacityAdjustments: {
+          leaveUptakeEstimates: [], // For Annual, Sick, Study % overrides
+          estimatedTeamLeaveDays: { // For total team days M/P/FR
+              maternity: 0,
+              paternity: 0,
+              familyResp: 0
+          },
+          teamActivities: [],
+          recurringOverhead: []
+        }        
+
     }
 ];
 
@@ -1062,6 +1155,26 @@ const sampleSystemDataStreamView = {
     pmts: samplePMTsDataStreamView,
     services: sampleServicesDataStreamView,
     platformDependencies: [], // Will be built dynamically on load
+    // Capacity constraints
+    capacityConfiguration: {
+        workingDaysPerYear: null, // To be configured
+        standardHoursPerDay: 8,   // Default
+        globalConstraints: {
+            publicHolidays: null, // To be configured
+            orgEvents: [
+                // User will add events via UI later
+            ]
+        },
+        leaveTypes: [ // Define standard leave types globally
+            { id: "annual", name: "Annual Leave", defaultEstimatedDays: 0 },
+            { id: "sick", name: "Sick Leave", defaultEstimatedDays: 0 },
+            { id: "study", name: "Study Leave", defaultEstimatedDays: 0 }
+            //{ id: "maternity", name: "Maternity Leave", defaultEstimatedDays: 0 },
+            //{ id: "paternity", name: "Paternity Leave", defaultEstimatedDays: 0 },
+            //{ id: "family", name: "Family Responsibility", defaultEstimatedDays: 0 }
+        ]
+    },
+    
     yearlyInitiatives: [
         // --- Protected Initiatives ---
         {
@@ -1153,7 +1266,18 @@ const contactCenterTeamsData = [
         ],
         awayTeamMembers: [],
         sdmId: 'sdm1',
-        pmtId: 'pmt1'
+        pmtId: 'pmt1',
+        teamCapacityAdjustments: {
+          leaveUptakeEstimates: [], // For Annual, Sick, Study % overrides
+          estimatedTeamLeaveDays: { // For total team days M/P/FR
+              maternity: 0,
+              paternity: 0,
+              familyResp: 0
+          },
+          teamActivities: [],
+          recurringOverhead: []
+        }        
+        
     },
     {
         teamId: 'team2',
@@ -1169,7 +1293,18 @@ const contactCenterTeamsData = [
         ],
         awayTeamMembers: [],
         sdmId: 'sdm1',
-        pmtId: 'pmt2'
+        pmtId: 'pmt2',
+        teamCapacityAdjustments: {
+          leaveUptakeEstimates: [], // For Annual, Sick, Study % overrides
+          estimatedTeamLeaveDays: { // For total team days M/P/FR
+              maternity: 0,
+              paternity: 0,
+              familyResp: 0
+          },
+          teamActivities: [],
+          recurringOverhead: []
+        }        
+        
     },
     {
         teamId: 'team3',
@@ -1187,7 +1322,18 @@ const contactCenterTeamsData = [
             { name: 'Helping Hannah', level: 2, sourceTeam: 'AI Research Division' }
         ], // Example away team member
         sdmId: 'sdm2',
-        pmtId: 'pmt2'
+        pmtId: 'pmt2',
+        teamCapacityAdjustments: {
+          leaveUptakeEstimates: [], // For Annual, Sick, Study % overrides
+          estimatedTeamLeaveDays: { // For total team days M/P/FR
+              maternity: 0,
+              paternity: 0,
+              familyResp: 0
+          },
+          teamActivities: [],
+          recurringOverhead: []
+        }        
+        
     },
     {
         teamId: 'team4',
@@ -1203,7 +1349,18 @@ const contactCenterTeamsData = [
         ],
         awayTeamMembers: [],
         sdmId: 'sdm2', // Still under Matthew Jackson
-        pmtId: 'pmt3'
+        pmtId: 'pmt3',
+        teamCapacityAdjustments: {
+          leaveUptakeEstimates: [], // For Annual, Sick, Study % overrides
+          estimatedTeamLeaveDays: { // For total team days M/P/FR
+              maternity: 0,
+              paternity: 0,
+              familyResp: 0
+          },
+          teamActivities: [],
+          recurringOverhead: []
+        }        
+        
     },
     {
         teamId: 'team5',
@@ -1222,7 +1379,18 @@ const contactCenterTeamsData = [
             { name: 'Support Sam', level: 3, sourceTeam: 'Sister Company Ops' }
         ], // Example away team member
         sdmId: 'sdm3',
-        pmtId: 'pmt3'
+        pmtId: 'pmt3',
+        teamCapacityAdjustments: {
+          leaveUptakeEstimates: [], // For Annual, Sick, Study % overrides
+          estimatedTeamLeaveDays: { // For total team days M/P/FR
+              maternity: 0,
+              paternity: 0,
+              familyResp: 0
+          },
+          teamActivities: [],
+          recurringOverhead: []
+        }        
+        
     },
     {
         teamId: 'team6',
@@ -1236,7 +1404,18 @@ const contactCenterTeamsData = [
         ],
         awayTeamMembers: [],
         sdmId: 'sdm3',
-        pmtId: 'pmt2'
+        pmtId: 'pmt2',
+        teamCapacityAdjustments: {
+          leaveUptakeEstimates: [], // For Annual, Sick, Study % overrides
+          estimatedTeamLeaveDays: { // For total team days M/P/FR
+              maternity: 0,
+              paternity: 0,
+              familyResp: 0
+          },
+          teamActivities: [],
+          recurringOverhead: []
+        }        
+        
     },
     {
         teamId: 'team7',
@@ -1252,7 +1431,18 @@ const contactCenterTeamsData = [
         ],
         awayTeamMembers: [],
         sdmId: 'sdm4',
-        pmtId: 'pmt4'
+        pmtId: 'pmt4',
+        teamCapacityAdjustments: {
+          leaveUptakeEstimates: [], // For Annual, Sick, Study % overrides
+          estimatedTeamLeaveDays: { // For total team days M/P/FR
+              maternity: 0,
+              paternity: 0,
+              familyResp: 0
+          },
+          teamActivities: [],
+          recurringOverhead: []
+        }        
+        
     },
     {
         teamId: 'team8',
@@ -1266,7 +1456,18 @@ const contactCenterTeamsData = [
         ],
         awayTeamMembers: [],
         sdmId: 'sdm4', // Still under Laura Turner
-        pmtId: 'pmt1'
+        pmtId: 'pmt1',
+        teamCapacityAdjustments: {
+          leaveUptakeEstimates: [], // For Annual, Sick, Study % overrides
+          estimatedTeamLeaveDays: { // For total team days M/P/FR
+              maternity: 0,
+              paternity: 0,
+              familyResp: 0
+          },
+          teamActivities: [],
+          recurringOverhead: []
+        }        
+        
     }
 ];
 
@@ -1451,6 +1652,25 @@ const sampleSystemDataContactCenter = {
     pmts: contactCenterPMTsData,
     services: sampleServicesDataConnectPro,
     platformDependencies: [], // Will be built dynamically on load
+    // Capacity constraints
+    capacityConfiguration: {
+        workingDaysPerYear: null, // To be configured
+        standardHoursPerDay: 8,   // Default
+        globalConstraints: {
+            publicHolidays: null, // To be configured
+            orgEvents: [
+                // User will add events via UI later
+            ]
+        },
+        leaveTypes: [ // Define standard leave types globally
+            { id: "annual", name: "Annual Leave", defaultEstimatedDays: 0 },
+            { id: "sick", name: "Sick Leave", defaultEstimatedDays: 0 },
+            { id: "study", name: "Study Leave", defaultEstimatedDays: 0 }
+           // { id: "maternity", name: "Maternity Leave", defaultEstimatedDays: 0 },
+           // { id: "paternity", name: "Paternity Leave", defaultEstimatedDays: 0 },
+           // { id: "family", name: "Family Responsibility", defaultEstimatedDays: 0 }
+        ]
+    },    
     yearlyInitiatives: [
         // --- Protected Initiatives ---
         {
@@ -1528,7 +1748,8 @@ function switchView(targetViewId, newMode = null) {
         'serviceDependenciesTable', // The table below the carousel
         'organogramView',
         'engineerTableView',
-        'planningView'
+        'planningView',
+        'capacityConfigView'
     ];
 
     // --- 2. Hide all view containers ---
@@ -1569,6 +1790,7 @@ function switchView(targetViewId, newMode = null) {
             else if (targetViewId === 'engineerTableView') titleSuffix = ' - Engineer List';
             else if (targetViewId === 'systemEditForm') titleSuffix = ' - Edit System';
             else if (targetViewId === 'visualizationCarousel' || targetViewId === 'serviceDependenciesTable') titleSuffix = ' - Overview';
+            else if (targetViewId === 'capacityConfigView') titleSuffix = ' - Capacity Configuration TODO';
             pageTitleH1.innerText = `${currentSystemData.systemName || 'System'}${titleSuffix}`;
             pageTitleH1.style.display = 'block';
         } else if (pageTitleH1) {
@@ -1635,8 +1857,280 @@ function switchView(targetViewId, newMode = null) {
 // Make it globally accessible
 window.switchView = switchView;
 
-/** Save Sample Systems to Local Storage **/
+/** NEW Function - Shows the Capacity Configuration View */
+function showCapacityConfigView() {
+    console.log("Switching to Capacity Configuration View (Focus Mode)...");
+    if (!currentSystemData) {
+        alert("Please load a system first.");
+        return;
+    }
 
+    // Use switchView to handle view transition and UI elements
+    switchView('capacityConfigView'); // Pass the ID of the new view container
+
+    generateGlobalConstraintsForm();
+    //TODO Fix with collapsible UX: generateTeamConstraintsForms();    
+    // ---------------------------
+
+    // Placeholder for future content generation
+    console.log("Capacity Config View displayed. Content generation will be added in next phase.");
+    // Example (Phase 5+): generateCapacitySummaryDisplay();
+    // ------------------------------------------------
+}
+// Make it globally accessible for the button's onclick
+window.showCapacityConfigView = showCapacityConfigView;
+
+/**
+ * NEW Function (Phase 3 - Fix 1) - Generates the form elements for global capacity constraints.
+ * Fixes tbody lookup issue in renderOrgEvents.
+ */
+function generateGlobalConstraintsForm() {
+    console.log("Generating Global Constraints Form (Fix 1)...");
+    const container = document.getElementById('capacityConfigView');
+    if (!container) {
+        console.error("Cannot generate global constraints form: Container #capacityConfigView not found.");
+        return;
+    }
+    if (!currentSystemData || !currentSystemData.capacityConfiguration) {
+         console.error("Cannot generate global constraints form: Missing currentSystemData.capacityConfiguration.");
+         container.innerHTML = '<p style="color:red;">Error: Capacity configuration data missing in the loaded system.</p>';
+         return;
+    }
+
+    // Ensure nested structure exists
+    if (!currentSystemData.capacityConfiguration.globalConstraints) {
+         currentSystemData.capacityConfiguration.globalConstraints = { publicHolidays: null, orgEvents: [] };
+    }
+     if (!currentSystemData.capacityConfiguration.leaveTypes) {
+         currentSystemData.capacityConfiguration.leaveTypes = [
+             { id: "annual", name: "Annual Leave", defaultEstimatedDays: 0 },
+             { id: "sick", name: "Sick Leave", defaultEstimatedDays: 0 },
+             { id: "study", name: "Study Leave", defaultEstimatedDays: 0 },
+             { id: "maternity", name: "Maternity Leave", defaultEstimatedDays: 0 },
+             { id: "paternity", name: "Paternity Leave", defaultEstimatedDays: 0 },
+             { id: "family", name: "Family Responsibility", defaultEstimatedDays: 0 }
+         ];
+     }
+
+
+    // Clear placeholder
+    container.innerHTML = '';
+
+    // --- Create Section for Global Settings ---
+    const globalSection = document.createElement('div');
+    globalSection.style.border = '1px solid #ccc';
+    globalSection.style.padding = '15px';
+    globalSection.style.marginBottom = '20px';
+
+    const globalTitle = document.createElement('h3');
+    globalTitle.textContent = 'Organizational Defaults & Global Events';
+    globalSection.appendChild(globalTitle);
+
+    // Working Days per Year
+    const wdLabel = document.createElement('label');
+    wdLabel.textContent = 'Standard Working Days Per Year: ';
+    wdLabel.htmlFor = 'workingDaysInput';
+    wdLabel.title = 'Define the standard number of working days in a year for your organization, excluding weekends. Used as the basis for SDE Year calculations.';
+    const wdInput = document.createElement('input');
+    wdInput.type = 'number';
+    wdInput.id = 'workingDaysInput';
+    wdInput.min = '1';
+    wdInput.step = '1';
+    wdInput.value = currentSystemData.capacityConfiguration.workingDaysPerYear || 230; // Default if null
+    wdInput.style.width = '80px';
+    wdInput.addEventListener('change', (e) => {
+        const value = parseInt(e.target.value);
+        if (!isNaN(value) && value > 0) {
+            currentSystemData.capacityConfiguration.workingDaysPerYear = value;
+            console.log("Updated workingDaysPerYear:", value);
+            // Later: Trigger recalculation of summary display
+             // generateCapacitySummaryDisplay();
+        } else {
+            e.target.value = currentSystemData.capacityConfiguration.workingDaysPerYear || 230; // Revert if invalid
+        }
+    });
+    globalSection.appendChild(wdLabel);
+    globalSection.appendChild(wdInput);
+    globalSection.appendChild(document.createElement('br'));
+    globalSection.appendChild(document.createElement('br'));
+
+    // Public Holidays
+    const phLabel = document.createElement('label');
+    phLabel.textContent = 'Public Holidays (Days/Year): ';
+    phLabel.htmlFor = 'publicHolidaysInput';
+    phLabel.title = 'Enter the total number of official public holidays per year that impact all teams.';
+    const phInput = document.createElement('input');
+    phInput.type = 'number';
+    phInput.id = 'publicHolidaysInput';
+    phInput.min = '0';
+    phInput.step = '1';
+    phInput.value = currentSystemData.capacityConfiguration.globalConstraints.publicHolidays || 0;
+    phInput.style.width = '80px';
+    phInput.addEventListener('change', (e) => {
+        const value = parseInt(e.target.value);
+         if (!isNaN(value) && value >= 0) {
+            currentSystemData.capacityConfiguration.globalConstraints.publicHolidays = value;
+            console.log("Updated publicHolidays:", value);
+             // Later: Trigger recalculation of summary display
+             // generateCapacitySummaryDisplay();
+        } else {
+             e.target.value = currentSystemData.capacityConfiguration.globalConstraints.publicHolidays || 0; // Revert
+         }
+    });
+    globalSection.appendChild(phLabel);
+    globalSection.appendChild(phInput);
+    globalSection.appendChild(document.createElement('br'));
+    globalSection.appendChild(document.createElement('br'));
+
+    // --- Org-Wide Events ---
+    const orgEventsTitle = document.createElement('h4');
+    orgEventsTitle.textContent = 'Organization-Wide Events';
+    orgEventsTitle.title = 'Define events that impact all (or most) engineers globally (e.g., Hackathons, All-Hands). Estimate average days per participating SDE.';
+    globalSection.appendChild(orgEventsTitle);
+
+    const orgEventsTable = document.createElement('table');
+    orgEventsTable.style.width = '80%';
+    orgEventsTable.style.borderCollapse = 'collapse';
+    orgEventsTable.innerHTML = `
+        <thead>
+            <tr>
+                <th style="border: 1px solid #ccc; padding: 5px;">Event Name</th>
+                <th style="border: 1px solid #ccc; padding: 5px; text-align: center;">Est. Days/SDE</th>
+                <th style="border: 1px solid #ccc; padding: 5px; width: 80px; text-align: center;">Action</th>
+            </tr>
+        </thead>
+        <tbody id="orgEventsTbody">
+            </tbody>
+    `;
+    globalSection.appendChild(orgEventsTable);
+
+    // *** Find the tbody WITHIN the newly created table ***
+    const orgEventsTbody = orgEventsTable.querySelector('#orgEventsTbody'); // Find tbody inside the table
+
+    // Function to render org events rows (NOW accepts tbody as argument)
+    const renderOrgEvents = (tbodyElement) => { // Added tbodyElement parameter
+        if (!tbodyElement) {
+            console.error("renderOrgEvents called without a valid tbody element.");
+            return;
+        }
+        // const tbody = document.getElementById('orgEventsTbody'); // REMOVED THIS LINE
+        tbodyElement.innerHTML = ''; // Clear existing - Use the passed-in element
+        const events = currentSystemData.capacityConfiguration.globalConstraints.orgEvents || [];
+        events.forEach((event, index) => {
+            // *** Ensure the removeBtn onclick closure captures the correct tbodyElement ***
+            const row = tbodyElement.insertRow(); // Use tbodyElement
+
+            const nameCell = row.insertCell();
+            nameCell.style.border = '1px solid #ccc'; nameCell.style.padding = '5px';
+            const nameInput = document.createElement('input');
+            nameInput.type = 'text'; nameInput.value = event.name || ''; nameInput.style.width = '95%';
+            nameInput.onchange = (e) => { event.name = e.target.value; console.log(`Updated org event[${index}] name`); /* Trigger recalc */ };
+            nameCell.appendChild(nameInput);
+
+            const daysCell = row.insertCell();
+            daysCell.style.border = '1px solid #ccc'; daysCell.style.padding = '5px'; daysCell.style.textAlign = 'center';
+            const daysInput = document.createElement('input');
+            daysInput.type = 'number'; daysInput.min = '0'; daysInput.step = '0.5'; daysInput.value = event.estimatedDaysPerSDE || 0; daysInput.style.width = '60px';
+            daysInput.onchange = (e) => { event.estimatedDaysPerSDE = parseFloat(e.target.value) || 0; console.log(`Updated org event[${index}] days`); /* Trigger recalc */ };
+            daysCell.appendChild(daysInput);
+
+            const actionCell = row.insertCell();
+            actionCell.style.border = '1px solid #ccc'; actionCell.style.padding = '5px'; actionCell.style.textAlign = 'center';
+            const removeBtn = document.createElement('button');
+            removeBtn.textContent = 'Remove'; removeBtn.style.fontSize = '0.9em';
+            removeBtn.onclick = () => {
+                 if (!currentSystemData.capacityConfiguration.globalConstraints.orgEvents) return; // Safety check
+                 currentSystemData.capacityConfiguration.globalConstraints.orgEvents.splice(index, 1);
+                 renderOrgEvents(tbodyElement); // Pass the tbodyElement again for re-render
+                 // Later: Trigger recalculation of summary display
+                 // generateCapacitySummaryDisplay();
+             };
+             actionCell.appendChild(removeBtn);
+         });
+    };
+
+    // Check if tbody was found before calling renderOrgEvents
+    if (orgEventsTbody) {
+        renderOrgEvents(orgEventsTbody); // Initial render, pass the found tbody
+    } else {
+        console.error("Could not find #orgEventsTbody within the created orgEventsTable.");
+    }
+
+    const addOrgEventBtn = document.createElement('button');
+    addOrgEventBtn.textContent = 'Add Org Event';
+    addOrgEventBtn.style.marginTop = '10px';
+    addOrgEventBtn.onclick = () => {
+         if (!currentSystemData.capacityConfiguration.globalConstraints.orgEvents) {
+             currentSystemData.capacityConfiguration.globalConstraints.orgEvents = [];
+         }
+         currentSystemData.capacityConfiguration.globalConstraints.orgEvents.push({ id: 'evt-' + Date.now(), name: 'New Org Event', estimatedDaysPerSDE: 0 });
+         // *** Pass the correct tbody element when re-rendering after add ***
+         if(orgEventsTbody) renderOrgEvents(orgEventsTbody);
+         // Later: Trigger recalculation of summary display
+         // generateCapacitySummaryDisplay();
+     };
+     globalSection.appendChild(addOrgEventBtn);
+     globalSection.appendChild(document.createElement('br'));
+     globalSection.appendChild(document.createElement('br'));
+
+
+    // --- Standard Leave Types (Defaults) ---
+    const leaveTypesTitle = document.createElement('h4');
+    leaveTypesTitle.textContent = 'Standard Leave Types (Default Days/SDE)';
+    leaveTypesTitle.title = 'Define standard leave types and their default estimated days per SDE per year. Team-specific estimates can override these defaults later.';
+    globalSection.appendChild(leaveTypesTitle);
+
+    const leaveTypesTable = document.createElement('table');
+    leaveTypesTable.style.width = '60%';
+    leaveTypesTable.style.borderCollapse = 'collapse';
+    leaveTypesTable.innerHTML = `
+        <thead>
+            <tr>
+                <th style="border: 1px solid #ccc; padding: 5px;">Leave Type</th>
+                <th style="border: 1px solid #ccc; padding: 5px; text-align: center;">Default Est. Days/SDE</th>
+            </tr>
+        </thead>
+        <tbody id="leaveTypesTbody">
+            </tbody>
+    `;
+    globalSection.appendChild(leaveTypesTable);
+
+    const tbodyLeave = leaveTypesTable.querySelector('#leaveTypesTbody'); // Find tbody within this table
+    if(tbodyLeave) {
+        (currentSystemData.capacityConfiguration.leaveTypes || []).forEach(leaveType => {
+            if(!leaveType) return; // Skip if invalid
+            const row = tbodyLeave.insertRow();
+            const nameCell = row.insertCell();
+            nameCell.style.border = '1px solid #ccc'; nameCell.style.padding = '5px';
+            nameCell.textContent = leaveType.name;
+
+            const daysCell = row.insertCell();
+            daysCell.style.border = '1px solid #ccc'; daysCell.style.padding = '5px'; daysCell.style.textAlign = 'center';
+            const daysInput = document.createElement('input');
+            daysInput.type = 'number'; daysInput.min = '0'; daysInput.step = '1'; daysInput.value = leaveType.defaultEstimatedDays || 0; daysInput.style.width = '60px';
+            daysInput.title = `Default estimate for ${leaveType.name}`;
+            daysInput.addEventListener('change', (e) => {
+                const value = parseInt(e.target.value);
+                leaveType.defaultEstimatedDays = (!isNaN(value) && value >= 0) ? value : 0;
+                console.log(`Updated default days for ${leaveType.id} to ${leaveType.defaultEstimatedDays}`);
+                 // Later: Trigger recalculation of summary display
+                 // generateCapacitySummaryDisplay();
+             });
+             daysCell.appendChild(daysInput);
+        });
+    } else {
+        console.error("Could not find #leaveTypesTbody within the created leaveTypesTable.");
+    }
+    // Note: Not adding 'Add New Leave Type' for now to keep MVP simpler.
+
+    // --- Append Global Section ---
+    container.appendChild(globalSection);
+    console.log("Finished generating Global Constraints Form.");
+}
+window.generateGlobalConstraintsForm = generateGlobalConstraintsForm; // Make global if needed
+
+
+/** Save Sample Systems to Local Storage **/
 function saveSampleSystemsToLocalStorage() {
     if (!localStorage.getItem(LOCAL_STORAGE_KEY)) {
         const systems = {
@@ -4431,7 +4925,13 @@ function createNewSystem() {
                 { name: 'Enter Engineer Name Here', level: 2 } // Example default engineer with level
             ],
             sdmId: 'sdm1', // Reference to the default SDM
-            pmtId: 'pmt1'  // Reference to the default PMT
+            pmtId: 'pmt1',  // Reference to the default PMT
+            teamCapacityAdjustments: {
+              leaveEstimates: [], // Team-specific estimates added via UI
+              teamActivities: [], // Team-specific activities added via UI
+              recurringOverhead: [] // Team-specific overheads added via UI
+            }        
+            
         }
     ];
 
@@ -4463,6 +4963,25 @@ function createNewSystem() {
         teams: defaultTeamsData,
         services: defaultServicesData,
         platformDependencies: [], 
+        // Capacity constraints
+        capacityConfiguration: {
+            workingDaysPerYear: null, // To be configured
+            standardHoursPerDay: 8,   // Default
+            globalConstraints: {
+                publicHolidays: null, // To be configured
+                orgEvents: [
+                    // User will add events via UI later
+                ]
+            },
+            leaveTypes: [ // Define standard leave types globally
+                { id: "annual", name: "Annual Leave", defaultEstimatedDays: 0 },
+                { id: "sick", name: "Sick Leave", defaultEstimatedDays: 0 },
+                { id: "study", name: "Study Leave", defaultEstimatedDays: 0 }
+                //{ id: "maternity", name: "Maternity Leave", defaultEstimatedDays: 0 },
+                //{ id: "paternity", name: "Paternity Leave", defaultEstimatedDays: 0 },
+                //{ id: "family", name: "Family Responsibility", defaultEstimatedDays: 0 }
+            ]
+        },        
         yearlyInitiatives: []
     };
 
