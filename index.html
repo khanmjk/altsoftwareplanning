@@ -1921,7 +1921,8 @@ function showCapacityConfigView() {
 
     // Placeholder for future content generation
     console.log("Capacity Config View displayed. Content generation will be added in next phase.");
-    // Example (Phase 5+): generateCapacitySummaryDisplay();
+    // (Phase 5+)
+    updateCapacityCalculationsAndDisplay();
     // ------------------------------------------------
 }
 // Make it globally accessible for the button's onclick
@@ -1988,8 +1989,8 @@ function generateGlobalConstraintsForm() {
         if (!isNaN(value) && value > 0) {
             currentSystemData.capacityConfiguration.workingDaysPerYear = value;
             console.log("Updated workingDaysPerYear:", value);
-            // Later: Trigger recalculation of summary display
-             // generateCapacitySummaryDisplay();
+            //Trigger recalculation of summary display
+            updateCapacityCalculationsAndDisplay();
         } else {
             e.target.value = currentSystemData.capacityConfiguration.workingDaysPerYear || 230; // Revert if invalid
         }
@@ -2016,8 +2017,8 @@ function generateGlobalConstraintsForm() {
          if (!isNaN(value) && value >= 0) {
             currentSystemData.capacityConfiguration.globalConstraints.publicHolidays = value;
             console.log("Updated publicHolidays:", value);
-             // Later: Trigger recalculation of summary display
-             // generateCapacitySummaryDisplay();
+             //Trigger recalculation of summary display
+             updateCapacityCalculationsAndDisplay();
         } else {
              e.target.value = currentSystemData.capacityConfiguration.globalConstraints.publicHolidays || 0; // Revert
          }
@@ -2087,8 +2088,8 @@ function generateGlobalConstraintsForm() {
                  if (!currentSystemData.capacityConfiguration.globalConstraints.orgEvents) return; // Safety check
                  currentSystemData.capacityConfiguration.globalConstraints.orgEvents.splice(index, 1);
                  renderOrgEvents(tbodyElement); // Pass the tbodyElement again for re-render
-                 // Later: Trigger recalculation of summary display
-                 // generateCapacitySummaryDisplay();
+                 // Trigger recalculation of summary display
+                 updateCapacityCalculationsAndDisplay();
              };
              actionCell.appendChild(removeBtn);
          });
@@ -2111,8 +2112,8 @@ function generateGlobalConstraintsForm() {
          currentSystemData.capacityConfiguration.globalConstraints.orgEvents.push({ id: 'evt-' + Date.now(), name: 'New Org Event', estimatedDaysPerSDE: 0 });
          // *** Pass the correct tbody element when re-rendering after add ***
          if(orgEventsTbody) renderOrgEvents(orgEventsTbody);
-         // Later: Trigger recalculation of summary display
-         // generateCapacitySummaryDisplay();
+         // Trigger recalculation of summary display
+         updateCapacityCalculationsAndDisplay();
      };
      globalSection.appendChild(addOrgEventBtn);
      globalSection.appendChild(document.createElement('br'));
@@ -2158,8 +2159,8 @@ function generateGlobalConstraintsForm() {
                 const value = parseInt(e.target.value);
                 leaveType.defaultEstimatedDays = (!isNaN(value) && value >= 0) ? value : 0;
                 console.log(`Updated default days for ${leaveType.id} to ${leaveType.defaultEstimatedDays}`);
-                 // Later: Trigger recalculation of summary display
-                 // generateCapacitySummaryDisplay();
+                 //Trigger recalculation of summary display
+                 updateCapacityCalculationsAndDisplay();
              });
              daysCell.appendChild(daysInput);
         });
@@ -2330,6 +2331,119 @@ function calculateAllCapacityMetrics(systemData) {
 window.calculateAllCapacityMetrics = calculateAllCapacityMetrics;
 
 /**
+ * NEW Function (Phase 5b) - Triggers recalculation and redraws the summary display.
+ * @param {string | null} newScenario - Optional. If provided, sets the current scenario before redrawing.
+ */
+function updateCapacityCalculationsAndDisplay(newScenario = null) {
+    console.log(`Updating capacity display. New scenario: ${newScenario}`);
+    if (newScenario && ['TeamBIS', 'EffectiveBIS', 'FundedHC'].includes(newScenario)) {
+        currentCapacityScenario = newScenario;
+    }
+    if (!currentSystemData) {
+        console.warn("No current system data to calculate metrics from.");
+        return;
+    }
+    const calculatedMetrics = calculateAllCapacityMetrics(currentSystemData);
+    generateCapacitySummaryDisplay(calculatedMetrics, currentCapacityScenario);
+}
+window.updateCapacityCalculationsAndDisplay = updateCapacityCalculationsAndDisplay; // Make global if needed
+
+/**
+ * NEW Function (Phase 5b) - Generates the Summary Table HTML based on calculated metrics and selected scenario.
+ * @param {object} calculatedMetrics - The object returned by calculateAllCapacityMetrics.
+ * @param {string} selectedScenario - The key of the currently selected scenario ('TeamBIS', 'EffectiveBIS', 'FundedHC').
+ */
+function generateCapacitySummaryDisplay(calculatedMetrics, selectedScenario) {
+    console.log(`Generating Capacity Summary Display for scenario: ${selectedScenario}`);
+    const summarySection = document.getElementById('capacitySummarySection');
+    if (!summarySection) { console.error("Summary section not found."); return; }
+
+    const placeholder = summarySection.querySelector('#capacitySummaryPlaceholder');
+    if (placeholder) placeholder.style.display = 'none'; // Hide placeholder
+
+    // --- Scenario Buttons ---
+    let scenarioButtonsDiv = summarySection.querySelector('#capacityScenarioButtons');
+    if (!scenarioButtonsDiv) {
+        scenarioButtonsDiv = document.createElement('div');
+        scenarioButtonsDiv.id = 'capacityScenarioButtons';
+        scenarioButtonsDiv.style.marginBottom = '15px';
+        summarySection.insertBefore(scenarioButtonsDiv, summarySection.querySelector('p')); // Insert before placeholder
+    }
+    const baseButtonStyle = 'padding: 5px 10px; margin-right: 10px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; font-size: 0.9em;';
+    const activeButtonStyle = baseButtonStyle + ' background-color: #007bff; color: white; border-color: #0056b3; font-weight: bold;';
+    const inactiveButtonStyle = baseButtonStyle + ' background-color: #e9ecef; color: #495057;';
+
+    scenarioButtonsDiv.innerHTML = `
+        <strong style="margin-right: 10px;">Show Summary For:</strong>
+        <button type="button" style="${selectedScenario === 'EffectiveBIS' ? activeButtonStyle : inactiveButtonStyle}" onclick="updateCapacityCalculationsAndDisplay('EffectiveBIS')">Effective BIS</button>
+        <button type="button" style="${selectedScenario === 'TeamBIS' ? activeButtonStyle : inactiveButtonStyle}" onclick="updateCapacityCalculationsAndDisplay('TeamBIS')">Team BIS</button>
+        <button type="button" style="${selectedScenario === 'FundedHC' ? activeButtonStyle : inactiveButtonStyle}" onclick="updateCapacityCalculationsAndDisplay('FundedHC')">Funded HC</button>
+    `;
+
+    // --- Summary Table ---
+    let summaryTable = summarySection.querySelector('#capacitySummaryTable');
+    if (!summaryTable) {
+        summaryTable = document.createElement('table');
+        summaryTable.id = 'capacitySummaryTable';
+        summaryTable.style.width = '100%';
+        summaryTable.style.borderCollapse = 'collapse';
+        summaryTable.style.marginTop = '10px';
+        summarySection.appendChild(summaryTable); // Append new table
+    }
+    summaryTable.style.display = 'table'; // Ensure table is visible
+    summaryTable.innerHTML = ''; // Clear previous content
+
+    const thead = summaryTable.createTHead();
+    const headerRow = thead.insertRow();
+    const headers = ['Team Identity', `HC (${selectedScenario})`, `Gross SDE Yrs`, `(-) Deduct SDE Yrs`, `(=) Net Project SDE Yrs`];
+    headers.forEach(text => {
+        const th = document.createElement('th');
+        th.textContent = text;
+        th.style.border = '1px solid #ccc'; th.style.padding = '5px'; th.style.textAlign = 'left'; th.style.backgroundColor = '#f8f9fa';
+        if (text !== 'Team Identity') th.style.textAlign = 'center'; // Center numerical headers
+        headerRow.appendChild(th);
+    });
+
+    const tbody = summaryTable.createTBody();
+    const totals = calculatedMetrics.totals[selectedScenario] || { headcount: 0, grossYrs: 0, deductYrs: 0, netYrs: 0 };
+
+    (currentSystemData.teams || []).forEach(team => {
+        if (!team || !team.teamId) return;
+        const teamMetrics = calculatedMetrics[team.teamId]?.[selectedScenario];
+        if (!teamMetrics) { console.warn(`Metrics not found for team ${team.teamId} and scenario ${selectedScenario}`); return; }
+
+        const row = tbody.insertRow();
+        row.insertCell().textContent = team.teamIdentity || team.teamName || team.teamId;
+        row.insertCell().textContent = teamMetrics.headcount.toFixed(2);
+        row.insertCell().textContent = teamMetrics.grossYrs.toFixed(2);
+        row.insertCell().textContent = teamMetrics.deductYrs.toFixed(2);
+        const netCell = row.insertCell();
+        netCell.textContent = teamMetrics.netYrs.toFixed(2);
+        netCell.style.fontWeight = 'bold';
+
+        // Style numerical cells
+        Array.from(row.cells).forEach((cell, i) => { if (i > 0) cell.style.textAlign = 'center'; });
+    });
+
+    // Add Totals Row
+    const tfoot = summaryTable.createTFoot();
+    const footerRow = tfoot.insertRow();
+    footerRow.style.fontWeight = 'bold'; footerRow.style.backgroundColor = '#f0f0f0';
+    footerRow.insertCell().textContent = 'TOTALS';
+    footerRow.insertCell().textContent = (totals.headcount).toFixed(2);
+    footerRow.insertCell().textContent = totals.grossYrs.toFixed(2);
+    footerRow.insertCell().textContent = totals.deductYrs.toFixed(2);
+    footerRow.insertCell().textContent = totals.netYrs.toFixed(2);
+    Array.from(footerRow.cells).forEach((cell, i) => {
+        cell.style.borderTop = '2px solid #666';
+        if (i > 0) cell.style.textAlign = 'center';
+    });
+
+    console.log("Summary display generated.");
+}
+window.generateCapacitySummaryDisplay = generateCapacitySummaryDisplay; // Make global if needed
+
+/**
  * REVISED Function (Phase 4b - SIMPLIFIED Team Activities UI)
  * - Removes Participation % column from Team Activities table.
  * - Clarifies 'Value' input meaning via tooltips based on 'Est. Type'.
@@ -2404,7 +2518,7 @@ function generateTeamConstraintsForms() {
                          const valueInput = row.querySelector('input[name="value"]');
                          if(valueInput) valueInput.title = value === 'perSDE' ? 'Enter TOTAL SDE-Days impact (e.g., # SDEs * Duration)' : 'Enter TOTAL calendar days for the activity (applies to whole team)';
                      }
-                     // generateCapacitySummaryDisplay(); // Future
+                     updateCapacityCalculationsAndDisplay();
                  };
                  cell.appendChild(element); return element;
              };
@@ -2424,7 +2538,7 @@ function generateTeamConstraintsForms() {
             removeBtn.onclick = () => {
                 team.teamCapacityAdjustments.teamActivities.splice(activityIndex, 1);
                 renderTeamActivitiesTable(teamIndex, targetContainer); // Re-render this specific table
-                // generateCapacitySummaryDisplay(); // Future
+                updateCapacityCalculationsAndDisplay();
             };
             actionCell.appendChild(removeBtn);
         }); // end forEach activity
@@ -2468,7 +2582,7 @@ function generateTeamConstraintsForms() {
              const row = stdLeaveTbody.insertRow(); row.insertCell().textContent = leaveType.name;
              const percentCell = row.insertCell(); percentCell.style.textAlign = 'center'; const percentInput = document.createElement('input'); percentInput.type = 'number'; percentInput.min = '0'; percentInput.max = '100'; percentInput.step = '5'; percentInput.value = teamUptakePercentValue; percentInput.placeholder = '100'; percentInput.style.width = '60px'; percentInput.style.textAlign = 'center'; percentInput.title = `Enter % uptake (0-100) for ${leaveType.name}. Blank means 100% of default: ${globalDefault}`; percentInput.setAttribute('data-leave-type-id', leaveType.id); percentInput.setAttribute('data-team-index', teamIndex); const effectiveDaysCell = row.insertCell(); effectiveDaysCell.id = `effectiveDays_${teamIndex}_${leaveType.id}`; effectiveDaysCell.textContent = effectiveDays.toFixed(1); effectiveDaysCell.style.textAlign = 'center'; effectiveDaysCell.style.fontWeight = 'bold';
              percentInput.addEventListener('change', (e) => {
-                  const inputVal = e.target.value.trim(); const lTypeId = e.target.getAttribute('data-leave-type-id'); const tIdx = parseInt(e.target.getAttribute('data-team-index')); const targetTeam = currentSystemData.teams[tIdx]; if (!targetTeam?.teamCapacityAdjustments?.leaveUptakeEstimates) return; const estimateIndex = targetTeam.teamCapacityAdjustments.leaveUptakeEstimates.findIndex(est => est.leaveTypeId === lTypeId); let validatedPercent = 100; if (inputVal !== '') { const numericVal = parseInt(inputVal); if (!isNaN(numericVal) && numericVal >= 0 && numericVal <= 100) { validatedPercent = numericVal; } else { const previousEstimate = (estimateIndex > -1) ? targetTeam.teamCapacityAdjustments.leaveUptakeEstimates[estimateIndex] : null; e.target.value = previousEstimate ? (previousEstimate.estimatedUptakePercent ?? '') : ''; validatedPercent = previousEstimate ? (previousEstimate.estimatedUptakePercent ?? 100) : 100;} } if (inputVal === '' || validatedPercent === 100) { if (estimateIndex > -1) { targetTeam.teamCapacityAdjustments.leaveUptakeEstimates.splice(estimateIndex, 1); console.log(`Removed % override for ${lTypeId} on team ${tIdx}`); } e.target.value = ''; validatedPercent = 100; } else { if (estimateIndex > -1) { targetTeam.teamCapacityAdjustments.leaveUptakeEstimates[estimateIndex].estimatedUptakePercent = validatedPercent; } else { targetTeam.teamCapacityAdjustments.leaveUptakeEstimates.push({ leaveTypeId: lTypeId, estimatedUptakePercent: validatedPercent }); } e.target.value = validatedPercent; console.log(`Set % uptake for ${lTypeId} on team ${tIdx} to ${validatedPercent}`); } const currentDefaultObj = currentSystemData.capacityConfiguration.leaveTypes.find(lt => lt.id === lTypeId); const currentDefaultVal = currentDefaultObj ? (currentDefaultObj.defaultEstimatedDays || 0) : 0; const effectiveCell = document.getElementById(`effectiveDays_${tIdx}_${lTypeId}`); if(effectiveCell) effectiveCell.textContent = (currentDefaultVal * (validatedPercent / 100)).toFixed(1); updateTotalStdLeaveDisplay(tIdx);
+                  const inputVal = e.target.value.trim(); const lTypeId = e.target.getAttribute('data-leave-type-id'); const tIdx = parseInt(e.target.getAttribute('data-team-index')); const targetTeam = currentSystemData.teams[tIdx]; if (!targetTeam?.teamCapacityAdjustments?.leaveUptakeEstimates) return; const estimateIndex = targetTeam.teamCapacityAdjustments.leaveUptakeEstimates.findIndex(est => est.leaveTypeId === lTypeId); let validatedPercent = 100; if (inputVal !== '') { const numericVal = parseInt(inputVal); if (!isNaN(numericVal) && numericVal >= 0 && numericVal <= 100) { validatedPercent = numericVal; } else { const previousEstimate = (estimateIndex > -1) ? targetTeam.teamCapacityAdjustments.leaveUptakeEstimates[estimateIndex] : null; e.target.value = previousEstimate ? (previousEstimate.estimatedUptakePercent ?? '') : ''; validatedPercent = previousEstimate ? (previousEstimate.estimatedUptakePercent ?? 100) : 100;} } if (inputVal === '' || validatedPercent === 100) { if (estimateIndex > -1) { targetTeam.teamCapacityAdjustments.leaveUptakeEstimates.splice(estimateIndex, 1); console.log(`Removed % override for ${lTypeId} on team ${tIdx}`); } e.target.value = ''; validatedPercent = 100; } else { if (estimateIndex > -1) { targetTeam.teamCapacityAdjustments.leaveUptakeEstimates[estimateIndex].estimatedUptakePercent = validatedPercent; } else { targetTeam.teamCapacityAdjustments.leaveUptakeEstimates.push({ leaveTypeId: lTypeId, estimatedUptakePercent: validatedPercent }); } e.target.value = validatedPercent; console.log(`Set % uptake for ${lTypeId} on team ${tIdx} to ${validatedPercent}`); } const currentDefaultObj = currentSystemData.capacityConfiguration.leaveTypes.find(lt => lt.id === lTypeId); const currentDefaultVal = currentDefaultObj ? (currentDefaultObj.defaultEstimatedDays || 0) : 0; const effectiveCell = document.getElementById(`effectiveDays_${tIdx}_${lTypeId}`); if(effectiveCell) effectiveCell.textContent = (currentDefaultVal * (validatedPercent / 100)).toFixed(1); updateTotalStdLeaveDisplay(tIdx); updateCapacityCalculationsAndDisplay();
               });
               percentCell.appendChild(percentInput);
          });
@@ -2478,7 +2592,7 @@ function generateTeamConstraintsForms() {
         // --- Variable Leave Estimates Section ---
         // ... (Variable Leave UI generation - No change) ...
          const varLeaveTitle = document.createElement('h5'); varLeaveTitle.textContent = 'Variable Leave Impact Estimate'; varLeaveTitle.style.marginTop = '15px'; varLeaveTitle.title = 'Estimate the total impact ON THE TEAM for variable leave (Maternity, Paternity, etc.). Enter # SDEs affected and Avg Days/SDE for each.'; detailsContainer.appendChild(varLeaveTitle); const varLeaveContainer = document.createElement('div'); varLeaveContainer.style.marginLeft = '20px';
-         const handleVariableLeaveInputChange = (e) => { const input = e.target; const tIdx = parseInt(input.getAttribute('data-team-index')); const leaveKey = input.getAttribute('data-leave-key'); const field = input.getAttribute('data-field'); const targetTeam = currentSystemData.teams[tIdx]; if (!targetTeam?.teamCapacityAdjustments?.variableLeaveImpact?.[leaveKey] || !field) return; const value = parseInt(input.value); const validatedValue = (!isNaN(value) && value >= 0) ? value : 0; targetTeam.teamCapacityAdjustments.variableLeaveImpact[leaveKey][field] = validatedValue; input.value = validatedValue; console.log(`Updated ${leaveKey}.${field} for team ${tIdx} to ${validatedValue}`); updateVariableLeaveTotalDisplay(tIdx, leaveKey); };
+         const handleVariableLeaveInputChange = (e) => { const input = e.target; const tIdx = parseInt(input.getAttribute('data-team-index')); const leaveKey = input.getAttribute('data-leave-key'); const field = input.getAttribute('data-field'); const targetTeam = currentSystemData.teams[tIdx]; if (!targetTeam?.teamCapacityAdjustments?.variableLeaveImpact?.[leaveKey] || !field) return; const value = parseInt(input.value); const validatedValue = (!isNaN(value) && value >= 0) ? value : 0; targetTeam.teamCapacityAdjustments.variableLeaveImpact[leaveKey][field] = validatedValue; input.value = validatedValue; console.log(`Updated ${leaveKey}.${field} for team ${tIdx} to ${validatedValue}`); updateVariableLeaveTotalDisplay(tIdx, leaveKey); updateCapacityCalculationsAndDisplay();};
          const createVarLeaveInputRow = (targetTeam, leaveKey, labelText) => { const div = document.createElement('div'); div.style.marginBottom = '5px'; div.style.display = 'flex'; div.style.alignItems = 'center'; const label = document.createElement('label'); label.textContent = `${labelText}: `; label.style.width = '180px'; label.style.marginRight = '10px'; div.appendChild(label); const sdesInput = document.createElement('input'); sdesInput.type = 'number'; sdesInput.min = '0'; sdesInput.step = '1'; sdesInput.value = targetTeam.teamCapacityAdjustments.variableLeaveImpact[leaveKey]?.affectedSDEs || 0; sdesInput.style.width = '60px'; sdesInput.style.marginRight = '5px'; sdesInput.title = '# SDEs Affected'; sdesInput.setAttribute('data-team-index', teamIndex); sdesInput.setAttribute('data-leave-key', leaveKey); sdesInput.setAttribute('data-field', 'affectedSDEs'); sdesInput.addEventListener('change', handleVariableLeaveInputChange); div.appendChild(sdesInput); div.appendChild(document.createTextNode(' SDEs * ')); const daysInput = document.createElement('input'); daysInput.type = 'number'; daysInput.min = '0'; daysInput.step = '1'; daysInput.value = targetTeam.teamCapacityAdjustments.variableLeaveImpact[leaveKey]?.avgDaysPerAffectedSDE || 0; daysInput.style.width = '60px'; daysInput.style.marginRight = '10px'; daysInput.title = 'Avg. Days per Affected SDE'; daysInput.setAttribute('data-team-index', teamIndex); daysInput.setAttribute('data-leave-key', leaveKey); daysInput.setAttribute('data-field', 'avgDaysPerAffectedSDE'); daysInput.addEventListener('change', handleVariableLeaveInputChange); div.appendChild(daysInput); div.appendChild(document.createTextNode(' Days/SDE = ')); const totalDisplay = document.createElement('span'); totalDisplay.className = 'variable-leave-total-display'; totalDisplay.setAttribute('data-leave-key', leaveKey); totalDisplay.style.fontWeight = 'bold'; totalDisplay.style.minWidth = '40px'; totalDisplay.style.display = 'inline-block'; const initialTotal = (sdesInput.valueAsNumber || 0) * (daysInput.valueAsNumber || 0); totalDisplay.textContent = initialTotal.toFixed(0); div.appendChild(totalDisplay); div.appendChild(document.createTextNode(' Total SDE Days')); return div; };
          varLeaveContainer.appendChild(createVarLeaveInputRow(team, 'maternity', 'Maternity Leave')); varLeaveContainer.appendChild(createVarLeaveInputRow(team, 'paternity', 'Paternity Leave')); varLeaveContainer.appendChild(createVarLeaveInputRow(team, 'familyResp', 'Family Responsibility')); varLeaveContainer.appendChild(createVarLeaveInputRow(team, 'medical', 'Medical Leave')); detailsContainer.appendChild(varLeaveContainer);
         // --- End Variable Leave Section ---
@@ -2532,8 +2646,8 @@ function generateTeamConstraintsForms() {
             targetTeam.teamCapacityAdjustments.avgOverheadHoursPerWeekPerSDE = validatedValue;
             e.target.value = validatedValue.toFixed(1); // Ensure input shows validated value (e.g., 1 decimal for hours)
             console.log(`Updated avgOverheadHoursPerWeekPerSDE for team ${tIdx} to ${validatedValue}`);
-            // Later: Trigger summary recalculation
-            // generateCapacitySummaryDisplay();
+            // Trigger summary recalculation
+            updateCapacityCalculationsAndDisplay();
         });
 
         overheadContainer.appendChild(overheadLabel);
