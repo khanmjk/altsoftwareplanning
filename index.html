@@ -2076,47 +2076,59 @@ function generateGlobalConstraintsForm() {
     // *** Find the tbody WITHIN the newly created table ***
     const orgEventsTbody = orgEventsTable.querySelector('#orgEventsTbody'); // Find tbody inside the table
 
-    // Function to render org events rows (NOW accepts tbody as argument)
-    const renderOrgEvents = (tbodyElement) => { // Added tbodyElement parameter
-        if (!tbodyElement) {
-            console.error("renderOrgEvents called without a valid tbody element.");
-            return;
-        }
-        // const tbody = document.getElementById('orgEventsTbody'); // REMOVED THIS LINE
-        tbodyElement.innerHTML = ''; // Clear existing - Use the passed-in element
-        const events = currentSystemData.capacityConfiguration.globalConstraints.orgEvents || [];
+    // --- REVISED renderOrgEvents function within generateGlobalConstraintsForm ---
+    const renderOrgEvents = (tbodyElement) => {
+        if (!tbodyElement) {console.error("Org events tbody not found for rendering"); return;}
+        tbodyElement.innerHTML = '';
+        // Access the array safely AFTER the check/init above
+        const events = currentSystemData.capacityConfiguration.globalConstraints.orgEvents;
+        console.log("[DEBUG] Rendering org events table with data:", JSON.stringify(events)); // Add log to see data used for render
+    
         events.forEach((event, index) => {
-            // *** Ensure the removeBtn onclick closure captures the correct tbodyElement ***
-            const row = tbodyElement.insertRow(); // Use tbodyElement
-
-            const nameCell = row.insertCell();
-            nameCell.style.border = '1px solid #ccc'; nameCell.style.padding = '5px';
-            const nameInput = document.createElement('input');
-            nameInput.type = 'text'; nameInput.value = event.name || ''; nameInput.style.width = '95%';
-            nameInput.onchange = (e) => { event.name = e.target.value; console.log(`Updated org event[${index}] name`); /* Trigger recalc */ };
+            const row = tbodyElement.insertRow();
+            const nameCell = row.insertCell(); /* ... Name Input Cell ... */ nameCell.style.border = '1px solid #ccc'; nameCell.style.padding = '5px'; const nameInput = document.createElement('input'); nameInput.type = 'text'; nameInput.value = event.name || ''; nameInput.style.width = '95%';
+            // *** MODIFIED NAME INPUT ONCHANGE ***
+            nameInput.onchange = (e) => {
+                // Explicitly find the event in currentSystemData using index
+                const eventToUpdate = currentSystemData.capacityConfiguration.globalConstraints.orgEvents[index];
+                if (eventToUpdate) {
+                    eventToUpdate.name = e.target.value; // Update the object in the main data structure
+                    console.log(`Updated org event[${index}] name in currentSystemData`);
+                    updateCapacityCalculationsAndDisplay(); // Trigger update
+                } else {
+                    console.error(`Could not find org event at index ${index} to update name.`);
+                }
+            };
             nameCell.appendChild(nameInput);
-
-            const daysCell = row.insertCell();
-            daysCell.style.border = '1px solid #ccc'; daysCell.style.padding = '5px'; daysCell.style.textAlign = 'center';
-            const daysInput = document.createElement('input');
-            daysInput.type = 'number'; daysInput.min = '0'; daysInput.step = '0.5'; daysInput.value = event.estimatedDaysPerSDE || 0; daysInput.style.width = '60px';
-            daysInput.onchange = (e) => { event.estimatedDaysPerSDE = parseFloat(e.target.value) || 0; console.log(`Updated org event[${index}] days`); /* Trigger recalc */ };
+    
+            const daysCell = row.insertCell(); /* ... Days Input Cell ... */ daysCell.style.border = '1px solid #ccc'; daysCell.style.padding = '5px'; daysCell.style.textAlign = 'center'; const daysInput = document.createElement('input'); daysInput.type = 'number'; daysInput.min = '0'; daysInput.step = '0.5'; daysInput.value = event.estimatedDaysPerSDE || 0; daysInput.style.width = '60px';
+            // *** MODIFIED DAYS INPUT ONCHANGE ***
+            daysInput.onchange = (e) => {
+                 // Explicitly find the event in currentSystemData using index
+                 const eventToUpdate = currentSystemData.capacityConfiguration.globalConstraints.orgEvents[index];
+                 if (eventToUpdate) {
+                     eventToUpdate.estimatedDaysPerSDE = parseFloat(e.target.value) || 0; // Update the object in the main data structure
+                     console.log(`Updated org event[${index}] days in currentSystemData`);
+                     updateCapacityCalculationsAndDisplay(); // Trigger update
+                 } else {
+                     console.error(`Could not find org event at index ${index} to update days.`);
+                 }
+            };
             daysCell.appendChild(daysInput);
-
-            const actionCell = row.insertCell();
-            actionCell.style.border = '1px solid #ccc'; actionCell.style.padding = '5px'; actionCell.style.textAlign = 'center';
-            const removeBtn = document.createElement('button');
-            removeBtn.textContent = 'Remove'; removeBtn.style.fontSize = '0.9em';
+    
+            const actionCell = row.insertCell(); /* ... Remove Button Cell ... */ actionCell.style.border = '1px solid #ccc'; actionCell.style.padding = '5px'; actionCell.style.textAlign = 'center'; const removeBtn = document.createElement('button'); removeBtn.textContent = 'Remove'; removeBtn.style.fontSize = '0.9em';
+            // Remove button logic remains the same - it correctly modifies the array directly
             removeBtn.onclick = () => {
-                 if (!currentSystemData.capacityConfiguration.globalConstraints.orgEvents) return; // Safety check
-                 currentSystemData.capacityConfiguration.globalConstraints.orgEvents.splice(index, 1);
-                 renderOrgEvents(tbodyElement); // Pass the tbodyElement again for re-render
-                 // Trigger recalculation of summary display
-                 updateCapacityCalculationsAndDisplay();
-             };
-             actionCell.appendChild(removeBtn);
-         });
+                console.log(`Attempting to remove org event at index ${index}`);
+                currentSystemData.capacityConfiguration.globalConstraints.orgEvents.splice(index, 1);
+                console.log("Spliced event from array. New array:", JSON.stringify(currentSystemData.capacityConfiguration.globalConstraints.orgEvents));
+                renderOrgEvents(tbodyElement); // Re-render the table rows
+                updateCapacityCalculationsAndDisplay(); // Trigger summary update
+            };
+            actionCell.appendChild(removeBtn);
+        });
     };
+    // --- END REVISED renderOrgEvents function ---
 
     // Check if tbody was found before calling renderOrgEvents
     if (orgEventsTbody) {
