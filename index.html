@@ -1966,11 +1966,27 @@ function generateGlobalConstraintsForm() {
      }
 
 
-    // Clear placeholder
-    container.innerHTML = '';
-
     // --- Create Section for Global Settings ---
-    const globalSection = document.createElement('div');
+    let globalSection = document.getElementById('globalConstraintsSection');
+    if (!globalSection) {
+        console.log("Creating #globalConstraintsSection div...");
+        globalSection = document.createElement('div');
+        globalSection.id = 'globalConstraintsSection';
+        globalSection.style.border = '1px solid #ccc';
+        globalSection.style.padding = '15px';
+        globalSection.style.marginBottom = '20px';
+        const globalTitle = document.createElement('h3');
+        globalTitle.textContent = 'Organizational Defaults & Global Events';
+        globalSection.appendChild(globalTitle);
+        // Insert the new section at the beginning of the main container
+        container.insertBefore(globalSection, container.firstChild);
+    } else {
+        console.log("Clearing existing content within #globalConstraintsSection (keeping title)...");
+        // Clear previous content EXCEPT the title (assuming H3 is the first child)
+        while (globalSection.childNodes.length > 1) {
+            globalSection.removeChild(globalSection.lastChild);
+        }
+      }
     globalSection.style.border = '1px solid #ccc';
     globalSection.style.padding = '15px';
     globalSection.style.marginBottom = '20px';
@@ -2177,7 +2193,6 @@ function generateGlobalConstraintsForm() {
     // Note: Not adding 'Add New Leave Type' for now to keep MVP simpler.
 
     // --- Append Global Section ---
-    container.appendChild(globalSection);
     console.log("Finished generating Global Constraints Form.");
 }
 window.generateGlobalConstraintsForm = generateGlobalConstraintsForm; // Make global if needed
