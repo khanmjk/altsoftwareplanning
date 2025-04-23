@@ -1950,6 +1950,12 @@ function generateGlobalConstraintsForm() {
     if (!currentSystemData.capacityConfiguration.globalConstraints) {
          currentSystemData.capacityConfiguration.globalConstraints = { publicHolidays: null, orgEvents: [] };
     }
+
+    if (!currentSystemData.capacityConfiguration.globalConstraints.orgEvents || !Array.isArray(currentSystemData.capacityConfiguration.globalConstraints.orgEvents)) {
+         console.warn("Initializing missing or invalid orgEvents array.");
+         currentSystemData.capacityConfiguration.globalConstraints.orgEvents = [];
+     }
+     
      if (!currentSystemData.capacityConfiguration.leaveTypes) {
          currentSystemData.capacityConfiguration.leaveTypes = [
              { id: "annual", name: "Annual Leave", defaultEstimatedDays: 0 },
@@ -1983,7 +1989,7 @@ function generateGlobalConstraintsForm() {
     wdInput.id = 'workingDaysInput';
     wdInput.min = '1';
     wdInput.step = '1';
-    wdInput.value = currentSystemData.capacityConfiguration.workingDaysPerYear || 230; // Default if null
+    wdInput.value = currentSystemData.capacityConfiguration.workingDaysPerYear || 261; // Default if null
     wdInput.style.width = '80px';
     wdInput.addEventListener('change', (e) => {
         const value = parseInt(e.target.value);
@@ -1993,7 +1999,7 @@ function generateGlobalConstraintsForm() {
             //Trigger recalculation of summary display
             updateCapacityCalculationsAndDisplay();
         } else {
-            e.target.value = currentSystemData.capacityConfiguration.workingDaysPerYear || 230; // Revert if invalid
+            e.target.value = currentSystemData.capacityConfiguration.workingDaysPerYear || 261; // Revert if invalid
         }
     });
     globalSection.appendChild(wdLabel);
@@ -2192,7 +2198,7 @@ function calculateAllCapacityMetrics(systemData) {
 
     // --- Get Global Settings ---
     const config = systemData.capacityConfiguration;
-    const workingDaysPerYear = config.workingDaysPerYear || 230; // Default if null
+    const workingDaysPerYear = config.workingDaysPerYear || 261; // Default if null
     const publicHolidays = config.globalConstraints?.publicHolidays || 0;
     const globalLeaveTypes = config.leaveTypes || [];
     const orgEvents = config.globalConstraints?.orgEvents || [];
@@ -2201,8 +2207,10 @@ function calculateAllCapacityMetrics(systemData) {
 
     // --- Calculate Deduction Days PER SDE (where applicable) ---
     let deduction_days_per_sde_org_events = 0;
+    console.log("[DEBUG] Calculating Org Events:", JSON.stringify(orgEvents));
     orgEvents.forEach(event => { deduction_days_per_sde_org_events += (event.estimatedDaysPerSDE || 0); });
-
+    console.log(`[DEBUG] Calculated deduction_days_per_sde_org_events: ${deduction_days_per_sde_org_events}`);
+    
     // --- Initialize Overall Totals ---
     results.totals.TeamBIS = { headcount: 0, grossYrs: 0, deductYrs: 0, netYrs: 0 };
     results.totals.EffectiveBIS = { headcount: 0, grossYrs: 0, deductYrs: 0, netYrs: 0 };
