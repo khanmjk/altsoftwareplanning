@@ -747,15 +747,16 @@ const sampleTeamsDataStreamView = [
         sdmId: 'sdm1',
         pmtId: 'pmt1',
         teamCapacityAdjustments: {
-          leaveUptakeEstimates: [], // For Annual, Sick, Study % overrides
-          estimatedTeamLeaveDays: { // For total team days M/P/FR
-              maternity: 0,
-              paternity: 0,
-              familyResp: 0
-          },
-          teamActivities: [],
-          recurringOverhead: []
-        }        
+            leaveUptakeEstimates: [], // Empty by default
+            variableLeaveImpact: {   // New structure
+                maternity:  { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                paternity:  { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                medical:    { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }
+            },
+            teamActivities: [],
+            recurringOverhead: []
+        }
     },
     {
         teamId: 'team2',
@@ -775,15 +776,16 @@ const sampleTeamsDataStreamView = [
         sdmId: 'sdm2',
         pmtId: 'pmt2',
         teamCapacityAdjustments: {
-          leaveUptakeEstimates: [], // For Annual, Sick, Study % overrides
-          estimatedTeamLeaveDays: { // For total team days M/P/FR
-              maternity: 0,
-              paternity: 0,
-              familyResp: 0
-          },
-          teamActivities: [],
-          recurringOverhead: []
-        }        
+            leaveUptakeEstimates: [], // Empty by default
+            variableLeaveImpact: {   // New structure
+                maternity:  { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                paternity:  { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                medical:    { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }
+            },
+            teamActivities: [],
+            recurringOverhead: []
+        }
 
     },
     {
@@ -801,15 +803,16 @@ const sampleTeamsDataStreamView = [
         sdmId: 'sdm3',
         pmtId: 'pmt2',
         teamCapacityAdjustments: {
-          leaveUptakeEstimates: [], // For Annual, Sick, Study % overrides
-          estimatedTeamLeaveDays: { // For total team days M/P/FR
-              maternity: 0,
-              paternity: 0,
-              familyResp: 0
-          },
-          teamActivities: [],
-          recurringOverhead: []
-        }        
+            leaveUptakeEstimates: [], // Empty by default
+            variableLeaveImpact: {   // New structure
+                maternity:  { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                paternity:  { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                medical:    { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }
+            },
+            teamActivities: [],
+            recurringOverhead: []
+        }
 
     },
     {
@@ -831,15 +834,16 @@ const sampleTeamsDataStreamView = [
         sdmId: 'sdm4',
         pmtId: 'pmt3',
         teamCapacityAdjustments: {
-          leaveUptakeEstimates: [], // For Annual, Sick, Study % overrides
-          estimatedTeamLeaveDays: { // For total team days M/P/FR
-              maternity: 0,
-              paternity: 0,
-              familyResp: 0
-          },
-          teamActivities: [],
-          recurringOverhead: []
-        }        
+            leaveUptakeEstimates: [], // Empty by default
+            variableLeaveImpact: {   // New structure
+                maternity:  { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                paternity:  { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                medical:    { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }
+            },
+            teamActivities: [],
+            recurringOverhead: []
+        }
 
     },
     {
@@ -857,15 +861,16 @@ const sampleTeamsDataStreamView = [
         sdmId: 'sdm5',
         pmtId: 'pmt3',
         teamCapacityAdjustments: {
-          leaveUptakeEstimates: [], // For Annual, Sick, Study % overrides
-          estimatedTeamLeaveDays: { // For total team days M/P/FR
-              maternity: 0,
-              paternity: 0,
-              familyResp: 0
-          },
-          teamActivities: [],
-          recurringOverhead: []
-        }        
+            leaveUptakeEstimates: [], // Empty by default
+            variableLeaveImpact: {   // New structure
+                maternity:  { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                paternity:  { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                medical:    { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }
+            },
+            teamActivities: [],
+            recurringOverhead: []
+        }
 
     },
     {
@@ -882,15 +887,16 @@ const sampleTeamsDataStreamView = [
         sdmId: 'sdm6',
         pmtId: 'pmt2',
         teamCapacityAdjustments: {
-          leaveUptakeEstimates: [], // For Annual, Sick, Study % overrides
-          estimatedTeamLeaveDays: { // For total team days M/P/FR
-              maternity: 0,
-              paternity: 0,
-              familyResp: 0
-          },
-          teamActivities: [],
-          recurringOverhead: []
-        }        
+            leaveUptakeEstimates: [], // Empty by default
+            variableLeaveImpact: {   // New structure
+                maternity:  { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                paternity:  { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                medical:    { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }
+            },
+            teamActivities: [],
+            recurringOverhead: []
+        }
 
     },
     {
@@ -908,15 +914,16 @@ const sampleTeamsDataStreamView = [
         sdmId: 'sdm7',
         pmtId: 'pmt4',
         teamCapacityAdjustments: {
-          leaveUptakeEstimates: [], // For Annual, Sick, Study % overrides
-          estimatedTeamLeaveDays: { // For total team days M/P/FR
-              maternity: 0,
-              paternity: 0,
-              familyResp: 0
-          },
-          teamActivities: [],
-          recurringOverhead: []
-        }        
+            leaveUptakeEstimates: [], // Empty by default
+            variableLeaveImpact: {   // New structure
+                maternity:  { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                paternity:  { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                medical:    { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }
+            },
+            teamActivities: [],
+            recurringOverhead: []
+        }
 
     },
     {
@@ -933,15 +940,16 @@ const sampleTeamsDataStreamView = [
         sdmId: 'sdm8',
         pmtId: 'pmt1',
         teamCapacityAdjustments: {
-          leaveUptakeEstimates: [], // For Annual, Sick, Study % overrides
-          estimatedTeamLeaveDays: { // For total team days M/P/FR
-              maternity: 0,
-              paternity: 0,
-              familyResp: 0
-          },
-          teamActivities: [],
-          recurringOverhead: []
-        }        
+            leaveUptakeEstimates: [], // Empty by default
+            variableLeaveImpact: {   // New structure
+                maternity:  { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                paternity:  { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                medical:    { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }
+            },
+            teamActivities: [],
+            recurringOverhead: []
+        }
 
     }
 ];
@@ -1168,8 +1176,8 @@ const sampleSystemDataStreamView = {
         leaveTypes: [ // Define standard leave types globally
             { id: "annual", name: "Annual Leave", defaultEstimatedDays: 0 },
             { id: "sick", name: "Sick Leave", defaultEstimatedDays: 0 },
-            { id: "study", name: "Study Leave", defaultEstimatedDays: 0 }
-            //{ id: "maternity", name: "Maternity Leave", defaultEstimatedDays: 0 },
+            { id: "study", name: "Study Leave", defaultEstimatedDays: 0 },
+            { id: "inlieu", name: "Time off In-lieu Leave", defaultEstimatedDays: 0 }
             //{ id: "paternity", name: "Paternity Leave", defaultEstimatedDays: 0 },
             //{ id: "family", name: "Family Responsibility", defaultEstimatedDays: 0 }
         ]
@@ -1268,15 +1276,16 @@ const contactCenterTeamsData = [
         sdmId: 'sdm1',
         pmtId: 'pmt1',
         teamCapacityAdjustments: {
-          leaveUptakeEstimates: [], // For Annual, Sick, Study % overrides
-          estimatedTeamLeaveDays: { // For total team days M/P/FR
-              maternity: 0,
-              paternity: 0,
-              familyResp: 0
-          },
-          teamActivities: [],
-          recurringOverhead: []
-        }        
+            leaveUptakeEstimates: [], // Empty by default
+            variableLeaveImpact: {   // New structure
+                maternity:  { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                paternity:  { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                medical:    { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }
+            },
+            teamActivities: [],
+            recurringOverhead: []
+        }
         
     },
     {
@@ -1295,15 +1304,16 @@ const contactCenterTeamsData = [
         sdmId: 'sdm1',
         pmtId: 'pmt2',
         teamCapacityAdjustments: {
-          leaveUptakeEstimates: [], // For Annual, Sick, Study % overrides
-          estimatedTeamLeaveDays: { // For total team days M/P/FR
-              maternity: 0,
-              paternity: 0,
-              familyResp: 0
-          },
-          teamActivities: [],
-          recurringOverhead: []
-        }        
+            leaveUptakeEstimates: [], // Empty by default
+            variableLeaveImpact: {   // New structure
+                maternity:  { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                paternity:  { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                medical:    { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }
+            },
+            teamActivities: [],
+            recurringOverhead: []
+        }
         
     },
     {
@@ -1324,15 +1334,16 @@ const contactCenterTeamsData = [
         sdmId: 'sdm2',
         pmtId: 'pmt2',
         teamCapacityAdjustments: {
-          leaveUptakeEstimates: [], // For Annual, Sick, Study % overrides
-          estimatedTeamLeaveDays: { // For total team days M/P/FR
-              maternity: 0,
-              paternity: 0,
-              familyResp: 0
-          },
-          teamActivities: [],
-          recurringOverhead: []
-        }        
+            leaveUptakeEstimates: [], // Empty by default
+            variableLeaveImpact: {   // New structure
+                maternity:  { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                paternity:  { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                medical:    { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }
+            },
+            teamActivities: [],
+            recurringOverhead: []
+        }
         
     },
     {
@@ -1351,15 +1362,16 @@ const contactCenterTeamsData = [
         sdmId: 'sdm2', // Still under Matthew Jackson
         pmtId: 'pmt3',
         teamCapacityAdjustments: {
-          leaveUptakeEstimates: [], // For Annual, Sick, Study % overrides
-          estimatedTeamLeaveDays: { // For total team days M/P/FR
-              maternity: 0,
-              paternity: 0,
-              familyResp: 0
-          },
-          teamActivities: [],
-          recurringOverhead: []
-        }        
+            leaveUptakeEstimates: [], // Empty by default
+            variableLeaveImpact: {   // New structure
+                maternity:  { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                paternity:  { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                medical:    { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }
+            },
+            teamActivities: [],
+            recurringOverhead: []
+        }
         
     },
     {
@@ -1381,15 +1393,16 @@ const contactCenterTeamsData = [
         sdmId: 'sdm3',
         pmtId: 'pmt3',
         teamCapacityAdjustments: {
-          leaveUptakeEstimates: [], // For Annual, Sick, Study % overrides
-          estimatedTeamLeaveDays: { // For total team days M/P/FR
-              maternity: 0,
-              paternity: 0,
-              familyResp: 0
-          },
-          teamActivities: [],
-          recurringOverhead: []
-        }        
+            leaveUptakeEstimates: [], // Empty by default
+            variableLeaveImpact: {   // New structure
+                maternity:  { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                paternity:  { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                medical:    { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }
+            },
+            teamActivities: [],
+            recurringOverhead: []
+        }
         
     },
     {
@@ -1406,15 +1419,16 @@ const contactCenterTeamsData = [
         sdmId: 'sdm3',
         pmtId: 'pmt2',
         teamCapacityAdjustments: {
-          leaveUptakeEstimates: [], // For Annual, Sick, Study % overrides
-          estimatedTeamLeaveDays: { // For total team days M/P/FR
-              maternity: 0,
-              paternity: 0,
-              familyResp: 0
-          },
-          teamActivities: [],
-          recurringOverhead: []
-        }        
+            leaveUptakeEstimates: [], // Empty by default
+            variableLeaveImpact: {   // New structure
+                maternity:  { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                paternity:  { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                medical:    { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }
+            },
+            teamActivities: [],
+            recurringOverhead: []
+        }
         
     },
     {
@@ -1433,15 +1447,16 @@ const contactCenterTeamsData = [
         sdmId: 'sdm4',
         pmtId: 'pmt4',
         teamCapacityAdjustments: {
-          leaveUptakeEstimates: [], // For Annual, Sick, Study % overrides
-          estimatedTeamLeaveDays: { // For total team days M/P/FR
-              maternity: 0,
-              paternity: 0,
-              familyResp: 0
-          },
-          teamActivities: [],
-          recurringOverhead: []
-        }        
+            leaveUptakeEstimates: [], // Empty by default
+            variableLeaveImpact: {   // New structure
+                maternity:  { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                paternity:  { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                medical:    { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }
+            },
+            teamActivities: [],
+            recurringOverhead: []
+        }
         
     },
     {
@@ -1458,15 +1473,16 @@ const contactCenterTeamsData = [
         sdmId: 'sdm4', // Still under Laura Turner
         pmtId: 'pmt1',
         teamCapacityAdjustments: {
-          leaveUptakeEstimates: [], // For Annual, Sick, Study % overrides
-          estimatedTeamLeaveDays: { // For total team days M/P/FR
-              maternity: 0,
-              paternity: 0,
-              familyResp: 0
-          },
-          teamActivities: [],
-          recurringOverhead: []
-        }        
+            leaveUptakeEstimates: [], // Empty by default
+            variableLeaveImpact: {   // New structure
+                maternity:  { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                paternity:  { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                medical:    { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }
+            },
+            teamActivities: [],
+            recurringOverhead: []
+        }
         
     }
 ];
@@ -1665,8 +1681,8 @@ const sampleSystemDataContactCenter = {
         leaveTypes: [ // Define standard leave types globally
             { id: "annual", name: "Annual Leave", defaultEstimatedDays: 0 },
             { id: "sick", name: "Sick Leave", defaultEstimatedDays: 0 },
-            { id: "study", name: "Study Leave", defaultEstimatedDays: 0 }
-           // { id: "maternity", name: "Maternity Leave", defaultEstimatedDays: 0 },
+            { id: "study", name: "Study Leave", defaultEstimatedDays: 0 },
+            { id: "inlieu", name: "Time off In-lieu Leave", defaultEstimatedDays: 0 }
            // { id: "paternity", name: "Paternity Leave", defaultEstimatedDays: 0 },
            // { id: "family", name: "Family Responsibility", defaultEstimatedDays: 0 }
         ]
@@ -1869,7 +1885,7 @@ function showCapacityConfigView() {
     switchView('capacityConfigView'); // Pass the ID of the new view container
 
     generateGlobalConstraintsForm();
-    //TODO Fix with collapsible UX: generateTeamConstraintsForms();    
+    generateTeamConstraintsForms();    
     // ---------------------------
 
     // Placeholder for future content generation
@@ -1906,9 +1922,7 @@ function generateGlobalConstraintsForm() {
              { id: "annual", name: "Annual Leave", defaultEstimatedDays: 0 },
              { id: "sick", name: "Sick Leave", defaultEstimatedDays: 0 },
              { id: "study", name: "Study Leave", defaultEstimatedDays: 0 },
-             { id: "maternity", name: "Maternity Leave", defaultEstimatedDays: 0 },
-             { id: "paternity", name: "Paternity Leave", defaultEstimatedDays: 0 },
-             { id: "family", name: "Family Responsibility", defaultEstimatedDays: 0 }
+             { id: "inlieu", name: "Time off In-lieu Leave", defaultEstimatedDays: 0 }             
          ];
      }
 
@@ -2129,6 +2143,318 @@ function generateGlobalConstraintsForm() {
 }
 window.generateGlobalConstraintsForm = generateGlobalConstraintsForm; // Make global if needed
 
+/**
+ * REVISED Function (Phase 4a - FIX 2 + Refresh on Expand)
+ * - Fixes ReferenceError: team is not defined in createVarLeaveInputRow.
+ * - Implements collapsible sections per team with content regeneration on expand.
+ * - UI for standard leave uptake % with calculated effective days display.
+ * - UI for variable leave impact (# SDEs * Avg Days).
+ * - Placeholders for Activities & Overhead.
+ */
+function generateTeamConstraintsForms() {
+    console.log("Generating Team Constraints Forms (Phase 4a - Fix 2 + Refresh)...");
+    const container = document.getElementById('capacityConfigView');
+    if (!container) { /* ... Error handling ... */ return; }
+    if (!currentSystemData || !currentSystemData.teams || !currentSystemData.capacityConfiguration?.leaveTypes) { /* ... Error handling ... */ return; }
+
+    // Find or create the main container for all team forms
+    let teamsSection = document.getElementById('teamConstraintsSection');
+    if (!teamsSection) {
+        teamsSection = document.createElement('div');
+        teamsSection.id = 'teamConstraintsSection';
+        teamsSection.style.border = '1px solid #ccc'; teamsSection.style.padding = '15px'; teamsSection.style.marginTop = '20px';
+        const teamsTitle = document.createElement('h3');
+        teamsTitle.textContent = 'Team-Specific Adjustments';
+        teamsSection.appendChild(teamsTitle);
+        container.appendChild(teamsSection);
+    } else {
+        // Clear only previous team containers, keep title
+        const teamContainers = teamsSection.querySelectorAll('.team-constraint-container');
+        teamContainers.forEach(tc => tc.remove());
+    }
+
+    const teams = currentSystemData.teams || [];
+    const globalLeaveTypes = currentSystemData.capacityConfiguration.leaveTypes || []; // Needed inside helper
+
+    // --- Helper Function to Recalculate & Update Team's Total Standard Leave ---
+    const updateTotalStdLeaveDisplay = (teamIndex) => {
+        const teamContainer = document.getElementById(`teamConstraintContainer_${teamIndex}`);
+        if (!teamContainer) return;
+        const totalDisplayElement = teamContainer.querySelector('.total-std-leave-display');
+        if (!totalDisplayElement) return;
+        const team = currentSystemData.teams[teamIndex];
+        if (!team?.teamCapacityAdjustments?.leaveUptakeEstimates) return;
+        let totalEffectiveDays = 0;
+        globalLeaveTypes.forEach(leaveType => {
+            if (!leaveType || !leaveType.id) return;
+            const currentGlobalDefaultObj = currentSystemData.capacityConfiguration.leaveTypes.find(lt => lt.id === leaveType.id);
+            const globalDefault = currentGlobalDefaultObj ? (currentGlobalDefaultObj.defaultEstimatedDays || 0) : 0;
+            const teamUptake = team.teamCapacityAdjustments.leaveUptakeEstimates.find(est => est.leaveTypeId === leaveType.id);
+            const uptakePercent = teamUptake ? (teamUptake.estimatedUptakePercent ?? 100) : 100;
+            totalEffectiveDays += globalDefault * (uptakePercent / 100);
+        });
+        totalDisplayElement.textContent = totalEffectiveDays.toFixed(1);
+    };
+
+    // --- Helper Function to Recalculate & Update Team's Variable Leave Total ---
+     const updateVariableLeaveTotalDisplay = (teamIndex, leaveKey) => {
+         const teamContainer = document.getElementById(`teamConstraintContainer_${teamIndex}`);
+         if (!teamContainer) { console.warn(`updateVariableLeaveTotalDisplay: Cannot find container for team ${teamIndex}`); return; }
+         const totalDisplayElement = teamContainer.querySelector(`.variable-leave-total-display[data-leave-key="${leaveKey}"]`);
+         if (!totalDisplayElement) { console.warn(`updateVariableLeaveTotalDisplay: Cannot find total display span for team ${teamIndex}, key ${leaveKey}`); return; }
+         const team = currentSystemData.teams[teamIndex];
+         const impact = team?.teamCapacityAdjustments?.variableLeaveImpact?.[leaveKey];
+         if (impact) {
+             const affectedSDEs = impact.affectedSDEs ?? 0;
+             const avgDays = impact.avgDaysPerAffectedSDE ?? 0;
+             const totalDays = affectedSDEs * avgDays;
+             totalDisplayElement.textContent = totalDays.toFixed(0);
+         } else {
+             totalDisplayElement.textContent = '0';
+         }
+     };
+
+
+    // --- Helper Function to RENDER DETAILS for a single team ---
+    const renderTeamConstraintDetails = (teamIndex, detailsContainer) => {
+        console.log(`Rendering details for team index ${teamIndex}`);
+        detailsContainer.innerHTML = ''; // Clear previous content
+
+        const team = currentSystemData.teams[teamIndex]; // Get the specific team object
+        if (!team) return;
+
+        // --- Ensure data structures exist (same as before) ---
+         if (!team.teamCapacityAdjustments) { team.teamCapacityAdjustments = { leaveUptakeEstimates: [], variableLeaveImpact: {}, teamActivities: [], recurringOverhead: [] }; }
+         else {
+             if (!team.teamCapacityAdjustments.leaveUptakeEstimates) team.teamCapacityAdjustments.leaveUptakeEstimates = [];
+             if (!team.teamCapacityAdjustments.variableLeaveImpact) team.teamCapacityAdjustments.variableLeaveImpact = {};
+             const varLeave = team.teamCapacityAdjustments.variableLeaveImpact;
+             if (!varLeave.maternity) varLeave.maternity = { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 };
+             if (!varLeave.paternity) varLeave.paternity = { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 };
+             if (!varLeave.familyResp) varLeave.familyResp = { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 };
+             if (!varLeave.medical) varLeave.medical = { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 };
+         }
+         // --- End Structure Check ---
+
+
+        // --- Standard Leave Estimates Section (%) ---
+        // ... (Standard Leave UI generation - NO CHANGES NEEDED HERE, it was already correct) ...
+         const stdLeaveTitle = document.createElement('h5');
+         stdLeaveTitle.textContent = 'Standard Leave Uptake Estimate (%)';
+         stdLeaveTitle.style.marginTop = '10px';
+         stdLeaveTitle.title = 'Estimate the average % of the Org Default leave days expected to be taken per SDE for standard leave types. Blank assumes 100%.';
+         detailsContainer.appendChild(stdLeaveTitle);
+         const stdLeaveTable = document.createElement('table');
+         stdLeaveTable.style.marginLeft = '20px'; stdLeaveTable.style.width = 'auto';
+          stdLeaveTable.innerHTML = `
+              <thead> <tr> <th style="text-align: left; padding: 4px 8px;">Leave Type</th> <th style="text-align: center; padding: 4px 8px;" title="Organization Default Days/SDE">Org Default (Days)</th> <th style="text-align: center; padding: 4px 8px;" title="Estimated % uptake for this team (0-100)">Team Uptake (%)</th> <th style="text-align: center; padding: 4px 8px;" title="Calculated Effective Days/SDE (Default * Uptake %)">Effective Days/SDE</th> </tr> </thead>
+              <tbody></tbody>`;
+         const stdLeaveTbody = stdLeaveTable.querySelector('tbody');
+         detailsContainer.appendChild(stdLeaveTable);
+          const totalStdLeaveDiv = document.createElement('div');
+          totalStdLeaveDiv.style.marginLeft = '20px'; totalStdLeaveDiv.style.marginTop = '5px'; totalStdLeaveDiv.style.fontWeight = 'bold';
+          totalStdLeaveDiv.innerHTML = `Total Avg. Standard Leave Days/SDE: <span class="total-std-leave-display">0.0</span>`;
+          detailsContainer.appendChild(totalStdLeaveDiv);
+         let teamTotalAvgStdLeave = 0;
+         globalLeaveTypes.forEach(leaveType => {
+             if (!leaveType || !leaveType.id) return;
+              const currentGlobalDefaultObj = currentSystemData.capacityConfiguration.leaveTypes.find(lt => lt.id === leaveType.id);
+              const globalDefault = currentGlobalDefaultObj ? (currentGlobalDefaultObj.defaultEstimatedDays || 0) : 0;
+             const teamUptakeObj = team.teamCapacityAdjustments.leaveUptakeEstimates.find(est => est.leaveTypeId === leaveType.id);
+             const teamUptakePercentValue = teamUptakeObj ? (teamUptakeObj.estimatedUptakePercent ?? '') : '';
+              const displayUptakePercent = teamUptakeObj ? (teamUptakeObj.estimatedUptakePercent ?? 100) : 100;
+             const effectiveDays = globalDefault * (displayUptakePercent / 100);
+             teamTotalAvgStdLeave += effectiveDays;
+             const row = stdLeaveTbody.insertRow();
+             row.insertCell().textContent = leaveType.name;
+             const defaultCell = row.insertCell();
+             defaultCell.textContent = `(${globalDefault})`;
+             defaultCell.style.textAlign = 'center'; defaultCell.style.fontSize = '0.9em'; defaultCell.style.color = '#666';
+             const percentCell = row.insertCell();
+             percentCell.style.textAlign = 'center';
+             const percentInput = document.createElement('input');
+             percentInput.type = 'number'; percentInput.min = '0'; percentInput.max = '100'; percentInput.step = '5';
+             percentInput.value = teamUptakePercentValue;
+             percentInput.placeholder = '100';
+             percentInput.style.width = '60px'; percentInput.style.textAlign = 'center';
+             percentInput.title = `Enter % uptake (0-100) for ${leaveType.name}. Blank means 100% of default: ${globalDefault}`;
+             percentInput.setAttribute('data-leave-type-id', leaveType.id);
+             percentInput.setAttribute('data-team-index', teamIndex);
+             const effectiveDaysCell = row.insertCell();
+             effectiveDaysCell.id = `effectiveDays_${teamIndex}_${leaveType.id}`;
+             effectiveDaysCell.textContent = effectiveDays.toFixed(1);
+             effectiveDaysCell.style.textAlign = 'center'; effectiveDaysCell.style.fontWeight = 'bold';
+             percentInput.addEventListener('change', (e) => {
+                  const inputVal = e.target.value.trim(); const lTypeId = e.target.getAttribute('data-leave-type-id'); const tIdx = parseInt(e.target.getAttribute('data-team-index')); const targetTeam = currentSystemData.teams[tIdx];
+                  if (!targetTeam?.teamCapacityAdjustments?.leaveUptakeEstimates) return;
+                  const estimateIndex = targetTeam.teamCapacityAdjustments.leaveUptakeEstimates.findIndex(est => est.leaveTypeId === lTypeId); let validatedPercent = 100;
+                  if (inputVal !== '') { const numericVal = parseInt(inputVal); if (!isNaN(numericVal) && numericVal >= 0 && numericVal <= 100) { validatedPercent = numericVal; } else { const previousEstimate = (estimateIndex > -1) ? targetTeam.teamCapacityAdjustments.leaveUptakeEstimates[estimateIndex] : null; e.target.value = previousEstimate ? (previousEstimate.estimatedUptakePercent ?? '') : ''; validatedPercent = previousEstimate ? (previousEstimate.estimatedUptakePercent ?? 100) : 100;} }
+                  if (inputVal === '' || validatedPercent === 100) { if (estimateIndex > -1) { targetTeam.teamCapacityAdjustments.leaveUptakeEstimates.splice(estimateIndex, 1); console.log(`Removed % override for ${lTypeId} on team ${tIdx}`); } e.target.value = ''; validatedPercent = 100; } else { if (estimateIndex > -1) { targetTeam.teamCapacityAdjustments.leaveUptakeEstimates[estimateIndex].estimatedUptakePercent = validatedPercent; } else { targetTeam.teamCapacityAdjustments.leaveUptakeEstimates.push({ leaveTypeId: lTypeId, estimatedUptakePercent: validatedPercent }); } e.target.value = validatedPercent; console.log(`Set % uptake for ${lTypeId} on team ${tIdx} to ${validatedPercent}`); }
+                  const currentDefaultObj = currentSystemData.capacityConfiguration.leaveTypes.find(lt => lt.id === lTypeId); const currentDefaultVal = currentDefaultObj ? (currentDefaultObj.defaultEstimatedDays || 0) : 0; const effectiveCell = document.getElementById(`effectiveDays_${tIdx}_${lTypeId}`); if(effectiveCell) effectiveCell.textContent = (currentDefaultVal * (validatedPercent / 100)).toFixed(1);
+                  updateTotalStdLeaveDisplay(tIdx);
+              });
+              percentCell.appendChild(percentInput);
+         });
+         const totalDisplaySpan = totalStdLeaveDiv.querySelector('.total-std-leave-display');
+         if(totalDisplaySpan) totalDisplaySpan.textContent = teamTotalAvgStdLeave.toFixed(1);
+         // --- End Standard Leave Section ---
+
+
+        // --- Variable Leave Estimates Section ---
+        const varLeaveTitle = document.createElement('h5'); /* ... Title setup ... */
+        varLeaveTitle.textContent = 'Variable Leave Impact Estimate';
+        varLeaveTitle.style.marginTop = '15px';
+        varLeaveTitle.title = 'Estimate the total impact ON THE TEAM for variable leave (Maternity, Paternity, etc.). Enter # SDEs affected and Avg Days/SDE for each.';
+        detailsContainer.appendChild(varLeaveTitle);
+
+        const varLeaveContainer = document.createElement('div'); /* ... Container setup ... */
+        varLeaveContainer.style.marginLeft = '20px';
+
+        // Event handler for variable leave inputs (defined once per team render)
+        const handleVariableLeaveInputChange = (e) => {
+             const input = e.target;
+             const tIdx = parseInt(input.getAttribute('data-team-index')); // Get teamIndex
+             const leaveKey = input.getAttribute('data-leave-key');
+             const field = input.getAttribute('data-field');
+             const targetTeam = currentSystemData.teams[tIdx]; // Use tIdx here
+             if (!targetTeam?.teamCapacityAdjustments?.variableLeaveImpact?.[leaveKey] || !field) return;
+             const value = parseInt(input.value);
+             const validatedValue = (!isNaN(value) && value >= 0) ? value : 0;
+             targetTeam.teamCapacityAdjustments.variableLeaveImpact[leaveKey][field] = validatedValue;
+             input.value = validatedValue;
+             console.log(`Updated ${leaveKey}.${field} for team ${tIdx} to ${validatedValue}`);
+             updateVariableLeaveTotalDisplay(tIdx, leaveKey); // Use tIdx
+         };
+
+         // *** FIX: Pass 'team' object into helper ***
+         // Helper to create granular input row (defined once per team render)
+         const createVarLeaveInputRow = (targetTeam, leaveKey, labelText) => { // Added targetTeam parameter
+              const div = document.createElement('div'); /* ... Row div setup ... */
+              div.style.marginBottom = '5px'; div.style.display = 'flex'; div.style.alignItems = 'center';
+              const label = document.createElement('label');
+              label.textContent = `${labelText}: `; label.style.width = '180px'; label.style.marginRight = '10px';
+              div.appendChild(label);
+              const sdesInput = document.createElement('input'); /* ... SDEs input setup ... */
+              sdesInput.type = 'number'; sdesInput.min = '0'; sdesInput.step = '1';
+              // *** FIX: Use targetTeam parameter ***
+              sdesInput.value = targetTeam.teamCapacityAdjustments.variableLeaveImpact[leaveKey]?.affectedSDEs || 0;
+              sdesInput.style.width = '60px'; sdesInput.style.marginRight = '5px'; sdesInput.title = '# SDEs Affected';
+              sdesInput.setAttribute('data-team-index', teamIndex); sdesInput.setAttribute('data-leave-key', leaveKey); sdesInput.setAttribute('data-field', 'affectedSDEs');
+              sdesInput.addEventListener('change', handleVariableLeaveInputChange); // Attach listener
+              div.appendChild(sdesInput);
+              div.appendChild(document.createTextNode(' SDEs * '));
+              const daysInput = document.createElement('input'); /* ... Days input setup ... */
+              daysInput.type = 'number'; daysInput.min = '0'; daysInput.step = '1';
+              // *** FIX: Use targetTeam parameter ***
+              daysInput.value = targetTeam.teamCapacityAdjustments.variableLeaveImpact[leaveKey]?.avgDaysPerAffectedSDE || 0;
+              daysInput.style.width = '60px'; daysInput.style.marginRight = '10px'; daysInput.title = 'Avg. Days per Affected SDE';
+              daysInput.setAttribute('data-team-index', teamIndex); daysInput.setAttribute('data-leave-key', leaveKey); daysInput.setAttribute('data-field', 'avgDaysPerAffectedSDE');
+              daysInput.addEventListener('change', handleVariableLeaveInputChange); // Attach listener
+              div.appendChild(daysInput);
+              div.appendChild(document.createTextNode(' Days/SDE = '));
+              const totalDisplay = document.createElement('span'); /* ... Total display span setup ... */
+              totalDisplay.className = 'variable-leave-total-display'; totalDisplay.setAttribute('data-leave-key', leaveKey);
+              totalDisplay.style.fontWeight = 'bold'; totalDisplay.style.minWidth = '40px'; totalDisplay.style.display = 'inline-block';
+              const initialTotal = (sdesInput.valueAsNumber || 0) * (daysInput.valueAsNumber || 0);
+              totalDisplay.textContent = initialTotal.toFixed(0);
+              div.appendChild(totalDisplay);
+              div.appendChild(document.createTextNode(' Total Team Days'));
+              return div;
+         };
+
+        // Create rows for M/P/FR/Medical - Pass the current team object
+        varLeaveContainer.appendChild(createVarLeaveInputRow(team, 'maternity', 'Maternity Leave'));
+        varLeaveContainer.appendChild(createVarLeaveInputRow(team, 'paternity', 'Paternity Leave'));
+        varLeaveContainer.appendChild(createVarLeaveInputRow(team, 'familyResp', 'Family Responsibility'));
+        varLeaveContainer.appendChild(createVarLeaveInputRow(team, 'medical', 'Medical Leave'));
+        detailsContainer.appendChild(varLeaveContainer);
+        // --- End Variable Leave Section ---
+
+
+        // --- Placeholders for Activities & Overhead ---
+        // ... (Placeholders - NO CHANGES) ...
+         const activitiesTitle = document.createElement('h5'); activitiesTitle.textContent = 'Team Activities (Training, Conferences, etc.)'; activitiesTitle.style.marginTop = '15px'; detailsContainer.appendChild(activitiesTitle);
+         const activitiesPlaceholder = document.createElement('p'); activitiesPlaceholder.textContent = '[UI for Team Activities will be added here in Phase 4b]'; activitiesPlaceholder.style.marginLeft = '20px'; activitiesPlaceholder.style.fontStyle = 'italic'; detailsContainer.appendChild(activitiesPlaceholder);
+         const overheadTitle = document.createElement('h5'); overheadTitle.textContent = 'Recurring Overhead (Meetings, etc.)'; overheadTitle.style.marginTop = '15px'; detailsContainer.appendChild(overheadTitle);
+         const overheadPlaceholder = document.createElement('p'); overheadPlaceholder.textContent = '[UI for Recurring Overhead will be added here in Phase 4c]'; overheadPlaceholder.style.marginLeft = '20px'; overheadPlaceholder.style.fontStyle = 'italic'; detailsContainer.appendChild(overheadPlaceholder);
+        // --- End Placeholders ---
+
+    }; // --- End renderTeamConstraintDetails ---
+
+
+    // --- Iterate Through Teams and Setup Collapsible ---
+    teams.forEach((team, teamIndex) => {
+        if (!team || !team.teamId) return;
+
+        const teamContainer = document.createElement('div'); /* ... Container setup ... */
+        teamContainer.id = `teamConstraintContainer_${teamIndex}`; teamContainer.className = 'team-constraint-container';
+        teamContainer.style.borderTop = '1px solid #ccc'; teamContainer.style.paddingTop = '10px'; teamContainer.style.marginTop = '10px';
+
+        const teamHeader = document.createElement('h4'); /* ... Header setup ... */
+        teamHeader.style.cursor = 'pointer'; teamHeader.style.backgroundColor = '#f8f9fa';
+        teamHeader.style.padding = '8px'; teamHeader.style.margin = '0';
+        teamHeader.title = `Click to expand/collapse settings for ${team.teamName || team.teamIdentity}`;
+        const indicator = document.createElement('span');
+        indicator.id = `teamConstraintToggle_${teamIndex}`; indicator.className = 'toggle-indicator'; indicator.innerText = '(+) ';
+        indicator.style.fontWeight = 'bold'; indicator.style.marginRight = '5px';
+        teamHeader.appendChild(indicator);
+        teamHeader.appendChild(document.createTextNode(`Team: ${team.teamIdentity || team.teamName || team.teamId}`));
+        teamContainer.appendChild(teamHeader);
+
+        const teamDetails = document.createElement('div'); /* ... Details div setup ... */
+        teamDetails.id = `teamConstraintContent_${teamIndex}`;
+        teamDetails.style.display = 'none';
+        teamDetails.style.padding = '10px'; teamDetails.style.border = '1px solid #eee'; teamDetails.style.borderTop = 'none';
+
+        // --- MODIFIED OnClick Handler ---
+        teamHeader.onclick = () => {
+             const contentDiv = teamDetails; const indicatorSpan = indicator; const isHidden = contentDiv.style.display === 'none' || contentDiv.style.display === '';
+             if (isHidden) {
+                 renderTeamConstraintDetails(teamIndex, contentDiv); // Re-render content ON EXPAND
+                 contentDiv.style.display = 'block'; indicatorSpan.textContent = '(-)';
+             } else {
+                 contentDiv.style.display = 'none'; indicatorSpan.textContent = '(+)'; contentDiv.innerHTML = ''; // Clear content on collapse
+             }
+             // adjustPlanningTableHeight(); // Maybe not needed here?
+         };
+        // --- End OnClick Handler ---
+
+        teamContainer.appendChild(teamDetails);
+        teamsSection.appendChild(teamContainer);
+    }); // --- End teams.forEach ---
+
+
+    // --- Placeholder for Overall Summary Section ---
+    let summarySection = document.getElementById('capacitySummarySection'); /* ... Placeholder setup ... */
+     if (!summarySection) {
+          summarySection = document.createElement('div'); summarySection.id = 'capacitySummarySection'; summarySection.style.border = '1px solid #666'; summarySection.style.backgroundColor = '#f0f0f0'; summarySection.style.padding = '15px'; summarySection.style.marginTop = '20px'; const summaryTitle = document.createElement('h3'); summaryTitle.textContent = 'Calculated Net Project Capacity Summary'; summarySection.appendChild(summaryTitle); const summaryPlaceholder = document.createElement('p'); summaryPlaceholder.id = 'capacitySummaryPlaceholder'; summaryPlaceholder.textContent = '[Summary table with calculations will be added in Phase 5]'; summaryPlaceholder.style.fontStyle = 'italic'; summarySection.appendChild(summaryPlaceholder); container.appendChild(summarySection);
+     } else { const placeholder = summarySection.querySelector('#capacitySummaryPlaceholder'); if (placeholder) placeholder.style.display = 'block'; const table = summarySection.querySelector('table'); if(table) table.style.display = 'none'; }
+    // --- End Summary Section ---
+
+     // --- Add Save Button ---
+     let saveButtonContainer = document.getElementById('capacitySaveButtonContainer'); /* ... Button setup ... */
+      if (!saveButtonContainer) {
+          saveButtonContainer = document.createElement('div'); saveButtonContainer.id = 'capacitySaveButtonContainer'; saveButtonContainer.style.textAlign = 'center'; saveButtonContainer.style.marginTop = '25px'; const saveButton = document.createElement('button'); saveButton.id = 'saveCapacityConfigButton'; saveButton.textContent = 'Save All Capacity Configuration'; saveButton.style.padding = '10px 20px'; saveButton.style.fontSize = '16px'; saveButton.style.backgroundColor = '#dc3545'; saveButton.style.color = 'white'; saveButton.style.border = 'none'; saveButton.style.borderRadius = '5px'; saveButton.style.cursor = 'pointer'; saveButton.onclick = saveCapacityConfiguration; saveButtonContainer.appendChild(saveButton); container.appendChild(saveButtonContainer);
+      }
+
+    console.log("Finished setting up Team Constraints structure (Fix 2 + Collapse + Refresh).");
+}
+window.generateTeamConstraintsForms = generateTeamConstraintsForms;
+
+
+// Add the placeholder save function for now (if not already present)
+if (typeof saveCapacityConfiguration === 'undefined') {
+     function saveCapacityConfiguration() {
+         alert("Save functionality will be implemented in Phase 5.");
+     }
+     window.saveCapacityConfiguration = saveCapacityConfiguration;
+}
+
+// Add the adjustPlanningTableHeight function if it's not already present
+if (typeof adjustPlanningTableHeight === 'undefined') {
+    function adjustPlanningTableHeight() { console.log("Placeholder: adjustPlanningTableHeight() called."); }
+    window.adjustPlanningTableHeight = adjustPlanningTableHeight;
+}
 
 /** Save Sample Systems to Local Storage **/
 function saveSampleSystemsToLocalStorage() {
@@ -4927,10 +5253,16 @@ function createNewSystem() {
             sdmId: 'sdm1', // Reference to the default SDM
             pmtId: 'pmt1',  // Reference to the default PMT
             teamCapacityAdjustments: {
-              leaveEstimates: [], // Team-specific estimates added via UI
-              teamActivities: [], // Team-specific activities added via UI
-              recurringOverhead: [] // Team-specific overheads added via UI
-            }        
+                leaveUptakeEstimates: [], // Empty by default
+                variableLeaveImpact: {   // New structure
+                    maternity:  { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                    paternity:  { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                    familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+                    medical:    { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }
+                },
+                teamActivities: [],
+                recurringOverhead: []
+            }     
             
         }
     ];
@@ -4976,8 +5308,8 @@ function createNewSystem() {
             leaveTypes: [ // Define standard leave types globally
                 { id: "annual", name: "Annual Leave", defaultEstimatedDays: 0 },
                 { id: "sick", name: "Sick Leave", defaultEstimatedDays: 0 },
-                { id: "study", name: "Study Leave", defaultEstimatedDays: 0 }
-                //{ id: "maternity", name: "Maternity Leave", defaultEstimatedDays: 0 },
+                { id: "study", name: "Study Leave", defaultEstimatedDays: 0 },
+                { id: "inlieu", name: "Time off In-lieu Leave", defaultEstimatedDays: 0 }
                 //{ id: "paternity", name: "Paternity Leave", defaultEstimatedDays: 0 },
                 //{ id: "family", name: "Family Responsibility", defaultEstimatedDays: 0 }
             ]
