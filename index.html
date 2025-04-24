@@ -1841,7 +1841,7 @@ function switchView(targetViewId, newMode = null) {
             else if (targetViewId === 'engineerTableView') titleSuffix = ' - Engineer List';
             else if (targetViewId === 'systemEditForm') titleSuffix = ' - Edit System';
             else if (targetViewId === 'visualizationCarousel' || targetViewId === 'serviceDependenciesTable') titleSuffix = ' - Overview';
-            else if (targetViewId === 'capacityConfigView') titleSuffix = ' - Capacity Configuration TODO';
+            else if (targetViewId === 'capacityConfigView') titleSuffix = ' - Capacity Configurations';
             pageTitleH1.innerText = `${currentSystemData.systemName || 'System'}${titleSuffix}`;
             pageTitleH1.style.display = 'block';
         } else if (pageTitleH1) {
@@ -2027,10 +2027,6 @@ function generateGlobalConstraintsForm() {
     globalSection.style.border = '1px solid #ccc';
     globalSection.style.padding = '15px';
     globalSection.style.marginBottom = '20px';
-
-    const globalTitle = document.createElement('h3');
-    globalTitle.textContent = 'Organizational Defaults & Global Events';
-    globalSection.appendChild(globalTitle);
 
     // Working Days per Year
     const wdLabel = document.createElement('label');
