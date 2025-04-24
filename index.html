@@ -2036,19 +2036,29 @@ function generateGlobalConstraintsForm() {
     wdInput.step = '1';
     wdInput.value = currentSystemData.capacityConfiguration.workingDaysPerYear || 261; // Default if null
     wdInput.style.width = '80px';
+    wdInput.dataset.originalTitle = wdLabel.title; // Store original title for warnings    
     wdInput.addEventListener('change', (e) => {
         const value = parseInt(e.target.value);
+        let warningMsg = ''; // Initialize warning message
         if (!isNaN(value) && value > 0) {
             currentSystemData.capacityConfiguration.workingDaysPerYear = value;
             console.log("Updated workingDaysPerYear:", value);
-            //Trigger recalculation of summary display
+            // --- Sanity Check ---
+            if (value > 300 || value < 200) { // Example sanity check range
+                warningMsg = 'Value seems high/low. Typical range is 200-300.';
+            }
+            // --- End Sanity Check ---
             updateCapacityCalculationsAndDisplay();
         } else {
-            e.target.value = currentSystemData.capacityConfiguration.workingDaysPerYear || 261; // Revert if invalid
+            // Revert to stored value if input is invalid
+            e.target.value = currentSystemData.capacityConfiguration.workingDaysPerYear || 261;
         }
+        updateInputWarning(e.target, warningMsg); // Update warning display
     });
     globalSection.appendChild(wdLabel);
     globalSection.appendChild(wdInput);
+    // Initial check on load
+    updateInputWarning(wdInput, (parseInt(wdInput.value) > 300 || parseInt(wdInput.value) < 200) ? 'Value seems high/low. Typical range is 200-300.' : '');    
     globalSection.appendChild(document.createElement('br'));
     globalSection.appendChild(document.createElement('br'));
 
@@ -2064,19 +2074,30 @@ function generateGlobalConstraintsForm() {
     phInput.step = '1';
     phInput.value = currentSystemData.capacityConfiguration.globalConstraints.publicHolidays || 0;
     phInput.style.width = '80px';
+    phInput.dataset.originalTitle = phLabel.title; // Store original title    
     phInput.addEventListener('change', (e) => {
         const value = parseInt(e.target.value);
-         if (!isNaN(value) && value >= 0) {
+        let warningMsg = ''; // Initialize warning message
+        if (!isNaN(value) && value >= 0) {
             currentSystemData.capacityConfiguration.globalConstraints.publicHolidays = value;
             console.log("Updated publicHolidays:", value);
-             //Trigger recalculation of summary display
-             updateCapacityCalculationsAndDisplay();
+            // --- Sanity Check ---
+            if (value > 30) { // Example sanity check
+                 warningMsg = 'Value seems high for public holidays (more than 30).';
+            }
+            // --- End Sanity Check ---
+            updateCapacityCalculationsAndDisplay();
         } else {
-             e.target.value = currentSystemData.capacityConfiguration.globalConstraints.publicHolidays || 0; // Revert
-         }
+            // Revert to stored value if input is invalid
+            e.target.value = currentSystemData.capacityConfiguration.globalConstraints.publicHolidays || 0;
+        }
+        updateInputWarning(e.target, warningMsg); // Update warning display
     });
+
     globalSection.appendChild(phLabel);
     globalSection.appendChild(phInput);
+    // Initial check on load
+    updateInputWarning(phInput, (parseInt(phInput.value) > 30) ? 'Value seems high for public holidays (more than 30).' : '');    
     globalSection.appendChild(document.createElement('br'));
     globalSection.appendChild(document.createElement('br'));
 
@@ -2705,26 +2726,38 @@ function generateTeamConstraintsForms() {
         overheadInput.step = '0.5'; // Allow half hours
         overheadInput.value = team.teamCapacityAdjustments.avgOverheadHoursPerWeekPerSDE || 0;
         overheadInput.style.width = '70px';
+        overheadInput.dataset.originalTitle = overheadLabel.title; // Store original title        
         overheadInput.setAttribute('data-team-index', teamIndex);
 
         overheadInput.addEventListener('change', (e) => {
             const tIdx = parseInt(e.target.getAttribute('data-team-index'));
             const targetTeam = currentSystemData.teams[tIdx];
             if (!targetTeam?.teamCapacityAdjustments) return;
-
+        
             const value = parseFloat(e.target.value);
             const validatedValue = (!isNaN(value) && value >= 0) ? value : 0;
-
+            let warningMsg = ''; // Initialize warning message
+        
             targetTeam.teamCapacityAdjustments.avgOverheadHoursPerWeekPerSDE = validatedValue;
-            e.target.value = validatedValue.toFixed(1); // Ensure input shows validated value (e.g., 1 decimal for hours)
+            // Display with one decimal place, but store the potentially more precise value
+            e.target.value = validatedValue.toFixed(1);
             console.log(`Updated avgOverheadHoursPerWeekPerSDE for team ${tIdx} to ${validatedValue}`);
-            // Trigger summary recalculation
+        
+            // --- Sanity Check ---
+            if (validatedValue > 40) { // Example sanity check
+                warningMsg = 'Value exceeds 40 Hrs/Week/SDE. Is this realistic?';
+            }
+            // --- End Sanity Check ---
+        
+            updateInputWarning(e.target, warningMsg); // Update warning display
             updateCapacityCalculationsAndDisplay();
         });
 
         overheadContainer.appendChild(overheadLabel);
         overheadContainer.appendChild(overheadInput);
         detailsContainer.appendChild(overheadContainer);
+        // Initial check on load
+        updateInputWarning(overheadInput, (parseFloat(overheadInput.value) > 40) ? 'Value exceeds 40 Hrs/Week/SDE. Is this realistic?' : '');        
         // --- *** END Recurring Overhead Section *** ---
         // --- End Placeholders ---
 
