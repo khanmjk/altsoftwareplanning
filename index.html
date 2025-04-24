@@ -2310,10 +2310,11 @@ function calculateOrgEventDaysPerSDE(capacityConfig) {
 
 /**
  * Helper: Calculates team activity impacts.
- * Returns an object: { daysPerSDE: total_days_from_perSDE_inputs, totalTeamDays: total_days_from_total_inputs }
+ * Returns an object: { daysPerSDE: total_days_from_perSDE_inputs, totalTeamDaysDuration: duration_from_total_inputs }
+ * Note: Renamed totalTeamDays to totalTeamDaysDuration to better reflect user interpretation.
  */
 function calculateTeamActivityImpacts(team) {
-    const result = { daysPerSDE: 0, totalTeamDays: 0 };
+    const result = { daysPerSDE: 0, totalTeamDaysDuration: 0 }; // Renamed second property
     if (!team || !team.teamCapacityAdjustments?.teamActivities) return result;
 
     const teamActivities = team.teamCapacityAdjustments.teamActivities;
@@ -2322,7 +2323,7 @@ function calculateTeamActivityImpacts(team) {
         if (activity.estimateType === 'perSDE') {
             result.daysPerSDE += value;
         } else { // Default to 'total' if not 'perSDE'
-            result.totalTeamDays += value;
+            result.totalTeamDaysDuration += value; // Accumulate the duration specified
         }
     });
     return result;
@@ -2334,7 +2335,6 @@ function calculateTeamActivityImpacts(team) {
  */
 function calculateOverheadDaysPerSDE(team, workingDaysPerYear) {
     if (!team || !team.teamCapacityAdjustments || !workingDaysPerYear || workingDaysPerYear === 0) {
-         // console.warn("calculateOverheadDaysPerSDE: Missing required inputs or workingDaysPerYear is zero."); // Reduced verbosity
          return 0;
     }
     const hoursPerWeek = team.teamCapacityAdjustments.avgOverheadHoursPerWeekPerSDE || 0;
@@ -2347,13 +2347,13 @@ function calculateOverheadDaysPerSDE(team, workingDaysPerYear) {
 
 
 /**
- * REVISED (Phase 7b fix 5) - Calculates capacity metrics for all teams across all scenarios.
+ * REVISED (Phase 7b fix 6) - Calculates capacity metrics for all teams across all scenarios.
  * - Includes required helper functions.
  * - Calculates SDE Year contribution for each deduction category directly.
- * - CORRECTED Team Activity calculation for 'perSDE' type inputs.
+ * - CORRECTED Team Activity calculation for 'Total Team Days' type inputs per user interpretation.
  */
 function calculateAllCapacityMetrics() {
-    console.log("Calculating all capacity metrics (Phase 7b - Fix 5)..."); // Log updated
+    console.log("Calculating all capacity metrics (Phase 7b - Fix 6)..."); // Log updated
     if (!currentSystemData || !currentSystemData.capacityConfiguration || !currentSystemData.teams) {
         console.error("Cannot calculate metrics: Missing core data (config or teams).");
         return { totals: { TeamBIS: {}, EffectiveBIS: {}, FundedHC: {} } };
@@ -2392,7 +2392,8 @@ function calculateAllCapacityMetrics() {
         const orgEvents_days_per_sde = calculateOrgEventDaysPerSDE(capacityConfig);
         const overhead_days_per_sde = calculateOverheadDaysPerSDE(team, workingDaysPerYear);
         const variable_leave_total_team_days = calculateTotalVariableLeaveDays(team);
-        const teamActivityImpacts = calculateTeamActivityImpacts(team); // Returns { daysPerSDE, totalTeamDays }
+        // Get { daysPerSDE: total_avg_days, totalTeamDaysDuration: duration_for_whole_team_event }
+        const teamActivityImpacts = calculateTeamActivityImpacts(team);
 
         // --- Iterate through each scenario for this team ---
         ['TeamBIS', 'EffectiveBIS', 'FundedHC'].forEach(scenario => {
@@ -2404,18 +2405,24 @@ function calculateAllCapacityMetrics() {
             }
 
             // --- Calculate SDE Year impact for EACH category for THIS scenario ---
-            const teamActivityYrs_from_perSDE = teamActivityImpacts.daysPerSDE / workingDays; // SDE Year equivalent of the AVERAGE impact
-            const teamActivityYrs_from_total = teamActivityImpacts.totalTeamDays / workingDays; // SDE Year equivalent of the TOTAL impact
+
+            // Calculate SDE Years impact from the duration specified for 'Total Team Days' type activities
+            // This impact applies to *each* SDE in the current scenario's headcount
+            const teamActivityYrs_from_total_duration = (teamActivityImpacts.totalTeamDaysDuration / workingDays) * headcount;
+
+            // Calculate SDE Years impact from the average specified for 'Days/SDE' type activities
+            // This impact is an average and not scaled by headcount again
+            const teamActivityYrs_from_perSDE_avg = teamActivityImpacts.daysPerSDE / workingDays;
 
             const breakdown = {
                 stdLeaveYrs: (stdLeave_days_per_sde / workingDays) * headcount,
                 varLeaveYrs: variable_leave_total_team_days / workingDays, // Direct conversion from total days
                 holidayYrs: (holidays_days_per_sde / workingDays) * headcount,
                 orgEventYrs: (orgEvents_days_per_sde / workingDays) * headcount,
-                 // *** CORRECTED LOGIC for Team Activities ***
-                 // Add the SDE year equivalent of the average impact (perSDE) directly
-                 // Add the SDE year equivalent of the total impact (total) directly
-                teamActivityYrs: teamActivityYrs_from_perSDE + teamActivityYrs_from_total,
+                // *** CORRECTED LOGIC for Team Activities (Fix 6) ***
+                // Add the impact from events affecting the whole team (scaled by HC)
+                // Add the impact from averaged per-SDE events (not scaled by HC)
+                teamActivityYrs: teamActivityYrs_from_total_duration + teamActivityYrs_from_perSDE_avg,
                 overheadYrs: (overhead_days_per_sde / workingDays) * headcount
             };
 
@@ -2443,14 +2450,14 @@ function calculateAllCapacityMetrics() {
                 totals[scenario].deductionsBreakdown.varLeaveYrs += breakdown.varLeaveYrs || 0;
                 totals[scenario].deductionsBreakdown.holidayYrs += breakdown.holidayYrs || 0;
                 totals[scenario].deductionsBreakdown.orgEventYrs += breakdown.orgEventYrs || 0;
-                totals[scenario].deductionsBreakdown.teamActivityYrs += breakdown.teamActivityYrs || 0; // Accumulates the correctly calculated combined impact
+                totals[scenario].deductionsBreakdown.teamActivityYrs += breakdown.teamActivityYrs || 0;
                 totals[scenario].deductionsBreakdown.overheadYrs += breakdown.overheadYrs || 0;
             }
 
         }); // End scenario loop
     }); // End team loop
 
-    console.log("Finished calculating metrics (Phase 7b - Fix 5).");
+    console.log("Finished calculating metrics (Phase 7b - Fix 6).");
     const finalMetrics = { ...teamMetrics, totals: totals };
     return finalMetrics;
 }
