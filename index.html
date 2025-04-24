@@ -5,6 +5,7 @@
     <title>Architecture Visualization Tool</title>
     <!-- Include D3.js for visualization -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
     <style>
         /* Basic styling */
         body { font-family: Arial, sans-serif; margin: 20px; }
@@ -698,6 +699,8 @@ const Modes = {
 let currentMode = Modes.NAVIGATION;
 let planningCapacityScenario = 'effective'; // Default to 'effective'
 let currentCapacityScenario = 'EffectiveBIS'; // Default scenario for capacity summary ('TeamBIS', 'EffectiveBIS', 'FundedHC')
+let currentChartTeamId = '__ORG_VIEW__'; // To track which team's chart is displayed
+let capacityChartInstance = null; // To hold the Chart.js instance
 
 // --- Carousel State ---
 let currentVisualizationIndex = 0;
@@ -2470,48 +2473,48 @@ function calculateAllCapacityMetrics() {
 window.calculateAllCapacityMetrics = calculateAllCapacityMetrics; // Ensure it's globally accessible
 
 /**
- * NEW Function (Phase 5b) - Triggers recalculation and redraws the summary display.
+ * REVISED (Phase 7d) - Triggers recalculation and redraws summary, narrative, AND chart.
  * @param {string | null} newScenario - Optional. If provided, sets the current scenario before redrawing.
  */
 function updateCapacityCalculationsAndDisplay(newScenario = null) {
-    console.log(`Updating capacity display. New scenario: ${newScenario}`);
-    if (newScenario && ['TeamBIS', 'EffectiveBIS', 'FundedHC'].includes(newScenario)) {
+    console.log(`Updating capacity display. New scenario provided: ${newScenario}, Current scenario: ${currentCapacityScenario}`);
+    let scenarioChanged = false;
+    if (newScenario && ['TeamBIS', 'EffectiveBIS', 'FundedHC'].includes(newScenario) && newScenario !== currentCapacityScenario) {
         currentCapacityScenario = newScenario;
+        scenarioChanged = true;
+        console.log(`Capacity scenario changed to: ${currentCapacityScenario}`);
     }
+
     if (!currentSystemData) {
         console.warn("No current system data to calculate metrics from.");
+        // Clear displays if no data?
+         const summarySection = document.getElementById('capacitySummarySection');
+         if (summarySection) summarySection.innerHTML = '<h3>Calculated Net Project Capacity Summary</h3><p><em>No system data loaded.</em></p>';
+         const narrativeContainer = document.getElementById('capacityNarrativeSection');
+          if (narrativeContainer) narrativeContainer.style.display = 'none'; // Hide if no data
+           const chartContainer = document.getElementById('capacityChartContainer');
+          if (chartContainer) chartContainer.style.display = 'none'; // Hide if no data
         return;
     }
-    const calculatedMetrics = calculateAllCapacityMetrics(currentSystemData);
-    generateCapacitySummaryDisplay(calculatedMetrics, currentCapacityScenario);
-     // Generate the narrative text using the same data and scenario
-    generateCapacityNarrative(calculatedMetrics, currentCapacityScenario);   
 
-    // --- Ensure Correct DOM Order (Phase 7c Fix) ---
-    try {
-        const summarySection = document.getElementById('capacitySummarySection');
-        const narrativeSec = document.getElementById('capacityNarrativeSection'); // Use different var name just in case
-        const mainContainer = document.getElementById('capacityConfigView');
-    
-        // Check if both sections exist and are direct children of the main container
-        if (summarySection && narrativeSec && summarySection.parentNode === mainContainer && narrativeSec.parentNode === mainContainer) {
-            // Check if narrative is NOT already after summary
-            if (narrativeSec !== summarySection.nextElementSibling) {
-                 console.log("Adjusting narrative section position in DOM...");
-                 // Insert narrative section immediately after summary section
-                 summarySection.insertAdjacentElement('afterend', narrativeSec);
-            }
-        } else {
-             if (!summarySection) console.warn("Summary section not found for DOM ordering.");
-             if (!narrativeSec) console.warn("Narrative section not found for DOM ordering.");
-             // Optional: Add logic here if they aren't children of mainContainer?
-        }
-    } catch (e) {
-        console.error("Error adjusting DOM order for narrative section:", e);
-    }
-    // --- End DOM Order Check ---    
+    // --- Perform Calculations ---
+    const calculatedMetrics = calculateAllCapacityMetrics(currentSystemData);
+    console.log("Capacity metrics calculated:", calculatedMetrics); // Log calculated metrics for debugging
+
+    // --- Update Displays ---
+    // 1. Summary Table
+    generateCapacitySummaryDisplay(calculatedMetrics, currentCapacityScenario);
+
+    // 2. Narrative Section (will handle its own container creation/visibility)
+    generateCapacityNarrative(calculatedMetrics, currentCapacityScenario);
+
+    // 3. Waterfall Chart (will handle its own container creation/visibility)
+    generateCapacityWaterfallChart(calculatedMetrics, currentCapacityScenario); // <-- ADDED CALL
+
+    console.log("All capacity displays updated.");
 }
-window.updateCapacityCalculationsAndDisplay = updateCapacityCalculationsAndDisplay; // Make global if needed
+// Make global if needed
+window.updateCapacityCalculationsAndDisplay = updateCapacityCalculationsAndDisplay;
 
 
 /**
@@ -2905,7 +2908,279 @@ function generateCapacityNarrative(calculatedMetrics, selectedScenario) {
 // Make global if needed for direct calls (though usually called via updateCapacityCalculationsAndDisplay)
 window.generateCapacityNarrative = generateCapacityNarrative;
 
+/**
+ * FINAL (Phase 7d - Waterfall Chart Implementation) - Generates the Capacity Waterfall Chart.
+ * Includes dynamic container creation, collapsible behavior, Org View, and Chart.js rendering.
+ * @param {object} calculatedMetrics - The object returned by calculateAllCapacityMetrics.
+ * @param {string} selectedScenario - The key of the currently selected scenario ('TeamBIS', 'EffectiveBIS', 'FundedHC').
+ */
+function generateCapacityWaterfallChart(calculatedMetrics, selectedScenario) {
+    console.log(`Generating Capacity Waterfall Chart section for scenario: ${selectedScenario}...`);
 
+    const ORG_VIEW_ID = '__ORG_VIEW__'; // Identifier for Org View
+
+    let chartContainer = document.getElementById('capacityChartContainer');
+    const mainContainer = document.getElementById('capacityConfigView');
+    const narrativeSection = document.getElementById('capacityNarrativeSection');
+    const summarySection = document.getElementById('capacitySummarySection');
+
+    // --- Ensure Chart Container Exists ---
+    if (!chartContainer) {
+        if (!mainContainer) {
+            console.error("Main container #capacityConfigView not found."); return;
+        }
+        console.log("Creating chart container dynamically (collapsible)...");
+        chartContainer = document.createElement('div');
+        chartContainer.id = 'capacityChartContainer';
+        chartContainer.style.marginTop = '20px';
+        chartContainer.style.border = '1px solid #ccc';
+        chartContainer.style.backgroundColor = '#f8f9fa';
+
+        const chartHeader = document.createElement('h3');
+        chartHeader.id = 'chartHeader';
+        chartHeader.style.margin = '0'; chartHeader.style.padding = '10px 15px';
+        chartHeader.style.cursor = 'pointer'; chartHeader.style.backgroundColor = '#e9ecef';
+        chartHeader.style.borderBottom = '1px solid rgb(224, 224, 224)';
+        chartHeader.title = 'Click to expand/collapse chart section';
+        chartHeader.innerHTML = `<span class="toggle-indicator" id="chartToggleIndicator" style="font-weight:bold; margin-right:5px;">[+] </span>Capacity Visualization (Waterfall)`;
+        chartContainer.appendChild(chartHeader);
+
+        const chartContent = document.createElement('div');
+        chartContent.id = 'chartContent';
+        chartContent.style.padding = '15px'; chartContent.style.display = 'none'; // Start collapsed
+        chartContainer.appendChild(chartContent); // Add content div
+
+        const canvasElement = document.createElement('canvas');
+        canvasElement.id = 'capacityWaterfallChart';
+        canvasElement.style.width = '100%'; canvasElement.style.maxHeight = '450px';
+        chartContent.appendChild(canvasElement);
+
+        const teamSelectorDiv = document.createElement('div');
+        teamSelectorDiv.id = 'chartTeamSelector';
+        teamSelectorDiv.style.textAlign = 'center'; teamSelectorDiv.style.marginTop = '10px';
+        teamSelectorDiv.innerHTML = `<p><i>Select a view:</i></p>`;
+        chartContent.appendChild(teamSelectorDiv);
+
+        chartHeader.onclick = () => { /* ... (toggle logic remains same) ... */
+            const contentDiv = chartContainer.querySelector('#chartContent');
+            const indicatorSpan = chartHeader.querySelector('#chartToggleIndicator');
+            if (contentDiv && indicatorSpan) {
+                const isHidden = contentDiv.style.display === 'none';
+                contentDiv.style.display = isHidden ? 'block' : 'none';
+                indicatorSpan.textContent = isHidden ? '[-] ' : '[+] ';
+            }
+        };
+
+        // Append container
+        if (narrativeSection && narrativeSection.parentNode === mainContainer) {
+            narrativeSection.insertAdjacentElement('afterend', chartContainer);
+        } else if (summarySection && summarySection.parentNode === mainContainer) {
+            summarySection.insertAdjacentElement('afterend', chartContainer);
+        } else {
+            mainContainer.appendChild(chartContainer);
+        }
+    } else {
+        chartContainer.style.display = 'block';
+    }
+
+    // --- Get references ---
+    const teamSelectorContainer = document.getElementById('chartTeamSelector');
+    const canvas = document.getElementById('capacityWaterfallChart');
+    const chartContentDiv = document.getElementById('chartContent'); // Get content div
+
+    if (!teamSelectorContainer || !canvas || !chartContentDiv) {
+        console.error("Chart inner elements not found."); return;
+    }
+
+    // --- Populate View Selector Buttons ---
+    teamSelectorContainer.innerHTML = '<strong style="margin-right: 10px;">Select View:</strong>';
+    if (typeof currentChartTeamId === 'undefined') { currentChartTeamId = ORG_VIEW_ID; } // Ensure default
+
+    // Org View Button
+    const orgButton = document.createElement('button'); /* ... (button creation logic remains same) ... */
+    orgButton.textContent = 'Org View'; orgButton.type = 'button';
+    orgButton.style.cssText = `padding: 3px 8px; margin: 0 5px 5px 0; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; font-size: 0.85em;`;
+    if (currentChartTeamId === ORG_VIEW_ID) { orgButton.style.backgroundColor = '#007bff'; orgButton.style.color = 'white'; orgButton.style.fontWeight = 'bold'; }
+    else { orgButton.style.backgroundColor = '#e9ecef'; orgButton.style.color = '#495057'; }
+    orgButton.onclick = () => { currentChartTeamId = ORG_VIEW_ID; generateCapacityWaterfallChart(calculatedMetrics, selectedScenario); };
+    teamSelectorContainer.appendChild(orgButton);
+
+    // Team Buttons
+    if (currentSystemData && currentSystemData.teams && currentSystemData.teams.length > 0) {
+        currentSystemData.teams.forEach(team => {
+            const button = document.createElement('button'); /* ... (button creation logic remains same) ... */
+             button.textContent = team.teamIdentity || team.teamName; button.type = 'button';
+             button.style.cssText = `padding: 3px 8px; margin: 0 5px 5px 0; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; font-size: 0.85em;`;
+             if (team.teamId === currentChartTeamId) { button.style.backgroundColor = '#007bff'; button.style.color = 'white'; button.style.fontWeight = 'bold'; }
+             else { button.style.backgroundColor = '#e9ecef'; button.style.color = '#495057'; }
+             button.onclick = () => { currentChartTeamId = team.teamId; generateCapacityWaterfallChart(calculatedMetrics, selectedScenario); };
+             teamSelectorContainer.appendChild(button);
+        });
+    }
+
+    // --- Chart Generation Logic ---
+    console.log(`Generating chart for view: ${currentChartTeamId === ORG_VIEW_ID ? 'Org View' : currentChartTeamId}`);
+
+    // Destroy previous chart instance
+    if (capacityChartInstance) {
+        capacityChartInstance.destroy();
+        capacityChartInstance = null;
+    }
+
+    // Determine data source and label
+    let viewData;
+    let viewLabel;
+    if (currentChartTeamId === ORG_VIEW_ID) {
+        viewData = calculatedMetrics.totals?.[selectedScenario];
+        viewLabel = 'Organization Total';
+    } else {
+        viewData = calculatedMetrics[currentChartTeamId]?.[selectedScenario];
+        viewLabel = getTeamNameById(currentChartTeamId);
+    }
+
+    // Check if data exists
+    if (!viewData || !viewData.deductionsBreakdown) {
+        console.warn(`No metrics/breakdown found for view ${currentChartTeamId} and scenario ${selectedScenario}. Cannot generate chart.`);
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.font = '16px Arial'; ctx.fillStyle = '#666'; ctx.textAlign = 'center';
+        ctx.fillText(`No data available for ${viewLabel} (${selectedScenario})`, canvas.width / 2, 50);
+        return;
+    }
+
+    // --- Prepare Waterfall Data ---
+    const labels = ['Gross', 'Holidays', 'Org Events', 'Std Leave', 'Var Leave', 'Activities', 'Overhead', 'Net Project'];
+    const dataValues = [];
+    const colors = [];
+    const borderColors = [];
+
+    const grossYrs = viewData.grossYrs || 0;
+    const holidayYrs = viewData.deductionsBreakdown.holidayYrs || 0;
+    const orgEventYrs = viewData.deductionsBreakdown.orgEventYrs || 0;
+    const stdLeaveYrs = viewData.deductionsBreakdown.stdLeaveYrs || 0;
+    const varLeaveYrs = viewData.deductionsBreakdown.varLeaveYrs || 0;
+    const activityYrs = viewData.deductionsBreakdown.teamActivityYrs || 0; // Ensure correct key
+    const overheadYrs = viewData.deductionsBreakdown.overheadYrs || 0;
+    const netYrs = viewData.netYrs || 0;
+
+    let currentLevel = 0;
+
+    // Gross Capacity Bar (Positive)
+    dataValues.push([currentLevel, grossYrs]);
+    colors.push('rgba(75, 192, 192, 0.6)'); // Greenish
+    borderColors.push('rgba(75, 192, 192, 1)');
+    currentLevel = grossYrs;
+
+    // Deduction Bars (Negative impact visually shown by starting point)
+    const deductions = [holidayYrs, orgEventYrs, stdLeaveYrs, varLeaveYrs, activityYrs, overheadYrs];
+    const deductionColors = [
+        'rgba(255, 99, 132, 0.6)', // Red
+        'rgba(255, 159, 64, 0.6)', // Orange
+        'rgba(255, 205, 86, 0.6)', // Yellow
+        'rgba(153, 102, 255, 0.6)', // Purple
+        'rgba(201, 203, 207, 0.6)', // Grey
+        'rgba(54, 162, 235, 0.6)' // Blue
+    ];
+    deductions.forEach((deduction, index) => {
+        if (typeof deduction !== 'number' || isNaN(deduction) || deduction === 0) {
+            // Skip zero or invalid deductions visually, or represent as 0 height bar?
+             // Let's represent as [currentLevel, currentLevel] to keep label alignment
+              dataValues.push([currentLevel, currentLevel]);
+        } else {
+             dataValues.push([currentLevel, currentLevel - deduction]);
+             currentLevel -= deduction;
+        }
+         colors.push(deductionColors[index % deductionColors.length]); // Cycle colors if needed
+         borderColors.push(deductionColors[index % deductionColors.length].replace('0.6', '1')); // Solid border
+    });
+
+    // Net Project Capacity Bar (Positive, starts from 0)
+    dataValues.push([0, netYrs]);
+    colors.push('rgba(75, 192, 192, 0.6)'); // Greenish
+    borderColors.push('rgba(75, 192, 192, 1)');
+
+    // --- Configure Chart.js ---
+    const config = {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: `Capacity (SDE Years) - ${viewLabel} (${selectedScenario})`,
+                data: dataValues,
+                backgroundColor: colors,
+                borderColor: borderColors,
+                borderWidth: 1,
+                barPercentage: 0.8, // Adjust bar width
+                categoryPercentage: 0.9 // Adjust spacing between bars
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false, // Allow height to adjust
+            indexAxis: 'x', // Waterfall typically vertical bars
+            scales: {
+                x: {
+                    grid: { display: false } // Cleaner look
+                },
+                y: {
+                    beginAtZero: true, // Start y-axis at zero
+                    title: {
+                        display: true,
+                        text: 'Capacity (SDE Years)'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false // Legend not very useful for waterfall
+                },
+                title: {
+                    display: true,
+                    text: `Capacity Waterfall: ${viewLabel} (${selectedScenario})`,
+                    padding: { top: 10, bottom: 15 },
+                    font: { size: 16 }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const value = context.raw;
+                            let label = context.dataset.label || '';
+                            if (label) { label += ': '; }
+                            if (Array.isArray(value) && value.length === 2) {
+                                const start = value[0];
+                                const end = value[1];
+                                const change = end - start;
+                                // For deductions, show the negative change; for Gross/Net show the total
+                                if (context.label === 'Gross' || context.label === 'Net Project') {
+                                     label += `${end.toFixed(2)} SDE Yrs`;
+                                } else {
+                                     label += `${change.toFixed(2)} SDE Yrs`;
+                                }
+
+                            }
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    };
+
+    // --- Create the Chart ---
+    const ctx = canvas.getContext('2d');
+    capacityChartInstance = new Chart(ctx, config); // Store instance
+
+    console.log("Waterfall chart generated successfully.");
+}
+// Make global if needed
+window.generateCapacityWaterfallChart = generateCapacityWaterfallChart;
+
+// Helper to get team name (you might already have this or similar)
+function getTeamNameById(teamId) {
+    if (!currentSystemData || !currentSystemData.teams) return teamId; // Fallback
+    const team = currentSystemData.teams.find(t => t.teamId === teamId);
+    return team ? (team.teamIdentity || team.teamName) : teamId;
+}
 
 /**
  * REVISED Function (Phase 4b - SIMPLIFIED Team Activities UI)
