@@ -1912,6 +1912,11 @@ function showCapacityConfigView() {
         alert("Please load a system first.");
         return;
     }
+    const container = document.getElementById('capacityConfigView');
+    if (!container) {
+        console.error("Cannot generate global constraints form: Container #capacityConfigView not found.");
+        return;
+    }
 
     // Use switchView to handle view transition and UI elements
     switchView('capacityConfigView'); // Pass the ID of the new view container
@@ -1924,7 +1929,7 @@ function showCapacityConfigView() {
     console.log("Capacity Config View displayed. Content generation will be added in next phase.");
     // (Phase 5+)
     updateCapacityCalculationsAndDisplay();
-    // ------------------------------------------------
+
 }
 // Make it globally accessible for the button's onclick
 window.showCapacityConfigView = showCapacityConfigView;
@@ -2479,6 +2484,32 @@ function updateCapacityCalculationsAndDisplay(newScenario = null) {
     }
     const calculatedMetrics = calculateAllCapacityMetrics(currentSystemData);
     generateCapacitySummaryDisplay(calculatedMetrics, currentCapacityScenario);
+     // Generate the narrative text using the same data and scenario
+    generateCapacityNarrative(calculatedMetrics, currentCapacityScenario);   
+
+    // --- Ensure Correct DOM Order (Phase 7c Fix) ---
+    try {
+        const summarySection = document.getElementById('capacitySummarySection');
+        const narrativeSec = document.getElementById('capacityNarrativeSection'); // Use different var name just in case
+        const mainContainer = document.getElementById('capacityConfigView');
+    
+        // Check if both sections exist and are direct children of the main container
+        if (summarySection && narrativeSec && summarySection.parentNode === mainContainer && narrativeSec.parentNode === mainContainer) {
+            // Check if narrative is NOT already after summary
+            if (narrativeSec !== summarySection.nextElementSibling) {
+                 console.log("Adjusting narrative section position in DOM...");
+                 // Insert narrative section immediately after summary section
+                 summarySection.insertAdjacentElement('afterend', narrativeSec);
+            }
+        } else {
+             if (!summarySection) console.warn("Summary section not found for DOM ordering.");
+             if (!narrativeSec) console.warn("Narrative section not found for DOM ordering.");
+             // Optional: Add logic here if they aren't children of mainContainer?
+        }
+    } catch (e) {
+        console.error("Error adjusting DOM order for narrative section:", e);
+    }
+    // --- End DOM Order Check ---    
 }
 window.updateCapacityCalculationsAndDisplay = updateCapacityCalculationsAndDisplay; // Make global if needed
 
@@ -2648,6 +2679,231 @@ function generateCapacitySummaryDisplay(calculatedMetrics, selectedScenario) {
     console.log("Summary display generated.");
 }
 window.generateCapacitySummaryDisplay = generateCapacitySummaryDisplay; // Make global if needed
+
+/**
+ * REVISED (Phase 7c - Step 2 Fix) - Generates narrative & ensures container exists.
+ */
+function generateCapacityNarrative(calculatedMetrics, selectedScenario) {
+    console.log(`Attempting to generate Capacity Narrative for scenario: ${selectedScenario}...`);
+
+    let narrativeContainer = document.getElementById('capacityNarrativeSection');
+    const mainContainer = document.getElementById('capacityConfigView'); // Parent container
+
+    if (!narrativeContainer) {
+        console.log("Creating narrative section container with collapsible structure...");
+        narrativeContainer = document.createElement('div');
+        narrativeContainer.id = 'capacityNarrativeSection';
+        // Style the main container
+        narrativeContainer.style.border = '1px solid rgb(204, 204, 204)'; // Slightly darker border
+        narrativeContainer.style.marginTop = '20px';
+        narrativeContainer.style.backgroundColor = '#f8f9fa'; // Match summary header bg
+    
+        // Create the clickable Header
+        const narrativeHeader = document.createElement('h3');
+        narrativeHeader.id = 'narrativeHeader'; // Add ID for potential JS targeting
+        narrativeHeader.style.margin = '0';
+        narrativeHeader.style.padding = '10px 15px';
+        narrativeHeader.style.cursor = 'pointer';
+        narrativeHeader.style.backgroundColor = '#e9ecef'; // Header background
+        narrativeHeader.style.borderBottom = '1px solid rgb(224, 224, 224)';
+        narrativeHeader.title = 'Click to expand/collapse narrative';
+        // Add toggle indicator
+        narrativeHeader.innerHTML = `<span class="toggle-indicator" style="font-weight:bold; margin-right:5px;">[+] </span>Capacity Narrative`;
+    
+        // Create the Content Div (starts hidden)
+        const narrativeContent = document.createElement('div');
+        narrativeContent.id = 'narrativeContent'; // ID to target for innerHTML
+        narrativeContent.style.padding = '15px';
+        narrativeContent.style.display = 'none'; // Content starts hidden
+        narrativeContent.style.fontFamily = 'Arial, sans-serif';
+        narrativeContent.style.lineHeight = '1.6';
+        narrativeContent.innerHTML = `<p><em>Generating narrative...</em></p>`; // Initial placeholder
+    
+        // Append header and content to the main container
+        narrativeContainer.appendChild(narrativeHeader);
+        narrativeContainer.appendChild(narrativeContent);
+    
+        // Add the click listener to the header for toggling
+        narrativeHeader.onclick = () => {
+            const contentDiv = narrativeContainer.querySelector('#narrativeContent'); // Find content within this specific container
+            const indicatorSpan = narrativeHeader.querySelector('.toggle-indicator');
+            if (contentDiv) {
+                const isHidden = contentDiv.style.display === 'none';
+                contentDiv.style.display = isHidden ? 'block' : 'none';
+                if (indicatorSpan) {
+                     indicatorSpan.textContent = isHidden ? '[-] ' : '[+] ';
+                }
+                // If opening, ensure narrative is generated (might be redundant if always called by update func)
+                // if(isHidden) {
+                //    const currentScenario = getCurrentlySelectedScenario(); // Need a helper for this if called independently
+                //    const metrics = calculateAllCapacityMetrics();
+                //    generateCapacityNarrative(metrics, currentScenario);
+                // }
+            }
+        };
+    
+        // Append the whole new section to the main view container
+        mainContainer.appendChild(narrativeContainer);
+    
+    } else {
+         // If container exists, ensure content is hidden and indicator is reset on view redraw
+         const contentDiv = narrativeContainer.querySelector('#narrativeContent');
+         const indicatorSpan = narrativeContainer.querySelector('#narrativeHeader .toggle-indicator');
+         if (contentDiv) contentDiv.style.display = 'none';
+         if (indicatorSpan) indicatorSpan.textContent = '[+] ';
+    }  
+      if (!mainContainer) {
+           console.error("Main container #capacityConfigView not found. Cannot create narrative section.");
+           return;
+      } else {
+           console.log("Narrative container found.");
+      }
+
+    // Make the section visible now that we are attempting to populate it
+    narrativeContainer.style.display = 'block';
+    console.log("Narrative container display style SET TO:", narrativeContainer.style.display);
+
+    // Ensure we have the necessary data to generate the narrative
+    if (!calculatedMetrics || !currentSystemData || !currentSystemData.capacityConfiguration || !currentSystemData.teams) {
+        console.error("Cannot generate narrative: Required data is missing.");
+        narrativeContainer.innerHTML = `<h3 style="margin-top: 0;">Capacity Narrative (${selectedScenario})</h3><p><em>Error: Cannot generate narrative because required data is missing.</em></p>`;
+        return;
+    }
+
+    console.log(`Generating full Capacity Narrative for scenario: ${selectedScenario}...`);
+
+    // Find the specific CONTENT div within the narrative section
+    const narrativeContentContainer = document.getElementById('narrativeContent');
+    const narrativeMainContainer = document.getElementById('capacityNarrativeSection'); // The overall container
+
+    // Ensure the content container exists
+    if (!narrativeContentContainer) {
+        console.error("Narrative content container #narrativeContent not found in the DOM.");
+        // Optionally display error in main container if possible
+        if(narrativeMainContainer) narrativeMainContainer.style.display = 'block'; // Make sure section header is visible
+        return;
+    }
+     // Ensure the main container is visible (in case it was hidden)
+     if(narrativeMainContainer) narrativeMainContainer.style.display = 'block';
+
+
+    // Ensure we have the necessary data to generate the narrative
+    if (!calculatedMetrics || !currentSystemData || !currentSystemData.capacityConfiguration || !currentSystemData.teams) {
+        console.error("Cannot generate narrative: Required data is missing.");
+        narrativeContentContainer.innerHTML = `<p><em>Error: Cannot generate narrative because required data is missing.</em></p>`;
+        return;
+    }
+
+    const teams = currentSystemData.teams;
+    const capacityConfig = currentSystemData.capacityConfiguration;
+    const workingDays = capacityConfig.workingDaysPerYear || 261;
+    const totals = calculatedMetrics.totals; // Get totals for all scenarios
+
+    // --- Helper Functions for Narrative ---
+    const toDays = (sdeYears) => {
+        if (typeof sdeYears !== 'number' || isNaN(sdeYears)) return 'N/A';
+        return (sdeYears * workingDays).toFixed(0);
+    }
+    const toFixed = (num, places = 2) => {
+        if (typeof num !== 'number' || isNaN(num)) return 'N/A';
+        // Handle potential -0.00 case after rounding small negative numbers
+        const fixedNum = (num || 0).toFixed(places);
+        return (fixedNum === '-0.00' || fixedNum === '-0.0') ? '0.00' : fixedNum;
+    }
+    const getTeamName = (team) => team.teamIdentity || team.teamName || team.teamId;
+    // Helper to find a specific leave type's default days
+    const getDefaultLeaveDays = (leaveTypeId) => {
+        return capacityConfig.leaveTypes?.find(lt => lt.id === leaveTypeId)?.defaultEstimatedDays || 0;
+    }
+    // Helper to find a team's specific uptake % for a leave type
+    const getTeamLeaveUptake = (team, leaveTypeId) => {
+         const uptakeObj = team.teamCapacityAdjustments?.leaveUptakeEstimates?.find(est => est.leaveTypeId === leaveTypeId);
+         return uptakeObj?.estimatedUptakePercent ?? 100; // Default 100%
+    }
+
+    // --- Start Building Narrative HTML ---
+    let narrativeHTML = ''; // Start empty, content goes into #narrativeContent
+
+    // --- Paragraph 1: Top-Level Reality ---
+    narrativeHTML += `<p><strong>Overall Capacity Baselines:</strong> `;
+    narrativeHTML += `The total <strong>Funded Headcount</strong> is <strong>${toFixed(totals.FundedHC?.headcount)}</strong>, equivalent to a gross capacity of <strong>${toFixed(totals.FundedHC?.grossYrs)} SDE Years</strong> (${toDays(totals.FundedHC?.grossYrs)} SDE Days). `;
+    narrativeHTML += `Based on current team composition (<strong>'Team BIS'</strong> - Builders In Seats), there are <strong>${toFixed(totals.TeamBIS?.headcount)}</strong> builders, providing <strong>${toFixed(totals.TeamBIS?.grossYrs)} SDE Years</strong> (${toDays(totals.TeamBIS?.grossYrs)} SDE Days). `;
+    narrativeHTML += `Including known incoming 'Away Team' members (<strong>'Effective BIS'</strong>), the effective headcount is <strong>${toFixed(totals.EffectiveBIS?.headcount)}</strong>, for a gross capacity of <strong>${toFixed(totals.EffectiveBIS?.grossYrs)} SDE Years</strong> (${toDays(totals.EffectiveBIS?.grossYrs)} SDE Days) before any deductions.</p>`;
+
+    // --- Paragraph 2: Global Constraints ---
+    const holidays = capacityConfig.globalConstraints?.publicHolidays || 0;
+    const orgEvents = capacityConfig.globalConstraints?.orgEvents || [];
+    const holidayImpactYrs = totals[selectedScenario]?.deductionsBreakdown?.holidayYrs || 0;
+    const orgEventImpactYrs = totals[selectedScenario]?.deductionsBreakdown?.orgEventYrs || 0;
+
+    narrativeHTML += `<p><strong>Global Factors Reducing Capacity:</strong> `;
+    narrativeHTML += `Across the organization, <strong>${holidays} Public Holiday</strong> days reduce capacity by approx. <strong>${toFixed(holidayImpactYrs)} SDE Years</strong> (${toDays(holidayImpactYrs)} SDE Days). `;
+    if (orgEvents.length > 0) {
+        const eventNames = orgEvents.map(e => e.name || 'Unnamed Event').slice(0, 3).join(', '); // Show first few
+        narrativeHTML += `Planned Organization-Wide Events (e.g., ${eventNames}${orgEvents.length > 3 ? '...' : ''}) account for a further reduction of <strong>${toFixed(orgEventImpactYrs)} SDE Years</strong> (${toDays(orgEventImpactYrs)} SDE Days). `;
+    } else {
+         narrativeHTML += `No significant Organization-Wide Events impacting capacity have been defined. `;
+    }
+     const annualDefault = getDefaultLeaveDays('annual');
+     narrativeHTML += `Standard leave defaults include ${annualDefault} days/SDE for Annual Leave. The actual impact varies per team based on estimated uptake percentages.</p>`;
+
+    // --- Paragraphs 3+ (Per Team) ---
+    narrativeHTML += `<h4 style="margin-bottom: 0.5em;">Team-Specific Breakdown (${selectedScenario} Scenario):</h4>`;
+
+    teams.forEach(team => {
+        const teamId = team.teamId;
+        const teamName = getTeamName(team);
+        const teamMetrics = calculatedMetrics[teamId]?.[selectedScenario];
+        const teamBreakdown = teamMetrics?.deductionsBreakdown;
+
+        if (!teamMetrics || !teamBreakdown) {
+            narrativeHTML += `<p><strong>${teamName}:</strong> Metrics not available for this scenario.</p><hr style='border:none; border-top: 1px solid #eee; margin: 1em 0;'>`;
+            return; // Skip this team if no metrics
+        }
+
+        const totalSinkYrs = teamMetrics.deductYrs || 0;
+        const totalSinkDays = toDays(totalSinkYrs);
+
+        narrativeHTML += `<p><strong><u>${teamName}</u> (HC: ${toFixed(teamMetrics.headcount)}):</strong> `;
+
+        // Explain main sinks
+        narrativeHTML += `Key capacity reductions include: `;
+        narrativeHTML += `Standard Leave (<strong>${toFixed(teamBreakdown.stdLeaveYrs)}</strong> SDE Yrs)`;
+         // Explain leave uptake example (Annual Leave)
+         const annualUptakePercent = getTeamLeaveUptake(team, 'annual');
+         if (annualUptakePercent !== 100) {
+             narrativeHTML += `, reflecting an estimated <strong>${annualUptakePercent}%</strong> uptake of the ${annualDefault} default annual leave days`;
+         }
+          narrativeHTML += `; Variable Leave (<strong>${toFixed(teamBreakdown.varLeaveYrs)}</strong> SDE Yrs); `;
+          narrativeHTML += `Team Activities (<strong>${toFixed(teamBreakdown.teamActivityYrs)}</strong> SDE Yrs); `;
+          narrativeHTML += `Overhead (<strong>${toFixed(teamBreakdown.overheadYrs)}</strong> SDE Yrs); `;
+          narrativeHTML += `plus global factors. `;
+
+        // Total Sink
+        narrativeHTML += `In total, this team loses approx. <strong>${totalSinkDays} SDE Days</strong> (<strong>${toFixed(totalSinkYrs)} SDE Yrs</strong>) to these factors in the ${selectedScenario} view. `;
+
+        // Before/After across scenarios
+        const netTeamBIS = calculatedMetrics[teamId]?.TeamBIS?.netYrs;
+        const netEffectiveBIS = calculatedMetrics[teamId]?.EffectiveBIS?.netYrs;
+        const netFundedHC = calculatedMetrics[teamId]?.FundedHC?.netYrs;
+        narrativeHTML += `Resulting Net Project Capacity across scenarios: Team BIS = <strong>${toFixed(netTeamBIS)} Yrs</strong>, Effective BIS = <strong>${toFixed(netEffectiveBIS)} Yrs</strong>, Funded HC = <strong>${toFixed(netFundedHC)} Yrs</strong>.</p><hr style='border:none; border-top: 1px solid #eee; margin: 1em 0;'>`; // Add separator
+
+    });
+
+    // --- Final Paragraph: Overall Summary ---
+    const totalNetYrs = totals[selectedScenario]?.netYrs || 0;
+    narrativeHTML += `<p style="margin-top:1em;"><strong>Overall Summary (${selectedScenario}):</strong> `;
+    narrativeHTML += `Summing across all teams for the <strong>${selectedScenario}</strong> scenario, the total Gross Capacity is <strong>${toFixed(totals[selectedScenario]?.grossYrs)} SDE Yrs</strong>. After accounting for all deductions totalling <strong>${toFixed(totals[selectedScenario]?.deductYrs)} SDE Yrs</strong>, the estimated final <strong>Net Project Capacity is ${toFixed(totalNetYrs)} SDE Years</strong> (${toDays(totalNetYrs)} SDE Days).</p>`;
+
+    // --- Display Narrative ---
+    narrativeContentContainer.innerHTML = narrativeHTML; // Set the content of the inner div
+    console.log("Finished generating full capacity narrative.");
+    
+    console.log("Placeholder for generateCapacityNarrative executed.");
+}
+window.generateCapacityNarrative = generateCapacityNarrative; // Make global if needed
+
+
 
 /**
  * REVISED Function (Phase 4b - SIMPLIFIED Team Activities UI)
