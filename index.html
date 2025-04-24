@@ -1181,7 +1181,7 @@ const sampleSystemDataStreamView = {
     platformDependencies: [], // Will be built dynamically on load
     // Capacity constraints
     capacityConfiguration: {
-        workingDaysPerYear: null, // To be configured
+        workingDaysPerYear: 261, // To be configured
         standardHoursPerDay: 8,   // Default
         globalConstraints: {
             publicHolidays: null, // To be configured
@@ -1702,7 +1702,7 @@ const sampleSystemDataContactCenter = {
     platformDependencies: [], // Will be built dynamically on load
     // Capacity constraints
     capacityConfiguration: {
-        workingDaysPerYear: null, // To be configured
+        workingDaysPerYear: 261, // To be configured
         standardHoursPerDay: 8,   // Default
         globalConstraints: {
             publicHolidays: null, // To be configured
@@ -2716,15 +2716,55 @@ function generateTeamConstraintsForms() {
 }
 window.generateTeamConstraintsForms = generateTeamConstraintsForms;
 
+/**
+ * REVISED Function (Phase 6 - CORRECTED Save Logic)
+ * - Saves capacity configuration directly to localStorage using the correct system name.
+ * - Avoids calling the incorrect saveSystemChanges function.
+ * - Includes validation for workingDaysPerYear.
+ */
+function saveCapacityConfiguration() {
+    console.log("Attempting to save capacity configuration directly...");
+    if (!currentSystemData || !currentSystemData.systemName) {
+         alert("Cannot save configuration: No system data loaded or system name is missing.");
+         return;
+    }
 
-// Add the placeholder save function (if not already present)
-if (typeof saveCapacityConfiguration === 'undefined') {
-     function saveCapacityConfiguration() { alert("Save functionality will be implemented in Phase 5."); }
-     window.saveCapacityConfiguration = saveCapacityConfiguration;
+    const systemNameKey = currentSystemData.systemName; // Use the name stored in the data
+
+    // Optional: Validation check before saving
+    const workingDays = currentSystemData.capacityConfiguration?.workingDaysPerYear;
+    console.log(`Validating workingDaysPerYear: Value=${workingDays}, Type=${typeof workingDays}`); // Added log for debugging
+    if (workingDays === undefined || workingDays === null || workingDays <= 0) {
+         if (!confirm(`Warning: 'Standard Working Days Per Year' (${workingDays}) is not set or is invalid. Calculations might be incorrect. Save anyway?`)) {
+             const wdInput = document.getElementById('workingDaysInput');
+             if(wdInput) wdInput.focus();
+             return;
+         }
+     }
+
+    try {
+        // 1. Get existing systems from localStorage
+        const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
+
+        // 2. Update the data for the current system using its correct name
+        systems[systemNameKey] = currentSystemData;
+        console.log(`Updating localStorage for key: "${systemNameKey}"`);
+
+        // 3. Save the entire systems object back to localStorage
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
+
+        alert(`Capacity configuration for system "${systemNameKey}" saved successfully.`);
+        console.log("Capacity configuration saved.");
+
+    } catch (error) {
+        console.error("Error during saveCapacityConfiguration:", error);
+        alert("An error occurred while trying to save the capacity configuration. Check console.");
+    }
 }
+// Ensure it's globally accessible if button calls it directly
+window.saveCapacityConfiguration = saveCapacityConfiguration;
 
-// Add adjustPlanningTableHeight if needed
-// if (typeof adjustPlanningTableHeight === 'undefined') { function adjustPlanningTableHeight() { console.log("Placeholder: adjustPlanningTableHeight() called."); } window.adjustPlanningTableHeight = adjustPlanningTableHeight; }
+
 
 /*****************************/
 /** Save Sample Systems to Local Storage **/
@@ -5570,7 +5610,7 @@ function createNewSystem() {
         platformDependencies: [], 
         // Capacity constraints
         capacityConfiguration: {
-            workingDaysPerYear: null, // To be configured
+            workingDaysPerYear: 261, // To be configured - but assume 261
             standardHoursPerDay: 8,   // Default
             globalConstraints: {
                 publicHolidays: null, // To be configured
