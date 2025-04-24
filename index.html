@@ -2260,283 +2260,201 @@ function generateGlobalConstraintsForm() {
 window.generateGlobalConstraintsForm = generateGlobalConstraintsForm; // Make global if needed
 
 /**
- * REVISED (Phase 7b fix) - Calculates capacity metrics for all teams across all scenarios.
- * - Includes previously nested helper functions definitions before the main function.
- * - Calculates Gross SDE Years, Total Deduction SDE Years, and Net Project SDE Years.
- * - Calculates and stores a breakdown of deductions (SDE Yrs) by category.
+ * Helper: Calculates total standard leave days per SDE for a team.
+ */
+function calculateTotalStandardLeaveDaysPerSDE(team, globalLeaveTypes, capacityConfig) {
+    if (!team || !globalLeaveTypes || !capacityConfig || !capacityConfig.leaveTypes) return 0;
+    let totalEffectiveDays = 0;
+    const teamUptakeEstimates = team.teamCapacityAdjustments?.leaveUptakeEstimates || [];
+
+    globalLeaveTypes.forEach(leaveType => {
+        if (!leaveType || !leaveType.id) return;
+        const currentGlobalDefaultObj = capacityConfig.leaveTypes.find(lt => lt.id === leaveType.id);
+        const globalDefault = currentGlobalDefaultObj ? (currentGlobalDefaultObj.defaultEstimatedDays || 0) : 0;
+        const teamUptake = teamUptakeEstimates.find(est => est.leaveTypeId === leaveType.id);
+        const uptakePercent = teamUptake ? (teamUptake.estimatedUptakePercent ?? 100) : 100;
+        totalEffectiveDays += globalDefault * (uptakePercent / 100);
+    });
+    return totalEffectiveDays;
+}
+
+/**
+ * Helper: Calculates total variable leave impact in TOTAL TEAM DAYS.
+ */
+function calculateTotalVariableLeaveDays(team) {
+    if (!team || !team.teamCapacityAdjustments?.variableLeaveImpact) return 0;
+    let totalTeamVariableDays = 0;
+    const varLeaveImpacts = team.teamCapacityAdjustments.variableLeaveImpact;
+
+    for (const leaveKey in varLeaveImpacts) {
+        if (varLeaveImpacts.hasOwnProperty(leaveKey)) {
+            const impact = varLeaveImpacts[leaveKey];
+            totalTeamVariableDays += (impact?.affectedSDEs || 0) * (impact?.avgDaysPerAffectedSDE || 0);
+        }
+    }
+    return totalTeamVariableDays;
+}
+
+/**
+ * Helper: Calculates total org event days per SDE.
+ */
+function calculateOrgEventDaysPerSDE(capacityConfig) {
+    let totalDays = 0;
+    const orgEvents = capacityConfig?.globalConstraints?.orgEvents || [];
+    orgEvents.forEach(event => {
+        totalDays += event.estimatedDaysPerSDE || 0;
+    });
+    return totalDays;
+}
+
+
+/**
+ * Helper: Calculates team activity impacts.
+ * Returns an object: { daysPerSDE: total_days_from_perSDE_inputs, totalTeamDays: total_days_from_total_inputs }
+ */
+function calculateTeamActivityImpacts(team) {
+    const result = { daysPerSDE: 0, totalTeamDays: 0 };
+    if (!team || !team.teamCapacityAdjustments?.teamActivities) return result;
+
+    const teamActivities = team.teamCapacityAdjustments.teamActivities;
+    teamActivities.forEach(activity => {
+        const value = activity.value || 0;
+        if (activity.estimateType === 'perSDE') {
+            result.daysPerSDE += value;
+        } else { // Default to 'total' if not 'perSDE'
+            result.totalTeamDays += value;
+        }
+    });
+    return result;
+}
+
+
+/**
+ * Helper (CORRECTED): Calculates overhead days per SDE.
+ */
+function calculateOverheadDaysPerSDE(team, workingDaysPerYear) {
+    if (!team || !team.teamCapacityAdjustments || !workingDaysPerYear || workingDaysPerYear === 0) {
+         // console.warn("calculateOverheadDaysPerSDE: Missing required inputs or workingDaysPerYear is zero."); // Reduced verbosity
+         return 0;
+    }
+    const hoursPerWeek = team.teamCapacityAdjustments.avgOverheadHoursPerWeekPerSDE || 0;
+    if (hoursPerWeek === 0) return 0;
+    const standardHoursPerDay = 8;
+    const totalAnnualOverheadHours = hoursPerWeek * (workingDaysPerYear / 5);
+    const totalOverheadDays = totalAnnualOverheadHours / standardHoursPerDay;
+    return totalOverheadDays;
+}
+
+
+/**
+ * REVISED (Phase 7b fix 5) - Calculates capacity metrics for all teams across all scenarios.
+ * - Includes required helper functions.
+ * - Calculates SDE Year contribution for each deduction category directly.
+ * - CORRECTED Team Activity calculation for 'perSDE' type inputs.
  */
 function calculateAllCapacityMetrics() {
-    console.log("Calculating all capacity metrics (Phase 7b)...");
+    console.log("Calculating all capacity metrics (Phase 7b - Fix 5)..."); // Log updated
     if (!currentSystemData || !currentSystemData.capacityConfiguration || !currentSystemData.teams) {
         console.error("Cannot calculate metrics: Missing core data (config or teams).");
-        return { totals: { TeamBIS: {}, EffectiveBIS: {}, FundedHC: {} } }; // Return empty structure
+        return { totals: { TeamBIS: {}, EffectiveBIS: {}, FundedHC: {} } };
     }
 
     const capacityConfig = currentSystemData.capacityConfiguration;
     const teams = currentSystemData.teams;
-    const workingDaysPerYear = capacityConfig.workingDaysPerYear || 261; // Default if not set
-    const sdesPerSdeYear = 1; // Assuming 1 SDE = 1 SDE Year base before deductions
+    const workingDaysPerYear = capacityConfig.workingDaysPerYear || 261;
+    const sdesPerSdeYear = 1; // Base assumption
     const globalLeaveTypes = capacityConfig.leaveTypes || [];
     const workingDays = workingDaysPerYear || 1; // Use for division, avoid zero
 
-    const teamMetrics = {}; // Stores metrics per team { teamId: { scenario: { ... } } }
-    const totals = { // Stores overall totals { scenario: { ... } }
-        TeamBIS: { headcount: 0, grossYrs: 0, deductYrs: 0, netYrs: 0 },
-        EffectiveBIS: { headcount: 0, grossYrs: 0, deductYrs: 0, netYrs: 0 },
-        FundedHC: { headcount: 0, grossYrs: 0, deductYrs: 0, netYrs: 0 }
+    const teamMetrics = {};
+    const totals = {
+        TeamBIS: { headcount: 0, grossYrs: 0, deductYrs: 0, netYrs: 0, deductionsBreakdown: {} },
+        EffectiveBIS: { headcount: 0, grossYrs: 0, deductYrs: 0, netYrs: 0, deductionsBreakdown: {} },
+        FundedHC: { headcount: 0, grossYrs: 0, deductYrs: 0, netYrs: 0, deductionsBreakdown: {} }
     };
+     // Initialize total breakdowns
+     ['TeamBIS', 'EffectiveBIS', 'FundedHC'].forEach(scenario => {
+        totals[scenario].deductionsBreakdown = {
+            stdLeaveYrs: 0, varLeaveYrs: 0, holidayYrs: 0,
+            orgEventYrs: 0, teamActivityYrs: 0, overheadYrs: 0
+        };
+     });
 
-
-    /**
-     * Helper: Calculates total standard leave days per SDE for a team.
-     */
-    function calculateTotalStandardLeaveDaysPerSDE(team, globalLeaveTypes, capacityConfig) {
-        if (!team || !globalLeaveTypes || !capacityConfig || !capacityConfig.leaveTypes) return 0;
-        let totalEffectiveDays = 0;
-        const teamUptakeEstimates = team.teamCapacityAdjustments?.leaveUptakeEstimates || [];
-    
-        globalLeaveTypes.forEach(leaveType => {
-            if (!leaveType || !leaveType.id) return;
-            // Find the corresponding global default value (ensure it exists in capacityConfig)
-            const currentGlobalDefaultObj = capacityConfig.leaveTypes.find(lt => lt.id === leaveType.id);
-            const globalDefault = currentGlobalDefaultObj ? (currentGlobalDefaultObj.defaultEstimatedDays || 0) : 0;
-            // Find the team-specific uptake percentage
-            const teamUptake = teamUptakeEstimates.find(est => est.leaveTypeId === leaveType.id);
-            const uptakePercent = teamUptake ? (teamUptake.estimatedUptakePercent ?? 100) : 100; // Default to 100% if blank or not found
-            totalEffectiveDays += globalDefault * (uptakePercent / 100);
-        });
-        // console.log(`[Debug] Team ${team.teamId} - Std Leave Days/SDE: ${totalEffectiveDays}`);
-        return totalEffectiveDays;
-    }
-    
-    /**
-     * Helper: Calculates total variable leave days per SDE for a team.
-     * Note: Converts total team impact back to an average per SDE.
-     */
-    function calculateTotalVariableLeaveDaysPerSDE(team, teamHeadcountForCalc) {
-        if (!team || !team.teamCapacityAdjustments?.variableLeaveImpact) return 0;
-        let totalTeamVariableDays = 0;
-        const varLeaveImpacts = team.teamCapacityAdjustments.variableLeaveImpact;
-    
-        for (const leaveKey in varLeaveImpacts) {
-            if (varLeaveImpacts.hasOwnProperty(leaveKey)) {
-                const impact = varLeaveImpacts[leaveKey];
-                const affectedSDEs = impact?.affectedSDEs || 0;
-                const avgDays = impact?.avgDaysPerAffectedSDE || 0;
-                totalTeamVariableDays += affectedSDEs * avgDays;
-            }
-        }
-        // Convert total team days back to an average per SDE for consistency in main calc
-        const avgPerSDE = (teamHeadcountForCalc > 0) ? (totalTeamVariableDays / teamHeadcountForCalc) : 0;
-        // console.log(`[Debug] Team ${team.teamId} - Var Leave Days/SDE: ${avgPerSDE} (Total Team Days: ${totalTeamVariableDays})`);
-        return avgPerSDE;
-    }
-    
-    /**
-     * Helper: Calculates total org event days per SDE.
-     */
-    function calculateOrgEventDaysPerSDE(capacityConfig) {
-        let totalDays = 0;
-        const orgEvents = capacityConfig?.globalConstraints?.orgEvents || [];
-        orgEvents.forEach(event => {
-            totalDays += event.estimatedDaysPerSDE || 0;
-        });
-        // console.log(`[Debug] Org Events Days/SDE: ${totalDays}`);
-        return totalDays;
-    }
-    
-    
-    /**
-     * Helper: Calculates total team activity days per SDE.
-     * Handles both 'perSDE' and 'total' estimate types.
-     */
-    function calculateTeamActivityDaysPerSDE(team, teamHeadcountForCalc) {
-        if (!team || !team.teamCapacityAdjustments?.teamActivities) return 0;
-        let totalDaysPerSDE = 0;
-        let totalTeamDaysFromTotalType = 0;
-        const teamActivities = team.teamCapacityAdjustments.teamActivities;
-    
-        teamActivities.forEach(activity => {
-            const value = activity.value || 0;
-            if (activity.estimateType === 'perSDE') {
-                totalDaysPerSDE += value;
-            } else if (activity.estimateType === 'total') {
-                totalTeamDaysFromTotalType += value;
-            } else {
-                // Default to perSDE if type is missing or invalid
-                totalDaysPerSDE += value;
-            }
-        });
-    
-        // Add the 'total' type days distributed across the team headcount
-        if (teamHeadcountForCalc > 0) {
-            totalDaysPerSDE += totalTeamDaysFromTotalType / teamHeadcountForCalc;
-        } else if (totalTeamDaysFromTotalType > 0) {
-            // If HC is 0 but total days were specified, log a warning maybe?
-            console.warn(`Team ${team.teamId} has 'Total Team Days' activities but 0 TeamBIS headcount for calculation.`);
-        }
-    
-        // console.log(`[Debug] Team ${team.teamId} - Team Activity Days/SDE: ${totalDaysPerSDE}`);
-        return totalDaysPerSDE;
-    }
-    
-    
-    /**
-     * Helper (CORRECTED): Calculates overhead days per SDE.
-     * Converts weekly hours input into total annual days equivalent.
-     */
-    function calculateOverheadDaysPerSDE(team, workingDaysPerYear) {
-        if (!team || !team.teamCapacityAdjustments || !workingDaysPerYear || workingDaysPerYear === 0) {
-             console.warn("calculateOverheadDaysPerSDE: Missing required inputs or workingDaysPerYear is zero.", { teamExists: !!team, adjExists: !!team?.teamCapacityAdjustments, workingDays: workingDaysPerYear });
-             return 0;
-        }
-    
-        const hoursPerWeek = team.teamCapacityAdjustments.avgOverheadHoursPerWeekPerSDE || 0;
-        if (hoursPerWeek === 0) {
-            return 0; // No overhead if hours are zero
-        }
-    
-        // Define standard working hours per day for conversion
-        const standardHoursPerDay = 8; // Assuming an 8-hour standard working day
-    
-        // Calculate total annual overhead hours per SDE
-        // (Weekly Hours * Number of weeks in the working year)
-        // Number of weeks = workingDaysPerYear / 5 (assuming 5 working days/week)
-        const totalAnnualOverheadHours = hoursPerWeek * (workingDaysPerYear / 5);
-    
-        // Convert total annual hours to total annual days
-        const totalOverheadDays = totalAnnualOverheadHours / standardHoursPerDay;
-    
-        // console.log(`[Debug] Team ${team.teamId} - Overhead Hrs/Week: ${hoursPerWeek}, Total Annual Overhead Hrs: ${totalAnnualOverheadHours.toFixed(2)}, Total Overhead Days/SDE: ${totalOverheadDays.toFixed(2)}`);
-    
-        return totalOverheadDays;
-    }
 
     // --- Iterate through each team ---
     (teams || []).forEach(team => {
         if (!team || !team.teamId) return;
         teamMetrics[team.teamId] = { TeamBIS: {}, EffectiveBIS: {}, FundedHC: {} };
 
-        // Calculate deduction days per SDE (mostly independent of scenario headcount, except VarLeave/Activities)
-        const teamBIS_HC_for_calc = team?.buildersInSeats || 0;
-
-        // *** Call the helper functions (now defined globally/just above) ***
-        const deduction_days_per_sde_std_leave = calculateTotalStandardLeaveDaysPerSDE(team, globalLeaveTypes, capacityConfig);
-        const deduction_days_per_sde_variable_leave = calculateTotalVariableLeaveDaysPerSDE(team, teamBIS_HC_for_calc);
-        const deduction_days_per_sde_public_holidays = capacityConfig.globalConstraints?.publicHolidays || 0;
-        const deduction_days_per_sde_org_events = calculateOrgEventDaysPerSDE(capacityConfig);
-        const deduction_days_per_sde_team_activities = calculateTeamActivityDaysPerSDE(team, teamBIS_HC_for_calc);
-        const deduction_days_per_sde_overhead = calculateOverheadDaysPerSDE(team, workingDaysPerYear);
-        // *** End Helper Calls ***
-
-        // Calculate total deduction days per SDE
-        const total_deduction_days_per_sde =
-            deduction_days_per_sde_std_leave +
-            deduction_days_per_sde_variable_leave +
-            deduction_days_per_sde_public_holidays +
-            deduction_days_per_sde_org_events +
-            deduction_days_per_sde_team_activities +
-            deduction_days_per_sde_overhead;
-
-        // --- Calculate Individual Deduction Components in SDE Years per SDE ---
-        const deductYrs_per_sde_std_leave = deduction_days_per_sde_std_leave / workingDays;
-        const deductYrs_per_sde_variable_leave = deduction_days_per_sde_variable_leave / workingDays;
-        const deductYrs_per_sde_holidays = deduction_days_per_sde_public_holidays / workingDays;
-        const deductYrs_per_sde_org_events = deduction_days_per_sde_org_events / workingDays;
-        const deductYrs_per_sde_team_activities = deduction_days_per_sde_team_activities / workingDays;
-        const deductYrs_per_sde_overhead = deduction_days_per_sde_overhead / workingDays;
-        // --- End Individual Components ---
+        // --- Pre-calculate per-SDE values and total team days using helpers ---
+        const stdLeave_days_per_sde = calculateTotalStandardLeaveDaysPerSDE(team, globalLeaveTypes, capacityConfig);
+        const holidays_days_per_sde = capacityConfig.globalConstraints?.publicHolidays || 0;
+        const orgEvents_days_per_sde = calculateOrgEventDaysPerSDE(capacityConfig);
+        const overhead_days_per_sde = calculateOverheadDaysPerSDE(team, workingDaysPerYear);
+        const variable_leave_total_team_days = calculateTotalVariableLeaveDays(team);
+        const teamActivityImpacts = calculateTeamActivityImpacts(team); // Returns { daysPerSDE, totalTeamDays }
 
         // --- Iterate through each scenario for this team ---
         ['TeamBIS', 'EffectiveBIS', 'FundedHC'].forEach(scenario => {
-        // *** Add Logging Here ***
-        console.log(`--- Team: ${team.teamId}, Scenario: ${scenario} ---`);
-        console.log(`Raw fundedHeadcount: ${team?.fundedHeadcount}`);
-        // *** End Logging ***            
             let headcount = 0;
             switch (scenario) {
-                case 'TeamBIS':
-                    headcount = team?.buildersInSeats || 0;
-                    // *** Add Logging ***
-                    console.log(`buildersInSeats: ${team?.buildersInSeats}, Assigned headcount: ${headcount}`);
-                    break;
-                case 'EffectiveBIS':
-                    headcount = (team?.buildersInSeats + team?.awayTeamMembers.length) || 0;
-                    // *** Add Logging ***
-                    console.log(` effectiveBIS: ${(team?.buildersInSeats + team?.awayTeamMembers.length)}, Assigned headcount: ${headcount}`);
-                    break;
-                case 'FundedHC':
-                    headcount = team?.fundedHeadcount || 0;
-                     // *** Add Logging ***
-                    console.log(`Read team?.fundedHeadcount: ${team?.fundedHeadcount}, Assigned headcount: ${headcount}`);
-                    break;
+                case 'TeamBIS': headcount = team?.buildersInSeats || 0; break;
+                case 'EffectiveBIS': headcount = (team?.buildersInSeats || 0) + (team?.awayTeamMembers?.length || 0); break;
+                case 'FundedHC': headcount = team?.fundedHeadcount || 0; break;
             }
-            // *** Add Logging After Switch ***
-            console.log(`>>> Headcount USED for ${scenario} calculations: ${headcount}`);
-            // *** End Logging ***
 
-            // Calculate core metrics for this team/scenario
+            // --- Calculate SDE Year impact for EACH category for THIS scenario ---
+            const teamActivityYrs_from_perSDE = teamActivityImpacts.daysPerSDE / workingDays; // SDE Year equivalent of the AVERAGE impact
+            const teamActivityYrs_from_total = teamActivityImpacts.totalTeamDays / workingDays; // SDE Year equivalent of the TOTAL impact
+
+            const breakdown = {
+                stdLeaveYrs: (stdLeave_days_per_sde / workingDays) * headcount,
+                varLeaveYrs: variable_leave_total_team_days / workingDays, // Direct conversion from total days
+                holidayYrs: (holidays_days_per_sde / workingDays) * headcount,
+                orgEventYrs: (orgEvents_days_per_sde / workingDays) * headcount,
+                 // *** CORRECTED LOGIC for Team Activities ***
+                 // Add the SDE year equivalent of the average impact (perSDE) directly
+                 // Add the SDE year equivalent of the total impact (total) directly
+                teamActivityYrs: teamActivityYrs_from_perSDE + teamActivityYrs_from_total,
+                overheadYrs: (overhead_days_per_sde / workingDays) * headcount
+            };
+
+            // Calculate core metrics
             const grossYrs = headcount * sdesPerSdeYear;
-            const deductYrs = total_deduction_days_per_sde * headcount / workingDays; // Use total days/SDE here
-            const netYrs = grossYrs - deductYrs;
+            const totalDeductYrs = Object.values(breakdown).reduce((sum, val) => sum + (val || 0), 0);
+            const netYrs = grossYrs - totalDeductYrs;
 
-            // Store core metrics
+            // Store metrics
             teamMetrics[team.teamId][scenario] = {
                 headcount: headcount,
                 grossYrs: grossYrs,
-                deductYrs: deductYrs,
+                deductYrs: totalDeductYrs,
                 netYrs: netYrs,
-                deductionsBreakdown: {} // Initialize breakdown object
+                deductionsBreakdown: breakdown
             };
 
-            // --- Store Deduction Breakdown for this scenario ---
-            // Use the pre-calculated SDE Yrs/SDE components and multiply by scenario headcount
-            teamMetrics[team.teamId][scenario].deductionsBreakdown = {
-                stdLeaveYrs: deductYrs_per_sde_std_leave * headcount,
-                varLeaveYrs: deductYrs_per_sde_variable_leave * headcount,
-                holidayYrs: deductYrs_per_sde_holidays * headcount,
-                orgEventYrs: deductYrs_per_sde_org_events * headcount,
-                teamActivityYrs: deductYrs_per_sde_team_activities * headcount,
-                overheadYrs: deductYrs_per_sde_overhead * headcount
-            };
-            // --- End Breakdown Storage ---
+            // Accumulate totals
+            totals[scenario].headcount += headcount;
+            totals[scenario].grossYrs += grossYrs;
+            totals[scenario].deductYrs += totalDeductYrs;
+            totals[scenario].netYrs += netYrs;
+            if (breakdown) {
+                totals[scenario].deductionsBreakdown.stdLeaveYrs += breakdown.stdLeaveYrs || 0;
+                totals[scenario].deductionsBreakdown.varLeaveYrs += breakdown.varLeaveYrs || 0;
+                totals[scenario].deductionsBreakdown.holidayYrs += breakdown.holidayYrs || 0;
+                totals[scenario].deductionsBreakdown.orgEventYrs += breakdown.orgEventYrs || 0;
+                totals[scenario].deductionsBreakdown.teamActivityYrs += breakdown.teamActivityYrs || 0; // Accumulates the correctly calculated combined impact
+                totals[scenario].deductionsBreakdown.overheadYrs += breakdown.overheadYrs || 0;
+            }
 
         }); // End scenario loop
     }); // End team loop
 
-    // --- Calculate Totals ---
-    ['TeamBIS', 'EffectiveBIS', 'FundedHC'].forEach(scenario => {
-        // Initialize breakdown totals for this scenario
-        totals[scenario].deductionsBreakdown = {
-            stdLeaveYrs: 0, varLeaveYrs: 0, holidayYrs: 0,
-            orgEventYrs: 0, teamActivityYrs: 0, overheadYrs: 0
-        };
-
-        (teams || []).forEach(team => {
-            if (!team || !team.teamId || !teamMetrics[team.teamId] || !teamMetrics[team.teamId][scenario]) return;
-            const teamScenarioMetrics = teamMetrics[team.teamId][scenario];
-
-            totals[scenario].headcount += teamScenarioMetrics.headcount || 0;
-            totals[scenario].grossYrs += teamScenarioMetrics.grossYrs || 0;
-            totals[scenario].deductYrs += teamScenarioMetrics.deductYrs || 0;
-            totals[scenario].netYrs += teamScenarioMetrics.netYrs || 0;
-
-            const teamBreakdown = teamScenarioMetrics.deductionsBreakdown;
-            if (teamBreakdown) {
-                totals[scenario].deductionsBreakdown.stdLeaveYrs += teamBreakdown.stdLeaveYrs || 0;
-                totals[scenario].deductionsBreakdown.varLeaveYrs += teamBreakdown.varLeaveYrs || 0;
-                totals[scenario].deductionsBreakdown.holidayYrs += teamBreakdown.holidayYrs || 0;
-                totals[scenario].deductionsBreakdown.orgEventYrs += teamBreakdown.orgEventYrs || 0;
-                totals[scenario].deductionsBreakdown.teamActivityYrs += teamBreakdown.teamActivityYrs || 0;
-                totals[scenario].deductionsBreakdown.overheadYrs += teamBreakdown.overheadYrs || 0;
-            }
-        });
-    }); // End totals scenario loop
-
-    console.log("Finished calculating metrics (Phase 7b - Fix Attempt). Metrics:", teamMetrics, "Totals:", totals);
+    console.log("Finished calculating metrics (Phase 7b - Fix 5).");
     const finalMetrics = { ...teamMetrics, totals: totals };
     return finalMetrics;
 }
+
 window.calculateAllCapacityMetrics = calculateAllCapacityMetrics; // Ensure it's globally accessible
 
 /**
