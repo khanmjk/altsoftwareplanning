@@ -1929,8 +1929,37 @@ function showCapacityConfigView() {
 // Make it globally accessible for the button's onclick
 window.showCapacityConfigView = showCapacityConfigView;
 
+// --- Helper for Input Warnings (Phase 7a) ---
+const updateInputWarning = (inputElement, message) => {
+    let warningSpan = inputElement.nextElementSibling;
+    // Check if the next sibling is ALREADY the warning span we created
+    if (warningSpan && warningSpan.classList.contains('input-warning')) {
+        // Update existing warning
+        warningSpan.textContent = message ? ' ⚠️' : ''; // Show icon only if there's a message
+        warningSpan.title = message || ''; // Set tooltip message
+        warningSpan.style.display = message ? 'inline' : 'none'; // Hide span if no message
+    } else if (message) {
+        // Create NEW warning span if there's a message and no span exists
+        warningSpan = document.createElement('span');
+        warningSpan.className = 'input-warning';
+        warningSpan.textContent = ' ⚠️';
+        warningSpan.title = message;
+        warningSpan.style.color = 'orange';
+        warningSpan.style.cursor = 'help';
+        warningSpan.style.marginLeft = '3px'; // Add a little space
+        warningSpan.style.display = 'inline'; // Ensure it's visible
+        // Insert the span immediately after the input element
+        inputElement.parentNode.insertBefore(warningSpan, inputElement.nextSibling);
+    }
+     // Update the input's own title to include the warning (if any)
+     // Ensure original title exists before appending
+     const originalTitle = inputElement.dataset.originalTitle || '';
+     inputElement.title = originalTitle + (message ? `\nWarning: ${message}` : '');
+};
+// --- End Helper ---
+
 /**
- * NEW Function (Phase 3 - Fix 1) - Generates the form elements for global capacity constraints.
+ * Generates the form elements for global capacity constraints.
  * Fixes tbody lookup issue in renderOrgEvents.
  */
 function generateGlobalConstraintsForm() {
@@ -1999,7 +2028,7 @@ function generateGlobalConstraintsForm() {
     const wdLabel = document.createElement('label');
     wdLabel.textContent = 'Standard Working Days Per Year: ';
     wdLabel.htmlFor = 'workingDaysInput';
-    wdLabel.title = 'Define the standard number of working days in a year for your organization, excluding weekends. Used as the basis for SDE Year calculations.';
+    wdLabel.title = 'Define the standard number of working days in a year (e.g., 261). Used as the basis for SDE Year calculations. Values over 300 may be unrealistic.';
     const wdInput = document.createElement('input');
     wdInput.type = 'number';
     wdInput.id = 'workingDaysInput';
@@ -2157,7 +2186,7 @@ function generateGlobalConstraintsForm() {
 
     // --- Standard Leave Types (Defaults) ---
     const leaveTypesTitle = document.createElement('h4');
-    leaveTypesTitle.textContent = 'Standard Leave Types (Default Days/SDE)';
+    leaveTypesTitle.textContent = 'Standard Leave Types (Default Days/SDE/Year)';
     leaveTypesTitle.title = 'Define standard leave types and their default estimated days per SDE per year. Team-specific estimates can override these defaults later.';
     globalSection.appendChild(leaveTypesTitle);
 
@@ -2168,7 +2197,7 @@ function generateGlobalConstraintsForm() {
         <thead>
             <tr>
                 <th style="border: 1px solid #ccc; padding: 5px;">Leave Type</th>
-                <th style="border: 1px solid #ccc; padding: 5px; text-align: center;">Default Est. Days/SDE</th>
+                <th style="border: 1px solid #ccc; padding: 5px; text-align: center;">Default Est. Days/SDE/Year</th>
             </tr>
         </thead>
         <tbody id="leaveTypesTbody">
@@ -2431,12 +2460,19 @@ function generateCapacitySummaryDisplay(calculatedMetrics, selectedScenario) {
 
     const thead = summaryTable.createTHead();
     const headerRow = thead.insertRow();
-    const headers = ['Team Identity', `HC (${selectedScenario})`, `Gross SDE Yrs`, `(-) Deduct SDE Yrs`, `(=) Net Project SDE Yrs`];
-    headers.forEach(text => {
+    // **UPDATED Headers with Units**
+    const headers = [
+        { text: 'Team Identity', title: 'Team Identifier' },
+        { text: `HC (${selectedScenario})`, title: 'Headcount for the selected scenario' },
+        { text: 'Gross (SDE Yrs)', title: 'Total SDE Years before deductions' },
+        { text: '(-) Deduct (SDE Yrs)', title: 'Total deductions (Leave, Holidays, Activities, Overhead) in SDE Years' },
+        { text: '(=) Net Project (SDE Yrs)', title: 'Remaining capacity for project work in SDE Years' }
+    ];
+    headers.forEach(hdr => {
         const th = document.createElement('th');
-        th.textContent = text;
-        th.style.border = '1px solid #ccc'; th.style.padding = '5px'; th.style.textAlign = 'left'; th.style.backgroundColor = '#f8f9fa';
-        if (text !== 'Team Identity') th.style.textAlign = 'center'; // Center numerical headers
+        th.textContent = hdr.text; th.title = hdr.title; // Use text and title properties
+        th.style.border = '1px solid #ccc'; th.style.padding = '5px'; th.style.backgroundColor = '#f8f9fa';
+        if (hdr.text !== 'Team Identity') th.style.textAlign = 'center'; else th.style.textAlign = 'left'; // Use hdr.text
         headerRow.appendChild(th);
     });
 
@@ -2531,7 +2567,7 @@ function generateTeamConstraintsForms() {
                     <th style="border: 1px solid #ccc; padding: 4px; width: 40%;">Activity Name</th>
                     <th style="border: 1px solid #ccc; padding: 4px; width: 20%;">Type</th>
                     <th style="border: 1px solid #ccc; padding: 4px; width: 20%;" title="Estimate per SDE or as a total for the team">Est. Type</th>
-                    <th style="border: 1px solid #ccc; padding: 4px; width: 10%;" title="Total SDE-Days OR Total Team Days">Value</th>
+                    <th style="border: 1px solid #ccc; padding: 4px; width: 10%;" title="'Days/SDE' = Enter average days per SDE.\n'Total Team Days' = Enter total days impact for the whole team.">Value</th>
                     <th style="border: 1px solid #ccc; padding: 4px; width: 10%;">Action</th>
                 </tr>
             </thead>
@@ -2607,7 +2643,7 @@ function generateTeamConstraintsForms() {
 
         // --- Standard Leave Estimates Section (%) ---
         // ... (Standard Leave UI generation - No change, uses simplified table) ...
-         const stdLeaveTitle = document.createElement('h5'); stdLeaveTitle.textContent = 'Standard Leave Uptake Estimate (%)'; stdLeaveTitle.style.marginTop = '10px'; stdLeaveTitle.title = 'Estimate the average % of the Org Default leave days expected to be taken per SDE for standard leave types. Blank assumes 100%.'; detailsContainer.appendChild(stdLeaveTitle); const stdLeaveTable = document.createElement('table'); stdLeaveTable.style.marginLeft = '20px'; stdLeaveTable.style.width = 'auto';
+         const stdLeaveTitle = document.createElement('h5'); stdLeaveTitle.textContent = 'Standard Leave Uptake Estimate (%)'; stdLeaveTitle.style.marginTop = '10px'; stdLeaveTitle.title = 'Estimate % of Org Default leave days taken per SDE (e.g., 80%). Blank=100%. Affects Annual, Sick, Study, etc.'; detailsContainer.appendChild(stdLeaveTitle); const stdLeaveTable = document.createElement('table'); stdLeaveTable.style.marginLeft = '20px'; stdLeaveTable.style.width = 'auto';
          stdLeaveTable.innerHTML = `<thead> <tr> <th style="text-align: left; padding: 4px 8px;">Leave Type</th> <th style="text-align: center; padding: 4px 8px;" title="Estimated % uptake for this team (0-100). Blank=100%">Team Uptake (%)</th> <th style="text-align: center; padding: 4px 8px;" title="Calculated Effective Days/SDE (Default * Uptake %)">Effective Days/SDE</th> </tr> </thead> <tbody></tbody>`;
          const stdLeaveTbody = stdLeaveTable.querySelector('tbody'); detailsContainer.appendChild(stdLeaveTable); const totalStdLeaveDiv = document.createElement('div'); totalStdLeaveDiv.style.marginLeft = '20px'; totalStdLeaveDiv.style.marginTop = '5px'; totalStdLeaveDiv.style.fontWeight = 'bold'; totalStdLeaveDiv.innerHTML = `Total Avg. Standard Leave Days/SDE: <span class="total-std-leave-display">0.0</span>`; detailsContainer.appendChild(totalStdLeaveDiv);
          let teamTotalAvgStdLeave = 0;
