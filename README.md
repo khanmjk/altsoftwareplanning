@@ -1,4 +1,4 @@
-# altsoftwareplanning
+# altsoftwareplanning - software management tools
 Experimenting with building a tool for software planning working backwards from software architecture and teams composition
 The code is crude, single file with html/javascript - becoming a monolith
 This is just me experiementing, using chatGPT as my copilot to help build this thing out (it's been a long time since I've coded!)
