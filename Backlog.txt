@@ -1,0 +1,61 @@
+Created backlog Fri 26 April
+-----------------------------
+
+----
+DONE
+----
+A lot has been done
+[Done] MVP shows functional system view, org chart, engineer list, manage year plan and tune capacity constraints pages
+[Done] Revisit the Yearly Planning page (planningView / generatePlanningTable). The goal will be to introduce a new control (like a toggle switch) labelled "Apply Capacity Constraints". When this is activated, the planning table's ATL/BTL calculation will switch from using the Gross capacity (Team BIS, Effective BIS, or Funded HC) to using the calculated Net Project SDE Years (Gross minus all the sinks we configured) for the corresponding scenario. This will give a much more realistic view of what can actually be delivered Above The Line.
+
+------------
+IN PROGRESS
+------------
+Resource Forecasting
+-- Incorporate the resource forecasting tool in the main app
+
+------
+TO DO
+------
+Data Model
+-- Inspect the data model structure and enhance the data model for future backlog items, create an easy way to extend the data structure without having to change a lot of existing code - so maybe add an attribute that allows for future additions to the model (extensible data structure)
+
+Year Planning
+-- Add ROI (Return on investment - some protected initiatives will override ROI) for prioritising initiatives, Target Due/Dates, Delivery Quarter columns to year plan table (updates to data model needed)
+-- Consider adding concept of flat headcount or incremental headcount to planning table?
+-- View planning by teams - for individual manager team planning
+-- Add versioning when saving plans (up to 5 previous versions) - need to update data model structure
+
+Manage Roadmap
+-- Similar to the year planning page, but focused on roadmap / backlog management (does not need to show ATL/BTL logic), just an interactive table to pull the latest backlog of initiatives, ability to add and remove initiatives. The Year plan and Roadmap must share the same data model (year plan shows more details / attributes than the roadmap)
+-- Generate roadmap table view (by quarter), should be interactive to filter by org, team
+
+
+Team Editing
+-- We support away team only from an incoming perspective (i.e. help provided to the team), but we could also consider concept of outgoing away team (I.e. the team lends engineers to other teams)
+
+UX enhancements
+-- modernise the UX to a style of popular apps, maybe copy the AWS console UX styles?
+-- OR get the AI to research the UX style for open project.org 
+
+
+
+Manage Detailed Planning
+-- Concept of work packages
+-- Data model planning updates
+-- A plan is governed by 1...many goals
+-- A goal is comprised on 1 ... many initiatives
+--- A goal has an owner (person accountable for the goal delivery)
+--- A goal can have a project manager assigned to own the planning and tracking
+--- A goal can have a technical point of contact (POC), the lead engineer
+-- An initiative can have 1.. many work packages
+--- An initiative can have a project manager assigned
+--- An initiative can have an owner (either the goal owner, or someone else) accountable for delivery
+-- A work package impacts 1.. many teams
+-- A team has 1..many tasks to deliver
+-- A work package has 1..many delivery statuses (Not Started, In Progress, Delivered)
+-- A work package has 1 .. many phases [Requirements, Design, Implementation, Integration testing, Security Testing, UAT/E2E Testing, Deployed]
+-- A work package has a planned delivery date and actual delivery date (to track plan versus actual)
+-- A work package has total capacity metric (sum of all HC estimates per team associated with the work package)
+-- A work package can have one owner (someone accountable for the work package delivery)
+
