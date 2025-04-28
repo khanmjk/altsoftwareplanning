@@ -946,15 +946,11 @@ window.showSdmForecastingView = showSdmForecastingView;
 }
 
 /**
- * REVISED (Fix Button Visibility): Generates the HTML structure for the forecasting tool dynamically.
- * - Adds Team Selection Dropdown.
- * - Makes Funded Size / Current Engineers read-only.
- * - Removes Efficiency Factor input group.
- * - Adds 'onchange' listeners to manual inputs for dynamic updates.
- * - Ensures Generate Forecast button is visible.
+ * REVISED (Comprehensive FAQ Update): Generates the HTML structure for the forecasting tool.
+ * - Includes extensively revised FAQ explaining current logic, assumptions, and future improvements.
  */
  function generateForecastingUI_SDM() {
-    console.log("Generating SDM Forecasting UI (Fixing Button Visibility)..."); // Updated log
+    console.log("Generating SDM Forecasting UI (Comprehensive FAQ Update)...");
     const container = document.getElementById('sdmForecastingView');
     if (!container) {
         console.error("SDM Forecasting container #sdmForecastingView not found.");
@@ -963,22 +959,20 @@ window.showSdmForecastingView = showSdmForecastingView;
     container.innerHTML = ''; // Clear previous content
 
     // --- Team Selection Dropdown ---
+    // (Code for team selection - unchanged from previous version)
     const teamSelectionDiv = document.createElement('div');
     teamSelectionDiv.style.marginBottom = '20px';
     teamSelectionDiv.style.paddingBottom = '15px';
     teamSelectionDiv.style.borderBottom = '1px solid #ccc';
-
     const teamLabel = document.createElement('label');
     teamLabel.htmlFor = 'sdmForecastTeamSelect';
     teamLabel.textContent = 'Select Team to Forecast:';
     teamLabel.style.fontWeight = 'bold';
     teamLabel.style.marginRight = '10px';
-
     const teamSelect = document.createElement('select');
     teamSelect.id = 'sdmForecastTeamSelect';
     teamSelect.style.padding = '5px';
     teamSelect.style.minWidth = '200px';
-
     teamSelect.appendChild(new Option('-- Select a Team --', ''));
     if (currentSystemData && currentSystemData.teams) {
         currentSystemData.teams.forEach(team => {
@@ -990,7 +984,6 @@ window.showSdmForecastingView = showSdmForecastingView;
         loadSdmForecastInputsForTeam(event.target.value);
         clearSdmForecastOutputs();
     });
-
     teamSelectionDiv.appendChild(teamLabel);
     teamSelectionDiv.appendChild(teamSelect);
     container.appendChild(teamSelectionDiv);
@@ -998,9 +991,9 @@ window.showSdmForecastingView = showSdmForecastingView;
 
 
     // --- Input Section ---
+    // (Input section HTML - unchanged from previous version)
     const inputSection = document.createElement('div');
     inputSection.className = 'input-section';
-    // Use template literals for easier HTML structure definition
     inputSection.innerHTML = `
         <h3>Input Parameters</h3>
         <p style="font-size:0.9em; color:#555;"><i>Select a team above. Funded Size & Current Engineers are read from system data. Changes to other parameters below will automatically update the forecast.</i></p>
@@ -1035,10 +1028,12 @@ window.showSdmForecastingView = showSdmForecastingView;
             <input id="closeGapWeek_SDM" type="number" value="26" />
             <div class="help-text">Target week (1-52) to reach the funded team size via hiring.</div>
         </div>
-        <button type="button" id="generateForecastBtn_SDM">Generate Forecast</button> `;
+        <button type="button" id="generateForecastBtn_SDM">Generate Forecast</button>
+    `;
     container.appendChild(inputSection);
 
-    // --- Output Section (Remains mostly the same structure) ---
+    // --- Output Section ---
+    // (Output section HTML - unchanged from previous version)
     const outputSection = document.createElement('div');
     outputSection.className = 'output-section';
     outputSection.innerHTML = `
@@ -1049,67 +1044,174 @@ window.showSdmForecastingView = showSdmForecastingView;
         <div class="summary" id="outputSummary_SDM"></div>
         <h3>Weekly Resource Plan</h3>
         <table id="forecastTable_SDM"><thead><tr><th>Week</th><th>Effective Engineers</th></tr></thead><tbody><tr><td colspan="2">...</td></tr></tbody></table>
-        <div class="faq-section">
-             <h3>Frequently Asked Questions (FAQ)</h3>
-             <p style="color:orange; font-style:italic;">(Note: FAQ needs updating for integrated capacity calculations)</p>
-             </div>
     `;
     container.appendChild(outputSection);
 
-    // *** Attach 'change' event listeners AFTER adding elements to the DOM ***
-    const manualInputs = [
-        'hiringTime_SDM',
-        'rampUpTime_SDM',
-        'attritionRate_SDM',
-        'closeGapWeek_SDM'
-    ];
+    // --- FAQ Section (UPDATED CONTENT) ---
+    const faqSection = document.createElement('div');
+    faqSection.className = 'faq-section';
+    faqSection.innerHTML = `
+        <h3>FAQ & Model Insights</h3>
 
+        <div class="faq-item">
+            <h4>1. How are 'Effective Engineers', 'SDE-Weeks', and 'SDE-Days' calculated now?</h4>
+            <p>This forecast model estimates the <em>productive engineering capacity available for project work</em> after accounting for hiring delays, ramp-up, attrition, and non-project time defined in the 'Tune Capacity Constraints' section.</p>
+            <ul>
+                <li><strong>Foundation:</strong> The model tracks 'Total Headcount' (Purple line) based on current engineers, hiring pipeline, and attrition. It also tracks 'Total Ramped Up Engineers' (Green dashed line), which lags headcount based on the 'Ramp-up Time' input.</li>
+                <li><strong>Capacity Integration:</strong> The crucial step is determining the actual productive time per engineer. Instead of a simple efficiency %, the model calculates the <strong>'Net Available Days per Week per SDE'</strong> for the selected team. This calculation uses the values you configured in the 'Tune Capacity Constraints' page:
+                    <ul>
+                        <li>The 'Standard Working Days Per Year' set globally.</li>
+                        <li>Deductions for global Public Holidays and Org-Wide Events.</li>
+                        <li>Deductions for Standard Leave types (like Annual, Sick), adjusted by the team's specific 'Uptake %'.</li>
+                        <li>Deductions based on the team's 'Avg. Overhead (Hrs/Week/SDE)' for recurring meetings, admin, etc.</li>
+                        <li>Deductions for per-SDE 'Team Activities' (like training days).</li>
+                        <li><em>(Note: Variable Leave like Maternity/Paternity and 'Total Team Days' activities configured in Capacity Constraints affect the *overall* team capacity but aren't factored into this *per-SDE* availability calculation directly).</em></li>
+                    </ul>
+                     (Check the browser console logs when generating the forecast for a detailed breakdown of this calculation for the selected team).
+                </li>
+                <li><strong>Effective Engineers (Blue Line):</strong> This is calculated weekly as: 'Total Ramped Up Engineers' &times; ('Net Available Days per Week per SDE' / 5). It represents the SDEs effectively available for project work that week.</li>
+                <li><strong>SDE-Weeks (Monthly Table):</strong> The sum of the weekly 'Effective Engineers' values for all weeks falling within that calendar month.</li>
+                <li><strong>SDE-Days (Monthly Table):</strong> The sum over the weeks in that month of (Weekly 'Effective Engineers' &times; 'Net Available Days per Week per SDE'). This gives a more precise measure of total productive days.</li>
+            </ul>
+            <p><em>Auditor's Note:</em> This integrated approach grounds the forecast in the more detailed capacity planning done elsewhere, providing better traceability than a subjective efficiency percentage. However, the accuracy still relies on the quality of inputs in *both* the forecasting tool *and* the Capacity Constraints configuration.</p>
+        </div>
+
+        <div class="faq-item">
+            <h4>2. Why is 'Effective Engineers' (Blue) lower than 'Total Ramped Up Engineers' (Green Dashed)?</h4>
+            <p>The Green dashed line shows the number of engineers who have completed their ramp-up period. The Blue line shows how much *productive project capacity* those ramped-up engineers represent.</p>
+            <p>The Blue line will be lower than the Green line whenever the calculated 'Net Available Days per Week per SDE' is less than 5. This difference represents the proportion of a ramped-up engineer's time consumed by configured non-project factors like leave, holidays, recurring overhead, org events, and per-SDE team activities (as defined in 'Tune Capacity Constraints').</p>
+            <p>If the lines overlap, it means the net available days calculated to 5.00, indicating minimal or no capacity sinks were configured for that team.</p>
+        </div>
+
+         <div class="faq-item">
+            <h4>3. How is the 'Est. Hires Required' calculated?</h4>
+            <p>The text "Est. Hires Required: X by Week Y (~Z/week)" aims to provide a practical hiring target.</p>
+             <ul>
+                <li>The underlying model first calculates the *minimum constant weekly hiring rate* (Z) needed to make the 'Total Headcount' reach the 'Funded Team Size' precisely by the 'Target Week to Close Funding Gap', accounting for the specified 'Average Hiring Time' and 'Annual Attrition Rate'. This rate is often fractional.</li>
+                <li>To provide a more actionable number, the tool then estimates the total number of *whole* hires (X) needed. This includes the initial gap ('Funded Size' - 'Current Available Engineers') plus an estimate of the cumulative attrition expected to occur between the start and the target week.</li>
+             </ul>
+            <p><em>Manager Tip:</em> Use the 'Est. Hires Required' as your primary target. The average weekly rate gives context on the required velocity. Plan hiring activities realistically – you hire whole people, often in batches, not fractions per week.</p>
+        </div>
+
+         <div class="faq-item">
+            <h4>4. How does Attrition work in this model? What are its limitations?</h4>
+            <p>The model applies attrition based on the 'Annual Attrition Rate (%)' input.</p>
+             <ul>
+                <li>The annual percentage is converted into a weekly rate.</li>
+                <li>Each week, this rate is applied to the *current total headcount* (including engineers still ramping up).</li>
+                <li>Fractional attrition accumulates, and whole engineers are removed from the headcount (deducted from ramped-up engineers first, then ramping engineers) when the fraction crosses an integer.</li>
+             </ul>
+             <p><strong>Limitations (Critical View):</strong></p>
+             <ul>
+                <li><strong>Linear/Constant Rate:</strong> Assumes attrition occurs evenly throughout the year. Reality is often uneven (e.g., lower initially for new hires, peaks after bonus cycles, market shifts).</li>
+                <li><strong>Applied to All:</strong> Applies the same rate to everyone currently on the team, regardless of tenure or ramp-up status.</li>
+             </ul>
+             <p><em>Manager Tip:</em> Use an annual rate that reflects your best *overall* estimate for the team's expected turnover during the forecast period. Be aware of the model's simplification.</p>
+        </div>
+
+        <div class="faq-item">
+            <h4>5. How does Ramp-up Time work? What are its limitations?</h4>
+             <p>New hires enter the simulation after the 'Average Hiring Time'. They immediately count towards 'Total Headcount' (Purple line).</p>
+             <ul>
+                <li>They remain in a 'ramping' state for the number of weeks specified in 'Ramp-up Time'.</li>
+                <li>Only *after* completing this period do they contribute to 'Total Ramped Up Engineers' (Green dashed line) and subsequently to 'Effective Engineers' (Blue line).</li>
+             </ul>
+            <p><strong>Limitations (Critical View):</strong></p>
+             <ul>
+                <li><strong>Binary State:</strong> Assumes 0% productivity during ramp-up, then instantly 100% productivity afterwards. Real ramp-up is usually a gradual curve.</li>
+                <li><strong>Uniform Time:</strong> Assumes the same ramp-up time for all hires, regardless of level or role complexity.</li>
+             </ul>
+             <p><em>Manager Tip:</em> Set 'Ramp-up Time' to the average duration until a new hire consistently delivers close to their expected full capacity. Factor in onboarding quality, role complexity, and expected experience level of hires.</p>
+        </div>
+
+        <div class="faq-item">
+            <h4>6. How should I choose the manual input values (Hiring, Ramp-up, Attrition, Target Week)?</h4>
+            <ul>
+                <li><strong>Hiring Time:</strong> Use historical data (job req approval to start date) if possible. Include sourcing, interviews, offer, notice periods. Be realistic about current market conditions.</li>
+                <li><strong>Ramp-up Time:</strong> Estimate based on role complexity, required domain knowledge, onboarding effectiveness, and typical new hire experience.</li>
+                <li><strong>Attrition Rate (%):</strong> Base on historical team/org data, adjusted for current morale, compensation competitiveness, and market trends. If unsure, it might be safer to slightly overestimate attrition.</li>
+                <li><strong>Target Week:</strong> Set an ambitious but *achievable* target. Consider your recruitment team's capacity and the calculated hiring rate. An impossible target week (e.g., less than hiring time) will generate an error.</li>
+            </ul>
+            <p><em>Important:</em> These parameters are specific to *this forecast run* and are **not** currently saved per team in the application data model. You need to re-enter them each time you run a forecast.</p>
+        </div>
+
+        <div class="faq-item">
+             <h4>7. What are the key assumptions and limitations of this forecasting model?</h4>
+             <p>Like any model, this one makes simplifying assumptions. Understanding them is crucial for interpreting the results:</p>
+             <ul>
+                 <li><strong>Linear Attrition:</strong> Assumes a constant rate spread evenly over the year (see Q4).</li>
+                 <li><strong>Binary Ramp-Up:</strong> Assumes hires are non-productive then fully productive (see Q5).</li>
+                 <li><strong>Constant Hiring Rate (for calculation):</strong> Calculates the *required* rate as a constant average; actual hiring may vary.</li>
+                 <li><strong>Simplified Hiring Pipeline:</strong> Assumes hires start exactly after 'Hiring Time'; doesn't model candidate drop-off or variable time-to-fill.</li>
+                 <li><strong>Capacity Based on Snapshot:</strong> Uses the current 'Tune Capacity Constraints' data; doesn't forecast *changes* to leave policies, overhead levels, etc., during the year.</li>
+                 <li><strong>Deterministic Model:</strong> Doesn't incorporate probability or risk ranges (e.g., best/worst case for hiring or attrition).</li>
+                 <li><strong>No Cost Modeling:</strong> Focuses purely on headcount/SDE capacity, not budget implications.</li>
+                 <li><strong>Fixed Horizon:</strong> Currently limited to a 52-week forecast.</li>
+             </ul>
+             <p><em>Auditor's Note:</em> While useful for visualizing potential trajectories based on inputs, the outputs are sensitive to these assumptions. Use the forecast for planning discussions and scenario analysis ("what-if") rather than as a precise prediction.</p>
+        </div>
+
+        <div class="faq-item">
+             <h4>8. What are potential future improvements for this forecasting model?</h4>
+             <p>Based on the current model's limitations and standard industry practices, potential future enhancements could include:</p>
+             <ul>
+                 <li><strong>Dynamic Inputs:</strong> Modeling non-linear attrition (e.g., seasonal), variable hiring rates (e.g., freezes/bursts), and gradual productivity ramp-up curves.</li>
+                 <li><strong>Persistence:</strong> Saving forecast input parameters per team.</li>
+                 <li><strong>Scenario Comparison:</strong> Ability to save and compare different forecast scenarios (e.g., optimistic vs. pessimistic attrition).</li>
+                 <li><strong>Risk Modeling:</strong> Incorporating uncertainty using ranges or Monte Carlo simulations.</li>
+                 <li><strong>Cost Integration:</strong> Adding salary bands or cost estimates to model budget impact.</li>
+                 <li><strong>More Granularity:</strong> Allowing different parameters based on engineer level or role.</li>
+                 <li><strong>Historical Data Integration:</strong> Using past hiring/attrition data to calibrate the model.</li>
+                 <li><strong>Extended Time Horizon:</strong> Allowing forecasts beyond one year.</li>
+                 <li><strong>Enhanced Visualizations:</strong> Offering different chart types for analysis.</li>
+                 <li><strong>Project Linking:</strong> Connecting forecasted capacity to planned project demands (a major integration).</li>
+             </ul>
+        </div>
+    `;
+    container.appendChild(faqSection);
+
+    // Attach event listeners
+    const manualInputs = [
+        'hiringTime_SDM', 'rampUpTime_SDM', 'attritionRate_SDM', 'closeGapWeek_SDM'
+    ];
     manualInputs.forEach(inputId => {
         const inputElement = document.getElementById(inputId);
         if (inputElement) {
-            // Remove previous listener before adding again (safety for potential re-renders)
             inputElement.removeEventListener('change', generateForecast_SDM);
             inputElement.addEventListener('change', generateForecast_SDM);
-            console.log(`Attached change listener to ${inputId}`);
-        } else {
-            console.warn(`Could not find input element ${inputId} to attach listener.`);
-        }
+        } else { console.warn(`Could not find input element ${inputId} to attach listener.`); }
     });
-
-    // Attach listener to the button
     const generateBtn = document.getElementById('generateForecastBtn_SDM');
     if (generateBtn) {
-        // Remove old listener first if needed
         generateBtn.removeEventListener('click', generateForecast_SDM);
-        generateBtn.addEventListener('click', generateForecast_SDM); // Use addEventListener for consistency
-        console.log("Attached click listener to Generate button.");
-    } else {
-         console.error("Could not find Generate Forecast button to attach listener.");
-    }
+        generateBtn.addEventListener('click', generateForecast_SDM);
+    } else { console.error("Could not find Generate Forecast button to attach listener."); }
 
-    console.log("SDM Forecasting UI generated with dynamic update listeners and visible button.");
+    console.log("SDM Forecasting UI generated with updated FAQ.");
 }
 
 /**
  * RENAMED & ADAPTED from standalone tool.
- * Phase 2c: Removed reading of deleted inputs (efficiencyFactor, leaveDays, publicHolidays).
- * Passes selectedTeamId to simulation.
+ * Phase 2c/Debug:
+ * - Removed reading of deleted inputs.
+ * - Passes selectedTeamId to simulation.
+ * - Changed Hiring Rate display text.
  */
  function generateForecast_SDM() {
-    console.log("Generating SDM Forecast (Phase 2c)...");
+    console.log("Generating SDM Forecast (Phase 2c/Debug)...");
 
     // --- Get Selected Team ---
     const teamSelect = document.getElementById('sdmForecastTeamSelect');
     const selectedTeamId = teamSelect?.value;
     if (!selectedTeamId) {
         alert("Please select a team to forecast.");
-        clearSdmForecastOutputs(); // Clear results if no team selected
+        clearSdmForecastOutputs();
         return;
     }
     console.log(`Forecasting for team: ${selectedTeamId}`);
     // --- End Get Selected Team ---
 
-    // --- Retrieve input values using NEW IDs ---
+    // --- Retrieve input values ---
     const fundedSizeInput = document.getElementById('fundedSize_SDM');
     const currentEngineersInput = document.getElementById('currentEngineers_SDM');
     const hiringTimeInput = document.getElementById('hiringTime_SDM');
@@ -1117,15 +1219,12 @@ window.showSdmForecastingView = showSdmForecastingView;
     const attritionRateInput = document.getElementById('attritionRate_SDM');
     const closeGapWeekInput = document.getElementById('closeGapWeek_SDM');
 
-    // Get values (handle potential null elements)
     const fundedSize = parseInt(fundedSizeInput?.value || '0');
     const currentEngineers = parseInt(currentEngineersInput?.value || '0'); // Team BIS
     const hiringTime = parseInt(hiringTimeInput?.value || '12');
     const rampUpTime = parseInt(rampUpTimeInput?.value || '10');
     const attritionRate = parseFloat(attritionRateInput?.value || '10') / 100;
     const closeGapWeek = parseInt(closeGapWeekInput?.value || '26');
-
-    // --- REMOVED reading efficiencyFactor, leaveDays, publicHolidays ---
 
     const hiringInfoDiv = document.getElementById('hiringInfo_SDM');
     const outputSummaryDiv = document.getElementById('outputSummary_SDM');
@@ -1138,7 +1237,6 @@ window.showSdmForecastingView = showSdmForecastingView;
          clearSdmForecastOutputs();
          return;
     }
-     // Check if essential capacity config exists
      if (!currentSystemData?.capacityConfiguration?.workingDaysPerYear || currentSystemData.capacityConfiguration.workingDaysPerYear <= 0) {
         alert("Cannot run forecast: 'Standard Working Days Per Year' must be configured in Capacity Constraints and be greater than 0.");
         clearSdmForecastOutputs();
@@ -1146,9 +1244,7 @@ window.showSdmForecastingView = showSdmForecastingView;
      }
      if (!currentSystemData?.capacityConfiguration?.leaveTypes) {
          console.warn("Leave types not defined in capacity configuration. Proceeding with defaults (0).");
-         // Allow proceeding, but calculations might be off if leave types aren't defined
      }
-
 
     // Feasibility Check
     if (closeGapWeek < hiringTime) {
@@ -1159,49 +1255,70 @@ window.showSdmForecastingView = showSdmForecastingView;
         if (forecastChart_SDM) { forecastChart_SDM.destroy(); forecastChart_SDM = null; }
         return;
     } else {
-        if(outputSummaryDiv) outputSummaryDiv.innerHTML = ''; // Clear previous summary/error
+        if(outputSummaryDiv) outputSummaryDiv.innerHTML = '';
     }
 
-    // Calculate required hiring rate using renamed function
-    // Pass null for teamId as computeHiringRate just needs the headcount simulation part
+    // Calculate required hiring rate
     const hiringRate = computeHiringRate_SDM(fundedSize, currentEngineers, hiringTime, rampUpTime, attritionRate, closeGapWeek);
 
-    if(hiringInfoDiv) hiringInfoDiv.innerHTML = `Required Hiring Rate: <span style="color:blue">${hiringRate.toFixed(2)} engineers/week</span> to reach funded team size by week ${closeGapWeek}.`;
+    // *** Calculate Estimated Total Hires Needed ***
+    // Simple gap fill + estimated attrition replacement by target week
+    let estimatedAttritionByTarget = 0;
+    // Run a quick simulation JUST for attrition calculation up to target week
+    // (This is an approximation, a more precise way would integrate into computeHiringRate)
+    let tempHeadcount = currentEngineers;
+    let tempAttritionCounter = 0;
+    const tempWeeklyAttrition = attritionRate / 52;
+    for (let wk = 1; wk < closeGapWeek; wk++) {
+        tempAttritionCounter += tempHeadcount * tempWeeklyAttrition;
+        let attrThisWk = Math.floor(tempAttritionCounter);
+        tempAttritionCounter -= attrThisWk;
+        tempHeadcount -= attrThisWk;
+        estimatedAttritionByTarget += attrThisWk;
+        tempHeadcount += hiringRate; // Approximate impact of hiring on base for next week's attrition
+        tempHeadcount = Math.min(tempHeadcount, fundedSize); // Cap
+    }
+    const hiresNeeded = Math.max(0, fundedSize - currentEngineers) + estimatedAttritionByTarget;
+    // *** -------------------------------------- ***
+
+
+    // --- Update Hiring Info Display ---
+    if (hiringInfoDiv) {
+        hiringInfoDiv.innerHTML = `Est. Hires Required: <strong style="color:blue">${Math.ceil(hiresNeeded)}</strong> by Week ${closeGapWeek} to reach funded size (Avg. rate: ~${hiringRate.toFixed(2)}/week).`;
+        hiringInfoDiv.title = `Calculated minimum constant weekly hiring rate needed: ${hiringRate.toFixed(4)}. Total hires includes gap filling (${Math.max(0, fundedSize - currentEngineers)}) and replacing estimated attrition (${estimatedAttritionByTarget.toFixed(1)}) occurring before week ${closeGapWeek}.`;
+    }
+    // --- -------------------------- ---
+
 
     // Initialize weeks array
     let weeks = [...Array(52).keys()].map(i => i + 1);
 
-    // --- Simulate team size over time using renamed function ---
-    // *** Pass selectedTeamId for actual forecast run ***
+    // Simulate team size over time
     const simulationResult = simulateTeamSize_SDM(
         hiringRate, fundedSize, currentEngineers, hiringTime, rampUpTime, attritionRate,
-        selectedTeamId // Pass actual teamId for capacity lookup
-        // capAtFundedSize defaults to true
+        selectedTeamId
     );
-    // *** --------------------------------------------- ***
 
-    // Check if simulation returned valid results
-     if (!simulationResult) {
+    if (!simulationResult) {
          alert("An error occurred during the forecast simulation. Please check the console.");
          clearSdmForecastOutputs();
          if(hiringInfoDiv) hiringInfoDiv.textContent = "Simulation Error.";
          return;
      }
 
-    // Update global variables (renamed versions)
+    // Update global variables
     productiveEngineers_SDM = simulationResult.productiveEngineers;
     totalRampedUpEngineersArray_SDM = simulationResult.totalRampedUpEngineersArray;
     cumulativeAttritionArray_SDM = simulationResult.cumulativeAttritionArray;
     monthlyData_SDM = simulationResult.monthlyData;
     totalHeadcountArray_SDM = simulationResult.totalHeadcountArray;
 
-    // Generate tables and charts using renamed functions
+    // Generate tables and charts
     generateWeeklyTable_SDM(weeks, productiveEngineers_SDM);
-    generateMonthlySummary_SDM(monthlyData_SDM); // This now also attaches listeners
+    generateMonthlySummary_SDM(monthlyData_SDM);
     generateChart_SDM(weeks, simulationResult, fundedSize);
 
-    // Generate output summary using renamed function
-    // Pass simulationResult to access calculated net days for the summary text
+    // Generate output summary
     generateOutputSummary_SDM(hiringRate, closeGapWeek, selectedTeamId, simulationResult);
 }
 
@@ -1265,6 +1382,7 @@ window.showSdmForecastingView = showSdmForecastingView;
  * - Calculates netAvailableDaysPerWeekPerSDE based on Capacity Config data IF teamId is provided.
  * - Uses netAvailableDaysPerWeekPerSDE to calculate effectiveEngineers.
  * - Uses default capacity assumptions if teamId is null (for computeHiringRate call).
+ * - ADDED detailed logging for capacity calculation components.
  */
  function simulateTeamSize_SDM(
     hiringRate, fundedSize, currentEngineers, hiringTime, rampUpTime, attritionRate,
@@ -1283,7 +1401,6 @@ window.showSdmForecastingView = showSdmForecastingView;
 
         if (!team) {
             console.error(`Simulation error: Team not found for ID: ${selectedTeamId}`);
-            // Return null to indicate failure, handled by caller
             return null;
         }
          teamNameForLog = team.teamIdentity || team.teamName || teamId;
@@ -1298,22 +1415,31 @@ window.showSdmForecastingView = showSdmForecastingView;
         const workingDaysPerYear = capacityConfig.workingDaysPerYear;
         const globalLeaveTypes = capacityConfig.leaveTypes || [];
 
+        // *** ADDED Logging for individual components ***
         const stdLeave_days_per_sde = calculateTotalStandardLeaveDaysPerSDE(team, globalLeaveTypes, capacityConfig);
         const holidays_days_per_sde = capacityConfig.globalConstraints?.publicHolidays || 0;
         const orgEvents_days_per_sde = calculateOrgEventDaysPerSDE(capacityConfig);
         const overhead_days_per_sde = calculateOverheadDaysPerSDE(team, workingDaysPerYear);
         const teamActivityImpacts = calculateTeamActivityImpacts(team);
-        const teamActivity_days_per_sde = teamActivityImpacts.daysPerSDE;
+        const teamActivity_days_per_sde = teamActivityImpacts.daysPerSDE; // Only use the perSDE part
+
+        console.log(`  Capacity Calculation Details for Team: ${teamNameForLog}`);
+        console.log(`    - Working Days/Year: ${workingDaysPerYear}`);
+        console.log(`    - Std Leave Days/SDE/Yr: ${stdLeave_days_per_sde.toFixed(2)}`);
+        console.log(`    - Public Holiday Days/SDE/Yr: ${holidays_days_per_sde.toFixed(2)}`);
+        console.log(`    - Org Event Days/SDE/Yr: ${orgEvents_days_per_sde.toFixed(2)}`);
+        console.log(`    - Overhead Days/SDE/Yr: ${overhead_days_per_sde.toFixed(2)}`);
+        console.log(`    - Team Activity Days/SDE/Yr: ${teamActivity_days_per_sde.toFixed(2)}`);
+        // *** -------------------------------------- ***
 
         const totalPerSdeDeductionDays = stdLeave_days_per_sde + holidays_days_per_sde + orgEvents_days_per_sde + overhead_days_per_sde + teamActivity_days_per_sde;
         const netProjectDaysPerSdePerYear = Math.max(0, workingDaysPerYear - totalPerSdeDeductionDays);
         netAvailableDaysPerWeekPerSDE = (netProjectDaysPerSdePerYear / workingDaysPerYear) * 5;
 
-        console.log(`  Calculating capacity for Team: ${teamNameForLog}`);
-        console.log(`    Working Days/Year: ${workingDaysPerYear}`);
-        console.log(`    Total Per-SDE Deduction Days/Year: ${totalPerSdeDeductionDays.toFixed(1)}`);
-        console.log(`    Net Project Days/SDE/Year: ${netProjectDaysPerSdePerYear.toFixed(1)}`);
-        console.log(`    Net Available Days/Week/SDE: ${netAvailableDaysPerWeekPerSDE.toFixed(2)}`);
+        // Log overall calculation results
+        console.log(`    = Total Per-SDE Deduction Days/Year: ${totalPerSdeDeductionDays.toFixed(1)}`);
+        console.log(`    = Net Project Days/SDE/Year: ${netProjectDaysPerSdePerYear.toFixed(1)}`);
+        console.log(`    = Net Available Days/Week/SDE: ${netAvailableDaysPerWeekPerSDE.toFixed(2)}`);
         // --- End Net Available Days Calculation ---
     } else {
          console.log("  Running simulation for rate calculation (using default 5 available days/week).");
@@ -1346,14 +1472,13 @@ window.showSdmForecastingView = showSdmForecastingView;
 
         if (attritionThisWeek > 0) {
              totalHeadcount -= attritionThisWeek;
-             let preAttritionHC = totalHeadcount + attritionThisWeek; // Headcount before this week's attrition
+             let preAttritionHC = totalHeadcount + attritionThisWeek;
              let rampedProportion = (preAttritionHC > 0) ? totalRampedUpEngineers / preAttritionHC : 0;
              let attritionFromRamped = Math.round(attritionThisWeek * rampedProportion);
              let attritionFromRamping = attritionThisWeek - attritionFromRamped;
 
              totalRampedUpEngineers -= attritionFromRamped;
 
-             // Remove from ramping pipeline
              let removedFromRamping = 0;
              for (let i = rampingEngineers.length - 1; i >= 0 && removedFromRamping < attritionFromRamping; i--) {
                  let removable = Math.min(rampingEngineers[i].count, attritionFromRamping - removedFromRamping);
@@ -1366,7 +1491,6 @@ window.showSdmForecastingView = showSdmForecastingView;
              cumulativeAttrition += attritionThisWeek;
         }
 
-        // Ensure non-negative counts
         totalRampedUpEngineers = Math.max(0, totalRampedUpEngineers);
         totalHeadcount = Math.max(0, totalHeadcount);
 
@@ -1408,11 +1532,9 @@ window.showSdmForecastingView = showSdmForecastingView;
              }
         }
 
-        // *** Calculate effective engineers using NET available days ***
-        // Convert net days/week (out of 5) to a weekly multiplier
+        // Calculate effective engineers using NET available days
         const weeklyAvailabilityMultiplier = netAvailableDaysPerWeekPerSDE / 5;
         const effectiveEngineers = totalRampedUpEngineers * weeklyAvailabilityMultiplier;
-        // *** ---------------------------------------------------- ***
 
         // Store weekly results
         productiveEngineersLocal.push(effectiveEngineers);
@@ -1432,9 +1554,8 @@ window.showSdmForecastingView = showSdmForecastingView;
                     monthlyDataLocal.sdeDays[monthIndex] = 0;
                 }
                 monthlyDataLocal.headcount[monthIndex] = totalHeadcount;
-                monthlyDataLocal.sdeWeeks[monthIndex] += effectiveEngineers; // Sum of effective SDEs each week
-                // SDE-Days = Sum over weeks of (Effective SDEs that week * Net available days for that week)
-                monthlyDataLocal.sdeDays[monthIndex] += effectiveEngineers * netAvailableDaysPerWeekPerSDE; // Uses the calculated net days
+                monthlyDataLocal.sdeWeeks[monthIndex] += effectiveEngineers;
+                monthlyDataLocal.sdeDays[monthIndex] += effectiveEngineers * netAvailableDaysPerWeekPerSDE;
             } else {
                  console.warn(`Invalid month number ${monthNumber} derived for week ${week}`);
             }
@@ -1458,7 +1579,6 @@ window.showSdmForecastingView = showSdmForecastingView;
         totalHeadcountArray: totalHeadcountArrayLocal,
         cumulativeAttritionArray: cumulativeAttritionArrayLocal,
         monthlyData: monthlyDataLocal,
-        // Pass back the calculated net days for the summary
         calculatedNetAvailableDaysPerWeek: netAvailableDaysPerWeekPerSDE
     };
 }
@@ -1630,9 +1750,10 @@ function updateMonthlyHeadcount_SDM(monthIndex, newHeadcount) {
 
 /**
  * RENAMED & ADAPTED from standalone tool. Uses new chart ID and variable names.
+ * Phase 2 Debug: Added borderDash to green line for visibility.
  */
-function generateChart_SDM(weeks, simulationResult, fundedSize) {
-    console.log("Generating SDM Forecast Chart...");
+ function generateChart_SDM(weeks, simulationResult, fundedSize) {
+    console.log("Generating SDM Forecast Chart (with dashed green line)..."); // Updated log
     // Destroy existing chart instance if it exists
     if (forecastChart_SDM) {
         forecastChart_SDM.destroy();
@@ -1643,7 +1764,7 @@ function generateChart_SDM(weeks, simulationResult, fundedSize) {
     const canvas = document.getElementById('forecastChart_SDM');
     if (!canvas) {
         console.error("Canvas element #forecastChart_SDM not found.");
-        return; // Cannot generate chart without canvas
+        return;
     }
     const ctx = canvas.getContext('2d');
     if (!ctx) {
@@ -1657,53 +1778,55 @@ function generateChart_SDM(weeks, simulationResult, fundedSize) {
             labels: weeks,
             datasets: [
                 {
-                    label: 'Effective Engineers',
+                    label: 'Effective Engineers', // Blue
                     data: simulationResult.productiveEngineers,
                     borderColor: 'blue', fill: false, yAxisID: 'y', tension: 0.1
                 },
                 {
-                    label: 'Total Ramped Up Engineers',
+                    label: 'Total Ramped Up Engineers', // Green
                     data: simulationResult.totalRampedUpEngineersArray,
-                    borderColor: 'green', fill: false, yAxisID: 'y', tension: 0.1
+                    borderColor: 'green',
+                    borderDash: [10, 5], // *** ADDED: Make dashed ***
+                    fill: false, yAxisID: 'y', tension: 0.1
                 },
                 {
-                    label: 'Total Headcount',
+                    label: 'Total Headcount', // Purple
                     data: simulationResult.totalHeadcountArray,
                     borderColor: 'purple', fill: false, yAxisID: 'y', tension: 0.1
                 },
                 {
-                    label: 'Cumulative Attrition',
+                    label: 'Cumulative Attrition', // Orange
                     data: simulationResult.cumulativeAttritionArray,
                     borderColor: 'orange', fill: false, yAxisID: 'y1', tension: 0.1
                 },
                 {
-                    label: 'Funded Team Size',
+                    label: 'Funded Team Size', // Red Dashed
                     data: weeks.map(() => fundedSize),
                     borderColor: 'red', borderDash: [5, 5], fill: false, yAxisID: 'y', tension: 0.1
                 },
             ]
         },
         options: {
-            responsive: true, maintainAspectRatio: false, // Allow chart to resize vertically
+            responsive: true, maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false, },
             stacked: false,
             scales: {
                 x: { display: true, title: { display: true, text: 'Week' } },
-                y: { // Primary Y-axis for Engineers/Headcount
+                y: {
                     type: 'linear', display: true, position: 'left',
                     beginAtZero: true,
                     title: { display: true, text: 'Engineers' },
                 },
-                y1: { // Secondary Y-axis for Attrition
+                y1: {
                     type: 'linear', display: true, position: 'right',
-                    grid: { drawOnChartArea: false, }, // only want the grid lines for the primary axis
+                    grid: { drawOnChartArea: false, },
                     beginAtZero: true,
                     title: { display: true, text: 'Cumulative Attrition' },
                 }
             }
         }
     });
-    console.log("SDM Forecast Chart generated.");
+    console.log("SDM Forecast Chart generated (with dashed green line).");
 }
 
 // ========= END SDM Resource Forecasting Tool Code =========
@@ -2784,7 +2907,8 @@ window.onload = function() {
 };
 
 /**
- * REVISED (v4) - Central function to manage switching between main views.
+ * REVISED (v5) - Central function to manage switching between main views.
+ * - Adds title handling for sdmForecastingView.
  * - Corrects title rendering logic.
  * - Hides edit-menu buttons on sub-views (Org Chart, Planning, etc.).
  * - Corrects Back button visibility on Edit System page.
@@ -2792,7 +2916,7 @@ window.onload = function() {
  * @param {string | null} targetViewId - The ID of the main view container to show (e.g., 'planningView', 'organogramView'), or null/empty to show the home screen.
  * @param {string | null} newMode - Optional: The new mode to set (e.g., Modes.PLANNING). If null, mode is typically NAVIGATION or BROWSE depending on targetViewId.
  */
-function switchView(targetViewId, newMode = null) {
+ function switchView(targetViewId, newMode = null) {
     console.log(`Switching view to: ${targetViewId || 'Home'}, Mode: ${newMode || 'Auto'}`);
 
     // --- 1. Define all known view container IDs ---
@@ -2803,7 +2927,8 @@ function switchView(targetViewId, newMode = null) {
         'organogramView',
         'engineerTableView',
         'planningView',
-        'capacityConfigView'
+        'capacityConfigView',
+        'sdmForecastingView' // Added new view ID
     ];
 
     // --- 2. Hide all view containers ---
@@ -2844,7 +2969,10 @@ function switchView(targetViewId, newMode = null) {
             else if (targetViewId === 'engineerTableView') titleSuffix = ' - Engineer List';
             else if (targetViewId === 'systemEditForm') titleSuffix = ' - Edit System';
             else if (targetViewId === 'visualizationCarousel' || targetViewId === 'serviceDependenciesTable') titleSuffix = ' - Overview';
-            else if (targetViewId === 'capacityConfigView') titleSuffix = ' - Capacity Configurations';
+            else if (targetViewId === 'capacityConfigView') titleSuffix = ' - Capacity Constraints';
+            // *** ADDED CASE for SDM Forecasting View ***
+            else if (targetViewId === 'sdmForecastingView') titleSuffix = ' - SDM Resource Forecasting Model';
+            // *** ------------------------------------ ***
             pageTitleH1.innerText = `${currentSystemData.systemName || 'System'}${titleSuffix}`;
             pageTitleH1.style.display = 'block';
         } else if (pageTitleH1) {
@@ -2869,35 +2997,29 @@ function switchView(targetViewId, newMode = null) {
         // Show Return Home always when a system is loaded
         if (returnHomeBtn) returnHomeBtn.style.display = 'block';
 
-        // *** CORRECTED LOGIC for Back Button visibility ***
         // Show Back button ONLY if NOT on the main overview
         const isOverviewForBackButton = (targetViewId === 'visualizationCarousel' || targetViewId === 'serviceDependenciesTable');
         if (backButton) {
-            // Show if NOT overview, hide if overview. Edit page should show it.
-             backButton.style.display = isOverviewForBackButton ? 'none' : 'block'; // <-- Corrected logic
+             backButton.style.display = isOverviewForBackButton ? 'none' : 'block';
         }
-        // *** END CORRECTION ***
 
     } else {
         // Showing the Home Screen (targetViewId is null or empty)
         currentMode = Modes.NAVIGATION;
         currentSystemData = null; // Clear loaded system
 
-        // Restore default Title/Description
         if (pageTitleH1) { pageTitleH1.innerText = "Software Management Tools"; pageTitleH1.style.display = 'block'; }
         if (systemDescP) { systemDescP.innerText = "Load a previously saved system or create a new system..."; systemDescP.style.display = 'block';}
 
-        // Show main menu, hide edit menu
         if (mainMenu) mainMenu.style.display = 'block';
         if (editMenu) editMenu.style.display = 'none';
-
-        // Hide action buttons
         if (returnHomeBtn) returnHomeBtn.style.display = 'none';
         if (backButton) backButton.style.display = 'none';
 
-         // Clean up popups/tooltips just in case
-        const systemListDiv = document.getElementById('systemListDiv');
-        if (systemListDiv) document.body.removeChild(systemListDiv);
+         const systemListDiv = document.getElementById('systemListDiv'); // Remove Load list modal if present
+         if (systemListDiv) document.body.removeChild(systemListDiv);
+         const systemDeleteListDiv = document.getElementById('systemDeleteListDiv'); // Remove Delete list modal if present
+         if (systemDeleteListDiv) document.body.removeChild(systemDeleteListDiv);
         d3.selectAll('.tooltip').remove();
     }
 
