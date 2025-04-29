@@ -1,5 +1,5 @@
-Created backlog Fri 26 April
------------------------------
+Created MVP backlog Fri 26 April 2025
+--------------------------------------
 
 ----
 DONE
@@ -17,45 +17,62 @@ IN PROGRESS
 ------
 TO DO
 ------
+UX
+-- In system overview, only show the service dependencies table when the service dependency visualisation is selected from the carousel	
+-- Landing home page - include a content window that shows the documentation about the tool
+
 Data Model
 -- Inspect the data model structure and enhance the data model for future backlog items, create an easy way to extend the data structure without having to change a lot of existing code - so maybe add an attribute that allows for future additions to the model (extensible data structure)
 
 Year Planning
 -- Add ROI (Return on investment - some protected initiatives will override ROI) for prioritising initiatives, Target Due/Dates, Delivery Quarter columns to year plan table (updates to data model needed)
 -- Consider adding concept of flat headcount or incremental headcount to planning table?
--- View planning by teams - for individual manager team planning
+-- View planning by teams - for individual manager team planning. Allow managers to tune their teams estimates which will update the data model, year plan page uses latest changes)
 -- Add versioning when saving plans (up to 5 previous versions) - need to update data model structure
+-- Add ability to export the plan to CSV or Excel
 
 Manage Roadmap
 -- Similar to the year planning page, but focused on roadmap / backlog management (does not need to show ATL/BTL logic), just an interactive table to pull the latest backlog of initiatives, ability to add and remove initiatives. The Year plan and Roadmap must share the same data model (year plan shows more details / attributes than the roadmap)
 -- Generate roadmap table view (by quarter), should be interactive to filter by org, team
+-- Add ability to import a backlog from an excel file
 
 
 Team Editing
 -- We support away team only from an incoming perspective (i.e. help provided to the team), but we could also consider concept of outgoing away team (I.e. the team lends engineers to other teams)
-
-UX enhancements
--- modernise the UX to a style of popular apps, maybe copy the AWS console UX styles?
--- OR get the AI to research the UX style for open project.org 
-
-
 
 Manage Detailed Planning
 -- Concept of work packages
 -- Data model planning updates
 -- A plan is governed by 1...many goals
 -- A goal is comprised on 1 ... many initiatives
---- A goal has an owner (person accountable for the goal delivery)
+--- A goal has an owner (person accountable for the goal delivery) - typically a product manager from the organisation
 --- A goal can have a project manager assigned to own the planning and tracking
---- A goal can have a technical point of contact (POC), the lead engineer
+--- A goal can have a technical point of contact (POC), the lead engineer or SDM
 -- An initiative can have 1.. many work packages
 --- An initiative can have a project manager assigned
 --- An initiative can have an owner (either the goal owner, or someone else) accountable for delivery
 -- A work package impacts 1.. many teams
 -- A team has 1..many tasks to deliver
+--- Tasks can have 0..many dependencies on other tasks within the work package, or other work packages outside its work package
 -- A work package has 1..many delivery statuses (Not Started, In Progress, Delivered)
 -- A work package has 1 .. many phases [Requirements, Design, Implementation, Integration testing, Security Testing, UAT/E2E Testing, Deployed]
 -- A work package has a planned delivery date and actual delivery date (to track plan versus actual)
 -- A work package has total capacity metric (sum of all HC estimates per team associated with the work package)
 -- A work package can have one owner (someone accountable for the work package delivery)
+-- A work package can have 0..many dependencies on other work packages
 
+AI enhancements
+- Solve for dynamic input of API key to use AI features (ask the user to provide the name of their environment variable for the app to read local API key, not made public in the code or console log) (a local secure way of accessing user's API key. If the API key does not exist, no AI features exposed).
+- Use AI to create a new system from a visual software architecture diagram
+- Use AI chatbot to set up a new system, edit, or interact with the data associated with existing systems
+- Use AI to optimise the yearly planning
+- Use AI to optimise detail planning
+- Use AI to provide insights into the software system and overall engineering organisation
+
+==== Post MVP ===
+UX enhancements
+-- modernise the UX to a style of popular apps, maybe copy the AWS console UX styles?
+-- OR get the AI to research the UX style for open project.org 
+-- Add sign-in / auth functionality
+-- Update data model to support organisations: An organisation has 1..many systems, etc.
+-- Launch the app :-)
