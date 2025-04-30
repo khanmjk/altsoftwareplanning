@@ -23,6 +23,8 @@ UX
 
 Data Model
 -- Inspect the data model structure and enhance the data model for future backlog items, create an easy way to extend the data structure without having to change a lot of existing code - so maybe add an attribute that allows for future additions to the model (extensible data structure)
+-- Enhance the team member structure by supporting AI SWEs to supplement the team. These AI SWE (software engineers) can have different skill levels too, similar to human: Intern, Junior, Intermediate, Senior. They could be added from a pool of AI agents
+for away team work, or can be part of a team like any other human engineer
 
 Year Planning
 -- Add ROI (Return on investment - some protected initiatives will override ROI) for prioritising initiatives, Target Due/Dates, Delivery Quarter columns to year plan table (updates to data model needed)
@@ -31,10 +33,18 @@ Year Planning
 -- Add versioning when saving plans (up to 5 previous versions) - need to update data model structure
 -- Add ability to export the plan to CSV or Excel
 
-Manage Roadmap
+Manage Roadmap & Backlog
 -- Similar to the year planning page, but focused on roadmap / backlog management (does not need to show ATL/BTL logic), just an interactive table to pull the latest backlog of initiatives, ability to add and remove initiatives. The Year plan and Roadmap must share the same data model (year plan shows more details / attributes than the roadmap)
 -- Generate roadmap table view (by quarter), should be interactive to filter by org, team
 -- Add ability to import a backlog from an excel file
+-- The backlog items can have 1..many initiatives
+-- Initiatives can be associated with 1..many themes or tags that are linked to a business goal / strategy, like Revenue, Cost Optimization, Engineering Excellence, UX/Usability, Accessibility, Security, Product Feature enhancements
+-- It must be possible to generate a view of business objectives and strategies from the backlog
+-- It must be possible to generate a 3 year plan (3YP) view of the roadmap, something like Current Year, Next Year, future
+-- It must be possible to show a visual representation of the initiatives by theme so the senior engineering or product leader can gauge the distribution of investments by theme or tags
+-- It must be possible to generate a view of completed goals, initiatives or work packages
+-- It must be possible to generate a roadmap view per team for software managers to focus on their team or org-specific commitments
+-- It must be possible to display a graph visualization (similar to system visualizations) of service impact and relations to initiatives and work package dependencies
 
 
 Team Editing
@@ -51,7 +61,10 @@ Manage Detailed Planning
 -- An initiative can have 1.. many work packages
 --- An initiative can have a project manager assigned
 --- An initiative can have an owner (either the goal owner, or someone else) accountable for delivery
+--- An initiatve can impact 1..many teams
+--- An initiative can impact 1.. many services
 -- A work package impacts 1.. many teams
+--- A work package impacts 1.. many services
 -- A team has 1..many tasks to deliver
 --- Tasks can have 0..many dependencies on other tasks within the work package, or other work packages outside its work package
 -- A work package has 1..many delivery statuses (Not Started, In Progress, Delivered)
