@@ -669,6 +669,8 @@
     <div id="documentationContent" style="display: none; padding: 15px; max-height: 450px; overflow-y: auto; background-color: #fdfdfd;">
         <p><em>Loading documentation... Please ensure you have an internet connection to fetch the latest help content.</em></p>
     </div>
+    <!-- NEW: Resize Handle -->
+    <div id="docResizeHandle" style="height: 10px; background-color: #e0e0e0; cursor: ns-resize; border-top: 1px solid #ccc; display: none;"></div>
 </div>
 <!-- Return to Home Button -->
 <button id="backToSystemViewButton" onclick="showSystemOverview()" style="display: none; margin-right: 10px;">Back to System Overview</button>
@@ -852,6 +854,58 @@ const weekToMonth_SDM = [ // Renamed variable - CORRECTED LENGTH
     11,11,11,11, // Nov (4 weeks) Weeks 44-47
     12,12,12,12,12 // Dec (5 weeks) Weeks 48-52 *** Corrected: Added 5th '12' ***
 ];
+
+// --- Documentation Resizing Logic (Corrected Names) ---
+let isDocumentationResizing = false;
+let lastMouseY = 0;
+let originalDocumentationHeight = 0;
+const MIN_DOCUMENTATION_HEIGHT = 100; // Minimum height in pixels
+const MAX_DOCUMENT_HEIGHT_PERCENTAGE = 0.85; // Max height as 85% of viewport height
+
+function startDocumentationResize(event) {
+    isDocumentationResizing = true;
+    lastMouseY = event.clientY;
+    const contentDiv = document.getElementById('documentationContent');
+    originalDocumentationHeight = contentDiv.offsetHeight; // Get current actual height
+
+    document.addEventListener('mousemove', duringDocumentationResize);
+    document.addEventListener('mouseup', stopDocumentationResize);
+    document.body.style.userSelect = 'none'; // Prevent text selection during drag
+    event.preventDefault(); // Prevent default drag behavior
+}
+
+function duringDocumentationResize(event) {
+    if (!isDocumentationResizing) return;
+
+    const contentDiv = document.getElementById('documentationContent');
+    const deltaY = event.clientY - lastMouseY;
+    // Calculate new height based on the original height when mousedown started, plus the total delta
+    let newHeight = originalDocumentationHeight + (event.clientY - lastMouseY);
+
+
+    // Apply constraints
+    const maxPossibleHeight = window.innerHeight * MAX_DOCUMENT_HEIGHT_PERCENTAGE; // Corrected const name
+    newHeight = Math.max(MIN_DOCUMENTATION_HEIGHT, newHeight); // Enforce minimum
+    newHeight = Math.min(maxPossibleHeight, newHeight);     // Enforce maximum
+
+    contentDiv.style.maxHeight = newHeight + 'px';
+    // If you want to update the height based on *incremental* changes from the *last* mousemove:
+    // originalDocumentationHeight = contentDiv.offsetHeight; // Update for next delta (if not using mousedown original)
+    // lastMouseY = event.clientY; // Update for next delta
+}
+
+function stopDocumentationResize() {
+    if (!isDocumentationResizing) return;
+    isDocumentationResizing = false;
+    document.removeEventListener('mousemove', duringDocumentationResize);
+    document.removeEventListener('mouseup', stopDocumentationResize);
+    document.body.style.userSelect = ''; // Re-enable text selection
+    const contentDiv = document.getElementById('documentationContent');
+    if(contentDiv){
+        console.log("Documentation resize ended. New max-height:", contentDiv.style.maxHeight);
+    }
+}
+// --- End Documentation Resizing Logic (Corrected Names) ---
 
 /**
  * NEW Function: Shows the SDM Forecasting View
@@ -2912,28 +2966,35 @@ const sampleSystemDataContactCenter = {
     // **********************************************************
 };
 
-// REPLACE your entire window.onload function with this:
 window.onload = function() {
     console.log("!!! window.onload: Page HTML and synchronous scripts loaded. !!!");
     currentMode = Modes.NAVIGATION;
 
-    // Attach the static toggle listener for the documentation header immediately
     const docHeader = document.getElementById('documentationHeader');
+    const docResizeHandle = document.getElementById('docResizeHandle'); // Get resize handle
+
     if (docHeader) {
         docHeader.addEventListener('click', () => {
-            toggleCollapsibleSection('documentationContent', 'documentationToggleIndicator');
+            // Pass the resize handle ID to toggleCollapsibleSection
+            toggleCollapsibleSection('documentationContent', 'documentationToggleIndicator', 'docResizeHandle');
         });
         console.log("Attached toggle listener to documentation header.");
     } else {
         console.warn("Documentation header not found in window.onload.");
     }
 
-    // Wait a brief moment after window.onload for external scripts to potentially finish loading
-    // before trying to initialize the view that uses them.
+    // Attach mousedown listener to the resize handle
+    if (docResizeHandle) { // Assuming docResizeHandle is defined earlier
+        docResizeHandle.addEventListener('mousedown', startDocumentationResize); // Use corrected function name
+        console.log("Attached mousedown listener to docResizeHandle.");
+    } else {
+        console.warn("Documentation resize handle not found in window.onload.");
+    }
+
     setTimeout(() => {
         console.log("Attempting initial switchView(null) after short delay.");
-        switchView(null); // This will display home and attempt to load documentation
-    }, 500); // 500ms delay - adjust if needed, but keep it short
+        switchView(null);
+    }, 500);
 };
 
 
@@ -9981,30 +10042,39 @@ function adjustPlanningTableHeight() {
 }
 
 /**
- * REVISED - Toggles the visibility of a collapsible section and updates its indicator.
- * Added logging to verify arguments.
- * Also triggers recalculation of the main planning table height.
+ * REVISED - Toggles the visibility of a collapsible section and its indicator.
+ * Optionally toggles visibility of a resize handle.
+ * Also triggers recalculation of the main planning table height if applicable.
  * @param {string} contentId - The ID of the div containing the content to toggle.
  * @param {string} indicatorId - The ID of the span element showing (+) or (-).
+ * @param {string|null} handleId - Optional. The ID of the resize handle to toggle.
  */
-function toggleCollapsibleSection(contentId, indicatorId) {
-    // *** ADDED LOGGING HERE ***
-    console.log(`toggleCollapsibleSection called with contentId: '${contentId}', indicatorId: '${indicatorId}'`);
+function toggleCollapsibleSection(contentId, indicatorId, handleId = null) {
+    console.log(`toggleCollapsibleSection called with contentId: '${contentId}', indicatorId: '${indicatorId}', handleId: '${handleId}'`);
 
     const contentDiv = document.getElementById(contentId);
     const indicatorSpan = document.getElementById(indicatorId);
+    const handleDiv = handleId ? document.getElementById(handleId) : null;
 
     if (!contentDiv || !indicatorSpan) {
-        console.error(`Cannot toggle section: Missing content or indicator element. ID searched for content: '${contentId}', ID searched for indicator: '${indicatorId}'`);
+        console.error(`Cannot toggle section: Missing content or indicator element. ContentID: '${contentId}', IndicatorID: '${indicatorId}'`);
         return;
     }
 
     const isHidden = contentDiv.style.display === 'none' || contentDiv.style.display === '';
-    contentDiv.style.display = isHidden ? 'block' : 'none'; // Use 'block' for general divs
+    contentDiv.style.display = isHidden ? 'block' : 'none';
     indicatorSpan.textContent = isHidden ? '(-)' : '(+)';
 
-    // Crucially, recalculate table height AFTER changing display
-    adjustPlanningTableHeight();
+    // Toggle resize handle visibility if provided
+    if (handleDiv) {
+        handleDiv.style.display = isHidden ? 'block' : 'none';
+    }
+
+    // Adjust planning table height only if we are in the planning view and toggling specific sections
+    if (document.getElementById('planningView').style.display !== 'none' &&
+        (contentId === 'teamLoadSummaryContent' || contentId === 'addInitiativeContent')) {
+        adjustPlanningTableHeight();
+    }
     console.log(`Toggled section ${contentId} to ${isHidden ? 'visible' : 'hidden'}`);
 }
 
