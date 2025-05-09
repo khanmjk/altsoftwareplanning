@@ -2908,57 +2908,52 @@ window.onload = function() {
 };
 
 /**
- * REVISED (v5) - Central function to manage switching between main views.
- * - Adds title handling for sdmForecastingView.
- * - Corrects title rendering logic.
- * - Hides edit-menu buttons on sub-views (Org Chart, Planning, etc.).
- * - Corrects Back button visibility on Edit System page.
- * Hides all views, then shows the target view and manages related UI elements.
- * @param {string | null} targetViewId - The ID of the main view container to show (e.g., 'planningView', 'organogramView'), or null/empty to show the home screen.
- * @param {string | null} newMode - Optional: The new mode to set (e.g., Modes.PLANNING). If null, mode is typically NAVIGATION or BROWSE depending on targetViewId.
+ * REVISED (v6) - Central function to manage switching between main views.
+ * - Handles serviceDependenciesTable visibility correctly with carousel.
  */
  function switchView(targetViewId, newMode = null) {
     console.log(`Switching view to: ${targetViewId || 'Home'}, Mode: ${newMode || 'Auto'}`);
 
-    // --- 1. Define all known view container IDs ---
     const allViewIds = [
         'systemEditForm',
-        'visualizationCarousel', // Control the whole carousel container
-        'serviceDependenciesTable', // The table below the carousel
+        'visualizationCarousel',
+        'serviceDependenciesTable', // Keep in list to ensure it's hidden by default when switching *away* from overview
         'organogramView',
         'engineerTableView',
         'planningView',
         'capacityConfigView',
-        'sdmForecastingView' // Added new view ID
+        'sdmForecastingView'
     ];
 
-    // --- 2. Hide all view containers ---
     allViewIds.forEach(id => {
         const element = document.getElementById(id);
         if (element) {
-            element.style.display = 'none';
+            // Special handling for serviceDependenciesTable:
+            // It should only be hidden here if the targetView is NOT the carousel.
+            // If the target IS the carousel, its visibility is managed by showVisualization().
+            if (id === 'serviceDependenciesTable' && targetViewId === 'visualizationCarousel') {
+                // Don't hide it here; showVisualization will manage it.
+            } else {
+                element.style.display = 'none';
+            }
         }
     });
 
-    // --- 3. Manage Top Bar Elements & Mode ---
     const pageTitleH1 = document.getElementById('pageTitle');
     const systemDescP = document.getElementById('systemDescription');
-    const editMenu = document.querySelector('.edit-menu'); // System-specific actions
-    const mainMenu = document.querySelector('.menu');     // Home screen actions
+    const editMenu = document.querySelector('.edit-menu');
+    const mainMenu = document.querySelector('.menu');
     const returnHomeBtn = document.getElementById('returnHomeButton');
     const backButton = document.getElementById('backToSystemViewButton');
 
     if (targetViewId) {
-        // Showing a specific system-related view
         currentMode = newMode || Modes.BROWSE;
-
-        // Show the target view container
         const targetElement = document.getElementById(targetViewId);
         if (targetElement) {
             targetElement.style.display = 'block';
         } else {
             console.error(`switchView: Target element with ID '${targetViewId}' not found!`);
-            returnToHome(); // Fallback to home screen
+            returnToHome();
             return;
         }
 
@@ -2969,11 +2964,11 @@ window.onload = function() {
             else if (targetViewId === 'organogramView') titleSuffix = ' - Organization Overview';
             else if (targetViewId === 'engineerTableView') titleSuffix = ' - Engineer List';
             else if (targetViewId === 'systemEditForm') titleSuffix = ' - Edit System';
-            else if (targetViewId === 'visualizationCarousel' || targetViewId === 'serviceDependenciesTable') titleSuffix = ' - Overview';
+            // For visualizationCarousel, title is 'System Name - Overview'.
+            // The table doesn't get its own title suffix here if it's shown with the carousel.
+            else if (targetViewId === 'visualizationCarousel') titleSuffix = ' - Overview';
             else if (targetViewId === 'capacityConfigView') titleSuffix = ' - Capacity Constraints';
-            // *** ADDED CASE for SDM Forecasting View ***
             else if (targetViewId === 'sdmForecastingView') titleSuffix = ' - SDM Resource Forecasting Model';
-            // *** ------------------------------------ ***
             pageTitleH1.innerText = `${currentSystemData.systemName || 'System'}${titleSuffix}`;
             pageTitleH1.style.display = 'block';
         } else if (pageTitleH1) {
@@ -2981,58 +2976,58 @@ window.onload = function() {
         }
 
         if (systemDescP) {
-             const isOverview = (targetViewId === 'visualizationCarousel' || targetViewId === 'serviceDependenciesTable');
+             // Show description only if the main carousel is being shown.
+             // If serviceDependenciesTable is shown by itself (not current case), desc would be hidden.
+             const isOverview = (targetViewId === 'visualizationCarousel');
              systemDescP.style.display = isOverview ? 'block' : 'none';
              if(systemDescP.style.display === 'block' && currentSystemData) {
                 systemDescP.innerText = currentSystemData.systemDescription || '';
              }
         }
 
-        // Hide main menu, show edit menu ONLY for overview
         if (mainMenu) mainMenu.style.display = 'none';
         if (editMenu) {
-            const isOverview = (targetViewId === 'visualizationCarousel' || targetViewId === 'serviceDependenciesTable');
+            // Edit menu shown only when the main carousel is the target.
+            const isOverview = (targetViewId === 'visualizationCarousel');
             editMenu.style.display = isOverview ? 'block' : 'none';
         }
 
-        // Show Return Home always when a system is loaded
         if (returnHomeBtn) returnHomeBtn.style.display = 'block';
 
-        // Show Back button ONLY if NOT on the main overview
-        const isOverviewForBackButton = (targetViewId === 'visualizationCarousel' || targetViewId === 'serviceDependenciesTable');
+        const isOverviewForBackButton = (targetViewId === 'visualizationCarousel');
         if (backButton) {
              backButton.style.display = isOverviewForBackButton ? 'none' : 'block';
         }
 
-    } else {
-        // Showing the Home Screen (targetViewId is null or empty)
+    } else { // Home Screen
         currentMode = Modes.NAVIGATION;
-        currentSystemData = null; // Clear loaded system
-
+        currentSystemData = null;
         if (pageTitleH1) { pageTitleH1.innerText = "Software Management Tools"; pageTitleH1.style.display = 'block'; }
         if (systemDescP) { systemDescP.innerText = "Load a previously saved system or create a new system..."; systemDescP.style.display = 'block';}
-
         if (mainMenu) mainMenu.style.display = 'block';
         if (editMenu) editMenu.style.display = 'none';
         if (returnHomeBtn) returnHomeBtn.style.display = 'none';
         if (backButton) backButton.style.display = 'none';
-
-         const systemListDiv = document.getElementById('systemListDiv'); // Remove Load list modal if present
-         if (systemListDiv) document.body.removeChild(systemListDiv);
-         const systemDeleteListDiv = document.getElementById('systemDeleteListDiv'); // Remove Delete list modal if present
-         if (systemDeleteListDiv) document.body.removeChild(systemDeleteListDiv);
+        const systemListDiv = document.getElementById('systemListDiv');
+        if (systemListDiv) document.body.removeChild(systemListDiv);
+        const systemDeleteListDiv = document.getElementById('systemDeleteListDiv');
+        if (systemDeleteListDiv) document.body.removeChild(systemDeleteListDiv);
         d3.selectAll('.tooltip').remove();
     }
 
     // Special handling for carousel visibility
+    // This call to showVisualization(0) is now CRITICAL.
+    // It ensures that if the carousel is the target, the correct first item is shown,
+    // AND the serviceDependenciesTable visibility is correctly set based on that first item.
     if (targetViewId === 'visualizationCarousel') {
-        showVisualization(0); // Make sure first carousel item is shown
+        showVisualization(0);
     }
+    // If targetViewId is serviceDependenciesTable directly (not current use case),
+    // then showVisualization would not be called, and the table would just be 'block'.
 
     console.log(`View switched. Current mode: ${currentMode}`);
 }
-// Make it globally accessible
-window.switchView = switchView;
+// window.switchView = switchView; // Already global
 
 /** NEW Function - Shows the Capacity Configuration View */
 function showCapacityConfigView() {
@@ -4801,7 +4796,7 @@ function buildGlobalPlatformDependencies() {
     currentSystemData.platformDependencies = Array.from(platformDepsSet);
 }
 
-/** REVISED (v4) Load Saved System using switchView */
+/** REVISED (v5) Load Saved System using switchView - Table visibility managed by carousel */
 function loadSavedSystem(systemName) {
     // --- Find System Data (No Change) ---
     const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
@@ -4812,17 +4807,16 @@ function loadSavedSystem(systemName) {
     console.log('Selected system to load:', currentSystemData);
     // --- End Find System Data ---
 
-    // --- Remove System Load List Popup ---
-    const systemLoadListDiv = document.getElementById('systemLoadListDiv'); // <-- NEW ID
+    // --- Remove System Load List Popup (No Change) ---
+    const systemLoadListDiv = document.getElementById('systemLoadListDiv');
     if (systemLoadListDiv) {
       document.body.removeChild(systemLoadListDiv);
       console.log("Removed system load list modal.");
     }
     // --- End Remove Popup ---
 
-    // --- Clear previous visualization content ---
-    d3.selectAll('.tooltip').remove(); // Remove any lingering tooltips
-    // Clear specific legend divs if they still exist, although switchView handles main containers
+    // --- Clear previous visualization content (No Change) ---
+    d3.selectAll('.tooltip').remove();
     const legendDivs = ['legend', 'teamLegend', 'serviceLegend', 'dependencyLegend'];
     legendDivs.forEach(id => {
         const el = document.getElementById(id);
@@ -4843,14 +4837,11 @@ function loadSavedSystem(systemName) {
      // --- End Data Prep ---
 
     // --- USE switchView TO SHOW OVERVIEW ---
-    // This replaces setting display styles and managing buttons/title manually
-    switchView('visualizationCarousel'); // Show the carousel (overview); this also sets mode and shows edit-menu/return-home
-    const serviceDepsTableDiv = document.getElementById('serviceDependenciesTable');
-     if (serviceDepsTableDiv) serviceDepsTableDiv.style.display = 'block'; // Explicitly show table too
+    // Show ONLY the carousel. Table visibility managed by showVisualization.
+    switchView('visualizationCarousel');
     // --- End switchView ---
 
     // --- Regenerate Overview Content ---
-    // (Must happen AFTER switchView makes containers visible)
     try {
          // Populate dropdowns needed for carousel items
          populateServiceSelection();
@@ -4859,12 +4850,12 @@ function loadSavedSystem(systemName) {
         // Generate visualizations (even if initially hidden by carousel)
          generateVisualization(currentSystemData);
          generateTeamVisualization(currentSystemData);
-         // The specific service/dependency views are generated when shown by showVisualization
+         // The specific service/dependency D3 views are generated when shown by showVisualization
 
-        // Generate separate dependencies table
+        // Generate separate dependencies table (data ready, display conditional)
          generateServiceDependenciesTable();
 
-         // Show the FIRST item in the carousel - This triggers updates if needed
+         // Show the FIRST item in the carousel - This triggers updates and sets table visibility.
          showVisualization(0);
 
         console.log("Finished loading and displaying system:", currentSystemData.systemName);
@@ -4872,92 +4863,95 @@ function loadSavedSystem(systemName) {
          console.error("Error regenerating system overview content during load:", error);
           const carouselDiv = document.getElementById('visualizationCarousel');
           if(carouselDiv) carouselDiv.innerHTML = '<p style="color:red">Error loading visualizations.</p>';
-          if(serviceDepsTableDiv) serviceDepsTableDiv.innerHTML = '<p style="color:red">Error loading dependencies table.</p>';
+          // No explicit error message for the table here as its display is part of the carousel logic.
     }
      // --- End Regeneration ---
 }
-window.loadSavedSystem = loadSavedSystem;
+// window.loadSavedSystem = loadSavedSystem; // Already global
 
 /**
- * REVISED (v2) - Shows the visualization item at the specified index and hides others.
+ * REVISED (v3) - Shows the visualization item at the specified index and hides others.
  * Updates the carousel title and triggers specific D3 updates *after* display.
+ * Manages visibility of the serviceDependenciesTable based on the selected carousel item.
  * @param {number} index - The index of the visualization item to show.
  */
-function showVisualization(index) {
+ function showVisualization(index) {
     const carouselContainer = document.getElementById('visualizationCarousel');
     if (!carouselContainer) {
         console.error("Carousel container #visualizationCarousel not found.");
-        return; // Exit if carousel isn't relevant
+        return;
     }
 
     const items = carouselContainer.querySelectorAll('.carousel-item');
     const titleElement = document.getElementById('visualizationTitle');
+    const serviceDepsTableDiv = document.getElementById('serviceDependenciesTable'); // Get the table div
 
     if (index < 0 || index >= items.length || items.length === 0) {
         console.error("Invalid visualization index or no items:", index);
-        // Optionally hide all or show a default message
         items.forEach(item => item.style.display = 'none');
         if (titleElement) titleElement.textContent = 'No Visualization';
+        if (serviceDepsTableDiv) serviceDepsTableDiv.style.display = 'none'; // Ensure table is hidden
         return;
     }
 
     // Hide all items first
     items.forEach((item, i) => {
-        item.style.display = 'none'; // Ensure all are hidden initially
-        item.classList.remove('active'); // Remove active class if using transitions later
+        item.style.display = 'none';
+        item.classList.remove('active');
     });
 
-    // Get the target item *before* trying to display it
-    const targetItemId = visualizationItems[index]?.id; // Safely get ID
+    // **Explicitly hide the service dependencies table initially**
+    if (serviceDepsTableDiv) {
+        serviceDepsTableDiv.style.display = 'none';
+    }
+
+    const targetItemId = visualizationItems[index]?.id;
     const targetItem = targetItemId ? document.getElementById(targetItemId) : null;
 
     if (targetItem) {
-         // *** Make the target item visible FIRST ***
-         targetItem.style.display = 'block';
-         targetItem.classList.add('active'); // Add active class
+        targetItem.style.display = 'block';
+        targetItem.classList.add('active');
+        console.log(`Showing visualization: ${visualizationItems[index].title}`);
 
-         console.log(`Showing visualization: ${visualizationItems[index].title}`);
+        if (titleElement) {
+            titleElement.textContent = visualizationItems[index].title;
+        }
 
-         // Update the title
-         if (titleElement) {
-             titleElement.textContent = visualizationItems[index].title;
-         }
+        // **Conditionally show the service dependencies table**
+        if (targetItemId === 'dependencyVisualization' && serviceDepsTableDiv) {
+            serviceDepsTableDiv.style.display = 'block';
+            console.log("Service Dependencies Table shown because Dependency Visualization is active.");
+        } else if (serviceDepsTableDiv) {
+            // Ensure it's hidden for other visualizations, though already done above, this is a safeguard
+            serviceDepsTableDiv.style.display = 'none';
+        }
 
-         // *** NOW trigger the specific D3 generation/update for the VISIBLE item ***
-         // This ensures the D3 functions calculate dimensions based on the visible container
-         switch (targetItemId) {
+
+        switch (targetItemId) {
             case 'visualization':
-                // Assume generateVisualization was called on load/overview.
-                // If layout issues persist, uncommenting this might help, but could be slow.
-                // generateVisualization(currentSystemData);
                 console.log("System Visualization shown.");
                 break;
             case 'teamVisualization':
-                // Assume generateTeamVisualization was called on load/overview.
-                // generateTeamVisualization(currentSystemData);
-                 console.log("Team Visualization shown.");
+                console.log("Team Visualization shown.");
                 break;
             case 'serviceRelationshipsVisualization':
-                // Repopulate dropdown and trigger D3 update for service-specific views
                 populateServiceSelection();
-                updateServiceVisualization(); // This calls generateServiceVisualization
+                updateServiceVisualization();
                 console.log("Service Relationships shown & updated.");
                 break;
             case 'dependencyVisualization':
-                 // Repopulate dropdown and trigger D3 update for service-specific views
                 populateDependencyServiceSelection();
-                updateDependencyVisualization(); // This calls generateDependencyForceVisualization
+                updateDependencyVisualization();
                 console.log("Dependency Visualization shown & updated.");
                 break;
-         }
-         // *** End D3 Trigger ***
-
+        }
     } else {
         console.error("Target visualization element not found for ID:", targetItemId);
         if (titleElement) titleElement.textContent = 'Error';
+        if (serviceDepsTableDiv) serviceDepsTableDiv.style.display = 'none'; // Ensure table is hidden on error
     }
 
-    currentVisualizationIndex = index; // Update the global index
+    currentVisualizationIndex = index;
 }
 
 /**
@@ -9856,36 +9850,39 @@ function showSystemOverview() {
     console.log("Navigating back to system overview...");
     if (!currentSystemData) {
         console.warn("showSystemOverview called but no system is loaded. Returning home instead.");
-        returnToHome(); // Go home if no system is loaded
+        returnToHome();
         return;
     }
 
     // Use switchView to handle showing carousel/table and managing buttons/title
-    // Show BOTH the carousel and the table below it for the overview
+    // Show ONLY the carousel. The table's visibility is now handled by showVisualization.
     switchView('visualizationCarousel'); // Shows carousel, hides others, sets mode to BROWSE
-    const serviceDepsTableDiv = document.getElementById('serviceDependenciesTable');
-    if (serviceDepsTableDiv) serviceDepsTableDiv.style.display = 'block'; // Explicitly show table too
 
-     // Regenerate content within the (now visible) containers
+    // Regenerate content within the (now visible) containers
     try {
         buildGlobalPlatformDependencies();
-        generateVisualization(currentSystemData);
-        generateTeamVisualization(currentSystemData);
+        generateVisualization(currentSystemData); // For the first carousel item
+        generateTeamVisualization(currentSystemData); // For the second carousel item
+        // ServiceDependenciesTable is generated but its visibility is controlled by showVisualization
         generateServiceDependenciesTable();
-        // Service/Dependency visualizations are triggered by showVisualization(0) below
 
-         // Show the FIRST item in the carousel
-         showVisualization(0);
+        // Populate dropdowns needed for other carousel items
+        populateServiceSelection();
+        populateDependencyServiceSelection();
+        // Service/Dependency D3 rendering is triggered by showVisualization when those items are selected
 
-        console.log("Displayed overview containers and regenerated content.");
+        // Show the FIRST item in the carousel - this will correctly set table visibility
+        showVisualization(0);
+
+        console.log("Displayed overview containers and regenerated content. Table visibility tied to carousel item.");
     } catch (error) {
-         console.error("Error regenerating system overview content:", error);
-         const carouselDiv = document.getElementById('visualizationCarousel');
-         if(carouselDiv) carouselDiv.innerHTML = '<p style="color:red">Error loading visualizations.</p>';
-         if(serviceDepsTableDiv) serviceDepsTableDiv.innerHTML = '<p style="color:red">Error loading dependencies table.</p>';
-     }
+        console.error("Error regenerating system overview content:", error);
+        const carouselDiv = document.getElementById('visualizationCarousel');
+        if(carouselDiv) carouselDiv.innerHTML = '<p style="color:red">Error loading visualizations.</p>';
+        // We no longer explicitly show the table here, so no need to put an error in it.
+    }
 }
-window.showSystemOverview = showSystemOverview;
+// window.showSystemOverview = showSystemOverview; // Already global
 
 /** REVISED (v9) Shows the Yearly Planning View using switchView */
 function showPlanningView() {
