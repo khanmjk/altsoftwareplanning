@@ -9,17 +9,20 @@ A lot has been done
 [Done] Revisit the Yearly Planning page (planningView / generatePlanningTable). The goal will be to introduce a new control (like a toggle switch) labelled "Apply Capacity Constraints". When this is activated, the planning table's ATL/BTL calculation will switch from using the Gross capacity (Team BIS, Effective BIS, or Funded HC) to using the calculated Net Project SDE Years (Gross minus all the sinks we configured) for the corresponding scenario. This will give a much more realistic view of what can actually be delivered Above The Line.
 [Done] Resource Forecasting - Incorporate the resource forecasting tool in the main app
 [Done] In system overview, only show the service dependencies table when the service dependency visualisation is selected from the carousel	
+[Done] Documentation - Generate comprehensive project wiki, readme and instructions about the tool
+[Done] Landing home page - include a content window that shows the documentation about the tool
 
 ------------
 IN PROGRESS
 ------------
-- Documentation - Generate comprehensive project wiki, readme and instructions about the tool
+
+-- Refresh the MVP UX to look like a modernized webapp 
 
 ------
 TO DO
 ------
 UX
--- Landing home page - include a content window that shows the documentation about the tool
+-- 
 
 Data Model
 -- Inspect the data model structure and enhance the data model for future backlog items, create an easy way to extend the data structure without having to change a lot of existing code - so maybe add an attribute that allows for future additions to the model (extensible data structure)
