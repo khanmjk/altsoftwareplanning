@@ -7,6 +7,7 @@
     <!-- Include D3.js for visualization -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/12.3.2/markdown-it.min.js"></script>
     <style>
         /* Basic styling */
         body { font-family: Arial, sans-serif; margin: 20px; }
@@ -657,7 +658,16 @@
     <button id="deleteSystemButton" onclick="deleteSystem()">Delete System</button>    
     <button onclick="resetToDefaults()">Reset to Defaults</button>    
 </div>
-
+<!-- Tool Documentation Section -->
+<div id="toolDocumentationSection" style="margin-top: 20px; border: 1px solid #ccc; display: none; max-width: 90%; margin-left: auto; margin-right: auto;">
+    <h3 id="documentationHeader" style="cursor: pointer; margin: 0; padding: 10px; background-color: #e9ecef; border-bottom: 1px solid #ccc;" title="Click to expand/collapse documentation">
+        <span id="documentationToggleIndicator" class="toggle-indicator" style="font-weight:bold; margin-right:5px;">[+] </span>
+        Tool Documentation & Help
+    </h3>
+    <div id="documentationContent" style="display: none; padding: 15px; max-height: 450px; overflow-y: auto; background-color: #fdfdfd;">
+        <p><em>Loading documentation... Please ensure you have an internet connection to fetch the latest help content.</em></p>
+    </div>
+</div>
 <!-- Return to Home Button -->
 <button id="backToSystemViewButton" onclick="showSystemOverview()" style="display: none; margin-right: 10px;">Back to System Overview</button>
 <button id="returnHomeButton" onclick="returnToHome()" style="display: none;">Home Page</button>
@@ -2904,12 +2914,25 @@ window.onload = function() {
     console.log("!!! Window on load !!!!");
     
     currentMode = Modes.NAVIGATION;
+    console.log("!!! Window on load !!!!");
+
     // Initialize UI accordingly
+    const docHeader = document.getElementById('documentationHeader');
+    if (docHeader) {
+        docHeader.addEventListener('click', () => {
+            toggleCollapsibleSection('documentationContent', 'documentationToggleIndicator');
+        });
+    } else {
+        console.warn("Documentation header not found to attach toggle listener.");
+    }    
+    // To ensure the home screen is the default, call switchView(null)
+    switchView(null); // This will display home and trigger documentation load
 };
 
+
 /**
- * REVISED (v6) - Central function to manage switching between main views.
- * - Handles serviceDependenciesTable visibility correctly with carousel.
+ * REVISED (v7) - Central function to manage switching between main views.
+ * - Manages visibility of toolDocumentationSection on home page.
  */
  function switchView(targetViewId, newMode = null) {
     console.log(`Switching view to: ${targetViewId || 'Home'}, Mode: ${newMode || 'Auto'}`);
@@ -2917,23 +2940,25 @@ window.onload = function() {
     const allViewIds = [
         'systemEditForm',
         'visualizationCarousel',
-        'serviceDependenciesTable', // Keep in list to ensure it's hidden by default when switching *away* from overview
+        'serviceDependenciesTable',
         'organogramView',
         'engineerTableView',
         'planningView',
         'capacityConfigView',
-        'sdmForecastingView'
+        'sdmForecastingView',
+        'toolDocumentationSection' // Added documentation section
     ];
 
+    // --- Hide all view containers (with special handling for serviceDepsTable) ---
     allViewIds.forEach(id => {
         const element = document.getElementById(id);
         if (element) {
-            // Special handling for serviceDependenciesTable:
-            // It should only be hidden here if the targetView is NOT the carousel.
-            // If the target IS the carousel, its visibility is managed by showVisualization().
             if (id === 'serviceDependenciesTable' && targetViewId === 'visualizationCarousel') {
-                // Don't hide it here; showVisualization will manage it.
-            } else {
+                // Visibility managed by showVisualization()
+            } else if (id === 'toolDocumentationSection' && targetViewId === null) {
+                // Visibility managed below for home screen
+            }
+            else {
                 element.style.display = 'none';
             }
         }
@@ -2945,8 +2970,9 @@ window.onload = function() {
     const mainMenu = document.querySelector('.menu');
     const returnHomeBtn = document.getElementById('returnHomeButton');
     const backButton = document.getElementById('backToSystemViewButton');
+    const documentationSection = document.getElementById('toolDocumentationSection'); // Get documentation section
 
-    if (targetViewId) {
+    if (targetViewId) { // Navigating to a specific system-related view
         currentMode = newMode || Modes.BROWSE;
         const targetElement = document.getElementById(targetViewId);
         if (targetElement) {
@@ -2957,6 +2983,9 @@ window.onload = function() {
             return;
         }
 
+        // Hide documentation when not on home
+        if (documentationSection) documentationSection.style.display = 'none';
+
         // Update Title/Description
         if (pageTitleH1 && currentSystemData) {
             let titleSuffix = '';
@@ -2964,8 +2993,6 @@ window.onload = function() {
             else if (targetViewId === 'organogramView') titleSuffix = ' - Organization Overview';
             else if (targetViewId === 'engineerTableView') titleSuffix = ' - Engineer List';
             else if (targetViewId === 'systemEditForm') titleSuffix = ' - Edit System';
-            // For visualizationCarousel, title is 'System Name - Overview'.
-            // The table doesn't get its own title suffix here if it's shown with the carousel.
             else if (targetViewId === 'visualizationCarousel') titleSuffix = ' - Overview';
             else if (targetViewId === 'capacityConfigView') titleSuffix = ' - Capacity Constraints';
             else if (targetViewId === 'sdmForecastingView') titleSuffix = ' - SDM Resource Forecasting Model';
@@ -2976,8 +3003,6 @@ window.onload = function() {
         }
 
         if (systemDescP) {
-             // Show description only if the main carousel is being shown.
-             // If serviceDependenciesTable is shown by itself (not current case), desc would be hidden.
              const isOverview = (targetViewId === 'visualizationCarousel');
              systemDescP.style.display = isOverview ? 'block' : 'none';
              if(systemDescP.style.display === 'block' && currentSystemData) {
@@ -2987,47 +3012,93 @@ window.onload = function() {
 
         if (mainMenu) mainMenu.style.display = 'none';
         if (editMenu) {
-            // Edit menu shown only when the main carousel is the target.
             const isOverview = (targetViewId === 'visualizationCarousel');
             editMenu.style.display = isOverview ? 'block' : 'none';
         }
-
         if (returnHomeBtn) returnHomeBtn.style.display = 'block';
-
         const isOverviewForBackButton = (targetViewId === 'visualizationCarousel');
         if (backButton) {
              backButton.style.display = isOverviewForBackButton ? 'none' : 'block';
         }
 
-    } else { // Home Screen
+    } else { // Showing the Home Screen (targetViewId is null or empty)
         currentMode = Modes.NAVIGATION;
         currentSystemData = null;
         if (pageTitleH1) { pageTitleH1.innerText = "Software Management Tools"; pageTitleH1.style.display = 'block'; }
-        if (systemDescP) { systemDescP.innerText = "Load a previously saved system or create a new system..."; systemDescP.style.display = 'block';}
+        if (systemDescP) { systemDescP.innerText = "Load a previously saved system or create a new software system"; systemDescP.style.display = 'block';} // Restored original home desc
         if (mainMenu) mainMenu.style.display = 'block';
         if (editMenu) editMenu.style.display = 'none';
         if (returnHomeBtn) returnHomeBtn.style.display = 'none';
         if (backButton) backButton.style.display = 'none';
-        const systemListDiv = document.getElementById('systemListDiv');
+
+        // Show and potentially load documentation on home screen
+        if (documentationSection) {
+            documentationSection.style.display = 'block';
+            // Check if content needs to be loaded (e.g., if it's empty or just placeholder)
+            const docContent = document.getElementById('documentationContent');
+            if (docContent && docContent.innerHTML.includes("<em>Loading documentation...")) {
+                loadAndDisplayDocumentation();
+            }
+        }
+
+        const systemListDiv = document.getElementById('systemLoadListDiv');
         if (systemListDiv) document.body.removeChild(systemListDiv);
         const systemDeleteListDiv = document.getElementById('systemDeleteListDiv');
         if (systemDeleteListDiv) document.body.removeChild(systemDeleteListDiv);
         d3.selectAll('.tooltip').remove();
     }
 
-    // Special handling for carousel visibility
-    // This call to showVisualization(0) is now CRITICAL.
-    // It ensures that if the carousel is the target, the correct first item is shown,
-    // AND the serviceDependenciesTable visibility is correctly set based on that first item.
     if (targetViewId === 'visualizationCarousel') {
         showVisualization(0);
     }
-    // If targetViewId is serviceDependenciesTable directly (not current use case),
-    // then showVisualization would not be called, and the table would just be 'block'.
-
     console.log(`View switched. Current mode: ${currentMode}`);
 }
-// window.switchView = switchView; // Already global
+
+/**
+ * Fetches README.md from GitHub, converts Markdown to HTML, and displays it.
+ */
+async function loadAndDisplayDocumentation() {
+    const contentDiv = document.getElementById('documentationContent');
+    if (!contentDiv) {
+        console.error("Documentation content div not found.");
+        return;
+    }
+
+    // Replace with your actual GitHub raw README.md URL when ready
+    // const readmeUrl = 'https://raw.githubusercontent.com/markdown-it/markdown-it/master/README.md'; // Placeholder
+    const readmeUrl = 'https://raw.githubusercontent.com/khanmjk/altsoftwareplanning/refs/heads/main/README.md';
+
+
+    contentDiv.innerHTML = '<p><em>Fetching latest documentation...</em></p>';
+
+    try {
+        const response = await fetch(readmeUrl);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const markdownText = await response.text();
+
+        // Initialize markdown-it
+        // Ensure markdownit is available (loaded from CDN)
+        if (typeof window.markdownit === 'undefined') {
+            contentDiv.innerHTML = '<p style="color:red;">Error: Markdown library (markdown-it) not loaded. Cannot display documentation.</p>';
+            console.error("markdown-it library is not defined. Make sure the CDN link is correct and loaded.");
+            return;
+        }
+        const md = window.markdownit({
+            html: true, // Enable HTML tags in source
+            linkify: true, // Autoconvert URL-like text to links
+            typographer: true // Enable some language-neutral replacement + quotes beautification
+        });
+        const htmlContent = md.render(markdownText);
+        contentDiv.innerHTML = htmlContent;
+        console.log("Documentation loaded and rendered successfully.");
+
+    } catch (error) {
+        console.error("Failed to load or render documentation:", error);
+        contentDiv.innerHTML = `<p style="color:red;">Could not load documentation. Please check your internet connection or the configured URL. Details: ${error.message}</p>`;
+    }
+}
 
 /** NEW Function - Shows the Capacity Configuration View */
 function showCapacityConfigView() {
