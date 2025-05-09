@@ -8,6 +8,8 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/12.3.2/markdown-it.min.js"></script>
+    <script src="https://unpkg.com/markdown-it-anchor@8.6.7/dist/markdownItAnchor.umd.js"></script>
+
     <style>
         /* Basic styling */
         body { font-family: Arial, sans-serif; margin: 20px; }
@@ -2910,29 +2912,34 @@ const sampleSystemDataContactCenter = {
     // **********************************************************
 };
 
+// REPLACE your entire window.onload function with this:
 window.onload = function() {
-    console.log("!!! Window on load !!!!");
-    
+    console.log("!!! window.onload: Page HTML and synchronous scripts loaded. !!!");
     currentMode = Modes.NAVIGATION;
-    console.log("!!! Window on load !!!!");
 
-    // Initialize UI accordingly
+    // Attach the static toggle listener for the documentation header immediately
     const docHeader = document.getElementById('documentationHeader');
     if (docHeader) {
         docHeader.addEventListener('click', () => {
             toggleCollapsibleSection('documentationContent', 'documentationToggleIndicator');
         });
+        console.log("Attached toggle listener to documentation header.");
     } else {
-        console.warn("Documentation header not found to attach toggle listener.");
-    }    
-    // To ensure the home screen is the default, call switchView(null)
-    switchView(null); // This will display home and trigger documentation load
+        console.warn("Documentation header not found in window.onload.");
+    }
+
+    // Wait a brief moment after window.onload for external scripts to potentially finish loading
+    // before trying to initialize the view that uses them.
+    setTimeout(() => {
+        console.log("Attempting initial switchView(null) after short delay.");
+        switchView(null); // This will display home and attempt to load documentation
+    }, 500); // 500ms delay - adjust if needed, but keep it short
 };
 
 
 /**
- * REVISED (v7) - Central function to manage switching between main views.
- * - Manages visibility of toolDocumentationSection on home page.
+ * REVISED (v8) - Central function to manage switching between main views.
+ * - Calls loadAndDisplayDocumentation when switching to home.
  */
  function switchView(targetViewId, newMode = null) {
     console.log(`Switching view to: ${targetViewId || 'Home'}, Mode: ${newMode || 'Auto'}`);
@@ -2946,19 +2953,17 @@ window.onload = function() {
         'planningView',
         'capacityConfigView',
         'sdmForecastingView',
-        'toolDocumentationSection' // Added documentation section
+        'toolDocumentationSection'
     ];
 
-    // --- Hide all view containers (with special handling for serviceDepsTable) ---
+    const documentationSection = document.getElementById('toolDocumentationSection'); // Get early
+
     allViewIds.forEach(id => {
         const element = document.getElementById(id);
         if (element) {
             if (id === 'serviceDependenciesTable' && targetViewId === 'visualizationCarousel') {
                 // Visibility managed by showVisualization()
-            } else if (id === 'toolDocumentationSection' && targetViewId === null) {
-                // Visibility managed below for home screen
-            }
-            else {
+            } else {
                 element.style.display = 'none';
             }
         }
@@ -2970,9 +2975,8 @@ window.onload = function() {
     const mainMenu = document.querySelector('.menu');
     const returnHomeBtn = document.getElementById('returnHomeButton');
     const backButton = document.getElementById('backToSystemViewButton');
-    const documentationSection = document.getElementById('toolDocumentationSection'); // Get documentation section
 
-    if (targetViewId) { // Navigating to a specific system-related view
+    if (targetViewId) {
         currentMode = newMode || Modes.BROWSE;
         const targetElement = document.getElementById(targetViewId);
         if (targetElement) {
@@ -2983,10 +2987,7 @@ window.onload = function() {
             return;
         }
 
-        // Hide documentation when not on home
-        if (documentationSection) documentationSection.style.display = 'none';
-
-        // Update Title/Description
+        // pageTitleH1, systemDescP, editMenu, returnHomeBtn, backButton logic... (as before)
         if (pageTitleH1 && currentSystemData) {
             let titleSuffix = '';
             if (targetViewId === 'planningView') titleSuffix = ' - Year Plan';
@@ -3021,23 +3022,34 @@ window.onload = function() {
              backButton.style.display = isOverviewForBackButton ? 'none' : 'block';
         }
 
+
     } else { // Showing the Home Screen (targetViewId is null or empty)
-        currentMode = Modes.NAVIGATION;
+     currentMode = Modes.NAVIGATION;
         currentSystemData = null;
         if (pageTitleH1) { pageTitleH1.innerText = "Software Management Tools"; pageTitleH1.style.display = 'block'; }
-        if (systemDescP) { systemDescP.innerText = "Load a previously saved system or create a new software system"; systemDescP.style.display = 'block';} // Restored original home desc
+        if (systemDescP) { systemDescP.innerText = "Load a previously saved system or create a new software system"; systemDescP.style.display = 'block';}
         if (mainMenu) mainMenu.style.display = 'block';
         if (editMenu) editMenu.style.display = 'none';
         if (returnHomeBtn) returnHomeBtn.style.display = 'none';
         if (backButton) backButton.style.display = 'none';
 
-        // Show and potentially load documentation on home screen
-        if (documentationSection) {
+        if (documentationSection) { // documentationSection is fetched at the top of switchView
             documentationSection.style.display = 'block';
-            // Check if content needs to be loaded (e.g., if it's empty or just placeholder)
             const docContent = document.getElementById('documentationContent');
-            if (docContent && docContent.innerHTML.includes("<em>Loading documentation...")) {
-                loadAndDisplayDocumentation();
+            if (docContent) {
+                // Check if it's the initial placeholder or an error message before trying to load
+                const currentHTML = docContent.innerHTML.trim().toLowerCase();
+                const needsLoading = currentHTML.includes("<em>loading documentation...") ||
+                                   currentHTML.includes("<em>attempting to load documentation...") ||
+                                   currentHTML.includes("<em>waiting for help components...") ||
+                                   currentHTML === ""; // Also try if completely empty
+
+                if (needsLoading) {
+                    console.log("switchView (home): Conditions met to call loadAndDisplayDocumentation.");
+                    loadAndDisplayDocumentation();
+                } else {
+                    console.log("switchView (home): Documentation content not in initial state, assuming already loaded or in error state. Not re-fetching.");
+                }
             }
         }
 
@@ -3055,48 +3067,128 @@ window.onload = function() {
 }
 
 /**
- * Fetches README.md from GitHub, converts Markdown to HTML, and displays it.
+ * Custom slugify function to match the README's Table of Contents link style.
+ * - Converts to lowercase
+ * - Replaces spaces and multiple hyphens with a single hyphen
+ * - Removes leading numbers and dots (e.g., "1. Purpose" -> "purpose")
+ * - Removes most other non-alphanumeric characters except hyphens
+ * - Handles ampersands by replacing with '-and-' then simplifying.
+ */
+function customSlugify(str) {
+    if (typeof str !== 'string') return '';
+    let s = str.toString().trim()
+        .toLowerCase()
+        // Remove leading numbers and dots like "1. ", "2.3. "
+        .replace(/^\d+(\.\d+)*\.\s*/, '')
+        // Replace '&' with '-and-' before other replacements to avoid '--'
+        .replace(/\s*&\s*/g, '-and-')
+        // Replace spaces and common punctuation with a single hyphen
+        .replace(/\s+|[/\\?,:()!"“„#$'%~`´]/g, '-')
+        // Remove any characters that are not word characters (letters, numbers, underscore) or hyphens
+        .replace(/[^\w-]+/g, '')
+        // Replace multiple hyphens with a single hyphen
+        .replace(/-+/g, '-')
+        // Trim leading/trailing hyphens that might result
+        .replace(/^-+|-+$/g, '');
+    return s;
+}
+
+// REPLACE your entire loadAndDisplayDocumentation function with this:
+/**
+ * Fetches README.md, converts Markdown to HTML, displays it,
+ * and handles internal anchor link scrolling.
+ * Uses custom slugify for markdown-it-anchor.
  */
 async function loadAndDisplayDocumentation() {
     const contentDiv = document.getElementById('documentationContent');
     if (!contentDiv) {
-        console.error("Documentation content div not found.");
+        console.error("LAD_SLUGIFY: Documentation content div not found.");
         return;
     }
+    console.log("LAD_SLUGIFY: Attempting to load documentation.");
 
-    // Replace with your actual GitHub raw README.md URL when ready
-    // const readmeUrl = 'https://raw.githubusercontent.com/markdown-it/markdown-it/master/README.md'; // Placeholder
     const readmeUrl = 'https://raw.githubusercontent.com/khanmjk/altsoftwareplanning/refs/heads/main/README.md';
 
+    // --- CRITICAL LIBRARY CHECK ---
+    if (typeof window.markdownit === 'undefined') {
+        const errorMsg = "LAD_SLUGIFY: FATAL - window.markdownit is UNDEFINED. Cannot render documentation.";
+        console.error(errorMsg);
+        contentDiv.innerHTML = `<p style="color:red;">${errorMsg}</p>`;
+        return;
+    } else {
+        console.log("LAD_SLUGIFY: window.markdownit is DEFINED.");
+    }
 
-    contentDiv.innerHTML = '<p><em>Fetching latest documentation...</em></p>';
+    let useAnchorPlugin = false;
+    if (typeof window.markdownItAnchor === 'undefined') {
+        console.warn("LAD_SLUGIFY: window.markdownItAnchor is UNDEFINED. Links may not function.");
+    } else {
+        console.log("LAD_SLUGIFY: window.markdownItAnchor is DEFINED.");
+        useAnchorPlugin = true;
+    }
+    // --- END CRITICAL LIBRARY CHECK ---
+
+    contentDiv.innerHTML = '<p><em>Fetching latest documentation from GitHub...</em></p>';
 
     try {
         const response = await fetch(readmeUrl);
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`HTTP error! status: ${response.status} while fetching README.`);
         }
         const markdownText = await response.text();
+        console.log("LAD_SLUGIFY: Successfully fetched README.md");
 
-        // Initialize markdown-it
-        // Ensure markdownit is available (loaded from CDN)
-        if (typeof window.markdownit === 'undefined') {
-            contentDiv.innerHTML = '<p style="color:red;">Error: Markdown library (markdown-it) not loaded. Cannot display documentation.</p>';
-            console.error("markdown-it library is not defined. Make sure the CDN link is correct and loaded.");
-            return;
-        }
-        const md = window.markdownit({
-            html: true, // Enable HTML tags in source
-            linkify: true, // Autoconvert URL-like text to links
-            typographer: true // Enable some language-neutral replacement + quotes beautification
+        let md = window.markdownit({
+            html: true,
+            linkify: true,
+            typographer: true
         });
+
+        if (useAnchorPlugin) {
+            md = md.use(window.markdownItAnchor, {
+                permalink: window.markdownItAnchor.permalink.headerLink(),
+                level: [1, 2, 3, 4, 5, 6],
+                slugify: s => customSlugify(s) // *** USE OUR CUSTOM SLUGIFY FUNCTION ***
+            });
+            console.log("LAD_SLUGIFY: markdown-it-anchor plugin applied with custom slugify.");
+        }
+
         const htmlContent = md.render(markdownText);
         contentDiv.innerHTML = htmlContent;
-        console.log("Documentation loaded and rendered successfully.");
+        console.log("LAD_SLUGIFY: Documentation rendered.");
+
+        if (useAnchorPlugin) {
+            const internalLinks = contentDiv.querySelectorAll('a[href^="#"]');
+            internalLinks.forEach(link => {
+                link.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    const targetId = this.getAttribute('href').substring(1);
+                    const targetElement = document.getElementById(targetId);
+
+                    if (targetElement && contentDiv.contains(targetElement)) {
+                        const contentDivScrollTop = contentDiv.scrollTop;
+                        const contentDivRect = contentDiv.getBoundingClientRect();
+                        const targetElementRect = targetElement.getBoundingClientRect();
+                        const targetOffsetFromContentDivTop = targetElementRect.top - contentDivRect.top;
+                        let scrollToPosition = contentDivScrollTop + targetOffsetFromContentDivTop - 10;
+                        scrollToPosition = Math.max(0, scrollToPosition);
+                        contentDiv.scrollTop = scrollToPosition;
+                        console.log(`LAD_SLUGIFY: Scrolled to: #${targetId}`);
+                    } else {
+                        console.warn(`LAD_SLUGIFY: Target element for link #${targetId} not found. Check generated IDs vs. link hrefs.`);
+                        const generatedIds = Array.from(contentDiv.querySelectorAll('[id]')).map(el => el.id);
+                        console.log("LAD_SLUGIFY: Available IDs in documentation content:", generatedIds);
+                    }
+                });
+            });
+            console.log("LAD_SLUGIFY: Internal link listeners attached.");
+        } else {
+             console.log("LAD_SLUGIFY: Internal link listeners NOT attached as anchor plugin was unavailable.");
+        }
 
     } catch (error) {
-        console.error("Failed to load or render documentation:", error);
-        contentDiv.innerHTML = `<p style="color:red;">Could not load documentation. Please check your internet connection or the configured URL. Details: ${error.message}</p>`;
+        console.error("LAD_SLUGIFY: Failed to load or render documentation:", error);
+        contentDiv.innerHTML = `<p style="color:red;">Could not load documentation. Details: ${error.message}</p>`;
     }
 }
 
