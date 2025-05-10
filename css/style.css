@@ -1,539 +1,727 @@
+/* === Phase UX.A1: Foundational Styling & Top Bar === */
 
-        /* Basic styling */
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        h1 { text-align: center; }
-        .menu, .edit-menu { text-align: center; margin-bottom: 20px; }
-        .menu button, .edit-menu button { margin: 5px; padding: 10px 20px; font-size: 16px; }
-        #visualization, #teamVisualization { max-width: 800px; margin: 20px auto; }
-        svg { width: 100%; height: 600px; border: 1px solid #ccc; }
-        #teamTable { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        #teamTable th, #teamTable td { border: 1px solid #ccc; padding: 8px; text-align: left; vertical-align: top; }
-        .node text { pointer-events: none; font-size: 12px; }
-        .tooltip { position: absolute; text-align: left; width: auto; max-width: 300px; padding: 5px; font: 12px sans-serif; background: rgba(255, 255, 255, 0.9); border: 1px solid #ccc; pointer-events: none; }
-        .legend { font-size: 12px; display: flex; flex-wrap: wrap; }
-        .legend-item { display: flex; align-items: center; margin-right: 15px; margin-bottom: 5px; }
-        .team-edit {margin-bottom: 15px;padding: 10px;border: 1px solid #ccc;}
+/* Global Resets and Typography */
+body {
+    font-family: 'Inter', Arial, sans-serif;
+    margin: 0; /* Remove default body margin */
+    padding: 0;
+    background-color: #f8f9fa; /* Light gray page background */
+    color: #212529; /* Default dark text color */
+    line-height: 1.6;
+    font-size: 16px; /* Base font size */
+}
+
+/* Add padding to the body to account for fixed top bar */
+body {
+    padding-top: 70px; /* Height of the top bar + a little extra */
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600; /* Semi-bold for headings */
+    margin-top: 1.5em;
+    margin-bottom: 0.75em;
+    line-height: 1.2;
+}
+
+h1 { font-size: 2.25rem; text-align: center; margin-top: 20px; margin-bottom: 20px;} /* 36px */
+h2 { font-size: 1.75rem; } /* 28px */
+h3 { font-size: 1.5rem; }  /* 24px */
+h4 { font-size: 1.25rem; } /* 20px */
+
+a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Top Bar Styling */
+#topBar {
+    background-color: #232f3e; /* Dark AWS-like header */
+    color: #f8f9fa; /* Light text for dark background */
+    padding: 0 20px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Distribute space */
+    position: fixed; /* Stick to the top */
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1030; /* Ensure it's above most content */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#appTitle {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-right: 20px;
+    white-space: nowrap;
+}
+
+/* Container for main action buttons (Load, Create on home; Edit, Org Chart etc. on system view) */
+#mainActions {
+    display: flex;
+    align-items: center;
+    flex-grow: 1; /* Allow it to take available space */
+}
+
+/* Styling for buttons moved into the top bar */
+#topBar .menu button,
+#topBar .edit-menu button {
+    background-color: transparent;
+    color: #adb5bd; /* Lighter gray for inactive items */
+    border: none;
+    padding: 8px 15px;
+    margin: 0 5px;
+    font-size: 0.95rem; /* Slightly smaller than page buttons */
+    font-weight: 500;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+#topBar .menu button:hover,
+#topBar .edit-menu button:hover {
+    background-color: #495057; /* Darker gray on hover */
+    color: #fff;
+}
+
+/* Style for an "active" or primary top bar button if needed later */
+#topBar button.primary-action {
+    color: #fff;
+    background-color: #007bff; /* Example primary color */
+}
+#topBar button.primary-action:hover {
+    background-color: #0056b3;
+}
+
+
+/* Utility/Global Nav buttons (Home, Back) */
+#globalNavButtons {
+    display: flex;
+    align-items: center;
+}
+
+#globalNavButtons button { /* Style for Return Home / Back to System */
+    background-color: #495057; /* Darker gray for these controls */
+    color: #f8f9fa;
+    border: 1px solid #343a40;
+    padding: 6px 12px;
+    font-size: 0.875rem;
+    margin-left: 10px;
+    border-radius: 4px;
+}
+
+#globalNavButtons button:hover {
+    background-color: #5a6268;
+}
+
+
+/* Adjusting existing page content to respect the fixed top bar */
+/* This might need to be specific if you have other fixed elements */
+/* For now, the body padding-top should handle most cases. */
+
+/* Overriding general h1, p for the ones at the very top of the page */
+/* as they are now "outside" the main flow due to fixed top bar */
+h1#pageTitle {
+    /* This h1 is now part of the dynamic content area, not a global page title */
+    /* We'll style it more like a content heading if it's visible */
+    font-size: 1.75rem; /* Make it like an H2 */
+    margin-top: 20px; /* Standard content margin */
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+p#systemDescription {
+    margin-top: 0;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #545b64; /* Muted text color */
+}
+
+/*
+   Remove old .menu, .edit-menu direct styling as they are now part of #topBar
+   You can delete these old rules if they only applied to the button containers:
+    .menu, .edit-menu { text-align: center; margin-bottom: 20px; }
+    .menu button, .edit-menu button { margin: 5px; padding: 10px 20px; font-size: 16px; }
+*/
+
+/* Ensure the main content views have some top margin if pageTitle/systemDescription are hidden */
+#visualizationCarousel,
+#systemEditForm,
+#organogramView,
+#engineerTableView,
+#planningView,
+#capacityConfigView,
+#sdmForecastingView,
+#toolDocumentationSection {
+    margin-top: 20px; /* Add default top margin to content views */
+    margin-bottom: 20px;
+    padding: 20px; /* Add some padding inside the content views */
+    background-color: #ffffff; /* White background for content areas */
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* Adjusting existing fixed buttons to not overlap topBar */
+#returnHomeButton { /* Will be moved into #globalNavButtons */
+  position: static; /* Remove fixed positioning, will be part of flex container */
+  padding: 6px 12px;
+  font-size: 0.875rem;
+  z-index: auto;
+}
+#backToSystemViewButton { /* Will be moved into #globalNavButtons */
+  position: static; /* Remove fixed positioning */
+  padding: 6px 12px;
+  font-size: 0.875rem;
+  z-index: auto;
+  margin-right: 5px; /* Add some space if both are visible */
+}
+
+
+/* === End Phase UX.A1 === */
+
+/* Your existing CSS rules will follow here... */
+/* e.g., #visualization, #teamVisualization { max-width: 800px; ... } */
+/* ... */
+      
+/* Basic styling */
+body { font-family: Arial, sans-serif; margin: 20px; }
+h1 { text-align: center; }
+/* .menu, .edit-menu { text-align: center; margin-bottom: 20px; }*/
+/* .menu button, .edit-menu button { margin: 5px; padding: 10px 20px; font-size: 16px; }*/
+#visualization, #teamVisualization { max-width: 800px; margin: 20px auto; }
+svg { width: 100%; height: 600px; border: 1px solid #ccc; }
+#teamTable { width: 100%; border-collapse: collapse; margin-top: 20px; }
+#teamTable th, #teamTable td { border: 1px solid #ccc; padding: 8px; text-align: left; vertical-align: top; }
+.node text { pointer-events: none; font-size: 12px; }
+.tooltip { position: absolute; text-align: left; width: auto; max-width: 300px; padding: 5px; font: 12px sans-serif; background: rgba(255, 255, 255, 0.9); border: 1px solid #ccc; pointer-events: none; }
+.legend { font-size: 12px; display: flex; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; margin-right: 15px; margin-bottom: 5px; }
+.team-edit {margin-bottom: 15px;padding: 10px;border: 1px solid #ccc;}
+
+   /* #returnHomeButton {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 10px 15px;
+    font-size: 14px;
+    z-index: 1000;
+    } */
+
+    #systemDescription {
+        text-align: center; /* Add this line to center the text */
+        /* You can add other styles here too if needed, like margin */
+        margin-top: 10px;
+        margin-bottom: 20px;
+    }
     
-          #returnHomeButton {
-          position: fixed;
-          top: 20px;
-          right: 20px;
-          padding: 10px 15px;
-          font-size: 14px;
-          z-index: 1000;
-          }
+    /*   #backToSystemViewButton {
+    position: fixed;
+    top: 20px;
+    right: 170px; 
+    padding: 10px 15px;
+    font-size: 14px;
+    z-index: 1000; 
+    display: none; 
+    }  
+    */        
+    
+    .team-edit {
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+    }
+    
+    .team-edit h4 {
+        margin: 0;
+        padding: 10px;
+        background-color: #f2f2f2;
+    }
+    
+    .team-details {
+        padding: 10px;
+        display: none;
+    }
+    .service-edit {
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+    }
+    
+    .service-edit h4 {
+        margin: 0;
+        padding: 10px;
+        background-color: #e6f7ff;
+        cursor: pointer;
+    }
+    
+    .service-details {
+        padding: 10px;
+        display: none;
+    }
+    
+    .api-edit {
+        margin-left: 20px;
+        margin-bottom: 10px;
+        border: 1px solid #ddd;
+        padding: 10px;
+    }    
 
-          #systemDescription {
-              text-align: center; /* Add this line to center the text */
-              /* You can add other styles here too if needed, like margin */
-              margin-top: 10px;
-              margin-bottom: 20px;
-          }
-          
-          #backToSystemViewButton {
-            position: fixed;
-            top: 20px;
-            /* Adjust 'right' value to position it left of Return Home */
-            /* Return home is at 20px, add its width + margin */
-            /* Let's estimate ~140px for Return Home + 10px margin + 10px gap */
-            right: 170px; /* Adjust this pixel value as needed */
-            padding: 10px 15px;
-            font-size: 14px;
-            z-index: 1000; /* Same stack level as Return Home */
-            display: none; /* Keep initial display none */
-          }          
-          
-          .team-edit {
-              margin-bottom: 15px;
-              border: 1px solid #ccc;
-          }
-          
-          .team-edit h4 {
-              margin: 0;
-              padding: 10px;
-              background-color: #f2f2f2;
-          }
-          
-          .team-details {
-              padding: 10px;
-              display: none;
-          }
-          .service-edit {
-              margin-bottom: 15px;
-              border: 1px solid #ccc;
-          }
-          
-          .service-edit h4 {
-              margin: 0;
-              padding: 10px;
-              background-color: #e6f7ff;
-              cursor: pointer;
-          }
-          
-          .service-details {
-              padding: 10px;
-              display: none;
-          }
-          
-          .api-edit {
-              margin-left: 20px;
-              margin-bottom: 10px;
-              border: 1px solid #ddd;
-              padding: 10px;
-          }    
-
-          /* --- Visualization Carousel Styles --- */
-          #visualizationCarousel {
-              position: relative;
-              max-width: 90%;   /* <-- Changed to match service table */
-              margin: 20px auto;
-              border: 1px solid #ddd;
-              padding: 10px;
-              display:none; /* Initially hidden */
-          }
-          
-          #visualizationCarousel .carousel-item {
-              /* display: none; */ /* Initially set in HTML, JS will manage */
-              /* Optional: Add transition effects later if desired */
-              /* transition: opacity 0.5s ease-in-out; */
-              /* opacity: 0; */
-              width: 100%; /* Ensure items take full width */
-          }
-          
-          #visualizationCarousel .carousel-item.active {
-              display: block; /* Show the active item */
-              /* opacity: 1; */
-          }
-          
-          /* Style for the central title */
-          #visualizationTitle {
-              display: inline-block; /* Allows margin */
-              min-width: 250px;      /* Give it some space */
-              text-align: center;
-          }
-          
-          /* Optional: Basic button styling */
-          #visualizationCarousel button {
-              padding: 5px 10px;
-              cursor: pointer;
-          }
-          /* --- End Carousel Styles --- */
+    /* --- Visualization Carousel Styles --- */
+    #visualizationCarousel {
+        position: relative;
+        max-width: 90%;   /* <-- Changed to match service table */
+        margin: 20px auto;
+        border: 1px solid #ddd;
+        padding: 10px;
+        display:none; /* Initially hidden */
+    }
+    
+    #visualizationCarousel .carousel-item {
+        /* display: none; */ /* Initially set in HTML, JS will manage */
+        /* Optional: Add transition effects later if desired */
+        /* transition: opacity 0.5s ease-in-out; */
+        /* opacity: 0; */
+        width: 100%; /* Ensure items take full width */
+    }
+    
+    #visualizationCarousel .carousel-item.active {
+        display: block; /* Show the active item */
+        /* opacity: 1; */
+    }
+    
+    /* Style for the central title */
+    #visualizationTitle {
+        display: inline-block; /* Allows margin */
+        min-width: 250px;      /* Give it some space */
+        text-align: center;
+    }
+    
+    /* Optional: Basic button styling */
+    #visualizationCarousel button {
+        padding: 5px 10px;
+        cursor: pointer;
+    }
+    /* --- End Carousel Styles --- */
 
 
-          /* Adjust SVG size for service visualization */
-          #serviceSvg {
-              width: 100%;
-              height: 600px;
-              border: 1px solid #ccc;
-          }
-          
-          /* Adjust tooltip styling if necessary */
-          .tooltip {
-              position: absolute;
-              text-align: left;
-              width: auto;
-              max-width: 300px;
-              padding: 5px;
-              font: 12px sans-serif;
-              background: rgba(255, 255, 255, 0.9);
-              border: 1px solid #ccc;
-              pointer-events: none;
-              z-index: 1000;
-          }
-          /* Dependency visualization styles */
-          .node circle {
-              fill: #fff;
-              stroke: steelblue;
-              stroke-width: 2px;
-          }
-          
-          .node text {
-              font: 12px sans-serif;
-          }
-          
-          .link {
-              fill: none;
-              stroke: #ccc;
-              stroke-width: 2px;
-          }
-          
-          .tooltip {
-              position: absolute;
-              text-align: left;
-              width: auto;
-              max-width: 300px;
-              padding: 10px;
-              font: 12px sans-serif;
-              background: rgba(255, 255, 255, 0.9);
-              border: 1px solid #ccc;
-              border-radius: 5px;
-              pointer-events: none;
-              z-index: 1000;
-          }
-          #serviceDependenciesTable {
-              margin-top: 20px;
-          }
-          
-          #serviceDependenciesTable table {
-              width: 100%;
-              border-collapse: collapse;
-          }
-          
-          #serviceDependenciesTable th, #serviceDependenciesTable td {
-              border: 1px solid #ccc;
-              padding: 8px;
-              text-align: left;
-          }
-          
-          #serviceDependenciesTable th {
-              background-color: #f2f2f2;
-          }
-          
-          #serviceDependenciesTable tr:nth-child(even) {
-              background-color: #f9f9f9;
-          }
-          
-          #serviceDependenciesTable tr:hover {
-              background-color: #e9e9e9;
-          }          
-          .platform-deps-container {
-              display: flex;
-              align-items: center;
-          }
-          .current-deps, .other-deps {
-              flex: 1;
-              margin: 0 10px;
-          }
-          .platform-deps-buttons {
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-          }
-          .platform-deps-buttons button {
-              margin: 5px 0;
-          }
-          .platform-deps-container select {
-              width: 100%;
-              min-height: 100px;
-          }          
-          .service-deps-container {
-              display: flex;
-              align-items: center;
-              margin-bottom: 10px;
-          }
-          
-          .current-service-deps, .other-services {
-              flex: 1;
-              margin: 0 10px;
-          }
-          
-          .service-deps-buttons {
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-          }
-          
-          .service-deps-buttons button {
-              margin: 5px 0;
-          }
-          
-          .service-deps-container select {
-              width: 100%;
-              min-height: 100px;
-          }
-          /* Styles for Dependent APIs */
-          .dependent-apis-container {
-              display: flex;
-              align-items: center;
-              margin-bottom: 10px;
-          }
-          
-          .current-dependent-apis, .other-apis {
-              flex: 1;
-              margin: 0 10px;
-          }
-          
-          .dependent-apis-buttons {
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-          }
-          
-          .dependent-apis-buttons button {
-              margin: 5px 0;
-          }
-          
-          .dependent-apis-container select {
-              width: 100%;
-              min-height: 100px;
-          }          
-          /* Add styles for new views */
-          #organogramView, #engineerTableView {
-              max-width: 90%; /* Allow wider view */
-              margin: 20px auto;
-          }
-          
-          #organogramSvg {
-              width: 100%;
-              height: 700px; /* Adjust as needed */
-              border: 1px solid #ccc;
-              background-color: #f9f9f9; /* Light background */
-          }
-          
-          /* Styles for Organogram Nodes/Links (Example) */
-          .organogram-link {
-            fill: none;
-            stroke: #555;
-            stroke-opacity: 0.6;
-            stroke-width: 1.5px;
-          }
-          
-          .organogram-node circle { /* Example using circles */
-            stroke: steelblue;
-            stroke-width: 1.5px;
-          }
-           .organogram-node rect { /* Example using rectangles */
-            stroke: steelblue;
-            stroke-width: 1.5px;
-            fill: #fff;
-          }
-          
-          .organogram-node text {
-            font: 10px sans-serif;
-            /* Adjust text anchor and position based on layout */
-          }
-          
-           /* Styles for Engineer Table */
-           #engineerTable th, #engineerTable td {
-               border: 1px solid #ccc;
-               padding: 8px;
-               text-align: left;
-           }
-           #engineerTable th {
-               background-color: #f2f2f2;
-           }
-            #engineerTable th[data-sort-key]:hover { /* Indicate sortable */
-               background-color: #e0e0e0;
-               text-decoration: underline;
-            }
-          #engineerTable tr:nth-child(even) {
-              background-color: #f9f9f9;
-          }          
-          /* Also add some basic CSS for visual feedback (place within the <style> tag) */
-          /* Add styles for drag-and-drop feedback */
-          #planningTableBody tr.dragging {
-              opacity: 0.5;
-              border: 2px dashed #ccc;
-          }
-          #planningTableBody tr.drag-over {
-              border-top: 2px solid blue; /* Highlight where it will drop */
-          }          
-      /* --- Styles for Planning Table Enhancements (Revised for Alignment Fix) --- */
-          #planningTableWrapper {
-              overflow: auto; /* Enable BOTH horizontal and vertical scrolling */
-              /* max-height: 550px; */ /* Set max height before vertical scroll appears (Adjust as needed) */
-              max-width: 100%;   /* Ensure it doesn't overflow its parent */
-              margin-bottom: 15px; /* Add some space below */
-              border: 1px solid #ccc; /* Optional: add a border to see the scroll container */
-          }
-      
-          /* Make headers stick within the scrollable container */
-          #planningTable thead th {
-            position: sticky;
-            top: 0;
-            z-index: 2;
-            background-color: #f2f2f2;
-            border: 1px solid #ccc;
-            text-align: left;
-            white-space: nowrap;
-            /* --- ADDED specific, reduced padding and font-size --- */
-            padding: 3px 5px;  /* Reduced vertical and horizontal padding */
-            font-size: 0.85em; /* Reduced font size */
-            /* ----------------------------------------------------- */
-          }
-           /* Ensure the background of the dynamic team headers is also solid */
-       #planningTable th[data-team-id] {
-            background-color: #e6f7ff;
-            writing-mode: vertical-lr;
-            text-orientation: mixed;
-            text-align: center;
-            /* --- Apply reduced padding/font AND adjust min/max width --- */
-            padding: 5px 2px;  /* Adjusted padding for vertical (more top/bottom, less left/right) */
-            font-size: 0.8em;  /* Further reduced font for vertical names */
-            min-width: 25px;   /* Reduced width */
-            max-width: 25px;   /* Reduced width */
-        
-          }
-      
-      
-          /* Center-align specific numerical columns in the planning table */
-          #planningTable th:nth-child(5), /* Total SDE Years Header */
-          #planningTable td:nth-child(5), /* Total SDE Years Cell */
-          #planningTable th:nth-child(6), /* Cumulative SDE Years Header */
-          #planningTable td:nth-child(6) { /* Cumulative SDE Years Cell */
-              text-align: center !important; /* Use important if needed */
-          }
+    /* Adjust SVG size for service visualization */
+    #serviceSvg {
+        width: 100%;
+        height: 600px;
+        border: 1px solid #ccc;
+    }
+    
+    /* Adjust tooltip styling if necessary */
+    .tooltip {
+        position: absolute;
+        text-align: left;
+        width: auto;
+        max-width: 300px;
+        padding: 5px;
+        font: 12px sans-serif;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid #ccc;
+        pointer-events: none;
+        z-index: 1000;
+    }
+    /* Dependency visualization styles */
+    .node circle {
+        fill: #fff;
+        stroke: steelblue;
+        stroke-width: 2px;
+    }
+    
+    .node text {
+        font: 12px sans-serif;
+    }
+    
+    .link {
+        fill: none;
+        stroke: #ccc;
+        stroke-width: 2px;
+    }
+    
+    .tooltip {
+        position: absolute;
+        text-align: left;
+        width: auto;
+        max-width: 300px;
+        padding: 10px;
+        font: 12px sans-serif;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        pointer-events: none;
+        z-index: 1000;
+    }
+    #serviceDependenciesTable {
+        margin-top: 20px;
+    }
+    
+    #serviceDependenciesTable table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    #serviceDependenciesTable th, #serviceDependenciesTable td {
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: left;
+    }
+    
+    #serviceDependenciesTable th {
+        background-color: #f2f2f2;
+    }
+    
+    #serviceDependenciesTable tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+    
+    #serviceDependenciesTable tr:hover {
+        background-color: #e9e9e9;
+    }          
+    .platform-deps-container {
+        display: flex;
+        align-items: center;
+    }
+    .current-deps, .other-deps {
+        flex: 1;
+        margin: 0 10px;
+    }
+    .platform-deps-buttons {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .platform-deps-buttons button {
+        margin: 5px 0;
+    }
+    .platform-deps-container select {
+        width: 100%;
+        min-height: 100px;
+    }          
+    .service-deps-container {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    
+    .current-service-deps, .other-services {
+        flex: 1;
+        margin: 0 10px;
+    }
+    
+    .service-deps-buttons {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .service-deps-buttons button {
+        margin: 5px 0;
+    }
+    
+    .service-deps-container select {
+        width: 100%;
+        min-height: 100px;
+    }
+    /* Styles for Dependent APIs */
+    .dependent-apis-container {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    
+    .current-dependent-apis, .other-apis {
+        flex: 1;
+        margin: 0 10px;
+    }
+    
+    .dependent-apis-buttons {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .dependent-apis-buttons button {
+        margin: 5px 0;
+    }
+    
+    .dependent-apis-container select {
+        width: 100%;
+        min-height: 100px;
+    }          
+    /* Add styles for new views */
+    #organogramView, #engineerTableView {
+        max-width: 90%; /* Allow wider view */
+        margin: 20px auto;
+    }
+    
+    #organogramSvg {
+        width: 100%;
+        height: 700px; /* Adjust as needed */
+        border: 1px solid #ccc;
+        background-color: #f9f9f9; /* Light background */
+    }
+    
+    /* Styles for Organogram Nodes/Links (Example) */
+    .organogram-link {
+    fill: none;
+    stroke: #555;
+    stroke-opacity: 0.6;
+    stroke-width: 1.5px;
+    }
+    
+    .organogram-node circle { /* Example using circles */
+    stroke: steelblue;
+    stroke-width: 1.5px;
+    }
+    .organogram-node rect { /* Example using rectangles */
+    stroke: steelblue;
+    stroke-width: 1.5px;
+    fill: #fff;
+    }
+    
+    .organogram-node text {
+    font: 10px sans-serif;
+    /* Adjust text anchor and position based on layout */
+    }
+    
+    /* Styles for Engineer Table */
+    #engineerTable th, #engineerTable td {
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: left;
+    }
+    #engineerTable th {
+        background-color: #f2f2f2;
+    }
+    #engineerTable th[data-sort-key]:hover { /* Indicate sortable */
+        background-color: #e0e0e0;
+        text-decoration: underline;
+    }
+    #engineerTable tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }          
+    /* Also add some basic CSS for visual feedback (place within the <style> tag) */
+    /* Add styles for drag-and-drop feedback */
+    #planningTableBody tr.dragging {
+        opacity: 0.5;
+        border: 2px dashed #ccc;
+    }
+    #planningTableBody tr.drag-over {
+        border-top: 2px solid blue; /* Highlight where it will drop */
+    }          
+/* --- Styles for Planning Table Enhancements (Revised for Alignment Fix) --- */
+    #planningTableWrapper {
+        overflow: auto; /* Enable BOTH horizontal and vertical scrolling */
+        /* max-height: 550px; */ /* Set max height before vertical scroll appears (Adjust as needed) */
+        max-width: 100%;   /* Ensure it doesn't overflow its parent */
+        margin-bottom: 15px; /* Add some space below */
+        border: 1px solid #ccc; /* Optional: add a border to see the scroll container */
+    }
+
+    /* Make headers stick within the scrollable container */
+    #planningTable thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background-color: #f2f2f2;
+    border: 1px solid #ccc;
+    text-align: left;
+    white-space: nowrap;
+    /* --- ADDED specific, reduced padding and font-size --- */
+    padding: 3px 5px;  /* Reduced vertical and horizontal padding */
+    font-size: 0.85em; /* Reduced font size */
+    /* ----------------------------------------------------- */
+    }
+    /* Ensure the background of the dynamic team headers is also solid */
+#planningTable th[data-team-id] {
+    background-color: #e6f7ff;
+    writing-mode: vertical-lr;
+    text-orientation: mixed;
+    text-align: center;
+    /* --- Apply reduced padding/font AND adjust min/max width --- */
+    padding: 5px 2px;  /* Adjusted padding for vertical (more top/bottom, less left/right) */
+    font-size: 0.8em;  /* Further reduced font for vertical names */
+    min-width: 25px;   /* Reduced width */
+    max-width: 25px;   /* Reduced width */
+
+    }
+
+
+    /* Center-align specific numerical columns in the planning table */
+    #planningTable th:nth-child(5), /* Total SDE Years Header */
+    #planningTable td:nth-child(5), /* Total SDE Years Cell */
+    #planningTable th:nth-child(6), /* Cumulative SDE Years Header */
+    #planningTable td:nth-child(6) { /* Cumulative SDE Years Cell */
+        text-align: center !important; /* Use important if needed */
+    }
 
 /* --- REVISED: Reduce font size and padding for BOTH planning table rows AND summary table rows --- */
-        #planningTable tbody td,
-        #teamLoadSummaryTable tbody td { /* Added summary table selector */
-            padding: 2px 3px;   /* Reduced vertical padding */
-            font-size: 0.80em; /* Smaller row font */
-            border: 1px solid #eee;
-            vertical-align: middle; /* Align content vertically */
-        }
-        /* Also target inputs in the main planning table */
-        #planningTable tbody td input[type="number"] {
-             vertical-align: middle;
-            font-size: 0.85em; /* Smaller row font */             
-        }
-        /* Style summary table footer cells similarly */
-        #teamLoadSummaryTable tfoot td {
-            padding: 2px 3px;
-            font-size: 0.80em; /* Apply same font size */
-            border: 1px solid #ccc; /* Keep slightly stronger border for footer */
-            background-color: #f8f9fa; /* Keep footer background */
-            text-align: center; /* Keep footer text centered */
-            vertical-align: middle;
-        }
-        /* Adjust the first footer cell (label) alignment */
-         #teamLoadSummaryTable tfoot td:first-child {
-            text-align: left;
-         }
- 
-        /* --- REVISED: Control column widths for Team Load Summary Table (Attempt 2) --- */
-        #teamLoadSummaryTable thead th {
-             /* Base style if needed */
-        }
-        #teamLoadSummaryTable thead th:nth-child(1) { text-align: left; width: 10%; max-width: 30px} /* Team Name */
-        #teamLoadSummaryTable thead th:nth-child(2), /* Funded HC */
-        #teamLoadSummaryTable thead th:nth-child(3), /* Team BIS */
-        #teamLoadSummaryTable thead th:nth-child(4), /* Away BIS */
-        #teamLoadSummaryTable thead th:nth-child(5) { width: 8%; } /* Effective BIS */
-        #teamLoadSummaryTable thead th:nth-child(6) { width: 12%; max-width: 40px; } /* Assigned ATL SDEs */
-        #teamLoadSummaryTable thead th:nth-child(7) { width: 12%; max-width: 40px; } /* Scenario Capacity Limit */
-        #teamLoadSummaryTable thead th:nth-child(8) { width: 12%; max-width: 40px; } /* Remaining Capacity (ATL) */
-        #teamLoadSummaryTable thead th:nth-child(9) { width: 10%; } /* ATL Status */
-        /* -------------------------------------------------------------------------- */
+#planningTable tbody td,
+#teamLoadSummaryTable tbody td { /* Added summary table selector */
+    padding: 2px 3px;   /* Reduced vertical padding */
+    font-size: 0.80em; /* Smaller row font */
+    border: 1px solid #eee;
+    vertical-align: middle; /* Align content vertically */
+}
+/* Also target inputs in the main planning table */
+#planningTable tbody td input[type="number"] {
+        vertical-align: middle;
+    font-size: 0.85em; /* Smaller row font */             
+}
+/* Style summary table footer cells similarly */
+#teamLoadSummaryTable tfoot td {
+    padding: 2px 3px;
+    font-size: 0.80em; /* Apply same font size */
+    border: 1px solid #ccc; /* Keep slightly stronger border for footer */
+    background-color: #f8f9fa; /* Keep footer background */
+    text-align: center; /* Keep footer text centered */
+    vertical-align: middle;
+}
+/* Adjust the first footer cell (label) alignment */
+    #teamLoadSummaryTable tfoot td:first-child {
+    text-align: left;
+    }
 
-          /* REVISED Style for clickable headers */
-          #planningView h3[onclick],
-          #planningView h4[onclick] { /* Keep targeting both in case h4 is used later */
-              cursor: pointer;
-              /* Removed position: relative and padding-left */
-          }
-          /* REVISED Style for toggle indicator */
-          #planningView h3[onclick] span.toggle-indicator,
-          #planningView h4[onclick] span.toggle-indicator {
-               /* Removed absolute positioning properties */
-               display: inline-block; /* Keep this */
-               font-weight: bold;    /* Keep this */
-               margin-right: 5px;    /* Add some space after the indicator */
-               /* Optional: Adjust color if desired */
-               /* color: #007bff; */
-          }
-          /* Style for the disabled constraints toggle label */
-          .toggle-disabled {
-              opacity: 0.6;  /* Make it appear faded */
-              color: #6c757d; /* Grey out the text */
-              cursor: not-allowed !important; /* Ensure 'not-allowed' cursor */
-          }
-          .toggle-disabled input[type="checkbox"] {
-               cursor: not-allowed !important; /* Apply to checkbox too */
-          }            
-        /* --- Styles specifically for SDM Forecasting Tool View --- */
-        #sdmForecastingView .input-section,
-        #sdmForecastingView .output-section {
-            margin-bottom: 30px;
-            padding: 15px;
-            border: 1px solid #eee; /* Add a light border */
-            border-radius: 4px;
-        }
+/* --- REVISED: Control column widths for Team Load Summary Table (Attempt 2) --- */
+#teamLoadSummaryTable thead th {
+        /* Base style if needed */
+}
+#teamLoadSummaryTable thead th:nth-child(1) { text-align: left; width: 10%; max-width: 30px} /* Team Name */
+#teamLoadSummaryTable thead th:nth-child(2), /* Funded HC */
+#teamLoadSummaryTable thead th:nth-child(3), /* Team BIS */
+#teamLoadSummaryTable thead th:nth-child(4), /* Away BIS */
+#teamLoadSummaryTable thead th:nth-child(5) { width: 8%; } /* Effective BIS */
+#teamLoadSummaryTable thead th:nth-child(6) { width: 12%; max-width: 40px; } /* Assigned ATL SDEs */
+#teamLoadSummaryTable thead th:nth-child(7) { width: 12%; max-width: 40px; } /* Scenario Capacity Limit */
+#teamLoadSummaryTable thead th:nth-child(8) { width: 12%; max-width: 40px; } /* Remaining Capacity (ATL) */
+#teamLoadSummaryTable thead th:nth-child(9) { width: 10%; } /* ATL Status */
+/* -------------------------------------------------------------------------- */
 
-        #sdmForecastingView .input-group {
-            margin-bottom: 15px; /* Increased spacing */
-        }
+    /* REVISED Style for clickable headers */
+    #planningView h3[onclick],
+    #planningView h4[onclick] { /* Keep targeting both in case h4 is used later */
+        cursor: pointer;
+        /* Removed position: relative and padding-left */
+    }
+    /* REVISED Style for toggle indicator */
+    #planningView h3[onclick] span.toggle-indicator,
+    #planningView h4[onclick] span.toggle-indicator {
+        /* Removed absolute positioning properties */
+        display: inline-block; /* Keep this */
+        font-weight: bold;    /* Keep this */
+        margin-right: 5px;    /* Add some space after the indicator */
+        /* Optional: Adjust color if desired */
+        /* color: #007bff; */
+    }
+    /* Style for the disabled constraints toggle label */
+    .toggle-disabled {
+        opacity: 0.6;  /* Make it appear faded */
+        color: #6c757d; /* Grey out the text */
+        cursor: not-allowed !important; /* Ensure 'not-allowed' cursor */
+    }
+    .toggle-disabled input[type="checkbox"] {
+        cursor: not-allowed !important; /* Apply to checkbox too */
+    }            
+/* --- Styles specifically for SDM Forecasting Tool View --- */
+#sdmForecastingView .input-section,
+#sdmForecastingView .output-section {
+    margin-bottom: 30px;
+    padding: 15px;
+    border: 1px solid #eee; /* Add a light border */
+    border-radius: 4px;
+}
 
-        #sdmForecastingView label {
-            display: block; /* Ensure label is on its own line */
-            margin-top: 10px;
-            font-weight: bold; /* Make label stand out */
-            margin-bottom: 3px; /* Space between label and input */
-        }
+#sdmForecastingView .input-group {
+    margin-bottom: 15px; /* Increased spacing */
+}
 
-        #sdmForecastingView input[type="number"] { /* Target number inputs */
-            width: 150px; /* Adjust width as needed */
-            padding: 8px;
-            margin-top: 0; /* Remove default top margin */
-            box-sizing: border-box; /* Include padding in width */
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
+#sdmForecastingView label {
+    display: block; /* Ensure label is on its own line */
+    margin-top: 10px;
+    font-weight: bold; /* Make label stand out */
+    margin-bottom: 3px; /* Space between label and input */
+}
 
-        #sdmForecastingView .help-text {
-            font-size: 0.9em;
-            color: #555;
-            margin-top: 4px; /* Space above help text */
-            margin-left: 5px; /* Indent slightly */
-        }
+#sdmForecastingView input[type="number"] { /* Target number inputs */
+    width: 150px; /* Adjust width as needed */
+    padding: 8px;
+    margin-top: 0; /* Remove default top margin */
+    box-sizing: border-box; /* Include padding in width */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
 
-        /* Style the info/summary divs if needed */
-        #sdmForecastingView .info,
-        #sdmForecastingView .summary {
-            margin-top: 10px;
-            font-weight: bold;
-            padding: 10px;
-            background-color: #e9ecef;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-        }
+#sdmForecastingView .help-text {
+    font-size: 0.9em;
+    color: #555;
+    margin-top: 4px; /* Space above help text */
+    margin-left: 5px; /* Indent slightly */
+}
 
-        /* Style tables within the view */
-        #sdmForecastingView table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            font-size: 0.9em; /* Slightly smaller font for tables */
-        }
+/* Style the info/summary divs if needed */
+#sdmForecastingView .info,
+#sdmForecastingView .summary {
+    margin-top: 10px;
+    font-weight: bold;
+    padding: 10px;
+    background-color: #e9ecef;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+}
 
-        #sdmForecastingView th,
-        #sdmForecastingView td {
-            border: 1px solid #ccc;
-            padding: 6px 8px; /* Adjust padding */
-            text-align: center;
-        }
-        #sdmForecastingView th {
-            background-color: #f2f2f2;
-            font-weight: bold;
-        }
+/* Style tables within the view */
+#sdmForecastingView table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 0.9em; /* Slightly smaller font for tables */
+}
 
-        #sdmForecastingView td.editable { /* Keep editable style */
-            background-color: #f9f9f9;
-            cursor: pointer;
-        }
+#sdmForecastingView th,
+#sdmForecastingView td {
+    border: 1px solid #ccc;
+    padding: 6px 8px; /* Adjust padding */
+    text-align: center;
+}
+#sdmForecastingView th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
 
-        /* Style the FAQ section */
-        #sdmForecastingView .faq-section {
-            margin-top: 40px;
-            border-top: 1px solid #ccc;
-            padding-top: 20px;
-        }
+#sdmForecastingView td.editable { /* Keep editable style */
+    background-color: #f9f9f9;
+    cursor: pointer;
+}
 
-        #sdmForecastingView .faq-item {
-            margin-bottom: 20px;
-        }
+/* Style the FAQ section */
+#sdmForecastingView .faq-section {
+    margin-top: 40px;
+    border-top: 1px solid #ccc;
+    padding-top: 20px;
+}
 
-        #sdmForecastingView .faq-item h4 {
-            margin-bottom: 5px; /* Adjust spacing */
-            color: #0056b3;
-        }
-        #sdmForecastingView .faq-item p,
-        #sdmForecastingView .faq-item ul,
-        #sdmForecastingView .faq-item ol {
-            font-size: 0.95em;
-            color: #333;
-            margin-left: 15px; /* Indent FAQ content */
-        }
-        /* --- End SDM Forecasting Tool Styles --- */          
+#sdmForecastingView .faq-item {
+    margin-bottom: 20px;
+}
 
-          /* Add any additional styles as needed */          
+#sdmForecastingView .faq-item h4 {
+    margin-bottom: 5px; /* Adjust spacing */
+    color: #0056b3;
+}
+#sdmForecastingView .faq-item p,
+#sdmForecastingView .faq-item ul,
+#sdmForecastingView .faq-item ol {
+    font-size: 0.95em;
+    color: #333;
+    margin-left: 15px; /* Indent FAQ content */
+}
+/* --- End SDM Forecasting Tool Styles --- */          
+
+    /* Add any additional styles as needed */          

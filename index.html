@@ -4,7 +4,11 @@
     <!-- Test changing file -->
     <meta charset="UTF-8">
     <title>Architecture Visualization Tool</title>
-    <!-- Include D3.js for visualization -->
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/12.3.2/markdown-it.min.js"></script>
@@ -24,24 +28,53 @@
 </head>
 <body>
 
-<!-- Updated Heading with ID -->
-<h1 id="pageTitle">Software Management Tools</h1>
-<p id="systemDescription">Load a previously saved system or create a new software system</p>
-
-<!-- Menu for loading systems 
-<div class="menu">
-    <button onclick="showSavedSystems()">Load Saved System</button>
+<!-- NEW Top Bar Structure -->
+<div id="topBar">
+    <span id="appTitle">Software Management Tools</span>
+    <div id="mainActions">
+        <!-- .menu and .edit-menu will be populated here by JavaScript or be static -->
+        <div class="menu"> <!-- Will be shown/hidden by JS -->
+            <button onclick="showSavedSystems()">Load Saved System</button>
+            <button onclick="createNewSystem()">Create New System</button>
+            <button id="deleteSystemButton" onclick="deleteSystem()">Delete System</button>
+            <button onclick="resetToDefaults()">Reset to Defaults</button>
+        </div>
+        <div class="edit-menu" style="display: none;"> <!-- Will be shown/hidden by JS -->
+            <button id="editSystemButton" onclick="enterEditMode()">Edit System</button>
+            <button id="viewOrgChartButton" onclick="showOrganogramView()">View Org Chart</button>
+            <button id="viewEngineerListButton" onclick="showEngineerTableView()">View Engineers in Org</button>
+            <button id="manageYearPlanButton" onclick="showPlanningView()">Manage Year Plan</button>
+            <button id="tuneCapacityButton" onclick="showCapacityConfigView()">Tune Capacity Constraints</button>
+            <button id="sdmForecastButton" onclick="showSdmForecastingView()">SDM Resource Forecasting</button>
+        </div>
+    </div>
+    <div id="globalNavButtons">
+        <!-- Return Home / Back buttons will be placed here.
+             Their display:none/block will still be controlled by JS -->
+        <button id="backToSystemViewButton" onclick="showSystemOverview()" style="display: none;">Back to System</button>
+        <button id="returnHomeButton" onclick="returnToHome()" style="display: none;">Home</button>
+    </div>
 </div>
--->
 
-<!-- Edit System Button -->
-<div class="edit-menu" style="display: none;">
-    <button id="editSystemButton" onclick="enterEditMode()">Edit System</button>
-    <button id="viewOrgChartButton" onclick="showOrganogramView()">View Org Chart</button>
-    <button id="viewEngineerListButton" onclick="showEngineerTableView()">View Engineers in Org</button>
-    <button id="manageYearPlanButton" onclick="showPlanningView()">Manage Year Plan</button>
-    <button id="tuneCapacityButton" onclick="showCapacityConfigView()">Tune Capacity Constraints</button>
-    <button id="sdmForecastButton" onclick="showSdmForecastingView()">SDM Resource Forecasting</button>    
+<!-- Main Page Content Area (original h1 and p are now here) -->
+<div style="margin: 0 20px;"> <!-- Added a wrapper for main content padding -->
+    <h1 id="pageTitle">Software Management Tools</h1>
+    <p id="systemDescription">Load a previously saved system or create a new software system</p>
+
+    <!-- Tool Documentation Section (as previously added) -->
+    <div id="toolDocumentationSection" style="margin-top: 20px; border: 1px solid #ccc; display: none; max-width: 90%; margin-left: auto; margin-right: auto;">
+        <h3 id="documentationHeader" style="cursor: pointer; margin: 0; padding: 10px; background-color: #e9ecef; border-bottom: 1px solid #ccc;" title="Click to expand/collapse documentation">
+            <span id="documentationToggleIndicator" class="toggle-indicator" style="font-weight:bold; margin-right:5px;">[+] </span>
+            Tool Documentation & Help
+        </h3>
+        <div id="documentationContent" style="display: none; padding: 15px; max-height: 450px; overflow-y: auto; background-color: #fdfdfd;">
+            <p><em>Loading documentation... Please ensure you have an internet connection to fetch the latest help content.</em></p>
+        </div>
+        <div id="docResizeHandle" style="height: 10px; background-color: #e0e0e0; cursor: ns-resize; border-top: 1px solid #ccc; display: none;"></div>
+    </div>
+
+    <!-- Visualization Section and other main view divs follow here AS THEY WERE -->
+    <!-- e.g., <div id="visualizationCarousel">...</div> -->
 </div>
 
 <!-- Visualization Section -->
@@ -124,13 +157,6 @@
     <button type="button" onclick="exitEditMode()">Cancel</button>
 </div>
 
-<!-- Menu for loading systems and creating new systems -->
-<div class="menu">
-    <button onclick="showSavedSystems()">Load Saved System</button>
-    <button onclick="createNewSystem()">Create New System</button>
-    <button id="deleteSystemButton" onclick="deleteSystem()">Delete System</button>    
-    <button onclick="resetToDefaults()">Reset to Defaults</button>    
-</div>
 <!-- Tool Documentation Section -->
 <div id="toolDocumentationSection" style="margin-top: 20px; border: 1px solid #ccc; display: none; max-width: 90%; margin-left: auto; margin-right: auto;">
     <h3 id="documentationHeader" style="cursor: pointer; margin: 0; padding: 10px; background-color: #e9ecef; border-bottom: 1px solid #ccc;" title="Click to expand/collapse documentation">
@@ -143,9 +169,6 @@
     <!-- NEW: Resize Handle -->
     <div id="docResizeHandle" style="height: 10px; background-color: #e0e0e0; cursor: ns-resize; border-top: 1px solid #ccc; display: none;"></div>
 </div>
-<!-- Return to Home Button -->
-<button id="backToSystemViewButton" onclick="showSystemOverview()" style="display: none; margin-right: 10px;">Back to System Overview</button>
-<button id="returnHomeButton" onclick="returnToHome()" style="display: none;">Home Page</button>
 
 <!-- added some new views 8th april 25 -->
 <div id="organogramView" style="display:none; margin-top: 20px;">
