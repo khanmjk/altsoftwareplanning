@@ -1,10 +1,5 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <!-- Test changing file -->
-    <meta charset="UTF-8">
-    <title>Architecture Visualization Tool</title>
-    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -23,685 +18,686 @@
     <script src="js/editSystem.js"></script>
     <script src="js/orgView.js"></script>
     <script src="js/yearPlanning.js"></script>
-    <script src="js/capacityTuning.js"></script>
-    
-</head>
-<body>
+    <script src="js/capacityTuning.js"></script>        
 
-<!-- NEW Top Bar Structure -->
-<div id="topBar">
-    <span id="appTitle">Software Management Tools</span>
-    <div id="mainActions">
-        <!-- .menu and .edit-menu will be populated here by JavaScript or be static -->
-        <div class="menu"> <!-- Will be shown/hidden by JS -->
-            <button onclick="showSavedSystems()">Load Saved System</button>
-            <button onclick="createNewSystem()">Create New System</button>
-            <button id="deleteSystemButton" onclick="deleteSystem()">Delete System</button>
-            <button onclick="resetToDefaults()">Reset to Defaults</button>
-        </div>
-        <div class="edit-menu" style="display: none;"> <!-- Will be shown/hidden by JS -->
-            <button id="editSystemButton" onclick="enterEditMode()">Edit System</button>
-            <button id="viewOrgChartButton" onclick="showOrganogramView()">View Org Chart</button>
-            <button id="viewEngineerListButton" onclick="showEngineerTableView()">View Engineers in Org</button>
-            <button id="manageYearPlanButton" onclick="showPlanningView()">Manage Year Plan</button>
-            <button id="tuneCapacityButton" onclick="showCapacityConfigView()">Tune Capacity Constraints</button>
-            <button id="sdmForecastButton" onclick="showSdmForecastingView()">SDM Resource Forecasting</button>
-        </div>
-    </div>
-    <div id="globalNavButtons">
-        <!-- Return Home / Back buttons will be placed here.
-             Their display:none/block will still be controlled by JS -->
-        <button id="backToSystemViewButton" onclick="showSystemOverview()" style="display: none;">Back to System</button>
-        <button id="returnHomeButton" onclick="returnToHome()" style="display: none;">Home</button>
-    </div>
-</div>
-
-<!-- Main Page Content Area (original h1 and p are now here) -->
-<div style="margin: 0 20px;"> <!-- Added a wrapper for main content padding -->
-    <h1 id="pageTitle">Software Management Tools</h1>
-    <p id="systemDescription">Load a previously saved system or create a new software system</p>
-
-    <!-- Tool Documentation Section (as previously added) -->
-    <div id="toolDocumentationSection" style="margin-top: 20px; border: 1px solid #ccc; display: none; max-width: 90%; margin-left: auto; margin-right: auto;">
-        <h3 id="documentationHeader" style="cursor: pointer; margin: 0; padding: 10px; background-color: #e9ecef; border-bottom: 1px solid #ccc;" title="Click to expand/collapse documentation">
-            <span id="documentationToggleIndicator" class="toggle-indicator" style="font-weight:bold; margin-right:5px;">[+] </span>
-            Tool Documentation & Help
-        </h3>
-        <div id="documentationContent" style="display: none; padding: 15px; max-height: 450px; overflow-y: auto; background-color: #fdfdfd;">
-            <p><em>Loading documentation... Please ensure you have an internet connection to fetch the latest help content.</em></p>
-        </div>
-        <div id="docResizeHandle" style="height: 10px; background-color: #e0e0e0; cursor: ns-resize; border-top: 1px solid #ccc; display: none;"></div>
-    </div>
-
-    <!-- Visualization Section and other main view divs follow here AS THEY WERE -->
-    <!-- e.g., <div id="visualizationCarousel">...</div> -->
-</div>
-
-<!-- Visualization Section -->
-<div id="visualizationCarousel" style="position: relative; max-width: 800px; margin: 20px auto; border: 1px solid #ddd; padding: 10px; display:none;"> <div style="text-align: center; margin-bottom: 10px;">
-        <button onclick="navigateVisualizations(-1)">&lt; Previous</button>
-        <span id="visualizationTitle" style="margin: 0 15px; font-weight: bold; font-size: 1.1em;">System Visualization</span> <button onclick="navigateVisualizations(1)">Next &gt;</button>
-    </div>
-
-    <div id="visualization" class="carousel-item" style="display: block;"> <svg id="systemSvg" style="width: 100%; height: 600px; border: 1px solid #ccc;"></svg>
-        <div id="legend" class="legend"></div>
-    </div>
-
-    <div id="teamVisualization" class="carousel-item" style="display: none;">
-        <svg id="teamSvg" style="width: 100%; height: 600px; border: 1px solid #ccc;"></svg>
-        <div id="teamLegend" class="legend"></div>
-    </div>
-
-    <div id="serviceRelationshipsVisualization" class="carousel-item" style="display: none;">
-        <select id="serviceSelection" onchange="updateServiceVisualization()" style="margin-bottom: 5px; display: block; margin-left: auto; margin-right: auto;">
-            </select>
-        <svg id="serviceSvg" style="width: 100%; height: 600px; border: 1px solid #ccc;"></svg>
-        <div id="serviceLegend" class="legend"></div>
-    </div>
-
-    <div id="dependencyVisualization" class="carousel-item" style="display: none;">
-        <select id="dependencyServiceSelection" onchange="updateDependencyVisualization()" style="margin-bottom: 5px; display: block; margin-left: auto; margin-right: auto;">
-            </select>
-        <svg id="dependencySvg" style="width: 100%; height: 600px; border: 1px solid #ccc;"></svg>
-        <div id="dependencyLegend" class="legend"></div>
-    </div>
-
-</div>
-<div id="serviceDependenciesTable" style="max-width: 90%; margin: 20px auto; display:none;">
-    <h2>Service Dependencies Table</h2>
-    <div style="overflow-x: auto;"> <table style="width: 100%; border-collapse: collapse;">
-            <thead>
-            <tr>
-                <th>Service Name</th>
-                <th>Description</th>
-                <th>Owning Team</th>
-                <th>Upstream Dependencies (Services Depended On)</th>
-                <th>Platform Dependencies</th>
-                <th>Downstream Dependencies (Services That Depend On This Service)</th>
-            </tr>
-            </thead>
-            <tbody>
-                </tbody>
-        </table>
-    </div>
-</div>
-
-
-<!-- System Edit Form -->
-<div id="systemEditForm" style="display:none;">
-    <h2>Edit System</h2>
-    <form id="editSystemForm">
-        <label>System Name:</label><br>
-        <input type="text" id="systemNameInput"><br><br>
-        <label>System Description:</label><br>
-        <textarea id="systemDescriptionInput" rows="3" cols="50"></textarea><br><br>
-        <button type="button" onclick="saveSystemDetails()">Save System Details</button>
-    </form>
-
-    <!-- Services Management Section -->
-    <h3>Services</h3>
-    <div id="editServicesManagement">
-        <!-- Services will be listed here -->
-    </div>
-    <button type="button" onclick="addNewService()">Add New Service</button><br><br>
-    
-    <!-- Teams Management Section -->
-    <h3>Teams</h3>
-    <div id="teamsManagement">
-        <!-- Teams will be listed here -->
-    </div>
-    <button id="addNewTeamButton" type="button" onclick="addNewTeam()">Add New Team</button><br><br>
-
-    <!-- Buttons to Save or Cancel -->
-    <button type="button" onclick="saveAllChanges()">Save All Changes</button>
-    <button type="button" onclick="exitEditMode()">Cancel</button>
-</div>
-
-<!-- Tool Documentation Section -->
-<div id="toolDocumentationSection" style="margin-top: 20px; border: 1px solid #ccc; display: none; max-width: 90%; margin-left: auto; margin-right: auto;">
-    <h3 id="documentationHeader" style="cursor: pointer; margin: 0; padding: 10px; background-color: #e9ecef; border-bottom: 1px solid #ccc;" title="Click to expand/collapse documentation">
-        <span id="documentationToggleIndicator" class="toggle-indicator" style="font-weight:bold; margin-right:5px;">[+] </span>
-        Tool Documentation & Help
-    </h3>
-    <div id="documentationContent" style="display: none; padding: 15px; max-height: 450px; overflow-y: auto; background-color: #fdfdfd;">
-        <p><em>Loading documentation... Please ensure you have an internet connection to fetch the latest help content.</em></p>
-    </div>
-    <!-- NEW: Resize Handle -->
-    <div id="docResizeHandle" style="height: 10px; background-color: #e0e0e0; cursor: ns-resize; border-top: 1px solid #ccc; display: none;"></div>
-</div>
-
-<!-- added some new views 8th april 25 -->
-<div id="organogramView" style="display:none; margin-top: 20px;">
-    <div id="organogramToolbar" style="margin-bottom: 10px;">
-        </div>
-    <div id="organogramContent" style="border: 1px solid #ccc; padding: 15px;">
+    <head>
+        <!-- Test changing file -->
+        <meta charset="UTF-8">
+    </head>
+    <body>
+        <!-- NEW Top Bar Structure -->
+        <div id="topBar">
+            <span id="appTitle">Software Management Tools</span>
+            <div id="mainActions">
+                <!-- .menu and .edit-menu will be populated here by JavaScript or be static -->
+                <div class="menu"> <!-- Will be shown/hidden by JS -->
+                    <button onclick="showSavedSystems()">Load Saved System</button>
+                    <button onclick="createNewSystem()">Create New System</button>
+                    <button id="deleteSystemButton" onclick="deleteSystem()">Delete System</button>
+                    <button onclick="resetToDefaults()">Reset to Defaults</button>
+                </div>
+                <div class="edit-menu" style="display: none;"> <!-- Will be shown/hidden by JS -->
+                    <button id="editSystemButton" onclick="enterEditMode()">Edit System</button>
+                    <button id="viewOrgChartButton" onclick="showOrganogramView()">View Org Chart</button>
+                    <button id="viewEngineerListButton" onclick="showEngineerTableView()">View Engineers in Org</button>
+                    <button id="manageYearPlanButton" onclick="showPlanningView()">Manage Year Plan</button>
+                    <button id="tuneCapacityButton" onclick="showCapacityConfigView()">Tune Capacity Constraints</button>
+                    <button id="sdmForecastButton" onclick="showSdmForecastingView()">SDM Resource Forecasting</button>
+                </div>
+            </div>
+            <div id="globalNavButtons">
+                <!-- Return Home / Back buttons will be placed here.
+                    Their display:none/block will still be controlled by JS -->
+                <button id="backToSystemViewButton" onclick="showSystemOverview()" style="display: none;">Back to System</button>
+                <button id="returnHomeButton" onclick="returnToHome()" style="display: none;">Home</button>
+            </div>
         </div>
 
-    <!-- Team Breakdown Table -->
-    <div id="teamBreakdown" style="margin-top: 30px;">
-        <h2>Team Breakdown</h2>
-        <p id="levelKey" style="font-size: 0.9em; color: #555; margin-bottom: 10px;"></p> <table id="teamTable">
-              <thead>
-                  <!-- Headers will be generated by JS -->
-              </thead>
-              <tbody>
-                  <!-- Rows will be generated by JS -->
-              </tbody>
-              <tfoot>
-                  <!-- Totals will be generated by JS -->
-              </tfoot>
-        </table>
-    </div>
-</div>
+        <!-- Main Page Content Area Wrapper -->
+        <div class="main-content-area"> 
+            <h1 id="pageTitle">Software Management Tools</h1>
+            <p id="systemDescription">Load a previously saved system or create a new software system</p>
 
-<div id="engineerTableView" style="display:none; margin-top: 20px;">
-    <h2 id="engineerTableHeading">Engineer Resource List</h2> <p style="font-size: 0.9em; color: #555;">Click column headers to sort.</p>
-    <table id="engineerTable" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-        <thead>
-            <tr>
-                <th data-sort-key="name" style="cursor: pointer; border: 1px solid #ccc; padding: 8px; text-align: left;">Engineer Name &#x2195;</th>
-                <th data-sort-key="level" style="cursor: pointer; border: 1px solid #ccc; padding: 8px; text-align: left;">Level &#x2195;</th>
-                <th data-sort-key="teamName" style="cursor: pointer; border: 1px solid #ccc; padding: 8px; text-align: left;">Team Name &#x2195;</th>
-                <th data-sort-key="sdmName" style="cursor: pointer; border: 1px solid #ccc; padding: 8px; text-align: left;">SDM Name &#x2195;</th>
-                <th data-sort-key="srMgrName" style="cursor: pointer; border: 1px solid #ccc; padding: 8px; text-align: left;">Senior Manager Name &#x2195;</th>
-            </tr>
-        </thead>
-        <tbody>
-            </tbody>
-    </table>
-</div>
+            <!-- Tool Documentation Section (as previously added) -->
+            <div id="toolDocumentationSection" style="margin-top: 20px; border: 1px solid #ccc; display: none; max-width: 90%; margin-left: auto; margin-right: auto;">
+                <h3 id="documentationHeader" style="cursor: pointer; margin: 0; padding: 10px; background-color: #e9ecef; border-bottom: 1px solid #ccc;" title="Click to expand/collapse documentation">
+                    <span id="documentationToggleIndicator" class="toggle-indicator" style="font-weight:bold; margin-right:5px;">[+] </span>
+                    Tool Documentation & Help
+                </h3>
+                <div id="documentationContent" style="display: none; padding: 15px; max-height: 450px; overflow-y: auto; background-color: #fdfdfd;">
+                    <p><em>Loading documentation... Please ensure you have an internet connection to fetch the latest help content.</em></p>
+                </div>
+                <div id="docResizeHandle" style="height: 10px; background-color: #e0e0e0; cursor: ns-resize; border-top: 1px solid #ccc; display: none;"></div>
+            </div>
 
-<div id="planningView" style="display:none; margin-top: 20px;">
-    <div id="planningCapacitySummary" style="margin-bottom: 15px; font-weight: bold;">
+            <!-- Visualization Section and other main view divs follow here AS THEY WERE -->
+            <!-- e.g., <div id="visualizationCarousel">...</div> -->
+            <!-- Visualization Section -->
+            <div id="visualizationCarousel" style="position: relative; max-width: 800px; margin: 20px auto; border: 1px solid #ddd; padding: 10px; display:none;"> <div style="text-align: center; margin-bottom: 10px;">
+                    <button onclick="navigateVisualizations(-1)">&lt; Previous</button>
+                    <span id="visualizationTitle" style="margin: 0 15px; font-weight: bold; font-size: 1.1em;">System Visualization</span> <button onclick="navigateVisualizations(1)">Next &gt;</button>
+                </div>
+
+                <div id="visualization" class="carousel-item" style="display: block;"> <svg id="systemSvg" style="width: 100%; height: 600px; border: 1px solid #ccc;"></svg>
+                    <div id="legend" class="legend"></div>
+                </div>
+
+                <div id="teamVisualization" class="carousel-item" style="display: none;">
+                    <svg id="teamSvg" style="width: 100%; height: 600px; border: 1px solid #ccc;"></svg>
+                    <div id="teamLegend" class="legend"></div>
+                </div>
+
+                <div id="serviceRelationshipsVisualization" class="carousel-item" style="display: none;">
+                    <select id="serviceSelection" onchange="updateServiceVisualization()" style="margin-bottom: 5px; display: block; margin-left: auto; margin-right: auto;">
+                        </select>
+                    <svg id="serviceSvg" style="width: 100%; height: 600px; border: 1px solid #ccc;"></svg>
+                    <div id="serviceLegend" class="legend"></div>
+                </div>
+
+                <div id="dependencyVisualization" class="carousel-item" style="display: none;">
+                    <select id="dependencyServiceSelection" onchange="updateDependencyVisualization()" style="margin-bottom: 5px; display: block; margin-left: auto; margin-right: auto;">
+                        </select>
+                    <svg id="dependencySvg" style="width: 100%; height: 600px; border: 1px solid #ccc;"></svg>
+                    <div id="dependencyLegend" class="legend"></div>
+                </div>
+
+            </div>
+            <div id="serviceDependenciesTable" style="max-width: 90%; margin: 20px auto; display:none;">
+                <h2>Service Dependencies Table</h2>
+                <div style="overflow-x: auto;"> <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                        <tr>
+                            <th>Service Name</th>
+                            <th>Description</th>
+                            <th>Owning Team</th>
+                            <th>Upstream Dependencies (Services Depended On)</th>
+                            <th>Platform Dependencies</th>
+                            <th>Downstream Dependencies (Services That Depend On This Service)</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+
+            <!-- System Edit Form -->
+            <div id="systemEditForm" style="display:none;">
+                <h2>Edit System</h2>
+                <form id="editSystemForm">
+                    <label>System Name:</label><br>
+                    <input type="text" id="systemNameInput"><br><br>
+                    <label>System Description:</label><br>
+                    <textarea id="systemDescriptionInput" rows="3" cols="50"></textarea><br><br>
+                    <button type="button" onclick="saveSystemDetails()">Save System Details</button>
+                </form>
+
+                <!-- Services Management Section -->
+                <h3>Services</h3>
+                <div id="editServicesManagement">
+                    <!-- Services will be listed here -->
+                </div>
+                <button type="button" onclick="addNewService()">Add New Service</button><br><br>
+                
+                <!-- Teams Management Section -->
+                <h3>Teams</h3>
+                <div id="teamsManagement">
+                    <!-- Teams will be listed here -->
+                </div>
+                <button id="addNewTeamButton" type="button" onclick="addNewTeam()">Add New Team</button><br><br>
+
+                <!-- Buttons to Save or Cancel -->
+                <button type="button" onclick="saveAllChanges()">Save All Changes</button>
+                <button type="button" onclick="exitEditMode()">Cancel</button>
+            </div>
+
+            <!-- Tool Documentation Section -->
+            <div id="toolDocumentationSection" style="margin-top: 20px; border: 1px solid #ccc; display: none; max-width: 90%; margin-left: auto; margin-right: auto;">
+                <h3 id="documentationHeader" style="cursor: pointer; margin: 0; padding: 10px; background-color: #e9ecef; border-bottom: 1px solid #ccc;" title="Click to expand/collapse documentation">
+                    <span id="documentationToggleIndicator" class="toggle-indicator" style="font-weight:bold; margin-right:5px;">[+] </span>
+                    Tool Documentation & Help
+                </h3>
+                <div id="documentationContent" style="display: none; padding: 15px; max-height: 450px; overflow-y: auto; background-color: #fdfdfd;">
+                    <p><em>Loading documentation... Please ensure you have an internet connection to fetch the latest help content.</em></p>
+                </div>
+                <!-- NEW: Resize Handle -->
+                <div id="docResizeHandle" style="height: 10px; background-color: #e0e0e0; cursor: ns-resize; border-top: 1px solid #ccc; display: none;"></div>
+            </div>
+
+            <!-- added some new views 8th april 25 -->
+            <div id="organogramView" style="display:none; margin-top: 20px;">
+                <div id="organogramToolbar" style="margin-bottom: 10px;">
+                    </div>
+                <div id="organogramContent" style="border: 1px solid #ccc; padding: 15px;">
+                    </div>
+
+                <!-- Team Breakdown Table -->
+                <div id="teamBreakdown" style="margin-top: 30px;">
+                    <h2>Team Breakdown</h2>
+                    <p id="levelKey" style="font-size: 0.9em; color: #555; margin-bottom: 10px;"></p> <table id="teamTable">
+                        <thead>
+                            <!-- Headers will be generated by JS -->
+                        </thead>
+                        <tbody>
+                            <!-- Rows will be generated by JS -->
+                        </tbody>
+                        <tfoot>
+                            <!-- Totals will be generated by JS -->
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <div id="engineerTableView" style="display:none; margin-top: 20px;">
+                <h2 id="engineerTableHeading">Engineer Resource List</h2> <p style="font-size: 0.9em; color: #555;">Click column headers to sort.</p>
+                <table id="engineerTable" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                    <thead>
+                        <tr>
+                            <th data-sort-key="name" style="cursor: pointer; border: 1px solid #ccc; padding: 8px; text-align: left;">Engineer Name &#x2195;</th>
+                            <th data-sort-key="level" style="cursor: pointer; border: 1px solid #ccc; padding: 8px; text-align: left;">Level &#x2195;</th>
+                            <th data-sort-key="teamName" style="cursor: pointer; border: 1px solid #ccc; padding: 8px; text-align: left;">Team Name &#x2195;</th>
+                            <th data-sort-key="sdmName" style="cursor: pointer; border: 1px solid #ccc; padding: 8px; text-align: left;">SDM Name &#x2195;</th>
+                            <th data-sort-key="srMgrName" style="cursor: pointer; border: 1px solid #ccc; padding: 8px; text-align: left;">Senior Manager Name &#x2195;</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </div>
+
+            <div id="planningView" style="display:none; margin-top: 20px;">
+                <div id="planningCapacitySummary" style="margin-bottom: 15px; font-weight: bold;">
+                    </div>
+
+                <div id="planningScenarioControl" style="margin-bottom: 15px; padding: 8px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">
+                    </div>
+
+                <div id="teamLoadSummarySection" style="margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px;">
+                    <h4 onclick="toggleCollapsibleSection('teamLoadSummaryContent', 'teamLoadSummaryToggle')"
+                        style="cursor: pointer; margin: 0; padding: 10px; background-color: #e9ecef; border-bottom: 1px solid #ccc;"
+                        title="Click to expand/collapse team load summary">
+                        <span id="teamLoadSummaryToggle" class="toggle-indicator">(+) </span> Team Load Summary (for ATL Initiatives)
+                    </h4>
+                    <div id="teamLoadSummaryContent" style="display: none; padding: 10px;">
+                        <p style="font-size: 0.9em; color: #555;">Shows team load based *only* on initiatives currently Above The Line (ATL) according to the selected scenario below.</p>
+                        <table id="teamLoadSummaryTable" style="margin: 0 auto; border-collapse: collapse; font-size: 0.9em;">
+                            <thead>
+                                <tr style="background-color: #f2f2f2;">
+                                    <th style="border: 1px solid #ccc; padding: 5px;">Team Name</th>
+                                    <th style="border: 1px solid #ccc; padding: 5px;" title="Finance Approved Budget">Funded HC</th>
+                                    <th style="border: 1px solid #ccc; padding: 5px;" title="Actual Team Members">Team BIS</th>
+                                    <th style="border: 1px solid #ccc; padding: 5px;" title="Borrowed/Away Members">Away BIS</th>
+                                    <th style="border: 1px solid #ccc; padding: 5px;" title="Team BIS + Away BIS">Effective BIS</th>
+                                    <th style="border: 1px solid #ccc; padding: 5px;" title="SDEs assigned to this team from ATL initiatives only">Assigned ATL SDEs</th>
+                                    <th style="border: 1px solid #ccc; padding: 5px;" title="Team's capacity based on selected scenario button below">Scenario Capacity Limit</th>
+                                    <th style="border: 1px solid #ccc; padding: 5px;" title="Scenario Capacity Limit - Assigned ATL SDEs">Remaining Capacity (ATL)</th>
+                                    <th style="border: 1px solid #ccc; padding: 5px;" title="Load status for ATL work based on Scenario Capacity Limit">ATL Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="teamLoadSummaryTableBody">
+                                </tbody>
+                            <tfoot id="teamLoadSummaryTableFoot" style="font-weight: bold;">
+                                </tfoot>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="planningTableContainer">
+                    </div>
+                <div id="addInitiativeSection" style="margin-top: 20px; padding: 15px; border: 1px solid #ccc;">
+                    <h3 onclick="toggleCollapsibleSection('addInitiativeContent', 'addInitiativeToggle')" title="Click to expand/collapse">
+                        <span id="addInitiativeToggle" class="toggle-indicator">(+) </span> Add New Initiative
+                    </h3>
+                    
+                    <div id="addInitiativeContent" style="display: none;"> 
+                    <div style="margin-bottom: 10px;">
+                        <label for="newInitiativeTitle" style="display: block;">Title:</label>
+                        <input type="text" id="newInitiativeTitle" placeholder="Initiative Title" style="width: 90%;">
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <label for="newInitiativeDescription" style="display: block;">Description:</label>
+                        <textarea id="newInitiativeDescription" placeholder="Description" rows="2" style="width: 90%;"></textarea>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <label for="newInitiativeGoalId" style="display: block;">Related Business Goal ID (Optional):</label>
+                        <input type="text" id="newInitiativeGoalId" placeholder="Optional: Business Goal ID" style="width: 90%;">
+                    </div>
+            
+                    <hr>
+                    <h4>Team Assignments:</h4>
+                    <div id="newInitiativeAssignmentsDisplay" style="margin-bottom: 10px; min-height: 30px; background-color: #f8f9fa; padding: 5px; border: 1px solid #eee;">
+                    </div>
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <label for="newInitiativeTeamSelect" style="margin-right: 5px;">Team:</label>
+                        <select id="newInitiativeTeamSelect" style="margin-right: 10px;">
+                            <option value="">-- Select Team --</option>
+                        </select>
+                        <label for="newInitiativeSdeYears" style="margin-right: 5px;">SDE Years:</label>
+                        <input type="number" id="newInitiativeSdeYears" step="0.25" min="0" placeholder="e.g., 1.5" style="width: 80px; margin-right: 10px;">
+                        <button type="button" id="addTeamAssignmentButton">Add Assignment</button>
+                    </div>
+            
+                    <hr>
+                    <button type="button" id="addInitiativeButton" style="padding: 10px 15px; font-size: 16px; background-color: #28a745; color: white; border: none; cursor: pointer;">Add Initiative to Plan</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="capacityConfigView" style="display:none; margin-top: 20px; max-width: 90%; margin-left: auto; margin-right: auto;"></div>
+            <div id="sdmForecastingView" style="display:none; margin-top: 20px; max-width: 90%; margin-left: auto; margin-right: auto;"></div>
+
         </div>
 
-    <div id="planningScenarioControl" style="margin-bottom: 15px; padding: 8px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">
-        </div>
+        <script>
 
-    <div id="teamLoadSummarySection" style="margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px;">
-        <h4 onclick="toggleCollapsibleSection('teamLoadSummaryContent', 'teamLoadSummaryToggle')"
-            style="cursor: pointer; margin: 0; padding: 10px; background-color: #e9ecef; border-bottom: 1px solid #ccc;"
-            title="Click to expand/collapse team load summary">
-            <span id="teamLoadSummaryToggle" class="toggle-indicator">(+) </span> Team Load Summary (for ATL Initiatives)
-        </h4>
-        <div id="teamLoadSummaryContent" style="display: none; padding: 10px;">
-             <p style="font-size: 0.9em; color: #555;">Shows team load based *only* on initiatives currently Above The Line (ATL) according to the selected scenario below.</p>
-             <table id="teamLoadSummaryTable" style="margin: 0 auto; border-collapse: collapse; font-size: 0.9em;">
-                 <thead>
-                     <tr style="background-color: #f2f2f2;">
-                         <th style="border: 1px solid #ccc; padding: 5px;">Team Name</th>
-                         <th style="border: 1px solid #ccc; padding: 5px;" title="Finance Approved Budget">Funded HC</th>
-                         <th style="border: 1px solid #ccc; padding: 5px;" title="Actual Team Members">Team BIS</th>
-                         <th style="border: 1px solid #ccc; padding: 5px;" title="Borrowed/Away Members">Away BIS</th>
-                         <th style="border: 1px solid #ccc; padding: 5px;" title="Team BIS + Away BIS">Effective BIS</th>
-                         <th style="border: 1px solid #ccc; padding: 5px;" title="SDEs assigned to this team from ATL initiatives only">Assigned ATL SDEs</th>
-                         <th style="border: 1px solid #ccc; padding: 5px;" title="Team's capacity based on selected scenario button below">Scenario Capacity Limit</th>
-                         <th style="border: 1px solid #ccc; padding: 5px;" title="Scenario Capacity Limit - Assigned ATL SDEs">Remaining Capacity (ATL)</th>
-                         <th style="border: 1px solid #ccc; padding: 5px;" title="Load status for ATL work based on Scenario Capacity Limit">ATL Status</th>
-                     </tr>
-                 </thead>
-                 <tbody id="teamLoadSummaryTableBody">
-                     </tbody>
-                 <tfoot id="teamLoadSummaryTableFoot" style="font-weight: bold;">
-                      </tfoot>
-             </table>
-        </div>
-    </div>
+        /* JavaScript Code */
 
-    <div id="planningTableContainer">
-        </div>
-    <div id="addInitiativeSection" style="margin-top: 20px; padding: 15px; border: 1px solid #ccc;">
-         <h3 onclick="toggleCollapsibleSection('addInitiativeContent', 'addInitiativeToggle')" title="Click to expand/collapse">
-             <span id="addInitiativeToggle" class="toggle-indicator">(+) </span> Add New Initiative
-        </h3>
-        
-        <div id="addInitiativeContent" style="display: none;"> 
-          <div style="margin-bottom: 10px;">
-              <label for="newInitiativeTitle" style="display: block;">Title:</label>
-              <input type="text" id="newInitiativeTitle" placeholder="Initiative Title" style="width: 90%;">
-          </div>
-          <div style="margin-bottom: 10px;">
-              <label for="newInitiativeDescription" style="display: block;">Description:</label>
-              <textarea id="newInitiativeDescription" placeholder="Description" rows="2" style="width: 90%;"></textarea>
-          </div>
-          <div style="margin-bottom: 10px;">
-              <label for="newInitiativeGoalId" style="display: block;">Related Business Goal ID (Optional):</label>
-              <input type="text" id="newInitiativeGoalId" placeholder="Optional: Business Goal ID" style="width: 90%;">
-          </div>
-  
-          <hr>
-          <h4>Team Assignments:</h4>
-          <div id="newInitiativeAssignmentsDisplay" style="margin-bottom: 10px; min-height: 30px; background-color: #f8f9fa; padding: 5px; border: 1px solid #eee;">
-          </div>
-          <div style="display: flex; align-items: center; margin-bottom: 10px;">
-               <label for="newInitiativeTeamSelect" style="margin-right: 5px;">Team:</label>
-               <select id="newInitiativeTeamSelect" style="margin-right: 10px;">
-                   <option value="">-- Select Team --</option>
-               </select>
-               <label for="newInitiativeSdeYears" style="margin-right: 5px;">SDE Years:</label>
-               <input type="number" id="newInitiativeSdeYears" step="0.25" min="0" placeholder="e.g., 1.5" style="width: 80px; margin-right: 10px;">
-               <button type="button" id="addTeamAssignmentButton">Add Assignment</button>
-          </div>
-  
-          <hr>
-          <button type="button" id="addInitiativeButton" style="padding: 10px 15px; font-size: 16px; background-color: #28a745; color: white; border: none; cursor: pointer;">Add Initiative to Plan</button>
-        </div>
-    </div>
-</div>
+        /**
+         * Fetches README.md, converts Markdown to HTML, displays it,
+         * and handles internal anchor link scrolling.
+         * Uses custom slugify for markdown-it-anchor.
+         */
+        async function loadAndDisplayDocumentation() {
+            const contentDiv = document.getElementById('documentationContent');
+            if (!contentDiv) {
+                console.error("LAD_SLUGIFY: Documentation content div not found.");
+                return;
+            }
+            console.log("LAD_SLUGIFY: Attempting to load documentation.");
 
-<div id="capacityConfigView" style="display:none; margin-top: 20px; max-width: 90%; margin-left: auto; margin-right: auto;"></div>
-<div id="sdmForecastingView" style="display:none; margin-top: 20px; max-width: 90%; margin-left: auto; margin-right: auto;"></div>
+            const readmeUrl = 'https://raw.githubusercontent.com/khanmjk/altsoftwareplanning/refs/heads/main/README.md';
 
-<script>
+            // --- CRITICAL LIBRARY CHECK ---
+            if (typeof window.markdownit === 'undefined') {
+                const errorMsg = "LAD_SLUGIFY: FATAL - window.markdownit is UNDEFINED. Cannot render documentation.";
+                console.error(errorMsg);
+                contentDiv.innerHTML = `<p style="color:red;">${errorMsg}</p>`;
+                return;
+            } else {
+                console.log("LAD_SLUGIFY: window.markdownit is DEFINED.");
+            }
 
-/* JavaScript Code */
+            let useAnchorPlugin = false;
+            if (typeof window.markdownItAnchor === 'undefined') {
+                console.warn("LAD_SLUGIFY: window.markdownItAnchor is UNDEFINED. Links may not function.");
+            } else {
+                console.log("LAD_SLUGIFY: window.markdownItAnchor is DEFINED.");
+                useAnchorPlugin = true;
+            }
+            // --- END CRITICAL LIBRARY CHECK ---
 
-/**
- * Fetches README.md, converts Markdown to HTML, displays it,
- * and handles internal anchor link scrolling.
- * Uses custom slugify for markdown-it-anchor.
- */
-async function loadAndDisplayDocumentation() {
-    const contentDiv = document.getElementById('documentationContent');
-    if (!contentDiv) {
-        console.error("LAD_SLUGIFY: Documentation content div not found.");
-        return;
-    }
-    console.log("LAD_SLUGIFY: Attempting to load documentation.");
+            contentDiv.innerHTML = '<p><em>Fetching latest documentation from GitHub...</em></p>';
 
-    const readmeUrl = 'https://raw.githubusercontent.com/khanmjk/altsoftwareplanning/refs/heads/main/README.md';
+            try {
+                const response = await fetch(readmeUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status} while fetching README.`);
+                }
+                const markdownText = await response.text();
+                console.log("LAD_SLUGIFY: Successfully fetched README.md");
 
-    // --- CRITICAL LIBRARY CHECK ---
-    if (typeof window.markdownit === 'undefined') {
-        const errorMsg = "LAD_SLUGIFY: FATAL - window.markdownit is UNDEFINED. Cannot render documentation.";
-        console.error(errorMsg);
-        contentDiv.innerHTML = `<p style="color:red;">${errorMsg}</p>`;
-        return;
-    } else {
-        console.log("LAD_SLUGIFY: window.markdownit is DEFINED.");
-    }
+                let md = window.markdownit({
+                    html: true,
+                    linkify: true,
+                    typographer: true
+                });
 
-    let useAnchorPlugin = false;
-    if (typeof window.markdownItAnchor === 'undefined') {
-        console.warn("LAD_SLUGIFY: window.markdownItAnchor is UNDEFINED. Links may not function.");
-    } else {
-        console.log("LAD_SLUGIFY: window.markdownItAnchor is DEFINED.");
-        useAnchorPlugin = true;
-    }
-    // --- END CRITICAL LIBRARY CHECK ---
+                if (useAnchorPlugin) {
+                    md = md.use(window.markdownItAnchor, {
+                        permalink: window.markdownItAnchor.permalink.headerLink(),
+                        level: [1, 2, 3, 4, 5, 6],
+                        slugify: s => customSlugify(s) // *** USE OUR CUSTOM SLUGIFY FUNCTION ***
+                    });
+                    console.log("LAD_SLUGIFY: markdown-it-anchor plugin applied with custom slugify.");
+                }
 
-    contentDiv.innerHTML = '<p><em>Fetching latest documentation from GitHub...</em></p>';
+                const htmlContent = md.render(markdownText);
+                contentDiv.innerHTML = htmlContent;
+                console.log("LAD_SLUGIFY: Documentation rendered.");
 
-    try {
-        const response = await fetch(readmeUrl);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status} while fetching README.`);
+                if (useAnchorPlugin) {
+                    const internalLinks = contentDiv.querySelectorAll('a[href^="#"]');
+                    internalLinks.forEach(link => {
+                        link.addEventListener('click', function(event) {
+                            event.preventDefault();
+                            const targetId = this.getAttribute('href').substring(1);
+                            const targetElement = document.getElementById(targetId);
+
+                            if (targetElement && contentDiv.contains(targetElement)) {
+                                const contentDivScrollTop = contentDiv.scrollTop;
+                                const contentDivRect = contentDiv.getBoundingClientRect();
+                                const targetElementRect = targetElement.getBoundingClientRect();
+                                const targetOffsetFromContentDivTop = targetElementRect.top - contentDivRect.top;
+                                let scrollToPosition = contentDivScrollTop + targetOffsetFromContentDivTop - 10;
+                                scrollToPosition = Math.max(0, scrollToPosition);
+                                contentDiv.scrollTop = scrollToPosition;
+                                console.log(`LAD_SLUGIFY: Scrolled to: #${targetId}`);
+                            } else {
+                                console.warn(`LAD_SLUGIFY: Target element for link #${targetId} not found. Check generated IDs vs. link hrefs.`);
+                                const generatedIds = Array.from(contentDiv.querySelectorAll('[id]')).map(el => el.id);
+                                console.log("LAD_SLUGIFY: Available IDs in documentation content:", generatedIds);
+                            }
+                        });
+                    });
+                    console.log("LAD_SLUGIFY: Internal link listeners attached.");
+                } else {
+                    console.log("LAD_SLUGIFY: Internal link listeners NOT attached as anchor plugin was unavailable.");
+                }
+
+            } catch (error) {
+                console.error("LAD_SLUGIFY: Failed to load or render documentation:", error);
+                contentDiv.innerHTML = `<p style="color:red;">Could not load documentation. Details: ${error.message}</p>`;
+            }
         }
-        const markdownText = await response.text();
-        console.log("LAD_SLUGIFY: Successfully fetched README.md");
 
-        let md = window.markdownit({
-            html: true,
-            linkify: true,
-            typographer: true
+        // Call the function to save sample systems on page load
+        saveSampleSystemsToLocalStorage();
+
+        /** Enter Edit Mode **/
+
+        /** REVISED Enter Edit Mode - Calls showSystemEditForm which uses switchView */
+        function enterEditMode(creatingNewSystem = false) { // Default creatingNewSystem to false
+            const mode = creatingNewSystem ? Modes.CREATING : Modes.EDITING;
+            console.log(`Entering mode: ${mode}`);
+            currentMode = mode; // Set the mode
+
+            if (!currentSystemData) {
+                alert("No system data to edit.");
+                returnToHome();
+                return;
+            }
+            // Show the system edit form, populated with current data
+            showSystemEditForm(currentSystemData);
+        }
+        // No need to add enterEditMode to window, called by button onclick
+
+        /** REVISED (v4) Show System Edit Form using switchView */
+        function showSystemEditForm(systemData) {
+            console.log("Entering Edit System form (Focus Mode)...");
+            if (!systemData) { console.error("showSystemEditForm called without systemData."); return; }
+
+            // Use switchView to handle showing the form and managing buttons/title
+            switchView('systemEditForm', Modes.EDITING); // Explicitly set EDITING mode
+
+            // --- Populate form fields ---
+            const nameInput = document.getElementById('systemNameInput');
+            const descInput = document.getElementById('systemDescriptionInput');
+            if(nameInput) nameInput.value = systemData.systemName || '';
+            if(descInput) descInput.value = systemData.systemDescription || '';
+            console.log("Populated edit form: Name=", nameInput?.value, "Desc=", descInput?.value);
+
+            // Populate services and teams (existing logic)
+            try {
+                displayServicesForEditing(systemData.services || [], 'editServicesManagement');
+                displayTeamsForEditing(systemData.teams || []);
+            } catch (error) {
+                console.error("Error populating services/teams in edit form:", error);
+                const editFormDiv = document.getElementById('systemEditForm');
+                if(editFormDiv) editFormDiv.innerHTML = `<p style="color:red;">Error populating form details. Check console.</p>`;
+            }
+
+        }
+
+        /** Save System Details **/
+        function saveSystemDetails() {
+            // Get updated system name and description
+            console.log("*** 1 document.getElementById('systemNameInput').value",document.getElementById('systemNameInput').value);    
+            console.log("*** 2 document.getElementById('systemDescriptionInput'",document.getElementById('systemDescriptionInput').value);    
+            
+            const systemNameInput = document.getElementById('systemNameInput');
+            const systemDescriptionTextarea = document.getElementById('systemDescriptionInput');
+
+            console.log("*** 3 systemNameInput = ", systemNameInput.value);
+            console.log("*** 4 systemDescriptionTextarea = ", systemDescriptionTextarea.value);  
+        
+            const oldSystemName = currentSystemData.systemName;
+            const newSystemName = systemNameInput.value.trim();
+
+            if (!newSystemName) {
+                alert('System name cannot be empty.');
+                return;
+            }
+
+            currentSystemData.systemName = newSystemName;
+            currentSystemData.systemDescription = systemDescriptionTextarea.value.trim();
+
+            // Save currentSystemData to local storage
+            const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
+
+            systems[newSystemName] = currentSystemData;
+
+            console.log('Saving to local storage:', systems);
+
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
+
+            alert('System details saved, please continue to update the services and teams. Note: If you changed the system name, it is treated as a new system');
+
+            if (currentMode == Modes.EDITING) {
+            // Update UI components
+            generateTeamTable(currentSystemData);
+            generateServiceDependenciesTable();
+            updateServiceVisualization();
+            updateDependencyVisualization();
+            }
+        }
+
+        /** Save All Changes **/
+
+        /** REVISED Save All Changes - Handles Creation and Updates */
+        function saveAllChanges() {
+        //    if (currentMode !== Modes.CREATING && currentMode !== Modes.EDITING) {
+        //         alert('Not in creation or edit mode. No changes to save.');
+        //         return;
+        //    }
+
+            // --- Get Final System Name and Description from Form ---
+            const systemNameInput = document.getElementById('systemNameInput');
+            const systemDescriptionTextarea = document.getElementById('systemDescriptionInput');
+            const finalSystemName = systemNameInput.value.trim();
+            const finalSystemDescription = systemDescriptionTextarea.value.trim();
+
+            if (!finalSystemName) {
+                alert('System Name cannot be empty. Please enter a name before saving.');
+                systemNameInput.focus(); // Focus the input field
+                return;
+            }
+            // Basic check for description, can be optional
+            if (!finalSystemDescription) {
+                if (!confirm('System Description is empty. Save anyway?')) {
+                    systemDescriptionTextarea.focus();
+                    return;
+                }
+            }
+            // --- Update currentSystemData with final name/desc ---
+            // This ensures the object being saved has the correct top-level info
+            const oldSystemNameKey = currentSystemData.systemName; // Store the name *before* updating
+            currentSystemData.systemName = finalSystemName;
+            currentSystemData.systemDescription = finalSystemDescription;
+            console.log(`Attempting to save system as: "${finalSystemName}"`);
+
+            // --- Perform Validation ---
+            // Ensure engineer assignments are valid before saving
+            if (!validateEngineerAssignments()) {
+                // If validation fails, revert name/desc change in the data object
+                // to avoid potential mismatches if user cancels or tries again.
+                currentSystemData.systemName = oldSystemNameKey;
+                currentSystemData.systemDescription = document.getElementById('systemDescriptionInput').value; // Or revert based on how it was before validation
+                return; // Stop the save
+            }
+            // Add other validation checks here if needed (e.g., required fields for teams/services)
+            
+            // --- Save to Local Storage ---
+            try {
+                const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
+
+                // Check if renaming an existing system or creating a new one
+                if (currentMode === Modes.EDITING && oldSystemNameKey && oldSystemNameKey !== finalSystemName) {
+                    // If the name changed during editing, remove the old entry
+                    if (systems[oldSystemNameKey]) {
+                        delete systems[oldSystemNameKey];
+                        console.log(`Removed old system entry for key: "${oldSystemNameKey}" due to rename.`);
+                    }
+                }
+                // Check if overwriting another system with the new name (relevant for 'Create New' if name exists)
+                if (systems[finalSystemName] && (currentMode === Modes.CREATING || oldSystemNameKey !== finalSystemName)) {
+                    if (!confirm(`A system named "${finalSystemName}" already exists. Overwrite it?`)) {
+                        // Revert data object name change before cancelling
+                        currentSystemData.systemName = oldSystemNameKey;
+                        currentSystemData.systemDescription = document.getElementById('systemDescriptionInput').value; // Revert desc too
+                        return; // User cancelled overwrite
+                    }
+                }
+
+
+                // Save the current data under the final name
+                systems[finalSystemName] = currentSystemData;
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
+
+                alert(`System "${finalSystemName}" saved successfully.`);
+
+                // --- Post-Save Actions ---
+                if (currentMode === Modes.CREATING) {
+                    // After successfully creating, switch to Browse mode for the new system
+                    currentMode = Modes.Browse;
+                    // Optionally reload the view for the newly saved system
+                    loadSavedSystem(finalSystemName); // Load it properly
+                } else {
+                    // If editing, maybe exit edit mode or refresh views
+                    exitEditMode(); // Go back to Browse mode
+                }
+
+            } catch (error) {
+                console.error("Error saving system to local storage:", error);
+                alert("An error occurred while trying to save the system. Please check the console for details.");
+                // Revert data object name change on error
+                currentSystemData.systemName = oldSystemNameKey;
+                currentSystemData.systemDescription = document.getElementById('systemDescriptionInput').value;
+            }
+
+        }
+
+        /** REVISED (v2) Exit Edit Mode - Calls showSystemOverview which uses switchView */
+        function exitEditMode() {
+            if (currentMode === Modes.CREATING) {
+                // If cancelling creation, go all the way home
+                if (confirm('Are you sure you want to cancel creating the new system? All unsaved changes will be lost.')) {
+                    returnToHome(); // Use the refactored returnToHome
+                }
+                // If user cancels the confirm dialog, do nothing, stay in edit mode.
+            } else {
+                // If cancelling an edit, simply go back to the system overview
+                console.log("Exiting edit mode, returning to system overview...");
+                showSystemOverview(); // Use the refactored showSystemOverview
+            }
+        }
+        
+        /** REVISED (v5) Shows the Organogram View using switchView */
+        function showOrganogramView() {
+            console.log("Switching to Organization Chart View (Focus Mode) + Team Table...");
+            if (!currentSystemData) { alert("Please load a system first."); return; }
+
+            switchView('organogramView'); // Switch view, hides others, shows buttons
+
+            // --- Generate Content ---
+            // Generate and show organogram
+            try {
+                generateOrganogram(); // Call the generation function
+            } catch (error) {
+                console.error("Error generating Organogram:", error);
+                const contentDiv = document.getElementById('organogramContent'); // Content div inside organogramView
+                if(contentDiv) contentDiv.innerHTML = `<p style="color:red;">Error generating chart. Check console.</p>`;
+            }
+
+            // Generate Team Table within this view
+            try {
+                generateTeamTable(currentSystemData); // Pass current system data
+            } catch (error) {
+                console.error("Error generating Team Table within Organogram view:", error);
+                const teamTableContainer = document.getElementById('teamBreakdown'); // Team table container inside organogramView
+                if(teamTableContainer) teamTableContainer.innerHTML = `<p style="color:red;">Error generating team table. Check console.</p>`;
+            }
+            // --- End Content Generation ---
+        }
+        window.showOrganogramView = showOrganogramView;
+
+        /** REVISED (v3) Shows the Engineer Table View using switchView */
+        function showEngineerTableView() {
+            console.log("Switching to Engineer Table View (Focus Mode)...");
+            if (!currentSystemData) { alert("Please load a system first."); return; }
+
+            switchView('engineerTableView'); // Switch view, hides others, shows buttons
+
+            // Generate and show engineer table
+            try {
+                generateEngineerTable(); // Generate with default sort
+            } catch (error) {
+                console.error("Error generating Engineer Table:", error);
+                const engineerTableContainer = document.getElementById('engineerTableView');
+                if(engineerTableContainer) engineerTableContainer.innerHTML = `<p style="color:red;">Error generating engineer table. Check console.</p>`;
+            }
+        }
+
+        // Make it globally accessible (if not already done)
+        window.showEngineerTableView = showEngineerTableView;
+
+        /** REVISED (v9) Shows the Yearly Planning View using switchView */
+        function showPlanningView() {
+            console.log("Switching to Yearly Planning View (Focus Mode)...");
+            if (!currentSystemData) { alert("Please load a system first."); return; }
+
+            switchView('planningView', Modes.PLANNING); // Switch view and set mode
+
+            try {
+                // Generate the table content
+                generatePlanningTable(); // This also generates the summary table now
+
+                // --- Populate Team Select & Attach Listeners ---
+                populateTeamSelect();
+                // Add listeners only once (using data attribute check)
+                const addAssignButton = document.getElementById('addTeamAssignmentButton');
+                if (addAssignButton && !addAssignButton.hasAttribute('data-listener-attached')) {
+                    addAssignButton.addEventListener('click', handleAddTeamAssignment);
+                    addAssignButton.setAttribute('data-listener-attached', 'true');
+                }
+                const addInitButton = document.getElementById('addInitiativeButton');
+                if (addInitButton && !addInitButton.hasAttribute('data-listener-attached')) {
+                    addInitButton.addEventListener('click', handleAddInitiative);
+                    addInitButton.setAttribute('data-listener-attached', 'true');
+                }
+                // Listener for savePlanButton is now attached within generatePlanningTable
+
+                // Adjust table height AFTER view is visible and content generated
+                adjustPlanningTableHeight();
+
+            } catch (error) {
+                console.error("Error generating Planning View content:", error);
+                const planningViewDiv = document.getElementById('planningView');
+                if(planningViewDiv) planningViewDiv.innerHTML = `<p style="color:red;">Error generating planning view. Check console.</p>`;
+            }
+        }
+
+        // Attach functions to the global window object
+        window.showPlanningView = showPlanningView; // Ensure global access
+        window.showSavedSystems = showSavedSystems;
+        window.createNewSystem = createNewSystem;
+        window.resetToDefaults = resetToDefaults;
+        window.returnToHome = returnToHome;
+        window.showPlanningView = showPlanningView;
+        // --- Window Resize Listener for Planning Table Height ---
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            // Debounce resize events to avoid excessive calculations
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                // Only adjust if the planning view is currently visible
+                const planningViewDiv = document.getElementById('planningView');
+                if (planningViewDiv && planningViewDiv.style.display !== 'none') {
+                    adjustPlanningTableHeight();
+                }
+            }, 150); // Adjust timeout (milliseconds) as needed
         });
 
-        if (useAnchorPlugin) {
-            md = md.use(window.markdownItAnchor, {
-                permalink: window.markdownItAnchor.permalink.headerLink(),
-                level: [1, 2, 3, 4, 5, 6],
-                slugify: s => customSlugify(s) // *** USE OUR CUSTOM SLUGIFY FUNCTION ***
-            });
-            console.log("LAD_SLUGIFY: markdown-it-anchor plugin applied with custom slugify.");
-        }
-
-        const htmlContent = md.render(markdownText);
-        contentDiv.innerHTML = htmlContent;
-        console.log("LAD_SLUGIFY: Documentation rendered.");
-
-        if (useAnchorPlugin) {
-            const internalLinks = contentDiv.querySelectorAll('a[href^="#"]');
-            internalLinks.forEach(link => {
-                link.addEventListener('click', function(event) {
-                    event.preventDefault();
-                    const targetId = this.getAttribute('href').substring(1);
-                    const targetElement = document.getElementById(targetId);
-
-                    if (targetElement && contentDiv.contains(targetElement)) {
-                        const contentDivScrollTop = contentDiv.scrollTop;
-                        const contentDivRect = contentDiv.getBoundingClientRect();
-                        const targetElementRect = targetElement.getBoundingClientRect();
-                        const targetOffsetFromContentDivTop = targetElementRect.top - contentDivRect.top;
-                        let scrollToPosition = contentDivScrollTop + targetOffsetFromContentDivTop - 10;
-                        scrollToPosition = Math.max(0, scrollToPosition);
-                        contentDiv.scrollTop = scrollToPosition;
-                        console.log(`LAD_SLUGIFY: Scrolled to: #${targetId}`);
-                    } else {
-                        console.warn(`LAD_SLUGIFY: Target element for link #${targetId} not found. Check generated IDs vs. link hrefs.`);
-                        const generatedIds = Array.from(contentDiv.querySelectorAll('[id]')).map(el => el.id);
-                        console.log("LAD_SLUGIFY: Available IDs in documentation content:", generatedIds);
-                    }
-                });
-            });
-            console.log("LAD_SLUGIFY: Internal link listeners attached.");
-        } else {
-             console.log("LAD_SLUGIFY: Internal link listeners NOT attached as anchor plugin was unavailable.");
-        }
-
-    } catch (error) {
-        console.error("LAD_SLUGIFY: Failed to load or render documentation:", error);
-        contentDiv.innerHTML = `<p style="color:red;">Could not load documentation. Details: ${error.message}</p>`;
-    }
-}
-
-// Call the function to save sample systems on page load
-saveSampleSystemsToLocalStorage();
-
-/** Enter Edit Mode **/
-
-/** REVISED Enter Edit Mode - Calls showSystemEditForm which uses switchView */
-function enterEditMode(creatingNewSystem = false) { // Default creatingNewSystem to false
-    const mode = creatingNewSystem ? Modes.CREATING : Modes.EDITING;
-    console.log(`Entering mode: ${mode}`);
-    currentMode = mode; // Set the mode
-
-    if (!currentSystemData) {
-        alert("No system data to edit.");
-        returnToHome();
-        return;
-    }
-    // Show the system edit form, populated with current data
-    showSystemEditForm(currentSystemData);
-}
-// No need to add enterEditMode to window, called by button onclick
-
-/** REVISED (v4) Show System Edit Form using switchView */
-function showSystemEditForm(systemData) {
-    console.log("Entering Edit System form (Focus Mode)...");
-    if (!systemData) { console.error("showSystemEditForm called without systemData."); return; }
-
-    // Use switchView to handle showing the form and managing buttons/title
-    switchView('systemEditForm', Modes.EDITING); // Explicitly set EDITING mode
-
-    // --- Populate form fields ---
-    const nameInput = document.getElementById('systemNameInput');
-    const descInput = document.getElementById('systemDescriptionInput');
-    if(nameInput) nameInput.value = systemData.systemName || '';
-    if(descInput) descInput.value = systemData.systemDescription || '';
-    console.log("Populated edit form: Name=", nameInput?.value, "Desc=", descInput?.value);
-
-    // Populate services and teams (existing logic)
-    try {
-         displayServicesForEditing(systemData.services || [], 'editServicesManagement');
-         displayTeamsForEditing(systemData.teams || []);
-    } catch (error) {
-         console.error("Error populating services/teams in edit form:", error);
-          const editFormDiv = document.getElementById('systemEditForm');
-          if(editFormDiv) editFormDiv.innerHTML = `<p style="color:red;">Error populating form details. Check console.</p>`;
-    }
-
-}
-
-/** Save System Details **/
-function saveSystemDetails() {
-    // Get updated system name and description
-    console.log("*** 1 document.getElementById('systemNameInput').value",document.getElementById('systemNameInput').value);    
-    console.log("*** 2 document.getElementById('systemDescriptionInput'",document.getElementById('systemDescriptionInput').value);    
-    
-    const systemNameInput = document.getElementById('systemNameInput');
-    const systemDescriptionTextarea = document.getElementById('systemDescriptionInput');
-
-    console.log("*** 3 systemNameInput = ", systemNameInput.value);
-    console.log("*** 4 systemDescriptionTextarea = ", systemDescriptionTextarea.value);  
-  
-    const oldSystemName = currentSystemData.systemName;
-    const newSystemName = systemNameInput.value.trim();
-
-    if (!newSystemName) {
-        alert('System name cannot be empty.');
-        return;
-    }
-
-    currentSystemData.systemName = newSystemName;
-    currentSystemData.systemDescription = systemDescriptionTextarea.value.trim();
-
-    // Save currentSystemData to local storage
-    const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
-
-    systems[newSystemName] = currentSystemData;
-
-    console.log('Saving to local storage:', systems);
-
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
-
-    alert('System details saved, please continue to update the services and teams. Note: If you changed the system name, it is treated as a new system');
-
-    if (currentMode == Modes.EDITING) {
-      // Update UI components
-      generateTeamTable(currentSystemData);
-      generateServiceDependenciesTable();
-      updateServiceVisualization();
-      updateDependencyVisualization();
-    }
-}
-
-/** Save All Changes **/
-
-/** REVISED Save All Changes - Handles Creation and Updates */
-function saveAllChanges() {
-//    if (currentMode !== Modes.CREATING && currentMode !== Modes.EDITING) {
-//         alert('Not in creation or edit mode. No changes to save.');
-//         return;
-//    }
-
-    // --- Get Final System Name and Description from Form ---
-    const systemNameInput = document.getElementById('systemNameInput');
-    const systemDescriptionTextarea = document.getElementById('systemDescriptionInput');
-    const finalSystemName = systemNameInput.value.trim();
-    const finalSystemDescription = systemDescriptionTextarea.value.trim();
-
-    if (!finalSystemName) {
-        alert('System Name cannot be empty. Please enter a name before saving.');
-        systemNameInput.focus(); // Focus the input field
-        return;
-    }
-    // Basic check for description, can be optional
-    if (!finalSystemDescription) {
-         if (!confirm('System Description is empty. Save anyway?')) {
-             systemDescriptionTextarea.focus();
-             return;
-         }
-    }
-    // --- Update currentSystemData with final name/desc ---
-    // This ensures the object being saved has the correct top-level info
-    const oldSystemNameKey = currentSystemData.systemName; // Store the name *before* updating
-    currentSystemData.systemName = finalSystemName;
-    currentSystemData.systemDescription = finalSystemDescription;
-    console.log(`Attempting to save system as: "${finalSystemName}"`);
-
-    // --- Perform Validation ---
-    // Ensure engineer assignments are valid before saving
-    if (!validateEngineerAssignments()) {
-         // If validation fails, revert name/desc change in the data object
-         // to avoid potential mismatches if user cancels or tries again.
-         currentSystemData.systemName = oldSystemNameKey;
-         currentSystemData.systemDescription = document.getElementById('systemDescriptionInput').value; // Or revert based on how it was before validation
-         return; // Stop the save
-    }
-    // Add other validation checks here if needed (e.g., required fields for teams/services)
-    
-    // --- Save to Local Storage ---
-    try {
-        const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
-
-         // Check if renaming an existing system or creating a new one
-         if (currentMode === Modes.EDITING && oldSystemNameKey && oldSystemNameKey !== finalSystemName) {
-             // If the name changed during editing, remove the old entry
-             if (systems[oldSystemNameKey]) {
-                 delete systems[oldSystemNameKey];
-                 console.log(`Removed old system entry for key: "${oldSystemNameKey}" due to rename.`);
-             }
-         }
-         // Check if overwriting another system with the new name (relevant for 'Create New' if name exists)
-         if (systems[finalSystemName] && (currentMode === Modes.CREATING || oldSystemNameKey !== finalSystemName)) {
-            if (!confirm(`A system named "${finalSystemName}" already exists. Overwrite it?`)) {
-                // Revert data object name change before cancelling
-                currentSystemData.systemName = oldSystemNameKey;
-                currentSystemData.systemDescription = document.getElementById('systemDescriptionInput').value; // Revert desc too
-                return; // User cancelled overwrite
-            }
-         }
-
-
-        // Save the current data under the final name
-        systems[finalSystemName] = currentSystemData;
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
-
-        alert(`System "${finalSystemName}" saved successfully.`);
-
-        // --- Post-Save Actions ---
-        if (currentMode === Modes.CREATING) {
-             // After successfully creating, switch to Browse mode for the new system
-             currentMode = Modes.Browse;
-             // Optionally reload the view for the newly saved system
-             loadSavedSystem(finalSystemName); // Load it properly
-        } else {
-             // If editing, maybe exit edit mode or refresh views
-              exitEditMode(); // Go back to Browse mode
-        }
-
-    } catch (error) {
-        console.error("Error saving system to local storage:", error);
-        alert("An error occurred while trying to save the system. Please check the console for details.");
-         // Revert data object name change on error
-         currentSystemData.systemName = oldSystemNameKey;
-         currentSystemData.systemDescription = document.getElementById('systemDescriptionInput').value;
-    }
-
-}
-
-/** REVISED (v2) Exit Edit Mode - Calls showSystemOverview which uses switchView */
-function exitEditMode() {
-    if (currentMode === Modes.CREATING) {
-        // If cancelling creation, go all the way home
-        if (confirm('Are you sure you want to cancel creating the new system? All unsaved changes will be lost.')) {
-            returnToHome(); // Use the refactored returnToHome
-        }
-        // If user cancels the confirm dialog, do nothing, stay in edit mode.
-    } else {
-        // If cancelling an edit, simply go back to the system overview
-        console.log("Exiting edit mode, returning to system overview...");
-        showSystemOverview(); // Use the refactored showSystemOverview
-    }
-}
- 
-/** REVISED (v5) Shows the Organogram View using switchView */
-function showOrganogramView() {
-    console.log("Switching to Organization Chart View (Focus Mode) + Team Table...");
-    if (!currentSystemData) { alert("Please load a system first."); return; }
-
-    switchView('organogramView'); // Switch view, hides others, shows buttons
-
-    // --- Generate Content ---
-    // Generate and show organogram
-    try {
-        generateOrganogram(); // Call the generation function
-    } catch (error) {
-        console.error("Error generating Organogram:", error);
-        const contentDiv = document.getElementById('organogramContent'); // Content div inside organogramView
-        if(contentDiv) contentDiv.innerHTML = `<p style="color:red;">Error generating chart. Check console.</p>`;
-    }
-
-    // Generate Team Table within this view
-    try {
-        generateTeamTable(currentSystemData); // Pass current system data
-    } catch (error) {
-        console.error("Error generating Team Table within Organogram view:", error);
-        const teamTableContainer = document.getElementById('teamBreakdown'); // Team table container inside organogramView
-        if(teamTableContainer) teamTableContainer.innerHTML = `<p style="color:red;">Error generating team table. Check console.</p>`;
-    }
-    // --- End Content Generation ---
-}
-window.showOrganogramView = showOrganogramView;
-
-/** REVISED (v3) Shows the Engineer Table View using switchView */
-function showEngineerTableView() {
-    console.log("Switching to Engineer Table View (Focus Mode)...");
-     if (!currentSystemData) { alert("Please load a system first."); return; }
-
-    switchView('engineerTableView'); // Switch view, hides others, shows buttons
-
-    // Generate and show engineer table
-    try {
-         generateEngineerTable(); // Generate with default sort
-    } catch (error) {
-        console.error("Error generating Engineer Table:", error);
-         const engineerTableContainer = document.getElementById('engineerTableView');
-         if(engineerTableContainer) engineerTableContainer.innerHTML = `<p style="color:red;">Error generating engineer table. Check console.</p>`;
-    }
-}
-
-// Make it globally accessible (if not already done)
-window.showEngineerTableView = showEngineerTableView;
-
-/** REVISED (v9) Shows the Yearly Planning View using switchView */
-function showPlanningView() {
-    console.log("Switching to Yearly Planning View (Focus Mode)...");
-    if (!currentSystemData) { alert("Please load a system first."); return; }
-
-    switchView('planningView', Modes.PLANNING); // Switch view and set mode
-
-     try {
-         // Generate the table content
-        generatePlanningTable(); // This also generates the summary table now
-
-        // --- Populate Team Select & Attach Listeners ---
-        populateTeamSelect();
-        // Add listeners only once (using data attribute check)
-        const addAssignButton = document.getElementById('addTeamAssignmentButton');
-        if (addAssignButton && !addAssignButton.hasAttribute('data-listener-attached')) {
-            addAssignButton.addEventListener('click', handleAddTeamAssignment);
-            addAssignButton.setAttribute('data-listener-attached', 'true');
-        }
-        const addInitButton = document.getElementById('addInitiativeButton');
-        if (addInitButton && !addInitButton.hasAttribute('data-listener-attached')) {
-            addInitButton.addEventListener('click', handleAddInitiative);
-            addInitButton.setAttribute('data-listener-attached', 'true');
-        }
-        // Listener for savePlanButton is now attached within generatePlanningTable
-
-        // Adjust table height AFTER view is visible and content generated
-        adjustPlanningTableHeight();
-
-     } catch (error) {
-         console.error("Error generating Planning View content:", error);
-         const planningViewDiv = document.getElementById('planningView');
-         if(planningViewDiv) planningViewDiv.innerHTML = `<p style="color:red;">Error generating planning view. Check console.</p>`;
-     }
-}
-
-// Attach functions to the global window object
-window.showPlanningView = showPlanningView; // Ensure global access
-window.showSavedSystems = showSavedSystems;
-window.createNewSystem = createNewSystem;
-window.resetToDefaults = resetToDefaults;
-window.returnToHome = returnToHome;
-window.showPlanningView = showPlanningView;
-// --- Window Resize Listener for Planning Table Height ---
-let resizeTimeout;
-window.addEventListener('resize', () => {
-    // Debounce resize events to avoid excessive calculations
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(() => {
-        // Only adjust if the planning view is currently visible
-        const planningViewDiv = document.getElementById('planningView');
-        if (planningViewDiv && planningViewDiv.style.display !== 'none') {
-            adjustPlanningTableHeight();
-        }
-    }, 150); // Adjust timeout (milliseconds) as needed
-});
-
-</script>
-
-</body>
+        </script>
+    </body>
 </html>

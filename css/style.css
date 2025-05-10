@@ -81,6 +81,8 @@ a:hover {
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.2s ease, color 0.2s ease;
+    text-align: left; /* Align buttons to the start of the #mainActions flex container */
+    margin-bottom: 0; /* Remove bottom margin as they are in the top bar */    
 }
 
 #topBar .menu button:hover,
@@ -142,30 +144,40 @@ p#systemDescription {
     color: #545b64; /* Muted text color */
 }
 
-/*
-   Remove old .menu, .edit-menu direct styling as they are now part of #topBar
-   You can delete these old rules if they only applied to the button containers:
-    .menu, .edit-menu { text-align: center; margin-bottom: 20px; }
-    .menu button, .edit-menu button { margin: 5px; padding: 10px 20px; font-size: 16px; }
-*/
 
-/* Ensure the main content views have some top margin if pageTitle/systemDescription are hidden */
-#visualizationCarousel,
+/* Ensure main view containers can expand */
+#visualizationCarousel, /* Keep a max-width for the carousel itself */
 #systemEditForm,
 #organogramView,
 #engineerTableView,
 #planningView,
 #capacityConfigView,
 #sdmForecastingView,
-#toolDocumentationSection {
-    margin-top: 20px; /* Add default top margin to content views */
+#toolDocumentationSection,
+#serviceDependenciesTable { /* Apply card styling directly here too */
+    margin-top: 20px;
     margin-bottom: 20px;
-    padding: 20px; /* Add some padding inside the content views */
-    background-color: #ffffff; /* White background for content areas */
+    padding: 20px;
+    background-color: #ffffff;
     border: 1px solid #dee2e6;
     border-radius: 6px;
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    /* Remove individual max-width if they were set here, allow them to fill .main-content-area */
+    /* max-width: 90%; /* This was applied to some, let's control it differently */
 }
+
+/* Specifically for views that need to be very wide */
+#organogramView,
+#engineerTableView,
+#planningView,
+#capacityConfigView,
+#sdmForecastingView,
+#serviceDependenciesTable {
+    max-width: none; /* Override any previous max-width to allow full stretch */
+    width: 100%; /* Ensure they try to take full width of .main-content-area */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+
 
 /* Adjusting existing fixed buttons to not overlap topBar */
 #returnHomeButton { /* Will be moved into #globalNavButtons */
@@ -185,15 +197,114 @@ p#systemDescription {
 
 /* === End Phase UX.A1 === */
 
+/* === Phase UX.A2: Card UI & Section Styling === */
+
+/* Styling for main headers within content cards (e.g., "Edit System", "Team Breakdown") */
+/* These are typically h2 elements directly inside a main view div */
+#systemEditForm > h2,
+#organogramView > div > h2, /* For "Team Breakdown" which is nested */
+#engineerTableView > h2,
+#serviceDependenciesTable > h2 {
+    font-size: 1.5rem; /* 24px */
+    font-weight: 600;
+    color: #16191f; /* Darker text */
+    padding-bottom: 0.75rem;
+    margin-top: 0; /* Remove default margin if it's the first element in a card */
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #eaeded; /* Subtle separator line */
+}
+
+/* Styling for sub-section headers (h3, h4) within cards */
+/* e.g., "Services", "Teams" in Edit System; collapsible headers in Planning/Capacity views */
+.service-edit > h4, /* Already styled somewhat, let's refine */
+.team-edit > h4,    /* Already styled somewhat, let's refine */
+#systemEditForm > h3,
+#planningView #addInitiativeSection > h3,
+#planningView #teamLoadSummarySection > h4,
+#capacityConfigView #globalConstraintsSection > h3,
+#capacityConfigView #teamConstraintsSection > h3,
+#capacityConfigView .team-constraint-container > h4,
+#sdmForecastingView h3 { /* Target h3s in SDM tool for section titles */
+    font-size: 1.15rem; /* Around 18px */
+    font-weight: 600;
+    color: #212529;
+    background-color: #f8f9fa; /* Very light gray for header background */
+    padding: 10px 15px;
+    margin: -20px -20px 15px -20px; /* Extend to card edges, then add bottom margin */
+    /* For collapsible headers, they might have their own margin:0 set inline/JS */
+    border-bottom: 1px solid #dee2e6;
+    border-top-left-radius: 6px; /* Match card radius if it's the first element */
+    border-top-right-radius: 6px; /* Match card radius */
+}
+/* Specific adjustments for collapsible headers to override the negative margin if needed */
+#planningView #addInitiativeSection > h3[onclick],
+#planningView #teamLoadSummarySection > h4[onclick],
+#toolDocumentationSection > h3[onclick],
+#capacityConfigView .team-constraint-container > h4[onclick],
+.service-edit > h4[onclick] { /* If service headers become clickable */
+    margin: 0 0 0 0; /* Reset margin if it's a clickable header within a card */
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    /* Keep existing background and padding from their specific rules or inline styles */
+}
+
+
+/* Styling for sub-sections within cards (like "Add New Initiative" or individual team edits) */
+/* This creates a "card-within-a-card" effect */
+#addInitiativeSection,
+.team-edit,
+.service-edit,
+#capacityConfigView #globalConstraintsSection,
+#capacityConfigView #teamConstraintsSection,
+#sdmForecastingView .input-section,
+#sdmForecastingView .output-section,
+#sdmForecastingView .faq-section {
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0; /* Slightly softer border for nested cards */
+    border-radius: 4px;
+    padding: 15px; /* Inner padding */
+    margin-bottom: 20px; /* Space between sub-cards */
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+/* For collapsible sections, their headers might already have specific styling. */
+/* We ensure the content div within these sub-cards has appropriate padding. */
+#addInitiativeContent,
+.team-details, /* Content of team-edit */
+.service-details, /* Content of service-edit */
+#teamLoadSummaryContent,
+#capacityConfigView #globalConstraintsSection > div:not(h3), /* Target content divs */
+#capacityConfigView .team-details, /* Content of team-constraint-container */
+#documentationContent, /* Already has padding, but ensure consistency */
+#sdmForecastingView .input-section > div:not(h3):not(.input-group), /* More specific for sdm tool */
+#sdmForecastingView .output-section > div:not(h3) {
+    padding-top: 15px; /* Add padding if not directly on the sub-card div */
+}
+/* Adjust padding for direct children of input-section if they are not headers or input-groups */
+#sdmForecastingView .input-section > *:not(h3):not(.input-group):not(button) {
+    padding-left: 5px; /* Indent general text a bit */
+}
+
+
+
+/* General container for views below the top bar */
+.main-content-area {
+    padding: 20px;
+    /* max-width: 1200px; */ /* Or your preferred max width for content */
+    width: auto;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* === End Phase UX.A2 === */
+
 /* Your existing CSS rules will follow here... */
 /* e.g., #visualization, #teamVisualization { max-width: 800px; ... } */
 /* ... */
       
 /* Basic styling */
-body { font-family: Arial, sans-serif; margin: 20px; }
 h1 { text-align: center; }
-/* .menu, .edit-menu { text-align: center; margin-bottom: 20px; }*/
-/* .menu button, .edit-menu button { margin: 5px; padding: 10px 20px; font-size: 16px; }*/
+
 #visualization, #teamVisualization { max-width: 800px; margin: 20px auto; }
 svg { width: 100%; height: 600px; border: 1px solid #ccc; }
 #teamTable { width: 100%; border-collapse: collapse; margin-top: 20px; }
@@ -204,15 +315,6 @@ svg { width: 100%; height: 600px; border: 1px solid #ccc; }
 .legend-item { display: flex; align-items: center; margin-right: 15px; margin-bottom: 5px; }
 .team-edit {margin-bottom: 15px;padding: 10px;border: 1px solid #ccc;}
 
-   /* #returnHomeButton {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    padding: 10px 15px;
-    font-size: 14px;
-    z-index: 1000;
-    } */
-
     #systemDescription {
         text-align: center; /* Add this line to center the text */
         /* You can add other styles here too if needed, like margin */
@@ -220,17 +322,7 @@ svg { width: 100%; height: 600px; border: 1px solid #ccc; }
         margin-bottom: 20px;
     }
     
-    /*   #backToSystemViewButton {
-    position: fixed;
-    top: 20px;
-    right: 170px; 
-    padding: 10px 15px;
-    font-size: 14px;
-    z-index: 1000; 
-    display: none; 
-    }  
-    */        
-    
+   
     .team-edit {
         margin-bottom: 15px;
         border: 1px solid #ccc;
@@ -273,10 +365,10 @@ svg { width: 100%; height: 600px; border: 1px solid #ccc; }
     /* --- Visualization Carousel Styles --- */
     #visualizationCarousel {
         position: relative;
-        max-width: 90%;   /* <-- Changed to match service table */
+        max-width: 100%;
+        /* max-width: 1000px;   */
         margin: 20px auto;
-        border: 1px solid #ddd;
-        padding: 10px;
+        /* border: 1px solid #ddd;*/
         display:none; /* Initially hidden */
     }
     
