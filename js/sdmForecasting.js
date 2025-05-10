@@ -186,7 +186,7 @@ window.showSdmForecastingView = showSdmForecastingView;
             <input id="closeGapWeek_SDM" type="number" value="26" />
             <div class="help-text">Target week (1-52) to reach the funded team size via hiring.</div>
         </div>
-        <button type="button" id="generateForecastBtn_SDM">Generate Forecast</button>
+        <button type="button" class="btn-primary" id="generateForecastBtn_SDM">Generate Forecast</button>
     `;
     container.appendChild(inputSection);
 

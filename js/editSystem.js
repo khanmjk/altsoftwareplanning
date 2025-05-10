@@ -269,7 +269,10 @@ function displayServicesForEditing(services, containerId, expandedIndex = -1) {
              apiDiv.appendChild(document.createElement('br'));
 
 
-            let deleteApiButton = document.createElement('button'); deleteApiButton.type = 'button'; deleteApiButton.innerText = 'Delete API';
+            let deleteApiButton = document.createElement('button'); 
+            deleteApiButton.type = 'button'; 
+            deleteApiButton.className = 'btn-danger'; // Added class for styling
+            deleteApiButton.innerText = 'Delete API';
             deleteApiButton.onclick = () => deleteApi(index, apiIndex, containerId); // Pass containerId
             apiDiv.appendChild(deleteApiButton);
 
@@ -284,13 +287,20 @@ function displayServicesForEditing(services, containerId, expandedIndex = -1) {
         // --------------------
 
         // --- Action Buttons ---
-        let deleteServiceButton = document.createElement('button'); deleteServiceButton.type = 'button'; deleteServiceButton.innerText = 'Delete Service';
-        deleteServiceButton.style.color = 'red'; deleteServiceButton.style.marginLeft = '10px';
+        let deleteServiceButton = document.createElement('button'); 
+        deleteServiceButton.type = 'button'; 
+        deleteServiceButton.className = 'btn-danger'; // Added class for styling
+        deleteServiceButton.innerText = 'Delete Service';
+        /* deleteServiceButton.style.color = 'red'; 
+        deleteServiceButton.style.marginLeft = '10px'; */
         deleteServiceButton.onclick = () => { if (confirm('Are you sure?')) deleteService(index, containerId); }; // Pass containerId
         serviceDetails.appendChild(deleteServiceButton);
 
-        let saveServiceButton = document.createElement('button'); saveServiceButton.type = 'button'; saveServiceButton.innerText = 'Save Service Changes';
-        saveServiceButton.style.marginLeft = '10px';
+        let saveServiceButton = document.createElement('button'); 
+        saveServiceButton.type = 'button'; 
+        saveServiceButton.className = 'btn-primary'; // Added class for styling
+        saveServiceButton.innerText = 'Save Service Changes';
+        saveServiceButton.style.marginLeft = '10px'; 
         saveServiceButton.onclick = () => saveServiceChanges(index); // Saves only this service's state from currentSystemData
         serviceDetails.appendChild(saveServiceButton);
         // --------------------
@@ -802,8 +812,21 @@ function displayTeamsForEditing(teams, expandedIndex = -1) {
         // --- Action Buttons (Save/Delete Team) - No Change ---
         let actionButtonsDiv = document.createElement('div');
         actionButtonsDiv.style.marginTop = '15px';
-        let saveButton = document.createElement('button'); saveButton.type = 'button'; saveButton.innerText = 'Save Team Changes'; saveButton.onclick = () => saveTeamChanges(index); actionButtonsDiv.appendChild(saveButton);
-        let deleteButton = document.createElement('button'); deleteButton.type = 'button'; deleteButton.innerText = 'Delete Team'; deleteButton.style.marginLeft = '10px'; deleteButton.style.color = 'red'; deleteButton.onclick = () => deleteTeam(index); actionButtonsDiv.appendChild(deleteButton);
+        let saveButton = document.createElement('button'); 
+        saveButton.type = 'button'; 
+        saveButton.className = 'btn-primary'; // Added class for styling
+        saveButton.innerText = 'Save Team Changes'; 
+        saveButton.onclick = () => saveTeamChanges(index); 
+        actionButtonsDiv.appendChild(saveButton);
+        
+        let deleteButton = document.createElement('button'); 
+        deleteButton.type = 'button'; 
+        deleteButton.className = 'btn-danger'; // Added class for styling
+        deleteButton.innerText = 'Delete Team'; 
+        deleteButton.style.marginLeft = '10px'; 
+        /* deleteButton.style.color = 'red'; */
+        deleteButton.onclick = () => deleteTeam(index); 
+        actionButtonsDiv.appendChild(deleteButton);
         teamDetails.appendChild(actionButtonsDiv);
         // --- End Actions ---
 

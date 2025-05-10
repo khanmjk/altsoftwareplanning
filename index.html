@@ -33,7 +33,7 @@
                 <div class="menu"> <!-- Will be shown/hidden by JS -->
                     <button onclick="showSavedSystems()">Load Saved System</button>
                     <button onclick="createNewSystem()">Create New System</button>
-                    <button id="deleteSystemButton" onclick="deleteSystem()">Delete System</button>
+                    <button id="deleteSystemButton" class="btn-danger" onclick="deleteSystem()">Delete System</button>
                     <button onclick="resetToDefaults()">Reset to Defaults</button>
                 </div>
                 <div class="edit-menu" style="display: none;"> <!-- Will be shown/hidden by JS -->
@@ -148,7 +148,7 @@
                 <button id="addNewTeamButton" type="button" onclick="addNewTeam()">Add New Team</button><br><br>
 
                 <!-- Buttons to Save or Cancel -->
-                <button type="button" onclick="saveAllChanges()">Save All Changes</button>
+                <button type="button" class="btn-primary" onclick="saveAllChanges()">Save All Changes</button>
                 <button type="button" onclick="exitEditMode()">Cancel</button>
             </div>
 
@@ -279,7 +279,7 @@
                     </div>
             
                     <hr>
-                    <button type="button" id="addInitiativeButton" style="padding: 10px 15px; font-size: 16px; background-color: #28a745; color: white; border: none; cursor: pointer;">Add Initiative to Plan</button>
+                    <button type="button" id="addInitiativeButton" class="btn-primary">Add Initiative to Plan</button>
                     </div>
                 </div>
             </div>

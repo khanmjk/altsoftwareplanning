@@ -1439,7 +1439,26 @@ function generateTeamConstraintsForms() {
 
      // --- Add Save Button (no change) ---
      let saveButtonContainer = document.getElementById('capacitySaveButtonContainer'); /* ... Button setup ... */
-      if (!saveButtonContainer) { saveButtonContainer = document.createElement('div'); saveButtonContainer.id = 'capacitySaveButtonContainer'; saveButtonContainer.style.textAlign = 'center'; saveButtonContainer.style.marginTop = '25px'; const saveButton = document.createElement('button'); saveButton.id = 'saveCapacityConfigButton'; saveButton.textContent = 'Save All Capacity Configuration'; saveButton.style.padding = '10px 20px'; saveButton.style.fontSize = '16px'; saveButton.style.backgroundColor = '#dc3545'; saveButton.style.color = 'white'; saveButton.style.border = 'none'; saveButton.style.borderRadius = '5px'; saveButton.style.cursor = 'pointer'; saveButton.onclick = saveCapacityConfiguration; saveButtonContainer.appendChild(saveButton); container.appendChild(saveButtonContainer); }
+      if (!saveButtonContainer) { 
+        saveButtonContainer = document.createElement('div'); 
+        saveButtonContainer.id = 'capacitySaveButtonContainer'; 
+        saveButtonContainer.style.textAlign = 'center'; 
+        saveButtonContainer.style.marginTop = '25px'; 
+        const saveButton = document.createElement('button'); 
+        saveButton.id = 'saveCapacityConfigButton'; 
+        saveButton.textContent = 'Save All Capacity Configuration'; 
+        saveButton.className = 'btn-primary';
+       /* saveButton.style.padding = '10px 20px'; 
+        saveButton.style.fontSize = '16px'; 
+        saveButton.style.backgroundColor = '#dc3545'; 
+        saveButton.style.color = 'white'; 
+        saveButton.style.border = 'none'; 
+        saveButton.style.borderRadius = '5px';*/ 
+        saveButton.style.cursor = 'pointer'; 
+        saveButton.onclick = saveCapacityConfiguration; 
+        saveButtonContainer.appendChild(saveButton); 
+        container.appendChild(saveButtonContainer); 
+    }
 
     console.log("Finished setting up Team Constraints structure (Phase 4b Simplified Activities).");
 }

@@ -298,6 +298,100 @@ p#systemDescription {
 
 /* === End Phase UX.A2 === */
 
+/* === Phase UX.A3: Component Styling === */
+
+/* --- Button Styles --- */
+button, .button { /* Apply to button elements and anything with class .button */
+    display: inline-block;
+    font-weight: 500; /* Slightly bolder than normal text */
+    line-height: 1.5;
+    color: #212529;
+    text-align: center;
+    vertical-align: middle;
+    cursor: pointer;
+    user-select: none;
+    background-color: #f8f9fa; /* Default light gray */
+    border: 1px solid #ced4da; /* Standard border */
+    padding: 0.375rem 0.75rem; /* Standard padding (e.g., Bootstrap's default) */
+    font-size: 0.95rem; /* Match topBar button font size */
+    border-radius: 0.25rem; /* Standard small border radius */
+    transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    text-decoration: none; /* Remove underline from button-styled links */
+}
+
+button:hover, .button:hover {
+    color: #212529;
+    background-color: #e2e6ea;
+    border-color: #dae0e5;
+}
+
+button:focus, .button:focus {
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); /* AWS-like focus ring */
+}
+
+/* Primary Action Button (e.g., Save, Create, Add) */
+button.btn-primary, .button.btn-primary {
+    color: #fff;
+    background-color: #007bff; /* Our primary blue */
+    border-color: #007bff;
+}
+
+button.btn-primary:hover, .button.btn-primary:hover {
+    background-color: #0069d9;
+    border-color: #0062cc;
+}
+
+/* Secondary/Standard Button (already covered by default, but can be explicit) */
+button.btn-secondary, .button.btn-secondary {
+    /* Uses the default button styles */
+}
+
+/* Destructive Action Button (e.g., Delete, Remove) */
+button.btn-danger, .button.btn-danger {
+    color: #fff;
+    background-color: #dc3545; /* Red */
+    border-color: #dc3545;
+}
+
+button.btn-danger:hover, .button.btn-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+
+/* Link-style Button (for less prominent actions) */
+button.btn-link, .button.btn-link {
+    font-weight: 400;
+    color: #007bff;
+    background-color: transparent;
+    border-color: transparent;
+    text-decoration: none;
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+}
+
+button.btn-link:hover, .button.btn-link:hover {
+    color: #0056b3;
+    text-decoration: underline;
+    background-color: transparent;
+    border-color: transparent;
+}
+
+/* Adjustments for buttons in specific contexts if needed */
+/* Top bar buttons are already styled - this new .button class won't override them unless explicitly added */
+
+/* Example: Buttons in dual list selectors or small action buttons */
+.dual-list-container button,
+.api-edit button, /* Delete API button */
+#newInitiativeAssignmentsDisplay button /* Remove assignment button */ {
+    font-size: 0.8em;
+    padding: 0.25rem 0.5rem;
+}
+#addInitiativeButton { /* The main "Add Initiative to Plan" button */
+    /* This already has inline styles, let's use class for consistency */
+    /* Remove inline style from HTML and use this class */
+}
+
 /* Your existing CSS rules will follow here... */
 /* e.g., #visualization, #teamVisualization { max-width: 800px; ... } */
 /* ... */
