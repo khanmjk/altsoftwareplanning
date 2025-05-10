@@ -11,6 +11,7 @@ A lot has been done
 [Done] In system overview, only show the service dependencies table when the service dependency visualisation is selected from the carousel	
 [Done] Documentation - Generate comprehensive project wiki, readme and instructions about the tool
 [Done] Landing home page - include a content window that shows the documentation about the tool
+[Done] Refactored single index.html to multiple files by features, major refactor
 
 ------------
 IN PROGRESS
