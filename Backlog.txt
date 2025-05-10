@@ -12,12 +12,13 @@ A lot has been done
 [Done] Documentation - Generate comprehensive project wiki, readme and instructions about the tool
 [Done] Landing home page - include a content window that shows the documentation about the tool
 [Done] Refactored single index.html to multiple files by features, major refactor
+[Done] Refresh the MVP UX to look like a modernized webapp
 
 ------------
 IN PROGRESS
 ------------
 
--- Refresh the MVP UX to look like a modernized webapp 
+
 
 ------
 TO DO
@@ -81,14 +82,23 @@ Manage Detailed Planning
 AI enhancements
 - Solve for dynamic input of API key to use AI features (ask the user to provide the name of their environment variable for the app to read local API key, not made public in the code or console log) (a local secure way of accessing user's API key. If the API key does not exist, no AI features exposed).
 - Use AI to create a new system from a visual software architecture diagram
-- Use AI chatbot to set up a new system, edit, or interact with the data associated with existing systems
+- Use AI conversational chatbot to set up a new system, edit, or interact with the data associated with existing systems
 - Use AI to optimise the yearly planning
 - Use AI to optimise detail planning
 - Use AI to provide insights into the software system and overall engineering organisation
 
+Bugs / Missing features
+- [Bug] Apply consistent behaviour for displaying visualization graphs in caroussel - fix legends
+- [Feature] No ability to add new engineers to team (regression)
+- [UX] Use team identity instead of team name for "Owning Team" column in Service Dependencies table when Service Dependency Visualization is shown on the carousel
+- [UX] Use consistent formatting for legends in the carousel (circles not blocks)
+- [Feature] For all visualizations add a toggle button to show/hide platform components 
+- [Feature] Add more default systems for demo purposes: Reference architectures for Android Stack, Chat GPT app, LLM system, etc.
+- [Feature] Organization Overview - show a view of traditional org chart with blocks
+
 ==== Post MVP ===
 UX enhancements
--- modernise the UX to a style of popular apps, maybe copy the AWS console UX styles?
+-- [Partially Done - needs rewrite port to modern framework like react] modernise the UX to a style of popular apps, maybe copy the AWS console UX styles?
 -- OR get the AI to research the UX style for open project.org 
 -- Add sign-in / auth functionality
 -- Update data model to support organisations: An organisation has 1..many systems, etc.

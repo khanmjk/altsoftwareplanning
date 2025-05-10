@@ -72,14 +72,14 @@ Upon launching the application, you'll see the main menu:
 
 ### Loading a Saved System
 
-*   Click **"Load Saved System"**.
+*   Click **"Load System"**.
 *   A dialog will appear listing all previously saved systems.
 *   Click the "Load" button next to the system you wish to work with.
 *   The application comes with pre-configured sample systems (`StreamView` and `ConnectPro`) to help you explore its features.
 
 ### Creating a New System
 
-*   Click **"Create New System"**.
+*   Click **"New System"**.
 *   You will be taken to the "Edit System" page with a new, default system structure.
 *   Fill in the "System Name" and "System Description".
 *   Proceed to define your services, teams, managers, and other relevant data.
@@ -87,7 +87,7 @@ Upon launching the application, you'll see the main menu:
 
 ### Resetting to Defaults
 
-*   Click **"Reset to Defaults"**.
+*   Click **"Reset Defaults"**.
 *   **Caution:** This action will erase ALL currently saved systems and restore the initial sample systems (`StreamView`, `ConnectPro`). This cannot be undone.
 *   A confirmation prompt will appear before deletion.
 
@@ -201,7 +201,7 @@ Accessible from the system overview page.
 
 #### Organization Chart (Org Chart)
 
-*   Click **"View Org Chart"**.
+*   Click **"Inspect Org Design"**.
 *   Displays an HTML-based hierarchical view of the organization: System Name -> Senior Managers -> SDMs -> Teams.
 *   Team nodes show Funded HC vs. Builders In Seats (BIS) and annotations for away-team members.
 
@@ -214,7 +214,7 @@ Accessible from the system overview page.
 
 #### Engineer Resource List
 
-*   Click **"View Engineers in Org"**.
+*   Click **"Engineers List"**.
 *   Displays a sortable table of all engineers (including away-team members) in the system.
 *   Columns: #, Engineer Name (with "(Away)" indicator), Level, Team Name, SDM Name, Senior Manager Name.
 *   Click column headers to sort.
@@ -222,7 +222,7 @@ Accessible from the system overview page.
 
 ### Tune Capacity Constraints
 
-*   Click **"Tune Capacity Constraints"** from the system overview page.
+*   Click **"Capacity Tuning"** from the system overview page.
 *   This page allows you to define factors that reduce raw engineering capacity.
 
 #### Global Configuration
@@ -254,7 +254,7 @@ Accessible from the system overview page.
 
 ### Yearly Planning
 
-*   Click **"Manage Year Plan"** from the system overview page.
+*   Click **"Year Plan"** from the system overview page.
 
 #### Planning Table
 
@@ -295,7 +295,7 @@ Accessible from the system overview page.
 
 ### SDM Resource Forecasting Model
 
-*   Click **"SDM Resource Forecasting"** from the system overview page.
+*   Click **"Resource Forecasting"** from the system overview page.
 *   Allows Software Development Managers (SDMs) to model and forecast their team's headcount and effective SDE availability over a 52-week period.
 *   **Inputs:**
     *   Select a Team (Funded Size and Current Engineers are auto-populated).
@@ -331,13 +331,14 @@ Accessible from the system overview page.
     *   Use the carousel to view the System, Team, Service, and Dependency visualizations.
     *   View the Org Chart and Engineer List.
 4.  **Tune Capacity Constraints:**
-    *   Navigate to "Tune Capacity Constraints".
+    *   Navigate to "Capacity Tuning".
+    *   Configure Capacity Constraints".
     *   Set global working days, holidays, and org events.
     *   For each team, configure leave uptake, variable leave impact, team activities, and recurring overhead.
     *   Review the calculated summary, narrative, and waterfall chart to understand net capacity.
     *   Click **"Save All Capacity Configuration"**.
 5.  **Manage Yearly Plan:**
-    *   Navigate to "Manage Year Plan".
+    *   Navigate to "Year Plan".
     *   Add your initiatives with SDE Year estimates per team.
     *   Mark critical initiatives as "Protected".
     *   Drag and drop to prioritize.
@@ -345,7 +346,7 @@ Accessible from the system overview page.
     *   Review the "Team Load Summary" to identify team-specific load.
     *   Click **"Save Current Plan Order & Estimates"**.
 6.  **Forecast Resources (Optional):**
-    *   Navigate to "SDM Resource Forecasting".
+    *   Navigate to "Resource Forecasting".
     *   Select a team and adjust hiring/ramp-up parameters to model their resource trajectory.
 
 ---
