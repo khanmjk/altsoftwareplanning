@@ -452,6 +452,95 @@ label {
     display: inline-block; /* Allow them to not take full line */
 }
 
+/* --- Table Styles --- */
+table { /* General table reset/base */
+    width: 100%;
+    margin-bottom: 1rem;
+    color: #212529;
+    border-collapse: collapse; /* Ensure this is set */
+}
+
+th, td {
+    padding: 0.75rem; /* Default padding, can be overridden */
+    vertical-align: top;
+    border-top: 1px solid #dee2e6; /* Lighter borders */
+}
+
+thead th {
+    vertical-align: bottom;
+    border-bottom: 2px solid #dee2e6; /* Stronger border for header bottom */
+    background-color: #f8f9fa; /* Light header background */
+    font-weight: 600; /* Bolder header text */
+    text-align: left; /* Default left align for headers */
+    white-space: nowrap; /* Prevent header text from wrapping too early */
+}
+
+/* Specific overrides for our existing tables if needed */
+/* Example: Planning table had very specific padding/font sizes */
+#planningTable thead th {
+    /* These were very specific to make header compact. Keep them if they work. */
+    position: sticky; top: 0; z-index: 2;
+    background-color: #e9ecef; /* Slightly darker for planning table sticky header */
+    border: 1px solid #ccc;
+    text-align: left; white-space: nowrap;
+    padding: 3px 5px; font-size: 0.85em;
+}
+#planningTable th[data-team-id] {
+    background-color: #ddeeff; /* Light blue for team headers */
+    padding: 5px 2px; font-size: 0.8em;
+    min-width: 25px; max-width: 25px;
+    /* writing-mode and text-orientation are fine */
+}
+#planningTable tbody td,
+#teamLoadSummaryTable tbody td {
+    padding: 2px 4px; /* Fine-tuned padding */
+    font-size: 0.82em; /* Slightly adjusted font size */
+    border: 1px solid #f0f0f0; /* Very light cell borders */
+    vertical-align: middle;
+}
+#planningTable tbody td input[type="number"] {
+    font-size: 0.9em; /* Make input text slightly larger than cell text */
+    padding: 2px;
+}
+
+/* Engineer Table & Team Breakdown Table */
+#engineerTable th, #engineerTable td,
+#teamTable th, #teamTable td {
+    border: 1px solid #dee2e6;
+    padding: 0.5rem; /* Standardized padding */
+}
+#engineerTable thead th,
+#teamTable thead th {
+    background-color: #f0f2f5; /* AWS-like table header */
+}
+
+/* Team Load Summary Table */
+#teamLoadSummaryTable { font-size: 0.85em; }
+#teamLoadSummaryTable thead th {
+    padding: 5px 8px; /* Slightly more padding */
+    background-color: #f0f2f5;
+}
+#teamLoadSummaryTable tbody td,
+#teamLoadSummaryTable tfoot td {
+    padding: 4px 6px;
+    font-size: 0.85em; /* Match table overall size */
+}
+#teamLoadSummaryTable tfoot td {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+/* Service Dependencies Table */
+#serviceDependenciesTable th { background-color: #f0f2f5; }
+#serviceDependenciesTable th, #serviceDependenciesTable td {
+    padding: 0.5rem;
+    border: 1px solid #dee2e6;
+}
+
+/* SDM Forecasting Tables */
+#sdmForecastingView table { font-size: 0.9em; }
+#sdmForecastingView th { background-color: #f0f2f5; padding: 6px 8px; }
+#sdmForecastingView td { padding: 6px 8px; border: 1px solid #dee2e6; }
 
 
 /* Basic styling */
