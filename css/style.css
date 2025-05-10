@@ -542,6 +542,10 @@ thead th {
 #sdmForecastingView th { background-color: #f0f2f5; padding: 6px 8px; }
 #sdmForecastingView td { padding: 6px 8px; border: 1px solid #dee2e6; }
 
+/* Add bottom margin to the form within the system edit view */
+#editSystemForm {
+    margin-bottom: 40px; /* This provides 20px of space after the -20px top margin of the h3 */
+}
 
 /* Basic styling */
 h1 { text-align: center; }
