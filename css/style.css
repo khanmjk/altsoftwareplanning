@@ -395,7 +395,65 @@ button.btn-link:hover, .button.btn-link:hover {
 /* Your existing CSS rules will follow here... */
 /* e.g., #visualization, #teamVisualization { max-width: 800px; ... } */
 /* ... */
-      
+
+
+/* --- Form Element Styles --- */
+input[type="text"],
+input[type="number"],
+input[type="email"], /* If you add email later */
+input[type="password"], /* If you add password later */
+textarea,
+select {
+    display: block; /* Make them take full width by default in their containers */
+    width: 100%;    /* Or a specific percentage like 90% if preferred inside forms */
+    padding: 0.5rem 0.75rem;
+    font-size: 0.95rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    box-sizing: border-box; /* Important for width: 100% */
+    margin-bottom: 0.5rem; /* Space below form elements */
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+textarea:focus,
+select:focus {
+    border-color: #80bdff; /* Lighter blue focus border */
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); /* AWS-like focus glow */
+}
+
+textarea {
+    resize: vertical; /* Allow only vertical resizing */
+}
+
+select[multiple] {
+    height: auto; /* Let browser determine height for multi-selects */
+    min-height: 100px; /* Retain your min-height for dual lists */
+}
+
+label {
+    display: inline-block; /* Or block if you prefer labels on their own line */
+    margin-bottom: 0.3rem;
+    font-weight: 500;
+}
+
+/* For specific input widths where 100% is too much (like SDE Years input) */
+#newInitiativeSdeYears,
+#planningTable tbody td input[type="number"], /* Targets inputs in planning table cells */
+#sdmForecastingView input[type="number"] { /* Already styled specifically, ensure this doesn't break it or consolidate */
+    width: 80px; /* Or your preferred smaller width */
+    display: inline-block; /* Allow them to not take full line */
+}
+
+
+
 /* Basic styling */
 h1 { text-align: center; }
 
