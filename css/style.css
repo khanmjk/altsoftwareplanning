@@ -342,11 +342,6 @@ button.btn-primary:hover, .button.btn-primary:hover {
     border-color: #0062cc;
 }
 
-/* Secondary/Standard Button (already covered by default, but can be explicit) */
-button.btn-secondary, .button.btn-secondary {
-    /* Uses the default button styles */
-}
-
 /* Destructive Action Button (e.g., Delete, Remove) */
 button.btn-danger, .button.btn-danger {
     color: #fff;
@@ -386,10 +381,6 @@ button.btn-link:hover, .button.btn-link:hover {
 #newInitiativeAssignmentsDisplay button /* Remove assignment button */ {
     font-size: 0.8em;
     padding: 0.25rem 0.5rem;
-}
-#addInitiativeButton { /* The main "Add Initiative to Plan" button */
-    /* This already has inline styles, let's use class for consistency */
-    /* Remove inline style from HTML and use this class */
 }
 
 /* Your existing CSS rules will follow here... */
@@ -926,10 +917,7 @@ svg { width: 100%; height: 600px; border: 1px solid #ccc; }
     text-align: left;
     }
 
-/* --- REVISED: Control column widths for Team Load Summary Table (Attempt 2) --- */
-#teamLoadSummaryTable thead th {
-        /* Base style if needed */
-}
+/* Control column widths for Team Load Summary Table (Attempt 2)  */
 #teamLoadSummaryTable thead th:nth-child(1) { text-align: left; width: 10%; max-width: 30px} /* Team Name */
 #teamLoadSummaryTable thead th:nth-child(2), /* Funded HC */
 #teamLoadSummaryTable thead th:nth-child(3), /* Team BIS */
@@ -939,33 +927,33 @@ svg { width: 100%; height: 600px; border: 1px solid #ccc; }
 #teamLoadSummaryTable thead th:nth-child(7) { width: 12%; max-width: 40px; } /* Scenario Capacity Limit */
 #teamLoadSummaryTable thead th:nth-child(8) { width: 12%; max-width: 40px; } /* Remaining Capacity (ATL) */
 #teamLoadSummaryTable thead th:nth-child(9) { width: 10%; } /* ATL Status */
-/* -------------------------------------------------------------------------- */
 
-    /* REVISED Style for clickable headers */
-    #planningView h3[onclick],
-    #planningView h4[onclick] { /* Keep targeting both in case h4 is used later */
-        cursor: pointer;
-        /* Removed position: relative and padding-left */
-    }
-    /* REVISED Style for toggle indicator */
-    #planningView h3[onclick] span.toggle-indicator,
-    #planningView h4[onclick] span.toggle-indicator {
-        /* Removed absolute positioning properties */
-        display: inline-block; /* Keep this */
-        font-weight: bold;    /* Keep this */
-        margin-right: 5px;    /* Add some space after the indicator */
-        /* Optional: Adjust color if desired */
-        /* color: #007bff; */
-    }
-    /* Style for the disabled constraints toggle label */
-    .toggle-disabled {
-        opacity: 0.6;  /* Make it appear faded */
-        color: #6c757d; /* Grey out the text */
-        cursor: not-allowed !important; /* Ensure 'not-allowed' cursor */
-    }
-    .toggle-disabled input[type="checkbox"] {
-        cursor: not-allowed !important; /* Apply to checkbox too */
-    }            
+
+/* REVISED Style for clickable headers */
+#planningView h3[onclick],
+#planningView h4[onclick] { /* Keep targeting both in case h4 is used later */
+    cursor: pointer;
+    /* Removed position: relative and padding-left */
+}
+/* REVISED Style for toggle indicator */
+#planningView h3[onclick] span.toggle-indicator,
+#planningView h4[onclick] span.toggle-indicator {
+    /* Removed absolute positioning properties */
+    display: inline-block; /* Keep this */
+    font-weight: bold;    /* Keep this */
+    margin-right: 5px;    /* Add some space after the indicator */
+    /* Optional: Adjust color if desired */
+    /* color: #007bff; */
+}
+/* Style for the disabled constraints toggle label */
+.toggle-disabled {
+    opacity: 0.6;  /* Make it appear faded */
+    color: #6c757d; /* Grey out the text */
+    cursor: not-allowed !important; /* Ensure 'not-allowed' cursor */
+}
+.toggle-disabled input[type="checkbox"] {
+    cursor: not-allowed !important; /* Apply to checkbox too */
+}            
 /* --- Styles specifically for SDM Forecasting Tool View --- */
 #sdmForecastingView .input-section,
 #sdmForecastingView .output-section {

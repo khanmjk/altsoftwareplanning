@@ -30,6 +30,11 @@ Implement the logic within EnhancedTableWidget to take these definitions and cor
 ------
 TO DO
 ------
+
+Utilities
+- Now that we've got export to excel, csv and json working, we need a utlity to generate these files from other places: planning table, overall system data dump, etc.
+
+
 UX
 -- Now that we can add resources to the system, we need to also support removing resources (when people leave)
 -- Ability to export the system to JSON, CSV and Excel, from top level menu "Export System" [leveraging Tabular library's export functionality]
