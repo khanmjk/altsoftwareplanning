@@ -14,22 +14,26 @@ A lot has been done
 [Done] Refactored single index.html to multiple files by features, major refactor
 [Done] Refresh the MVP UX to look like a modernized webapp
 [Done] [Feature] No ability to add new engineers to team (regression)
+[Done] [Feature] Make the Engineer List editable as well, build common table widget
 
 ------------
 IN PROGRESS
 ------------
-- [Feature] Make the Engineer List editable as well
+
+- Working on creating a reusable modern table widget leveraging tabular library
 
 ------
 TO DO
 ------
 UX
--- 
+-- Now that we can add resources to the system, we need to also support removing resources (when people leave)
+-- Ability to export the system to JSON, CSV and Excel, from top level menu "Export System" [leveraging Tabular library's export functionality]
 
 Data Model
 -- Inspect the data model structure and enhance the data model for future backlog items, create an easy way to extend the data structure without having to change a lot of existing code - so maybe add an attribute that allows for future additions to the model (extensible data structure)
 -- Enhance the team member structure by supporting AI SWEs to supplement the team. These AI SWE (software engineers) can have different skill levels too, similar to human: Intern, Junior, Intermediate, Senior. They could be added from a pool of AI agents
 for away team work, or can be part of a team like any other human engineer
+-- Enhance data model to track engineer skillsets and perhaps degree qualifications, maybe even years of industry experience
 
 Year Planning
 -- Add ROI (Return on investment - some protected initiatives will override ROI) for prioritising initiatives, Target Due/Dates, Delivery Quarter columns to year plan table (updates to data model needed)
