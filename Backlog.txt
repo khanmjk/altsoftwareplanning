@@ -94,6 +94,20 @@ Manage Detailed Planning
 -- A work package can have 0..many dependencies on other work packages
 
 AI enhancements
+- Create a top-level menu for "AI-Assistant" - a page that allows the user to interact through a chat interface on interrogating the selected system
+-- Create an AI agent that can perform actions on the system with access to the code
+-- A cool feature would be to enable the user to recreate classic systems they wanted to learn about more, using the established data construct underlying the app (basically generate synthetic sample system architecture with a sample team/org structure)
+-- Advanced: We can allow the user to pass in a link to github repo, to analyse the repo and create the system architcture visualizations
+-- Ask questions about the system architecture
+-- Find out about the people / teams
+-- Understand the current status of the backlog
+-- Inspect the year plan: which teams are underfunded? Which initiatives are ATL?
+-- Ask it to help identify bottlenecks: Inspect capacity contraints, find optimizations in the planning, suggest ideas to improve delivery plan
+-- Analyse the make-up of teams, flag risks like a team is funded mostly with junior engineers, doesn't have a senior engineer, etc. Flag hiring concerns.
+-- Use AI to update and change the system: Like move engineers to new managers, Add new initiatives to backlog
+-- Use AI to generate a delivery plan - classic ganntt chart using the year plan as input, work out a plan per team for the year
+-- Use AI to set-up recurring tasks to collect status updates for initiatives (detailed work package tracking feature)
+-- USe AI to generate graphs / views the webapp pages don't currently render - like a pie chart showing disribution of initiatives by themes
 - Solve for dynamic input of API key to use AI features (ask the user to provide the name of their environment variable for the app to read local API key, not made public in the code or console log) (a local secure way of accessing user's API key. If the API key does not exist, no AI features exposed).
 - Use AI to create a new system from a visual software architecture diagram
 - Use AI conversational chatbot to set up a new system, edit, or interact with the data associated with existing systems
