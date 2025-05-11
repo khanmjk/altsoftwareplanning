@@ -154,8 +154,6 @@ function generateOrganogram() {
 let engineerListTable = null; // To hold the Tabulator instance
 let engineerTableWidgetInstance = null;
 
-// In js/orgView.js
-
 // Make sure updateEngineerTableHeading, prepareEngineerDataForTabulator,
 // and defineEngineerTableColumns are defined in this file as per our previous discussions.
 // (Their content will be the versions we finalized that fix display issues and data updates).
@@ -274,6 +272,7 @@ function prepareEngineerDataForTabulator() {
 // In js/orgView.js
 
 function defineEngineerTableColumns() {
+    // ... (engineerLevels, levelEditorParams, getTeamIdentityEditorParams, editableCellFormatter remain the same as the last working version) ...
     const engineerLevels = [
         { label: "L1", value: 1 }, { label: "L2", value: 2 }, { label: "L3", value: 3 },
         { label: "L4", value: 4 }, { label: "L5", value: 5 }, { label: "L6", value: 6 },
@@ -281,8 +280,7 @@ function defineEngineerTableColumns() {
     ];
 
     const levelEditorParams = {
-        values: engineerLevels, // Tabulator will use 'label' for display, 'value' for the value.
-        // listItemFormatter: function(value, title){ return title; }, // <<-- REMOVE THIS LINE
+        values: engineerLevels,
         autocomplete: false,
         clearable: false,
     };
@@ -297,16 +295,13 @@ function defineEngineerTableColumns() {
             }
         });
         return {
-            values: options, // Tabulator will use 'label' for display, 'value' for the value.
-            // listItemFormatter: function(value, title) { return title; }, // <<-- REMOVE THIS LINE
+            values: options,
             autocomplete: false,
             clearable: true,
         };
     };
 
-    // Formatter to add a pencil icon to editable cells for visual cue
     const editableCellFormatter = function(cell, formatterParams, onRendered){
-        // ... (this function remains the same as the previous version)
         let value = cell.getValue();
         const field = cell.getField();
 
@@ -328,16 +323,21 @@ function defineEngineerTableColumns() {
         return value;
     };
 
+
     return [
         {
             title: "Engineer Name", field: "name", sorter: "string", minWidth: 200, frozen: true,
-            editable: false
+            editable: false,
+            // For export, ensure the 'name' field is used directly
+            accessorDownload: function(value, data, type, params, column, row) {
+                return data.name; // Or simply 'value' if field is 'name'
+            }
         },
         {
             title: "Level", field: "level", width: 120, hozAlign: "left",
             sorter: "number",
             editor: "list",
-            editorParams: levelEditorParams, // Updated params without listItemFormatter
+            editorParams: levelEditorParams,
             formatter: editableCellFormatter,
             cellEdited: function(cell) {
                 // ... (cellEdited logic for Level remains the same)
@@ -360,6 +360,13 @@ function defineEngineerTableColumns() {
                     }
                     saveSystemChanges();
                 }
+            },
+            // For export, ensure the numeric level is used, or format as "L1" if preferred in export
+            accessorDownload: function(value, data, type, params, column, row) {
+                // return data.level; // Exports the raw number: 1, 2, 3
+                // OR if you want "L1", "L2" in export:
+                const levelObj = engineerLevels.find(l => l.value === data.level);
+                return levelObj ? levelObj.label : data.level;
             }
         },
         {
@@ -368,7 +375,7 @@ function defineEngineerTableColumns() {
             minWidth: 170,
             hozAlign: "left",
             editor: "list",
-            editorParams: getTeamIdentityEditorParams, // Updated params without listItemFormatter
+            editorParams: getTeamIdentityEditorParams,
             formatter: editableCellFormatter,
             cellEdited: function(cell) {
                 // ... (cellEdited logic for Team Identity remains the same)
@@ -397,10 +404,29 @@ function defineEngineerTableColumns() {
                     saveSystemChanges();
                     generateEngineerTable();
                 }
+            },
+            // ***** START OF FIX FOR EXPORT *****
+            accessorDownload: function(value, data, type, accessorParams, column, row) {
+                // 'value' here is the teamId (or null) from the row's data for this field
+                // 'data' is the entire data object for the row
+                const teamId = data.teamId; // Or simply 'value'
+                if (teamId) {
+                    const team = (currentSystemData.teams || []).find(t => t.teamId === teamId);
+                    return team ? (team.teamIdentity || team.teamName || teamId) : "Invalid Team ID";
+                } else {
+                    return "Unallocated";
+                }
             }
+            // ***** END OF FIX FOR EXPORT *****
         },
-        { title: "SDM Name", field: "sdmName", sorter: "string", minWidth: 150, editable: false },
-        { title: "Senior Manager", field: "seniorManagerName", sorter: "string", minWidth: 150, editable: false },
+        {
+            title: "SDM Name", field: "sdmName", sorter: "string", minWidth: 150, editable: false,
+            accessorDownload: function(value, data) { return data.sdmName; } // Explicitly return field value
+        },
+        {
+            title: "Senior Manager", field: "seniorManagerName", sorter: "string", minWidth: 150, editable: false,
+            accessorDownload: function(value, data) { return data.seniorManagerName; } // Explicitly return field value
+        },
     ];
 }
 
