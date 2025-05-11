@@ -13,12 +13,12 @@ A lot has been done
 [Done] Landing home page - include a content window that shows the documentation about the tool
 [Done] Refactored single index.html to multiple files by features, major refactor
 [Done] Refresh the MVP UX to look like a modernized webapp
+[Done] [Feature] No ability to add new engineers to team (regression)
 
 ------------
 IN PROGRESS
 ------------
-
-
+- [Feature] Make the Engineer List editable as well
 
 ------
 TO DO
@@ -89,7 +89,6 @@ AI enhancements
 
 Bugs / Missing features
 - [Bug] Apply consistent behaviour for displaying visualization graphs in caroussel - fix legends
-- [Feature] No ability to add new engineers to team (regression)
 - [UX] Use team identity instead of team name for "Owning Team" column in Service Dependencies table when Service Dependency Visualization is shown on the carousel
 - [UX] Use consistent formatting for legends in the carousel (circles not blocks)
 - [Feature] For all visualizations add a toggle button to show/hide platform components 

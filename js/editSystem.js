@@ -544,297 +544,405 @@ function deleteApi(serviceIndex, apiIndex, containerId) {
     displayServicesForEditing(currentSystemData.services, containerId, serviceIndex);
 }
 
-/** Display Teams for Editing **/
-/** REVISED Display Teams for Editing - Adds Away-Team Management Section */
-function displayTeamsForEditing(teams, expandedIndex = -1) {
+ /**
+ * REVISED Display Teams for Editing
+ * - Uses currentSystemData.allKnownEngineers as the master list for engineer availability.
+ * - Implements "Add New Engineer" to the system-wide pool.
+ * - Displays "(Team Name / Unallocated)" next to available engineers.
+ * - Handles engineer moves between teams correctly, updating allKnownEngineers.
+ * - Refreshes all team UIs upon significant changes to engineer assignments or new engineer additions.
+ */
+function displayTeamsForEditing(teamsDataToDisplay, expandedTeamIndex = -1) {
+    console.log("displayTeamsForEditing called. Expanded index:", expandedTeamIndex);
     const teamsDiv = document.getElementById('teamsManagement');
+    if (!teamsDiv) {
+        console.error("Team management div 'teamsManagement' not found.");
+        return;
+    }
     teamsDiv.innerHTML = ''; // Clear existing content
 
-    // Pre-fetch global lists (keep as before)
+    // Ensure global data structures are present
+    if (!currentSystemData) {
+        console.error("currentSystemData is not available.");
+        teamsDiv.innerHTML = "<p style='color:red;'>Error: System data not loaded.</p>";
+        return;
+    }
+    if (!currentSystemData.allKnownEngineers || !Array.isArray(currentSystemData.allKnownEngineers)) {
+        console.warn("'currentSystemData.allKnownEngineers' is not initialized. Attempting to build it now.");
+        currentSystemData.allKnownEngineers = [];
+        // Populate from existing teams if it's missing (e.g., loading older data)
+        (currentSystemData.teams || []).forEach(team => {
+            (team.engineers || []).forEach(engineer => {
+                if (engineer && engineer.name && !currentSystemData.allKnownEngineers.some(e => e.name === engineer.name)) {
+                    currentSystemData.allKnownEngineers.push({
+                        name: engineer.name,
+                        level: engineer.level || 1,
+                        currentTeamId: team.teamId
+                    });
+                } else if (engineer && engineer.name) {
+                    // If engineer exists, ensure their currentTeamId is updated (first one wins for now)
+                    const existingKnown = currentSystemData.allKnownEngineers.find(e => e.name === engineer.name);
+                    if (existingKnown && !existingKnown.currentTeamId) {
+                        existingKnown.currentTeamId = team.teamId;
+                    }
+                }
+            });
+        });
+        console.log("Built 'allKnownEngineers':", JSON.parse(JSON.stringify(currentSystemData.allKnownEngineers)));
+    }
+
     const allServices = (currentSystemData.services || []).map(service => ({ value: service.serviceName, text: service.serviceName, owningTeamId: service.owningTeamId || null }));
     const allSdms = currentSystemData.sdms || [];
     const allPmts = currentSystemData.pmts || [];
-    const allSeniorManagers = currentSystemData.seniorManagers || [];
-    // Note: Away-team list is per-team, not global selection here
+    // const allSeniorManagers = currentSystemData.seniorManagers || []; // Not directly used in team loop, but by displaySeniorManagerAssignment
 
-    (teams || []).forEach((team, index) => {
-        if (!team) { console.warn("Skipping invalid team object at index", index); return; }
+    (teamsDataToDisplay || []).forEach((team, teamIndex) => {
+        if (!team || !team.teamId) {
+            console.warn("Skipping invalid team object at index", teamIndex, team);
+            return;
+        }
 
         let teamDiv = document.createElement('div');
         teamDiv.className = 'team-edit';
-        teamDiv.setAttribute('data-team-render-index', index); // Keep render index if needed
+        teamDiv.setAttribute('data-team-id', team.teamId); // Use teamId for a more stable attribute
+        teamDiv.setAttribute('data-team-render-index', teamIndex);
 
-        // --- Header (Collapsible) - No Change ---
+
         let teamHeader = document.createElement('h4');
         teamHeader.style.cursor = 'pointer';
         let indicator = document.createElement('span');
-        indicator.innerText = (index === expandedIndex) ? '- ' : '+ ';
+        // Determine if this specific team should be expanded
+        const isExpanded = (teamIndex === expandedTeamIndex) || (teamsDataToDisplay.length === 1); // Expand if it's the one specified or only one team
+        indicator.innerText = isExpanded ? '- ' : '+ ';
         teamHeader.appendChild(indicator);
-        teamHeader.appendChild(document.createTextNode(`Team: ${team.teamIdentity || team.teamName || 'New Team'}`));
+        teamHeader.appendChild(document.createTextNode(`Team: ${team.teamIdentity || team.teamName || `Team ${teamIndex + 1}`}`));
 
         let teamDetails = document.createElement('div');
         teamDetails.className = 'team-details';
-        teamDetails.style.display = (index === expandedIndex) ? 'block' : 'none';
+        teamDetails.style.display = isExpanded ? 'block' : 'none';
 
-        // Toggle Functionality (Keep as before, but refresh away-team list too)
         teamHeader.onclick = () => {
-            const content = teamDetails;
-            const isCurrentlyCollapsed = content.style.display === 'none' || content.style.display === '';
-            content.style.display = isCurrentlyCollapsed ? 'block' : 'none';
-            indicator.innerText = isCurrentlyCollapsed ? '- ' : '+ ';
-            if (isCurrentlyCollapsed) {
-                 // Refresh Available Services
-                 refreshAvailableListsInDualList(content, 'currentServices', 'availableServices',
-                    (currentSystemData.services || []).map(s => ({ value: s.serviceName, text: s.serviceName, owningTeamId: s.owningTeamId || null })),
-                    team.teamId
-                 );
-                 // Refresh Sr Mgr display
-                 displaySeniorManagerAssignment(content.querySelector(`#sdmSection_${index}`), index, team.sdmId);
-                 // Refresh Away-Team List Display (in case data changed elsewhere)
-                 displayAwayTeamMembers(team.awayTeamMembers || [], index);
-                 // Refresh Effective BIS display
-                 updateEffectiveBISDisplay(index);
+            const currentlyExpanded = teamDetails.style.display === 'block';
+            if (currentlyExpanded) {
+                teamDetails.style.display = 'none';
+                indicator.innerText = '+ ';
+            } else {
+                // Collapse any other open team details section
+                document.querySelectorAll('#teamsManagement .team-details').forEach(td => td.style.display = 'none');
+                document.querySelectorAll('#teamsManagement h4 > span').forEach(ind => ind.innerText = '+ ');
+
+                // Expand current
+                teamDetails.style.display = 'block';
+                indicator.innerText = '- ';
+                // No need to explicitly call refreshAllAvailableEngineerLists here if displayTeamsForEditing is called on major changes.
+                // However, parts of the form might need data refreshed if not done by a full displayTeamsForEditing call.
+                // For now, let's assume major changes trigger a full re-render.
+                // Ensure SDM/PMT/Service lists are fresh if they depend on other parts of the form.
+                // This might involve re-calling the createDualListContainer or specific update functions for those.
+                 displaySeniorManagerAssignment(teamDiv.querySelector(`#sdmSection_${teamIndex}`), teamIndex, team.sdmId);
+                 displayAwayTeamMembers(team.awayTeamMembers || [], teamIndex);
+                 updateEffectiveBISDisplay(teamIndex);
+
             }
         };
-        // --- End Header ---
 
-        // --- Basic Info Inputs (Using revised helper) ---
-        teamDetails.appendChild(createInputLabelPair(`teamIdentity_${index}`, 'Team Identity:', team.teamIdentity || '', 'text', index, 'teamIdentity'));
-        teamDetails.appendChild(createInputLabelPair(`teamName_${index}`, 'Team Name:', team.teamName || '', 'text', index, 'teamName'));
-        teamDetails.appendChild(createInputLabelPair(`teamDescription_${index}`, 'Team Description:', team.teamDescription || '', 'textarea', index, 'teamDescription'));
-        // --- End Basic Info ---
+        // --- Basic Info Inputs --- (Using helper createInputLabelPair from utils.js)
+        teamDetails.appendChild(createInputLabelPair(`teamIdentity_${teamIndex}`, 'Team Identity:', team.teamIdentity || '', 'text', teamIndex, 'teamIdentity'));
+        teamDetails.appendChild(createInputLabelPair(`teamName_${teamIndex}`, 'Team Name:', team.teamName || '', 'text', teamIndex, 'teamName'));
+        teamDetails.appendChild(createInputLabelPair(`teamDescription_${teamIndex}`, 'Team Description:', team.teamDescription || '', 'textarea', teamIndex, 'teamDescription'));
 
-        // --- Services Owned Dual List (Keep as before) ---
-        const currentServices = allServices.filter(s => s.owningTeamId === team.teamId);
-        const availableServices = allServices.filter(s => s.owningTeamId !== team.teamId);
+        // --- Services Owned Dual List ---
+        const currentServicesForTeam = (team.teamId && allServices.filter(s => s.owningTeamId === team.teamId)) || [];
+        const availableServicesForTeam = allServices.filter(s => s.owningTeamId !== team.teamId && s.owningTeamId === null); // Only show unowned services as available
         const servicesContainer = createDualListContainer(
-             index, 'Services Owned:', 'Available Services:',
-             currentServices, availableServices,
+             teamIndex, 'Services Owned:', 'Available Unowned Services:',
+             currentServicesForTeam,
+             availableServicesForTeam,
              'currentServices', 'availableServices',
-             (movedOptionValue, direction, contextIndex) => { /* ... service move callback (no change) ... */
-                const service = currentSystemData.services.find(s => s.serviceName === movedOptionValue);
-                const targetTeam = currentSystemData.teams[contextIndex];
-                if (service && targetTeam) {
-                    service.owningTeamId = (direction === 'add') ? targetTeam.teamId : null;
+             (movedServiceValue, direction, currentTeamIndexCallback) => {
+                const serviceToUpdate = currentSystemData.services.find(s => s.serviceName === movedServiceValue);
+                const targetTeamForService = currentSystemData.teams[currentTeamIndexCallback];
+                if (serviceToUpdate && targetTeamForService) {
+                    if (direction === 'add') {
+                        serviceToUpdate.owningTeamId = targetTeamForService.teamId;
+                    } else {
+                        serviceToUpdate.owningTeamId = null; // Service becomes unowned
+                    }
+                    // Refresh all team UIs to update their "Services Owned" and "Available Services" lists
+                    displayTeamsForEditing(currentSystemData.teams, currentTeamIndexCallback);
                 }
              }
         );
         teamDetails.appendChild(servicesContainer);
         teamDetails.appendChild(document.createElement('br'));
-        // --- End Services ---
 
-        // --- SDM Assignment & Senior Manager Assignment (Keep as before) ---
-        const sdmSection = document.createElement('div'); /* ... sdm section setup (no change) ... */
-        sdmSection.id = `sdmSection_${index}`; sdmSection.style.border = '1px dashed #ccc'; sdmSection.style.padding = '10px'; sdmSection.style.marginBottom = '10px';
+        // --- SDM Assignment & Senior Manager Assignment ---
+        const sdmSection = document.createElement('div');
+        sdmSection.id = `sdmSection_${teamIndex}`;
+        sdmSection.style.border = '1px dashed #ccc'; sdmSection.style.padding = '10px'; sdmSection.style.marginBottom = '10px';
         let sdmSectionTitle = document.createElement('h5'); sdmSectionTitle.innerText = 'SDM Assignment'; sdmSection.appendChild(sdmSectionTitle);
         const currentSdm = allSdms.find(sdm => sdm && sdm.sdmId === team.sdmId);
-        const sdmContainer = createDualListContainer( /* ... sdm dual list setup (no change) ... */
-            index, 'Current SDM:', 'Available SDMs:',
+        const sdmContainer = createDualListContainer(
+            teamIndex, 'Current SDM:', 'Available SDMs:',
             currentSdm ? [{ value: currentSdm.sdmId, text: currentSdm.sdmName }] : [],
-            allSdms.filter(sdm => sdm && sdm.sdmId !== team.sdmId).map(sdm => ({ value: sdm.sdmId, text: sdm.sdmName })),
+            allSdms.filter(sdm => sdm && (!team.sdmId || sdm.sdmId !== team.sdmId)).map(sdm => ({ value: sdm.sdmId, text: sdm.sdmName })),
             'currentSdm', 'availableSdms',
-            (movedOptionValue, direction, contextIndex) => { // SDM Move Callback
-                const targetTeam = currentSystemData.teams[contextIndex];
-                if(targetTeam){
-                    const newSdmId = (direction === 'add') ? movedOptionValue : null;
-                    targetTeam.sdmId = newSdmId;
-                    // Refresh Sr. Mgr section using the specific sdmSection container
-                    displaySeniorManagerAssignment(sdmSection, contextIndex, newSdmId);
+            (movedSdmId, directionCallback, teamIndexCallback) => {
+                const targetTeamForSdm = currentSystemData.teams[teamIndexCallback];
+                if (targetTeamForSdm) {
+                    const newSdmIdValue = (directionCallback === 'add') ? movedSdmId : null;
+                    targetTeamForSdm.sdmId = newSdmIdValue;
+                    displaySeniorManagerAssignment(sdmSection, teamIndexCallback, newSdmIdValue); // Update Sr. Mgr display
+                    // Refresh all team UIs if SDM assignment can affect other "Available SDMs" lists (e.g. if an SDM can only manage one team)
+                    // For now, assume SDM can manage multiple teams, so only this team's UI needs the Sr Mgr section refreshed.
                 }
             },
-            false, true, 'Enter New SDM Name', // Single select left, allow add new
-            (newSdmName) => { /* ... add new sdm callback (no change) ... */
-                if (!newSdmName || newSdmName.trim() === '') return null; newSdmName = newSdmName.trim();
-                let existingSdm = allSdms.find(s => s && s.sdmName.toLowerCase() === newSdmName.toLowerCase());
-                if (existingSdm) { alert(`SDM "${newSdmName}" already exists.`); return null; }
-                const newSdmId = 'sdm-' + Date.now(); const newSdm = { sdmId: newSdmId, sdmName: newSdmName, seniorManagerId: null };
-                currentSystemData.sdms.push(newSdm); allSdms.push(newSdm); // Update local cache too
-                console.log("Added new SDM:", newSdm); return { value: newSdmId, text: newSdmName };
-             }
+            false, true, 'Enter New SDM Name',
+            (newSdmNameInput) => { // addNewCallback for SDM
+                 if (!newSdmNameInput || newSdmNameInput.trim() === '') return null;
+                 newSdmNameInput = newSdmNameInput.trim();
+                 let existingSdmEntry = (currentSystemData.sdms || []).find(s => s && s.sdmName.toLowerCase() === newSdmNameInput.toLowerCase());
+                 if (existingSdmEntry) {
+                     alert(`SDM "${newSdmNameInput}" already exists.`);
+                     return { value: existingSdmEntry.sdmId, text: existingSdmEntry.sdmName, preventAdd: true };
+                 }
+                 const newSdmIdEntry = 'sdm-' + Date.now();
+                 const newSdmObject = { sdmId: newSdmIdEntry, sdmName: newSdmNameInput, seniorManagerId: null };
+                 if (!currentSystemData.sdms) currentSystemData.sdms = [];
+                 currentSystemData.sdms.push(newSdmObject);
+                 console.log("Added new SDM to system data:", newSdmObject);
+                 displayTeamsForEditing(currentSystemData.teams, teamIndex); // Refresh all to update SDM lists globally
+                 return { value: newSdmIdEntry, text: newSdmNameInput };
+            }
         );
         sdmSection.appendChild(sdmContainer);
-        let srMgrAssignmentContainer = document.createElement('div'); srMgrAssignmentContainer.id = `srMgrAssignmentContainer_${index}`; srMgrAssignmentContainer.style.marginTop = '10px';
+        let srMgrAssignmentContainer = document.createElement('div');
+        srMgrAssignmentContainer.id = `srMgrAssignmentContainer_${teamIndex}`;
+        srMgrAssignmentContainer.style.marginTop = '10px';
         sdmSection.appendChild(srMgrAssignmentContainer);
-        teamDetails.appendChild(sdmSection); teamDetails.appendChild(document.createElement('br'));
-        // Initial population of Sr Mgr (will also happen on expand)
-        if (teamDetails.style.display === 'block') {
-            displaySeniorManagerAssignment(sdmSection, index, team.sdmId);
+        teamDetails.appendChild(sdmSection);
+        teamDetails.appendChild(document.createElement('br'));
+        if (isExpanded) { // If initially expanded, populate Sr. Mgr section
+            displaySeniorManagerAssignment(sdmSection, teamIndex, team.sdmId);
         }
-        // --- End SDM/SrMgr ---
 
-        // --- PMT Assignment (Keep as before) ---
+        // --- PMT Assignment ---
         const currentPmt = allPmts.find(pmt => pmt && pmt.pmtId === team.pmtId);
-        const pmtContainer = createDualListContainer(/* ... pmt dual list setup (no change) ... */
-            index, 'Current PMT:', 'Available PMTs:',
+        const pmtContainer = createDualListContainer(
+            teamIndex, 'Current PMT:', 'Available PMTs:',
             currentPmt ? [{ value: currentPmt.pmtId, text: currentPmt.pmtName }] : [],
-            allPmts.filter(pmt => pmt && pmt.pmtId !== team.pmtId).map(pmt => ({ value: pmt.pmtId, text: pmt.pmtName })),
+            allPmts.filter(pmt => pmt && (!team.pmtId || pmt.pmtId !== team.pmtId)).map(pmt => ({ value: pmt.pmtId, text: pmt.pmtName })),
             'currentPmt', 'availablePmts',
-            (movedOptionValue, direction, contextIndex) => { // PMT Move Callback
-                const targetTeam = currentSystemData.teams[contextIndex];
-                if(targetTeam) targetTeam.pmtId = (direction === 'add') ? movedOptionValue : null;
+            (movedPmtId, directionCallback, teamIndexCallback) => {
+                const targetTeamForPmt = currentSystemData.teams[teamIndexCallback];
+                if (targetTeamForPmt) targetTeamForPmt.pmtId = (directionCallback === 'add') ? movedPmtId : null;
+                // Similar to SDM, refresh all if PMT uniqueness across teams is a rule. Assume PMT can be on multiple teams.
             },
-            false, true, 'Enter New PMT Name', // Single select left, allow add new
-             (newPmtName) => { /* ... add new pmt callback (no change) ... */
-                 if (!newPmtName || newPmtName.trim() === '') return null; newPmtName = newPmtName.trim();
-                 let existingPmt = allPmts.find(p => p && p.pmtName.toLowerCase() === newPmtName.toLowerCase());
-                 if (existingPmt) { alert(`PMT "${newPmtName}" already exists.`); return null; }
-                 const newPmtId = 'pmt-' + Date.now(); const newPmt = { pmtId: newPmtId, pmtName: newPmtName };
-                 currentSystemData.pmts.push(newPmt); allPmts.push(newPmt); // Update local cache
-                 console.log("Added new PMT:", newPmt); return { value: newPmtId, text: newPmtName };
-              }
+            false, true, 'Enter New PMT Name',
+            (newPmtNameInput) => { // addNewCallback for PMT
+                if (!newPmtNameInput || newPmtNameInput.trim() === '') return null;
+                newPmtNameInput = newPmtNameInput.trim();
+                let existingPmtEntry = (currentSystemData.pmts || []).find(p => p && p.pmtName.toLowerCase() === newPmtNameInput.toLowerCase());
+                if (existingPmtEntry) {
+                    alert(`PMT "${newPmtNameInput}" already exists.`);
+                    return { value: existingPmtEntry.pmtId, text: existingPmtEntry.pmtName, preventAdd: true };
+                }
+                const newPmtIdEntry = 'pmt-' + Date.now();
+                const newPmtObject = { pmtId: newPmtIdEntry, pmtName: newPmtNameInput };
+                if (!currentSystemData.pmts) currentSystemData.pmts = [];
+                currentSystemData.pmts.push(newPmtObject);
+                console.log("Added new PMT to system data:", newPmtObject);
+                displayTeamsForEditing(currentSystemData.teams, teamIndex); // Refresh all to update PMT lists globally
+                return { value: newPmtIdEntry, text: newPmtNameInput };
+            }
         );
-        teamDetails.appendChild(pmtContainer); teamDetails.appendChild(document.createElement('br'));
-        // --- End PMT ---
+        teamDetails.appendChild(pmtContainer);
+        teamDetails.appendChild(document.createElement('br'));
 
         // --- Headcount Section ---
-        teamDetails.appendChild(createInputLabelPair(`fundedHeadcount_${index}`, 'Finance Approved Funding:', team.fundedHeadcount ?? 0, 'number', index, 'fundedHeadcount'));
-
-        // ** UPDATED: Display Effective BIS (Read Only) **
-        const teamBIS = team.engineers?.length ?? 0;
-        const awayTeamBIS = team.awayTeamMembers?.length ?? 0;
-        const effectiveBIS = teamBIS + awayTeamBIS;
-        const bisTooltip = `Team BIS: ${teamBIS}, Away-Team BIS: ${awayTeamBIS}`;
+        teamDetails.appendChild(createInputLabelPair(`fundedHeadcount_${teamIndex}`, 'Finance Approved Funding:', team.fundedHeadcount ?? 0, 'number', teamIndex, 'fundedHeadcount'));
+        const currentTeamBIS = team.engineers?.length ?? 0;
+        const currentAwayTeamBIS = team.awayTeamMembers?.length ?? 0;
+        const currentEffectiveBIS = currentTeamBIS + currentAwayTeamBIS;
+        const bisTooltipText = `Team BIS (Current Engineers): ${currentTeamBIS}, Away-Team BIS: ${currentAwayTeamBIS}`;
         teamDetails.appendChild(
-            createInputLabelPair(`effectiveBIS_${index}`, 'Effective BIS:', effectiveBIS, 'text', index, 'effectiveBIS', true, bisTooltip) // isReadOnly = true
+            createInputLabelPair(`effectiveBIS_${teamIndex}`, 'Effective BIS:', currentEffectiveBIS.toFixed(0), 'text', teamIndex, 'effectiveBIS', true, bisTooltipText)
         );
         teamDetails.appendChild(document.createElement('br'));
-        // --- End Headcount ---
 
-        // --- Engineer Assignment (Keep as before) ---
-        let engineersSectionTitle = document.createElement('h5'); /* ... engineer section setup (no change) ... */
-        engineersSectionTitle.innerText = 'Team Engineer Assignment'; engineersSectionTitle.style.marginTop = '15px'; teamDetails.appendChild(engineersSectionTitle);
-        const currentEngineerOptions = (team.engineers || []).map(eng => ({ value: eng.name, text: `${eng.name} (L${eng.level ?? '?'})` })); // Show level in list
-        // Available needs to be calculated carefully now
-        let allEngineerNamesMap = new Map();
-        (currentSystemData.teams || []).forEach(t => { (t.engineers || []).forEach(eng => { if (eng?.name) allEngineerNamesMap.set(eng.name, t.teamId); }); });
-        const availableEngineerOptions = Array.from(allEngineerNamesMap.keys()).filter(name => allEngineerNamesMap.get(name) !== team.teamId).map(name => ({ value: name, text: name }));
+        // --- Engineer Assignment Section ---
+        let engineersSectionTitle = document.createElement('h5');
+        engineersSectionTitle.innerText = 'Team Engineer Assignment';
+        engineersSectionTitle.style.marginTop = '15px';
+        teamDetails.appendChild(engineersSectionTitle);
 
-        const engineerContainer = createDualListContainer( /* ... engineer dual list setup (no change in basic structure) ... */
-            index, 'Current Engineers:', 'Available Engineers:', currentEngineerOptions, availableEngineerOptions,
-            'currentEngineers', 'availableEngineers',
-            (movedEngineerName, direction, contextIndex) => { // Engineer Move Callback
-                 const currentTeam = currentSystemData.teams[contextIndex]; if (!currentTeam) return;
-                 if (direction === 'add') { /* ... remove from other teams, add to current (no change) ... */
-                    let engineerLevel = 1; // Default level
-                    // Try find the engineer on another team to get their level
-                    currentSystemData.teams.forEach(otherTeam => {
-                         const existingEng = (otherTeam.engineers || []).find(eng => eng.name === movedEngineerName);
-                         if (existingEng) engineerLevel = existingEng.level ?? 1;
-                    });
+        const currentEngineerOptions = (team.engineers || []).map(eng => ({
+            value: eng.name,
+            text: `${eng.name} (L${eng.level ?? '?'})`
+        }));
 
-                     // Remove from *all* other teams first
-                     currentSystemData.teams.forEach((otherTeam, otherIdx) => {
-                         if (otherTeam.teamId !== currentTeam.teamId && otherTeam.engineers) {
-                             const initialLength = otherTeam.engineers.length;
-                             otherTeam.engineers = otherTeam.engineers.filter(eng => eng.name !== movedEngineerName);
-                             if (otherTeam.engineers.length < initialLength) {
-                                 updateEffectiveBISDisplay(otherIdx); // Update other team's displayed BIS
-                             }
-                         }
-                     });
-                    // Add engineer to current team if not already present
-                    if (!currentTeam.engineers) currentTeam.engineers = [];
-                    if (!currentTeam.engineers.some(eng => eng.name === movedEngineerName)) {
-                        currentTeam.engineers.push({ name: movedEngineerName, level: engineerLevel }); // Use found/default level
-                        console.log(`Added ${movedEngineerName} to team ${currentTeam.teamId}`);
+        // Populate Available Engineers: allKnownEngineers not in current team's engineer list
+        const availableEngineerOptions = (currentSystemData.allKnownEngineers || [])
+            .filter(knownEng => !(team.engineers || []).some(currentEng => currentEng.name === knownEng.name))
+            .map(knownEng => {
+                let currentTeamName = "Unallocated";
+                if (knownEng.currentTeamId) {
+                    const assignedTeam = (currentSystemData.teams || []).find(t => t.teamId === knownEng.currentTeamId);
+                    currentTeamName = assignedTeam ? (assignedTeam.teamIdentity || assignedTeam.teamName) : "Unknown Team";
+                }
+                return {
+                    value: knownEng.name,
+                    text: `${knownEng.name} (L${knownEng.level ?? '?'}) (${currentTeamName})`
+                };
+            });
+
+        const engineerContainer = createDualListContainer(
+            teamIndex,
+            'Current Engineers:',
+            'Available Engineers (System Pool):',
+            currentEngineerOptions,
+            availableEngineerOptions,
+            'currentEngineers',
+            'availableEngineers',
+            (movedEngineerName, direction, teamIndexCallback) => { // moveCallback
+                const targetTeamForEngineer = currentSystemData.teams[teamIndexCallback];
+                if (!targetTeamForEngineer) return;
+
+                const engineerGlobalInfo = (currentSystemData.allKnownEngineers || []).find(ke => ke.name === movedEngineerName);
+                if (!engineerGlobalInfo) {
+                    console.error(`Engineer ${movedEngineerName} not found in global pool.`);
+                    return;
+                }
+
+                if (direction === 'add') { // Moving from Available -> Current for targetTeamForEngineer
+                    // 1. Remove from old team in currentSystemData.teams (if any)
+                    if (engineerGlobalInfo.currentTeamId && engineerGlobalInfo.currentTeamId !== targetTeamForEngineer.teamId) {
+                        const oldTeam = (currentSystemData.teams || []).find(t => t.teamId === engineerGlobalInfo.currentTeamId);
+                        if (oldTeam && oldTeam.engineers) {
+                            oldTeam.engineers = oldTeam.engineers.filter(eng => eng.name !== movedEngineerName);
+                            // updateEffectiveBISDisplay for oldTeam will be handled by full re-render
+                        }
                     }
-                 } else { // Remove from current team
-                     if (currentTeam.engineers) {
-                        currentTeam.engineers = currentTeam.engineers.filter(eng => eng.name !== movedEngineerName);
-                        console.log(`Removed ${movedEngineerName} from team ${currentTeam.teamId}`);
-                     }
-                 }
-                 // Update Effective BIS display for the current team
-                 updateEffectiveBISDisplay(contextIndex);
-                 // Refresh available lists for *all* team editors after moving an engineer
-                 refreshAllAvailableEngineerLists();
-
+                    // 2. Update engineer's global record
+                    engineerGlobalInfo.currentTeamId = targetTeamForEngineer.teamId;
+                    // 3. Add to targetTeamForEngineer.engineers
+                    if (!targetTeamForEngineer.engineers) targetTeamForEngineer.engineers = [];
+                    if (!targetTeamForEngineer.engineers.some(eng => eng.name === movedEngineerName)) {
+                        targetTeamForEngineer.engineers.push({ name: movedEngineerName, level: engineerGlobalInfo.level });
+                    }
+                } else { // Moving from Current for targetTeamForEngineer -> Available
+                    // 1. Remove from targetTeamForEngineer.engineers
+                    if (targetTeamForEngineer.engineers) {
+                        targetTeamForEngineer.engineers = targetTeamForEngineer.engineers.filter(eng => eng.name !== movedEngineerName);
+                    }
+                    // 2. Update engineer's global record
+                    engineerGlobalInfo.currentTeamId = null; // Now unallocated
+                }
+                // Full refresh of all team editors to ensure all lists are consistent
+                displayTeamsForEditing(currentSystemData.teams, teamIndexCallback);
             },
-            true, false, '', null // multiSelectLeft = true, allowAddNew = false for engineers
+            true, // multiSelectLeft for current engineers
+            true, // allowAddNew for engineers
+            'Enter New Engineer Name', // addNewPlaceholder
+            (newEngineerName, teamIndexCallback) => { // addNewCallback for engineers
+                if (!newEngineerName || newEngineerName.trim() === '') {
+                    alert("Engineer name cannot be empty."); return null;
+                }
+                newEngineerName = newEngineerName.trim();
+
+                if ((currentSystemData.allKnownEngineers || []).some(eng => eng.name.toLowerCase() === newEngineerName.toLowerCase())) {
+                    alert(`An engineer named "${newEngineerName}" already exists in the system. If they are on another team, they will appear in 'Available Engineers'.`);
+                    const existingEng = (currentSystemData.allKnownEngineers || []).find(eng => eng.name.toLowerCase() === newEngineerName.toLowerCase());
+                    if (existingEng) { // Should always be true if some() passed
+                         let currentTeamName = "Unallocated";
+                         if (existingEng.currentTeamId) {
+                             const assignedTeam = (currentSystemData.teams || []).find(t => t.teamId === existingEng.currentTeamId);
+                             currentTeamName = assignedTeam ? (assignedTeam.teamIdentity || assignedTeam.teamName) : "Unknown Team";
+                         }
+                        return { value: existingEng.name, text: `${existingEng.name} (L${existingEng.level ?? '?'}) (${currentTeamName})`, preventAdd: true };
+                    }
+                    return null;
+                }
+
+                const levelStr = prompt(`Enter level (1-5) for new engineer "${newEngineerName}":`, "1");
+                if (levelStr === null) return null; // User cancelled prompt
+                const level = parseInt(levelStr);
+                if (isNaN(level) || level < 1 || level > 5) {
+                    alert("Invalid level. Please enter a number between 1 and 5."); return null;
+                }
+
+                const newEngineerData = { name: newEngineerName, level: level, currentTeamId: null };
+                if (!currentSystemData.allKnownEngineers) currentSystemData.allKnownEngineers = [];
+                currentSystemData.allKnownEngineers.push(newEngineerData);
+                console.log("Added new engineer to global pool (allKnownEngineers):", newEngineerData);
+
+                // Refresh all team UIs to make the new engineer available everywhere
+                // displayTeamsForEditing(currentSystemData.teams, teamIndexCallback);
+
+                // Return data for the createDualListContainer to add to the current UI's "Available" list
+                return { value: newEngineerData.name, text: `${newEngineerData.name} (L${newEngineerData.level}) (Unallocated)` };
+            }
         );
-        engineerContainer.id = `engineersList_${index}`; teamDetails.appendChild(engineerContainer);
-        // --- End Engineers ---
+        engineerContainer.id = `engineersList_${teamIndex}`;
+        teamDetails.appendChild(engineerContainer);
 
-        // *** NEW: Away-Team Management Section ***
+        // --- Away-Team Management Section --- (Code as provided by you, assumed correct)
         let awayTeamSection = document.createElement('div');
-        awayTeamSection.style.marginTop = '15px';
-        awayTeamSection.style.padding = '10px';
-        awayTeamSection.style.border = '1px solid #add8e6'; // Light blue border
-        awayTeamSection.style.backgroundColor = '#f0f8ff'; // Alice blue background
-
-        let awayTeamTitle = document.createElement('h5');
-        awayTeamTitle.innerText = 'Away-Team Members';
+        awayTeamSection.style.marginTop = '15px'; awayTeamSection.style.padding = '10px';
+        awayTeamSection.style.border = '1px solid #add8e6'; awayTeamSection.style.backgroundColor = '#f0f8ff';
+        let awayTeamTitle = document.createElement('h5'); awayTeamTitle.innerText = 'Away-Team Members';
         awayTeamSection.appendChild(awayTeamTitle);
-
-        // Container to display current away-team members
-        let awayMemberListDiv = document.createElement('div');
-        awayMemberListDiv.id = `awayMemberList_${index}`;
-        awayMemberListDiv.style.marginBottom = '10px';
-        awayMemberListDiv.style.maxHeight = '150px'; // Prevent excessive height
-        awayMemberListDiv.style.overflowY = 'auto'; // Add scroll if needed
-        awayMemberListDiv.style.border = '1px solid #ccc';
-        awayMemberListDiv.style.padding = '5px';
-        awayTeamSection.appendChild(awayMemberListDiv);
-        // Initial population of the list happens later in displayAwayTeamMembers
-
-        // Form to add new away-team members
-        let addAwayForm = document.createElement('div');
-        addAwayForm.style.marginTop = '10px';
+        let awayMemberListDiv = document.createElement('div'); awayMemberListDiv.id = `awayMemberList_${teamIndex}`;
+        awayMemberListDiv.style.marginBottom = '10px'; awayMemberListDiv.style.maxHeight = '150px';
+        awayMemberListDiv.style.overflowY = 'auto'; awayMemberListDiv.style.border = '1px solid #ccc';
+        awayMemberListDiv.style.padding = '5px'; awayTeamSection.appendChild(awayMemberListDiv);
+        let addAwayForm = document.createElement('div'); addAwayForm.style.marginTop = '10px';
         addAwayForm.innerHTML = `
-            <label for="newAwayName_${index}" style="margin-right: 5px;">Name:</label>
-            <input type="text" id="newAwayName_${index}" placeholder="Away Member Name" style="width: 150px; margin-right: 10px;">
-            <label for="newAwayLevel_${index}" style="margin-right: 5px;">Level:</label>
-            <input type="number" id="newAwayLevel_${index}" min="1" max="5" placeholder="1-5" style="width: 50px; margin-right: 10px;">
-            <label for="newAwaySource_${index}" style="margin-right: 5px;">Source:</label>
-            <input type="text" id="newAwaySource_${index}" placeholder="Source Team/Org" style="width: 150px; margin-right: 10px;">
-            <button type="button" id="addAwayBtn_${index}">Add Away Member</button>
+            <label for="newAwayName_${teamIndex}" style="margin-right: 5px;">Name:</label>
+            <input type="text" id="newAwayName_${teamIndex}" placeholder="Away Member Name" style="width: 150px; margin-right: 10px;">
+            <label for="newAwayLevel_${teamIndex}" style="margin-right: 5px;">Level:</label>
+            <input type="number" id="newAwayLevel_${teamIndex}" min="1" max="5" placeholder="1-5" style="width: 50px; margin-right: 10px;">
+            <label for="newAwaySource_${teamIndex}" style="margin-right: 5px;">Source:</label>
+            <input type="text" id="newAwaySource_${teamIndex}" placeholder="Source Team/Org" style="width: 150px; margin-right: 10px;">
+            <button type="button" id="addAwayBtn_${teamIndex}" class="btn-secondary">Add Away Member</button>
         `;
         awayTeamSection.appendChild(addAwayForm);
-
         teamDetails.appendChild(awayTeamSection);
         teamDetails.appendChild(document.createElement('br'));
-
-        // Attach event listener to the 'Add Away Member' button
-        // Need to do this *after* the button is added to the DOM
-         setTimeout(() => { // Use setTimeout to ensure element exists
-            const addBtn = document.getElementById(`addAwayBtn_${index}`);
-            if (addBtn) {
-                 addBtn.onclick = () => handleAddAwayTeamMember(index);
-             } else {
-                 console.warn(`Could not find Add Away button for team index ${index}`);
-             }
-             // Initial population of the away team list display
-             displayAwayTeamMembers(team.awayTeamMembers || [], index);
-         }, 0);
-        // *** END Away-Team Section ***
+        // Event listener for "Add Away Member" button
+        setTimeout(() => { // Ensure button is in DOM
+            const addAwayBtn = document.getElementById(`addAwayBtn_${teamIndex}`);
+            if (addAwayBtn) {
+                addAwayBtn.onclick = () => handleAddAwayTeamMember(teamIndex);
+            }
+            // Initial display of away members for this team
+            displayAwayTeamMembers(team.awayTeamMembers || [], teamIndex);
+        }, 0);
 
 
-        // --- Action Buttons (Save/Delete Team) - No Change ---
-        let actionButtonsDiv = document.createElement('div');
+        // --- Action Buttons (Save/Delete Team) ---
+        let actionButtonsDiv = document.createElement('div'); /* ...styles... */
         actionButtonsDiv.style.marginTop = '15px';
-        let saveButton = document.createElement('button'); 
-        saveButton.type = 'button'; 
-        saveButton.className = 'btn-primary'; // Added class for styling
-        saveButton.innerText = 'Save Team Changes'; 
-        saveButton.onclick = () => saveTeamChanges(index); 
+        let saveButton = document.createElement('button');
+        saveButton.type = 'button'; saveButton.className = 'btn-primary';
+        saveButton.innerText = 'Save Team Changes'; saveButton.onclick = () => saveTeamChanges(teamIndex);
         actionButtonsDiv.appendChild(saveButton);
-        
-        let deleteButton = document.createElement('button'); 
-        deleteButton.type = 'button'; 
-        deleteButton.className = 'btn-danger'; // Added class for styling
-        deleteButton.innerText = 'Delete Team'; 
-        deleteButton.style.marginLeft = '10px'; 
-        /* deleteButton.style.color = 'red'; */
-        deleteButton.onclick = () => deleteTeam(index); 
+        let deleteButton = document.createElement('button');
+        deleteButton.type = 'button'; deleteButton.className = 'btn-danger';
+        deleteButton.innerText = 'Delete Team'; deleteButton.style.marginLeft = '10px';
+        deleteButton.onclick = () => deleteTeam(teamIndex);
         actionButtonsDiv.appendChild(deleteButton);
         teamDetails.appendChild(actionButtonsDiv);
-        // --- End Actions ---
 
         teamDiv.appendChild(teamHeader);
         teamDiv.appendChild(teamDetails);
         teamsDiv.appendChild(teamDiv);
-    }); // End teams.forEach
-} // --- End displayTeamsForEditing ---
+
+        if (isExpanded) { // If initially expanded, ensure all relevant parts are populated
+            updateEffectiveBISDisplay(teamIndex); // Includes away team members
+        }
+    }); // End teamsDataToDisplay.forEach
+}
 
 /** Helper to display Senior Manager Assignment UI within SDM section */
 function displaySeniorManagerAssignment(sdmSectionContainer, teamIndex, currentSdmId) {
@@ -905,33 +1013,39 @@ function displaySeniorManagerAssignment(sdmSectionContainer, teamIndex, currentS
     srMgrContainer.appendChild(srMgrDualList);
  }
 
+ /*
+    Since displayTeamsForEditing is now called to refresh all team UIs after significant engineer assignment changes (like adding a new engineer or moving an engineer between teams), 
+    the more granular refreshAllAvailableEngineerLists function is no longer strictly necessary and might lead to inconsistencies 
+    if not perfectly synced. For now, to simplify and ensure data integrity, we rely on the full refresh.
+*/
+
  /** Helper to refresh available engineer lists in all open team edit sections */
-function refreshAllAvailableEngineerLists() {
-     console.log("Refreshing all available engineer lists...");
-     const allTeamEditDivs = document.querySelectorAll('#teamsManagement .team-edit');
-     let allEngineerNamesMap = new Map(); // Recalculate global map
-     (currentSystemData.teams || []).forEach(t => { (t.engineers || []).forEach(eng => { if (eng?.name) allEngineerNamesMap.set(eng.name, t.teamId); }); });
-
-     allTeamEditDivs.forEach((teamDiv, index) => {
-         // Only refresh if the details are potentially visible (no easy way to know for sure without checking style)
-         // This is a simplification; ideally, only refresh *actually* visible ones.
-         const teamData = currentSystemData.teams[index]; // Assuming render index matches data index
-         if (!teamData) return;
-
-         const availableEngineersSelect = teamDiv.querySelector('select[data-field="availableEngineers"]');
-         const currentEngineersSelect = teamDiv.querySelector('select[data-field="currentEngineers"]');
-
-         if (availableEngineersSelect && currentEngineersSelect) {
-             const currentTeamEngineers = Array.from(currentEngineersSelect.options).map(opt => opt.value);
-             availableEngineersSelect.innerHTML = ''; // Clear current options
-             Array.from(allEngineerNamesMap.keys())
-                 .filter(name => !currentTeamEngineers.includes(name)) // Filter out engineers already in the current list
-                 .forEach(name => {
-                     availableEngineersSelect.appendChild(new Option(name, name));
-                 });
-         }
-     });
-}
+//function refreshAllAvailableEngineerLists() {
+//     console.log("Refreshing all available engineer lists...");
+//     const allTeamEditDivs = document.querySelectorAll('#teamsManagement .team-edit');
+//     let allEngineerNamesMap = new Map(); // Recalculate global map
+//     (currentSystemData.teams || []).forEach(t => { (t.engineers || []).forEach(eng => { if (eng?.name) allEngineerNamesMap.set(eng.name, t.teamId); }); });
+//
+//     allTeamEditDivs.forEach((teamDiv, index) => {
+//         // Only refresh if the details are potentially visible (no easy way to know for sure without checking style)
+//         // This is a simplification; ideally, only refresh *actually* visible ones.
+//         const teamData = currentSystemData.teams[index]; // Assuming render index matches data index
+//         if (!teamData) return;
+//
+//         const availableEngineersSelect = teamDiv.querySelector('select[data-field="availableEngineers"]');
+//         const currentEngineersSelect = teamDiv.querySelector('select[data-field="currentEngineers"]');
+//
+//         if (availableEngineersSelect && currentEngineersSelect) {
+//             const currentTeamEngineers = Array.from(currentEngineersSelect.options).map(opt => opt.value);
+//             availableEngineersSelect.innerHTML = ''; // Clear current options
+//             Array.from(allEngineerNamesMap.keys())
+//                 .filter(name => !currentTeamEngineers.includes(name)) // Filter out engineers already in the current list
+//                 .forEach(name => {
+//                     availableEngineersSelect.appendChild(new Option(name, name));
+//                 });
+//         }
+//     });
+//}
 
 /** Helper to refresh available options in a specific dual list (used for services) */
 function refreshAvailableListsInDualList(contentContainer, currentListField, availableListField, allOptionsData, currentTeamId) {
@@ -1322,51 +1436,66 @@ function addNewTeam() {
 
 /** Delete Team **/
 
-function deleteTeam(index) {
-    const team = currentSystemData.teams[index];
-    const confirmDelete = confirm(`Are you sure you want to delete the team "${team.teamName}"? This action cannot be undone.`);
+// In js/editSystem.js
+
+function deleteTeam(teamIndex) {
+    const teamToDelete = currentSystemData.teams[teamIndex];
+    if (!teamToDelete) {
+        console.error("Team to delete not found at index:", teamIndex);
+        return;
+    }
+    const confirmDelete = confirm(`Are you sure you want to delete the team "${teamToDelete.teamName || teamToDelete.teamIdentity}"? This action cannot be undone.`);
+
     if (confirmDelete) {
+        const deletedTeamId = teamToDelete.teamId;
+
         // Remove the team from currentSystemData.teams
-        currentSystemData.teams.splice(index, 1);
+        currentSystemData.teams.splice(teamIndex, 1);
 
-        // Update services that reference this team
-        currentSystemData.services.forEach(service => {
-            if (service.owningTeamId === team.teamId) {
-                service.owningTeamId = null;
+        // Update services that reference this team's ID
+        (currentSystemData.services || []).forEach(service => {
+            if (service.owningTeamId === deletedTeamId) {
+                service.owningTeamId = null; // Service becomes unowned
             }
         });
 
-        // Update uniqueEngineers array
-        uniqueEngineers = uniqueEngineers.filter(engineer => engineer.teamId !== team.teamId);
+        // --- NEW: Update allKnownEngineers ---
+        if (currentSystemData.allKnownEngineers) {
+            currentSystemData.allKnownEngineers.forEach(engineer => {
+                if (engineer.currentTeamId === deletedTeamId) {
+                    engineer.currentTeamId = null; // Engineer becomes unallocated
+                }
+            });
+        }
+        // --- END NEW ---
 
-        // Update team assignments in engineers
-        currentSystemData.teams.forEach(t => {
-            if (t.teamId !== team.teamId) {
-                const engineers = t.engineerNames ? t.engineerNames.split(',').map(name => name.trim()) : [];
-                t.engineerNames = engineers.filter(name => {
-                    const engineer = uniqueEngineers.find(e => e.engineerName === name);
-                    return engineer && engineer.teamId === t.teamId;
-                }).join(', ');
-            }
-        });
+        // The uniqueEngineers array might be deprecated if allKnownEngineers is the sole source.
+        // For now, if it's still used elsewhere, it would also need updating.
+        // uniqueEngineers = uniqueEngineers.filter(engineer => engineer.teamId !== deletedTeamId);
+
 
         // Save changes to local storage
-        saveSystemChanges();
-        
-        // Notify the user
-        alert(`Team "${team.teamName}" has been deleted.`);
+        saveSystemChanges(); // This function should ideally save the entire currentSystemData
 
-        // Refresh the teams editing interface
-        displayTeamsForEditing(currentSystemData.teams);
+        alert(`Team "${teamToDelete.teamName || teamToDelete.teamIdentity}" has been deleted.`);
 
-        // Update other UI components
-        generateTeamTable(currentSystemData);
-        generateTeamVisualization(currentSystemData);
-        generateServiceDependenciesTable();
-        populateServiceSelection();
-        populateDependencyServiceSelection();
-        updateServiceVisualization();
-        updateDependencyVisualization();
+        // Refresh the teams editing interface: Re-render all team sections
+        // Pass -1 or a valid index if you want a specific team to be expanded.
+        // Passing the original index might be confusing as it's now deleted.
+        displayTeamsForEditing(currentSystemData.teams, -1); // Refresh and collapse all
+
+        // Update other UI components that might be affected
+        generateTeamTable(currentSystemData); // In orgView.js
+        generateTeamVisualization(currentSystemData); // In visualizations.js
+        // If planning view or capacity view depend on team list, they might need refresh too if visible.
+        if (document.getElementById('planningView').style.display !== 'none') {
+            generatePlanningTable(); // In yearPlanning.js
+        }
+        if (document.getElementById('capacityConfigView').style.display !== 'none') {
+            // This might need more granular updates or a full re-render of capacity view sections
+            generateTeamConstraintsForms(); // In capacityTuning.js
+            updateCapacityCalculationsAndDisplay(); // In capacityTuning.js
+        }
     }
 }
 

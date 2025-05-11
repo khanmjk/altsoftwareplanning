@@ -456,6 +456,43 @@ function loadSavedSystem(systemName) {
     console.log('Selected system to load:', currentSystemData);
     // --- End Find System Data ---
 
+    // --- Initialize/Verify allKnownEngineers --- // <<< INSERT NEW SECTION HERE
+    if (!currentSystemData.allKnownEngineers || !Array.isArray(currentSystemData.allKnownEngineers)) {
+        console.log(`Initializing 'allKnownEngineers' for system: ${systemName} from team assignments.`);
+        currentSystemData.allKnownEngineers = [];
+        const engineerNamesProcessed = new Set(); // To handle cases where engineer might appear in old data without clear global uniqueness
+
+        (currentSystemData.teams || []).forEach(team => {
+            (team.engineers || []).forEach(engineer => {
+                if (engineer && engineer.name) {
+                    // Only add if not already processed from another team's list (handles potential old data inconsistencies)
+                    if (!engineerNamesProcessed.has(engineer.name.toLowerCase())) {
+                        currentSystemData.allKnownEngineers.push({
+                            name: engineer.name,
+                            level: engineer.level || 1, // Default to level 1 if not specified
+                            currentTeamId: team.teamId
+                        });
+                        engineerNamesProcessed.add(engineer.name.toLowerCase());
+                    } else {
+                        // If engineer name is already processed, check if this assignment is different
+                        // This scenario implies inconsistent old data; prioritize first encountered team or handle as error
+                        const existingEntry = currentSystemData.allKnownEngineers.find(e => e.name.toLowerCase() === engineer.name.toLowerCase());
+                        if (existingEntry && existingEntry.currentTeamId !== team.teamId) {
+                            console.warn(`Engineer "${engineer.name}" found on multiple teams (${existingEntry.currentTeamId}, ${team.teamId}) during 'allKnownEngineers' initialization. Using first assignment.`);
+                            // Optionally, clear currentTeamId to mark as conflicted or needing review:
+                            // existingEntry.currentTeamId = null;
+                        }
+                    }
+                }
+            });
+        });
+        console.log("'allKnownEngineers' initialized:", currentSystemData.allKnownEngineers);
+    } else {
+        // Optional: Verify existing allKnownEngineers against team assignments if needed for data integrity
+        console.log("'allKnownEngineers' already exists. Length:", currentSystemData.allKnownEngineers.length);
+    }
+    // --- END Initialize/Verify allKnownEngineers ---
+
     // --- Remove System Load List Popup (No Change) ---
     const systemLoadListDiv = document.getElementById('systemLoadListDiv');
     if (systemLoadListDiv) {
@@ -473,11 +510,12 @@ function loadSavedSystem(systemName) {
     });
     // --- End Clear ---
 
-     // --- Re-initialize uniqueEngineers and build platform deps (No Change) ---
-     uniqueEngineers = [];
+     // --- Re-initialize uniqueEngineers (deprecated by allKnownEngineers but kept for now if other parts use it) and build platform deps (No Change) ---
+     uniqueEngineers = []; // This might be replaced by allKnownEngineers logic
      (currentSystemData.teams || []).forEach(team => {
          (team.engineers || []).forEach(engineer => {
             if (engineer && engineer.name) {
+                 // This was a simple list; allKnownEngineers is richer
                  uniqueEngineers.push({ engineerName: engineer.name, teamId: team.teamId });
              }
          });
@@ -486,33 +524,22 @@ function loadSavedSystem(systemName) {
      // --- End Data Prep ---
 
     // --- USE switchView TO SHOW OVERVIEW ---
-    // Show ONLY the carousel. Table visibility managed by showVisualization.
     switchView('visualizationCarousel');
     // --- End switchView ---
 
-    // --- Regenerate Overview Content ---
+    // --- Regenerate Overview Content (No Change in this part of the function) ---
     try {
-         // Populate dropdowns needed for carousel items
          populateServiceSelection();
          populateDependencyServiceSelection();
-
-        // Generate visualizations (even if initially hidden by carousel)
          generateVisualization(currentSystemData);
          generateTeamVisualization(currentSystemData);
-         // The specific service/dependency D3 views are generated when shown by showVisualization
-
-        // Generate separate dependencies table (data ready, display conditional)
          generateServiceDependenciesTable();
-
-         // Show the FIRST item in the carousel - This triggers updates and sets table visibility.
          showVisualization(0);
-
         console.log("Finished loading and displaying system:", currentSystemData.systemName);
      } catch (error) {
          console.error("Error regenerating system overview content during load:", error);
           const carouselDiv = document.getElementById('visualizationCarousel');
           if(carouselDiv) carouselDiv.innerHTML = '<p style="color:red">Error loading visualizations.</p>';
-          // No explicit error message for the table here as its display is part of the carousel logic.
     }
      // --- End Regeneration ---
 }
@@ -553,6 +580,15 @@ function createNewSystem() {
         { pmtId: 'pmt1', pmtName: 'Enter PMT Name Here' }
     ];
 
+    const defaultEngineer1 = { name: 'Default Engineer Alpha', level: 2 };
+    const defaultEngineer2 = { name: 'Default Engineer Beta', level: 3 };
+
+    // Initialize allKnownEngineers for the default system ---
+    const defaultAllKnownEngineers = [
+        { name: defaultEngineer1.name, level: defaultEngineer1.level, currentTeamId: 'team1' }, // Assuming team1 is the default team
+        { name: defaultEngineer2.name, level: defaultEngineer2.level, currentTeamId: 'team1' }  // Assuming team1 is the default team
+    ];
+    
     // Default Teams Data (using new structure)
     const defaultTeamsData = [
         {
@@ -560,10 +596,11 @@ function createNewSystem() {
             teamName: 'Enter Team Name Here',
             teamIdentity: 'Enter Team Identity Here',
             teamDescription: 'Enter Team Description Here...', // Added description field based on usage elsewhere
-            fundedHeadcount: 1, // Example default
-            buildersInSeats: 1, // Matches the single default engineer
-            engineers: [ // Changed from engineerNames string to engineers array
-                { name: 'Enter Engineer Name Here', level: 2 } // Example default engineer with level
+            fundedHeadcount: 2,
+            // buildersInSeats: 1, // This will be derived from engineers list length
+            engineers: [ // Assign default engineers to this team
+                { name: defaultEngineer1.name, level: defaultEngineer1.level },
+                { name: defaultEngineer2.name, level: defaultEngineer2.level }
             ],
             awayTeamMembers: [], // Initialize away team members
             sdmId: 'sdm1', // Reference to the default SDM
@@ -631,9 +668,9 @@ function createNewSystem() {
             ]
         },
         yearlyInitiatives: [],
-        // *** NEW: Add placeholder for calculated capacity metrics ***
-        calculatedCapacityMetrics: null
-        // **********************************************************
+        // Add placeholder for calculated capacity metrics ***
+        calculatedCapacityMetrics: null,
+        allKnownEngineers: defaultAllKnownEngineers
     };
 
     // Assign to currentSystemData
