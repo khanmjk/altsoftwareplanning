@@ -5,14 +5,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://unpkg.com/tabulator-tables@5.5.2/dist/css/tabulator.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://unpkg.com/tabulator-tables@5.5.2/dist/css/tabulator_simple.min.css" rel="stylesheet"> 
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/components/enhancedTableWidget.css"> 
 
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/12.3.2/markdown-it.min.js"></script>
     <script src="https://unpkg.com/markdown-it-anchor@8.6.7/dist/markdownItAnchor.umd.js"></script>
     <script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.5.2/dist/js/tabulator.min.js"></script>
+    <script type="text/javascript" src="https://oss.sheetjs.com/sheetjs/xlsx.full.min.js"></script>    
 
-    <link rel="stylesheet" href="css/style.css">
+    <script src="js/components/enhancedTableWidget.js"></script>
     <script src="js/data.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/main.js"></script>
@@ -193,8 +197,8 @@
             </div>
 
             <div id="engineerTableView" style="display:none; margin-top: 20px;">
-                <h2 id="engineerTableHeading">Engineer Resource List</h2> 
-                <div id="engineerTableTabulator" style="margin-top: 10px;"></div>
+                <h2 id="engineerTableHeading">Engineer Resource List</h2>
+                <div id="engineerTableWidgetContainer" style="margin-top: 10px;"></div>
             </div>
 
             <div id="planningView" style="display:none; margin-top: 20px;">

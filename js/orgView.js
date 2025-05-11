@@ -152,86 +152,76 @@ function generateOrganogram() {
 // In js/orgView.js
 
 let engineerListTable = null; // To hold the Tabulator instance
+let engineerTableWidgetInstance = null;
 
+// In js/orgView.js
+
+// Make sure updateEngineerTableHeading, prepareEngineerDataForTabulator,
+// and defineEngineerTableColumns are defined in this file as per our previous discussions.
+// (Their content will be the versions we finalized that fix display issues and data updates).
+
+/**
+ * Generates the Engineer List table by instantiating and configuring
+ * the EnhancedTableWidget.
+ */
 function generateEngineerTable() {
-    console.log("Generating Engineer List table using Tabulator (with fixes)...");
-    updateEngineerTableHeading(); // Update heading first
+    console.log("Generating Engineer List using EnhancedTableWidget...");
+    updateEngineerTableHeading(); // Assumes this function updates the H2 title with stats
 
     const tableData = prepareEngineerDataForTabulator();
-    const columnDefinitions = defineEngineerTableColumns();
+    const columnDefinitions = defineEngineerTableColumns(); // This function now returns Tabulator column defs
 
-    if (engineerListTable) {
-        try {
-            engineerListTable.destroy();
-        } catch (e) { console.warn("Error destroying previous Tabulator instance:", e); }
-        engineerListTable = null;
-    }
-
-    let tableContainerDiv = document.getElementById('engineerTableTabulator');
-    if (!tableContainerDiv) {
+    // Ensure the target div for the widget exists in index.html within #engineerTableView
+    const widgetContainerId = 'engineerTableWidgetContainer';
+    let widgetTargetDiv = document.getElementById(widgetContainerId);
+    if (!widgetTargetDiv) {
         const engineerTableView = document.getElementById('engineerTableView');
-        // Remove any old static table if it exists by chance
+        if (!engineerTableView) {
+            console.error("Cannot find #engineerTableView to append widget container.");
+            return;
+        }
+        // Remove any old static table or old tabulator div if they exist from previous versions
         const oldStaticTable = engineerTableView.querySelector('table');
-        if(oldStaticTable) oldStaticTable.remove();
+        if (oldStaticTable) oldStaticTable.remove();
+        const oldTabulatorDiv = document.getElementById('engineerTableTabulator'); // Old ID for Tabulator div
+         if(oldTabulatorDiv) oldTabulatorDiv.remove();
 
-        tableContainerDiv = document.createElement('div');
-        tableContainerDiv.id = 'engineerTableTabulator';
-        engineerTableView.appendChild(tableContainerDiv);
+
+        widgetTargetDiv = document.createElement('div');
+        widgetTargetDiv.id = widgetContainerId;
+        engineerTableView.appendChild(widgetTargetDiv);
+        console.log(`Created new widget container div with ID: ${widgetContainerId}`);
+    } else {
+        console.log(`Using existing widget container div with ID: ${widgetContainerId}`);
     }
 
 
-    engineerListTable = new Tabulator("#engineerTableTabulator", {
+    // Destroy previous widget instance if it exists
+    if (engineerTableWidgetInstance) {
+        engineerTableWidgetInstance.destroy();
+        engineerTableWidgetInstance = null;
+        console.log("Previous Engineer List widget instance destroyed.");
+    }
+
+    // Create new instance of EnhancedTableWidget
+    engineerTableWidgetInstance = new EnhancedTableWidget(widgetContainerId, {
         data: tableData,
         columns: columnDefinitions,
-        layout: "fitColumns",
-        responsiveLayout: "hide",
-        pagination: "local",
-        paginationSize: 100, // <<-- SET DEFAULT PAGE SIZE TO 100
-        paginationSizeSelector: [10, 25, 50, 100, 250, 500],
-        placeholder: "No Engineer Data Available",
-        movableColumns: true, // Allow column reordering by user
-        // Add download/export configuration
-        downloadDataFormatter: (data) => data,
-        downloadConfig:{
-            columnHeaders:true,
-            columnGroups:false,
-            rowGroups:false,
-            columnCalcs:false,
-            dataTree:false,
-        },
+        uniqueIdField: 'name', // Assuming 'name' is unique for engineers and used as row ID
+        paginationSize: 100, // As per your request
+        paginationSizeSelector: [25, 50, 100, 250, 500], // Customize page size options
+        initialSort: [{ column: "name", dir: "asc" }], // Example: Sort by name initially
+        exportCsvFileName: 'engineer_list.csv',
+        exportJsonFileName: 'engineer_list.json',
+        exportXlsxFileName: 'engineer_list.xlsx',
+        exportSheetName: 'Engineers',
+        // The cellEdited logic is now part of the column definitions passed in `columnDefinitions`
+        // The widget's generic cellEdited could be used for logging or global actions if needed.
+        // cellEdited: (cell) => {
+        //     console.log("Global cellEdited from widget options:", cell.getField(), cell.getValue());
+        // }
     });
-
-    const engineerTableView = document.getElementById('engineerTableView');
-    let downloadButton = engineerTableView.querySelector('#download-csv-engineers');
-    if (!downloadButton) {
-        downloadButton = document.createElement('button');
-        downloadButton.id = 'download-csv-engineers';
-        downloadButton.textContent = 'Download CSV';
-        downloadButton.className = 'btn-secondary'; // Use consistent button styling
-        downloadButton.style.marginBottom = '10px';
-        downloadButton.style.marginRight = '10px';
-
-        // Insert button before the table container div
-        const tableElement = document.getElementById('engineerTableTabulator');
-        if (tableElement) {
-            tableElement.parentNode.insertBefore(downloadButton, tableElement);
-        } else {
-            engineerTableView.appendChild(downloadButton); // Fallback
-        }
-    }
-    // Ensure event listener is fresh or correctly attached
-    downloadButton.onclick = function(){
-        if (engineerListTable) {
-            engineerListTable.download("csv", "engineers.csv");
-        }
-    };
-
-    // Add column visibility controls (example of how it could be structured)
-    // This would typically involve creating checkboxes for each column.
-    // For now, let's defer the UI for this, but Tabulator supports it.
-
-    // Update the overall heading (funded, BIS, etc.) - this logic can remain similar
-    updateEngineerTableHeading();
+    console.log("Engineer List EnhancedTableWidget instance created.");
 }
 
 // Helper to prepare data for Tabulator (needs to be defined)
