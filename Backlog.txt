@@ -21,6 +21,11 @@ IN PROGRESS
 ------------
 
 - Working on creating a reusable modern table widget leveraging tabular library
+Moving Filtering to EnhancedTableWidget:
+Now that the immediate filter display issues in the Engineer List (using direct Tabulator configuration) are resolved, the next logical step for the widget itself is to abstract that filtering logic.
+When we resume work on the EnhancedTableWidget, we will:
+Define an API on the widget for how columns specify their filter type and options (e.g., columnDef.headerFilterType = 'select', columnDef.headerFilterOptions = [{label:'All', value:''}, ...]).
+Implement the logic within EnhancedTableWidget to take these definitions and correctly configure Tabulator's headerFilter and headerFilterParams for each column. This will include dynamically populating select lists from column data if specified.
 
 ------
 TO DO
@@ -98,6 +103,32 @@ Bugs / Missing features
 - [Feature] For all visualizations add a toggle button to show/hide platform components 
 - [Feature] Add more default systems for demo purposes: Reference architectures for Android Stack, Chat GPT app, LLM system, etc.
 - [Feature] Organization Overview - show a view of traditional org chart with blocks
+
+Backlog Items: Technical Debt & Architectural Enhancements
+============================================================
+1. Refactor Data Access and Manipulation into a Dedicated Service/Logic Layer:
+Description: Currently, data within currentSystemData is often manipulated directly by view-specific JavaScript files (e.g., orgView.js, editSystem.js). We should create a dedicated layer (e.g., in utils.js or a new dataService.js) with functions to manage CRUD operations (Create, Read, Update, Delete) and complex queries on currentSystemData. This will centralize business logic, improve testability, and make it easier to swap out data storage or UI layers in the future.
+Impact: Decouples presentation logic from data manipulation, preparing for potential backend integration (like DynamoDB) or UI framework changes (like React). Enhances code organization and maintainability.
+Complete and Roll Out EnhancedTableWidget to Other Applicable Tables:
+
+2. Description: Finish implementing the core features of EnhancedTableWidget (integrated column visibility, export controls, intelligent filtering). Then, systematically refactor other tables in the application (e.g., Team Breakdown, Service Dependencies, Capacity Summary, various tables in Capacity Tuning and SDM Forecasting) to use this common widget.
+Impact: Provides a consistent, modern UX for all tables, reduces code duplication, and makes future table enhancements (like advanced responsiveness or global search) easier to implement system-wide.
+
+3. Formalize State Management for currentSystemData:
+Description: While currentSystemData acts as our central store, its updates are somewhat ad-hoc via direct manipulation and saveSystemChanges(). Consider adopting a more formal (albeit simple for vanilla JS) state management pattern to ensure updates are predictable and easier to trace, especially as the application grows. This could involve clearly defined update functions or a mini-pub/sub system for state changes.
+Impact: Improves data integrity, makes debugging easier, and provides a clearer data flow, which is beneficial for future scaling or framework adoption.
+
+4. Develop a Set of "Data Getter" Utilities for Views:
+Description: Create specific functions in utils.js (or the new data service layer) that views can call to get pre-formatted or aggregated data needed for display, instead of views doing complex data lookups themselves. For example, Utils.getFormattedEngineerDetails(engineerName) or Utils.getTeamCapacitySummary(teamId, scenario).
+Impact: Simplifies the logic in view-specific files (like orgView.js, yearPlanning.js), making them more focused on presentation and easier to adapt if the underlying currentSystemData structure evolves.
+
+5. Address Data Model Extensibility (Revisit from Backlog):
+Description: Review the existing data structures (e.g., for teams, services, initiatives) and implement the previously discussed strategy for making them more extensible. This might involve adding a generic attributes or customFields property to key data objects to allow for easier addition of new information without constant schema changes.
+Impact: Reduces the friction for adding new features that require storing more data, ensuring the application can evolve more smoothly.
+
+6. Standardize UI Component Creation (Beyond Tables):
+Description: We've started with the EnhancedTableWidget. Identify other UI patterns that are repeated (e.g., dual-list selectors, collapsible sections, input forms) and consider creating simple, reusable component-like functions or classes for them in utils.js or a components directory.
+Impact: Further reduces code duplication, ensures UI consistency, and speeds up development of new views.
 
 ==== Post MVP ===
 UX enhancements
