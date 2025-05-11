@@ -272,20 +272,26 @@ function prepareEngineerDataForTabulator() {
 // In js/orgView.js
 
 function defineEngineerTableColumns() {
-    // ... (engineerLevels, levelEditorParams, getTeamIdentityEditorParams, editableCellFormatter remain the same as the last working version) ...
-    const engineerLevels = [
+    const engineerLevels = [ // For Level editor and filter
+        { label: "All", value: "" }, // "All" option for filter
         { label: "L1", value: 1 }, { label: "L2", value: 2 }, { label: "L3", value: 3 },
         { label: "L4", value: 4 }, { label: "L5", value: 5 }, { label: "L6", value: 6 },
         { label: "L7", value: 7 }
     ];
 
-    const levelEditorParams = {
-        values: engineerLevels,
-        autocomplete: false,
-        clearable: false,
+    const levelEditorParams = { // For cell editor
+        values: engineerLevels.filter(l => l.value !== ""), // Editor doesn't need "All"
+        itemFormatter: function(label, value, item, element){ // Corrected from listItemFormatter for Tabulator 5.x+
+            return label;
+        },
+        autocomplete: false, clearable: false
+    };
+    const levelHeaderFilterParams = { // For header filter
+        values: engineerLevels.reduce((obj, item) => { obj[item.value] = item.label; return obj; }, {}),
+        // e.g., {"": "All", 1: "L1", 2: "L2"}
     };
 
-    const getTeamIdentityEditorParams = () => {
+    const getTeamIdentityEditorParams = () => { // For cell editor
         const teams = currentSystemData.teams || [];
         const options = [{ label: "-- Unassign --", value: "" }];
         teams.forEach(team => {
@@ -294,19 +300,56 @@ function defineEngineerTableColumns() {
                 options.push({ label: String(displayIdentity), value: team.teamId });
             }
         });
-        return {
-            values: options,
-            autocomplete: false,
-            clearable: true,
-        };
+        return { values: options, itemFormatter: (l,v) => l, autocomplete: false, clearable: true };
     };
 
-    const editableCellFormatter = function(cell, formatterParams, onRendered){
+    // For Team Identity Header Filter
+    const getTeamIdentityHeaderFilterParams = () => {
+        const uniqueTeamOptions = { "": "All" }; // Value: Label for filter
+        if (currentSystemData && currentSystemData.allKnownEngineers) {
+            const teamIdsInTable = new Set(currentSystemData.allKnownEngineers.map(e => e.currentTeamId).filter(id => id));
+            teamIdsInTable.add(null); // For "Unallocated"
+
+            teamIdsInTable.forEach(teamId => {
+                if (teamId) {
+                    const team = (currentSystemData.teams || []).find(t => t.teamId === teamId);
+                    if (team) {
+                        const display = team.teamIdentity || team.teamName || team.teamId;
+                        uniqueTeamOptions[teamId] = display;
+                    }
+                } else {
+                    uniqueTeamOptions["_UNALLOCATED_"] = "Unallocated"; // Use a distinct value for null teamId
+                }
+            });
+        }
+        return { values: uniqueTeamOptions };
+    };
+    
+    // For SDM and Sr Manager Header Filters - extract unique names from current table data
+    const getUniqueNameFilterParams = (fieldName) => {
+        const options = { "": "All" };
+        if (engineerTableWidgetInstance && engineerTableWidgetInstance.tabulatorInstance) {
+            const uniqueNames = new Set(
+                engineerTableWidgetInstance.tabulatorInstance.getData().map(row => row[fieldName]).filter(name => name && name !== "N/A")
+            );
+            uniqueNames.forEach(name => options[name] = name);
+        }
+        // Fallback if table not ready or to pre-populate (might be less accurate initially)
+        else if (fieldName === 'sdmName' && currentSystemData.sdms) {
+            currentSystemData.sdms.forEach(sdm => options[sdm.sdmName] = sdm.sdmName);
+        } else if (fieldName === 'seniorManagerName' && currentSystemData.seniorManagers) {
+            currentSystemData.seniorManagers.forEach(sm => options[sm.seniorManagerName] = sm.seniorManagerName);
+        }
+        return { values: options };
+    };
+
+
+    const editableCellFormatter = (cell) => { /* ... remains the same as previous correct version ... */
         let value = cell.getValue();
         const field = cell.getField();
-
         if (field === "level") {
-            value = String(value);
+            const levelObj = engineerLevels.find(l => l.value === parseInt(value)); // parseInt here
+            value = levelObj ? levelObj.label : String(value);
         } else if (field === "teamId") {
             const teamId = cell.getValue();
             if (teamId) {
@@ -323,31 +366,26 @@ function defineEngineerTableColumns() {
         return value;
     };
 
-
     return [
         {
             title: "Engineer Name", field: "name", sorter: "string", minWidth: 200, frozen: true,
             editable: false,
-            // For export, ensure the 'name' field is used directly
-            accessorDownload: function(value, data, type, params, column, row) {
-                return data.name; // Or simply 'value' if field is 'name'
-            }
+            headerFilter: "input",
+            headerFilterPlaceholder: "Filter by name...",
+            accessorDownload: (value, data) => data.name
         },
         {
             title: "Level", field: "level", width: 120, hozAlign: "left",
             sorter: "number",
-            editor: "list",
-            editorParams: levelEditorParams,
-            formatter: editableCellFormatter,
-            cellEdited: function(cell) {
-                // ... (cellEdited logic for Level remains the same)
+            editor: "list", editorParams: levelEditorParams,
+            formatter: editableCellFormatter, // Displays L-number + pencil
+            headerFilter: "select",
+            headerFilterParams: levelHeaderFilterParams,
+            headerFilterFunc: "=", // Exact match is fine if values are numeric 1,2,3...
+            cellEdited: (cell) => { /* ... Level cellEdited logic ... */
                 const engineerName = cell.getRow().getData().name;
                 const newLevelValue = parseInt(cell.getValue());
-                if (isNaN(newLevelValue)) {
-                    console.error(`Invalid level value after edit for ${engineerName}:`, cell.getValue());
-                    cell.restoreOldValue();
-                    return;
-                }
+                if (isNaN(newLevelValue)) { cell.restoreOldValue(); return; }
                 const engineerGlobal = currentSystemData.allKnownEngineers.find(e => e.name === engineerName);
                 if (engineerGlobal) {
                     engineerGlobal.level = newLevelValue;
@@ -361,24 +399,25 @@ function defineEngineerTableColumns() {
                     saveSystemChanges();
                 }
             },
-            // For export, ensure the numeric level is used, or format as "L1" if preferred in export
-            accessorDownload: function(value, data, type, params, column, row) {
-                // return data.level; // Exports the raw number: 1, 2, 3
-                // OR if you want "L1", "L2" in export:
+            accessorDownload: (value, data) => {
                 const levelObj = engineerLevels.find(l => l.value === data.level);
                 return levelObj ? levelObj.label : data.level;
             }
         },
         {
             title: "Team Identity", field: "teamId",
-            sorter: "string",
-            minWidth: 170,
-            hozAlign: "left",
-            editor: "list",
-            editorParams: getTeamIdentityEditorParams,
+            sorterParams: { alignEmptyValues: "top" }, // Sort unassigned together
+            minWidth: 170, hozAlign: "left",
+            editor: "list", editorParams: getTeamIdentityEditorParams(), // Call the function
             formatter: editableCellFormatter,
-            cellEdited: function(cell) {
-                // ... (cellEdited logic for Team Identity remains the same)
+            headerFilter: "select",
+            headerFilterParams: getTeamIdentityHeaderFilterParams(), // Call the function
+            headerFilterFunc: (headerValue, rowValue, rowData, filterParams) => {
+                if (headerValue === "") return true; // "All"
+                if (headerValue === "_UNALLOCATED_") return !rowValue; // Match null/undefined teamId
+                return rowValue === headerValue;
+            },
+            cellEdited: (cell) => { /* ... Team Identity cellEdited logic ... */
                 const engineerName = cell.getRow().getData().name;
                 const newAssignedTeamId = cell.getValue() === "" ? null : cell.getValue();
                 const engineerGlobal = currentSystemData.allKnownEngineers.find(e => e.name === engineerName);
@@ -405,27 +444,27 @@ function defineEngineerTableColumns() {
                     generateEngineerTable();
                 }
             },
-            // ***** START OF FIX FOR EXPORT *****
-            accessorDownload: function(value, data, type, accessorParams, column, row) {
-                // 'value' here is the teamId (or null) from the row's data for this field
-                // 'data' is the entire data object for the row
-                const teamId = data.teamId; // Or simply 'value'
+            accessorDownload: (value, data) => { /* ... remains the same ... */
+                const teamId = data.teamId;
                 if (teamId) {
                     const team = (currentSystemData.teams || []).find(t => t.teamId === teamId);
                     return team ? (team.teamIdentity || team.teamName || teamId) : "Invalid Team ID";
-                } else {
-                    return "Unallocated";
-                }
+                } else { return "Unallocated"; }
             }
-            // ***** END OF FIX FOR EXPORT *****
         },
         {
-            title: "SDM Name", field: "sdmName", sorter: "string", minWidth: 150, editable: false,
-            accessorDownload: function(value, data) { return data.sdmName; } // Explicitly return field value
+            title: "Manager (SDM)", field: "sdmName", sorter: "string", minWidth: 150, editable: false,
+            headerFilter: "select", // Changed to select
+            headerFilterParams: () => getUniqueNameFilterParams('sdmName'), // Dynamically populate
+            headerFilterPlaceholder: "Filter by SDM...",
+            accessorDownload: (value, data) => data.sdmName
         },
         {
             title: "Senior Manager", field: "seniorManagerName", sorter: "string", minWidth: 150, editable: false,
-            accessorDownload: function(value, data) { return data.seniorManagerName; } // Explicitly return field value
+            headerFilter: "select", // Changed to select
+            headerFilterParams: () => getUniqueNameFilterParams('seniorManagerName'), // Dynamically populate
+            headerFilterPlaceholder: "Filter by Sr. Mgr...",
+            accessorDownload: (value, data) => data.seniorManagerName
         },
     ];
 }
