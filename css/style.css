@@ -1246,4 +1246,31 @@ a:focus {
     background: #f0f2f5; /* Match track color */
 }
 
+/* --- UX Enhancement: Animations for Element Entry --- */
+
+@keyframes fadeInAndSlideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-15px); /* Start slightly above */
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.new-item-added-fade-in-slide-down {
+    animation: fadeInAndSlideDown 0.4s ease-out forwards;
+}
+
+/* Optional: A simpler fade-in if slide is too much for some contexts */
+@keyframes simpleFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.new-item-added-fade-in {
+    animation: simpleFadeIn 0.3s ease-out forwards;
+}
+
 /* Add any additional styles as needed */          

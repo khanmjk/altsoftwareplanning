@@ -798,6 +798,8 @@ function populateTeamSelect() {
 function displayTempAssignments() {
     const displayDiv = document.getElementById('newInitiativeAssignmentsDisplay');
     if (!displayDiv) return;
+    // Store the current scroll position if needed, though for this short list it might not matter
+    // const scrollPosition = displayDiv.scrollTop;
     displayDiv.innerHTML = ''; // Clear current display
 
     tempAssignments.forEach((assignment, index) => {
@@ -817,7 +819,19 @@ function displayTempAssignments() {
         };
         assignmentDiv.appendChild(removeButton);
         displayDiv.appendChild(assignmentDiv);
+
+        // *** ADD THIS FOR ANIMATION ***
+        // Apply animation only if this item was just added (e.g., it's the last one)
+        // This is a heuristic; a more robust way would be to flag new items.
+        // For simplicity now, let's animate all items on each redraw of this small list.
+        assignmentDiv.classList.add('new-item-added-fade-in'); // Use the simpler fade-in
+        // Remove class after animation to allow re-animation if list rebuilds
+        setTimeout(() => {
+            assignmentDiv.classList.remove('new-item-added-fade-in');
+        }, 350); // Duration slightly longer than animation
+        // *****************************
     });
+    // displayDiv.scrollTop = scrollPosition; // Restore scroll position if needed
 }
 
 /** Handles clicking the 'Add Assignment' button */
