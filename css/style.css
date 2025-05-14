@@ -1183,7 +1183,7 @@ textarea:focus,
 select:focus,
 a:focus {
     outline: none; /* Remove default outline ONLY if :focus-visible is providing a better one */
-}
+/*}
 */
 /* A safer approach is to let the default :focus outline exist for older browsers,
    and :focus-visible will enhance it for modern browsers.
@@ -1204,5 +1204,46 @@ a:focus {
   own navigation features. These global styles will primarily affect standalone
   form elements and buttons.
 */
+
+/* --- UX Enhancement: Modern Scrollbar Styling --- */
+
+/* Target specific scrollable containers */
+#documentationContent,
+#planningTableWrapper {
+    /* For Firefox */
+    scrollbar-width: thin;            /* Options: "auto", "thin", "none" */
+    scrollbar-color: #adb5bd #f0f2f5; /* thumb color, track color */
+}
+
+/* For WebKit-based browsers (Chrome, Safari, Edge, Opera) */
+#documentationContent::-webkit-scrollbar,
+#planningTableWrapper::-webkit-scrollbar {
+    width: 10px;  /* Width of the vertical scrollbar */
+    height: 10px; /* Height of the horizontal scrollbar */
+}
+
+#documentationContent::-webkit-scrollbar-track,
+#planningTableWrapper::-webkit-scrollbar-track {
+    background: #f0f2f5;        /* Color of the track (the area the scrollbar moves along) */
+    border-radius: 10px;       /* Rounded corners for the track */
+}
+
+#documentationContent::-webkit-scrollbar-thumb,
+#planningTableWrapper::-webkit-scrollbar-thumb {
+    background-color: #adb5bd;    /* Color of the scrollbar thumb (the draggable part) */
+    border-radius: 10px;       /* Rounded corners for the thumb */
+    border: 2px solid #f0f2f5;  /* Creates padding around thumb, using track color */
+}
+
+#documentationContent::-webkit-scrollbar-thumb:hover,
+#planningTableWrapper::-webkit-scrollbar-thumb:hover {
+    background-color: #6c757d; /* Darker color when hovering over the thumb */
+}
+
+/* Optional: For corner where vertical and horizontal scrollbars meet (if both are present) */
+#documentationContent::-webkit-scrollbar-corner,
+#planningTableWrapper::-webkit-scrollbar-corner {
+    background: #f0f2f5; /* Match track color */
+}
 
 /* Add any additional styles as needed */          
