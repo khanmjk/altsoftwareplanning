@@ -15,11 +15,16 @@ A lot has been done
 [Done] Refresh the MVP UX to look like a modernized webapp
 [Done] [Feature] No ability to add new engineers to team (regression)
 [Done] [Feature] Make the Engineer List editable as well, build common table widget
-
+[Done] [UX] Play around with transition animation concepts from this video: https://youtu.be/_-6LgEjEyzE?si=TUsX_vDzRFMITooG
+[Done] Enhance the team member structure by supporting AI SWEs to supplement the team. These AI SWE (software engineers) can have different skill levels too, similar to human: Intern, Junior, Intermediate, Senior. They could be added from a pool of AI agents
+for away team work, or can be part of a team like any other human engineer
+[Done] Enhance data model to track engineer skillsets and perhaps degree qualifications, maybe even years of industry experience
 ------------
 IN PROGRESS
 ------------
-- [UX] Play around with transition animation concepts from this video: https://youtu.be/_-6LgEjEyzE?si=TUsX_vDzRFMITooG
+Data Model
+-- Inspect the data model structure and enhance the data model for future backlog items, create an easy way to extend the data structure without having to change a lot of existing code - so maybe add an attribute that allows for future additions to the model (extensible data structure)
+-- Year Planning - Add ROI (Return on investment - some protected initiatives will override ROI) for prioritising initiatives, Target Due/Dates, Delivery Quarter columns to year plan table (updates to data model needed)
 
 - Working on creating a reusable modern table widget leveraging tabular library
 Moving Filtering to EnhancedTableWidget:
@@ -40,14 +45,7 @@ UX
 -- Now that we can add resources to the system, we need to also support removing resources (when people leave)
 -- Ability to export the system to JSON, CSV and Excel, from top level menu "Export System" [leveraging Tabular library's export functionality]
 
-Data Model
--- Inspect the data model structure and enhance the data model for future backlog items, create an easy way to extend the data structure without having to change a lot of existing code - so maybe add an attribute that allows for future additions to the model (extensible data structure)
--- Enhance the team member structure by supporting AI SWEs to supplement the team. These AI SWE (software engineers) can have different skill levels too, similar to human: Intern, Junior, Intermediate, Senior. They could be added from a pool of AI agents
-for away team work, or can be part of a team like any other human engineer
--- Enhance data model to track engineer skillsets and perhaps degree qualifications, maybe even years of industry experience
-
 Year Planning
--- Add ROI (Return on investment - some protected initiatives will override ROI) for prioritising initiatives, Target Due/Dates, Delivery Quarter columns to year plan table (updates to data model needed)
 -- Consider adding concept of flat headcount or incremental headcount to planning table?
 -- View planning by teams - for individual manager team planning. Allow managers to tune their teams estimates which will update the data model, year plan page uses latest changes)
 -- Add versioning when saving plans (up to 5 previous versions) - need to update data model structure
