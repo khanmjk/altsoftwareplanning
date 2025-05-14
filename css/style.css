@@ -1148,4 +1148,61 @@ svg { width: 100%; height: 600px; border: 1px solid #ccc; }
     transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
 }
 
+/* --- UX Enhancement: Improved Focus Indicators --- */
+
+/*
+  :focus-visible is a pseudo-class that applies when an element matches :focus
+  and the browser heuristically determines that the focus should be made visible
+  (e.g., when focused via keyboard or script, but not always on mouse click).
+*/
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+a:focus-visible { /* For any standalone interactive links */
+    outline: 3px solid #007bff;       /* A clear, slightly thicker blue outline */
+    outline-offset: 2px;             /* Space between the element and the outline */
+    /* Optional: A softer box-shadow can also be used, but outline is often preferred for clarity */
+    /* box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.35); */
+    transition: outline 0.1s ease-in-out, outline-offset 0.1s ease-in-out; /* Smooth transition for the outline */
+}
+
+/*
+  Consider carefully if you want to remove the default outline universally.
+  If :focus-visible is not supported by an older browser,
+  removing the default :focus outline would leave no focus indicator.
+  However, :focus-visible has good modern browser support.
+
+  If you are confident in your target browsers, you might do:
+*/
+/*
+button:focus,
+input:focus,
+textarea:focus,
+select:focus,
+a:focus {
+    outline: none; /* Remove default outline ONLY if :focus-visible is providing a better one */
+}
+*/
+/* A safer approach is to let the default :focus outline exist for older browsers,
+   and :focus-visible will enhance it for modern browsers.
+   Or, provide a fallback :focus style that is less obtrusive than the default if needed.
+*/
+
+/* Specific styling for top bar buttons when focused via keyboard */
+#topBar button:focus-visible {
+    /* The general rule above might be sufficient, but you can make it more specific */
+    /* For example, to ensure it stands out against the dark top bar */
+    outline: 2px solid #79c0ff; /* A lighter blue for dark backgrounds */
+    outline-offset: 1px;
+    box-shadow: 0 0 0 2px rgba(121, 192, 255, 0.4); /* Adjusted shadow for top bar */
+}
+
+/*
+  For Tabulator tables, focus on cells or rows might be handled by Tabulator's
+  own navigation features. These global styles will primarily affect standalone
+  form elements and buttons.
+*/
+
 /* Add any additional styles as needed */          
