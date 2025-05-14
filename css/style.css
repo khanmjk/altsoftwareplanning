@@ -1104,4 +1104,48 @@ svg { width: 100%; height: 600px; border: 1px solid #ccc; }
 }
 /* --- End SDM Forecasting Tool Styles --- */          
 
-    /* Add any additional styles as needed */          
+/* --- UX Enhancement: Hover Effects --- */
+
+/* 1. Table Row Hover Effects */
+#teamTable tbody tr:hover td, /* Target TDs within the hovered TR */
+#serviceDependenciesTable tbody tr:hover td,
+#planningTableBody tr:hover td,
+#teamLoadSummaryTable tbody tr:hover td,
+#sdmForecastingView #forecastTable_SDM tbody tr:hover td,
+#sdmForecastingView #monthlySummaryTable_SDM tbody tr:hover td {
+    background-color: #f0f8ff !important; /* Alice blue, try with !important first for testing planning table */
+    transition: background-color 0.15s ease-in-out;
+}
+
+/* Attempt to make inputs transparent on row hover in planning table */
+#planningTableBody tr:hover td input[type="number"] {
+    background-color: transparent;
+}
+
+
+/* 2. Collapsible Section Header Hover Effects */
+#documentationHeader:hover,
+#planningView #addInitiativeSection > h3:hover,
+#planningView #teamLoadSummarySection > h4:hover,
+#capacityConfigView #globalConstraintsSection > h3:hover,
+#capacityConfigView #teamConstraintsSection > h3:hover,
+#capacityConfigView .team-constraint-container > h4:hover,
+#sdmForecastingView .input-section > h3:hover,
+#sdmForecastingView .output-section > h3:hover,
+#sdmForecastingView .faq-section > h3:hover,
+#capacityConfigView #narrativeHeader:hover,
+#capacityConfigView #chartHeader:hover {
+    background-color: #e2e6ea;
+    color: #0056b3;
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+/* Ensure these are active for Edit System collapsible headers */
+#systemEditForm .service-edit > h4:hover,
+#systemEditForm .team-edit > h4:hover {
+    background-color: #dce9f5; /* Distinct light blue for testing edit mode hover */
+    color: #004a99;    /* Distinct darker blue for testing */
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+/* Add any additional styles as needed */          
