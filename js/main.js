@@ -61,8 +61,26 @@ let draggedRowElement = null; // Store the element itself for styling
 // Store temporary assignments before adding the initiative
 let tempAssignments = [];
 
+    // Ensure this runs after the DOM is fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        const topBar = document.getElementById('topBar');
+        console.log("DOMContentLoaded event triggered. Top bar:", topBar);
+        if (topBar) {
+            // Add a small delay before triggering the animation
+            // This helps ensure the initial "exploded" styles are rendered first,
+            // especially on very fast connections or simple pages.
+            setTimeout(() => {
+                topBar.classList.add('top-bar-loaded');
+            }, 1000); // 100 milliseconds delay, adjust as needed
+        }
+        else {
+            console.error("Top bar not found in DOMContentLoaded.");
+        }
+    });
+
+
 window.onload = function() {
-    console.log("!!! window.onload: Page HTML and synchronous scripts loaded. !!!");
+    console.log("!!! window.onload: Page HTML and synchronous scripts loaded. !!!");  
     currentMode = Modes.NAVIGATION;
 
     const docHeader = document.getElementById('documentationHeader');

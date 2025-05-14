@@ -19,6 +19,7 @@ A lot has been done
 ------------
 IN PROGRESS
 ------------
+- [UX] Play around with transition animation concepts from this video: https://youtu.be/_-6LgEjEyzE?si=TUsX_vDzRFMITooG
 
 - Working on creating a reusable modern table widget leveraging tabular library
 Moving Filtering to EnhancedTableWidget:
