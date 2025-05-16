@@ -19,55 +19,10 @@ A lot has been done
 [Done] Enhance the team member structure by supporting AI SWEs to supplement the team. These AI SWE (software engineers) can have different skill levels too, similar to human: Intern, Junior, Intermediate, Senior. They could be added from a pool of AI agents
 for away team work, or can be part of a team like any other human engineer
 [Done] Enhance data model to track engineer skillsets and perhaps degree qualifications, maybe even years of industry experience
-------------
-IN PROGRESS
-------------
+[Done] MAJOR DATA MODEL changes
 Data Model
 -- Inspect the data model structure and enhance the data model for future backlog items, create an easy way to extend the data structure without having to change a lot of existing code - so maybe add an attribute that allows for future additions to the model (extensible data structure)
 -- Year Planning - Add ROI (Return on investment - some protected initiatives will override ROI) for prioritising initiatives, Target Due/Dates, Delivery Quarter columns to year plan table (updates to data model needed)
-
-- Working on creating a reusable modern table widget leveraging tabular library
-Moving Filtering to EnhancedTableWidget:
-Now that the immediate filter display issues in the Engineer List (using direct Tabulator configuration) are resolved, the next logical step for the widget itself is to abstract that filtering logic.
-When we resume work on the EnhancedTableWidget, we will:
-Define an API on the widget for how columns specify their filter type and options (e.g., columnDef.headerFilterType = 'select', columnDef.headerFilterOptions = [{label:'All', value:''}, ...]).
-Implement the logic within EnhancedTableWidget to take these definitions and correctly configure Tabulator's headerFilter and headerFilterParams for each column. This will include dynamically populating select lists from column data if specified.
-
-------
-TO DO
-------
-
-Utilities
-- Now that we've got export to excel, csv and json working, we need a utlity to generate these files from other places: planning table, overall system data dump, etc.
-
-
-UX
--- Now that we can add resources to the system, we need to also support removing resources (when people leave)
--- Ability to export the system to JSON, CSV and Excel, from top level menu "Export System" [leveraging Tabular library's export functionality]
-
-Year Planning
--- Consider adding concept of flat headcount or incremental headcount to planning table?
--- View planning by teams - for individual manager team planning. Allow managers to tune their teams estimates which will update the data model, year plan page uses latest changes)
--- Add versioning when saving plans (up to 5 previous versions) - need to update data model structure
--- Add ability to export the plan to CSV or Excel
-
-Manage Roadmap & Backlog
--- Similar to the year planning page, but focused on roadmap / backlog management (does not need to show ATL/BTL logic), just an interactive table to pull the latest backlog of initiatives, ability to add and remove initiatives. The Year plan and Roadmap must share the same data model (year plan shows more details / attributes than the roadmap)
--- Generate roadmap table view (by quarter), should be interactive to filter by org, team
--- Add ability to import a backlog from an excel file
--- The backlog items can have 1..many initiatives
--- Initiatives can be associated with 1..many themes or tags that are linked to a business goal / strategy, like Revenue, Cost Optimization, Engineering Excellence, UX/Usability, Accessibility, Security, Product Feature enhancements
--- It must be possible to generate a view of business objectives and strategies from the backlog
--- It must be possible to generate a 3 year plan (3YP) view of the roadmap, something like Current Year, Next Year, future
--- It must be possible to show a visual representation of the initiatives by theme so the senior engineering or product leader can gauge the distribution of investments by theme or tags
--- It must be possible to generate a view of completed goals, initiatives or work packages
--- It must be possible to generate a roadmap view per team for software managers to focus on their team or org-specific commitments
--- It must be possible to display a graph visualization (similar to system visualizations) of service impact and relations to initiatives and work package dependencies
-
-
-Team Editing
--- We support away team only from an incoming perspective (i.e. help provided to the team), but we could also consider concept of outgoing away team (I.e. the team lends engineers to other teams)
-
 Manage Detailed Planning
 -- Concept of work packages
 -- Data model planning updates
@@ -91,6 +46,54 @@ Manage Detailed Planning
 -- A work package has total capacity metric (sum of all HC estimates per team associated with the work package)
 -- A work package can have one owner (someone accountable for the work package delivery)
 -- A work package can have 0..many dependencies on other work packages
+
+------------
+IN PROGRESS
+------------
+
+
+- Working on creating a reusable modern table widget leveraging tabular library
+Moving Filtering to EnhancedTableWidget:
+Now that the immediate filter display issues in the Engineer List (using direct Tabulator configuration) are resolved, the next logical step for the widget itself is to abstract that filtering logic.
+When we resume work on the EnhancedTableWidget, we will:
+Define an API on the widget for how columns specify their filter type and options (e.g., columnDef.headerFilterType = 'select', columnDef.headerFilterOptions = [{label:'All', value:''}, ...]).
+Implement the logic within EnhancedTableWidget to take these definitions and correctly configure Tabulator's headerFilter and headerFilterParams for each column. This will include dynamically populating select lists from column data if specified.
+
+------
+TO DO
+------
+
+Utilities
+- Now that we've got export to excel, csv and json working, we need a utlity to generate these files from other places: planning table, overall system data dump, etc.
+
+
+UX
+-- Now that we can add resources to the system, we need to also support removing resources (when people leave)
+-- Ability to export the system to JSON, CSV and Excel, from top level menu "Export System" [leveraging Tabular library's export functionality]
+
+Year Planning
+-- View planning by teams - for individual manager team planning. Allow managers to tune their teams estimates which will update the data model, year plan page uses latest changes)
+-- Add versioning when saving plans (up to 5 previous versions) - need to update data model structure
+-- Add ability to export the plan to CSV or Excel
+
+Manage Roadmap & Backlog
+-- Similar to the year planning page, but focused on roadmap / backlog management (does not need to show ATL/BTL logic), just an interactive table to pull the latest backlog of initiatives, ability to add and remove initiatives. The Year plan and Roadmap must share the same data model (year plan shows more details / attributes than the roadmap)
+-- Generate roadmap table view (by quarter), should be interactive to filter by org, team
+-- Add ability to import a backlog from an excel file
+-- The backlog items can have 1..many initiatives
+-- Initiatives can be associated with 1..many themes or tags that are linked to a business goal / strategy, like Revenue, Cost Optimization, Engineering Excellence, UX/Usability, Accessibility, Security, Product Feature enhancements
+-- It must be possible to generate a view of business objectives and strategies from the backlog
+-- It must be possible to generate a 3 year plan (3YP) view of the roadmap, something like Current Year, Next Year, future
+-- It must be possible to show a visual representation of the initiatives by theme so the senior engineering or product leader can gauge the distribution of investments by theme or tags
+-- It must be possible to generate a view of completed goals, initiatives or work packages
+-- It must be possible to generate a roadmap view per team for software managers to focus on their team or org-specific commitments
+-- It must be possible to display a graph visualization (similar to system visualizations) of service impact and relations to initiatives and work package dependencies
+
+
+Team Editing
+-- We support away team only from an incoming perspective (i.e. help provided to the team), but we could also consider concept of outgoing away team (I.e. the team lends engineers to other teams)
+
+
 
 AI enhancements
 - Create a top-level menu for "AI-Assistant" - a page that allows the user to interact through a chat interface on interrogating the selected system

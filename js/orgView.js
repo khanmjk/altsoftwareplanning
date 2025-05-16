@@ -149,19 +149,19 @@ function generateOrganogram() {
 
 // In js/orgView.js
 
-// Replace your existing generateTeamTable function with this complete version:
-
 /**
  * Generates the Team Breakdown Table.
- * MODIFIED: Iterates team.engineers (array of names) and looks up details
- * from currentSystemData.allKnownEngineers to display engineer info.
+ * MODIFIED (v5 - Robust Lookup from data.js structure):
+ * - Assumes team.engineers is an array of names.
+ * - Performs case-insensitive, trimmed lookup of engineer details from systemData.allKnownEngineers.
+ * - Logs specific names if details are not found in the roster.
  */
-function generateTeamTable(systemData) { // systemData here is typically currentSystemData
-    console.log("[DEBUG V2] ENTER generateTeamTable");
+function generateTeamTable(systemData) {
+    console.log("[DEBUG V5] ENTER generateTeamTable");
 
     const teamTable = document.getElementById('teamTable');
     if (!teamTable) {
-        console.error("[DEBUG V2] EXIT generateTeamTable: Could not find #teamTable element.");
+        console.error("[DEBUG V5] EXIT generateTeamTable: Could not find #teamTable element.");
         const teamBreakdownDiv = document.getElementById('teamBreakdown');
         if (teamBreakdownDiv) {
              teamBreakdownDiv.innerHTML = '<p style="color:red;">Error: HTML element for team table not found (ID: teamTable).</p>';
@@ -174,7 +174,7 @@ function generateTeamTable(systemData) { // systemData here is typically current
     const tableFoot = teamTable.querySelector('tfoot');
 
     if (!tableHead || !tableBody || !tableFoot) {
-        console.error("[DEBUG V2] EXIT generateTeamTable: Table structure incomplete (missing thead/tbody/tfoot).");
+        console.error("[DEBUG V5] EXIT generateTeamTable: Table structure incomplete (missing thead/tbody/tfoot).");
         const teamBreakdownDiv = document.getElementById('teamBreakdown');
         if (teamBreakdownDiv) {
             teamBreakdownDiv.innerHTML = '<p style="color:red;">Error: Team table HTML structure is incomplete.</p>';
@@ -185,7 +185,7 @@ function generateTeamTable(systemData) { // systemData here is typically current
     tableBody.innerHTML = '';
     tableHead.innerHTML = '';
     tableFoot.innerHTML = '';
-    console.log("[DEBUG V2] Cleared table head, body, and foot.");
+    console.log("[DEBUG V5] Cleared table head, body, and foot.");
 
     const headerRow = tableHead.insertRow();
     const headersConfig = [
@@ -194,7 +194,7 @@ function generateTeamTable(systemData) { // systemData here is typically current
         { text: 'Team Identity', title: 'Unique identifier or codename for the team.' },
         { text: 'Team Name', title: 'Official name of the team.' },
         { text: 'PMT', title: 'Product Management counterpart for the team.' },
-        { text: 'Team BIS', title: 'Builders In Seats: Count of actual engineers assigned to this team.' },
+        { text: 'Team BIS', title: 'Builders In Seats: Count of actual engineers assigned to this team (from team.engineers list).' },
         { text: 'Finance Approved Funding', title: 'Official budgeted headcount allocated by finance.' },
         { text: 'Effective BIS', title: 'Total building capacity including team members and away-team resources (Team BIS + Away-Team BIS).' },
         { text: 'BIS Hiring Gap', title: 'Gap between Finance Approved Funding and actual Team BIS (Funded - Team BIS). Shows hiring need.' },
@@ -210,10 +210,10 @@ function generateTeamTable(systemData) { // systemData here is typically current
         headerRow.appendChild(th);
     });
 
-    if (!systemData || !systemData.teams || !Array.isArray(systemData.teams) || !systemData.allKnownEngineers) {
-        console.error("[DEBUG V2] EXIT generateTeamTable: Invalid or missing systemData.teams or systemData.allKnownEngineers");
+    if (!systemData || !systemData.teams || !Array.isArray(systemData.teams) || !systemData.allKnownEngineers || !Array.isArray(systemData.allKnownEngineers)) {
+        console.error("[DEBUG V5] EXIT generateTeamTable: Invalid or missing systemData.teams or systemData.allKnownEngineers. Check data loading and structure.");
         let errRow = tableBody.insertRow(); let cell = errRow.insertCell();
-        cell.colSpan = headersConfig.length; cell.textContent = "Error: Core team or engineer data is missing or invalid."; cell.style.color = 'red';
+        cell.colSpan = headersConfig.length; cell.textContent = "Error: Core team or global engineer roster data is missing or invalid. Please check system data."; cell.style.color = 'red';
         const levelKeyElement = document.getElementById('levelKey'); if (levelKeyElement) levelKeyElement.innerHTML = '';
         return;
     }
@@ -222,21 +222,21 @@ function generateTeamTable(systemData) { // systemData here is typically current
     const sdms = systemData.sdms || [];
     const pmts = systemData.pmts || [];
     const seniorManagers = systemData.seniorManagers || [];
-    const allKnownEngineers = systemData.allKnownEngineers || [];
+    const allKnownEngineers = systemData.allKnownEngineers; // Source of truth for engineer details
 
     let totalFundedHC = 0; let totalTeamBIS = 0; let totalEffectiveBIS = 0;
 
-    const getSeniorManagerName = (srMgrId) => { /* ... no change from your file ... */ if (!srMgrId) return 'No Senior Manager'; const srMgr = seniorManagers.find(s => s.seniorManagerId === srMgrId); return srMgr ? srMgr.seniorManagerName : `Unknown (${srMgrId.slice(-4)})`; };
-    const getSdmName = (sdmId) => { /* ... no change from your file ... */ if (!sdmId) return 'No SDM'; const sdm = sdms.find(s => s.sdmId === sdmId); return sdm ? sdm.sdmName : `Unknown (${sdmId.slice(-4)})`; };
-    const getPmtName = (pmtId) => { /* ... no change from your file ... */ if (!pmtId) return 'N/A'; const pmt = pmts.find(p => p.pmtId === pmtId); return pmt ? pmt.pmtName : `Unknown (${pmtId.slice(-4)})`; };
+    const getSeniorManagerName = (srMgrId) => { if (!srMgrId) return 'No Senior Manager'; const srMgr = seniorManagers.find(s => s.seniorManagerId === srMgrId); return srMgr ? srMgr.seniorManagerName : `Unknown (${srMgrId.slice(-4)})`; };
+    const getSdmName = (sdmId) => { if (!sdmId) return 'No SDM'; const sdm = sdms.find(s => s.sdmId === sdmId); return sdm ? sdm.sdmName : `Unknown (${sdmId.slice(-4)})`; };
+    const getPmtName = (pmtId) => { if (!pmtId) return 'N/A'; const pmt = pmts.find(p => p.pmtId === pmtId); return pmt ? pmt.pmtName : `Unknown (${pmtId.slice(-4)})`; };
 
     let teamServicesMap = {};
     services.forEach(service => { let teamId = service.owningTeamId; if (teamId) { if (!teamServicesMap[teamId]) teamServicesMap[teamId] = []; teamServicesMap[teamId].push(service.serviceName); } });
 
     let groupedData = {};
-    systemData.teams.forEach(team => { if (!team) return; const sdm = sdms.find(s => s.sdmId === team.sdmId); const srMgrId = sdm ? (sdm.seniorManagerId || 'no-sr-mgr') : 'no-sdm'; const sdmIdValue = team.sdmId || 'no-sdm'; if (!groupedData[srMgrId]) groupedData[srMgrId] = {}; if (!groupedData[srMgrId][sdmIdValue]) groupedData[srMgrId][sdmIdValue] = []; groupedData[srMgrId][sdmIdValue].push(team); });
+    systemData.teams.forEach(team => { if (!team || !team.teamId) return; const sdm = sdms.find(s => s.sdmId === team.sdmId); const srMgrId = sdm ? (sdm.seniorManagerId || 'no-sr-mgr') : 'no-sdm'; const sdmIdValue = team.sdmId || 'no-sdm'; if (!groupedData[srMgrId]) groupedData[srMgrId] = {}; if (!groupedData[srMgrId][sdmIdValue]) groupedData[srMgrId][sdmIdValue] = []; groupedData[srMgrId][sdmIdValue].push(team); });
 
-    console.log("[DEBUG V2] Starting table body population...");
+    console.log("[DEBUG V5] Starting table body population. Number of known engineers in roster:", allKnownEngineers.length);
     let rowCount = 0;
     for (const srMgrId in groupedData) {
         const srMgrData = groupedData[srMgrId];
@@ -251,7 +251,7 @@ function generateTeamTable(systemData) { // systemData here is typically current
             let isFirstRowForSdm = true;
 
             teamsInSdmGroup.forEach((team) => {
-                if (!team || !team.teamId) { console.warn("Skipping invalid team in generateTeamTable:", team); return; }
+                if (!team || !team.teamId) { console.warn("[DEBUG V5] Skipping invalid team in generateTeamTable:", team); return; }
                 let row = tableBody.insertRow();
                 rowCount++;
 
@@ -262,14 +262,14 @@ function generateTeamTable(systemData) { // systemData here is typically current
                 row.insertCell().innerText = getPmtName(team.pmtId);
 
                 const fundedHC = team.fundedHeadcount ?? 0;
-                const teamMemberNames = team.engineers || []; // This is now an array of names
-                const teamBIS = teamMemberNames.length;
+                const teamMemberEngineerNames = team.engineers || [];
+                const teamBIS = teamMemberEngineerNames.length;
                 const awayTeamBIS = (team.awayTeamMembers || []).length;
                 const effectiveBIS = teamBIS + awayTeamBIS;
                 const hiringGap = fundedHC - teamBIS;
 
                 const teamBISCell = row.insertCell(); teamBISCell.innerText = teamBIS; teamBISCell.style.textAlign = 'center';
-                row.insertCell().innerText = fundedHC.toFixed(0); // Typically whole numbers
+                row.insertCell().innerText = fundedHC.toFixed(0);
                 const effectiveBISCell = row.insertCell(); effectiveBISCell.innerText = effectiveBIS.toFixed(0); effectiveBISCell.title = `Team Members: ${teamBIS}, Away-Team: ${awayTeamBIS}`; effectiveBISCell.style.textAlign = 'center'; if (awayTeamBIS > 0) effectiveBISCell.style.fontWeight = 'bold';
                 let hiringGapCell = row.insertCell(); hiringGapCell.innerText = hiringGap; hiringGapCell.style.color = hiringGap < 0 ? 'blue' : (hiringGap > 0 ? 'orange' : 'green'); hiringGapCell.style.textAlign = 'center';
                 if (hiringGap < 0) { hiringGapCell.title = `Team BIS (${teamBIS}) exceeds Funded HC (${fundedHC}) by ${Math.abs(hiringGap)}`; hiringGapCell.style.fontWeight = 'bold'; }
@@ -278,15 +278,29 @@ function generateTeamTable(systemData) { // systemData here is typically current
 
                 totalFundedHC += fundedHC; totalTeamBIS += teamBIS; totalEffectiveBIS += effectiveBIS;
 
-                // Engineers (Level & Type) Cell - MODIFIED
                 let engineersCell = row.insertCell();
-                if (teamMemberNames.length > 0) {
-                    engineersCell.innerHTML = teamMemberNames.map(name => {
-                        const engDetails = allKnownEngineers.find(e => e.name === name);
-                        if (engDetails) {
-                            return `${engDetails.name} (L${engDetails.level ?? '?'})${engDetails.attributes?.isAISWE ? ' [AI]' : ''}`;
+                if (teamMemberEngineerNames.length > 0) {
+                    engineersCell.innerHTML = teamMemberEngineerNames.map(engineerNameFromTeamLoop => {
+                        if (!engineerNameFromTeamLoop || typeof engineerNameFromTeamLoop !== 'string') {
+                            console.warn(`[V5 DEBUG] Invalid engineer name in team.engineers: '${engineerNameFromTeamLoop}' for team: ${team.teamIdentity}`);
+                            return `${String(engineerNameFromTeamLoop || 'Invalid Name In TeamList')} (Error: Bad Name Format)`;
                         }
-                        return `${name} (Details Missing)`;
+                        const trimmedNameFromTeam = engineerNameFromTeamLoop.trim();
+                        const lowerTrimmedNameFromTeam = trimmedNameFromTeam.toLowerCase();
+
+                        const engDetails = allKnownEngineers.find(e =>
+                            e.name && typeof e.name === 'string' &&
+                            e.name.trim().toLowerCase() === lowerTrimmedNameFromTeam
+                        );
+
+                        if (engDetails) {
+                            const attributes = engDetails.attributes || {};
+                            const typeIndicator = attributes.isAISWE ? ` [AI - ${attributes.aiAgentType || 'General'}]` : '';
+                            return `${engDetails.name} (L${engDetails.level ?? '?'})${typeIndicator}`;
+                        } else {
+                            console.warn(`[V5 DEBUG - Lookup FAIL] Engineer name "${trimmedNameFromTeam}" (from team "${team.teamIdentity || team.teamId}") NOT FOUND in allKnownEngineers roster.`);
+                            return `${engineerNameFromTeamLoop} (Details Missing - Not in Roster)`;
+                        }
                     }).join('<br>');
                 } else {
                     engineersCell.innerText = 'None';
@@ -297,7 +311,9 @@ function generateTeamTable(systemData) { // systemData here is typically current
                 if (team.awayTeamMembers && team.awayTeamMembers.length > 0) {
                     awayTeamCell.innerHTML = team.awayTeamMembers.map(awayEng => {
                         if (typeof awayEng !== 'object' || awayEng === null) return 'Invalid Away Data';
-                        return `${awayEng.name || 'Unnamed'} (L${awayEng.level ?? '?'}) - ${awayEng.sourceTeam || 'Unknown Source'}`;
+                        const attributes = awayEng.attributes || {}; // Assuming away members might also have attributes
+                        const typeIndicator = attributes.isAISWE ? ` [AI - ${attributes.aiAgentType || 'General'}]` : '';
+                        return `${awayEng.name || 'Unnamed'} (L${awayEng.level ?? '?'})${typeIndicator} - From: ${awayEng.sourceTeam || 'Unknown Source'}`;
                     }).join('<br>');
                 } else {
                     awayTeamCell.innerText = 'None';
@@ -309,7 +325,7 @@ function generateTeamTable(systemData) { // systemData here is typically current
             });
         }
     }
-    console.log(`[DEBUG V2] Finished table body population. Inserted ${rowCount} rows.`);
+    console.log(`[DEBUG V5] Finished table body population. Inserted ${rowCount} rows.`);
 
     const totalHiringGap = totalFundedHC - totalTeamBIS;
     let footerRow1 = tableFoot.insertRow();
@@ -320,7 +336,7 @@ function generateTeamTable(systemData) { // systemData here is typically current
 
     const createFooterCell = (value, id) => {
         let cell = footerRow1.insertCell();
-        cell.textContent = typeof value === 'number' ? value.toFixed(0) : value; // Use toFixed(0) for counts
+        cell.textContent = typeof value === 'number' ? value.toFixed(0) : String(value);
         if (id) cell.id = id;
         Object.assign(cell.style, { fontWeight: 'bold', textAlign: 'center', border: '1px solid #ccc', padding: '8px', backgroundColor: '#f8f9fa' });
         return cell;
@@ -333,7 +349,11 @@ function generateTeamTable(systemData) { // systemData here is typically current
     totalHiringGapCell.style.color = totalHiringGap < 0 ? 'blue' : (totalHiringGap > 0 ? 'orange' : 'green');
 
     let remainingFooterCols = headersConfig.length - totalsLabelCell.colSpan - 4;
-    for(let i=0; i < remainingFooterCols; i++) { footerRow1.insertCell().style.backgroundColor = '#f8f9fa'; } // Match style
+    for(let i=0; i < remainingFooterCols; i++) {
+        const emptyCell = footerRow1.insertCell();
+        emptyCell.style.backgroundColor = '#f8f9fa';
+        emptyCell.style.border = '1px solid #ccc';
+    }
 
     let footerRow2 = tableFoot.insertRow();
     let gapNoteCell = footerRow2.insertCell();
@@ -349,13 +369,15 @@ function generateTeamTable(systemData) { // systemData here is typically current
 
     const levelKeyElement = document.getElementById('levelKey');
     if (levelKeyElement) {
-        levelKeyElement.innerHTML = `Level Key: L1-L7. [AI] indicates an AI Software Engineer.`;
+        levelKeyElement.innerHTML = `Level Key: L1-L7. [AI - Type] indicates an AI Software Engineer and its specialization.`;
     } else {
-        console.warn("[DEBUG V2] Could not find #levelKey element.");
+        console.warn("[DEBUG V5] Could not find #levelKey element.");
     }
-    console.log("[DEBUG V2] EXIT generateTeamTable - Successful completion.");
+    console.log("[DEBUG V5] EXIT generateTeamTable - Successful completion.");
 }
-window.generateTeamTable = generateTeamTable; // Ensure it's globally accessible if not already
+window.generateTeamTable = generateTeamTable;
+
+// END OF REPLACEMENT for generateTeamTable
 
 
 let engineerTableWidgetInstance = null; // Keep this global for the widget

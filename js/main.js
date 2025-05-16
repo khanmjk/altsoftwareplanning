@@ -380,20 +380,125 @@ function toggleCollapsibleSection(contentId, indicatorId, handleId = null) {
 }
 
 /** Save Sample Systems to Local Storage if not already present **/
+/**
+ * REVISED: Clears existing data, validates clearance, saves sample systems,
+ * and logs the stored data with emphasis on allKnownEngineers.
+ * ADDED: More detailed debugging for sampleSystemDataStreamView and stringification.
+ **/
 function saveSampleSystemsToLocalStorage() {
-    if (!localStorage.getItem(LOCAL_STORAGE_KEY)) {
-        // Ensure sampleSystemDataStreamView and sampleSystemDataContactCenter are defined (from data.js)
-        if (typeof sampleSystemDataStreamView !== 'undefined' && typeof sampleSystemDataContactCenter !== 'undefined') {
-            const systems = {
-                'StreamView': sampleSystemDataStreamView,
-                'ConnectPro': sampleSystemDataContactCenter
-            };
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
-            console.log("Saved sample systems to local storage.");
+    console.log(">>> Attempting to save sample systems to LocalStorage with new logic (extended debug)...");
+
+    // 1. Wipe out old data stored under LOCAL_STORAGE_KEY
+    localStorage.removeItem(LOCAL_STORAGE_KEY);
+    console.log(`Cleared data under localStorage key: "${LOCAL_STORAGE_KEY}"`);
+
+    // 2. Validate there are no objects saved (or the key is gone)
+    const clearedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (clearedData === null) {
+        console.log("Validation successful: localStorage key is cleared or contains no data.");
+
+        // --- AGGRESSIVE DEBUGGING of sampleSystemDataStreamView ---
+        console.log("--- Debugging sampleSystemDataStreamView before it's used ---");
+        if (typeof sampleSystemDataStreamView !== 'undefined') {
+            console.log("sampleSystemDataStreamView IS DEFINED.");
+
+            // Check for the 'allKnownEngineers' key directly
+            if (Object.prototype.hasOwnProperty.call(sampleSystemDataStreamView, 'allKnownEngineers')) {
+                console.log("sampleSystemDataStreamView HAS the 'allKnownEngineers' property.");
+                if (Array.isArray(sampleSystemDataStreamView.allKnownEngineers)) {
+                    console.log("sampleSystemDataStreamView.allKnownEngineers IS AN ARRAY. Length:", sampleSystemDataStreamView.allKnownEngineers.length);
+                    if (sampleSystemDataStreamView.allKnownEngineers.length > 0) {
+                        console.log("First engineer in sampleSystemDataStreamView.allKnownEngineers:", JSON.parse(JSON.stringify(sampleSystemDataStreamView.allKnownEngineers[0])));
+                    } else {
+                        console.log("sampleSystemDataStreamView.allKnownEngineers is an EMPTY array.");
+                    }
+                } else {
+                    console.error("CRITICAL DEBUG: sampleSystemDataStreamView.allKnownEngineers is NOT AN ARRAY. Type:", typeof sampleSystemDataStreamView.allKnownEngineers, "Value:", sampleSystemDataStreamView.allKnownEngineers);
+                }
+            } else {
+                console.error("CRITICAL DEBUG: sampleSystemDataStreamView DOES NOT HAVE the 'allKnownEngineers' property. Keys present:", Object.keys(sampleSystemDataStreamView));
+            }
+            // Log a deep copy to see its structure if still problematic
+            // console.log("Full structure of sampleSystemDataStreamView before use:", JSON.parse(JSON.stringify(sampleSystemDataStreamView)));
         } else {
-            console.error("Sample system data is not defined. Cannot save to local storage.");
+            console.error("CRITICAL DEBUG: sampleSystemDataStreamView is UNDEFINED at the point of use in saveSampleSystemsToLocalStorage.");
+            alert("Programming Error: sampleSystemDataStreamView is not defined. Check script load order and data.js.");
+            return; // Stop execution if critical data is missing
         }
+        console.log("--- End of debugging sampleSystemDataStreamView ---");
+        // --- END OF AGGRESSIVE DEBUGGING ---
+
+        // 3. Prepare systems object for saving
+        console.log("Preparing systemsToSave object...");
+        const systemsToSave = {
+            'StreamView': sampleSystemDataStreamView,
+            'ConnectPro': sampleSystemDataContactCenter
+        };
+
+        // --- DEBUG: Check systemsToSave['StreamView'] ---
+        if (systemsToSave.StreamView && systemsToSave.StreamView.allKnownEngineers && Array.isArray(systemsToSave.StreamView.allKnownEngineers)) {
+            console.log("DEBUG: systemsToSave.StreamView.allKnownEngineers IS valid before stringify. Length:", systemsToSave.StreamView.allKnownEngineers.length);
+        } else {
+            console.error("CRITICAL DEBUG: systemsToSave.StreamView.allKnownEngineers is MISSING or NOT AN ARRAY *before* stringify.");
+            if(systemsToSave.StreamView) console.log("Keys in systemsToSave.StreamView:", Object.keys(systemsToSave.StreamView));
+        }
+        // --- END DEBUG ---
+
+        try {
+            // Stringify and save
+            const stringifiedSystems = JSON.stringify(systemsToSave);
+
+            // --- DEBUG: Check stringified output ---
+            if (stringifiedSystems.includes('"allKnownEngineers"')) {
+                if (stringifiedSystems.includes('"StreamView":{"systemName":"StreamView","systemDescription":"StreamView is a video streaming platform') && stringifiedSystems.match(/"StreamView":\{[^{}]*"allKnownEngineers":\[/)) {
+                   console.log("DEBUG: Stringified data for StreamView APPEARS to contain 'allKnownEngineers' as an array.");
+                } else {
+                   console.warn("DEBUG: Stringified data contains 'allKnownEngineers', but not clearly within StreamView as an array. Manual check needed.");
+                   // console.log("Snippet of stringified StreamView:", stringifiedSystems.substring(stringifiedSystems.indexOf('"StreamView":'), stringifiedSystems.indexOf('"StreamView":') + 1000));
+                }
+            } else {
+                console.error("CRITICAL DEBUG: Stringified data DOES NOT contain the key 'allKnownEngineers' at all. Stringification is likely removing it.");
+            }
+            // --- END DEBUG ---
+
+            localStorage.setItem(LOCAL_STORAGE_KEY, stringifiedSystems);
+            console.log("Sample systems saved successfully to LocalStorage.");
+
+            // 4. Log the full sample data being stored (verification step)
+            console.log("--- Verifying Data Stored in localStorage (parsed from what was just set) ---");
+            const newlyStoredSystemsString = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (newlyStoredSystemsString) {
+                const newlyStoredSystems = JSON.parse(newlyStoredSystemsString);
+                const streamViewDataStored = newlyStoredSystems['StreamView'];
+
+                if (streamViewDataStored) {
+                    // console.log("Full 'StreamView' data as stored in localStorage:", JSON.parse(JSON.stringify(streamViewDataStored)));
+                    if (streamViewDataStored.allKnownEngineers && Array.isArray(streamViewDataStored.allKnownEngineers)) {
+                        console.log("VERIFICATION SUCCEEDED: 'StreamView.allKnownEngineers' array IS PRESENT in stored data. Length:", streamViewDataStored.allKnownEngineers.length);
+                        // if (streamViewDataStored.allKnownEngineers.length > 0) {
+                        //     console.log("First engineer in 'StreamView.allKnownEngineers' as stored:", JSON.parse(JSON.stringify(streamViewDataStored.allKnownEngineers[0])));
+                        // }
+                    } else {
+                        console.error("VERIFICATION FAILED: 'StreamView.allKnownEngineers' is missing or not an array in the data read back from localStorage. This is unexpected after a fresh save.");
+                        if(streamViewDataStored) console.log("Keys in streamViewDataStored:", Object.keys(streamViewDataStored));
+                    }
+                } else {
+                    console.warn("VERIFICATION WARNING: 'StreamView' data not found in what was just stored. This is unexpected.");
+                }
+            } else {
+                console.error("CRITICAL VERIFICATION FAILED: Could not retrieve data immediately after setting it in localStorage.");
+            }
+            console.log("--- End of localStorage verification ---");
+
+        } catch (error) {
+            console.error("Error stringifying or setting sample systems in localStorage:", error);
+            alert("Error during saving process. Check console.");
+        }
+    } else {
+        console.error("CRITICAL VALIDATION FAILED: localStorage was not cleared properly. Found data:", clearedData);
+        alert("Error: Could not clear previous data from localStorage. Please check browser console and potentially clear manually.");
     }
+    console.log("<<< Finished saveSampleSystemsToLocalStorage execution.");
 }
 
 /** Show Saved Systems Modal **/
@@ -440,124 +545,211 @@ function showSavedSystems() {
 window.showSavedSystems = showSavedSystems;
 
 
-/** Load Saved System - MODIFIED for new Engineer Data Model **/
+/** REVISED (v7) Load Saved System - Enhanced Logging for allKnownEngineers */
 function loadSavedSystem(systemName) {
-    console.log(`Attempting to load system: ${systemName}`);
-    const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
+    console.log(`[V7 LOAD] Attempting to load system: ${systemName}`);
+    const systemsString = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (!systemsString) {
+        alert('No systems data found in localStorage.');
+        console.error("[V7 LOAD] No systems key found in localStorage.");
+        returnToHome();
+        return;
+    }
+
+    const systems = JSON.parse(systemsString || '{}');
     const systemData = systems[systemName];
 
     if (!systemData) {
-        alert('System not found.');
-        console.error(`System "${systemName}" not found in localStorage.`);
+        alert(`System "${systemName}" not found in localStorage.`);
+        console.error(`[V7 LOAD] System "${systemName}" not found after parsing localStorage.`);
+        returnToHome();
         return;
     }
-    currentSystemData = JSON.parse(JSON.stringify(systemData)); // Deep copy
-    console.log('Selected system to load (raw):', currentSystemData);
 
-    // --- Normalize/Initialize allKnownEngineers & their attributes ---
-    let engineersWereProcessed = false;
-    if (!currentSystemData.allKnownEngineers || !Array.isArray(currentSystemData.allKnownEngineers) || currentSystemData.allKnownEngineers.length === 0) {
-        console.warn(`Initializing 'allKnownEngineers' for system: ${currentSystemData.systemName} from team.engineers array (older data format or empty list).`);
-        currentSystemData.allKnownEngineers = [];
-        const engineerMap = new Map();
+    currentSystemData = systemData; // Assign to global
+    console.log(`[V7 LOAD] Successfully parsed system data for: "${currentSystemData.systemName}" from localStorage.`);
 
-        (currentSystemData.teams || []).forEach(team => {
-            (team.engineers || []).forEach(engineerObj => { // Expecting {name, level} objects
-                if (engineerObj && typeof engineerObj.name === 'string') {
-                    const engineerNameLower = engineerObj.name.toLowerCase();
-                    if (!engineerMap.has(engineerNameLower)) {
-                        engineerMap.set(engineerNameLower, {
-                            name: engineerObj.name,
-                            level: engineerObj.level || 1,
-                            currentTeamId: team.teamId,
-                            attributes: {
-                                isAISWE: false,
-                                aiAgentType: null,
-                                skills: [],
-                                yearsOfExperience: 0
-                            }
-                        });
-                    } else {
-                        const existing = engineerMap.get(engineerNameLower);
-                        if (!existing.currentTeamId && team.teamId) { // If unassigned, assign to this team
-                            existing.currentTeamId = team.teamId;
-                        }
-                        // Ensure attributes exist if somehow missed (e.g. multiple listings in old data)
-                        if (!existing.attributes) {
-                             existing.attributes = { isAISWE: false, aiAgentType: null, skills: [], yearsOfExperience: 0 };
-                        }
-                    }
-                } else {
-                    console.warn("Skipping invalid engineer object in team:", team.teamId, engineerObj);
-                }
-            });
-        });
-        currentSystemData.allKnownEngineers = Array.from(engineerMap.values());
-        engineersWereProcessed = true;
-        console.log("'allKnownEngineers' array created/populated from team data:", currentSystemData.allKnownEngineers.length, "engineers found.");
+    // ----- IMMEDIATE CHECK of allKnownEngineers -----
+    if (currentSystemData.allKnownEngineers && Array.isArray(currentSystemData.allKnownEngineers)) {
+        console.log(`[V7 LOAD - PRE-AUGMENTATION] 'currentSystemData.allKnownEngineers' IS present. Length: ${currentSystemData.allKnownEngineers.length}`);
+        if (currentSystemData.allKnownEngineers.length > 0) {
+            console.log("[V7 LOAD - PRE-AUGMENTATION] Sample of loaded allKnownEngineers[0]:", JSON.stringify(currentSystemData.allKnownEngineers[0]));
+        }
     } else {
-        console.log("'allKnownEngineers' array exists. Verifying attributes field for each engineer...");
-        currentSystemData.allKnownEngineers.forEach(engineer => {
-            if (typeof engineer.attributes !== 'object' || engineer.attributes === null) {
-                engineer.attributes = {};
-                engineersWereProcessed = true;
-            }
-            if (typeof engineer.attributes.isAISWE === 'undefined') engineer.attributes.isAISWE = false;
-            if (typeof engineer.attributes.aiAgentType === 'undefined') engineer.attributes.aiAgentType = null;
-            if (!Array.isArray(engineer.attributes.skills)) engineer.attributes.skills = [];
-            if (typeof engineer.attributes.yearsOfExperience === 'undefined') engineer.attributes.yearsOfExperience = 0;
-        });
-        if (engineersWereProcessed) console.log("Default attributes applied to existing engineers where missing.");
+        console.warn(`[V7 LOAD - PRE-AUGMENTATION] 'currentSystemData.allKnownEngineers' is MISSING or not an array upon loading for system "${systemName}". Will attempt to initialize.`);
     }
+    // ----- END IMMEDIATE CHECK -----
 
-    // --- Normalize team.engineers to be an array of names ---
-    let teamsModifiedForEngineerNames = false;
+
+    // --- DATA AUGMENTATION: Ensure new fields/arrays exist for older saved data ---
+    console.log("[V7 LOAD] Augmenting loaded system data with new model defaults if missing...");
+
+    // Top-level system attributes
+    if (!currentSystemData.projectManagers) currentSystemData.projectManagers = [];
+    if (!currentSystemData.goals) currentSystemData.goals = [];
+    if (!currentSystemData.definedThemes) currentSystemData.definedThemes = [];
+    if (!currentSystemData.archivedYearlyPlans) currentSystemData.archivedYearlyPlans = [];
+    if (!currentSystemData.workPackages) currentSystemData.workPackages = [];
+    if (!currentSystemData.attributes) currentSystemData.attributes = {};
+
+    // allKnownEngineers (critical for engineer data)
+    // This block now primarily ensures attributes on existing engineers if allKnownEngineers was loaded.
+    // If it was missing, it initializes it as empty, which is then used by subsequent functions.
+    if (!currentSystemData.allKnownEngineers || !Array.isArray(currentSystemData.allKnownEngineers)) {
+        console.warn(`[V7 LOAD - AUGMENTATION] Initializing 'allKnownEngineers' as [] for loaded system: ${systemName} because it was missing or not an array.`);
+        currentSystemData.allKnownEngineers = [];
+        // Note: The logic to populate from team.engineers (if they were objects) is removed
+        // as the new data model implies team.engineers are just names and allKnownEngineers is the source of truth.
+        // If loading very old data where allKnownEngineers didn't exist AND teams had full engineer objects,
+        // that old data would need a more specific migration step if encountered.
+    }
+    // Ensure attributes in allKnownEngineers
+    (currentSystemData.allKnownEngineers || []).forEach(eng => {
+        if (!eng.attributes) eng.attributes = { isAISWE: false, skills: [], yearsOfExperience: 0, aiAgentType: null };
+        if (eng.attributes.isAISWE === undefined) eng.attributes.isAISWE = false;
+        if (!eng.attributes.skills) eng.attributes.skills = [];
+        if (eng.attributes.yearsOfExperience === undefined) eng.attributes.yearsOfExperience = 0;
+        if (eng.attributes.aiAgentType === undefined && eng.attributes.isAISWE) eng.attributes.aiAgentType = "General AI";
+        else if (eng.attributes.aiAgentType === undefined && !eng.attributes.isAISWE) eng.attributes.aiAgentType = null;
+
+    });
+
+
+    // Capacity Configuration (ensure structure and defaults for older data)
+    const defaultCapacityConfig = {
+        workingDaysPerYear: 261, standardHoursPerDay: 8,
+        globalConstraints: { publicHolidays: 0, orgEvents: [] },
+        leaveTypes: [
+            { id: "annual", name: "Annual Leave", defaultEstimatedDays: 0, attributes: {} },
+            { id: "sick", name: "Sick Leave", defaultEstimatedDays: 0, attributes: {} },
+            { id: "study", name: "Study Leave", defaultEstimatedDays: 0, attributes: {} },
+            { id: "inlieu", name: "Time off In-lieu Leave", defaultEstimatedDays: 0, attributes: {} }
+        ],
+        attributes: {}
+    };
+    if (!currentSystemData.capacityConfiguration) {
+        currentSystemData.capacityConfiguration = JSON.parse(JSON.stringify(defaultCapacityConfig)); // Deep copy
+    } else {
+        if (currentSystemData.capacityConfiguration.workingDaysPerYear === undefined) currentSystemData.capacityConfiguration.workingDaysPerYear = defaultCapacityConfig.workingDaysPerYear;
+        if (currentSystemData.capacityConfiguration.standardHoursPerDay === undefined) currentSystemData.capacityConfiguration.standardHoursPerDay = defaultCapacityConfig.standardHoursPerDay;
+        if (!currentSystemData.capacityConfiguration.globalConstraints) currentSystemData.capacityConfiguration.globalConstraints = JSON.parse(JSON.stringify(defaultCapacityConfig.globalConstraints));
+        if (currentSystemData.capacityConfiguration.globalConstraints.publicHolidays === undefined) currentSystemData.capacityConfiguration.globalConstraints.publicHolidays = 0;
+        if (!currentSystemData.capacityConfiguration.globalConstraints.orgEvents) currentSystemData.capacityConfiguration.globalConstraints.orgEvents = [];
+        (currentSystemData.capacityConfiguration.globalConstraints.orgEvents || []).forEach(event => { if(!event.attributes) event.attributes = {}; });
+        if (!currentSystemData.capacityConfiguration.leaveTypes || currentSystemData.capacityConfiguration.leaveTypes.length === 0) {
+            currentSystemData.capacityConfiguration.leaveTypes = JSON.parse(JSON.stringify(defaultCapacityConfig.leaveTypes));
+        }
+        (currentSystemData.capacityConfiguration.leaveTypes || []).forEach(lt => { if(!lt.attributes) lt.attributes = {}; });
+        if (!currentSystemData.capacityConfiguration.attributes) currentSystemData.capacityConfiguration.attributes = {};
+    }
+    if (currentSystemData.calculatedCapacityMetrics === undefined) currentSystemData.calculatedCapacityMetrics = null;
+
+
+    // Teams
     (currentSystemData.teams || []).forEach(team => {
-        if (team.engineers && Array.isArray(team.engineers) && team.engineers.length > 0 && typeof team.engineers[0] === 'object') {
-            // If engineers are still objects {name, level}, convert to names
-            team.engineers = team.engineers.map(engObj => engObj.name).filter(name => typeof name === 'string');
-            teamsModifiedForEngineerNames = true;
-        } else if (!Array.isArray(team.engineers)) {
-            team.engineers = []; // Ensure it's an array if it was something else
-            teamsModifiedForEngineerNames = true;
+        if (!team.attributes) team.attributes = {};
+        if (!team.engineers) team.engineers = []; // Should be array of names
+        if (!team.awayTeamMembers) team.awayTeamMembers = [];
+        const defaultTeamCapacityAdjustments = {
+            leaveUptakeEstimates: [],
+            variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 } },
+            teamActivities: [], avgOverheadHoursPerWeekPerSDE: 0, attributes: {}
+        };
+        if (!team.teamCapacityAdjustments) {
+            team.teamCapacityAdjustments = JSON.parse(JSON.stringify(defaultTeamCapacityAdjustments));
+        } else {
+            if (!team.teamCapacityAdjustments.leaveUptakeEstimates) team.teamCapacityAdjustments.leaveUptakeEstimates = [];
+            if (!team.teamCapacityAdjustments.variableLeaveImpact) team.teamCapacityAdjustments.variableLeaveImpact = JSON.parse(JSON.stringify(defaultTeamCapacityAdjustments.variableLeaveImpact));
+            else {
+                const vli = team.teamCapacityAdjustments.variableLeaveImpact;
+                if (!vli.maternity) vli.maternity = { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 };
+                if (!vli.paternity) vli.paternity = { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 };
+                if (!vli.familyResp) vli.familyResp = { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 };
+                if (!vli.medical) vli.medical = { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 };
+            }
+            if (!team.teamCapacityAdjustments.teamActivities) team.teamCapacityAdjustments.teamActivities = [];
+            if (team.teamCapacityAdjustments.avgOverheadHoursPerWeekPerSDE === undefined) team.teamCapacityAdjustments.avgOverheadHoursPerWeekPerSDE = 0;
+            if (!team.teamCapacityAdjustments.attributes) team.teamCapacityAdjustments.attributes = {};
         }
     });
-    if (teamsModifiedForEngineerNames) console.log("Normalized team.engineers to be arrays of names.");
 
-    // --- Remove System Load List Popup ---
-    const systemLoadListDiv = document.getElementById('systemLoadListDiv');
-    if (systemLoadListDiv && systemLoadListDiv.parentNode) {
-      document.body.removeChild(systemLoadListDiv);
-    }
-
-    // --- Clear previous visualization content ---
-    if (typeof d3 !== 'undefined' && d3.selectAll) d3.selectAll('.tooltip').remove();
-    ['legend', 'teamLegend', 'serviceLegend', 'dependencyLegend'].forEach(id => {
-        const el = document.getElementById(id);
-        if(el) el.innerHTML = '';
+    // Services & APIs
+    (currentSystemData.services || []).forEach(service => {
+        if (!service.attributes) service.attributes = {};
+        if (!service.apis) service.apis = [];
+        (service.apis || []).forEach(api => {
+            if (!api.attributes) api.attributes = {};
+            if (!api.dependentApis) api.dependentApis = [];
+        });
+        if (!service.serviceDependencies) service.serviceDependencies = [];
+        if (!service.platformDependencies) service.platformDependencies = [];
     });
 
-    if (typeof buildGlobalPlatformDependencies === 'function') buildGlobalPlatformDependencies();
+    // Yearly Initiatives
+    (currentSystemData.yearlyInitiatives || []).forEach(initiative => {
+        if (initiative.hasOwnProperty('relatedBusinessGoalId')) {
+            if (initiative.primaryGoalId === undefined) initiative.primaryGoalId = initiative.relatedBusinessGoalId; // Migrate if primaryGoalId doesn't exist
+            delete initiative.relatedBusinessGoalId;
+        }
+        const defaultROI = { category: null, valueType: null, estimatedValue: null, currency: null, timeHorizonMonths: null, confidenceLevel: null, calculationMethodology: null, businessCaseLink: null, overrideJustification: null, attributes: {} };
+        if (!initiative.roi) initiative.roi = JSON.parse(JSON.stringify(defaultROI));
+        else { // Ensure all sub-fields of ROI exist
+            for (const key in defaultROI) { if (initiative.roi[key] === undefined) initiative.roi[key] = defaultROI[key]; }
+            if (!initiative.roi.attributes) initiative.roi.attributes = {};
+        }
 
-    switchView('visualizationCarousel'); // Switch to the overview/carousel
+        if (initiative.targetDueDate === undefined) initiative.targetDueDate = null;
+        if (initiative.actualCompletionDate === undefined) initiative.actualCompletionDate = null;
+        if (!initiative.status) initiative.status = initiative.isProtected ? 'Committed' : 'Backlog';
+        if (!initiative.themes) initiative.themes = [];
+        if (initiative.primaryGoalId === undefined) initiative.primaryGoalId = null;
+        if (initiative.projectManager === undefined) initiative.projectManager = null;
+        if (initiative.owner === undefined) initiative.owner = null;
+        if (initiative.technicalPOC === undefined) initiative.technicalPOC = null;
+        if (!initiative.impactedServiceIds) initiative.impactedServiceIds = [];
+        if (!initiative.workPackageIds) initiative.workPackageIds = [];
+        if (!initiative.attributes) initiative.attributes = {};
+        if (!initiative.assignments) initiative.assignments = [];
+    });
 
-    // Regenerate content - ensure functions are defined before calling
+    ['seniorManagers', 'sdms', 'pmts', 'projectManagers', 'goals', 'definedThemes', 'archivedYearlyPlans', 'workPackages'].forEach(key => {
+        (currentSystemData[key] || []).forEach(item => {
+            if (item && !item.attributes) item.attributes = {};
+        });
+    });
+    console.log("[V7 LOAD] Data augmentation complete.");
+    // --- End Data Augmentation ---
+
+
+    const systemLoadListDiv = document.getElementById('systemLoadListDiv');
+    if (systemLoadListDiv && systemLoadListDiv.parentNode === document.body) {
+        document.body.removeChild(systemLoadListDiv);
+        console.log("[V7 LOAD] Removed system load list modal.");
+    }
+
+    d3.selectAll('.tooltip').remove();
+    const legendDivs = ['legend', 'teamLegend', 'serviceLegend', 'dependencyLegend'];
+    legendDivs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = '';
+    });
+
+    buildGlobalPlatformDependencies();
+
+    switchView('visualizationCarousel');
+
     try {
-        if (typeof populateServiceSelection === 'function') populateServiceSelection();
-        if (typeof populateDependencyServiceSelection === 'function') populateDependencyServiceSelection();
-        // Visualizations are now triggered by showVisualization after switchView completes
-        // generateVisualization(currentSystemData);
-        // generateTeamVisualization(currentSystemData);
-        if (typeof generateServiceDependenciesTable === 'function') generateServiceDependenciesTable();
-        // showVisualization(0); // This is now called in switchView's transition.finished
-        console.log("Finished loading and preparing display for system:", currentSystemData.systemName);
+        populateServiceSelection();
+        populateDependencyServiceSelection();
+        generateServiceDependenciesTable();
+        console.log("[V7 LOAD] Finished loading and preparing display for system:", currentSystemData.systemName);
     } catch (error) {
-        console.error("Error regenerating system overview content during load:", error);
+        console.error("[V7 LOAD] Error regenerating parts of system overview content during load:", error);
         const carouselDiv = document.getElementById('visualizationCarousel');
-        if(carouselDiv) carouselDiv.innerHTML = '<p style="color:red">Error loading visualizations.</p>';
+        if (carouselDiv) carouselDiv.innerHTML = '<p style="color:red">Error loading some visualization components. Check console.</p>';
     }
 }
-window.loadSavedSystem = loadSavedSystem;
+// window.loadSavedSystem = loadSavedSystem; // Keep global
 
 /** Build global list of platform dependencies **/
 function buildGlobalPlatformDependencies() {
@@ -569,69 +761,159 @@ function buildGlobalPlatformDependencies() {
     currentSystemData.platformDependencies = Array.from(platformDepsSet);
 }
 
-/** Create New Software System - MODIFIED for new Engineer Data Model **/
+/** Updated function to handle "Create New Software System" button click **/
 function createNewSystem() {
     currentMode = Modes.CREATING;
 
-    const defaultSeniorManagersData = [ { seniorManagerId: 'srMgr1', seniorManagerName: 'Enter Sr. Manager Name Here' } ];
-    const defaultSDMsData = [ { sdmId: 'sdm1', sdmName: 'Enter SDM Name Here', seniorManagerId: 'srMgr1' } ];
-    const defaultPMTsData = [ { pmtId: 'pmt1', pmtName: 'Enter PMT Name Here' } ];
-
-    // Define default engineers with new attributes structure
-    const defaultEngineer1_details = {
-        name: 'Default Engineer Alpha', level: 2, currentTeamId: 'team1',
-        attributes: { isAISWE: false, aiAgentType: null, skills: ['Core Programming', 'Problem Solving'], yearsOfExperience: 1 }
-    };
-    const defaultEngineer2_details = {
-        name: 'Default Engineer Beta', level: 3, currentTeamId: 'team1',
-        attributes: { isAISWE: false, aiAgentType: null, skills: ['System Basics', 'Debugging'], yearsOfExperience: 2 }
-    };
-    const defaultAIEngineer_details = {
-        name: 'AI-Helper-01', level: 2, currentTeamId: 'team1',
-        attributes: { isAISWE: true, aiAgentType: "Documentation Assistant", skills: ["NLP", "Markdown"], yearsOfExperience: null }
-    };
-
-    const defaultAllKnownEngineers = [
-        defaultEngineer1_details,
-        defaultEngineer2_details,
-        defaultAIEngineer_details
+    // Default Senior Managers Data
+    const defaultSeniorManagersData = [
+        // It's often better to start empty and let the user define,
+        // but if a default is truly needed:
+        // { seniorManagerId: 'srMgrDefault1', seniorManagerName: 'Default Sr. Manager', attributes: {} }
     ];
 
-    const defaultTeamsData = [{
-        teamId: 'team1', teamName: 'Enter Team Name Here', teamIdentity: 'Enter Team Identity Here',
-        teamDescription: 'Enter Team Description Here...', fundedHeadcount: 3,
-        engineers: [ defaultEngineer1_details.name, defaultEngineer2_details.name, defaultAIEngineer_details.name ], // Array of names
-        awayTeamMembers: [], sdmId: 'sdm1', pmtId: 'pmt1',
-        teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }}, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 0 }
-    }];
+    // Default SDMs Data
+    const defaultSDMsData = [
+        // { sdmId: 'sdmDefault1', sdmName: 'Default SDM', seniorManagerId: null, attributes: {} }
+    ];
 
-    const defaultServicesData = [{
-        serviceName: 'Enter Service Name Here', serviceDescription: 'Enter Service Description Here...',
-        owningTeamId: 'team1',
-        apis: [ { apiName: 'Enter API Name Here', apiDescription: 'Enter API Description Here...', dependentApis: [] } ],
-        serviceDependencies: [], platformDependencies: []
-    }];
+    // Default PMTs Data
+    const defaultPMTsData = [
+        // { pmtId: 'pmtDefault1', pmtName: 'Default PMT', attributes: {} }
+    ];
 
-    currentSystemData = {
-        systemName: '', systemDescription: '',
-        seniorManagers: defaultSeniorManagersData, sdms: defaultSDMsData, pmts: defaultPMTsData,
-        teams: defaultTeamsData, services: defaultServicesData,
-        platformDependencies: [],
-        allKnownEngineers: defaultAllKnownEngineers, // Use the new detailed list
+    // Default Project Managers Data (New)
+    const defaultProjectManagersData = [
+        // { pmId: 'pmDefault1', pmName: 'Default Project Manager', attributes: {} }
+    ];
+
+    // Default Engineers (now managed via allKnownEngineers)
+    const defaultAllKnownEngineers = [
+        // { name: 'Default Engineer A', level: 2, currentTeamId: null, attributes: { isAISWE: false, skills: [], yearsOfExperience: 0, aiAgentType: null } },
+        // { name: 'Default Engineer B', level: 3, currentTeamId: null, attributes: { isAISWE: false, skills: [], yearsOfExperience: 0, aiAgentType: null } }
+    ];
+
+    // Default Teams Data
+    const defaultTeamsData = [
+        // {
+        //     teamId: 'teamDefault1',
+        //     teamName: 'Default Team Alpha',
+        //     teamIdentity: 'Alphas',
+        //     teamDescription: 'A default example team.',
+        //     fundedHeadcount: 0,
+        //     engineers: [], // Engineer names, links to allKnownEngineers
+        //     awayTeamMembers: [],
+        //     sdmId: null,
+        //     pmtId: null,
+        //     teamCapacityAdjustments: {
+        //         leaveUptakeEstimates: [],
+        //         variableLeaveImpact: {
+        //             maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+        //             paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+        //             familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
+        //             medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }
+        //         },
+        //         teamActivities: [],
+        //         avgOverheadHoursPerWeekPerSDE: 0,
+        //         attributes: {}
+        //     },
+        //     attributes: {}
+        // }
+    ];
+
+    // Default Services Data
+    const defaultServicesData = [
+        // {
+        //     serviceName: 'Default Service Core',
+        //     serviceDescription: 'A default example service.',
+        //     owningTeamId: null, // Link to a teamId if a default team exists
+        //     apis: [
+        //         { apiName: 'DefaultAPI', apiDescription: 'A default API endpoint.', dependentApis: [], attributes: {} }
+        //     ],
+        //     serviceDependencies: [],
+        //     platformDependencies: [],
+        //     attributes: {}
+        // }
+    ];
+
+    // Default Yearly Initiatives (one example, usually starts empty)
+    const defaultYearlyInitiatives = [
+        // {
+        //     initiativeId: 'initDefault-001',
+        //     title: 'Setup Initial Project Environment',
+        //     description: 'Configure repositories, CI/CD, and basic infrastructure for the new system.',
+        //     isProtected: false,
+        //     assignments: [], // Example: [{ teamId: 'teamDefault1', sdeYears: 0.5 }]
+        //     roi: {
+        //         category: 'Tech Debt', // Or 'Enablement'
+        //         valueType: 'Narrative',
+        //         estimatedValue: 'Foundational Setup',
+        //         currency: null, timeHorizonMonths: 1, confidenceLevel: 'High',
+        //         calculationMethodology: 'Required to start any development.',
+        //         businessCaseLink: null, overrideJustification: null,
+        //         attributes: {}
+        //     },
+        //     targetDueDate: null,
+        //     actualCompletionDate: null,
+        //     status: 'Backlog', // Default status for new initiatives
+        //     themes: [], // e.g., ['theme-setup']
+        //     primaryGoalId: null, // e.g., 'goal-initial-setup'
+        //     projectManager: null, // { type: 'projectManager', id: null, name: 'Unassigned' }
+        //     owner: null,          // { type: 'sdm', id: null, name: 'Unassigned' }
+        //     technicalPOC: null,   // { type: 'engineer', id: null, name: 'Unassigned' }
+        //     impactedServiceIds: [],
+        //     workPackageIds: [],
+        //     attributes: {}
+        // }
+    ];
+
+    const defaultSystemData = {
+        systemName: '', // User must enter in form
+        systemDescription: '', // User must enter in form
+
+        // Core Entities (mostly starting empty for a new system)
+        seniorManagers: defaultSeniorManagersData,
+        sdms: defaultSDMsData,
+        pmts: defaultPMTsData,
+        projectManagers: defaultProjectManagersData, // New
+        teams: defaultTeamsData,
+        services: defaultServicesData,
+        allKnownEngineers: defaultAllKnownEngineers, // Start with no globally known engineers
+
+        platformDependencies: [], // Will be built dynamically
+
+        // Capacity Configuration (with defaults)
         capacityConfiguration: {
-            workingDaysPerYear: 261, standardHoursPerDay: 8,
-            globalConstraints: { publicHolidays: 10, orgEvents: [] },
-            leaveTypes: [
-                { id: "annual", name: "Annual Leave", defaultEstimatedDays: 20 },
-                { id: "sick", name: "Sick Leave", defaultEstimatedDays: 10 },
-                { id: "study", name: "Study Leave", defaultEstimatedDays: 5 },
-                { id: "inlieu", name: "Time off In-lieu Leave", defaultEstimatedDays: 0 }
-            ]
+            workingDaysPerYear: 261,
+            standardHoursPerDay: 8,
+            globalConstraints: {
+                publicHolidays: 0, // User should configure
+                orgEvents: []      // User will add events
+            },
+            leaveTypes: [ // Standard leave types with 0 defaults
+                { id: "annual", name: "Annual Leave", defaultEstimatedDays: 0, attributes: {} },
+                { id: "sick", name: "Sick Leave", defaultEstimatedDays: 0, attributes: {} },
+                { id: "study", name: "Study Leave", defaultEstimatedDays: 0, attributes: {} },
+                { id: "inlieu", name: "Time off In-lieu Leave", defaultEstimatedDays: 0, attributes: {} }
+            ],
+            attributes: {}
         },
-        yearlyInitiatives: [],
-        calculatedCapacityMetrics: null
+
+        // Planning & Roadmap Entities (starting empty)
+        yearlyInitiatives: defaultYearlyInitiatives, // Can start empty or with a placeholder
+        goals: [],
+        definedThemes: [],
+        archivedYearlyPlans: [],
+        workPackages: [], // Starts empty, to be populated during detailed planning
+
+        calculatedCapacityMetrics: null, // Initially null
+        attributes: {} // For system-level future extensibility
     };
-    if (typeof enterEditMode === 'function') enterEditMode(true);
+
+    currentSystemData = defaultSystemData;
+    console.log("Initialized new currentSystemData:", JSON.parse(JSON.stringify(currentSystemData)));
+
+    enterEditMode(true); // Pass true flag for creation mode
 }
 window.createNewSystem = createNewSystem;
 
@@ -646,7 +928,6 @@ window.returnToHome = returnToHome;
 /** Reset to Default Sample Systems **/
 function resetToDefaults() {
     if (confirm('This will erase all your saved systems and restore the default sample systems. Do you want to proceed?')) {
-        localStorage.removeItem(LOCAL_STORAGE_KEY);
         saveSampleSystemsToLocalStorage(); // This will re-add the defaults
         alert('Systems have been reset to defaults.');
         returnToHome();
