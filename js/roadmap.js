@@ -282,7 +282,48 @@ function defineRoadmapTableColumns() {
             headerFilter: "input",
             headerFilterPlaceholder: "Filter ROI..."
         },
-        { title: "Target Quarter/Yr", field: "targetQuarterYearDisplay", width: 120, hozAlign: "center", tooltip: function(e, cell){ return cell.getValue(); } },
+        { 
+            title: "Target Quarter/Yr", 
+            field: "targetQuarterYearDisplay", 
+            width: 120, 
+            hozAlign: "center", 
+            tooltip: function(e, cell){ return cell.getValue(); },
+            sorter: function(a, b, aRow, bRow, column, dir, sorterParams){
+                // a and b are the "QxYYYY" strings (values of targetQuarterYearDisplay field)
+                // We will sort based on the underlying targetDueDate for chronological accuracy
+                const date_a_str = aRow.getData().targetDueDate; // "YYYY-MM-DD" or null/undefined
+                const date_b_str = bRow.getData().targetDueDate; // "YYYY-MM-DD" or null/undefined
+
+                const aIsValidDate = date_a_str && typeof date_a_str === 'string' && date_a_str.length === 10;
+                const bIsValidDate = date_b_str && typeof date_b_str === 'string' && date_b_str.length === 10;
+
+                // Handle null/empty/invalid dates: push them to the bottom for ascending, top for descending
+                // This logic ensures items without a valid date are grouped at the end in ascending sort.
+                if (dir === "asc") {
+                    if (!aIsValidDate && bIsValidDate) return 1;
+                    if (aIsValidDate && !bIsValidDate) return -1;
+                    if (!aIsValidDate && !bIsValidDate) return 0;
+                } else { // dir === "desc"
+                    if (!aIsValidDate && bIsValidDate) return 1; // For desc, no-date 'a' should also go to the end (effectively "smaller")
+                    if (aIsValidDate && !bIsValidDate) return -1; // For desc, date 'a' should come before no-date 'b'
+                    if (!aIsValidDate && !bIsValidDate) return 0;
+                }
+
+                // If both are valid date strings, compare them using Luxon
+                const date_a = luxon.DateTime.fromISO(date_a_str);
+                const date_b = luxon.DateTime.fromISO(date_b_str);
+
+                // This validity check with Luxon is more robust
+                if (!date_a.isValid && date_b.isValid) return dir === "asc" ? 1 : -1;
+                if (date_a.isValid && !date_b.isValid) return dir === "asc" ? -1 : 1;
+                if (!date_a.isValid && !date_b.isValid) return 0;
+
+                if (date_a.valueOf() < date_b.valueOf()) return -1;
+                if (date_a.valueOf() > date_b.valueOf()) return 1;
+                return 0;
+            }             
+
+        },
         {
             title: "Target Due Date",
             field: "targetDueDate", // Sorts on the original "YYYY-MM-DD" string or null
