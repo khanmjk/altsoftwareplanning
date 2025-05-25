@@ -129,6 +129,7 @@ function initializeRoadmapView() {
 
 /**
  * Generates filter controls for the roadmap.
+ * (Defaults to all statuses checked)
  */
 function generateRoadmapControls() {
     const controlsContainer = document.getElementById('roadmapControlsContainer');
@@ -157,6 +158,7 @@ function generateRoadmapControls() {
         checkbox.style.marginRight = '5px';
         checkbox.style.marginLeft = '10px';
 
+        // Initialize checkbox state based on currentRoadmapStatusFilters
         if (status === "All") {
             checkbox.checked = currentRoadmapStatusFilters.length === ALL_INITIATIVE_STATUSES.length;
         } else {
@@ -186,7 +188,7 @@ function generateRoadmapControls() {
                     allCheckbox.checked = currentRoadmapStatusFilters.length === ALL_INITIATIVE_STATUSES.length;
                 }
             }
-            renderRoadmapTable();
+            renderRoadmapTable(); // Re-render table with new filters
         });
 
         const label = document.createElement('label');
@@ -203,9 +205,9 @@ function generateRoadmapControls() {
 
     const addNewButton = document.createElement('button');
     addNewButton.textContent = 'Add New Initiative';
-    addNewButton.className = 'btn-primary'; // Use existing CSS class
+    addNewButton.className = 'btn-primary';
     addNewButton.style.marginTop = '10px';
-    addNewButton.onclick = openRoadmapModalForAdd; // Open modal for adding
+    addNewButton.onclick = openRoadmapModalForAdd;
     controlsContainer.appendChild(addNewButton);
 }
 
@@ -242,6 +244,7 @@ function prepareRoadmapDataForTable() {
         return {
             ...init,
             id: init.initiativeId,
+            targetDueDate: init.targetDueDate || null, // Ensure empty strings become null
             ownerDisplay: ownerName,
             roiSummaryDisplay: roiDisplay,
             targetQuarterYearDisplay: formatDateToQuarterYear(init.targetDueDate)
@@ -251,7 +254,7 @@ function prepareRoadmapDataForTable() {
 
 /**
  * Defines columns for the roadmap table.
- * (Corrected tooltip function signature and updated Status headerFilter to "list")
+ * (Corrects Target Due Date sorting and Themes sorting)
  */
 function defineRoadmapTableColumns() {
     const columns = [
@@ -261,24 +264,53 @@ function defineRoadmapTableColumns() {
             title: "Status",
             field: "status",
             width: 120,
-            headerFilter: "list", // << CHANGED from "select" to "list"
-            headerFilterParams: { // Params for "list" header filter
-                values: ["", ...ALL_INITIATIVE_STATUSES], // Provide specific list, "" for "All"
-                clearable: true, // Allows user to clear the filter
-                autocomplete: true // Recommended for longer lists
+            headerFilter: "list",
+            headerFilterParams: {
+                values: ["", ...ALL_INITIATIVE_STATUSES],
+                clearable: true,
+                autocomplete: true
             },
-            headerFilterFunc: "=" // Use exact match for filtering
+            headerFilterFunc: "="
         },
         { title: "Owner", field: "ownerDisplay", width: 150, headerFilter: "input", tooltip: function(e, cell){ return cell.getValue(); } },
-        { title: "ROI Summary", field: "roiSummaryDisplay", width: 220, hozAlign: "left", tooltip: function(e, cell){ return cell.getValue(); } },
-        { title: "Target Quarter", field: "targetQuarterYearDisplay", width: 100, hozAlign: "center", tooltip: function(e, cell){ return cell.getValue(); } },
+        {
+            title: "ROI Summary",
+            field: "roiSummaryDisplay",
+            width: 220,
+            hozAlign: "left",
+            tooltip: function(e, cell){ return cell.getValue(); },
+            headerFilter: "input",
+            headerFilterPlaceholder: "Filter ROI..."
+        },
+        { title: "Target Quarter/Yr", field: "targetQuarterYearDisplay", width: 120, hozAlign: "center", tooltip: function(e, cell){ return cell.getValue(); } },
+        {
+            title: "Target Due Date",
+            field: "targetDueDate", // Sorts on the original "YYYY-MM-DD" string or null
+            width: 130,
+            hozAlign: "center",
+            sorter:"date",
+            sorterParams:{
+                format:"YYYY-MM-DD", // Ensures Luxon parses "YYYY-MM-DD"
+                alignEmptyValues: "bottom" // Puts items with no due date at the bottom
+            },
+            tooltip: function(e, cell){ return cell.getValue() ? cell.getValue() : "Not set"; },
+            headerFilter: "input",
+            headerFilterPlaceholder: "YYYY-MM-DD"
+        },
         {
             title: "Themes",
-            field: "themes",
+            field: "themes", // The raw data is an array
             width: 180,
-            formatter: (cell) => (cell.getValue() || []).join(', '),
-            headerFilter: "input", // Keep as input for comma-separated search
-            tooltip: function(e, cell){ return (cell.getValue() || []).join(', '); }
+            formatter: (cell) => (cell.getValue() || []).join(', '), // How to display it
+            headerFilter: "input",
+            tooltip: function(e, cell){ return (cell.getValue() || []).join(', '); },
+            sorter: function(a, b, aRow, bRow, column, dir, sorterParams){
+                // a and b are the 'themes' arrays for the two rows being compared.
+                // We sort based on their string representation.
+                const val_a = (a || []).join(', ').toLowerCase();
+                const val_b = (b || []).join(', ').toLowerCase();
+                return val_a.localeCompare(val_b);
+            }
         },
         {
             title: "Actions",
@@ -309,7 +341,7 @@ function defineRoadmapTableColumns() {
     columns.push({ title: "PM Capacity Notes", field: "attributes.pmCapacityNotes", visible: false, headerFilter: "input", formatter: "textarea", download: true, tooltip: function(e, cell){ return cell.getValue(); } });
     columns.push({ title: "Primary Goal ID", field: "primaryGoalId", visible: false, headerFilter: "input", download: true, tooltip: function(e, cell){ return cell.getValue(); } });
     columns.push({ title: "Project Manager", field: "projectManager.name", visible: false, headerFilter: "input", download: true, tooltip: function(e, cell){ return cell.getValue(); } });
-    columns.push({ title: "Target Due Date", field: "targetDueDate", visible: false, headerFilter: "input", download: true, tooltip: function(e, cell){ return cell.getValue(); } });
+    // Target Due Date is now a visible column, no longer need it hidden by default.
 
     return columns;
 }
