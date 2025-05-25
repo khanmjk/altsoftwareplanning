@@ -50,6 +50,10 @@ Manage Detailed Planning
 ------------
 IN PROGRESS
 ------------
+UX fixes
+- Need to update SwitchView to cleanup if roadmap edit dialog was shown
+- Fix table of contents for documentation - clickthrough on links don't all work
+
 Manage Roadmap & Backlog
 -- Similar to the year planning page, but focused on roadmap / backlog management (does not need to show ATL/BTL logic), just an interactive table to pull the latest backlog of initiatives, ability to add and remove initiatives. The Year plan and Roadmap must share the same data model (year plan shows more details / attributes than the roadmap)
 -- Generate roadmap table view (by quarter), should be interactive to filter by org, team
