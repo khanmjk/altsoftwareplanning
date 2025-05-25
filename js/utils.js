@@ -242,7 +242,7 @@ function createDualListContainer(contextIndex, leftLabel, rightLabel, currentOpt
         let addNewBtn = document.createElement('button'); addNewBtn.type = 'button'; addNewBtn.innerText = 'Add';
         addNewBtn.onclick = (e) => {
             e.preventDefault();
-            const newItemData = addNewCallback(addNewInput.value);
+            const newItemData = addNewCallback(addNewInput.value); // Pass current value from input
             if (newItemData && newItemData.value && newItemData.text) {
                  const exists = Array.from(availableSelect.options).some(opt => opt.value === newItemData.value) || Array.from(currentSelect.options).some(opt => opt.value === newItemData.value);
                  if (!exists) { availableSelect.appendChild(new Option(newItemData.text, newItemData.value)); }
@@ -296,10 +296,11 @@ function getSourceSummary(awayTeamMembers) {
     }
 }
 
-// Generate a unique ID for new teams
-function generateUniqueId() {
-    return 'team-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+// Generate a unique ID
+function generateUniqueId(prefix = 'id') {
+    return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 }
+
 
 /**
  * Custom slugify function to match the README's Table of Contents link style.
@@ -376,3 +377,119 @@ function stopDocumentationResize() {
 }
 // --- End Documentation Resizing Logic (Corrected Names) ---
 
+// --- NEW CRUD functions for Initiatives ---
+/**
+ * Adds a new initiative to currentSystemData.yearlyInitiatives.
+ * @param {object} initiativeData - The initiative object to add.
+ * @returns {object|null} The added initiative with an ID, or null if failed.
+ */
+function addInitiative(initiativeData) {
+    if (!currentSystemData || !initiativeData || !initiativeData.title) {
+        console.error("addInitiative: Missing currentSystemData or initiative data/title.");
+        return null;
+    }
+    if (!currentSystemData.yearlyInitiatives) {
+        currentSystemData.yearlyInitiatives = [];
+    }
+    const newInitiative = {
+        initiativeId: generateUniqueId('init'), // Ensure generateUniqueId can take a prefix
+        isProtected: false,
+        assignments: [],
+        roi: { category: null, valueType: null, estimatedValue: null, currency: null, timeHorizonMonths: null, confidenceLevel: null, calculationMethodology: null, businessCaseLink: null, overrideJustification: null, attributes: {} },
+        status: 'Backlog', // Default status
+        themes: [],
+        primaryGoalId: null,
+        projectManager: null,
+        owner: null,
+        technicalPOC: null,
+        impactedServiceIds: [],
+        workPackageIds: [],
+        attributes: { pmCapacityNotes: "" }, // Initialize new field
+        ...initiativeData // Spread provided data, allowing overrides of defaults
+    };
+    currentSystemData.yearlyInitiatives.push(newInitiative);
+    console.log("Added initiative:", newInitiative);
+    return newInitiative;
+}
+
+/**
+ * Updates an existing initiative in currentSystemData.yearlyInitiatives.
+ * @param {string} initiativeId - The ID of the initiative to update.
+ * @param {object} updates - An object containing the fields to update.
+ * @returns {object|null} The updated initiative, or null if not found or failed.
+ */
+function updateInitiative(initiativeId, updates) {
+    if (!currentSystemData || !currentSystemData.yearlyInitiatives || !initiativeId || !updates) {
+        console.error("updateInitiative: Missing currentSystemData, initiatives, initiativeId, or updates.");
+        return null;
+    }
+    const initiativeIndex = currentSystemData.yearlyInitiatives.findIndex(init => init.initiativeId === initiativeId);
+    if (initiativeIndex === -1) {
+        console.error(`updateInitiative: Initiative with ID ${initiativeId} not found.`);
+        return null;
+    }
+    // Deep merge for nested objects like 'roi' and 'attributes' could be complex.
+    // For now, a simple spread will overwrite 'roi' and 'attributes' if they are in 'updates'.
+    // A more robust merge would be needed for partial updates to nested objects.
+    // Let's assume 'updates' provides the full new 'roi' or 'attributes' object if they are being changed.
+    currentSystemData.yearlyInitiatives[initiativeIndex] = {
+        ...currentSystemData.yearlyInitiatives[initiativeIndex],
+        ...updates
+    };
+    console.log(`Updated initiative ${initiativeId}:`, currentSystemData.yearlyInitiatives[initiativeIndex]);
+    return currentSystemData.yearlyInitiatives[initiativeIndex];
+}
+
+/**
+ * Deletes an initiative from currentSystemData.yearlyInitiatives.
+ * @param {string} initiativeId - The ID of the initiative to delete.
+ * @returns {boolean} True if deletion was successful, false otherwise.
+ */
+function deleteInitiative(initiativeId) {
+    if (!currentSystemData || !currentSystemData.yearlyInitiatives || !initiativeId) {
+        console.error("deleteInitiative: Missing currentSystemData, initiatives, or initiativeId.");
+        return false;
+    }
+    const initialLength = currentSystemData.yearlyInitiatives.length;
+    currentSystemData.yearlyInitiatives = currentSystemData.yearlyInitiatives.filter(init => init.initiativeId !== initiativeId);
+    if (currentSystemData.yearlyInitiatives.length < initialLength) {
+        console.log(`Deleted initiative ${initiativeId}.`);
+        return true;
+    }
+    console.warn(`deleteInitiative: Initiative with ID ${initiativeId} not found for deletion.`);
+    return false;
+}
+
+/**
+ * Formats a date string (YYYY-MM-DD) to a "Q[1-4] YYYY" string.
+ * Returns an empty string if the date is invalid or null.
+ * @param {string|null} dateString - The date string in "YYYY-MM-DD" format.
+ * @returns {string} Formatted quarter and year, or empty string.
+ */
+function formatDateToQuarterYear(dateString) {
+    if (!dateString) {
+        return "";
+    }
+    try {
+        const date = new Date(dateString + 'T00:00:00'); // Ensure parsing as local date
+        if (isNaN(date.getTime())) {
+            return ""; // Invalid date
+        }
+        const year = date.getFullYear();
+        const month = date.getMonth() + 1; // JavaScript months are 0-indexed
+        let quarter;
+        if (month <= 3) {
+            quarter = 1;
+        } else if (month <= 6) {
+            quarter = 2;
+        } else if (month <= 9) {
+            quarter = 3;
+        } else {
+            quarter = 4;
+        }
+        return `Q${quarter} ${year}`;
+    } catch (e) {
+        console.warn("Error formatting date to quarter/year:", dateString, e);
+        return ""; // Invalid date format
+    }
+}

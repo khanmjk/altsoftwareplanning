@@ -5,16 +5,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://unpkg.com/tabulator-tables@5.5.2/dist/css/tabulator.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link href="https://unpkg.com/tabulator-tables@5.5.2/dist/css/tabulator_simple.min.css" rel="stylesheet"> 
+    <link href="https://unpkg.com/tabulator-tables@5.5.2/dist/css/tabulator_simple.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/components/enhancedTableWidget.css"> 
+    <link rel="stylesheet" href="css/components/enhancedTableWidget.css">
 
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/12.3.2/markdown-it.min.js"></script>
     <script src="https://unpkg.com/markdown-it-anchor@8.6.7/dist/markdownItAnchor.umd.js"></script>
     <script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.5.2/dist/js/tabulator.min.js"></script>
-    <script type="text/javascript" src="https://oss.sheetjs.com/sheetjs/xlsx.full.min.js"></script>    
+    <script type="text/javascript" src="https://oss.sheetjs.com/sheetjs/xlsx.full.min.js"></script>
 
     <script src="js/components/enhancedTableWidget.js"></script>
     <script src="js/data.js"></script>
@@ -25,47 +25,37 @@
     <script src="js/editSystem.js"></script>
     <script src="js/orgView.js"></script>
     <script src="js/yearPlanning.js"></script>
-    <script src="js/capacityTuning.js"></script>        
-
-    <head>
-        <!-- Test changing file -->
+    <script src="js/capacityTuning.js"></script>
+    <script src="js/roadmap.js"></script> <head>
         <meta charset="UTF-8">
     </head>
     <body>
-        <!-- NEW Top Bar Structure -->
         <div id="topBar">
             <span id="appTitle">Software Management Tools</span>
             <div id="mainActions">
-                <!-- .menu and .edit-menu will be populated here by JavaScript or be static -->
-                <div class="menu"> <!-- Will be shown/hidden by JS -->
-                    <button onclick="showSavedSystems()">Load  System</button>
+                <div class="menu"> <button onclick="showSavedSystems()">Load System</button>
                     <button onclick="createNewSystem()">New System</button>
                     <button id="deleteSystemButton" class="btn-danger" onclick="deleteSystem()">Delete System</button>
                     <button onclick="resetToDefaults()">Reset Defaults</button>
                 </div>
-                <div class="edit-menu" style="display: none;"> <!-- Will be shown/hidden by JS -->
-                    <button id="editSystemButton" onclick="enterEditMode()">Edit System</button>
+                <div class="edit-menu" style="display: none;"> <button id="editSystemButton" onclick="enterEditMode()">Edit System</button>
                     <button id="viewOrgChartButton" onclick="showOrganogramView()">Inspect Org Design</button>
                     <button id="viewEngineerListButton" onclick="showEngineerTableView()">Engineers List</button>
                     <button id="manageYearPlanButton" onclick="showPlanningView()">Year Plan</button>
-                    <button id="tuneCapacityButton" onclick="showCapacityConfigView()">Capacity Tuning</button>
+                    <button id="manageRoadmapButton" onclick="showRoadmapView()">Roadmap & Backlog</button> <button id="tuneCapacityButton" onclick="showCapacityConfigView()">Capacity Tuning</button>
                     <button id="sdmForecastButton" onclick="showSdmForecastingView()">Resource Forecasting</button>
                 </div>
             </div>
             <div id="globalNavButtons">
-                <!-- Return Home / Back buttons will be placed here.
-                    Their display:none/block will still be controlled by JS -->
                 <button id="backToSystemViewButton" onclick="showSystemOverview()" style="display: none;">Back to System</button>
                 <button id="returnHomeButton" onclick="returnToHome()" style="display: none;">Home</button>
             </div>
         </div>
 
-        <!-- Main Page Content Area Wrapper -->
-        <div class="main-content-area"> 
+        <div class="main-content-area">
             <h1 id="pageTitle">Software Management Tools</h1>
             <p id="systemDescription">Load a previously saved system or create a new software system</p>
 
-            <!-- Tool Documentation Section (as previously added) -->
             <div id="toolDocumentationSection" style="margin-top: 20px; border: 1px solid #ccc; display: none; max-width: 90%; margin-left: auto; margin-right: auto;">
                 <h3 id="documentationHeader" style="cursor: pointer; margin: 0; padding: 10px; background-color: #e9ecef; border-bottom: 1px solid #ccc;" title="Click to expand/collapse documentation">
                     <span id="documentationToggleIndicator" class="toggle-indicator" style="font-weight:bold; margin-right:5px;">[+] </span>
@@ -77,9 +67,6 @@
                 <div id="docResizeHandle" style="height: 10px; background-color: #e0e0e0; cursor: ns-resize; border-top: 1px solid #ccc; display: none;"></div>
             </div>
 
-            <!-- Visualization Section and other main view divs follow here AS THEY WERE -->
-            <!-- e.g., <div id="visualizationCarousel">...</div> -->
-            <!-- Visualization Section -->
             <div id="visualizationCarousel" style="position: relative; max-width: 800px; margin: 20px auto; border: 1px solid #ddd; padding: 10px; display:none;"> <div style="text-align: center; margin-bottom: 10px;">
                     <button onclick="navigateVisualizations(-1)">&lt; Previous</button>
                     <span id="visualizationTitle" style="margin: 0 15px; font-weight: bold; font-size: 1.1em;">System Visualization</span> <button onclick="navigateVisualizations(1)">Next &gt;</button>
@@ -129,7 +116,6 @@
             </div>
 
 
-            <!-- System Edit Form -->
             <div id="systemEditForm" style="display:none;">
                 <h2>Edit System</h2>
                 <form id="editSystemForm">
@@ -140,26 +126,20 @@
                     <button type="button" class="btn-primary" onclick="saveSystemDetails()">Save System Details</button>
                 </form>
 
-                <!-- Services Management Section -->
                 <h3>Services</h3>
                 <div id="editServicesManagement">
-                    <!-- Services will be listed here -->
-                </div>
+                    </div>
                 <button type="button" onclick="addNewService()">Add New Service</button><br><br>
-                
-                <!-- Teams Management Section -->
+
                 <h3>Teams</h3>
                 <div id="teamsManagement">
-                    <!-- Teams will be listed here -->
-                </div>
+                    </div>
                 <button id="addNewTeamButton" type="button" onclick="addNewTeam()">Add New Team</button><br><br>
 
-                <!-- Buttons to Save or Cancel -->
                 <button type="button" class="btn-primary" onclick="saveAllChanges()">Save All Changes</button>
                 <button type="button" onclick="exitEditMode()">Cancel</button>
             </div>
 
-            <!-- Tool Documentation Section -->
             <div id="toolDocumentationSection" style="margin-top: 20px; border: 1px solid #ccc; display: none; max-width: 90%; margin-left: auto; margin-right: auto;">
                 <h3 id="documentationHeader" style="cursor: pointer; margin: 0; padding: 10px; background-color: #e9ecef; border-bottom: 1px solid #ccc;" title="Click to expand/collapse documentation">
                     <span id="documentationToggleIndicator" class="toggle-indicator" style="font-weight:bold; margin-right:5px;">[+] </span>
@@ -168,30 +148,24 @@
                 <div id="documentationContent" style="display: none; padding: 15px; max-height: 450px; overflow-y: auto; background-color: #fdfdfd;">
                     <p><em>Loading documentation... Please ensure you have an internet connection to fetch the latest help content.</em></p>
                 </div>
-                <!-- NEW: Resize Handle -->
                 <div id="docResizeHandle" style="height: 10px; background-color: #e0e0e0; cursor: ns-resize; border-top: 1px solid #ccc; display: none;"></div>
             </div>
 
-            <!-- added some new views 8th april 25 -->
             <div id="organogramView" style="display:none; margin-top: 20px;">
                 <div id="organogramToolbar" style="margin-bottom: 10px;">
                     </div>
                 <div id="organogramContent" style="border: 1px solid #ccc; padding: 15px;">
                     </div>
 
-                <!-- Team Breakdown Table -->
                 <div id="teamBreakdown" style="margin-top: 30px;">
                     <h2>Team Breakdown</h2>
                     <p id="levelKey" style="font-size: 0.9em; color: #555; margin-bottom: 10px;"></p> <table id="teamTable">
                         <thead>
-                            <!-- Headers will be generated by JS -->
-                        </thead>
+                            </thead>
                         <tbody>
-                            <!-- Rows will be generated by JS -->
-                        </tbody>
+                            </tbody>
                         <tfoot>
-                            <!-- Totals will be generated by JS -->
-                        </tfoot>
+                            </tfoot>
                     </table>
                 </div>
             </div>
@@ -244,8 +218,8 @@
                     <h3 onclick="toggleCollapsibleSection('addInitiativeContent', 'addInitiativeToggle')" title="Click to expand/collapse">
                         <span id="addInitiativeToggle" class="toggle-indicator">(+) </span> Add New Initiative
                     </h3>
-                    
-                    <div id="addInitiativeContent" style="display: none;"> 
+
+                    <div id="addInitiativeContent" style="display: none;">
                     <div style="margin-bottom: 10px;">
                         <label for="newInitiativeTitle" style="display: block;">Title:</label>
                         <input type="text" id="newInitiativeTitle" placeholder="Initiative Title" style="width: 90%;">
@@ -258,7 +232,7 @@
                         <label for="newInitiativeGoalId" style="display: block;">Related Business Goal ID (Optional):</label>
                         <input type="text" id="newInitiativeGoalId" placeholder="Optional: Business Goal ID" style="width: 90%;">
                     </div>
-            
+
                     <hr>
                     <h4>Team Assignments:</h4>
                     <div id="newInitiativeAssignmentsDisplay" style="margin-bottom: 10px; min-height: 30px; background-color: #f8f9fa; padding: 5px; border: 1px solid #eee;">
@@ -272,10 +246,24 @@
                         <input type="number" id="newInitiativeSdeYears" step="0.25" min="0" placeholder="e.g., 1.5" style="width: 80px; margin-right: 10px;">
                         <button type="button" id="addTeamAssignmentButton">Add Assignment</button>
                     </div>
-            
+
                     <hr>
                     <button type="button" id="addInitiativeButton" class="btn-primary">Add Initiative to Plan</button>
                     </div>
+                </div>
+            </div>
+            <div id="roadmapView" style="display:none; margin-top: 20px; max-width: 95%; margin-left: auto; margin-right: auto;">
+                <h2>Roadmap & Backlog Management</h2>
+                <div id="roadmapControlsContainer" style="margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">
+                    </div>
+                <div id="roadmapTableContainer" style="margin-bottom: 20px;">
+                    </div>
+                <div id="addEditRoadmapInitiativeSection" style="margin-top: 20px; padding: 15px; border: 1px solid #ccc; background-color: #f9f9f9;">
+                    <h3 id="addEditRoadmapInitiativeTitle">Add New Initiative to Backlog</h3>
+                    <form id="roadmapInitiativeForm">
+                        <button type="button" id="saveRoadmapInitiativeButton" class="btn-primary">Save Initiative</button>
+                        <button type="button" id="cancelRoadmapInitiativeEditButton" style="margin-left: 10px;">Cancel</button>
+                    </form>
                 </div>
             </div>
 
@@ -436,15 +424,15 @@
         /** Save System Details **/
         function saveSystemDetails() {
             // Get updated system name and description
-            console.log("*** 1 document.getElementById('systemNameInput').value",document.getElementById('systemNameInput').value);    
-            console.log("*** 2 document.getElementById('systemDescriptionInput'",document.getElementById('systemDescriptionInput').value);    
-            
+            console.log("*** 1 document.getElementById('systemNameInput').value",document.getElementById('systemNameInput').value);
+            console.log("*** 2 document.getElementById('systemDescriptionInput'",document.getElementById('systemDescriptionInput').value);
+
             const systemNameInput = document.getElementById('systemNameInput');
             const systemDescriptionTextarea = document.getElementById('systemDescriptionInput');
 
             console.log("*** 3 systemNameInput = ", systemNameInput.value);
-            console.log("*** 4 systemDescriptionTextarea = ", systemDescriptionTextarea.value);  
-        
+            console.log("*** 4 systemDescriptionTextarea = ", systemDescriptionTextarea.value);
+
             const oldSystemName = currentSystemData.systemName;
             const newSystemName = systemNameInput.value.trim();
 
@@ -520,7 +508,7 @@
                 return; // Stop the save
             }
             // Add other validation checks here if needed (e.g., required fields for teams/services)
-            
+
             // --- Save to Local Storage ---
             try {
                 const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
@@ -585,7 +573,7 @@
                 showSystemOverview(); // Use the refactored showSystemOverview
             }
         }
-        
+
         /** REVISED (v5) Shows the Organogram View using switchView */
         // Modify showOrganogramView to include the new section
         /** REVISED (v5) Shows the Organogram View using switchView */
@@ -618,7 +606,7 @@
             // --- End ---
         }
         window.showOrganogramView = showOrganogramView;
-        
+
         /** REVISED (v3) Shows the Engineer Table View using switchView */
         function showEngineerTableView() {
             console.log("Switching to Engineer Table View (Focus Mode)...");
@@ -681,7 +669,8 @@
         window.createNewSystem = createNewSystem;
         window.resetToDefaults = resetToDefaults;
         window.returnToHome = returnToHome;
-        window.showPlanningView = showPlanningView;
+        //window.showPlanningView = showPlanningView; // Already done above
+
         // --- Window Resize Listener for Planning Table Height ---
         let resizeTimeout;
         window.addEventListener('resize', () => {

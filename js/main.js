@@ -116,7 +116,8 @@ function switchView(targetViewId, newMode = null) {
     const allViewIds = [
         'systemEditForm', 'visualizationCarousel', 'serviceDependenciesTable',
         'organogramView', 'engineerTableView', 'planningView',
-        'capacityConfigView', 'sdmForecastingView', 'toolDocumentationSection'
+        'capacityConfigView', 'sdmForecastingView', 'toolDocumentationSection',
+        'roadmapView' // << NEW VIEW ID
     ];
     const documentationSection = document.getElementById('toolDocumentationSection');
 
@@ -140,7 +141,7 @@ function switchView(targetViewId, newMode = null) {
         const backButton = document.getElementById('backToSystemViewButton');
 
         if (targetViewId) {
-            currentMode = newMode || Modes.BROWSE;
+            currentMode = newMode || Modes.Browse;
             const targetElement = document.getElementById(targetViewId);
             if (targetElement) {
                 targetElement.style.display = 'block';
@@ -155,6 +156,7 @@ function switchView(targetViewId, newMode = null) {
             if (pageTitleH1 && currentSystemData) {
                 let titleSuffix = '';
                 if (targetViewId === 'planningView') titleSuffix = ' - Year Plan';
+                else if (targetViewId === 'roadmapView') titleSuffix = ' - Roadmap & Backlog'; // << NEW SUFFIX
                 else if (targetViewId === 'organogramView') titleSuffix = ' - Organization Overview';
                 else if (targetViewId === 'engineerTableView') titleSuffix = ' - Engineer List';
                 else if (targetViewId === 'systemEditForm') titleSuffix = ' - Edit System';
@@ -263,6 +265,10 @@ function switchView(targetViewId, newMode = null) {
             if (planningTableContainer && planningTableContainer.offsetParent !== null) {
                  adjustPlanningTableHeight();
             }
+        }
+        // << NEW: Call roadmap generation if roadmapView is shown
+        if (targetViewId === 'roadmapView' && typeof initializeRoadmapView === 'function') {
+            initializeRoadmapView();
         }
     }).catch(err => {
         console.error("View transition 'finished' phase error:", err);
@@ -687,6 +693,13 @@ function loadSavedSystem(systemName) {
 
     // Yearly Initiatives
     (currentSystemData.yearlyInitiatives || []).forEach(initiative => {
+        if (!initiative.attributes) { // Ensure attributes object itself exists
+            initiative.attributes = {};
+        }
+        if (initiative.attributes.pmCapacityNotes === undefined) { // Add pmCapacityNotes if missing
+            initiative.attributes.pmCapacityNotes = "";
+        }
+
         if (initiative.hasOwnProperty('relatedBusinessGoalId')) {
             if (initiative.primaryGoalId === undefined) initiative.primaryGoalId = initiative.relatedBusinessGoalId; // Migrate if primaryGoalId doesn't exist
             delete initiative.relatedBusinessGoalId;
@@ -708,7 +721,7 @@ function loadSavedSystem(systemName) {
         if (initiative.technicalPOC === undefined) initiative.technicalPOC = null;
         if (!initiative.impactedServiceIds) initiative.impactedServiceIds = [];
         if (!initiative.workPackageIds) initiative.workPackageIds = [];
-        if (!initiative.attributes) initiative.attributes = {};
+        // if (!initiative.attributes) initiative.attributes = {}; // Already handled above
         if (!initiative.assignments) initiative.assignments = [];
     });
 
@@ -863,7 +876,7 @@ function createNewSystem() {
         //     technicalPOC: null,   // { type: 'engineer', id: null, name: 'Unassigned' }
         //     impactedServiceIds: [],
         //     workPackageIds: [],
-        //     attributes: {}
+        //     attributes: { pmCapacityNotes: "" } // << Initialize new field
         // }
     ];
 
@@ -1131,3 +1144,21 @@ function showSystemOverview() {
     // Visualizations are now updated within showVisualization when it's called by switchView's transition.finished
 }
 window.showSystemOverview = showSystemOverview;
+
+// << NEW Function to show Roadmap View >>
+/**
+ * Shows the Roadmap & Backlog Management View.
+ */
+function showRoadmapView() {
+    console.log("Switching to Roadmap & Backlog View...");
+    if (!currentSystemData) {
+        alert("Please load a system first to manage its roadmap and backlog.");
+        return;
+    }
+    // Assuming Modes.PLANNING is suitable, or create a new Modes.ROADMAP
+    switchView('roadmapView', Modes.PLANNING);
+
+    // The actual generation of content (table, form) will be triggered
+    // by switchView's transition.finished callback, which will call initializeRoadmapView.
+}
+window.showRoadmapView = showRoadmapView;
