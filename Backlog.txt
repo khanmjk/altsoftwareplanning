@@ -50,9 +50,24 @@ Manage Detailed Planning
 ------------
 IN PROGRESS
 ------------
+Manage Roadmap & Backlog
+-- Similar to the year planning page, but focused on roadmap / backlog management (does not need to show ATL/BTL logic), just an interactive table to pull the latest backlog of initiatives, ability to add and remove initiatives. The Year plan and Roadmap must share the same data model (year plan shows more details / attributes than the roadmap)
+-- Generate roadmap table view (by quarter), should be interactive to filter by org, team
+-- Add ability to import a backlog from an excel file
+-- The backlog items can have 1..many initiatives
+-- Initiatives can be associated with 1..many themes or tags that are linked to a business goal / strategy, like Revenue, Cost Optimization, Engineering Excellence, UX/Usability, Accessibility, Security, Product Feature enhancements
+-- It must be possible to generate a view of business objectives and strategies from the backlog
+-- It must be possible to generate a 3 year plan (3YP) view of the roadmap, something like Current Year, Next Year, future
+-- It must be possible to show a visual representation of the initiatives by theme so the senior engineering or product leader can gauge the distribution of investments by theme or tags
+-- It must be possible to generate a view of completed goals, initiatives or work packages
+-- It must be possible to generate a roadmap view per team for software managers to focus on their team or org-specific commitments
+-- It must be possible to display a graph visualization (similar to system visualizations) of service impact and relations to initiatives and work package dependencies
 
-
-
+* Make sure to clean up Yearly Planning view:
+-- There needs to be link from year plan to the backlog page (ATL items must be considered as "committed" in the backlog item status, whilst BTL items must get assigned to "backlog" state). 
+When generated the roadmap view, the planning status in the year plan for initiatives as ATL/BTL - must drive the backlog and roadmap.
+-- Remove Add new initiative from year plan so that the rule becomes year plan must always pull from the backlog. The backlog should be the main source of truth for initiatives / roadmap
+-- Thinking we should add some other attributes to initiatives like type: Egnineering, Product, BusinessOps, Security, Compliance, Legal, etc.
 
 ------
 TO DO
@@ -76,20 +91,6 @@ Year Planning
 -- View planning by teams - for individual manager team planning. Allow managers to tune their teams estimates which will update the data model, year plan page uses latest changes)
 -- Add versioning when saving plans (up to 5 previous versions) - need to update data model structure
 -- Add ability to export the plan to CSV or Excel
-
-Manage Roadmap & Backlog
--- Similar to the year planning page, but focused on roadmap / backlog management (does not need to show ATL/BTL logic), just an interactive table to pull the latest backlog of initiatives, ability to add and remove initiatives. The Year plan and Roadmap must share the same data model (year plan shows more details / attributes than the roadmap)
--- Generate roadmap table view (by quarter), should be interactive to filter by org, team
--- Add ability to import a backlog from an excel file
--- The backlog items can have 1..many initiatives
--- Initiatives can be associated with 1..many themes or tags that are linked to a business goal / strategy, like Revenue, Cost Optimization, Engineering Excellence, UX/Usability, Accessibility, Security, Product Feature enhancements
--- It must be possible to generate a view of business objectives and strategies from the backlog
--- It must be possible to generate a 3 year plan (3YP) view of the roadmap, something like Current Year, Next Year, future
--- It must be possible to show a visual representation of the initiatives by theme so the senior engineering or product leader can gauge the distribution of investments by theme or tags
--- It must be possible to generate a view of completed goals, initiatives or work packages
--- It must be possible to generate a roadmap view per team for software managers to focus on their team or org-specific commitments
--- It must be possible to display a graph visualization (similar to system visualizations) of service impact and relations to initiatives and work package dependencies
-
 
 Team Editing
 -- We support away team only from an incoming perspective (i.e. help provided to the team), but we could also consider concept of outgoing away team (I.e. the team lends engineers to other teams)
