@@ -41,13 +41,17 @@
         * [Global Configuration](#global-configuration-1)
         * [Team-Specific Adjustments](#team-specific-adjustments-1)
         * [Calculated Capacity Summary, Narrative & Waterfall Chart](#calculated-capacity-summary-narrative--waterfall-chart-1)
+    * [Roadmap & Backlog Management](#roadmap--backlog-management)
+        * [Roadmap Table](#roadmap-table)
+        * [Status Filtering](#status-filtering)
+        * [Adding & Editing Initiatives (Modal)](#adding--editing-initiatives-modal)
     * [Yearly Planning](#yearly-planning)
         * [Planning Table](#planning-table-1)
         * [Capacity Scenarios (Effective BIS, Team BIS, Funded HC)](#capacity-scenarios-effective-bis-team-bis-funded-hc-1)
         * [Applying Capacity Constraints (Net vs. Gross)](#applying-capacity-constraints-net-vs-gross-1)
         * [Protected Initiatives](#protected-initiatives-1)
         * [Drag & Drop Prioritization](#drag--drop-prioritization-1)
-        * [Adding New Initiatives](#adding-new-initiatives-1)
+        * [Adding New Initiatives (to Plan)](#adding-new-initiatives-to-plan)
         * [Team Load Summary Table](#team-load-summary-table-1)
     * [SDM Resource Forecasting Model](#sdm-resource-forecasting-model)
     * [Tool Documentation (Home Page)](#tool-documentation-home-page)
@@ -66,7 +70,8 @@ This tool provides a unified platform to:
 * **Map Organizational Structure:** Link teams to services, assign engineers (including AI Software Engineers), and represent management hierarchies.
 * **Visualize Relationships:** Understand how services connect, how teams are structured, and how they relate to the software they own.
 * **Plan Capacity & Resources:** Configure detailed capacity constraints (leave, overheads, team activities, etc.) to understand true team availability (Net Project SDE Years).
-* **Manage Yearly Roadmaps:** Create, prioritize, and estimate yearly initiatives (with ROI, status, themes) against calculated team capacities.
+* **Manage Roadmaps & Backlogs:** Define, prioritize, and manage initiatives from backlog through to completion, focusing on strategic alignment and product management needs.
+* **Execute Yearly Planning:** Commit initiatives to a yearly plan, assign detailed engineering estimates, and track against calculated team capacities.
 * **Forecast Team Growth:** Model SDE hiring, ramp-up, and attrition, factoring in detailed capacity constraints to predict resource availability.
 
 The ultimate goal is to enable better-informed decision-making for software delivery, resource allocation, and strategic planning.
@@ -173,13 +178,14 @@ Understanding these core entities is key to using the tool effectively. Most ent
     * `assignments`: Array of `{ teamId, sdeYears }` objects detailing effort per team.
     * `roi`: An object detailing Return on Investment: `{ category, valueType, estimatedValue, currency, timeHorizonMonths, confidenceLevel, calculationMethodology, businessCaseLink, overrideJustification, attributes }`.
     * `targetDueDate` (string: "YYYY-MM-DD").
+    * `actualCompletionDate` (string: "YYYY-MM-DD").
     * `status` (string: e.g., "Backlog", "Defined", "Committed", "In Progress", "Completed").
     * `themes` (array of strings/themeIds): Links to `definedThemes`.
     * `primaryGoalId` (string): Links to a `goal` in `currentSystemData.goals`.
     * `projectManager`, `owner`, `technicalPOC`: Objects like `{ type, id, name }` linking to personnel.
     * `impactedServiceIds` (array of strings).
     * `workPackageIds` (array of strings): Links to `workPackages`.
-    * Extensible `attributes` object.
+    * `attributes`: An extensible object, now including `pmCapacityNotes` (string) for product manager notes on high-level capacity or team impact.
 
 ### Capacity Configuration
 
@@ -321,6 +327,34 @@ Accessible from the system overview page.
 * **Waterfall Chart (Collapsible):** Visualizes the capacity reduction from Gross SDE Years to Net Project SDE Years for the selected team or the entire organization, showing the impact of each deduction category (Holidays, Org Events, Std Leave, Var Leave, Activities, Overhead).
 * Click **"Save All Capacity Configuration"** to persist settings and calculated metrics.
 
+### Roadmap & Backlog Management
+
+* Click **"Roadmap & Backlog"** from the system overview page.
+* This view is designed for Product Managers and strategic planners to manage the pipeline of initiatives.
+
+#### Roadmap Table
+
+* An interactive table (powered by Tabulator via `EnhancedTableWidget`) displaying initiatives.
+* **Columns include:** Title, Description, Status, Owner, ROI Summary (Category: Value), Target Quarter/Yr, Target Due Date, and Themes. Additional ROI details and PM Capacity Notes are available as hidden columns.
+* Supports sorting and filtering on all columns.
+* Detailed SDE year assignments per team are managed in the "Yearly Planning" view to separate concerns.
+
+#### Status Filtering
+
+* Filter initiatives by status: "All", "Backlog", "Defined", "Committed", "In Progress", "Completed".
+* The table defaults to showing all initiatives.
+
+#### Adding & Editing Initiatives (Modal)
+
+* Click "Add New Initiative" or an "Edit" button in a row to open a **modal dialog**.
+* The modal form allows comprehensive editing of initiative details:
+    * Core: Title, Description, Status, Target Due Date.
+    * Strategic: Themes (comma-separated), Primary Goal, Owner, Project Manager.
+    * ROI: All fields within the ROI object.
+    * Product Manager Notes: A dedicated text field (`pmCapacityNotes`) for high-level capacity considerations or team impact notes.
+    * Impacted Services.
+* "Save" and "Cancel" buttons are provided within the modal.
+
 ### Yearly Planning
 
 * Click **"Year Plan"** from the system overview page.
@@ -350,7 +384,7 @@ Accessible from the system overview page.
 
 * Reorder non-protected initiatives to change priority; table recalculates dynamically.
 
-#### Adding New Initiatives
+#### Adding New Initiatives (to Plan)
 
 * Collapsible section to add initiatives with title, description, optional goal ID, and SDE Year assignments.
     *(Future: inputs for ROI, due date, status, themes, owner, PM)*
@@ -387,41 +421,48 @@ Accessible from the system overview page.
     * Add/Define **Services**, assign owning teams, and define **APIs** and dependencies.
     * Click **"Save All Changes"** in the Edit System view.
 3.  **Explore Visualizations (System Overview):** Use the carousel, view Org Chart, and Engineer List.
-4.  **Tune Capacity Constraints:**
+4.  **Manage Roadmap & Backlog:**
+    * Navigate to "Roadmap & Backlog".
+    * Add new initiatives, define their strategic attributes (goals, themes, ROI, owner, PM notes, etc.), and set their initial status (e.g., "Backlog", "Defined").
+    * Edit existing initiatives as they evolve.
+5.  **Tune Capacity Constraints:**
     * Navigate to "Capacity Tuning".
     * Set global working days, holidays, org events, and default leave days.
     * For each team, configure leave uptake %, variable leave impact, team activities, and recurring overhead.
     * Review the summary, narrative, and waterfall chart.
     * **Save All Capacity Configuration**.
-5.  **Manage Yearly Plan:**
+6.  **Manage Yearly Plan:**
     * Navigate to "Year Plan".
-    * Add initiatives with SDE estimates, linking to goals, themes, assigning owners/PMs, and setting ROI, due dates, and status.
+    * Pull in "Committed" initiatives from the backlog/roadmap or add new ones specific to the plan.
+    * Assign detailed SDE Year estimates per team.
     * Mark critical initiatives as "Protected". Drag and drop to prioritize.
     * Use "Capacity Scenarios" and the "Apply Capacity Constraints?" toggle to analyze.
     * Review "Team Load Summary".
     * **Save Current Plan Order & Estimates**.
-6.  **Forecast Resources (Optional):** Navigate to "Resource Forecasting" for team-specific hiring and availability modeling.
+7.  **Forecast Resources (Optional):** Navigate to "Resource Forecasting" for team-specific hiring and availability modeling.
 
 ---
 
 ## 6. Tips & Best Practices
 
-* **Save Regularly:** Use the "Save" buttons frequently.
-* **Iterative Definition:** Start with high-level entities (Systems, Teams, major Services) and gradually add detail (APIs, dependencies, new personnel, detailed initiative attributes).
+* **Save Regularly:** Use the "Save" buttons frequently, especially "Save All Changes" in Edit System and "Save All Capacity Configuration" in Capacity Tuning, and "Save Current Plan" in Year Plan.
+* **Iterative Definition:** Start with high-level entities and gradually add detail.
 * **Consistent Naming:** Use clear and consistent names for all entities.
-* **Data Model First:** For new complex features (like detailed work packages), define the data model structure in `js/data.js` and update sample/default data before building the UI.
+* **Data Model First:** For new complex features, define the data model structure in `js/data.js` and update sample/default data before building the UI.
 * **Leverage Tooltips:** Hover over labels, buttons, and column headers for explanations.
 * **Use the Narrative:** The Capacity Tuning narrative provides a detailed story of your capacity calculations – use it to validate your inputs.
+* **Roadmap vs. Year Plan:** Use the "Roadmap & Backlog" view for broader strategic planning and initiative definition. Use the "Year Plan" view for detailed engineering capacity allocation and commitment for a specific period.
 
 ---
 
 ## 7. Known Limitations (MVP)
 
 * **Single User, Local Storage:** Data is saved in your browser's local storage. No backend server or multi-user collaboration.
-* **Limited Import/Export:** Initiative/Plan import/export to CSV/Excel is a future enhancement. (The Engineer List table *does* support export via the EnhancedTableWidget).
+* **Limited Import/Export:** General import/export for initiatives/plans to CSV/Excel is a future enhancement (though tables built with `EnhancedTableWidget` like Engineer List and Roadmap Table support export).
 * **No True Skill Matching:** While skills are tracked for engineers, there's no automated matching to initiative requirements for resource suggestions.
 * **UI for Advanced Planning Entities:** While the data model supports Goals, Themes, Project Managers, Work Packages, and Plan Archiving, dedicated UI views for managing all aspects of these (beyond basic linking in initiatives or adding PMs to a roster) are still under development or planned.
 * **Manual Refresh for Some Cross-View Updates:** Some complex data interdependencies might occasionally require a manual refresh of a view (e.g., by navigating away and back) if a direct data-driven UI update isn't immediately implemented for all edge cases.
+* **Roadmap Views:** Advanced roadmap visualizations (timeline, by theme as charts, etc.) are planned for future iterations of the "Roadmap & Backlog" feature.
 
 ---
 
@@ -429,7 +470,7 @@ Accessible from the system overview page.
 
 This tool is an evolving MVP. Key future enhancements include:
 
-* **Full Roadmap & Backlog Management Module:** Dedicated UI for managing initiatives by status, themes, goals; generating multi-year roadmap views; import capabilities.
+* **Full Roadmap & Backlog Management Module:** Dedicated UI for managing initiatives by status, themes, goals; generating multi-year roadmap views (timeline, chart by theme); import capabilities. (Phase 1 - Core table and CRUD - is complete).
 * **Detailed Planning Module:** UI for managing Goals (linking initiatives), Work Packages (phases, status, team assignments, dependencies), and task breakdowns.
 * **Enhanced Yearly Planning UI:** Full UI support for editing all new initiative fields (ROI, due dates, personnel, etc.) directly in the planning table or a detail panel. UI for managing `archivedYearlyPlans`.
 * **AI-Powered Enhancements:**

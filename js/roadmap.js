@@ -260,16 +260,31 @@ function prepareRoadmapDataForTable() {
 
 /**
  * Defines columns for the roadmap table.
- * (Adds a custom sorter for Target Due Date for robust chronological sorting)
+ * (Adjusts column widths for better layout with fitColumns, Actions column narrower)
  */
 function defineRoadmapTableColumns() {
     const columns = [
-        { title: "Title", field: "title", width: 250, headerFilter: "input", frozen:true, tooltip: function(e, cell){ return cell.getValue(); } },
-        { title: "Description", field: "description", width: 300, hozAlign: "left", formatter: "textarea", headerFilter: "input", tooltip: function(e, cell){ return cell.getValue(); } },
+        { 
+            title: "Title", 
+            field: "title", 
+            minWidth: 200, 
+            headerFilter: "input", 
+            frozen:true, 
+            tooltip: function(e, cell){ return cell.getValue(); } 
+        }, 
+        { 
+            title: "Description", 
+            field: "description", 
+            minWidth: 250, 
+            hozAlign: "left", 
+            formatter: "textarea", 
+            headerFilter: "input", 
+            tooltip: function(e, cell){ return cell.getValue(); } 
+        },
         {
             title: "Status",
             field: "status",
-            width: 120,
+            width: 110, 
             headerFilter: "list",
             headerFilterParams: {
                 values: ["", ...ALL_INITIATIVE_STATUSES],
@@ -278,22 +293,28 @@ function defineRoadmapTableColumns() {
             },
             headerFilterFunc: "="
         },
-        { title: "Owner", field: "ownerDisplay", width: 150, headerFilter: "input", tooltip: function(e, cell){ return cell.getValue(); } },
+        { 
+            title: "Owner", 
+            field: "ownerDisplay", 
+            width: 140, 
+            headerFilter: "input", 
+            tooltip: function(e, cell){ return cell.getValue(); } 
+        },
         {
-            title: "ROI Summary",
+            title: "ROI Summary", // No explicit width, let fitColumns manage
             field: "roiSummaryDisplay",
-            width: 220,
+            minWidth: 180, // Give it a minimum
             hozAlign: "left",
             tooltip: function(e, cell){ return cell.getValue(); },
             headerFilter: "input",
             headerFilterPlaceholder: "Filter ROI..."
         },
-        {
-            title: "Target Quarter/Yr",
-            field: "targetQuarterYearDisplay",
-            width: 120,
-            hozAlign: "center",
-            tooltip: function(e, cell){ return cell.getValue() || "N/A"; },
+        { 
+            title: "Target Quarter/Yr", 
+            field: "targetQuarterYearDisplay", 
+            width: 110, hozAlign: "center", 
+            tooltip: function(e, cell){ return cell.getValue() || "N/A"; }, 
+            headerFilter: "input",            
             sorter: function(a, b, aRow, bRow, column, dir, sorterParams){
                 const date_a_str = aRow.getData().targetDueDate;
                 const date_b_str = bRow.getData().targetDueDate;
@@ -311,59 +332,41 @@ function defineRoadmapTableColumns() {
                 const bIsNull = (date_b === null);
 
                 if (aIsNull && bIsNull) return 0;
-                // Consistent null handling: nulls/invalid go to the "end" (bottom for asc, top for desc needs careful return)
-                // For alignEmptyValues:"bottom" behavior:
-                if (aIsNull) return 1; // Treat null as "greater" than a valid date
-                if (bIsNull) return -1; // Treat valid date as "less" than a null date
-
-                return date_a.valueOf() - date_b.valueOf(); // Standard date comparison
+                if (aIsNull) return 1;
+                if (bIsNull) return -1;
+                return date_a.valueOf() - date_b.valueOf();
             }
         },
         {
             title: "Target Due Date",
-            field: "targetDueDate", // The raw "YYYY-MM-DD" string or null
-            width: 130,
+            field: "targetDueDate",
+            width: 110, // Keep defined width
             hozAlign: "center",
             tooltip: function(e, cell){ return cell.getValue() ? cell.getValue() : "Not set"; },
             headerFilter: "input",
             headerFilterPlaceholder: "YYYY-MM-DD",
             sorter: function(a, b, aRow, bRow, column, dir, sorterParams) {
-                // a and b are the targetDueDate strings from the data (already cleaned by prepareRoadmapDataForTable)
-                const val_a = a;
-                const val_b = b;
-
+                const val_a = a; const val_b = b;
                 let dateA = null;
                 if (val_a && typeof val_a === 'string' && val_a.match(/^\d{4}-\d{2}-\d{2}$/)) {
                     const parsedA = luxon.DateTime.fromISO(val_a);
                     if (parsedA.isValid) dateA = parsedA;
                 }
-
                 let dateB = null;
                 if (val_b && typeof val_b === 'string' && val_b.match(/^\d{4}-\d{2}-\d{2}$/)) {
                     const parsedB = luxon.DateTime.fromISO(val_b);
                     if (parsedB.isValid) dateB = parsedB;
                 }
-
-                const aIsNull = (dateA === null);
-                const bIsNull = (dateB === null);
-
-                if (aIsNull && bIsNull) return 0; // Both are null/invalid - treat as equal
-
-                // Logic for alignEmptyValues: "bottom"
-                // If 'a' is null/invalid, it should come after 'b' (if 'b' is valid) in an ascending sort.
-                // So, 'a' is considered "greater".
-                if (aIsNull) return 1;
-                if (bIsNull) return -1;
-
-                // If both are valid dates, compare their millisecond timestamps
+                const aIsNull = (dateA === null); const bIsNull = (dateB === null);
+                if (aIsNull && bIsNull) return 0;
+                if (aIsNull) return 1; if (bIsNull) return -1;
                 return dateA.valueOf() - dateB.valueOf();
             }
-            // sorterParams for format and alignEmptyValues are removed as the custom sorter handles this.
         },
         {
-            title: "Themes",
+            title: "Themes", // No explicit width
             field: "themes",
-            width: 180,
+            minWidth: 150, // Give it a minimum
             formatter: (cell) => (cell.getValue() || []).join(', '),
             headerFilter: "input",
             tooltip: function(e, cell){ return (cell.getValue() || []).join(', '); },
@@ -375,7 +378,7 @@ function defineRoadmapTableColumns() {
         },
         {
             title: "Actions",
-            width: 130,
+            width: 120, // << REDUCED width for Actions column
             hozAlign: "center",
             headerSort: false,
             formatter: (cell) => {
@@ -387,28 +390,28 @@ function defineRoadmapTableColumns() {
         }
     ];
 
-    // Add other ROI fields as hidden columns, and pmCapacityNotes
     const roiFields = ["valueType", "currency", "timeHorizonMonths", "confidenceLevel", "calculationMethodology", "businessCaseLink", "overrideJustification"];
     roiFields.forEach(field => {
         columns.push({
             title: `ROI: ${field.replace(/([A-Z])/g, ' $1').trim()}`,
             field: `roi.${field}`,
-            visible: false,
-            headerFilter: "input",
-            download: true,
-            tooltip: function(e, cell){ return cell.getValue(); }
+            visible: false, minWidth:150, // MinWidth for hidden columns too
+            headerFilter: "input", download: true, tooltip: function(e, cell){ return cell.getValue(); }
         });
     });
-    columns.push({ title: "PM Capacity Notes", field: "attributes.pmCapacityNotes", visible: false, headerFilter: "input", formatter: "textarea", download: true, tooltip: function(e, cell){ return cell.getValue(); } });
-    columns.push({ title: "Primary Goal ID", field: "primaryGoalId", visible: false, headerFilter: "input", download: true, tooltip: function(e, cell){ return cell.getValue(); } });
-    columns.push({ title: "Project Manager", field: "projectManager.name", visible: false, headerFilter: "input", download: true, tooltip: function(e, cell){ return cell.getValue(); } });
+    columns.push({ title: "PM Capacity Notes", field: "attributes.pmCapacityNotes", visible: false, minWidth: 200, headerFilter: "input", formatter: "textarea", download: true, tooltip: function(e, cell){ return cell.getValue(); } });
+    columns.push({ title: "Primary Goal ID", field: "primaryGoalId", visible: false, minWidth: 150, headerFilter: "input", download: true, tooltip: function(e, cell){ return cell.getValue(); } });
+    columns.push({ title: "Project Manager", field: "projectManager.name", visible: false, minWidth: 150, headerFilter: "input", download: true, tooltip: function(e, cell){ return cell.getValue(); } });
 
     return columns;
 }
 
+// Now, also update the renderRoadmapTable function to use layout: "fitColumns"
+// Replace the renderRoadmapTable function with this:
+
 /**
- * Renders the roadmap table using Tabulator (or EnhancedTableWidget).
- * (No significant changes from previous version, assuming EnhancedTableWidget handles it)
+ * Renders the roadmap table using Tabulator.
+ * (Uses fitColumns layout)
  */
 function renderRoadmapTable() {
     const tableContainer = document.getElementById('roadmapTableContainer');
@@ -420,47 +423,43 @@ function renderRoadmapTable() {
     const tableData = prepareRoadmapDataForTable();
     const columnDefinitions = defineRoadmapTableColumns();
 
+    const tabulatorOptions = {
+        data: tableData,
+        columns: columnDefinitions,
+        layout: "fitColumns", // << CHANGED layout to fitColumns
+        responsiveLayout: "hide",
+        pagination: "local",
+        paginationSize: 30,
+        paginationSizeSelector: [10, 15, 25, 50, 75, 100],
+        movableColumns: true,
+        initialSort: [{ column: "title", dir: "asc" }],
+        placeholder: "No initiatives match the current filters.",
+        headerVisible: true,
+    };
+
     if (typeof EnhancedTableWidget === 'function') {
-        if (roadmapTable && typeof roadmapTable.destroy === 'function') { // Check if roadmapTable is our widget or Tabulator
+        if (roadmapTable && typeof roadmapTable.destroy === 'function') {
             roadmapTable.destroy();
         }
-        roadmapTable = new EnhancedTableWidget(tableContainer, { // Use a unique ID if targetElement is a string
-            data: tableData,
-            columns: columnDefinitions,
-            uniqueIdField: 'id',
-            layout: "fitDataStretch",
-            responsiveLayout: "hide",
-            pagination: "local",
-            paginationSize: 30,
-            paginationSizeSelector: [10, 15, 25, 50, 75, 100],
-            movableColumns: true,
-            initialSort: [{ column: "title", dir: "asc" }],
-            placeholder: "No initiatives match the current filters.",
-            headerVisible: true,
+        roadmapTable = new EnhancedTableWidget(tableContainer, {
+            ...tabulatorOptions, // Spread the common options
+            uniqueIdField: 'id', // Specific to EnhancedTableWidget if it uses it
             exportCsvFileName: 'roadmap_initiatives.csv',
             exportJsonFileName: 'roadmap_initiatives.json',
             exportXlsxFileName: 'roadmap_initiatives.xlsx',
             exportSheetName: 'Roadmap Initiatives'
         });
-         console.log("Roadmap table rendered using EnhancedTableWidget.");
+         console.log("Roadmap table rendered using EnhancedTableWidget with fitColumns layout.");
     } else {
         console.warn("EnhancedTableWidget not found, falling back to direct Tabulator for roadmap.");
-         if (roadmapTable && typeof roadmapTable.destroy === 'function') { // Check if it's a Tabulator instance
+         if (roadmapTable && typeof roadmapTable.destroy === 'function') {
             roadmapTable.destroy();
         }
         roadmapTable = new Tabulator(tableContainer, {
-            height: "600px",
-            data: tableData,
-            layout: "fitDataStretch",
-            columns: columnDefinitions,
-            pagination: "local",
-            paginationSize: 15,
-            paginationSizeSelector: [10, 15, 25, 50, 100],
-            movableColumns: true,
-            initialSort: [{ column: "title", dir: "asc" }],
-            placeholder: "No initiatives match the current filters."
+            ...tabulatorOptions, // Spread the common options
+            height: "600px", // May need to set height if not using EnhancedTableWidget's auto-height logic
         });
-        console.log("Roadmap table rendered using direct Tabulator.");
+        console.log("Roadmap table rendered using direct Tabulator with fitColumns layout.");
     }
 }
 
