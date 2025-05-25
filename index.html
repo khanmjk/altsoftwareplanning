@@ -258,18 +258,29 @@
                     </div>
                 <div id="roadmapTableContainer" style="margin-bottom: 20px;">
                     </div>
-                <div id="addEditRoadmapInitiativeSection" style="margin-top: 20px; padding: 15px; border: 1px solid #ccc; background-color: #f9f9f9;">
-                    <h3 id="addEditRoadmapInitiativeTitle">Add New Initiative to Backlog</h3>
-                    <form id="roadmapInitiativeForm">
-                        <button type="button" id="saveRoadmapInitiativeButton" class="btn-primary">Save Initiative</button>
-                        <button type="button" id="cancelRoadmapInitiativeEditButton" style="margin-left: 10px;">Cancel</button>
-                    </form>
-                </div>
+                
             </div>
 
-            <div id="capacityConfigView" style="display:none; margin-top: 20px; max-width: 90%; margin-left: auto; margin-right: auto;"></div>
-            <div id="sdmForecastingView" style="display:none; margin-top: 20px; max-width: 90%; margin-left: auto; margin-right: auto;"></div>
+            <div id="capacityConfigView" style="display:none; margin-top: 20px; max-width: 90%; margin-left: auto; margin-right: auto;">                
+            </div>
+            <div id="sdmForecastingView" style="display:none; margin-top: 20px; max-width: 90%; margin-left: auto; margin-right: auto;">
+            </div>
 
+            <div id="roadmapInitiativeModal" class="modal" style="display:none;">
+                <div class="modal-content-wrapper"> <div class="modal-header">
+                    <h3 id="addEditRoadmapInitiativeTitle_modal">Add/Edit Initiative</h3>
+                    <span class="close-button" onclick="closeRoadmapModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="roadmapInitiativeForm_modal">
+                        <p><em>Loading form...</em></p>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="saveRoadmapInitiativeButton_modal" class="btn-primary">Save Initiative</button>
+                    <button type="button" id="cancelRoadmapInitiativeEditButton_modal" class="btn-secondary" style="margin-left: 10px;" onclick="closeRoadmapModal()">Cancel</button>
+                </div>
+            </div>
         </div>
 
         <script>
