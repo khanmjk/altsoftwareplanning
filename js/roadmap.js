@@ -212,15 +212,17 @@ function generateRoadmapControls() {
 }
 
 /**
- * Prepares and filters data for the roadmap table. (No changes from previous version)
+ * Prepares and filters data for the roadmap table.
+ * (Ensures targetDueDate is null if empty/whitespace for consistent date sorting)
  */
 function prepareRoadmapDataForTable() {
     if (!currentSystemData || !currentSystemData.yearlyInitiatives) {
         console.warn("No current system data or yearly initiatives to prepare for roadmap table.");
         return [];
     }
-    let initiatives = JSON.parse(JSON.stringify(currentSystemData.yearlyInitiatives));
+    let initiatives = JSON.parse(JSON.stringify(currentSystemData.yearlyInitiatives)); // Deep copy
 
+    // Filter by status
     if (currentRoadmapStatusFilters.length > 0 && currentRoadmapStatusFilters.length < ALL_INITIATIVE_STATUSES.length) {
          initiatives = initiatives.filter(init => currentRoadmapStatusFilters.includes(init.status));
     }
@@ -241,20 +243,24 @@ function prepareRoadmapDataForTable() {
             roiDisplay = String(roiValue);
         }
 
+        // Ensure targetDueDate is either a valid-looking string or null.
+        // This helps the Tabulator date sorter.
+        const cleanTargetDueDate = (init.targetDueDate && String(init.targetDueDate).trim() !== "") ? String(init.targetDueDate).trim() : null;
+
         return {
-            ...init,
-            id: init.initiativeId,
-            targetDueDate: init.targetDueDate || null, // Ensure empty strings become null
+            ...init, // Spread all original initiative properties
+            id: init.initiativeId, // Tabulator needs an 'id' field
+            targetDueDate: cleanTargetDueDate, // Use the cleaned date for sorting
             ownerDisplay: ownerName,
             roiSummaryDisplay: roiDisplay,
-            targetQuarterYearDisplay: formatDateToQuarterYear(init.targetDueDate)
+            targetQuarterYearDisplay: formatDateToQuarterYear(cleanTargetDueDate) // Also use cleaned date for quarter display
         };
     });
 }
 
 /**
  * Defines columns for the roadmap table.
- * (Corrects Target Due Date sorting and Themes sorting)
+ * (Adds a custom sorter for Target Due Date for robust chronological sorting)
  */
 function defineRoadmapTableColumns() {
     const columns = [
@@ -282,72 +288,86 @@ function defineRoadmapTableColumns() {
             headerFilter: "input",
             headerFilterPlaceholder: "Filter ROI..."
         },
-        { 
-            title: "Target Quarter/Yr", 
-            field: "targetQuarterYearDisplay", 
-            width: 120, 
-            hozAlign: "center", 
-            tooltip: function(e, cell){ return cell.getValue(); },
+        {
+            title: "Target Quarter/Yr",
+            field: "targetQuarterYearDisplay",
+            width: 120,
+            hozAlign: "center",
+            tooltip: function(e, cell){ return cell.getValue() || "N/A"; },
             sorter: function(a, b, aRow, bRow, column, dir, sorterParams){
-                // a and b are the "QxYYYY" strings (values of targetQuarterYearDisplay field)
-                // We will sort based on the underlying targetDueDate for chronological accuracy
-                const date_a_str = aRow.getData().targetDueDate; // "YYYY-MM-DD" or null/undefined
-                const date_b_str = bRow.getData().targetDueDate; // "YYYY-MM-DD" or null/undefined
-
-                const aIsValidDate = date_a_str && typeof date_a_str === 'string' && date_a_str.length === 10;
-                const bIsValidDate = date_b_str && typeof date_b_str === 'string' && date_b_str.length === 10;
-
-                // Handle null/empty/invalid dates: push them to the bottom for ascending, top for descending
-                // This logic ensures items without a valid date are grouped at the end in ascending sort.
-                if (dir === "asc") {
-                    if (!aIsValidDate && bIsValidDate) return 1;
-                    if (aIsValidDate && !bIsValidDate) return -1;
-                    if (!aIsValidDate && !bIsValidDate) return 0;
-                } else { // dir === "desc"
-                    if (!aIsValidDate && bIsValidDate) return 1; // For desc, no-date 'a' should also go to the end (effectively "smaller")
-                    if (aIsValidDate && !bIsValidDate) return -1; // For desc, date 'a' should come before no-date 'b'
-                    if (!aIsValidDate && !bIsValidDate) return 0;
+                const date_a_str = aRow.getData().targetDueDate;
+                const date_b_str = bRow.getData().targetDueDate;
+                let date_a = null;
+                if (date_a_str && typeof date_a_str === 'string' && date_a_str.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                    const parsedA = luxon.DateTime.fromISO(date_a_str);
+                    if (parsedA.isValid) date_a = parsedA;
                 }
+                let date_b = null;
+                if (date_b_str && typeof date_b_str === 'string' && date_b_str.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                    const parsedB = luxon.DateTime.fromISO(date_b_str);
+                    if (parsedB.isValid) date_b = parsedB;
+                }
+                const aIsNull = (date_a === null);
+                const bIsNull = (date_b === null);
 
-                // If both are valid date strings, compare them using Luxon
-                const date_a = luxon.DateTime.fromISO(date_a_str);
-                const date_b = luxon.DateTime.fromISO(date_b_str);
+                if (aIsNull && bIsNull) return 0;
+                // Consistent null handling: nulls/invalid go to the "end" (bottom for asc, top for desc needs careful return)
+                // For alignEmptyValues:"bottom" behavior:
+                if (aIsNull) return 1; // Treat null as "greater" than a valid date
+                if (bIsNull) return -1; // Treat valid date as "less" than a null date
 
-                // This validity check with Luxon is more robust
-                if (!date_a.isValid && date_b.isValid) return dir === "asc" ? 1 : -1;
-                if (date_a.isValid && !date_b.isValid) return dir === "asc" ? -1 : 1;
-                if (!date_a.isValid && !date_b.isValid) return 0;
-
-                if (date_a.valueOf() < date_b.valueOf()) return -1;
-                if (date_a.valueOf() > date_b.valueOf()) return 1;
-                return 0;
-            }             
-
+                return date_a.valueOf() - date_b.valueOf(); // Standard date comparison
+            }
         },
         {
             title: "Target Due Date",
-            field: "targetDueDate", // Sorts on the original "YYYY-MM-DD" string or null
+            field: "targetDueDate", // The raw "YYYY-MM-DD" string or null
             width: 130,
             hozAlign: "center",
-            sorter:"date",
-            sorterParams:{
-                format:"YYYY-MM-DD", // Ensures Luxon parses "YYYY-MM-DD"
-                alignEmptyValues: "bottom" // Puts items with no due date at the bottom
-            },
             tooltip: function(e, cell){ return cell.getValue() ? cell.getValue() : "Not set"; },
             headerFilter: "input",
-            headerFilterPlaceholder: "YYYY-MM-DD"
+            headerFilterPlaceholder: "YYYY-MM-DD",
+            sorter: function(a, b, aRow, bRow, column, dir, sorterParams) {
+                // a and b are the targetDueDate strings from the data (already cleaned by prepareRoadmapDataForTable)
+                const val_a = a;
+                const val_b = b;
+
+                let dateA = null;
+                if (val_a && typeof val_a === 'string' && val_a.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                    const parsedA = luxon.DateTime.fromISO(val_a);
+                    if (parsedA.isValid) dateA = parsedA;
+                }
+
+                let dateB = null;
+                if (val_b && typeof val_b === 'string' && val_b.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                    const parsedB = luxon.DateTime.fromISO(val_b);
+                    if (parsedB.isValid) dateB = parsedB;
+                }
+
+                const aIsNull = (dateA === null);
+                const bIsNull = (dateB === null);
+
+                if (aIsNull && bIsNull) return 0; // Both are null/invalid - treat as equal
+
+                // Logic for alignEmptyValues: "bottom"
+                // If 'a' is null/invalid, it should come after 'b' (if 'b' is valid) in an ascending sort.
+                // So, 'a' is considered "greater".
+                if (aIsNull) return 1;
+                if (bIsNull) return -1;
+
+                // If both are valid dates, compare their millisecond timestamps
+                return dateA.valueOf() - dateB.valueOf();
+            }
+            // sorterParams for format and alignEmptyValues are removed as the custom sorter handles this.
         },
         {
             title: "Themes",
-            field: "themes", // The raw data is an array
+            field: "themes",
             width: 180,
-            formatter: (cell) => (cell.getValue() || []).join(', '), // How to display it
+            formatter: (cell) => (cell.getValue() || []).join(', '),
             headerFilter: "input",
             tooltip: function(e, cell){ return (cell.getValue() || []).join(', '); },
             sorter: function(a, b, aRow, bRow, column, dir, sorterParams){
-                // a and b are the 'themes' arrays for the two rows being compared.
-                // We sort based on their string representation.
                 const val_a = (a || []).join(', ').toLowerCase();
                 const val_b = (b || []).join(', ').toLowerCase();
                 return val_a.localeCompare(val_b);
@@ -382,7 +402,6 @@ function defineRoadmapTableColumns() {
     columns.push({ title: "PM Capacity Notes", field: "attributes.pmCapacityNotes", visible: false, headerFilter: "input", formatter: "textarea", download: true, tooltip: function(e, cell){ return cell.getValue(); } });
     columns.push({ title: "Primary Goal ID", field: "primaryGoalId", visible: false, headerFilter: "input", download: true, tooltip: function(e, cell){ return cell.getValue(); } });
     columns.push({ title: "Project Manager", field: "projectManager.name", visible: false, headerFilter: "input", download: true, tooltip: function(e, cell){ return cell.getValue(); } });
-    // Target Due Date is now a visible column, no longer need it hidden by default.
 
     return columns;
 }
