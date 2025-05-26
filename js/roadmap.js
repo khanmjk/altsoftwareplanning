@@ -215,6 +215,8 @@ function generateRoadmapControls() {
  * Prepares and filters data for the roadmap table.
  * (Ensures targetDueDate is null if empty/whitespace for consistent date sorting)
  */
+// Function: prepareRoadmapDataForTable
+// MODIFIED: To include theme name lookups.
 function prepareRoadmapDataForTable() {
     if (!currentSystemData || !currentSystemData.yearlyInitiatives) {
         console.warn("No current system data or yearly initiatives to prepare for roadmap table.");
@@ -227,64 +229,69 @@ function prepareRoadmapDataForTable() {
          initiatives = initiatives.filter(init => currentRoadmapStatusFilters.includes(init.status));
     }
 
+    const definedThemesMap = new Map((currentSystemData.definedThemes || []).map(theme => [theme.themeId, theme.name]));
+
     return initiatives.map(init => {
         const ownerName = init.owner && init.owner.name ? init.owner.name : 'N/A';
         const roiCategory = init.roi && init.roi.category ? init.roi.category : '';
         const roiValue = init.roi && init.roi.estimatedValue ? init.roi.estimatedValue : '';
-        let roiDisplay = 'N/A';
+        let roiSummaryDisplay = 'N/A';
         if (roiCategory && roiValue) {
-            roiDisplay = `${roiCategory}: ${roiValue}`;
+            roiSummaryDisplay = `${roiCategory}: ${roiValue}`;
             if (init.roi.valueType === 'Monetary' && init.roi.currency) {
-                roiDisplay += ` ${init.roi.currency}`;
+                roiSummaryDisplay += ` ${init.roi.currency}`;
             }
         } else if (roiCategory) {
-            roiDisplay = roiCategory;
+            roiSummaryDisplay = roiCategory;
         } else if (roiValue) {
-            roiDisplay = String(roiValue);
+            roiSummaryDisplay = String(roiValue);
         }
 
-        // Ensure targetDueDate is either a valid-looking string or null.
-        // This helps the Tabulator date sorter.
         const cleanTargetDueDate = (init.targetDueDate && String(init.targetDueDate).trim() !== "") ? String(init.targetDueDate).trim() : null;
+
+        // --- NEW: Prepare theme names for display ---
+        const themeNames = (init.themes || [])
+            .map(themeId => definedThemesMap.get(themeId) || themeId) // Fallback to ID if name not found
+            .join(', ');
+        // --- END NEW ---
 
         return {
             ...init, // Spread all original initiative properties
             id: init.initiativeId, // Tabulator needs an 'id' field
-            targetDueDate: cleanTargetDueDate, // Use the cleaned date for sorting
+            targetDueDate: cleanTargetDueDate,
             ownerDisplay: ownerName,
-            roiSummaryDisplay: roiDisplay,
-            targetQuarterYearDisplay: formatDateToQuarterYear(cleanTargetDueDate) // Also use cleaned date for quarter display
+            roiSummaryDisplay: roiSummaryDisplay,
+            targetQuarterYearDisplay: formatDateToQuarterYear(cleanTargetDueDate),
+            themeNamesDisplay: themeNames // Add the new property for theme names
         };
     });
 }
 
-/**
- * Defines columns for the roadmap table.
- * (Adjusts column widths for better layout with fitColumns, Actions column narrower)
- */
+// Function: defineRoadmapTableColumns
+// MODIFIED: Added ROI Value Type column, updated Themes column to use themeNamesDisplay.
 function defineRoadmapTableColumns() {
     const columns = [
-        { 
-            title: "Title", 
-            field: "title", 
-            minWidth: 200, 
-            headerFilter: "input", 
-            frozen:true, 
-            tooltip: function(e, cell){ return cell.getValue(); } 
-        }, 
-        { 
-            title: "Description", 
-            field: "description", 
-            minWidth: 250, 
-            hozAlign: "left", 
-            formatter: "textarea", 
-            headerFilter: "input", 
-            tooltip: function(e, cell){ return cell.getValue(); } 
+        {
+            title: "Title",
+            field: "title",
+            minWidth: 200,
+            headerFilter: "input",
+            frozen:true,
+            tooltip: function(e, cell){ return cell.getValue(); }
+        },
+        {
+            title: "Description",
+            field: "description",
+            minWidth: 250,
+            hozAlign: "left",
+            formatter: "textarea",
+            headerFilter: "input",
+            tooltip: function(e, cell){ return cell.getValue(); }
         },
         {
             title: "Status",
             field: "status",
-            width: 110, 
+            width: 110,
             headerFilter: "list",
             headerFilterParams: {
                 values: ["", ...ALL_INITIATIVE_STATUSES],
@@ -293,28 +300,39 @@ function defineRoadmapTableColumns() {
             },
             headerFilterFunc: "="
         },
-        { 
-            title: "Owner", 
-            field: "ownerDisplay", 
-            width: 140, 
-            headerFilter: "input", 
-            tooltip: function(e, cell){ return cell.getValue(); } 
+        {
+            title: "Owner",
+            field: "ownerDisplay",
+            width: 140,
+            headerFilter: "input",
+            tooltip: function(e, cell){ return cell.getValue(); }
         },
         {
-            title: "ROI Summary", // No explicit width, let fitColumns manage
+            title: "ROI Summary",
             field: "roiSummaryDisplay",
-            minWidth: 180, // Give it a minimum
+            minWidth: 180,
             hozAlign: "left",
             tooltip: function(e, cell){ return cell.getValue(); },
             headerFilter: "input",
             headerFilterPlaceholder: "Filter ROI..."
         },
-        { 
-            title: "Target Quarter/Yr", 
-            field: "targetQuarterYearDisplay", 
-            width: 110, hozAlign: "center", 
-            tooltip: function(e, cell){ return cell.getValue() || "N/A"; }, 
-            headerFilter: "input",            
+        // --- NEW: ROI Value Type Column ---
+        {
+            title: "ROI Type",
+            field: "roi.valueType", // Access nested data
+            minWidth: 120,
+            hozAlign: "left",
+            headerFilter: "input", // Or "list" if you have predefined types
+            tooltip: (e, cell) => cell.getValue() || "N/A",
+            // visible: true // Default is true, so not strictly needed unless overriding a general hidden default
+        },
+        // --- END NEW ---
+        {
+            title: "Target Quarter/Yr",
+            field: "targetQuarterYearDisplay",
+            width: 110, hozAlign: "center",
+            tooltip: function(e, cell){ return cell.getValue() || "N/A"; },
+            headerFilter: "input",
             sorter: function(a, b, aRow, bRow, column, dir, sorterParams){
                 const date_a_str = aRow.getData().targetDueDate;
                 const date_b_str = bRow.getData().targetDueDate;
@@ -340,7 +358,7 @@ function defineRoadmapTableColumns() {
         {
             title: "Target Due Date",
             field: "targetDueDate",
-            width: 110, // Keep defined width
+            width: 110,
             hozAlign: "center",
             tooltip: function(e, cell){ return cell.getValue() ? cell.getValue() : "Not set"; },
             headerFilter: "input",
@@ -363,22 +381,20 @@ function defineRoadmapTableColumns() {
                 return dateA.valueOf() - dateB.valueOf();
             }
         },
+        // --- MODIFIED: Themes Column ---
         {
-            title: "Themes", // No explicit width
-            field: "themes",
-            minWidth: 150, // Give it a minimum
-            formatter: (cell) => (cell.getValue() || []).join(', '),
+            title: "Themes",
+            field: "themeNamesDisplay", // Use the new field with names
+            minWidth: 150,
+            formatter: (cell) => cell.getValue() || "", // Value is already a string
             headerFilter: "input",
-            tooltip: function(e, cell){ return (cell.getValue() || []).join(', '); },
-            sorter: function(a, b, aRow, bRow, column, dir, sorterParams){
-                const val_a = (a || []).join(', ').toLowerCase();
-                const val_b = (b || []).join(', ').toLowerCase();
-                return val_a.localeCompare(val_b);
-            }
+            tooltip: function(e, cell){ return cell.getValue() || "N/A"; }, // Tooltip shows names
+            sorter: "string" // Default string sorter should work on names
         },
+        // --- END MODIFIED ---
         {
             title: "Actions",
-            width: 120, // << REDUCED width for Actions column
+            width: 120,
             hozAlign: "center",
             headerSort: false,
             formatter: (cell) => {
@@ -390,15 +406,24 @@ function defineRoadmapTableColumns() {
         }
     ];
 
-    const roiFields = ["valueType", "currency", "timeHorizonMonths", "confidenceLevel", "calculationMethodology", "businessCaseLink", "overrideJustification"];
+    const roiFields = ["category", "currency", "timeHorizonMonths", "confidenceLevel", "calculationMethodology", "businessCaseLink", "overrideJustification"];
+    // Note: "valueType" was removed from this list as it's now a visible column.
+    // "estimatedValue" is part of "roiSummaryDisplay". If a separate "ROI Estimated Value" column is desired, it can be added explicitly.
     roiFields.forEach(field => {
         columns.push({
             title: `ROI: ${field.replace(/([A-Z])/g, ' $1').trim()}`,
             field: `roi.${field}`,
-            visible: false, minWidth:150, // MinWidth for hidden columns too
+            visible: false, minWidth:150,
             headerFilter: "input", download: true, tooltip: function(e, cell){ return cell.getValue(); }
         });
     });
+    // Add a specific hidden column for estimatedValue if it's not captured sufficiently by roiSummaryDisplay for export/column toggle
+    columns.push({
+        title: "ROI: Estimated Value", field: "roi.estimatedValue", visible: false, minWidth: 150,
+        headerFilter: "input", download: true, tooltip: function(e, cell){ return cell.getValue(); }
+    });
+
+
     columns.push({ title: "PM Capacity Notes", field: "attributes.pmCapacityNotes", visible: false, minWidth: 200, headerFilter: "input", formatter: "textarea", download: true, tooltip: function(e, cell){ return cell.getValue(); } });
     columns.push({ title: "Primary Goal ID", field: "primaryGoalId", visible: false, minWidth: 150, headerFilter: "input", download: true, tooltip: function(e, cell){ return cell.getValue(); } });
     columns.push({ title: "Project Manager", field: "projectManager.name", visible: false, minWidth: 150, headerFilter: "input", download: true, tooltip: function(e, cell){ return cell.getValue(); } });

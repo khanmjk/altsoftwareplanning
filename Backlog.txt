@@ -47,6 +47,7 @@ Manage Detailed Planning
 -- A work package can have one owner (someone accountable for the work package delivery)
 -- A work package can have 0..many dependencies on other work packages
 [Done] - Need to update SwitchView to cleanup if roadmap edit dialog was shown
+[Done] - Roadmap: Added ROI Type and used Theme name instead of theme ID
 
 ------------
 IN PROGRESS
