@@ -468,6 +468,7 @@ function generateTeamVisualization(systemData) {
         .style('width', '12px')
         .style('height', '12px')
         .style('background-color', d => d.color)
+        .style('border-radius', '50%') // This makes it a circle
         .style('margin-right', '5px');
 
     legend.append('span')
@@ -737,6 +738,7 @@ function generateServiceVisualization(services, selectedServiceName) {
         .style('width', '12px')
         .style('height', '12px')
         .style('background-color', d => d.color)
+        .style('border-radius', '50%') // This makes it a circle
         .style('margin-right', '5px');
 
     legend.append('span')
