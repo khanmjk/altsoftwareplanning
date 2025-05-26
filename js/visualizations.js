@@ -266,6 +266,7 @@ function generateVisualization(systemData) {
 
 /** Generate Team Relationships Visualization **/
 function generateTeamVisualization(systemData) {
+    d3.select('#teamLegend').selectAll('*').remove(); // Clear previous legend
     let svg = d3.select('#teamSvg');
     svg.selectAll('*').remove(); // Clear any existing content
 
@@ -468,6 +469,7 @@ function generateTeamVisualization(systemData) {
         .style('width', '12px')
         .style('height', '12px')
         .style('background-color', d => d.color)
+        .style('border-radius', '50%') // Added this line
         .style('margin-right', '5px');
 
     legend.append('span')
@@ -527,6 +529,7 @@ function updateServiceVisualization() {
 }
 
 function generateServiceVisualization(services, selectedServiceName) {
+    d3.select('#serviceLegend').selectAll('*').remove(); // Clear previous legend
     let svg = d3.select('#serviceSvg');
     svg.selectAll('*').remove(); // Clear any existing content
 
@@ -737,6 +740,7 @@ function generateServiceVisualization(services, selectedServiceName) {
         .style('width', '12px')
         .style('height', '12px')
         .style('background-color', d => d.color)
+        .style('border-radius', '50%') // Added this line
         .style('margin-right', '5px');
 
     legend.append('span')
