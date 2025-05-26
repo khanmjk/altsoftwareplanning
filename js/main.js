@@ -122,6 +122,15 @@ function switchView(targetViewId, newMode = null) {
     const documentationSection = document.getElementById('toolDocumentationSection');
 
     const updateDOMForViewChange = () => {
+         // --- Call closeRoadmapModal here ---
+        if (typeof closeRoadmapModal === 'function') {
+            console.log("switchView: Attempting to close roadmap modal if open.");
+            closeRoadmapModal();
+        } else {
+            console.warn("switchView: closeRoadmapModal function not found. Roadmap modal might not be hidden correctly.");
+        }
+        // --- End modal closing logic ---       
+   
         allViewIds.forEach(id => {
             const element = document.getElementById(id);
             if (element) {

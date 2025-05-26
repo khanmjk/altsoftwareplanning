@@ -46,12 +46,12 @@ Manage Detailed Planning
 -- A work package has total capacity metric (sum of all HC estimates per team associated with the work package)
 -- A work package can have one owner (someone accountable for the work package delivery)
 -- A work package can have 0..many dependencies on other work packages
+[Done] - Need to update SwitchView to cleanup if roadmap edit dialog was shown
 
 ------------
 IN PROGRESS
 ------------
 UX fixes
-- Need to update SwitchView to cleanup if roadmap edit dialog was shown
 - Fix table of contents for documentation - clickthrough on links don't all work
 
 Manage Roadmap & Backlog
