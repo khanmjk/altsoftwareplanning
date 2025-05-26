@@ -401,8 +401,8 @@ function generateTeamVisualization(systemData) {
                     <strong>Team Name:</strong> ${team.teamName}<br>
                     <strong>SDM:</strong> ${sdm ? sdm.sdmName : 'N/A'}<br>
                     <strong>PMT:</strong> ${pmt ? pmt.pmtName : 'N/A'}<br>
-                    <strong>Size of Team:</strong> ${team.sizeOfTeam}<br>
-                    <strong>Engineer Names:</strong> ${team.engineerNames}<br>
+                    <strong>Size of Team:</strong> ${team.fundedHeadcount !== undefined ? team.fundedHeadcount : (team.engineers ? team.engineers.length : 'N/A')}<br>
+                    <strong>Engineer Names:</strong> ${(team.engineers && team.engineers.length > 0) ? team.engineers.join(', ') : 'None'}<br>
                     <strong>Services Owned:</strong> ${services}`;
         tooltip.transition()
             .duration(200)
