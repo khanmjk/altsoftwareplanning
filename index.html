@@ -73,7 +73,8 @@
                     <span id="visualizationTitle" style="margin: 0 15px; font-weight: bold; font-size: 1.1em;">System Visualization</span> <button onclick="navigateVisualizations(1)">Next &gt;</button>
                 </div>
 
-                <div id="visualization" class="carousel-item" style="display: block;"> <svg id="systemSvg" style="width: 100%; height: 600px; border: 1px solid #ccc;"></svg>
+                <div id="visualization" class="carousel-item" style="display: block;"> <button id="togglePlatformComponentsSystem" class="button" style="margin-bottom: 10px;">Hide Platforms</button>
+<svg id="systemSvg" style="width: 100%; height: 600px; border: 1px solid #ccc;"></svg>
                     <div id="legend" class="legend"></div>
                 </div>
 
@@ -85,14 +86,16 @@
                 <div id="serviceRelationshipsVisualization" class="carousel-item" style="display: none;">
                     <select id="serviceSelection" onchange="updateServiceVisualization()" style="margin-bottom: 5px; display: block; margin-left: auto; margin-right: auto;">
                         </select>
-                    <svg id="serviceSvg" style="width: 100%; height: 600px; border: 1px solid #ccc;"></svg>
+                    <button id="togglePlatformComponentsService" class="button" style="margin-bottom: 10px;">Hide Platforms</button>
+<svg id="serviceSvg" style="width: 100%; height: 600px; border: 1px solid #ccc;"></svg>
                     <div id="serviceLegend" class="legend"></div>
                 </div>
 
                 <div id="dependencyVisualization" class="carousel-item" style="display: none;">
                     <select id="dependencyServiceSelection" onchange="updateDependencyVisualization()" style="margin-bottom: 5px; display: block; margin-left: auto; margin-right: auto;">
                         </select>
-                    <svg id="dependencySvg" style="width: 100%; height: 600px; border: 1px solid #ccc;"></svg>
+                    <button id="togglePlatformComponentsDependency" class="button" style="margin-bottom: 10px;">Hide Platforms</button>
+<svg id="dependencySvg" style="width: 100%; height: 600px; border: 1px solid #ccc;"></svg>
                     <div id="dependencyLegend" class="legend"></div>
                 </div>
 
