@@ -267,6 +267,37 @@
             <div id="sdmForecastingView" style="display:none; margin-top: 20px; max-width: 90%; margin-left: auto; margin-right: auto;">
             </div>
 
+           
+            <div id="themeManagementModal" class="modal" style="display:none;">
+                <div class="modal-content-wrapper">
+                    <div class="modal-header">
+                        <h3 id="themeManagementModalTitle">Manage Themes</h3>
+                        <span class="close-button" onclick="closeThemeManagementModal()">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <h4>Existing Themes</h4>
+                        <div id="existingThemesList" style="margin-bottom: 20px; max-height: 200px; overflow-y: auto; border: 1px solid #eee; padding:5px;">
+                            <p><em>No themes defined yet or loading...</em></p>
+                        </div>
+
+                        <h4>Add New Theme</h4>
+                        <form id="addNewThemeForm_modal">
+                            <div style="margin-bottom: 10px;">
+                                <label for="newThemeName_modal" style="display: block;">Theme Name:</label>
+                                <input type="text" id="newThemeName_modal" style="width: 95%;" required>
+                            </div>
+                            <div style="margin-bottom: 10px;">
+                                <label for="newThemeDescription_modal" style="display: block;">Description (Optional):</label>
+                                <textarea id="newThemeDescription_modal" rows="2" style="width: 95%;"></textarea>
+                            </div>
+                            <button type="button" id="saveNewThemeButton_modal" class="btn-primary">Add Theme</button>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-secondary" onclick="closeThemeManagementModal()">Close</button>
+                    </div>
+                </div>
+            </div>            
             <div id="roadmapInitiativeModal" class="modal" style="display:none;">
                 <div class="modal-content-wrapper"> <div class="modal-header">
                     <h3 id="addEditRoadmapInitiativeTitle_modal">Add/Edit Initiative</h3>

@@ -129,6 +129,13 @@ function switchView(targetViewId, newMode = null) {
         } else {
             console.warn("switchView: closeRoadmapModal function not found. Roadmap modal might not be hidden correctly.");
         }
+       // --- Call closeThemeManagementModal here ---
+        if (typeof closeThemeManagementModal === 'function') { 
+            console.log("switchView: Attempting to close theme management modal if open.");
+            closeThemeManagementModal();
+        } else {
+            console.warn("switchView: closeThemeManagementModal function not found. Theme modal might not be hidden correctly.");
+        }
         // --- End modal closing logic ---       
    
         allViewIds.forEach(id => {
