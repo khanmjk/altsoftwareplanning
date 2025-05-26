@@ -490,16 +490,16 @@ const sampleSystemDataStreamView = {
         }
     ],
     definedThemes: [
-        { themeId: 'theme-eng-excellence-sv', name: 'Engineering Excellence (SV)', description: 'Initiatives focused on improving engineering practices, tools, and code quality.', relatedGoalIds: ['goal-stability-sv-2025'], attributes: {} },
-        { themeId: 'theme-platform-stability-sv', name: 'Platform Stability (SV)', description: 'Ensuring the reliability and uptime of the platform.', relatedGoalIds: ['goal-stability-sv-2025'], attributes: {} },
-        { themeId: 'theme-user-experience-sv', name: 'User Experience (SV)', description: 'Enhancing the overall user journey and satisfaction.', relatedGoalIds: ['goal-ux-enhancement-sv-2025'], attributes: {} },
-        { themeId: 'theme-revenue-growth-sv', name: 'Revenue Growth (SV)', description: 'Initiatives directly aimed at increasing company revenue.', relatedGoalIds: ['goal-revenue-sv-2025'], attributes: {} },
-        { themeId: 'theme-cost-reduction-sv', name: 'Cost Reduction (SV)', description: 'Initiatives aimed at reducing operational or other costs.', relatedGoalIds: [], attributes: {} }, // AV1 codec could link here.
-        { themeId: 'theme-security-sv', name: 'Security (SV)', description: 'Initiatives focused on platform and data security.', relatedGoalIds: ['goal-security-compliance-sv-2025'], attributes: {} },
-        { themeId: 'theme-compliance-sv', name: 'Compliance (SV)', description: 'Meeting legal, regulatory, and industry standards.', relatedGoalIds: ['goal-security-compliance-sv-2025'], attributes: {} },
-        { themeId: 'theme-innovation-sv', name: 'Innovation (SV)', description: 'Exploring new technologies and product ideas.', relatedGoalIds: ['goal-ux-enhancement-sv-2025'], attributes: {} },
-        { themeId: 'theme-global-expansion-sv', name: 'Global Expansion (SV)', description: 'Expanding service reach to new markets.', relatedGoalIds: ['goal-expansion-sv-2026'], attributes: {} },
-        { themeId: 'theme-partnerships-sv', name: 'Partnerships (SV)', description: 'Developing and managing content or technology partnerships.', relatedGoalIds: [], attributes: {} }
+        { themeId: 'theme-eng-excellence-sv', name: 'Engineering Excellence', description: 'Initiatives focused on improving engineering practices, tools, and code quality.', relatedGoalIds: ['goal-stability-sv-2025'], attributes: {} },
+        { themeId: 'theme-platform-stability-sv', name: 'Platform Stability', description: 'Ensuring the reliability and uptime of the platform.', relatedGoalIds: ['goal-stability-sv-2025'], attributes: {} },
+        { themeId: 'theme-user-experience-sv', name: 'User Experience', description: 'Enhancing the overall user journey and satisfaction.', relatedGoalIds: ['goal-ux-enhancement-sv-2025'], attributes: {} },
+        { themeId: 'theme-revenue-growth-sv', name: 'Revenue Growth', description: 'Initiatives directly aimed at increasing company revenue.', relatedGoalIds: ['goal-revenue-sv-2025'], attributes: {} },
+        { themeId: 'theme-cost-reduction-sv', name: 'Cost Reduction', description: 'Initiatives aimed at reducing operational or other costs.', relatedGoalIds: [], attributes: {} }, // AV1 codec could link here.
+        { themeId: 'theme-security-sv', name: 'Security', description: 'Initiatives focused on platform and data security.', relatedGoalIds: ['goal-security-compliance-sv-2025'], attributes: {} },
+        { themeId: 'theme-compliance-sv', name: 'Compliance', description: 'Meeting legal, regulatory, and industry standards.', relatedGoalIds: ['goal-security-compliance-sv-2025'], attributes: {} },
+        { themeId: 'theme-innovation-sv', name: 'Innovation', description: 'Exploring new technologies and product ideas.', relatedGoalIds: ['goal-ux-enhancement-sv-2025'], attributes: {} },
+        { themeId: 'theme-global-expansion-sv', name: 'Global Expansion', description: 'Expanding service reach to new markets.', relatedGoalIds: ['goal-expansion-sv-2026'], attributes: {} },
+        { themeId: 'theme-partnerships-sv', name: 'Partnerships', description: 'Developing and managing content or technology partnerships.', relatedGoalIds: [], attributes: {} }
     ],
     archivedYearlyPlans: [],
     workPackages: [], // Starts empty
@@ -694,10 +694,10 @@ const sampleSystemDataContactCenter = {
             ]
         },
         leaveTypes: [
-            { id: "annual_cc", name: "Annual Leave (CC)", defaultEstimatedDays: 21, attributes: {} },
-            { id: "sick_cc", name: "Sick Leave (CC)", defaultEstimatedDays: 8, attributes: {} },
-            { id: "study_cc", name: "Study Leave (CC)", defaultEstimatedDays: 3, attributes: {} },
-            { id: "inlieu_cc", name: "Time off In-lieu Leave (CC)", defaultEstimatedDays: 0, attributes: {} }
+            { id: "annual_cc", name: "Annual Leave", defaultEstimatedDays: 21, attributes: {} },
+            { id: "sick_cc", name: "Sick Leave", defaultEstimatedDays: 8, attributes: {} },
+            { id: "study_cc", name: "Study Leave", defaultEstimatedDays: 3, attributes: {} },
+            { id: "inlieu_cc", name: "Time off In-lieu Leave", defaultEstimatedDays: 0, attributes: {} }
         ],
         attributes: {}
     },
@@ -917,34 +917,34 @@ const sampleSystemDataContactCenter = {
             initiativeIds: ['init-cc-security', 'init-cc-010', 'init-cc-012', 'init-cc-022'], attributes: {}
         },
         {
-            goalId: 'goal-csat-increase-cc-2025', name: 'Increase Customer Satisfaction by 10% in 2025 (CC)', description: 'Improve agent tools and customer interaction channels.', strategyLink: null,
+            goalId: 'goal-csat-increase-cc-2025', name: 'Increase Customer Satisfaction by 10% in 2025', description: 'Improve agent tools and customer interaction channels.', strategyLink: null,
             owner: { type: 'pmt', id: 'pmt1', name: 'Karen Davis' }, projectManager: { type: 'projectManager', id: 'pmCC001', name: 'Valerie Timeline' }, technicalPOC: { type: 'sdm', id: 'sdm1', name: 'Alex Johnson' },
             initiativeIds: ['init-cc-001', 'init-cc-005', 'init-cc-008', 'init-cc-009', 'init-cc-014', 'init-cc-016'], attributes: {}
         },
         {
-            goalId: 'goal-agent-efficiency-cc-2025', name: 'Improve Agent Efficiency by 15% (CC)', description: 'Streamline workflows and provide better tools for agents.', strategyLink: null,
+            goalId: 'goal-agent-efficiency-cc-2025', name: 'Improve Agent Efficiency by 15%', description: 'Streamline workflows and provide better tools for agents.', strategyLink: null,
             owner: { type: 'pmt', id: 'pmt2', name: 'Patricia Thompson' }, projectManager: { type: 'projectManager', id: 'pmCC002', name: 'Ricardo Deliver' }, technicalPOC: { type: 'sdm', id: 'sdm2', name: 'Matthew Jackson' },
             initiativeIds: ['init-cc-002', 'init-cc-004', 'init-cc-006', 'init-cc-007', 'init-cc-011', 'init-cc-013', 'init-cc-015', 'init-cc-017', 'init-cc-020'], attributes: {}
         },
         {
-            goalId: 'goal-platform-enhancement-cc-2025', name: 'Enhance Core Platform Capabilities (CC)', description: 'Upgrade foundational components for future growth and operational efficiency.', strategyLink: null,
+            goalId: 'goal-platform-enhancement-cc-2025', name: 'Enhance Core Platform Capabilities', description: 'Upgrade foundational components for future growth and operational efficiency.', strategyLink: null,
             owner: { type: 'seniorManager', id: 'srMgrCC1', name: 'Senior Sam' }, projectManager: { type: 'projectManager', id: 'pmCC002', name: 'Ricardo Deliver' }, technicalPOC: { type: 'sdm', id: 'sdm4', name: 'Laura Turner' },
             initiativeIds: ['init-cc-003', 'init-cc-018', 'init-cc-021'], attributes: {}
         }
     ],
     definedThemes: [
-        { themeId: 'theme-eng-excellence-cc', name: 'Engineering Excellence (CC)', description: 'Improving ConnectPro engineering practices.', relatedGoalIds: ['goal-ops-stability-cc-2025', 'goal-platform-enhancement-cc-2025'], attributes: {} },
-        { themeId: 'theme-ops-stability-cc', name: 'Operational Stability (CC)', description: 'Ensuring ConnectPro reliability.', relatedGoalIds: ['goal-ops-stability-cc-2025'], attributes: {} },
-        { themeId: 'theme-customer-sat-cc', name: 'Customer Satisfaction (CC)', description: 'Enhancing customer experience with ConnectPro.', relatedGoalIds: ['goal-csat-increase-cc-2025'], attributes: {} },
-        { themeId: 'theme-agent-efficiency-cc', name: 'Agent Efficiency (CC)', description: 'Improving tools and processes for contact center agents.', relatedGoalIds: ['goal-agent-efficiency-cc-2025'], attributes: {} },
-        { themeId: 'theme-compliance-cc', name: 'Compliance (CC)', description: 'Meeting regulatory requirements for contact centers.', relatedGoalIds: ['goal-security-compliance-cc-2025'], attributes: {} },
-        { themeId: 'theme-feature-enhancement-cc', name: 'Feature Enhancement (CC)', description: 'Adding new features to ConnectPro.', relatedGoalIds: ['goal-csat-increase-cc-2025'], attributes: {} },
-        { themeId: 'theme-security-cc', name: 'Security (CC)', description: 'Initiatives focused on platform and data security.', relatedGoalIds: ['goal-security-compliance-cc-2025'], attributes: {} },
-        { themeId: 'theme-innovation-cc', name: 'Innovation (CC)', description: 'Exploring new AI and automation capabilities for contact centers.', relatedGoalIds: ['goal-agent-efficiency-cc-2025', 'goal-csat-increase-cc-2025'], attributes: {} },
-        { themeId: 'theme-integration-cc', name: 'Integration (CC)', description: 'Integrating ConnectPro with other business systems.', relatedGoalIds: ['goal-agent-efficiency-cc-2025'], attributes: {} },
-        { themeId: 'theme-cost-reduction-cc', name: 'Cost Reduction (CC)', description: 'Initiatives focused on reducing operational costs for the contact center.', relatedGoalIds: [], attributes: {} },
-        { themeId: 'theme-ops-efficiency-cc', name: 'Operational Efficiency (CC)', description: 'Streamlining internal operations and workflows.', relatedGoalIds: ['goal-agent-efficiency-cc-2025', 'goal-platform-enhancement-cc-2025'], attributes: {} },
-        { themeId: 'theme-quality-assurance-cc', name: 'Quality Assurance (CC)', description: 'Improving service quality and agent performance monitoring.', relatedGoalIds: ['goal-agent-efficiency-cc-2025'], attributes: {} }
+        { themeId: 'theme-eng-excellence-cc', name: 'Engineering Excellence', description: 'Improving ConnectPro engineering practices.', relatedGoalIds: ['goal-ops-stability-cc-2025', 'goal-platform-enhancement-cc-2025'], attributes: {} },
+        { themeId: 'theme-ops-stability-cc', name: 'Operational Stability', description: 'Ensuring ConnectPro reliability.', relatedGoalIds: ['goal-ops-stability-cc-2025'], attributes: {} },
+        { themeId: 'theme-customer-sat-cc', name: 'Customer Satisfaction', description: 'Enhancing customer experience with ConnectPro.', relatedGoalIds: ['goal-csat-increase-cc-2025'], attributes: {} },
+        { themeId: 'theme-agent-efficiency-cc', name: 'Agent Efficiency', description: 'Improving tools and processes for contact center agents.', relatedGoalIds: ['goal-agent-efficiency-cc-2025'], attributes: {} },
+        { themeId: 'theme-compliance-cc', name: 'Compliance', description: 'Meeting regulatory requirements for contact centers.', relatedGoalIds: ['goal-security-compliance-cc-2025'], attributes: {} },
+        { themeId: 'theme-feature-enhancement-cc', name: 'Feature Enhancement', description: 'Adding new features to ConnectPro.', relatedGoalIds: ['goal-csat-increase-cc-2025'], attributes: {} },
+        { themeId: 'theme-security-cc', name: 'Security', description: 'Initiatives focused on platform and data security.', relatedGoalIds: ['goal-security-compliance-cc-2025'], attributes: {} },
+        { themeId: 'theme-innovation-cc', name: 'Innovation', description: 'Exploring new AI and automation capabilities for contact centers.', relatedGoalIds: ['goal-agent-efficiency-cc-2025', 'goal-csat-increase-cc-2025'], attributes: {} },
+        { themeId: 'theme-integration-cc', name: 'Integration', description: 'Integrating ConnectPro with other business systems.', relatedGoalIds: ['goal-agent-efficiency-cc-2025'], attributes: {} },
+        { themeId: 'theme-cost-reduction-cc', name: 'Cost Reduction', description: 'Initiatives focused on reducing operational costs for the contact center.', relatedGoalIds: [], attributes: {} },
+        { themeId: 'theme-ops-efficiency-cc', name: 'Operational Efficiency', description: 'Streamlining internal operations and workflows.', relatedGoalIds: ['goal-agent-efficiency-cc-2025', 'goal-platform-enhancement-cc-2025'], attributes: {} },
+        { themeId: 'theme-quality-assurance-cc', name: 'Quality Assurance', description: 'Improving service quality and agent performance monitoring.', relatedGoalIds: ['goal-agent-efficiency-cc-2025'], attributes: {} }
     ],
     archivedYearlyPlans: [],
     workPackages: [], // Starts empty
