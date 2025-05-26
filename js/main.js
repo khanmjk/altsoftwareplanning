@@ -403,124 +403,36 @@ function toggleCollapsibleSection(contentId, indicatorId, handleId = null) {
 
 /** Save Sample Systems to Local Storage if not already present **/
 /**
- * REVISED: Clears existing data, validates clearance, saves sample systems,
- * and logs the stored data with emphasis on allKnownEngineers.
- * ADDED: More detailed debugging for sampleSystemDataStreamView and stringification.
+ * REVISED: Saves sample systems to Local Storage ONLY if no data already exists.
  **/
 function saveSampleSystemsToLocalStorage() {
-    console.log(">>> Attempting to save sample systems to LocalStorage with new logic (extended debug)...");
+    console.log(">>> Checking if sample systems need to be saved to LocalStorage...");
 
-    // 1. Wipe out old data stored under LOCAL_STORAGE_KEY
-    localStorage.removeItem(LOCAL_STORAGE_KEY);
-    console.log(`Cleared data under localStorage key: "${LOCAL_STORAGE_KEY}"`);
+    const existingData = localStorage.getItem(LOCAL_STORAGE_KEY);
 
-    // 2. Validate there are no objects saved (or the key is gone)
-    const clearedData = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (clearedData === null) {
-        console.log("Validation successful: localStorage key is cleared or contains no data.");
+    // Only save sample systems if the key doesn't exist or if it's an empty object string
+    if (!existingData || existingData === '{}') {
+        console.log("No existing user data found or data is empty. Saving sample systems...");
 
-        // --- AGGRESSIVE DEBUGGING of sampleSystemDataStreamView ---
-        console.log("--- Debugging sampleSystemDataStreamView before it's used ---");
-        if (typeof sampleSystemDataStreamView !== 'undefined') {
-            console.log("sampleSystemDataStreamView IS DEFINED.");
-
-            // Check for the 'allKnownEngineers' key directly
-            if (Object.prototype.hasOwnProperty.call(sampleSystemDataStreamView, 'allKnownEngineers')) {
-                console.log("sampleSystemDataStreamView HAS the 'allKnownEngineers' property.");
-                if (Array.isArray(sampleSystemDataStreamView.allKnownEngineers)) {
-                    console.log("sampleSystemDataStreamView.allKnownEngineers IS AN ARRAY. Length:", sampleSystemDataStreamView.allKnownEngineers.length);
-                    if (sampleSystemDataStreamView.allKnownEngineers.length > 0) {
-                        console.log("First engineer in sampleSystemDataStreamView.allKnownEngineers:", JSON.parse(JSON.stringify(sampleSystemDataStreamView.allKnownEngineers[0])));
-                    } else {
-                        console.log("sampleSystemDataStreamView.allKnownEngineers is an EMPTY array.");
-                    }
-                } else {
-                    console.error("CRITICAL DEBUG: sampleSystemDataStreamView.allKnownEngineers is NOT AN ARRAY. Type:", typeof sampleSystemDataStreamView.allKnownEngineers, "Value:", sampleSystemDataStreamView.allKnownEngineers);
-                }
-            } else {
-                console.error("CRITICAL DEBUG: sampleSystemDataStreamView DOES NOT HAVE the 'allKnownEngineers' property. Keys present:", Object.keys(sampleSystemDataStreamView));
-            }
-            // Log a deep copy to see its structure if still problematic
-            // console.log("Full structure of sampleSystemDataStreamView before use:", JSON.parse(JSON.stringify(sampleSystemDataStreamView)));
-        } else {
-            console.error("CRITICAL DEBUG: sampleSystemDataStreamView is UNDEFINED at the point of use in saveSampleSystemsToLocalStorage.");
-            alert("Programming Error: sampleSystemDataStreamView is not defined. Check script load order and data.js.");
-            return; // Stop execution if critical data is missing
-        }
-        console.log("--- End of debugging sampleSystemDataStreamView ---");
-        // --- END OF AGGRESSIVE DEBUGGING ---
-
-        // 3. Prepare systems object for saving
-        console.log("Preparing systemsToSave object...");
+        // Prepare systems object for saving (StreamView and ConnectPro)
         const systemsToSave = {
-            'StreamView': sampleSystemDataStreamView,
-            'ConnectPro': sampleSystemDataContactCenter
+            'StreamView': sampleSystemDataStreamView, // Ensure this is defined in data.js
+            'ConnectPro': sampleSystemDataContactCenter // Ensure this is defined in data.js
         };
 
-        // --- DEBUG: Check systemsToSave['StreamView'] ---
-        if (systemsToSave.StreamView && systemsToSave.StreamView.allKnownEngineers && Array.isArray(systemsToSave.StreamView.allKnownEngineers)) {
-            console.log("DEBUG: systemsToSave.StreamView.allKnownEngineers IS valid before stringify. Length:", systemsToSave.StreamView.allKnownEngineers.length);
-        } else {
-            console.error("CRITICAL DEBUG: systemsToSave.StreamView.allKnownEngineers is MISSING or NOT AN ARRAY *before* stringify.");
-            if(systemsToSave.StreamView) console.log("Keys in systemsToSave.StreamView:", Object.keys(systemsToSave.StreamView));
-        }
-        // --- END DEBUG ---
-
         try {
-            // Stringify and save
             const stringifiedSystems = JSON.stringify(systemsToSave);
-
-            // --- DEBUG: Check stringified output ---
-            if (stringifiedSystems.includes('"allKnownEngineers"')) {
-                if (stringifiedSystems.includes('"StreamView":{"systemName":"StreamView","systemDescription":"StreamView is a video streaming platform') && stringifiedSystems.match(/"StreamView":\{[^{}]*"allKnownEngineers":\[/)) {
-                   console.log("DEBUG: Stringified data for StreamView APPEARS to contain 'allKnownEngineers' as an array.");
-                } else {
-                   console.warn("DEBUG: Stringified data contains 'allKnownEngineers', but not clearly within StreamView as an array. Manual check needed.");
-                   // console.log("Snippet of stringified StreamView:", stringifiedSystems.substring(stringifiedSystems.indexOf('"StreamView":'), stringifiedSystems.indexOf('"StreamView":') + 1000));
-                }
-            } else {
-                console.error("CRITICAL DEBUG: Stringified data DOES NOT contain the key 'allKnownEngineers' at all. Stringification is likely removing it.");
-            }
-            // --- END DEBUG ---
-
             localStorage.setItem(LOCAL_STORAGE_KEY, stringifiedSystems);
             console.log("Sample systems saved successfully to LocalStorage.");
 
-            // 4. Log the full sample data being stored (verification step)
-            console.log("--- Verifying Data Stored in localStorage (parsed from what was just set) ---");
-            const newlyStoredSystemsString = localStorage.getItem(LOCAL_STORAGE_KEY);
-            if (newlyStoredSystemsString) {
-                const newlyStoredSystems = JSON.parse(newlyStoredSystemsString);
-                const streamViewDataStored = newlyStoredSystems['StreamView'];
-
-                if (streamViewDataStored) {
-                    // console.log("Full 'StreamView' data as stored in localStorage:", JSON.parse(JSON.stringify(streamViewDataStored)));
-                    if (streamViewDataStored.allKnownEngineers && Array.isArray(streamViewDataStored.allKnownEngineers)) {
-                        console.log("VERIFICATION SUCCEEDED: 'StreamView.allKnownEngineers' array IS PRESENT in stored data. Length:", streamViewDataStored.allKnownEngineers.length);
-                        // if (streamViewDataStored.allKnownEngineers.length > 0) {
-                        //     console.log("First engineer in 'StreamView.allKnownEngineers' as stored:", JSON.parse(JSON.stringify(streamViewDataStored.allKnownEngineers[0])));
-                        // }
-                    } else {
-                        console.error("VERIFICATION FAILED: 'StreamView.allKnownEngineers' is missing or not an array in the data read back from localStorage. This is unexpected after a fresh save.");
-                        if(streamViewDataStored) console.log("Keys in streamViewDataStored:", Object.keys(streamViewDataStored));
-                    }
-                } else {
-                    console.warn("VERIFICATION WARNING: 'StreamView' data not found in what was just stored. This is unexpected.");
-                }
-            } else {
-                console.error("CRITICAL VERIFICATION FAILED: Could not retrieve data immediately after setting it in localStorage.");
-            }
-            console.log("--- End of localStorage verification ---");
-
         } catch (error) {
             console.error("Error stringifying or setting sample systems in localStorage:", error);
-            alert("Error during saving process. Check console.");
+            alert("Error during initial sample data saving process. Check console.");
         }
     } else {
-        console.error("CRITICAL VALIDATION FAILED: localStorage was not cleared properly. Found data:", clearedData);
-        alert("Error: Could not clear previous data from localStorage. Please check browser console and potentially clear manually.");
+        console.log("Existing user data found in LocalStorage. Sample systems will not be overwritten.");
     }
-    console.log("<<< Finished saveSampleSystemsToLocalStorage execution.");
+    console.log("<<< Finished saveSampleSystemsToLocalStorage check.");
 }
 
 /** Show Saved Systems Modal **/
@@ -794,132 +706,64 @@ function buildGlobalPlatformDependencies() {
 function createNewSystem() {
     currentMode = Modes.CREATING;
 
-    // Default Senior Managers Data
-    const defaultSeniorManagersData = [
-        // It's often better to start empty and let the user define,
-        // but if a default is truly needed:
-        // { seniorManagerId: 'srMgrDefault1', seniorManagerName: 'Default Sr. Manager', attributes: {} }
-    ];
+    const defaultSeniorManagersData = [];
+    const defaultSDMsData = [];
+    const defaultPMTsData = [];
+    const defaultProjectManagersData = [];
+    const defaultAllKnownEngineers = [];
+    const defaultTeamsData = [];
+    const defaultServicesData = [];
 
-    // Default SDMs Data
-    const defaultSDMsData = [
-        // { sdmId: 'sdmDefault1', sdmName: 'Default SDM', seniorManagerId: null, attributes: {} }
-    ];
-
-    // Default PMTs Data
-    const defaultPMTsData = [
-        // { pmtId: 'pmtDefault1', pmtName: 'Default PMT', attributes: {} }
-    ];
-
-    // Default Project Managers Data (New)
-    const defaultProjectManagersData = [
-        // { pmId: 'pmDefault1', pmName: 'Default Project Manager', attributes: {} }
-    ];
-
-    // Default Engineers (now managed via allKnownEngineers)
-    const defaultAllKnownEngineers = [
-        // { name: 'Default Engineer A', level: 2, currentTeamId: null, attributes: { isAISWE: false, skills: [], yearsOfExperience: 0, aiAgentType: null } },
-        // { name: 'Default Engineer B', level: 3, currentTeamId: null, attributes: { isAISWE: false, skills: [], yearsOfExperience: 0, aiAgentType: null } }
-    ];
-
-    // Default Teams Data
-    const defaultTeamsData = [
-        // {
-        //     teamId: 'teamDefault1',
-        //     teamName: 'Default Team Alpha',
-        //     teamIdentity: 'Alphas',
-        //     teamDescription: 'A default example team.',
-        //     fundedHeadcount: 0,
-        //     engineers: [], // Engineer names, links to allKnownEngineers
-        //     awayTeamMembers: [],
-        //     sdmId: null,
-        //     pmtId: null,
-        //     teamCapacityAdjustments: {
-        //         leaveUptakeEstimates: [],
-        //         variableLeaveImpact: {
-        //             maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
-        //             paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
-        //             familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 },
-        //             medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }
-        //         },
-        //         teamActivities: [],
-        //         avgOverheadHoursPerWeekPerSDE: 0,
-        //         attributes: {}
-        //     },
-        //     attributes: {}
-        // }
-    ];
-
-    // Default Services Data
-    const defaultServicesData = [
-        // {
-        //     serviceName: 'Default Service Core',
-        //     serviceDescription: 'A default example service.',
-        //     owningTeamId: null, // Link to a teamId if a default team exists
-        //     apis: [
-        //         { apiName: 'DefaultAPI', apiDescription: 'A default API endpoint.', dependentApis: [], attributes: {} }
-        //     ],
-        //     serviceDependencies: [],
-        //     platformDependencies: [],
-        //     attributes: {}
-        // }
-    ];
-
-    // Default Yearly Initiatives (one example, usually starts empty)
+    // Default Yearly Initiatives (now with assignments array)
     const defaultYearlyInitiatives = [
-        // {
-        //     initiativeId: 'initDefault-001',
-        //     title: 'Setup Initial Project Environment',
-        //     description: 'Configure repositories, CI/CD, and basic infrastructure for the new system.',
-        //     isProtected: false,
-        //     assignments: [], // Example: [{ teamId: 'teamDefault1', sdeYears: 0.5 }]
-        //     roi: {
-        //         category: 'Tech Debt', // Or 'Enablement'
-        //         valueType: 'Narrative',
-        //         estimatedValue: 'Foundational Setup',
-        //         currency: null, timeHorizonMonths: 1, confidenceLevel: 'High',
-        //         calculationMethodology: 'Required to start any development.',
-        //         businessCaseLink: null, overrideJustification: null,
-        //         attributes: {}
-        //     },
-        //     targetDueDate: null,
-        //     actualCompletionDate: null,
-        //     status: 'Backlog', // Default status for new initiatives
-        //     themes: [], // e.g., ['theme-setup']
-        //     primaryGoalId: null, // e.g., 'goal-initial-setup'
-        //     projectManager: null, // { type: 'projectManager', id: null, name: 'Unassigned' }
-        //     owner: null,          // { type: 'sdm', id: null, name: 'Unassigned' }
-        //     technicalPOC: null,   // { type: 'engineer', id: null, name: 'Unassigned' }
-        //     impactedServiceIds: [],
-        //     workPackageIds: [],
-        //     attributes: { pmCapacityNotes: "" } // << Initialize new field
-        // }
+        {
+            initiativeId: 'initDefault-001',
+            title: 'Setup Initial Project Environment',
+            description: 'Configure repositories, CI/CD, and basic infrastructure for the new system.',
+            isProtected: false,
+            assignments: [], // Initialize with empty assignments array
+            impactedServiceIds: [], // Keeping this distinct for now
+            roi: {
+                category: 'Enablement', 
+                valueType: 'Narrative',
+                estimatedValue: 'Foundational Setup',
+                currency: null, timeHorizonMonths: 1, confidenceLevel: 'High',
+                calculationMethodology: 'Required to start any development.',
+                businessCaseLink: null, overrideJustification: null,
+                attributes: {}
+            },
+            targetDueDate: null,
+            actualCompletionDate: null,
+            status: 'Backlog', 
+            themes: [], 
+            primaryGoalId: null, 
+            projectManager: null, 
+            owner: null,          
+            technicalPOC: null,   
+            workPackageIds: [],
+            attributes: { pmCapacityNotes: "" }
+        }
     ];
 
     const defaultSystemData = {
-        systemName: '', // User must enter in form
-        systemDescription: '', // User must enter in form
-
-        // Core Entities (mostly starting empty for a new system)
+        systemName: '', 
+        systemDescription: '', 
         seniorManagers: defaultSeniorManagersData,
         sdms: defaultSDMsData,
         pmts: defaultPMTsData,
-        projectManagers: defaultProjectManagersData, // New
+        projectManagers: defaultProjectManagersData, 
         teams: defaultTeamsData,
         services: defaultServicesData,
-        allKnownEngineers: defaultAllKnownEngineers, // Start with no globally known engineers
-
-        platformDependencies: [], // Will be built dynamically
-
-        // Capacity Configuration (with defaults)
+        allKnownEngineers: defaultAllKnownEngineers, 
+        platformDependencies: [], 
         capacityConfiguration: {
             workingDaysPerYear: 261,
             standardHoursPerDay: 8,
             globalConstraints: {
-                publicHolidays: 0, // User should configure
-                orgEvents: []      // User will add events
+                publicHolidays: 0, 
+                orgEvents: []      
             },
-            leaveTypes: [ // Standard leave types with 0 defaults
+            leaveTypes: [ 
                 { id: "annual", name: "Annual Leave", defaultEstimatedDays: 0, attributes: {} },
                 { id: "sick", name: "Sick Leave", defaultEstimatedDays: 0, attributes: {} },
                 { id: "study", name: "Study Leave", defaultEstimatedDays: 0, attributes: {} },
@@ -927,22 +771,19 @@ function createNewSystem() {
             ],
             attributes: {}
         },
-
-        // Planning & Roadmap Entities (starting empty)
-        yearlyInitiatives: defaultYearlyInitiatives, // Can start empty or with a placeholder
+        yearlyInitiatives: defaultYearlyInitiatives, 
         goals: [],
         definedThemes: [],
         archivedYearlyPlans: [],
-        workPackages: [], // Starts empty, to be populated during detailed planning
-
-        calculatedCapacityMetrics: null, // Initially null
-        attributes: {} // For system-level future extensibility
+        workPackages: [], 
+        calculatedCapacityMetrics: null, 
+        attributes: {} 
     };
 
     currentSystemData = defaultSystemData;
     console.log("Initialized new currentSystemData:", JSON.parse(JSON.stringify(currentSystemData)));
 
-    enterEditMode(true); // Pass true flag for creation mode
+    enterEditMode(true); 
 }
 window.createNewSystem = createNewSystem;
 

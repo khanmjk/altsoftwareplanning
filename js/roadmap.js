@@ -10,6 +10,9 @@ const ALL_INITIATIVE_STATUSES = ["Backlog", "Defined", "Committed", "In Progress
 // Store current filters - Default to showing ALL statuses
 let currentRoadmapStatusFilters = [...ALL_INITIATIVE_STATUSES]; // Uses the existing constant
 
+// NEW: Temporary store for team assignments in the roadmap modal
+let tempRoadmapAssignments_modal = [];
+
 
 /**
  * Helper function to get modal elements for the Roadmap Initiative Modal.
@@ -48,6 +51,87 @@ function getThemeManagementModalElements() {
 }
 
 /**
+ * NEW: Displays temporary team assignments in the roadmap modal.
+ */
+function displayTempRoadmapAssignments_modal() {
+    const displayDiv = document.getElementById('roadmapInitiativeAssignmentsDisplay_modal');
+    if (!displayDiv) {
+        console.warn("Could not find #roadmapInitiativeAssignmentsDisplay_modal to display temp assignments.");
+        return;
+    }
+    displayDiv.innerHTML = ''; // Clear current display
+
+    if (tempRoadmapAssignments_modal.length === 0) {
+        displayDiv.innerHTML = '<em>No teams assigned yet.</em>';
+        return;
+    }
+
+    tempRoadmapAssignments_modal.forEach((assignment, index) => {
+        const team = (currentSystemData.teams || []).find(t => t.teamId === assignment.teamId);
+        const teamName = team ? (team.teamIdentity || team.teamName) : assignment.teamId;
+        const assignmentDiv = document.createElement('div');
+        assignmentDiv.style.marginBottom = '3px';
+        assignmentDiv.textContent = `${teamName}: ${parseFloat(assignment.sdeYears || 0).toFixed(2)} SDE Years `;
+
+        const removeButton = document.createElement('button');
+        removeButton.textContent = 'Remove';
+        removeButton.type = 'button'; // Prevent form submission
+        removeButton.className = 'btn-danger btn-sm';
+        removeButton.style.marginLeft = '10px';
+        removeButton.style.fontSize = '0.8em';
+        removeButton.onclick = () => {
+            tempRoadmapAssignments_modal.splice(index, 1); // Remove from array
+            displayTempRoadmapAssignments_modal(); // Refresh display
+        };
+        assignmentDiv.appendChild(removeButton);
+        displayDiv.appendChild(assignmentDiv);
+        assignmentDiv.classList.add('new-item-added-fade-in');
+        setTimeout(() => {
+            assignmentDiv.classList.remove('new-item-added-fade-in');
+        }, 350);
+    });
+}
+
+/**
+ * NEW: Handles clicking the 'Add Assignment' button in the roadmap modal.
+ */
+function handleAddTeamAssignment_modal() {
+    const teamSelect = document.getElementById('roadmapInitiativeTeamSelect_modal');
+    const sdeYearsInput = document.getElementById('roadmapInitiativeSdeYears_modal');
+    if (!teamSelect || !sdeYearsInput) {
+        console.error("Team select or SDE years input not found in roadmap modal.");
+        return;
+    }
+
+    const teamId = teamSelect.value;
+    const sdeYears = parseFloat(sdeYearsInput.value);
+
+    if (!teamId) {
+        alert('Please select a team.');
+        return;
+    }
+    // SDE Years can be 0 for roadmap items, indicating impact without specific effort yet.
+    if (isNaN(sdeYears) || sdeYears < 0) {
+        alert('Please enter a valid non-negative number for SDE Years (0 is allowed).');
+        return;
+    }
+
+    const existingIndex = tempRoadmapAssignments_modal.findIndex(a => a.teamId === teamId);
+    if (existingIndex > -1) {
+        tempRoadmapAssignments_modal[existingIndex].sdeYears = sdeYears;
+        console.log(`Updated assignment in modal for team ${teamId} to ${sdeYears}`);
+    } else {
+        tempRoadmapAssignments_modal.push({ teamId: teamId, sdeYears: sdeYears });
+        console.log(`Added assignment in modal for team ${teamId}: ${sdeYears}`);
+    }
+
+    displayTempRoadmapAssignments_modal();
+    teamSelect.selectedIndex = 0;
+    sdeYearsInput.value = '0.0'; // Reset to 0.0
+}
+
+
+/**
  * Opens the modal for adding a new initiative.
  */
 function openRoadmapModalForAdd() {
@@ -56,14 +140,23 @@ function openRoadmapModalForAdd() {
 
     currentEditingInitiativeId = null;
     elements.titleElement.textContent = 'Add New Initiative to Backlog';
-    elements.formElement.reset();
+    elements.formElement.reset(); // Reset standard form inputs
 
-    // Re-populate dynamic select options every time the modal is opened for "add"
-    // to ensure it has the latest themes, goals, personnel etc.
-    generateRoadmapInitiativeFormFields(elements.formElement); // This will now build theme multi-select
+    tempRoadmapAssignments_modal = []; // Clear temporary assignments
+
+    generateRoadmapInitiativeFormFields(elements.formElement);
+    displayTempRoadmapAssignments_modal(); // Display empty assignments list
 
     const statusSelect = document.getElementById('initiativeStatus_modal_roadmap');
     if (statusSelect) statusSelect.value = "Backlog";
+    
+    const addAssignmentButtonInModal = document.getElementById('addTeamAssignmentButton_modal');
+    if (addAssignmentButtonInModal) {
+        // Remove existing listener to prevent duplicates if modal is reopened
+        addAssignmentButtonInModal.removeEventListener('click', handleAddTeamAssignment_modal);
+        addAssignmentButtonInModal.addEventListener('click', handleAddTeamAssignment_modal);
+    }
+
 
     elements.modal.style.display = 'block';
     const titleInput = document.getElementById('initiativeTitle_modal_roadmap');
@@ -88,10 +181,19 @@ function openRoadmapModalForEdit(initiativeId) {
     currentEditingInitiativeId = initiativeId;
     elements.titleElement.textContent = `Edit Initiative: ${initiative.title || initiativeId}`;
     
-    // Ensure form fields are up-to-date before populating
-    generateRoadmapInitiativeFormFields(elements.formElement);
-    populateRoadmapInitiativeForm_modal(initiative);
-    
+    // Deep copy current assignments to temp store for editing
+    tempRoadmapAssignments_modal = initiative.assignments ? JSON.parse(JSON.stringify(initiative.assignments)) : [];
+
+    generateRoadmapInitiativeFormFields(elements.formElement); // Regenerate form structure
+    populateRoadmapInitiativeForm_modal(initiative); // Populate with initiative data (excluding assignments, which are in temp)
+    displayTempRoadmapAssignments_modal(); // Display the temp assignments for editing
+
+    const addAssignmentButtonInModal = document.getElementById('addTeamAssignmentButton_modal');
+     if (addAssignmentButtonInModal) {
+        addAssignmentButtonInModal.removeEventListener('click', handleAddTeamAssignment_modal); // Remove old before adding new
+        addAssignmentButtonInModal.addEventListener('click', handleAddTeamAssignment_modal);
+    }
+
     elements.modal.style.display = 'block';
 
     const modalBody = elements.modal.querySelector('.modal-body');
@@ -111,10 +213,11 @@ function openRoadmapModalForEdit(initiativeId) {
  */
 function closeRoadmapModal() {
     const elements = getRoadmapModalElements();
-    if (!elements || !elements.modal ) return; // Check only modal for hiding
+    if (!elements || !elements.modal ) return; 
     if (elements.modal) elements.modal.style.display = 'none';
     if (elements.formElement) elements.formElement.reset();
     currentEditingInitiativeId = null;
+    tempRoadmapAssignments_modal = []; // Clear temporary assignments
 }
 
 // js/roadmap.js
@@ -478,23 +581,21 @@ function generateRoadmapControls() {
 
 /**
  * Prepares and filters data for the roadmap table.
- * (Ensures targetDueDate is null if empty/whitespace for consistent date sorting)
+ * MODIFIED: Includes preparing display strings for assigned teams and total initial SDEs from 'assignments'.
  */
-// Function: prepareRoadmapDataForTable
-// MODIFIED: To include theme name lookups.
 function prepareRoadmapDataForTable() {
     if (!currentSystemData || !currentSystemData.yearlyInitiatives) {
         console.warn("No current system data or yearly initiatives to prepare for roadmap table.");
         return [];
     }
-    let initiatives = JSON.parse(JSON.stringify(currentSystemData.yearlyInitiatives)); // Deep copy
+    let initiatives = JSON.parse(JSON.stringify(currentSystemData.yearlyInitiatives)); 
 
-    // Filter by status
     if (currentRoadmapStatusFilters.length > 0 && currentRoadmapStatusFilters.length < ALL_INITIATIVE_STATUSES.length) {
          initiatives = initiatives.filter(init => currentRoadmapStatusFilters.includes(init.status));
     }
 
     const definedThemesMap = new Map((currentSystemData.definedThemes || []).map(theme => [theme.themeId, theme.name]));
+    const teamsMap = new Map((currentSystemData.teams || []).map(team => [team.teamId, team.teamIdentity || team.teamName]));
 
     return initiatives.map(init => {
         const ownerName = init.owner && init.owner.name ? init.owner.name : 'N/A';
@@ -513,92 +614,81 @@ function prepareRoadmapDataForTable() {
         }
 
         const cleanTargetDueDate = (init.targetDueDate && String(init.targetDueDate).trim() !== "") ? String(init.targetDueDate).trim() : null;
-
-        // --- NEW: Prepare theme names for display ---
         const themeNames = (init.themes || [])
-            .map(themeId => definedThemesMap.get(themeId) || themeId) // Fallback to ID if name not found
+            .map(themeId => definedThemesMap.get(themeId) || themeId) 
             .join(', ');
-        // --- END NEW ---
+
+        // NEW: Prepare display for assigned teams and total SDEs
+        let assignedTeamsDisplay = "None";
+        let totalInitialSdes = 0;
+        if (init.assignments && init.assignments.length > 0) {
+            assignedTeamsDisplay = init.assignments
+                .map(assign => teamsMap.get(assign.teamId) || assign.teamId)
+                .join(', ');
+            totalInitialSdes = init.assignments.reduce((sum, assign) => sum + (parseFloat(assign.sdeYears) || 0), 0);
+        }
 
         return {
-            ...init, // Spread all original initiative properties
-            id: init.initiativeId, // Tabulator needs an 'id' field
+            ...init, 
+            id: init.initiativeId, 
             targetDueDate: cleanTargetDueDate,
             ownerDisplay: ownerName,
             roiSummaryDisplay: roiSummaryDisplay,
             targetQuarterYearDisplay: formatDateToQuarterYear(cleanTargetDueDate),
-            themeNamesDisplay: themeNames // Add the new property for theme names
+            themeNamesDisplay: themeNames,
+            assignedTeamsDisplay: assignedTeamsDisplay, // NEW
+            totalInitialSdesDisplay: totalInitialSdes.toFixed(2) // NEW
         };
     });
 }
 
-// Function: defineRoadmapTableColumns
-// MODIFIED: Added ROI Value Type column, updated Themes column to use themeNamesDisplay.
+/**
+ * Defines columns for the roadmap table.
+ * MODIFIED: Added columns for "Assigned Teams" and "Total Initial SDEs".
+ */
 function defineRoadmapTableColumns() {
     const columns = [
         {
-            title: "Title",
-            field: "title",
-            minWidth: 200,
-            headerFilter: "input",
-            frozen:true,
+            title: "Title", field: "title", minWidth: 200, headerFilter: "input", frozen:true,
             tooltip: function(e, cell){ return cell.getValue(); }
         },
         {
-            title: "Description",
-            field: "description",
-            minWidth: 250,
-            hozAlign: "left",
-            formatter: "textarea",
-            headerFilter: "input",
-            tooltip: function(e, cell){ return cell.getValue(); }
+            title: "Description", field: "description", minWidth: 250, hozAlign: "left",
+            formatter: "textarea", headerFilter: "input", tooltip: function(e, cell){ return cell.getValue(); }
         },
         {
-            title: "Status",
-            field: "status",
-            width: 110,
-            headerFilter: "list",
-            headerFilterParams: {
-                values: ["", ...ALL_INITIATIVE_STATUSES],
-                clearable: true,
-                autocomplete: true
-            },
+            title: "Status", field: "status", width: 110, headerFilter: "list",
+            headerFilterParams: { values: ["", ...ALL_INITIATIVE_STATUSES], clearable: true, autocomplete: true },
             headerFilterFunc: "="
         },
+        // NEW: Assigned Teams Column
         {
-            title: "Owner",
-            field: "ownerDisplay",
-            width: 140,
-            headerFilter: "input",
+            title: "Assigned Teams", field: "assignedTeamsDisplay", minWidth: 180, headerFilter: "input",
+            tooltip: (e, cell) => cell.getValue() || "N/A",
+            formatter: "textarea" // Allow multiline if many teams
+        },
+        // NEW: Total Initial SDEs Column
+        {
+            title: "SDE/Yr Estimates", field: "totalInitialSdesDisplay", width: 100, hozAlign: "center", headerFilter: "input", sorter: "number",
+            tooltip: (e, cell) => `Total initial SDE estimate: ${cell.getValue()}`
+        },
+        {
+            title: "Owner", field: "ownerDisplay", width: 140, headerFilter: "input",
             tooltip: function(e, cell){ return cell.getValue(); }
         },
         {
-            title: "ROI Summary",
-            field: "roiSummaryDisplay",
-            minWidth: 180,
-            hozAlign: "left",
+            title: "ROI Summary", field: "roiSummaryDisplay", minWidth: 180, hozAlign: "left",
             tooltip: function(e, cell){ return cell.getValue(); },
-            headerFilter: "input",
-            headerFilterPlaceholder: "Filter ROI..."
+            headerFilter: "input", headerFilterPlaceholder: "Filter ROI..."
         },
-        // --- NEW: ROI Value Type Column ---
         {
-            title: "ROI Type",
-            field: "roi.valueType", // Access nested data
-            minWidth: 120,
-            hozAlign: "left",
-            headerFilter: "input", // Or "list" if you have predefined types
-            tooltip: (e, cell) => cell.getValue() || "N/A",
-            // visible: true // Default is true, so not strictly needed unless overriding a general hidden default
+            title: "ROI Type", field: "roi.valueType", minWidth: 120, hozAlign: "left",
+            headerFilter: "input", tooltip: (e, cell) => cell.getValue() || "N/A",
         },
-        // --- END NEW ---
         {
-            title: "Target Quarter/Yr",
-            field: "targetQuarterYearDisplay",
-            width: 110, hozAlign: "center",
-            tooltip: function(e, cell){ return cell.getValue() || "N/A"; },
-            headerFilter: "input",
-            sorter: function(a, b, aRow, bRow, column, dir, sorterParams){
+            title: "Target Quarter/Yr", field: "targetQuarterYearDisplay", width: 110, hozAlign: "center",
+            tooltip: function(e, cell){ return cell.getValue() || "N/A"; }, headerFilter: "input",
+            sorter: function(a, b, aRow, bRow, column, dir, sorterParams){ /* ... sorter logic ... */
                 const date_a_str = aRow.getData().targetDueDate;
                 const date_b_str = bRow.getData().targetDueDate;
                 let date_a = null;
@@ -611,24 +701,16 @@ function defineRoadmapTableColumns() {
                     const parsedB = luxon.DateTime.fromISO(date_b_str);
                     if (parsedB.isValid) date_b = parsedB;
                 }
-                const aIsNull = (date_a === null);
-                const bIsNull = (date_b === null);
-
-                if (aIsNull && bIsNull) return 0;
-                if (aIsNull) return 1;
-                if (bIsNull) return -1;
+                const aIsNull = (date_a === null); const bIsNull = (date_b === null);
+                if (aIsNull && bIsNull) return 0; if (aIsNull) return 1; if (bIsNull) return -1;
                 return date_a.valueOf() - date_b.valueOf();
             }
         },
         {
-            title: "Target Due Date",
-            field: "targetDueDate",
-            width: 110,
-            hozAlign: "center",
+            title: "Target Due Date", field: "targetDueDate", width: 110, hozAlign: "center",
             tooltip: function(e, cell){ return cell.getValue() ? cell.getValue() : "Not set"; },
-            headerFilter: "input",
-            headerFilterPlaceholder: "YYYY-MM-DD",
-            sorter: function(a, b, aRow, bRow, column, dir, sorterParams) {
+            headerFilter: "input", headerFilterPlaceholder: "YYYY-MM-DD",
+            sorter: function(a, b, aRow, bRow, column, dir, sorterParams) { /* ... sorter logic ... */
                 const val_a = a; const val_b = b;
                 let dateA = null;
                 if (val_a && typeof val_a === 'string' && val_a.match(/^\d{4}-\d{2}-\d{2}$/)) {
@@ -641,27 +723,17 @@ function defineRoadmapTableColumns() {
                     if (parsedB.isValid) dateB = parsedB;
                 }
                 const aIsNull = (dateA === null); const bIsNull = (dateB === null);
-                if (aIsNull && bIsNull) return 0;
-                if (aIsNull) return 1; if (bIsNull) return -1;
+                if (aIsNull && bIsNull) return 0; if (aIsNull) return 1; if (bIsNull) return -1;
                 return dateA.valueOf() - dateB.valueOf();
             }
         },
-        // --- MODIFIED: Themes Column ---
         {
-            title: "Themes",
-            field: "themeNamesDisplay", // Use the new field with names
-            minWidth: 150,
-            formatter: (cell) => cell.getValue() || "", // Value is already a string
-            headerFilter: "input",
-            tooltip: function(e, cell){ return cell.getValue() || "N/A"; }, // Tooltip shows names
-            sorter: "string" // Default string sorter should work on names
+            title: "Themes", field: "themeNamesDisplay", minWidth: 150,
+            formatter: (cell) => cell.getValue() || "", headerFilter: "input",
+            tooltip: function(e, cell){ return cell.getValue() || "N/A"; }, sorter: "string"
         },
-        // --- END MODIFIED ---
         {
-            title: "Actions",
-            width: 120,
-            hozAlign: "center",
-            headerSort: false,
+            title: "Actions", width: 120, hozAlign: "center", headerSort: false,
             formatter: (cell) => {
                 const initiativeId = cell.getRow().getData().id;
                 const editButton = `<button class="btn-secondary btn-sm" onclick="openRoadmapModalForEdit('${initiativeId}')">Edit</button>`;
@@ -672,32 +744,23 @@ function defineRoadmapTableColumns() {
     ];
 
     const roiFields = ["category", "currency", "timeHorizonMonths", "confidenceLevel", "calculationMethodology", "businessCaseLink", "overrideJustification"];
-    // Note: "valueType" was removed from this list as it's now a visible column.
-    // "estimatedValue" is part of "roiSummaryDisplay". If a separate "ROI Estimated Value" column is desired, it can be added explicitly.
     roiFields.forEach(field => {
         columns.push({
             title: `ROI: ${field.replace(/([A-Z])/g, ' $1').trim()}`,
-            field: `roi.${field}`,
-            visible: false, minWidth:150,
+            field: `roi.${field}`, visible: false, minWidth:150,
             headerFilter: "input", download: true, tooltip: function(e, cell){ return cell.getValue(); }
         });
     });
-    // Add a specific hidden column for estimatedValue if it's not captured sufficiently by roiSummaryDisplay for export/column toggle
     columns.push({
         title: "ROI: Estimated Value", field: "roi.estimatedValue", visible: false, minWidth: 150,
         headerFilter: "input", download: true, tooltip: function(e, cell){ return cell.getValue(); }
     });
-
-
     columns.push({ title: "PM Capacity Notes", field: "attributes.pmCapacityNotes", visible: false, minWidth: 200, headerFilter: "input", formatter: "textarea", download: true, tooltip: function(e, cell){ return cell.getValue(); } });
     columns.push({ title: "Primary Goal ID", field: "primaryGoalId", visible: false, minWidth: 150, headerFilter: "input", download: true, tooltip: function(e, cell){ return cell.getValue(); } });
     columns.push({ title: "Project Manager", field: "projectManager.name", visible: false, minWidth: 150, headerFilter: "input", download: true, tooltip: function(e, cell){ return cell.getValue(); } });
 
     return columns;
 }
-
-// Now, also update the renderRoadmapTable function to use layout: "fitColumns"
-// Replace the renderRoadmapTable function with this:
 
 /**
  * Renders the roadmap table using Tabulator.
@@ -757,7 +820,7 @@ function renderRoadmapTable() {
  * Generates the HTML structure for the Add/Edit Initiative form fields
  * INSIDE the provided formElement (which is the modal's form).
  * MODIFIED: Themes input changed to multi-select.
- * Ensures options are freshly fetched from currentSystemData.definedThemes.
+ * MODIFIED AGAIN: Replaced Impacted Service IDs with a Team Assignments section.
  */
 function generateRoadmapInitiativeFormFields(formElement) {
     if (!formElement) {
@@ -768,8 +831,7 @@ function generateRoadmapInitiativeFormFields(formElement) {
 
     // Helper to create form group
     const createFormGroup = (labelText, idSuffix, inputType = 'text', options = null, value = '', placeholder = '', multiple = false) => {
-        // ... (helper function as previously defined, no changes needed here for this issue)
-        const elementId = `${idSuffix}_modal_roadmap`;
+        const elementId = `${idSuffix}_modal_roadmap`; // Unique ID for modal elements
         const div = document.createElement('div');
         div.style.marginBottom = '12px';
 
@@ -789,7 +851,7 @@ function generateRoadmapInitiativeFormFields(formElement) {
             input = document.createElement('select');
             if (multiple) {
                 input.multiple = true;
-                input.size = Math.min(5, (options || []).length || 1); 
+                input.size = Math.min(5, (options || []).length + 1); // +1 for potential placeholder
                 input.style.height = 'auto'; 
             }
             if (options) {
@@ -805,8 +867,8 @@ function generateRoadmapInitiativeFormFields(formElement) {
             input.type = inputType;
         }
         input.id = elementId;
-        input.name = elementId;
-        input.className = 'form-control';
+        input.name = elementId; // Ensure name attribute is set for form.elements access
+        input.className = 'form-control'; 
         if (placeholder) input.placeholder = placeholder;
 
         div.appendChild(input);
@@ -815,7 +877,7 @@ function generateRoadmapInitiativeFormFields(formElement) {
 
     // Main Initiative Details Section
     const mainDetailsFieldset = document.createElement('fieldset');
-    mainDetailsFieldset.style.border = '1px solid #ddd'; mainDetailsFieldset.style.padding = '10px'; mainDetailsFieldset.style.marginBottom = '10px';
+    mainDetailsFieldset.style.border = '1px solid #ddd'; mainDetailsFieldset.style.padding = '10px'; mainDetailsFieldset.style.marginBottom = '15px';
     const mainLegend = document.createElement('legend'); mainLegend.textContent = 'Core Details'; mainLegend.style.fontWeight = 'bold';
     mainDetailsFieldset.appendChild(mainLegend);
     mainDetailsFieldset.appendChild(createFormGroup('Title:', 'initiativeTitle', 'text'));
@@ -828,12 +890,10 @@ function generateRoadmapInitiativeFormFields(formElement) {
 
     // Strategic Alignment Section
     const strategicFieldset = document.createElement('fieldset');
-    strategicFieldset.style.border = '1px solid #ddd'; strategicFieldset.style.padding = '10px'; strategicFieldset.style.marginBottom = '10px';
+    strategicFieldset.style.border = '1px solid #ddd'; strategicFieldset.style.padding = '10px'; strategicFieldset.style.marginBottom = '15px';
     const strategicLegend = document.createElement('legend'); strategicLegend.textContent = 'Strategic Alignment'; strategicLegend.style.fontWeight = 'bold';
     strategicFieldset.appendChild(strategicLegend);
 
-    // Themes multi-select
-    // CRITICAL: Always fetch the latest themes from currentSystemData when generating this form.
     const currentDefinedThemes = currentSystemData.definedThemes || [];
     const themeOptions = currentDefinedThemes.map(theme => ({
         value: theme.themeId,
@@ -843,20 +903,18 @@ function generateRoadmapInitiativeFormFields(formElement) {
     if (themeOptions.length === 0) {
         const themesHelpText = document.createElement('p');
         themesHelpText.innerHTML = '<em>No themes defined. Use the "Manage Themes" button on the roadmap page to add themes.</em>';
-        themesHelpText.style.fontSize = '0.9em';
-        themesHelpText.style.color = '#555';
-        strategicFieldset.appendChild(createFormGroup('Themes:', 'initiativeThemes', 'text', null, '', 'No themes defined.'));
-        const themesTextInput = formElement.querySelector('#initiativeThemes_modal_roadmap');
-        if(themesTextInput) {
-            themesTextInput.disabled = true;
-            themesTextInput.style.display = 'none'; // Hide the disabled text input
-            themesTextInput.parentNode.insertBefore(themesHelpText, themesTextInput.nextSibling); // Insert help text
+        themesHelpText.style.fontSize = '0.9em'; themesHelpText.style.color = '#555';
+        const themesGroup = createFormGroup('Themes:', 'initiativeThemes', 'text', null, '', 'No themes defined.');
+        const themesTextInput = themesGroup.querySelector('input');
+        if (themesTextInput) {
+            themesTextInput.disabled = true; 
+            themesTextInput.style.display = 'none';
+            themesTextInput.parentNode.insertBefore(themesHelpText, themesTextInput.nextSibling);
         }
-
+        strategicFieldset.appendChild(themesGroup);
     } else {
-        strategicFieldset.appendChild(createFormGroup('Themes:', 'initiativeThemes', 'select', themeOptions, '', '', true)); // true for multiple
+        strategicFieldset.appendChild(createFormGroup('Themes:', 'initiativeThemes', 'select', themeOptions, '', '', true));
     }
-    // ... (rest of the form fields: Primary Goal, Owner, Project Manager, ROI Details, Impacted Services as before) ...
     const goalOptions = [{value: "", text:"-- None --"}].concat((currentSystemData.goals || []).map(g => ({ value: g.goalId, text: g.name })));
     strategicFieldset.appendChild(createFormGroup('Primary Goal:', 'initiativePrimaryGoalId', 'select', goalOptions));
     const personnelOptionsForOwner = [{value: "", text: "-- Select Owner --"}];
@@ -870,7 +928,7 @@ function generateRoadmapInitiativeFormFields(formElement) {
 
     // ROI Details Section
     const roiFieldset = document.createElement('fieldset');
-    roiFieldset.style.border = '1px solid #ddd'; roiFieldset.style.padding = '10px'; roiFieldset.style.marginBottom = '10px';
+    roiFieldset.style.border = '1px solid #ddd'; roiFieldset.style.padding = '10px'; roiFieldset.style.marginBottom = '15px';
     const roiLegend = document.createElement('legend'); roiLegend.textContent = 'ROI Details'; roiLegend.style.fontWeight = 'bold';
     roiFieldset.appendChild(roiLegend);
     roiFieldset.appendChild(createFormGroup('Category:', 'roiCategory', 'text'));
@@ -883,16 +941,90 @@ function generateRoadmapInitiativeFormFields(formElement) {
     roiFieldset.appendChild(createFormGroup('Business Case Link (URL):', 'roiBusinessCaseLink', 'text'));
     roiFieldset.appendChild(createFormGroup('Override Justification:', 'roiOverrideJustification', 'textarea'));
     formElement.appendChild(roiFieldset);
+    
+    // NEW: Team Assignments Section
+    const teamAssignmentsFieldset = document.createElement('fieldset');
+    teamAssignmentsFieldset.style.border = '1px solid #ddd';
+    teamAssignmentsFieldset.style.padding = '10px';
+    teamAssignmentsFieldset.style.marginBottom = '15px';
+    const assignmentsLegend = document.createElement('legend');
+    assignmentsLegend.textContent = 'Team Assignments (Effort)';
+    assignmentsLegend.style.fontWeight = 'bold';
+    teamAssignmentsFieldset.appendChild(assignmentsLegend);
 
-    formElement.appendChild(createFormGroup('Impacted Service IDs (comma-separated):', 'initiativeImpactedServiceIds', 'text', null, '', 'e.g., service-id1,service-id2'));
+    const assignmentsDisplayDiv = document.createElement('div');
+    assignmentsDisplayDiv.id = 'roadmapInitiativeAssignmentsDisplay_modal'; // Unique ID for modal
+    assignmentsDisplayDiv.style.marginBottom = '10px';
+    assignmentsDisplayDiv.style.minHeight = '30px';
+    assignmentsDisplayDiv.style.backgroundColor = '#f8f9fa';
+    assignmentsDisplayDiv.style.padding = '8px';
+    assignmentsDisplayDiv.style.border = '1px solid #eee';
+    assignmentsDisplayDiv.style.borderRadius = '4px';
+    teamAssignmentsFieldset.appendChild(assignmentsDisplayDiv);
 
+    const assignmentControlsDiv = document.createElement('div');
+    assignmentControlsDiv.style.display = 'flex';
+    assignmentControlsDiv.style.alignItems = 'center';
+    assignmentControlsDiv.style.gap = '10px'; // Adds space between items
 
-    console.log("Roadmap initiative form fields generated into modal with multi-select for Themes.");
+    const teamSelectLabel = document.createElement('label');
+    teamSelectLabel.htmlFor = 'roadmapInitiativeTeamSelect_modal';
+    teamSelectLabel.textContent = 'Team:';
+    assignmentControlsDiv.appendChild(teamSelectLabel);
+
+    const teamSelect = document.createElement('select');
+    teamSelect.id = 'roadmapInitiativeTeamSelect_modal';
+    teamSelect.className = 'form-control'; // Apply consistent styling
+    teamSelect.style.flexGrow = '1'; // Allow select to take available space
+    const defaultTeamOption = document.createElement('option');
+    defaultTeamOption.value = "";
+    defaultTeamOption.textContent = "-- Select Team --";
+    teamSelect.appendChild(defaultTeamOption);
+    (currentSystemData.teams || []).forEach(team => {
+        const option = document.createElement('option');
+        option.value = team.teamId;
+        option.textContent = team.teamIdentity || team.teamName || team.teamId;
+        teamSelect.appendChild(option);
+    });
+    assignmentControlsDiv.appendChild(teamSelect);
+
+    const sdeYearsLabel = document.createElement('label');
+    sdeYearsLabel.htmlFor = 'roadmapInitiativeSdeYears_modal';
+    sdeYearsLabel.textContent = 'SDE Years:';
+    assignmentControlsDiv.appendChild(sdeYearsLabel);
+
+    const sdeYearsInput = document.createElement('input');
+    sdeYearsInput.type = 'number';
+    sdeYearsInput.id = 'roadmapInitiativeSdeYears_modal';
+    sdeYearsInput.className = 'form-control';
+    sdeYearsInput.step = '0.1'; // Finer granularity
+    sdeYearsInput.min = '0';
+    sdeYearsInput.placeholder = 'e.g., 0.5';
+    sdeYearsInput.value = '0.0'; // Default to 0
+    sdeYearsInput.style.width = '100px';
+    assignmentControlsDiv.appendChild(sdeYearsInput);
+
+    const addAssignmentButton = document.createElement('button');
+    addAssignmentButton.type = 'button'; // Important to prevent form submission
+    addAssignmentButton.id = 'addTeamAssignmentButton_modal'; // Unique ID
+    addAssignmentButton.textContent = 'Add/Update Assignment';
+    addAssignmentButton.className = 'btn-secondary'; // Secondary button style
+    assignmentControlsDiv.appendChild(addAssignmentButton);
+    
+    teamAssignmentsFieldset.appendChild(assignmentControlsDiv);
+    formElement.appendChild(teamAssignmentsFieldset);
+    // END NEW: Team Assignments Section
+
+    // Remove original impactedServiceIds text input field generation
+    // formElement.appendChild(createFormGroup('Impacted Service IDs (comma-separated):', 'initiativeImpactedServiceIds', 'text', null, '', 'e.g., service-id1,service-id2'));
+
+    console.log("Roadmap initiative form fields generated into modal with Team Assignments section.");
 }
 
 /**
  * Populates the Add/Edit modal form with data from an existing initiative.
  * MODIFIED: To handle multi-select for themes.
+ * MODIFIED AGAIN: To handle Team Assignments section.
  */
 function populateRoadmapInitiativeForm_modal(initiative) {
     if (!initiative) return;
@@ -900,29 +1032,26 @@ function populateRoadmapInitiativeForm_modal(initiative) {
     if (!modalElements || !modalElements.formElement) return;
     const form = modalElements.formElement;
 
+    // Populate standard fields
     form.elements['initiativeTitle_modal_roadmap'].value = initiative.title || '';
     form.elements['initiativeDescription_modal_roadmap'].value = initiative.description || '';
     form.elements['initiativeStatus_modal_roadmap'].value = initiative.status || 'Backlog';
     form.elements['initiativeTargetDueDate_modal_roadmap'].value = initiative.targetDueDate || '';
     form.elements['initiativePmCapacityNotes_modal_roadmap'].value = initiative.attributes?.pmCapacityNotes || '';
     
-    // --- MODIFIED: Populate Themes multi-select ---
     const themesSelect = form.elements['initiativeThemes_modal_roadmap'];
-    if (themesSelect) {
+    if (themesSelect && themesSelect.type === 'select-multiple') {
         const initiativeThemeIds = initiative.themes || [];
         for (let i = 0; i < themesSelect.options.length; i++) {
             themesSelect.options[i].selected = initiativeThemeIds.includes(themesSelect.options[i].value);
         }
-    } else { // Fallback if the input is still text (e.g., no themes defined)
-        if (form.elements['initiativeThemes_modal_roadmap']) { // Check if the text input exists
-           form.elements['initiativeThemes_modal_roadmap'].value = (initiative.themes || []).join(', ');
-        }
+    } else if (themesSelect) { 
+        themesSelect.value = (initiative.themes || []).join(', ');
     }
-    // --- END MODIFIED ---
-
+    
     form.elements['initiativePrimaryGoalId_modal_roadmap'].value = initiative.primaryGoalId || '';
-    form.elements['initiativeImpactedServiceIds_modal_roadmap'].value = (initiative.impactedServiceIds || []).join(', ');
 
+    // Populate owner and projectManager
     if (initiative.owner && initiative.owner.type && initiative.owner.id) {
         form.elements['initiativeOwner_modal_roadmap'].value = `${initiative.owner.type}:${initiative.owner.id}`;
     } else {
@@ -934,6 +1063,7 @@ function populateRoadmapInitiativeForm_modal(initiative) {
         form.elements['initiativeProjectManager_modal_roadmap'].value = "";
     }
 
+    // Populate ROI fields
     const roi = initiative.roi || {};
     form.elements['roiCategory_modal_roadmap'].value = roi.category || '';
     form.elements['roiValueType_modal_roadmap'].value = roi.valueType || '';
@@ -944,11 +1074,15 @@ function populateRoadmapInitiativeForm_modal(initiative) {
     form.elements['roiCalculationMethodology_modal_roadmap'].value = roi.calculationMethodology || '';
     form.elements['roiBusinessCaseLink_modal_roadmap'].value = roi.businessCaseLink || '';
     form.elements['roiOverrideJustification_modal_roadmap'].value = roi.overrideJustification || '';
+    
+    // Note: The actual display of assignments is handled by displayTempRoadmapAssignments_modal
+    // which reads from tempRoadmapAssignments_modal. This temp store is populated in openRoadmapModalForEdit.
 }
 
 /**
  * Handles saving the initiative (add or edit) from the modal.
  * MODIFIED: To read from multi-select for themes.
+ * MODIFIED AGAIN: To use tempRoadmapAssignments_modal for team assignments.
  */
 function handleSaveRoadmapInitiative_modal() {
     const modalElements = getRoadmapModalElements();
@@ -958,7 +1092,6 @@ function handleSaveRoadmapInitiative_modal() {
     }
     const form = modalElements.formElement;
 
-    // --- MODIFIED: Read selected themes from multi-select ---
     let selectedThemeIds = [];
     const themesSelect = form.elements['initiativeThemes_modal_roadmap'];
     if (themesSelect && themesSelect.type === 'select-multiple') {
@@ -967,19 +1100,23 @@ function handleSaveRoadmapInitiative_modal() {
                 selectedThemeIds.push(themesSelect.options[i].value);
             }
         }
-    } else if (themesSelect) { // Fallback for text input if no themes were defined
+    } else if (themesSelect) { 
         selectedThemeIds = themesSelect.value.split(',').map(t => t.trim()).filter(t => t);
     }
-    // --- END MODIFIED ---
+
+    // Get assignments from the temporary store
+    const initiativeAssignments = JSON.parse(JSON.stringify(tempRoadmapAssignments_modal));
 
     const initiativeData = {
         title: form.elements['initiativeTitle_modal_roadmap'].value.trim(),
         description: form.elements['initiativeDescription_modal_roadmap'].value.trim(),
         status: form.elements['initiativeStatus_modal_roadmap'].value,
         targetDueDate: form.elements['initiativeTargetDueDate_modal_roadmap'].value || null,
-        themes: selectedThemeIds, // Use the collected theme IDs
+        themes: selectedThemeIds,
         primaryGoalId: form.elements['initiativePrimaryGoalId_modal_roadmap'].value || null,
-        impactedServiceIds: form.elements['initiativeImpactedServiceIds_modal_roadmap'].value.split(',').map(s => s.trim()).filter(s => s),
+        assignments: initiativeAssignments, // Use the assignments from the modal's temp store
+        impactedServiceIds: [], // Keep as per earlier decision if still needed, or remove. For now, setting to empty.
+                                // If you still need to manage impactedServiceIds distinctly, add a UI for it.
         roi: {
             category: form.elements['roiCategory_modal_roadmap'].value.trim() || null,
             valueType: form.elements['roiValueType_modal_roadmap'].value.trim() || null,
@@ -996,7 +1133,8 @@ function handleSaveRoadmapInitiative_modal() {
             pmCapacityNotes: form.elements['initiativePmCapacityNotes_modal_roadmap'].value.trim()
         }
     };
-     if (form.elements['roiTimeHorizonMonths_modal_roadmap'].value === '') {
+
+     if (form.elements['roiTimeHorizonMonths_modal_roadmap'].value === '') { // Ensure null if empty
         initiativeData.roi.timeHorizonMonths = null;
     }
 
@@ -1029,32 +1167,34 @@ function handleSaveRoadmapInitiative_modal() {
     if (currentEditingInitiativeId) {
         action = "updated";
         const existingInitiative = currentSystemData.yearlyInitiatives.find(i => i.initiativeId === currentEditingInitiativeId);
-        // Preserve fields not editable in this modal, like assignments and protection status
+        // Preserve fields not editable in this modal (isProtected, workPackageIds).
+        // Assignments are now taken from initiativeData (which got them from tempRoadmapAssignments_modal)
         const preservedData = {
-            assignments: existingInitiative?.assignments || [], // Ensure it exists
-            isProtected: existingInitiative?.isProtected || false, // Ensure it exists
-            workPackageIds: existingInitiative?.workPackageIds || [], // Ensure it exists
-            // Merge attributes, prioritizing new ones if any overlap
-            attributes: {...(existingInitiative?.attributes || {}), ...initiativeData.attributes},
-            // Merge ROI, prioritizing new ones
-            roi: {...(existingInitiative?.roi || {}), ...initiativeData.roi}
+            isProtected: existingInitiative?.isProtected || false, 
+            workPackageIds: existingInitiative?.workPackageIds || [], 
+            attributes: {...(existingInitiative?.attributes || {}), ...initiativeData.attributes}, // Merge attributes
+            roi: {...(existingInitiative?.roi || {}), ...initiativeData.roi} // Merge ROI
         };
-        const finalUpdateData = {...initiativeData, ...preservedData, initiativeId: currentEditingInitiativeId};
+        // Combine, ensuring initiativeData (from form) takes precedence for fields it manages.
+        const finalUpdateData = {...existingInitiative, ...initiativeData, ...preservedData, initiativeId: currentEditingInitiativeId };
+        // Ensure impactedServiceIds is explicitly handled or cleared if it's no longer part of this form's direct management
+        finalUpdateData.impactedServiceIds = existingInitiative?.impactedServiceIds || [];
+
+
         const updated = updateInitiative(currentEditingInitiativeId, finalUpdateData);
         if (updated) success = true;
     } else {
-        // For new initiatives, ensure assignments and workPackageIds are initialized if not already
-        initiativeData.assignments = [];
-        initiativeData.workPackageIds = [];
-        initiativeData.isProtected = false; // Default for new
-        const added = addInitiative(initiativeData);
+        // For new initiatives, ensure other necessary fields are initialized if not already
+        initiativeData.workPackageIds = initiativeData.workPackageIds || [];
+        initiativeData.isProtected = initiativeData.isProtected || false; 
+        const added = addInitiative(initiativeData); // addInitiative in utils.js should handle default assignments if needed
         if (added) success = true;
     }
 
     if (success) {
-        saveSystemChanges();
-        renderRoadmapTable();
-        closeRoadmapModal();
+        saveSystemChanges(); // Persist to localStorage
+        renderRoadmapTable(); // Refresh the main roadmap table
+        closeRoadmapModal();  // Close and clear the modal
         alert(`Initiative ${action} successfully.`);
     } else {
         alert(`Failed to ${action} initiative.`);

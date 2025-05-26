@@ -175,7 +175,8 @@ Understanding these core entities is key to using the tool effectively. Most ent
 * Key Attributes:
     * `initiativeId`, `title`, `description`.
     * `isProtected` (boolean): If true, the initiative is locked at the top of the plan.
-    * `assignments`: Array of `{ teamId, sdeYears }` objects detailing effort per team.
+    * `assignments`: Array of `{ teamId: string, sdeYears: number }` objects detailing effort per team. At the roadmap stage, `sdeYears` can be `0` to indicate general team impact or involvement before detailed SDE estimates are available. This structure is consistent with how the Yearly Planning view tracks effort.
+    * `impactedServiceIds` (array of strings): Lists the service IDs directly affected by this initiative.
     * `roi`: An object detailing Return on Investment: `{ category, valueType, estimatedValue, currency, timeHorizonMonths, confidenceLevel, calculationMethodology, businessCaseLink, overrideJustification, attributes }`.
     * `targetDueDate` (string: "YYYY-MM-DD").
     * `actualCompletionDate` (string: "YYYY-MM-DD").
@@ -183,10 +184,9 @@ Understanding these core entities is key to using the tool effectively. Most ent
     * `themes` (array of strings/themeIds): Links to `definedThemes`.
     * `primaryGoalId` (string): Links to a `goal` in `currentSystemData.goals`.
     * `projectManager`, `owner`, `technicalPOC`: Objects like `{ type, id, name }` linking to personnel.
-    * `impactedServiceIds` (array of strings).
     * `workPackageIds` (array of strings): Links to `workPackages`.
     * `attributes`: An extensible object, now including `pmCapacityNotes` (string) for product manager notes on high-level capacity or team impact.
-
+    
 ### Capacity Configuration
 
 * A detailed set of parameters stored in `currentSystemData.capacityConfiguration` to define and calculate net engineering capacity.
