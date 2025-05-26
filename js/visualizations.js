@@ -1279,7 +1279,7 @@ function generateServiceDependenciesTable() {
         // Owning Team
         const team = currentSystemData.teams.find(t => t.teamId === service.owningTeamId);
         const teamCell = document.createElement('td');
-        teamCell.textContent = team ? team.teamName : 'Unassigned';
+        teamCell.textContent = team ? (team.teamIdentity || team.teamName) : 'Unassigned';
         row.appendChild(teamCell);
 
         // Upstream Dependencies (Services Depended On)
