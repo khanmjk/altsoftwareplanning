@@ -466,6 +466,453 @@ function generateEngineerTable() {
     }
 }
 
+/**
+ * Handles the request to remove selected resources.
+ * Gathers selections, shows a confirmation dialog with impacts, and logs choices.
+ */
+function handleRequestToRemoveSelectedResources() {
+    const listContainer = document.getElementById('removeResourceListContainer');
+    if (!listContainer) {
+        console.error("Error: removeResourceListContainer element not found for removal process.");
+        alert("An error occurred. Cannot proceed with removal.");
+        return;
+    }
+
+    const checkedCheckboxes = listContainer.querySelectorAll('input[type="checkbox"]:checked');
+
+    if (checkedCheckboxes.length === 0) {
+        alert("No resources selected for removal.");
+        return;
+    }
+
+    let selectedResourcesForConfirmation = [];
+    let confirmationMessages = ["You are about to remove the following resources:"];
+    let hasSdm = false;
+    let hasSrManager = false;
+    let hasProjectManager = false;
+
+    checkedCheckboxes.forEach(checkbox => {
+        const id = checkbox.dataset.id;
+        const type = checkbox.dataset.type;
+        const teamId = checkbox.dataset.teamId; // Will be undefined if not set
+        const teamName = checkbox.dataset.teamName; // Will be undefined if not set
+
+        // Attempt to get a clean display name from the text node next to the checkbox
+        let displayName = `ID: ${id} (Type: ${type})`; // Fallback display name
+        if (checkbox.parentElement && checkbox.parentElement.childNodes.length > 1) {
+            // Assuming the text node is the second child node of the div containing the checkbox
+             const textNode = checkbox.parentElement.childNodes[1];
+             if (textNode && textNode.nodeType === Node.TEXT_NODE) {
+                displayName = textNode.textContent.trim();
+             }
+        }
+
+
+        confirmationMessages.push(`- ${displayName}`);
+        selectedResourcesForConfirmation.push({
+            id: id,
+            type: type,
+            name: displayName, // Using the extracted display name
+            teamId: teamId,
+            teamName: teamName
+        });
+
+        if (type === 'sdm') hasSdm = true;
+        if (type === 'sr_manager') hasSrManager = true;
+        if (type === 'project_manager') hasProjectManager = true;
+    });
+
+    confirmationMessages.push("\n---POTENTIAL IMPACTS---");
+    if (hasSdm) {
+        confirmationMessages.push("Removing an SDM will unassign them from their teams.");
+    }
+    if (hasSrManager) {
+        confirmationMessages.push("Removing a Senior Manager will unassign them from their SDMs.");
+    }
+    if (hasProjectManager) {
+        confirmationMessages.push("Removing a Project Manager will unassign them from any initiatives they manage.");
+    }
+    if (!hasSdm && !hasSrManager && !hasProjectManager) {
+         confirmationMessages.push("No special impact categories identified for the selected resource types beyond their removal from lists/rosters.");
+    }
+
+    confirmationMessages.push("\nAre you sure you want to permanently remove these resources? This action cannot be undone.");
+
+    const fullConfirmationString = confirmationMessages.join('\n');
+
+    if (confirm(fullConfirmationString)) {
+        console.log("User confirmed removal of:", selectedResourcesForConfirmation);
+        alert("Removal confirmed (actual removal logic pending Step 2). See console for selected items.");
+        // Future: Call actual removal logic here.
+        // After removal, refresh the list:
+        // if (typeof populateResourceRemovalList === 'function') populateResourceRemovalList();
+        // And potentially other views like organogram, team tables, engineer tables.
+    } else {
+        console.log("User cancelled removal.");
+    }
+}
+
+/**
+ * Executes the actual removal of selected resources from currentSystemData.
+ * @param {Array} selectedResources - An array of resource objects to remove.
+ */
+function executeRemoveResources(selectedResources) {
+    if (!currentSystemData) {
+        console.error("CRITICAL: currentSystemData is not available for executeRemoveResources.");
+        alert("A critical error occurred: system data is missing. Cannot proceed with removal.");
+        return;
+    }
+
+    let changesMade = false;
+    let errorsOccurred = false;
+
+    selectedResources.forEach(resource => {
+        switch (resource.type) {
+            case 'engineer':
+                console.log(`Attempting to remove engineer: ${resource.id}`); // resource.id is engineer's name
+                const engineerName = resource.id;
+                let engineerTeamId = null;
+
+                // Find engineer in allKnownEngineers to get their currentTeamId before removal
+                const engineerIndexGlobal = (currentSystemData.allKnownEngineers || []).findIndex(e => e.name === engineerName);
+
+                if (engineerIndexGlobal !== -1) {
+                    engineerTeamId = currentSystemData.allKnownEngineers[engineerIndexGlobal].currentTeamId;
+                    currentSystemData.allKnownEngineers.splice(engineerIndexGlobal, 1);
+                    changesMade = true;
+                    console.log(`Engineer ${engineerName} removed from allKnownEngineers.`);
+
+                    if (engineerTeamId) {
+                        const team = (currentSystemData.teams || []).find(t => t.teamId === engineerTeamId);
+                        if (team && Array.isArray(team.engineers)) {
+                            const engineerIndexInTeam = team.engineers.indexOf(engineerName);
+                            if (engineerIndexInTeam !== -1) {
+                                team.engineers.splice(engineerIndexInTeam, 1);
+                                console.log(`Engineer ${engineerName} removed from team ${team.teamName || team.teamIdentity} (ID: ${engineerTeamId}).`);
+                                // changesMade is already true
+                            } else {
+                                console.warn(`Engineer ${engineerName} not found in engineers array of team ID ${engineerTeamId}, though currentTeamId was set.`);
+                            }
+                        } else {
+                            console.warn(`Team with ID ${engineerTeamId} for engineer ${engineerName} not found or team.engineers is not an array.`);
+                        }
+                    }
+                } else {
+                    console.error(`Engineer ${engineerName} not found in allKnownEngineers during removal.`);
+                    errorsOccurred = true;
+                }
+                break;
+
+            case 'away_team_member':
+                console.log(`Attempting to remove away_team_member: ${resource.id} from team ${resource.teamName} (ID: ${resource.teamId})`);
+                const awayMemberName = resource.id;
+                const teamIdForAwayMember = resource.teamId;
+
+                if (!teamIdForAwayMember) {
+                    console.error(`Away-team member ${awayMemberName} is missing teamId in selection data.`);
+                    errorsOccurred = true;
+                    break;
+                }
+
+                const teamForAwayMember = (currentSystemData.teams || []).find(t => t.teamId === teamIdForAwayMember);
+                if (teamForAwayMember && Array.isArray(teamForAwayMember.awayTeamMembers)) {
+                    const awayMemberIndex = teamForAwayMember.awayTeamMembers.findIndex(am => am.name === awayMemberName);
+                    if (awayMemberIndex !== -1) {
+                        teamForAwayMember.awayTeamMembers.splice(awayMemberIndex, 1);
+                        changesMade = true;
+                        console.log(`Away-team member ${awayMemberName} removed from team ${teamForAwayMember.teamName || teamForAwayMember.teamIdentity}.`);
+                    } else {
+                        console.error(`Away-team member ${awayMemberName} not found in awayTeamMembers array of team ID ${teamIdForAwayMember}.`);
+                        errorsOccurred = true;
+                    }
+                } else {
+                    console.error(`Team with ID ${teamIdForAwayMember} for away-team member ${awayMemberName} not found or team.awayTeamMembers is not an array.`);
+                    errorsOccurred = true;
+                }
+                break;
+
+            case 'sdm':
+                console.log(`Removing SDM: ${resource.name} (ID: ${resource.id})`);
+                const sdmIdToRemove = resource.id;
+                const sdmIndex = (currentSystemData.sdms || []).findIndex(s => s.sdmId === sdmIdToRemove);
+                if (sdmIndex !== -1) {
+                    currentSystemData.sdms.splice(sdmIndex, 1);
+                    changesMade = true;
+                    console.log(`SDM ${resource.name} removed from currentSystemData.sdms.`);
+                } else {
+                    console.error(`SDM ${resource.name} (ID: ${sdmIdToRemove}) not found in currentSystemData.sdms.`);
+                    errorsOccurred = true;
+                }
+                // Unassign this SDM from any teams
+                (currentSystemData.teams || []).forEach(team => {
+                    if (team.sdmId === sdmIdToRemove) {
+                        team.sdmId = null;
+                        changesMade = true;
+                        console.log(`SDM ID ${sdmIdToRemove} unassigned from team ${team.teamName || team.teamIdentity}.`);
+                    }
+                });
+                break;
+
+            case 'sr_manager':
+                console.log(`Removing Senior Manager: ${resource.name} (ID: ${resource.id})`);
+                const srManagerIdToRemove = resource.id;
+                const srManagerIndex = (currentSystemData.seniorManagers || []).findIndex(sm => sm.seniorManagerId === srManagerIdToRemove);
+                if (srManagerIndex !== -1) {
+                    currentSystemData.seniorManagers.splice(srManagerIndex, 1);
+                    changesMade = true;
+                    console.log(`Senior Manager ${resource.name} removed from currentSystemData.seniorManagers.`);
+                } else {
+                    console.error(`Senior Manager ${resource.name} (ID: ${srManagerIdToRemove}) not found in currentSystemData.seniorManagers.`);
+                    errorsOccurred = true;
+                }
+                // Unassign this Senior Manager from any SDMs
+                (currentSystemData.sdms || []).forEach(sdm => {
+                    if (sdm.seniorManagerId === srManagerIdToRemove) {
+                        sdm.seniorManagerId = null;
+                        changesMade = true;
+                        console.log(`Senior Manager ID ${srManagerIdToRemove} unassigned from SDM ${sdm.sdmName}.`);
+                    }
+                });
+                break;
+
+            case 'pmt':
+                console.log(`Removing PMT: ${resource.name} (ID: ${resource.id})`);
+                const pmtIdToRemove = resource.id;
+                const pmtIndex = (currentSystemData.pmts || []).findIndex(p => p.pmtId === pmtIdToRemove);
+                if (pmtIndex !== -1) {
+                    currentSystemData.pmts.splice(pmtIndex, 1);
+                    changesMade = true;
+                    console.log(`PMT ${resource.name} removed from currentSystemData.pmts.`);
+                } else {
+                    console.error(`PMT ${resource.name} (ID: ${pmtIdToRemove}) not found in currentSystemData.pmts.`);
+                    errorsOccurred = true;
+                }
+                // Unassign this PMT from any teams
+                (currentSystemData.teams || []).forEach(team => {
+                    if (team.pmtId === pmtIdToRemove) {
+                        team.pmtId = null;
+                        changesMade = true;
+                        console.log(`PMT ID ${pmtIdToRemove} unassigned from team ${team.teamName || team.teamIdentity}.`);
+                    }
+                });
+                break;
+
+            case 'project_manager':
+                console.log(`Removing Project Manager: ${resource.name} (ID: ${resource.id})`);
+                const pmIdToRemove = resource.id;
+                if (currentSystemData.projectManagers && Array.isArray(currentSystemData.projectManagers)) {
+                    const pmIndex = currentSystemData.projectManagers.findIndex(pm => pm.pmId === pmIdToRemove);
+                    if (pmIndex !== -1) {
+                        currentSystemData.projectManagers.splice(pmIndex, 1);
+                        changesMade = true;
+                        console.log(`Project Manager ${resource.name} removed from currentSystemData.projectManagers.`);
+                    } else {
+                        console.error(`Project Manager ${resource.name} (ID: ${pmIdToRemove}) not found in currentSystemData.projectManagers.`);
+                        errorsOccurred = true;
+                    }
+                } else {
+                    console.log("currentSystemData.projectManagers array does not exist. Skipping removal from this list.");
+                }
+                // Unassign this Project Manager from any yearly initiatives
+                if (currentSystemData.yearlyInitiatives && Array.isArray(currentSystemData.yearlyInitiatives)) {
+                    currentSystemData.yearlyInitiatives.forEach(initiative => {
+                        if (initiative.projectManager && initiative.projectManager.id === pmIdToRemove) {
+                            initiative.projectManager = null; // Or consider deleting the key: delete initiative.projectManager;
+                            changesMade = true;
+                            console.log(`Project Manager ID ${pmIdToRemove} unassigned from initiative "${initiative.name}".`);
+                        }
+                    });
+                } else {
+                     console.log("currentSystemData.yearlyInitiatives array does not exist or is not an array. Skipping unassignment from initiatives.");
+                }
+                break;
+
+            default:
+                console.warn(`Unknown resource type selected for removal: ${resource.type}`);
+                errorsOccurred = true;
+        }
+    });
+
+    if (changesMade) {
+        if (typeof saveSystemChanges === 'function') {
+            saveSystemChanges();
+        } else {
+            console.error("saveSystemChanges function is not defined. Changes will not be persisted.");
+            alert("CRITICAL ERROR: Save function missing. Changes are not saved!");
+        }
+
+        console.log("Resource removal process complete. Refreshing views...");
+
+        if (typeof generateOrganogram === 'function') generateOrganogram();
+        if (typeof generateTeamTable === 'function' && currentSystemData) generateTeamTable(currentSystemData);
+        if (typeof generateEngineerTable === 'function') generateEngineerTable();
+        if (typeof populateResourceRemovalList === 'function') populateResourceRemovalList();
+        
+        alert("Selected resources have been removed. Views refreshed.");
+    } else if (errorsOccurred) {
+        alert("Could not find some of the selected resources for removal, or an error occurred. Please check the console. No changes were made to data if the item was not found.");
+    } else {
+        // This case might occur if all items were of types not yet implemented, or items were already removed by another process.
+        alert("No changes were made. This might be because the selected resource types are not yet fully supported for removal or were already removed.");
+    }
+}
+
+
+/**
+ * Populates the list of resources that can be removed.
+ */
+function populateResourceRemovalList() {
+    const listContainer = document.getElementById('removeResourceListContainer');
+    if (!listContainer) {
+        console.error("Error: removeResourceListContainer element not found.");
+        return;
+    }
+    listContainer.innerHTML = ''; // Clear existing content
+    let resourcesFound = 0;
+
+    if (!currentSystemData) {
+        listContainer.innerHTML = '<p style="color: #dc3545;">Error: currentSystemData is not available.</p>';
+        return;
+    }
+
+    // Helper to create checkbox and div
+    const createResourceEntry = (item, id, name, type, labelSuffix, teamDetails) => {
+        const div = document.createElement('div');
+        div.style.marginBottom = '5px';
+        div.style.padding = '3px';
+        div.style.borderBottom = '1px solid #eee';
+
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.value = id; // Use a unique ID for the value
+        checkbox.dataset.type = type;
+        checkbox.dataset.id = id; // Store the actual ID in data-id
+        checkbox.style.marginRight = '8px';
+
+        if (teamDetails) {
+            if (teamDetails.teamId) checkbox.dataset.teamId = teamDetails.teamId;
+            if (teamDetails.teamName) checkbox.dataset.teamName = teamDetails.teamName;
+        }
+
+        div.appendChild(checkbox);
+        div.appendChild(document.createTextNode(`${name} ${labelSuffix}`));
+        listContainer.appendChild(div);
+        resourcesFound++;
+    };
+
+    // Engineers
+    (currentSystemData.allKnownEngineers || []).forEach(engineer => {
+        const typeLabel = engineer.attributes?.isAISWE ? '(AI Engineer)' : '(Engineer)';
+        // Using engineer.name as ID here as per spec, assuming it's unique for this context
+        createResourceEntry(engineer, engineer.name, engineer.name, 'engineer', typeLabel);
+    });
+
+    // SDMs
+    (currentSystemData.sdms || []).forEach(sdm => {
+        createResourceEntry(sdm, sdm.sdmId, sdm.sdmName, 'sdm', '(SDM)');
+    });
+
+    // Senior Managers
+    (currentSystemData.seniorManagers || []).forEach(srMgr => {
+        createResourceEntry(srMgr, srMgr.seniorManagerId, srMgr.seniorManagerName, 'sr_manager', '(Senior Manager)');
+    });
+
+    // PMTs
+    (currentSystemData.pmts || []).forEach(pmt => {
+        createResourceEntry(pmt, pmt.pmtId, pmt.pmtName, 'pmt', '(PMT)');
+    });
+
+    // Project Managers (check if exists)
+    if (currentSystemData.projectManagers && Array.isArray(currentSystemData.projectManagers)) {
+        currentSystemData.projectManagers.forEach(pm => {
+            createResourceEntry(pm, pm.pmId, pm.pmName, 'project_manager', '(Project Manager)');
+        });
+    } else {
+        console.log("No Project Managers found in currentSystemData or data is not an array.");
+    }
+
+    // Away-Team Members
+    (currentSystemData.teams || []).forEach(team => {
+        if (team.awayTeamMembers && Array.isArray(team.awayTeamMembers) && team.awayTeamMembers.length > 0) {
+            team.awayTeamMembers.forEach(awayMember => {
+                const teamNameForDisplay = team.teamName || team.teamIdentity || 'Unknown Team';
+                const label = `(Away-Team on ${teamNameForDisplay}) - L${awayMember.level || '?'}`;
+                // Using awayMember.name as ID as per spec.
+                createResourceEntry(awayMember, awayMember.name, awayMember.name, 'away_team_member', label, { teamId: team.teamId, teamName: teamNameForDisplay });
+            });
+        }
+    });
+
+    if (resourcesFound === 0) {
+        listContainer.innerHTML = '<p style="color: #777; font-style: italic;">No resources found to remove.</p>';
+    }
+}
+
+
+/**
+ * Generates the "Remove Resource" form section.
+ */
+function generateRemoveResourceSection(containerElement) {
+    console.log("Generating 'Remove Resource' section...");
+    if (!containerElement) {
+        console.error("Container for 'Remove Resource' section not provided.");
+        return;
+    }
+
+    let sectionDiv = document.getElementById('removeResourceSection');
+    if (sectionDiv) {
+        sectionDiv.innerHTML = ''; // Clear if already exists for re-rendering
+    } else {
+        sectionDiv = document.createElement('div');
+        sectionDiv.id = 'removeResourceSection';
+        sectionDiv.style.marginTop = '30px';
+        sectionDiv.style.padding = '15px';
+        sectionDiv.style.border = '1px solid #ccc';
+        sectionDiv.style.backgroundColor = '#f9f9f9'; // Similar to addNewResourceSection
+        containerElement.appendChild(sectionDiv);
+    }
+
+    const title = document.createElement('h3');
+    title.textContent = 'Remove Resources from Organisation';
+    sectionDiv.appendChild(title);
+
+    const listContainer = document.createElement('div');
+    listContainer.id = 'removeResourceListContainer';
+    listContainer.style.border = '1px dashed #aaa';
+    listContainer.style.padding = '10px';
+    listContainer.style.minHeight = '100px'; // Make it visible even when empty
+    listContainer.style.marginTop = '10px';
+    listContainer.style.marginBottom = '10px';
+    // listContainer.innerHTML is now handled by populateResourceRemovalList
+    sectionDiv.appendChild(listContainer);
+
+    // Populate the list
+    if (typeof populateResourceRemovalList === 'function') {
+        populateResourceRemovalList();
+    } else {
+        console.error("populateResourceRemovalList function not found.");
+        listContainer.innerHTML = '<p style="color: red;">Error: Resource list population function missing.</p>';
+    }
+
+    const removeButton = document.createElement('button');
+    removeButton.id = 'removeSelectedResourcesButton';
+    removeButton.textContent = 'Remove Selected Resources';
+    removeButton.className = 'btn-danger'; // Assuming a .btn-danger class exists for styling
+    removeButton.style.marginTop = '10px';
+    
+    // Add event listener for the remove button
+    if (typeof handleRequestToRemoveSelectedResources === 'function') {
+        removeButton.onclick = handleRequestToRemoveSelectedResources;
+    } else {
+        console.error("handleRequestToRemoveSelectedResources function not found. Button will not work.");
+        removeButton.disabled = true;
+        removeButton.title = "Removal handler function is missing.";
+    }
+    
+    sectionDiv.appendChild(removeButton);
+}
+
 // In js/orgView.js
 
 // Function: prepareEngineerDataForTabulator
