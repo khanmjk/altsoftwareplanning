@@ -1534,3 +1534,45 @@ function handleAddNewResource() {
     }
 }
 
+// REVISED (v5) Shows the Organogram View using switchView
+function showOrganogramView() {
+    console.log("Switching to Organization Chart View + Add/Remove Resource Sections..."); // Modified console log
+    if (!currentSystemData) { alert("Please load a system first."); return; }
+
+    switchView('organogramView');
+
+    try {
+        generateOrganogram();
+    } catch (error) {
+        console.error("Error generating Organogram:", error);
+        document.getElementById('organogramContent').innerHTML = `<p style="color:red;">Error generating chart.</p>`;
+    }
+    try {
+        generateTeamTable(currentSystemData);
+    } catch (error) {
+        console.error("Error generating Team Table:", error);
+        document.getElementById('teamBreakdown').innerHTML = `<p style="color:red;">Error generating team table.</p>`;
+    }
+
+    // --- Generate and append Action Sections ---
+    const organogramViewDiv = document.getElementById('organogramView');
+    if (organogramViewDiv) {
+        // Add New Resource Section
+        if (typeof generateAddNewResourceSection === 'function') {
+            generateAddNewResourceSection(organogramViewDiv);
+        } else {
+            console.error("generateAddNewResourceSection function not found. 'Add Resource' UI will not be available.");
+        }
+
+        // Remove Resources Section
+        if (typeof generateRemoveResourceSection === 'function') {
+            generateRemoveResourceSection(organogramViewDiv);
+        } else {
+            console.error("generateRemoveResourceSection function not found. 'Remove Resources' UI will not be available.");
+        }
+    } else {
+        console.error("'organogramView' div not found. Cannot append action sections.");
+    }
+    // --- End ---
+}
+window.showOrganogramView = showOrganogramView;
