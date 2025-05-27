@@ -95,7 +95,7 @@ Utilities
 
 
 UX
--- Now that we can add resources to the system, we need to also support removing resources (when people leave)
+-- Now that we can add resources to the system, we need to also support removing resources (when people leave) [Jules failed at this task]
 -- Ability to export the system to JSON, CSV and Excel, from top level menu "Export System" [leveraging Tabular library's export functionality]
 
 Year Planning
