@@ -520,8 +520,7 @@ function getServiceDependencies(service, collectedServices = {}, visitedServices
 function updateServiceVisualization() {
     const selectedService = document.getElementById('serviceSelection').value;
 
-    // Ensure the service selection is populated with the latest data
-    populateServiceSelection();
+    // populateServiceSelection(); // <--- REMOVE THIS LINE
     
     if (selectedService === 'all') {
         generateServiceVisualization(currentSystemData.services, null); // No service is selected
