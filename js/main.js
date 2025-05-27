@@ -689,6 +689,14 @@ function loadSavedSystem(systemName) {
         const carouselDiv = document.getElementById('visualizationCarousel');
         if (carouselDiv) carouselDiv.innerHTML = '<p style="color:red">Error loading some visualization components. Check console.</p>';
     }
+
+    // Setup toggle buttons for platform components visibility
+    if (typeof window.setupPlatformToggleButtons === 'function') {
+        window.setupPlatformToggleButtons();
+        console.log("[V7 LOAD] Called setupPlatformToggleButtons.");
+    } else {
+        console.error("[V7 LOAD] setupPlatformToggleButtons function not found. Platform toggles will not work.");
+    }
 }
 // window.loadSavedSystem = loadSavedSystem; // Keep global
 

@@ -1,3 +1,5 @@
+let showPlatformComponents = true;
+
 /**
  * REVISED (v2) - Generates the main system visualization (Services, APIs, Platforms).
  * - Fixes static graph issue by stopping drag event propagation to prevent zoom interference.
@@ -42,6 +44,7 @@ function generateVisualization(systemData) {
     let links = [];
     let nodeMap = {};
 
+    // --- Prepare Nodes and Links ---
     const teamColorScale = d3.scaleOrdinal(d3.schemeCategory10);
     const teamIds = (systemData.teams || []).map(team => team.teamId);
     teamColorScale.domain(teamIds);
@@ -66,19 +69,21 @@ function generateVisualization(systemData) {
     });
 
     // Add platform dependencies as nodes
-    (systemData.services || []).forEach(service => {
-        (service.platformDependencies || []).forEach(platform => {
-            if (!nodeMap[platform]) {
-                nodes.push({ id: platform, type: 'platform', color: '#a04040' }); // Distinct platform color
-                nodeMap[platform] = { id: platform, type: 'platform' };
-            }
-            links.push({
-                source: service.serviceName,
-                target: platform,
-                type: 'platform-dependency'
+    if (showPlatformComponents) {
+        (systemData.services || []).forEach(service => {
+            (service.platformDependencies || []).forEach(platform => {
+                if (!nodeMap[platform]) {
+                    nodes.push({ id: platform, type: 'platform', color: '#a04040' }); // Distinct platform color
+                    nodeMap[platform] = { id: platform, type: 'platform' };
+                }
+                links.push({
+                    source: service.serviceName,
+                    target: platform,
+                    type: 'platform-dependency'
+                });
             });
         });
-    });
+    }
 
     // Create links based on dependencies
     (systemData.services || []).forEach(service => {
@@ -245,7 +250,9 @@ function generateVisualization(systemData) {
         color: teamColorScale(team.teamId)
     }));
     // Add platform legend item
-    legendData.push({ teamIdentity: 'Platform Dependency', color: '#a04040' });
+    if (showPlatformComponents) {
+        legendData.push({ teamIdentity: 'Platform Dependency', color: '#a04040' });
+    }
 
     let legend = d3.select('#legend').selectAll('.legend-item')
         .data(legendData)
@@ -582,22 +589,24 @@ function generateServiceVisualization(services, selectedServiceName) {
     });
 
     // Add platform dependencies as nodes
-    services.forEach(service => {
-        if (service.platformDependencies) {
-            service.platformDependencies.forEach(platform => {
-                if (!nodeMap[platform]) {
-                    nodes.push({ id: platform, type: 'platform', color: '#a04040', isSelected: false }); // Add isSelected property
-                    nodeMap[platform] = { id: platform, type: 'platform' };
-                }
-                // Link service to platform
-                links.push({
-                    source: service.serviceName,
-                    target: platform,
-                    type: 'platform-dependency'
+    if (showPlatformComponents) {
+        services.forEach(service => {
+            if (service.platformDependencies) {
+                service.platformDependencies.forEach(platform => {
+                    if (!nodeMap[platform]) {
+                        nodes.push({ id: platform, type: 'platform', color: '#a04040', isSelected: false }); // Add isSelected property
+                        nodeMap[platform] = { id: platform, type: 'platform' };
+                    }
+                    // Link service to platform
+                    links.push({
+                        source: service.serviceName,
+                        target: platform,
+                        type: 'platform-dependency'
+                    });
                 });
-            });
-        }
-    });
+            }
+        });
+    }
 
     // Create links based on service dependencies
     services.forEach(service => {
@@ -807,19 +816,21 @@ function buildDependencyGraph(serviceName) {
         });
 
         // Process platform dependencies
-        if (currentService.platformDependencies) {
-            currentService.platformDependencies.forEach(platform => {
-                if (!nodeMap[platform]) {
-                    nodes.push({ id: platform, type: 'platform' });
-                    nodeMap[platform] = true;
-                }
-                // Edge from platform to current service
-                links.push({
-                    source: platform,
-                    target: currentServiceName,
-                    type: 'platform-dependency',
+        if (showPlatformComponents) {
+            if (currentService.platformDependencies) {
+                currentService.platformDependencies.forEach(platform => {
+                    if (!nodeMap[platform]) {
+                        nodes.push({ id: platform, type: 'platform' });
+                        nodeMap[platform] = true;
+                    }
+                    // Edge from platform to current service
+                    links.push({
+                        source: platform,
+                        target: currentServiceName,
+                        type: 'platform-dependency',
+                    });
                 });
-            });
+            }
         }
 
         // Process downstream dependents
@@ -1142,13 +1153,15 @@ function generateDependencyForceVisualization(selectedServiceName) {
         .attr('class', 'dependency-legend-svg') // Use a class specific to SVG legend if needed
         .attr('transform', `translate(20, 20)`); // Position the legend (e.g., top-left)
 
-    const legendItemsData = [
+    let legendItemsData = [
         { label: 'Selected Service', color: 'red', shape: 'circle' },
         { label: 'Other Service', color: color('service'), shape: 'circle' },
-        { label: 'Platform', color: color('platform'), shape: 'circle' },
-        { label: 'Service Dependency', color: '#999', type: 'line', marker: 'arrow-service-dependency', dash: '0' },
-        { label: 'Platform Dependency', color: '#999', type: 'line', marker: 'arrow-platform-dependency', dash: '5,5' }
+        { label: 'Service Dependency', color: '#999', type: 'line', marker: 'arrow-service-dependency', dash: '0' }
     ];
+    if (showPlatformComponents) {
+        legendItemsData.push({ label: 'Platform', color: color('platform'), shape: 'circle' });
+        legendItemsData.push({ label: 'Platform Dependency', color: '#999', type: 'line', marker: 'arrow-platform-dependency', dash: '5,5' });
+    }
 
     // Append legend items to the SVG group
     legendItemsData.forEach((item, index) => {
@@ -1306,5 +1319,52 @@ function generateServiceDependenciesTable() {
 
         tbody.appendChild(row);
     });
+}
+
+function updateAllToggleButtonsText(showPlatforms) {
+    const toggleButtonSystem = document.getElementById('togglePlatformComponentsSystem');
+    const toggleButtonService = document.getElementById('togglePlatformComponentsService');
+    const toggleButtonDependency = document.getElementById('togglePlatformComponentsDependency');
+    const newText = showPlatforms ? 'Hide Platforms' : 'Show Platforms';
+
+    if (toggleButtonSystem) toggleButtonSystem.textContent = newText;
+    if (toggleButtonService) toggleButtonService.textContent = newText;
+    if (toggleButtonDependency) toggleButtonDependency.textContent = newText;
+}
+
+// This function should be called once the DOM is ready, e.g., from main.js
+function setupPlatformToggleButtons() {
+    const toggleButtonSystem = document.getElementById('togglePlatformComponentsSystem');
+    const toggleButtonService = document.getElementById('togglePlatformComponentsService');
+    const toggleButtonDependency = document.getElementById('togglePlatformComponentsDependency');
+
+    if (toggleButtonSystem) {
+        toggleButtonSystem.addEventListener('click', () => {
+            showPlatformComponents = !showPlatformComponents;
+            generateVisualization(currentSystemData); // Assumes currentSystemData is globally accessible
+            updateAllToggleButtonsText(showPlatformComponents);
+        });
+    }
+
+    if (toggleButtonService) {
+        toggleButtonService.addEventListener('click', () => {
+            showPlatformComponents = !showPlatformComponents;
+            updateServiceVisualization(); // This function should internally use currentSystemData
+            updateAllToggleButtonsText(showPlatformComponents);
+        });
+    }
+
+    if (toggleButtonDependency) {
+        toggleButtonDependency.addEventListener('click', () => {
+            showPlatformComponents = !showPlatformComponents;
+            updateDependencyVisualization(); // This function should internally use currentSystemData
+            updateAllToggleButtonsText(showPlatformComponents);
+        });
+    }
+    updateAllToggleButtonsText(showPlatformComponents); // Ensures initial sync
+}
+
+if (typeof window !== 'undefined') {
+    window.setupPlatformToggleButtons = setupPlatformToggleButtons;
 }
 
