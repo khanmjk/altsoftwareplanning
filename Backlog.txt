@@ -48,6 +48,11 @@ Manage Detailed Planning
 -- A work package can have 0..many dependencies on other work packages
 [Done] - Need to update SwitchView to cleanup if roadmap edit dialog was shown
 [Done] - Roadmap: Added ROI Type and used Theme name instead of theme ID
+[Done] - Fixed by Google's Jules - [UX] Use team identity instead of team name for "Owning Team" column in Service Dependencies table when Service Dependency Visualization is shown on the carousel
+[Done] - Fixed by Google's Jules - [UX] In the Team Relationships Visualization carousel, ensure the correct data structure attributes are used for "Size of Team" and "Engineer Names" as these currently show up as "undefined"
+[Done] - Fixed by Google's Jules - [UX]- [Bug] Apply consistent behaviour for displaying visualization graphs in caroussel - fix legends
+[Done] - Fixed by Google's Jules - [UX] Use consistent formatting for legends in the carousel (circles not blocks)
+[Done] - Fixed by Google's Jules - [Feature] For all visualizations add a toggle button to show/hide platform components
 
 ------------
 IN PROGRESS
@@ -124,13 +129,8 @@ AI enhancements
 - Use AI to provide insights into the software system and overall engineering organisation
 
 Bugs / Missing features
-- [Bug] Apply consistent behaviour for displaying visualization graphs in caroussel - fix legends
-- [UX] Use team identity instead of team name for "Owning Team" column in Service Dependencies table when Service Dependency Visualization is shown on the carousel
-- [UX] Use consistent formatting for legends in the carousel (circles not blocks)
-- [UX] In the Team Relationships Visualization carousel, ensure the correct data structure attributes are used for "Size of Team" and "Engineer Names" as these currently show up as "undefined"
 - [UX] Add ability remove an engineer from Engineer List table to account for attrition (the engineer must be removed from the main engineer list and all associate objects where engineer is associated with a team)
 - [UX] Include a Delete Resource section in the Organization view, make the Add and Delete resource sections collapsible. Remember to regenerate the team breakdown table to reflect changes.
-- [Feature] For all visualizations add a toggle button to show/hide platform components 
 - [Feature] Add more default systems for demo purposes: Reference architectures for Android Stack, Chat GPT app, LLM system, etc.
 - [Feature] Organization Overview - show a view of traditional org chart with blocks
 
