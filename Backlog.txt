@@ -53,12 +53,14 @@ Manage Detailed Planning
 [Done] - Fixed by Google's Jules - [UX]- [Bug] Apply consistent behaviour for displaying visualization graphs in caroussel - fix legends
 [Done] - Fixed by Google's Jules - [UX] Use consistent formatting for legends in the carousel (circles not blocks)
 [Done] - Fixed by Google's Jules - [Feature] For all visualizations add a toggle button to show/hide platform components
+[Done] - Fixed by Google's Jules - - Fix the UI display in "Service Relationships Visualization" caroussel. The drop down list for services, remains stuck on "All Services View" despite selecting a service from the drop down list. Expected behavior: The selected service must show as the heading in the list, only show "All Services View" when "All Services View" is selected, otherwise the selected service must show in the list entry.
 
 ------------
 IN PROGRESS
 ------------
 UX fixes
 - Fix table of contents for documentation - clickthrough on links don't all work
+
 
 Manage Roadmap & Backlog
 -- Similar to the year planning page, but focused on roadmap / backlog management (does not need to show ATL/BTL logic), just an interactive table to pull the latest backlog of initiatives, ability to add and remove initiatives. The Year plan and Roadmap must share the same data model (year plan shows more details / attributes than the roadmap)
