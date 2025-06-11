@@ -135,7 +135,7 @@ Bugs / Missing features
 - [UX] Include a Delete Resource section in the Organization view, make the Add and Delete resource sections collapsible. Remember to regenerate the team breakdown table to reflect changes.
 - [Feature] Add more default systems for demo purposes: Reference architectures for Android Stack, Chat GPT app, LLM system, etc.
 - [Feature] Organization Overview - show a view of traditional org chart with blocks
-- [Bug] - Fix issue when adding new engineer. The question "Is AI engineer?" there is no way to select Yes or No. so it defaults to AI Engineer even when the resource is a human! Need a checkbox added and apply logic correctly.
+- [Bug] - Fix issue when adding new engineer in Edit System Page, when adding team members to the "Available Engineers (System Pool)". The question "Is AI engineer?" there is no way to select Yes or No. so it defaults to AI Engineer even when the resource is a human! Need a checkbox added and apply logic correctly.
 
 Backlog Items: Technical Debt & Architectural Enhancements
 ============================================================
