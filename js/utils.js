@@ -237,55 +237,20 @@ function createDualListContainer(contextIndex, leftLabel, rightLabel, currentOpt
     // Add New Item Input/Button
     let addNewContainer = null;
     if (allowAddNew && addNewCallback) {
-        addNewContainer = document.createElement('div'); addNewContainer.style.marginTop = '5px'; addNewContainer.style.display = 'flex'; addNewContainer.style.flexDirection = 'column'; // Changed to column for checkbox layout
-
-        let inputAndButtonRow = document.createElement('div'); // Row for input and button
-        inputAndButtonRow.style.display = 'flex';
-        inputAndButtonRow.style.width = '100%';
-        inputAndButtonRow.style.marginBottom = '5px'; // Space before checkbox
-
+        addNewContainer = document.createElement('div'); addNewContainer.style.marginTop = '5px'; addNewContainer.style.display = 'flex';
         let addNewInput = document.createElement('input'); addNewInput.type = 'text'; addNewInput.placeholder = addNewPlaceholder; addNewInput.style.flexGrow = '1'; addNewInput.style.marginRight = '5px';
         let addNewBtn = document.createElement('button'); addNewBtn.type = 'button'; addNewBtn.innerText = 'Add';
-
-        inputAndButtonRow.appendChild(addNewInput);
-        inputAndButtonRow.appendChild(addNewBtn);
-        addNewContainer.appendChild(inputAndButtonRow);
-
-        // Create checkbox and label
-        let checkboxDiv = document.createElement('div');
-        checkboxDiv.style.display = 'flex';
-        checkboxDiv.style.alignItems = 'center';
-
-        let addNewCheckbox = document.createElement('input');
-        addNewCheckbox.type = 'checkbox';
-        addNewCheckbox.id = `addNewIsAICheckbox_${contextIndex}_${leftField}`; // Unique ID
-        addNewCheckbox.style.marginRight = '5px';
-
-        let addNewCheckboxLabel = document.createElement('label');
-        addNewCheckboxLabel.htmlFor = addNewCheckbox.id;
-        addNewCheckboxLabel.innerText = 'AI Engineer?';
-
-        checkboxDiv.appendChild(addNewCheckbox);
-        checkboxDiv.appendChild(addNewCheckboxLabel);
-        addNewContainer.appendChild(checkboxDiv);
-
         addNewBtn.onclick = (e) => {
             e.preventDefault();
-            const newItemValue = addNewInput.value;
-            const isAIChecked = addNewCheckbox.checked;
-            // Pass data as an object
-            const newItemData = addNewCallback({ name: newItemValue, isAI: isAIChecked });
+            const newItemData = addNewCallback(addNewInput.value); // Pass current value from input
             if (newItemData && newItemData.value && newItemData.text) {
                  const exists = Array.from(availableSelect.options).some(opt => opt.value === newItemData.value) || Array.from(currentSelect.options).some(opt => opt.value === newItemData.value);
                  if (!exists) { availableSelect.appendChild(new Option(newItemData.text, newItemData.value)); }
                  else if (!newItemData.preventAdd) { console.warn("Item already exists in lists:", newItemData.text); }
                  addNewInput.value = '';
-                 // addNewCheckbox.checked = false; // Optionally reset checkbox
-             } else if (newItemData && newItemData.preventAdd) { // Handle case where callback might prevent adding
-                 addNewInput.value = '';
-                 // addNewCheckbox.checked = false; // Optionally reset checkbox
-             }
+             } else if (newItemData && newItemData.preventAdd) { addNewInput.value = ''; }
         };
+        addNewContainer.appendChild(addNewInput); addNewContainer.appendChild(addNewBtn);
         rightDiv.appendChild(addNewContainer);
     }
 
