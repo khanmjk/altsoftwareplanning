@@ -819,7 +819,6 @@ function displayTeamsForEditing(teamsDataToDisplay, expandedTeamIndex = -1) {
                     alert("Engineer name cannot be empty."); return null;
                 }
                 const name = newEngineerNameInput.trim();
-                const name = newEngineerNameInput.trim();
                 if ((currentSystemData.allKnownEngineers || []).some(eng => eng.name.toLowerCase() === name.toLowerCase())) {
                     alert(`An engineer named "${name}" already exists in the system pool.`);
                     return { preventAdd: true }; // Prevent createDualListContainer from adding duplicate to UI
@@ -853,7 +852,6 @@ function displayTeamsForEditing(teamsDataToDisplay, expandedTeamIndex = -1) {
                     aiAgentType = typeStr.trim() || "General AI";
                 }
 
-                const newEngineerData = {
                 const newEngineerData = {
                     name, level, currentTeamId: null, // Added to global pool, initially unassigned
                     attributes: { isAISWE, aiAgentType, skills, yearsOfExperience }
