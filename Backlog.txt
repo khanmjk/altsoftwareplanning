@@ -107,7 +107,8 @@ Year Planning
 Team Editing
 -- We support away team only from an incoming perspective (i.e. help provided to the team), but we could also consider concept of outgoing away team (I.e. the team lends engineers to other teams)
 
-
+Capacaity Forecasting / contraints
+-- Add gains in AI engineers - hours saved by AI means more capacity to the team
 
 AI enhancements
 - Create a top-level menu for "AI-Assistant" - a page that allows the user to interact through a chat interface on interrogating the selected system
