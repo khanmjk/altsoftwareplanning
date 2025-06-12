@@ -848,7 +848,6 @@ function displayTeamsForEditing(teamsDataToDisplay, expandedTeamIndex = -1) {
                 if (isAISWE) {
                     const typeStr = prompt(`Enter AI Agent Type for "${name}" (e.g., Code Generation):`, "General AI");
                     if (typeStr === null) return null;
-                    if (typeStr === null) return null;
                     aiAgentType = typeStr.trim() || "General AI";
                 }
 
@@ -864,8 +863,7 @@ function displayTeamsForEditing(teamsDataToDisplay, expandedTeamIndex = -1) {
                 displayTeamsForEditing(currentSystemData.teams, currentTeamEditIndex); // Refresh all team UIs
                 // Return data for createDualListContainer to add to *this instance's* "Available" list
                 return { value: newEngineerData.name, text: `${newEngineerData.name} (L${newEngineerData.level})${newEngineerData.attributes.isAISWE ? ' [AI]' : ''} - (Unallocated)` };
-                return { value: newEngineerData.name, text: `${newEngineerData.name} (L${newEngineerData.level})${newEngineerData.attributes.isAISWE ? ' [AI]' : ''} - (Unallocated)` };
-            }
+             }
         );
         engineerContainer.id = `engineersList_${teamIndex}`;
         teamDetails.appendChild(engineerContainer);
