@@ -54,6 +54,7 @@ Manage Detailed Planning
 [Done] - Fixed by Google's Jules - [UX] Use consistent formatting for legends in the carousel (circles not blocks)
 [Done] - Fixed by Google's Jules - [Feature] For all visualizations add a toggle button to show/hide platform components
 [Done] - Fixed by Google's Jules - - Fix the UI display in "Service Relationships Visualization" caroussel. The drop down list for services, remains stuck on "All Services View" despite selecting a service from the drop down list. Expected behavior: The selected service must show as the heading in the list, only show "All Services View" when "All Services View" is selected, otherwise the selected service must show in the list entry.
+[Done] - Fixed by Google's Jules - [Bug] - Fix issue when adding new engineer in Edit System Page, when adding team members to the "Available Engineers (System Pool)". The question "Is AI engineer?" there is no way to select Yes or No. so it defaults to AI Engineer even when the resource is a human! Need a checkbox added and apply logic correctly.
 
 ------------
 IN PROGRESS
@@ -135,7 +136,7 @@ Bugs / Missing features
 - [UX] Include a Delete Resource section in the Organization view, make the Add and Delete resource sections collapsible. Remember to regenerate the team breakdown table to reflect changes.
 - [Feature] Add more default systems for demo purposes: Reference architectures for Android Stack, Chat GPT app, LLM system, etc.
 - [Feature] Organization Overview - show a view of traditional org chart with blocks
-- [Bug] - Fix issue when adding new engineer in Edit System Page, when adding team members to the "Available Engineers (System Pool)". The question "Is AI engineer?" there is no way to select Yes or No. so it defaults to AI Engineer even when the resource is a human! Need a checkbox added and apply logic correctly.
+
 
 Backlog Items: Technical Debt & Architectural Enhancements
 ============================================================
