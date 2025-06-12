@@ -814,6 +814,8 @@ function displayTeamsForEditing(teamsDataToDisplay, expandedTeamIndex = -1) {
             true, true, 'Enter New Engineer Name to Add to System Pool',
             (newEngineerNameInput, currentTeamEditIndex) => {
                 if (!newEngineerNameInput || newEngineerNameInput.trim() === '') {
+            (newEngineerNameInput, currentTeamEditIndex) => {
+                if (!newEngineerNameInput || newEngineerNameInput.trim() === '') {
                     alert("Engineer name cannot be empty."); return null;
                 }
                 const name = newEngineerNameInput.trim();
@@ -824,19 +826,28 @@ function displayTeamsForEditing(teamsDataToDisplay, expandedTeamIndex = -1) {
 
                 const levelStr = prompt(`Enter level (1-7) for new engineer "${name}":`, "1");
                 if (levelStr === null) return null;
+                if (levelStr === null) return null;
                 const level = parseInt(levelStr);
                 if (isNaN(level) || level < 1 || level > 7) {
                     alert("Invalid level. Please enter a number between 1 and 7."); return null;
                 }
                 const yearsStr = prompt(`Enter years of experience for "${name}":`, "0");
                 if (yearsStr === null) return null;
+                if (yearsStr === null) return null;
                 const yearsOfExperience = parseInt(yearsStr) || 0;
                 const skillsStr = prompt(`Enter skills for "${name}" (comma-separated):`, "");
                 const skills = skillsStr ? skillsStr.split(',').map(s => s.trim()).filter(s => s) : [];
-                const isAISWE = confirm(`Is "${name}" an AI Software Engineer?`);
+                // const isAISWE = confirm(`Is "${name}" an AI Software Engineer?`); replaced
+                let isAIInput = prompt(`Is "${name}" an AI Software Engineer? (Enter Yes or No)`, "No");
+                if (isAIInput === null) {
+                    // User clicked Cancel on the Yes/No prompt for AI status
+                    return null; // This is intended to cancel the entire "Add New Engineer" operation
+                }
+                const isAISWE = isAIInput.trim().toLowerCase() === 'yes';
                 let aiAgentType = null;
                 if (isAISWE) {
                     const typeStr = prompt(`Enter AI Agent Type for "${name}" (e.g., Code Generation):`, "General AI");
+                    if (typeStr === null) return null;
                     if (typeStr === null) return null;
                     aiAgentType = typeStr.trim() || "General AI";
                 }
@@ -848,8 +859,11 @@ function displayTeamsForEditing(teamsDataToDisplay, expandedTeamIndex = -1) {
                 if (!currentSystemData.allKnownEngineers) currentSystemData.allKnownEngineers = [];
                 currentSystemData.allKnownEngineers.push(newEngineerData);
                 console.log("Added new engineer to global pool:", newEngineerData);
+                currentSystemData.allKnownEngineers.push(newEngineerData);
+                console.log("Added new engineer to global pool:", newEngineerData);
                 displayTeamsForEditing(currentSystemData.teams, currentTeamEditIndex); // Refresh all team UIs
                 // Return data for createDualListContainer to add to *this instance's* "Available" list
+                return { value: newEngineerData.name, text: `${newEngineerData.name} (L${newEngineerData.level})${newEngineerData.attributes.isAISWE ? ' [AI]' : ''} - (Unallocated)` };
                 return { value: newEngineerData.name, text: `${newEngineerData.name} (L${newEngineerData.level})${newEngineerData.attributes.isAISWE ? ' [AI]' : ''} - (Unallocated)` };
             }
         );
