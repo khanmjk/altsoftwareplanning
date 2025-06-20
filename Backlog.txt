@@ -109,6 +109,8 @@ Team Editing
 
 Capacaity Forecasting / contraints
 -- Add gains in AI engineers - hours saved by AI means more capacity to the team
+-- Ensure that when a team has AI engineers, they are excluded from team capacity constraints for leave and meetings overheads
+
 
 AI enhancements
 - Create a top-level menu for "AI-Assistant" - a page that allows the user to interact through a chat interface on interrogating the selected system
