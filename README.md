@@ -39,7 +39,7 @@
         * [Adding New Resources](#adding-new-resources)
     * [Tune Capacity Constraints](#tune-capacity-constraints)
         * [Global Configuration](#global-configuration-1)
-        * [Team-Specific Adjustments](#team-specific-adjustments-1)
+        * [Team-Specific Adjustments & AI Productivity](#team-specific-adjustments--ai-productivity)
         * [Calculated Capacity Summary, Narrative & Waterfall Chart](#calculated-capacity-summary-narrative--waterfall-chart-1)
     * [Roadmap & Backlog Management](#roadmap--backlog-management)
         * [Roadmap Table](#roadmap-table)
@@ -47,12 +47,11 @@
         * [Adding & Editing Initiatives (Modal)](#adding--editing-initiatives-modal)
     * [Yearly Planning](#yearly-planning)
         * [Planning Table](#planning-table-1)
-        * [Capacity Scenarios (Effective BIS, Team BIS, Funded HC)](#capacity-scenarios-effective-bis-team-bis-funded-hc-1)
-        * [Applying Capacity Constraints (Net vs. Gross)](#applying-capacity-constraints-net-vs-gross-1)
+        * [Capacity Scenarios & Constraints Toggle](#capacity-scenarios--constraints-toggle)
         * [Protected Initiatives](#protected-initiatives-1)
         * [Drag & Drop Prioritization](#drag--drop-prioritization-1)
         * [Adding New Initiatives (to Plan)](#adding-new-initiatives-to-plan)
-        * [Team Load Summary Table](#team-load-summary-table-1)
+        * [Enhanced Team Load Summary Table](#enhanced-team-load-summary-table)
     * [SDM Resource Forecasting Model](#sdm-resource-forecasting-model)
     * [Tool Documentation (Home Page)](#tool-documentation-home-page)
 5.  [Basic Workflow Example](#basic-workflow-example)
@@ -69,7 +68,7 @@ This tool provides a unified platform to:
 * **Model Software Architecture:** Define systems, services, APIs, and their dependencies.
 * **Map Organizational Structure:** Link teams to services, assign engineers (including AI Software Engineers), and represent management hierarchies.
 * **Visualize Relationships:** Understand how services connect, how teams are structured, and how they relate to the software they own.
-* **Plan Capacity & Resources:** Configure detailed capacity constraints (leave, overheads, team activities, etc.) to understand true team availability (Net Project SDE Years).
+* **Plan Capacity & Resources:** Configure detailed capacity constraints (leave, overheads, team activities, etc.) and AI productivity gains to understand true team availability (Net Project SDE Years).
 * **Manage Roadmaps & Backlogs:** Define, prioritize, and manage initiatives from backlog through to completion, focusing on strategic alignment and product management needs.
 * **Execute Yearly Planning:** Commit initiatives to a yearly plan, assign detailed engineering estimates, and track against calculated team capacities.
 * **Forecast Team Growth:** Model SDE hiring, ramp-up, and attrition, factoring in detailed capacity constraints to predict resource availability.
@@ -186,7 +185,7 @@ Understanding these core entities is key to using the tool effectively. Most ent
     * `projectManager`, `owner`, `technicalPOC`: Objects like `{ type, id, name }` linking to personnel.
     * `workPackageIds` (array of strings): Links to `workPackages`.
     * `attributes`: An extensible object, now including `pmCapacityNotes` (string) for product manager notes on high-level capacity or team impact.
-    
+
 ### Capacity Configuration
 
 * A detailed set of parameters stored in `currentSystemData.capacityConfiguration` to define and calculate net engineering capacity.
@@ -201,6 +200,7 @@ Understanding these core entities is key to using the tool effectively. Most ent
         * `variableLeaveImpact` (object): Total team days lost for types like `{ maternity: { affectedSDEs, avgDaysPerAffectedSDE } }`.
         * `teamActivities` (array): Objects like `{ id, name, type, estimateType ('perSDE'|'total'), value, attributes }`.
         * `avgOverheadHoursPerWeekPerSDE` (number): For recurring meetings, admin, etc.
+        * `aiProductivityGainPercent` (number): An estimated percentage of productivity gained for human engineers due to AI tooling.
 * The system uses these inputs to generate `currentSystemData.calculatedCapacityMetrics`.
 
 ### Goals
@@ -302,7 +302,7 @@ Accessible from the system overview page.
 ### Tune Capacity Constraints
 
 * Click **"Capacity Tuning"** from the system overview page.
-* This page allows defining factors that reduce raw engineering capacity.
+* This page allows defining factors that reduce raw engineering capacity and account for AI-driven productivity gains.
 
 #### Global Configuration
 
@@ -312,19 +312,20 @@ Accessible from the system overview page.
 * **Organization-Wide Events:** Events like hackathons (Name, Est. Days/SDE).
 * **Standard Leave Types:** Define default estimated days/SDE for types like Annual, Sick, Study, In-Lieu.
 
-#### Team-Specific Adjustments
+#### Team-Specific Adjustments & AI Productivity
 
 * Collapsible sections for each team.
 * **Standard Leave Uptake Estimate (%):** Percentage of global default days this team's members typically take for each standard leave type.
 * **Variable Leave Impact Estimate:** Input total team days lost for types like Maternity, Paternity, Medical, Family Responsibility (Number of SDEs affected * Avg. Days per SDE).
 * **Team Activities:** Define non-recurring team-specific events (e.g., training, conferences). Estimate impact either as "Days/SDE" or "Total Team Days".
 * **Recurring Overhead:** Estimate average hours per SDE per week spent on recurring meetings, admin, ceremonies, etc. (e.g., `avgOverheadHoursPerWeekPerSDE`).
+* **AI Tooling Productivity Gain (%):** Estimate the percentage of productivity gain for human engineers on the team from using AI-assisted tools. This gain is applied after all capacity sinks are deducted to calculate the final Net Capacity.
 
 #### Calculated Capacity Summary, Narrative & Waterfall Chart
 
 * **Summary Table:** Dynamically updates to show, for the selected scenario (Effective BIS, Team BIS, Funded HC): Team Identity, Headcount (for the scenario), Gross SDE Years, (-) Total Deductions (SDE Years - with tooltip for breakdown of sinks like leave, holidays, activities, overhead), and (=) Net Project SDE Years. Displays warnings if net capacity is zero or negative.
 * **Narrative Section (Collapsible):** Provides a detailed written explanation of capacity calculations, breaking down how gross capacity is reduced by various sinks at global and team levels, including explicit calculation parameters and reconciliation of deductions.
-* **Waterfall Chart (Collapsible):** Visualizes the capacity reduction from Gross SDE Years to Net Project SDE Years for the selected team or the entire organization, showing the impact of each deduction category (Holidays, Org Events, Std Leave, Var Leave, Activities, Overhead).
+* **Waterfall Chart (Collapsible):** Visualizes the capacity reduction from Gross SDE Years to Net Project SDE Years for the selected team or the entire organization, showing the impact of each deduction category (Holidays, Org Events, Std Leave, Var Leave, Activities, Overhead) and the positive impact of AI Productivity Gains.
 * Click **"Save All Capacity Configuration"** to persist settings and calculated metrics.
 
 ### Roadmap & Backlog Management
@@ -357,7 +358,7 @@ Accessible from the system overview page.
 
 ### Yearly Planning
 
-* Click **"Year Plan"** from the system overview page.
+* Click **"Year Plan"** from the system overview page. This view is now fully aligned with the detailed model from the **Capacity Tuning** page. If capacity metrics haven't been saved, they will be calculated on the fly for this view.
 
 #### Planning Table
 
@@ -365,16 +366,12 @@ Accessible from the system overview page.
 * **Columns:** Protected, Title, ID, Description, Total SDE Years (per initiative), Cumulative SDE Years (overall), Capacity Status (vs. Team BIS & Funded HC), ATL/BTL (vs. selected scenario), and a column for SDE Year estimate per team (cells colored Green/Red based on team's capacity for the selected scenario).
     *(Future columns based on data model: ROI, Target Due Date, Delivery Quarter, Status, Themes, Primary Goal, Owner, Project Manager)*
 
-#### Capacity Scenarios (Effective BIS, Team BIS, Funded HC)
+#### Capacity Scenarios & Constraints Toggle
 
-* Buttons at the top allow selecting the capacity scenario (Effective BIS, Team BIS, or Funded HC) used for the ATL/BTL cut-off and per-team cell coloring.
-
-#### Applying Capacity Constraints (Net vs. Gross)
-
-* A checkbox **"Apply Capacity Constraints?"** switches the ATL/BTL calculation and per-team cell coloring:
-    * **Unchecked (Gross):** Uses raw headcount from the selected scenario.
-    * **Checked (Net):** Uses **Net Project SDE Years** (from "Tune Capacity Constraints" for the selected scenario).
-    * *(Disabled if capacity constraints haven't been saved with `calculatedCapacityMetrics`)*.
+* **Capacity Scenarios:** Buttons at the top allow selecting the capacity scenario (Effective BIS, Team BIS, or Funded HC) used for the ATL/BTL cut-off and per-team cell coloring.
+* **Apply Constraints & AI Gains (Net):** A checkbox that provides a powerful toggle between two planning realities:
+    * **Unchecked (Gross):** The plan is calculated against the **Gross SDE Years** for the selected scenario. This represents the team's on-paper capacity, including the full headcount of both human and AI engineers.
+    * **Checked (Net):** The plan is calculated against the **Net Project SDE Years**. This is the realistic capacity after subtracting all time sinks (leave, overhead, events) and adding the **AI Productivity Gain**. This view shows what the team can realistically deliver.
 
 #### Protected Initiatives
 
@@ -389,10 +386,13 @@ Accessible from the system overview page.
 * Collapsible section to add initiatives with title, description, optional goal ID, and SDE Year assignments.
     *(Future: inputs for ROI, due date, status, themes, owner, PM)*
 
-#### Team Load Summary Table
+#### Enhanced Team Load Summary Table
 
-* A collapsible table above the main planning table.
-* Shows each team's: Funded HC, Team BIS, Away BIS, Effective BIS, **Assigned ATL SDEs** (sum of SDEs for that team from currently ATL initiatives), **Scenario Capacity Limit** (team's limit based on selected scenario & constraint toggle), Remaining Capacity (ATL), ATL Status.
+* A collapsible, detailed table that provides a clear and transparent breakdown of each team's capacity for the selected scenario.
+* **Human-Centric Columns:** Displays `Funded HC (Humans)`, `Team BIS (Humans)`, and `Away BIS (Humans)` to clearly show the human component of the workforce.
+* **AI Contribution Columns:** Explicitly shows the number of `AI Engineers` and the calculated `(+) AI Productivity Gain` in SDE Years, making their impact clear.
+* **Dynamic Capacity Column:** The main capacity column's header is now dynamic (e.g., "FundedHC Capacity (Net)") to reflect the exact scenario and state (Gross/Net) being viewed.
+* **Sinks Column:** When constraints are applied, a new `(-) Sinks` column appears, showing the total SDE Years deducted for leave, overhead, etc., providing full transparency into the Net capacity calculation.
 
 ### SDM Resource Forecasting Model
 
@@ -428,7 +428,7 @@ Accessible from the system overview page.
 5.  **Tune Capacity Constraints:**
     * Navigate to "Capacity Tuning".
     * Set global working days, holidays, org events, and default leave days.
-    * For each team, configure leave uptake %, variable leave impact, team activities, and recurring overhead.
+    * For each team, configure leave uptake %, variable leave impact, team activities, recurring overhead, and **AI productivity gain %**.
     * Review the summary, narrative, and waterfall chart.
     * **Save All Capacity Configuration**.
 6.  **Manage Yearly Plan:**
@@ -436,8 +436,8 @@ Accessible from the system overview page.
     * Pull in "Committed" initiatives from the backlog/roadmap or add new ones specific to the plan.
     * Assign detailed SDE Year estimates per team.
     * Mark critical initiatives as "Protected". Drag and drop to prioritize.
-    * Use "Capacity Scenarios" and the "Apply Capacity Constraints?" toggle to analyze.
-    * Review "Team Load Summary".
+    * Use "Capacity Scenarios" and the "Apply Constraints & AI Gains (Net)?" toggle to analyze.
+    * Review the "Enhanced Team Load Summary" table to see detailed capacity and loading.
     * **Save Current Plan Order & Estimates**.
 7.  **Forecast Resources (Optional):** Navigate to "Resource Forecasting" for team-specific hiring and availability modeling.
 
@@ -480,5 +480,3 @@ This tool is an evolving MVP. Key future enhancements include:
 * **Data Access Layer Refactoring:** Complete the abstraction of data operations for easier future backend integration.
 * **EnhancedTableWidget Rollout:** Apply the widget to more tables (e.g., Planning Table, Team Load Summary) for consistent filtering/export.
 * **Collaboration & Cloud Sync:** For multi-user access and data persistence beyond local storage.
-
----

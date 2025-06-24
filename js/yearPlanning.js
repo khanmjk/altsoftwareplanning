@@ -242,12 +242,15 @@ function setPlanningScenario(scenario) {
 window.setPlanningScenario = setPlanningScenario;
 
 /**
- * REVISED (v11 - UX Wording) - Generates the Team Load Summary table.
- * - Makes the 'Scenario Capacity' column header dynamic to reflect the selected scenario and state (Gross/Net).
+ * REVISED (v12 - Final Polish) - Generates the Team Load Summary table.
+ * - Adds a "(-) Sinks" column that is only visible when constraints are applied.
+ * - This provides a full, transparent view of the capacity calculation: Gross -> Sinks -> Gains -> Net.
+ * - Retains all previous enhancements like dynamic headers and correct data sourcing.
  */
 function generateTeamLoadSummaryTable() {
-    console.log("Generating Team Load Summary Table (v11 - UX Wording)...");
+    console.log("Generating Team Load Summary Table (v12 - Final Polish)...");
 
+    // --- Get Containers & Pre-checks ---
     const summaryContainer = document.getElementById('teamLoadSummarySection');
     if (!summaryContainer) { console.error("Missing Team Load Summary container."); return; }
     const summaryTable = summaryContainer.querySelector('#teamLoadSummaryTable');
@@ -259,7 +262,7 @@ function generateTeamLoadSummaryTable() {
     }
     
     if (!summaryTable || !summaryTableBody || !summaryTableFoot || !summaryTableHead) {
-        console.error("Missing Team Load Summary table structure (tbody, tfoot, or thead).");
+        console.error("Missing Team Load Summary table structure.");
         return;
     }
     summaryTableHead.innerHTML = '';
@@ -289,10 +292,8 @@ function generateTeamLoadSummaryTable() {
         if (toggleSpan) { summaryTitleHeader.insertBefore(toggleSpan, summaryTitleHeader.firstChild); }
     }
     
-    // --- 1. Generate Table Headers with Dynamic Column ---
+    // --- 1. Generate Table Headers with NEW Sinks Column ---
     const headerRow = summaryTableHead.insertRow();
-    
-    // ** CHANGE: Create the dynamic header text **
     const scenarioDisplayName = scenarioKey.replace('BIS', ' BIS');
     const stateDisplayName = isNetCapacityUsed ? 'Net' : 'Gross';
     const dynamicHeaderText = `${scenarioDisplayName} Capacity (${stateDisplayName})`;
@@ -302,10 +303,11 @@ function generateTeamLoadSummaryTable() {
         { text: 'Funded HC (Humans)', title: 'Budgeted headcount for human engineers.' },
         { text: 'Team BIS (Humans)', title: 'Actual human engineers on the team.' },
         { text: 'Away BIS (Humans)', title: 'Borrowed human engineers.' },
-        { text: 'AI Engineers', title: 'Count of AI Software Engineers contributing to the team (on-team and away).' },
-        { text: '(+) AI Productivity Gain', title: 'The effective SDE/Year capacity gained from AI tooling, applied to human engineers.' },
+        { text: 'AI Engineers', title: 'Count of AI Software Engineers contributing to the team.' },
+        // ** NEW SINKS COLUMN **
+        { text: '(-) Sinks (SDE/Yrs)', title: 'Total deductions from leave, overhead, etc. This is only shown when the "Apply Constraints" toggle is ON.' },
+        { text: '(+) AI Productivity Gain', title: 'The effective SDE/Year capacity gained from AI tooling.' },
         { text: 'AI Gain %', title: 'The configured productivity gain percentage for the team.' },
-        // ** Use the dynamic header text **
         { text: dynamicHeaderText, title: 'The total planning capacity for the team under the selected scenario and state (Gross or Net).' },
         { text: 'Assigned ATL SDEs', title: 'The sum of SDE estimates for this team from initiatives Above The Line.' },
         { text: 'Remaining Capacity (ATL)', title: 'Scenario Capacity minus Assigned ATL SDEs.' },
@@ -319,8 +321,7 @@ function generateTeamLoadSummaryTable() {
         headerRow.appendChild(th);
     });
 
-    // --- 2. Populate Table Body and Footer ---
-    // The rest of the function remains identical to the previous version (v10).
+    // --- 2. Prepare Data for Body ---
     const sortedInitiatives = [...currentSystemData.yearlyInitiatives].sort((a, b) => { if (a.isProtected && !b.isProtected) return -1; if (!a.isProtected && b.isProtected) return 1; return 0; });
     let overallCumulativeSde = 0;
     const teamAtlSdeAssigned = teams.reduce((acc, team) => { acc[team.teamId] = 0; return acc; }, {});
@@ -334,16 +335,16 @@ function generateTeamLoadSummaryTable() {
                     teamAtlSdeAssigned[assignment.teamId] += assignment.sdeYears;
                 }
             });
-        } else {
-            break;
-        }
+        } else { break; }
     }
 
+    // --- 3. Populate Table Body ---
     let totalFundedHCGross = 0, totalTeamBISHumans = 0, totalAwayBISHumans = 0, totalAIEngineers = 0;
-    let totalProductivityGain = 0, totalScenarioCapacity = 0, totalAssignedAtlSde = 0;
+    let totalSinks = 0, totalProductivityGain = 0, totalScenarioCapacity = 0, totalAssignedAtlSde = 0;
 
     teams.sort((a, b) => (a?.teamName || '').localeCompare(b?.teamName || '')).forEach(team => {
         if (!team || !team.teamId) return;
+
         const teamId = team.teamId;
         const teamMetrics = calculatedMetrics[teamId];
         if (!teamMetrics) { console.warn(`Metrics not found for teamId: ${teamId}.`); return; }
@@ -351,19 +352,26 @@ function generateTeamLoadSummaryTable() {
         const teamAIBIS = (team.engineers || []).filter(name => currentSystemData.allKnownEngineers.find(e => e.name === name)?.attributes?.isAISWE).length;
         const awayAIBIS = (team.awayTeamMembers || []).filter(m => m.attributes?.isAISWE).length;
         const aiEngineers = teamAIBIS + awayAIBIS;
+        
         const teamBISHumans = teamMetrics.TeamBIS.humanHeadcount;
         const effectiveBISHumans = teamMetrics.EffectiveBIS.humanHeadcount;
         const awayBISHumans = effectiveBISHumans - teamBISHumans;
+
+        // ** NEW SINKS LOGIC **
+        const sinks = isNetCapacityUsed ? (teamMetrics[scenarioKey].deductYrs || 0) : 0;
+        
         const productivityGain = teamMetrics[scenarioKey].deductionsBreakdown.aiProductivityGainYrs || 0;
         const productivityPercent = team.teamCapacityAdjustments?.aiProductivityGainPercent || 0;
         const scenarioCapacity = isNetCapacityUsed ? teamMetrics[scenarioKey].netYrs : teamMetrics[scenarioKey].grossYrs;
         const assignedAtlSde = teamAtlSdeAssigned[teamId] || 0;
         const remainingCapacity = scenarioCapacity - assignedAtlSde;
 
+        // Accumulate totals
         totalFundedHCGross += teamMetrics.FundedHC.humanHeadcount;
         totalTeamBISHumans += teamBISHumans;
         totalAwayBISHumans += awayBISHumans;
         totalAIEngineers += aiEngineers;
+        totalSinks += sinks;
         totalProductivityGain += productivityGain;
         totalScenarioCapacity += scenarioCapacity;
         totalAssignedAtlSde += assignedAtlSde;
@@ -378,13 +386,21 @@ function generateTeamLoadSummaryTable() {
         row.insertCell().textContent = teamBISHumans.toFixed(2);
         row.insertCell().textContent = awayBISHumans.toFixed(2);
         row.insertCell().textContent = aiEngineers.toFixed(2);
+        
+        // ** NEW SINKS CELL **
+        const sinksCell = row.insertCell();
+        sinksCell.textContent = isNetCapacityUsed ? `-${sinks.toFixed(2)}` : '—';
+        sinksCell.style.color = isNetCapacityUsed ? '#dc3545' : '#6c757d';
+
         row.insertCell().textContent = `+${productivityGain.toFixed(2)}`;
         row.insertCell().textContent = `${productivityPercent.toFixed(0)}%`;
         row.insertCell().textContent = scenarioCapacity.toFixed(2);
         row.insertCell().textContent = assignedAtlSde.toFixed(2);
+        
         const remainingCell = row.insertCell();
         remainingCell.textContent = remainingCapacity.toFixed(2);
         remainingCell.style.color = remainingCapacity < 0 ? 'red' : 'green';
+        
         const statusCell = row.insertCell();
         statusCell.textContent = statusText;
         statusCell.style.color = statusColor;
@@ -393,14 +409,16 @@ function generateTeamLoadSummaryTable() {
         Array.from(row.cells).forEach((cell, index) => { cell.style.textAlign = index === 0 ? 'left' : 'center'; });
     });
 
+    // --- 4. Populate Footer ---
     const footerRow = summaryTableFoot.insertRow();
     footerRow.insertCell().textContent = 'Totals';
     footerRow.insertCell().textContent = totalFundedHCGross.toFixed(2);
     footerRow.insertCell().textContent = totalTeamBISHumans.toFixed(2);
     footerRow.insertCell().textContent = totalAwayBISHumans.toFixed(2);
     footerRow.insertCell().textContent = totalAIEngineers.toFixed(2);
-    footerRow.insertCell().textContent = `+${totalProductivityGain.toFixed(2)}`;
-    footerRow.insertCell().textContent = '';
+    footerRow.insertCell().textContent = isNetCapacityUsed ? `-${totalSinks.toFixed(2)}` : '—'; // Sinks total
+    footerRow.insertCell().textContent = `+${totalProductivityGain.toFixed(2)}`; // Gain total
+    footerRow.insertCell().textContent = ''; // Avg %
     footerRow.insertCell().textContent = totalScenarioCapacity.toFixed(2);
     footerRow.insertCell().textContent = totalAssignedAtlSde.toFixed(2);
     const totalRemainingCell = footerRow.insertCell();
