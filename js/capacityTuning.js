@@ -490,7 +490,9 @@ function updateCapacityCalculationsAndDisplay(newScenario = null) {
 window.updateCapacityCalculationsAndDisplay = updateCapacityCalculationsAndDisplay;
 
 /**
- * REVISED - Generates the Summary Table, showing human/total headcount breakdown.
+ * REVISED (v7 - Final Polish) - Generates the Summary Table.
+ * - Adds a "ℹ️" info icon to the 'AI Gain' column with a detailed tooltip showing the calculation.
+ * - Retains all previous enhancements like dynamic headers and correct data sourcing.
  */
 function generateCapacitySummaryDisplay(calculatedMetrics, selectedScenario) {
     console.log(`Generating AI-Aware Capacity Summary Display for scenario: ${selectedScenario}`);
@@ -529,13 +531,16 @@ function generateCapacitySummaryDisplay(calculatedMetrics, selectedScenario) {
 
     const thead = summaryTable.createTHead();
     const headerRow = thead.insertRow();
+    
     const headers = [
         { text: 'Team Identity', title: 'Team Identifier' },
         { text: `Headcount (${selectedScenario})`, title: 'Total headcount (Human + AI) for the selected scenario' },
         { text: 'Gross (SDE Yrs)', title: 'Total SDE Years before deductions' },
         { text: '(-) Deduct (SDE Yrs)', title: 'Total deductions (Leave, Overhead, etc.) applied to HUMAN engineers' },
-        { text: '(=) Net Project (SDE Yrs)', title: 'Remaining capacity for project work (including AI gains)' }
+        { text: '(+) AI Gain (SDE Yrs)', title: 'Productivity gain from AI tooling applied back to the team\'s capacity.' },
+        { text: '(=) Net Project (SDE Yrs)', title: 'Remaining capacity for project work (Gross - Deductions + AI Gain)' }
     ];
+
     headers.forEach(hdr => {
         const th = document.createElement('th');
         th.textContent = hdr.text;
@@ -562,14 +567,36 @@ function generateCapacitySummaryDisplay(calculatedMetrics, selectedScenario) {
         hcCell.title = `Total: ${teamMetrics.totalHeadcount.toFixed(1)}, Humans: ${teamMetrics.humanHeadcount.toFixed(1)}, AI: ${aiEngineers.toFixed(1)}`;
 
         row.insertCell().textContent = teamMetrics.grossYrs.toFixed(2);
+        
         const deductCell = row.insertCell();
         deductCell.textContent = teamMetrics.deductYrs.toFixed(2);
-        const infoIcon = document.createElement('span');
-        infoIcon.textContent = ' ℹ️';
-        infoIcon.style.cursor = 'help';
-        infoIcon.style.fontSize = '0.8em';
-        deductCell.appendChild(infoIcon);
+        const deductInfoIcon = document.createElement('span');
+        deductInfoIcon.textContent = ' ℹ️';
+        deductInfoIcon.style.cursor = 'help';
+        deductInfoIcon.style.fontSize = '0.8em';
+        deductCell.appendChild(deductInfoIcon);
         deductCell.title = formatDeductionTooltip(teamMetrics.deductionsBreakdown);
+
+        const aiGainCell = row.insertCell();
+        const aiGainValue = teamMetrics.deductionsBreakdown.aiProductivityGainYrs || 0;
+        aiGainCell.textContent = `+${aiGainValue.toFixed(2)}`;
+        aiGainCell.style.color = '#28a745';
+        aiGainCell.style.fontWeight = 'bold';
+
+        // ** NEW: Add Info Icon for AI Gain **
+        const aiGainInfoIcon = document.createElement('span');
+        aiGainInfoIcon.textContent = ' ℹ️';
+        aiGainInfoIcon.style.cursor = 'help';
+        aiGainInfoIcon.style.fontSize = '0.8em';
+        
+        // Construct the tooltip text for AI Gain calculation
+        const humanGrossYrs = teamMetrics.humanHeadcount * 1.0; // SDE Year per human
+        const humanNetBeforeGain = humanGrossYrs - teamMetrics.deductYrs;
+        const productivityPercent = team.teamCapacityAdjustments?.aiProductivityGainPercent || 0;
+        aiGainInfoIcon.title = `Calculation: (Human Net Capacity Before Gain) * AI Gain %\n` +
+                             `(${humanNetBeforeGain.toFixed(2)} SDE Yrs * ${productivityPercent}%) = +${aiGainValue.toFixed(2)} SDE Yrs`;
+        aiGainCell.appendChild(aiGainInfoIcon);
+
 
         const netCell = row.insertCell();
         netCell.textContent = teamMetrics.netYrs.toFixed(2);
@@ -596,14 +623,31 @@ function generateCapacitySummaryDisplay(calculatedMetrics, selectedScenario) {
     totalHcCell.title = `Total: ${totals.totalHeadcount.toFixed(1)}, Humans: ${totals.humanHeadcount.toFixed(1)}, AI: ${totalAiEngineers.toFixed(1)}`;
 
     footerRow.insertCell().textContent = totals.grossYrs.toFixed(2);
+    
     const deductTotalCell = footerRow.insertCell();
     deductTotalCell.textContent = totals.deductYrs.toFixed(2);
-    const totalInfoIcon = document.createElement('span');
-    totalInfoIcon.textContent = ' ℹ️';
-    totalInfoIcon.style.cursor = 'help';
-    totalInfoIcon.style.fontSize = '0.8em';
-    deductTotalCell.appendChild(totalInfoIcon);
+    const totalDeductInfoIcon = document.createElement('span');
+    totalDeductInfoIcon.textContent = ' ℹ️';
+    totalDeductInfoIcon.style.cursor = 'help';
+    totalDeductInfoIcon.style.fontSize = '0.8em';
+    deductTotalCell.appendChild(totalDeductInfoIcon);
     deductTotalCell.title = formatDeductionTooltip(totals.deductionsBreakdown);
+
+    const totalAIGainCell = footerRow.insertCell();
+    const totalAIGainValue = totals.deductionsBreakdown.aiProductivityGainYrs || 0;
+    totalAIGainCell.textContent = `+${totalAIGainValue.toFixed(2)}`;
+    totalAIGainCell.style.color = '#28a745';
+    // Add info icon to total gain as well
+    const totalAIGainInfoIcon = document.createElement('span');
+    totalAIGainInfoIcon.textContent = ' ℹ️';
+    totalAIGainInfoIcon.style.cursor = 'help';
+    totalAIGainInfoIcon.style.fontSize = '0.8em';
+    const totalHumanGrossYrs = totals.humanHeadcount * 1.0;
+    const totalHumanNetBeforeGain = totalHumanGrossYrs - totals.deductYrs;
+    totalAIGainInfoIcon.title = `Represents the sum of all team AI gains.\n` +
+                                `Calculated from each team's Human Net Capacity multiplied by their respective AI Gain %.`;
+    totalAIGainCell.appendChild(totalAIGainInfoIcon);
+
 
     const netTotalCell = footerRow.insertCell();
     netTotalCell.textContent = totals.netYrs.toFixed(2);
@@ -613,6 +657,7 @@ function generateCapacitySummaryDisplay(calculatedMetrics, selectedScenario) {
     } else {
         netTotalCell.style.backgroundColor = '#d4edda';
     }
+    
     Array.from(footerRow.cells).forEach((cell, i) => {
         cell.style.borderTop = '2px solid #666';
         if (i > 0) cell.style.textAlign = 'center';
@@ -621,8 +666,9 @@ function generateCapacitySummaryDisplay(calculatedMetrics, selectedScenario) {
 window.generateCapacitySummaryDisplay = generateCapacitySummaryDisplay;
 
 /**
- * REVISED - Generates an enhanced narrative that explains the AI vs. Human calculation
+ * REVISED (v7 - Enhanced Narrative) - Generates an enhanced narrative that explains the AI vs. Human calculation
  * and highlights the "AI Capacity Dividend" and "AI Productivity Gain" at both the org and team level.
+ * - This version provides a much more verbose and contextualized explanation of the capacity model.
  */
 function generateCapacityNarrative(calculatedMetrics, selectedScenario) {
     console.log(`Attempting to generate Enhanced AI-Aware Capacity Narrative for scenario: ${selectedScenario}...`);
@@ -691,51 +737,54 @@ function generateCapacityNarrative(calculatedMetrics, selectedScenario) {
         return;
     }
 
-
-    const teams = currentSystemData.teams;
-    const totals = calculatedMetrics.totals;
-
+    const totals = calculatedMetrics.totals[selectedScenario] || {};
     const toFixed = (num, places = 2) => (num || 0).toFixed(places);
-    const getTeamName = (team) => team.teamIdentity || team.teamName || team.teamId;
+    
+    // --- Overall Summary Narrative ---
+    let narrativeHTML = `<h4>Overall Capacity Summary (${selectedScenario})</h4>`;
+    
+    const totalHeadcount = totals.totalHeadcount || 0;
+    const humanHeadcount = totals.humanHeadcount || 0;
+    const aiHeadcount = totalHeadcount - humanHeadcount;
+    
+    narrativeHTML += `<p>For this scenario, the organization's **Gross Capacity is ${toFixed(totals.grossYrs)} SDE Years**. ` +
+                     `This initial figure is derived from a total headcount of **${toFixed(totalHeadcount, 1)}**, which is composed of ` +
+                     `<strong>${toFixed(humanHeadcount, 1)} Human Engineers</strong> and <strong>${toFixed(aiHeadcount, 1)} AI Engineers</strong>.</p>`;
 
-    let narrativeHTML = '';
+    narrativeHTML += `<p>To determine realistic project availability, we first subtract time for operational overheads. These "capacity sinks"—such as leave, public holidays, recurring meetings, and organizational events—amount to a total deduction of ` +
+                     `<strong>${toFixed(totals.deductYrs)} SDE Years</strong>. It's important to note that these sinks are calculated based on the ` +
+                     `<em>human headcount only</em>, as AI engineers do not take vacation or attend most team meetings.</p>`;
 
-    const totalScenarioHeadcount = totals[selectedScenario]?.totalHeadcount || 0;
-    const humanScenarioHeadcount = totals[selectedScenario]?.humanHeadcount || 0;
-    const aiScenarioHeadcount = totalScenarioHeadcount - humanScenarioHeadcount;
+    narrativeHTML += `<p>After accounting for those deductions, a productivity dividend is applied. The use of AI tooling provides a calculated gain of ` +
+                     `<strong>${toFixed(totals.deductionsBreakdown?.aiProductivityGainYrs)} SDE Years</strong> across the organization. This gain is applied back to the available human capacity.</p>`;
 
-    narrativeHTML += `<p><strong>Overall Capacity Summary (${selectedScenario}):</strong> In this scenario, the organization has a total headcount of <strong>${toFixed(totalScenarioHeadcount, 1)}</strong>, composed of <strong>${toFixed(humanScenarioHeadcount, 1)} Human Engineers</strong> and <strong>${toFixed(aiScenarioHeadcount, 1)} AI Engineers</strong>. This provides a Gross Capacity of <strong>${toFixed(totals[selectedScenario]?.grossYrs)} SDE Years</strong>.</p>`;
+    narrativeHTML += `<p>Therefore, after subtracting the sinks from the gross capacity and adding back the AI productivity gains, the final estimated ` +
+                     `<strong>Net Project Capacity is ${toFixed(totals.netYrs)} SDE Years</strong> for the organization.</p>`;
 
-    const totalDeductions = totals[selectedScenario]?.deductYrs || 0;
-    const totalAIGain = totals[selectedScenario]?.deductionsBreakdown?.aiProductivityGainYrs || 0;
-
-    narrativeHTML += `<p>All time-based deductions (leave, overhead, etc.) are applied exclusively to the human engineers, amounting to a total reduction of <strong>${toFixed(totalDeductions)} SDE Years</strong>. However, productivity enhancements from AI tooling provide a gain of <strong>${toFixed(totalAIGain)} SDE Years</strong>.</p>`;
-    narrativeHTML += `<p>After accounting for all factors, the final estimated <strong>Net Project Capacity for the organization is ${toFixed(totals[selectedScenario]?.netYrs)} SDE Years</strong>.</p>`;
     narrativeHTML += `<hr style='border:none; border-top: 1px solid #ccc; margin: 1.5em 0;'>`;
 
-    // Team Breakdown
-    narrativeHTML += `<h4 style="margin-bottom: 0.5em;">Team-Specific Breakdown (${selectedScenario} Scenario):</h4>`;
-    teams.forEach(team => {
-        const teamId = team.teamId;
-        const teamName = getTeamName(team);
-        const teamMetrics = calculatedMetrics[teamId]?.[selectedScenario];
-        if (!teamMetrics) { return; }
+    // --- Team-Specific Breakdown Narrative ---
+    narrativeHTML += `<h4>Team-Specific Breakdown (${selectedScenario} Scenario)</h4>`;
+    
+    (currentSystemData.teams || []).forEach(team => {
+        const teamMetrics = calculatedMetrics[team.teamId]?.[selectedScenario];
+        if (!teamMetrics) return;
 
-        const aiHeadcount = teamMetrics.totalHeadcount - teamMetrics.humanHeadcount;
+        const teamName = team.teamIdentity || team.teamName || team.teamId;
+        const teamGross = teamMetrics.grossYrs || 0;
+        const teamSinks = teamMetrics.deductYrs || 0;
         const teamAIGain = teamMetrics.deductionsBreakdown?.aiProductivityGainYrs || 0;
+        const teamNet = teamMetrics.netYrs || 0;
 
-        narrativeHTML += `<p><strong><u>${teamName}</u>:</strong> Based on a total headcount of <strong>${toFixed(teamMetrics.totalHeadcount, 1)}</strong> (${toFixed(teamMetrics.humanHeadcount, 1)} Humans, ${toFixed(aiHeadcount, 1)} AI), the Gross Capacity is <strong>${toFixed(teamMetrics.grossYrs)} SDE Years</strong>.`;
-
-        narrativeHTML += ` Capacity sinks applied to human engineers result in a deduction of <strong>${toFixed(teamMetrics.deductYrs)} SDE Years</strong>.`;
-        if (teamAIGain > 0) {
-            narrativeHTML += ` An estimated <strong>${toFixed(teamAIGain)} SDE Years</strong> are regained through AI tooling productivity enhancements.`;
-        }
-
-        narrativeHTML += ` The final Net Project Capacity for this team is <strong>${toFixed(teamMetrics.netYrs)} SDE Years</strong>.</p>`;
+        narrativeHTML += `<p><strong><u>${teamName}</u>:</strong> ` +
+                         `Starts with a Gross Capacity of <strong>${toFixed(teamGross)} SDE Years</strong>. ` +
+                         `From this, <strong>${toFixed(teamSinks)} SDE Years</strong> are deducted for human-centric sinks (leave, overhead, etc.). ` +
+                         `An estimated <strong>${toFixed(teamAIGain)} SDE Years</strong> are then regained through AI tooling productivity enhancements, ` +
+                         `resulting in a final Net Project Capacity of <strong>${toFixed(teamNet)} SDE Years</strong> for this team.</p>`;
     });
 
     narrativeContentContainer.innerHTML = narrativeHTML;
-    console.log("Finished generating Enhanced AI-aware capacity narrative.");
+    console.log("Finished generating enhanced, verbose capacity narrative.");
 }
 window.generateCapacityNarrative = generateCapacityNarrative;
 
@@ -1324,7 +1373,27 @@ function generateTeamConstraintsForms() {
     });
 
     let summarySection = document.getElementById('capacitySummarySection');
-     if (!summarySection) { summarySection = document.createElement('div'); summarySection.id = 'capacitySummarySection'; summarySection.style.border = '1px solid #666'; summarySection.style.backgroundColor = '#f0f0f0'; summarySection.style.padding = '15px'; summarySection.style.marginTop = '20px'; const summaryTitle = document.createElement('h3'); summaryTitle.textContent = 'Calculated Net Project Capacity Summary'; summarySection.appendChild(summaryTitle); const summaryPlaceholder = document.createElement('p'); summaryPlaceholder.id = 'capacitySummaryPlaceholder'; summaryPlaceholder.textContent = '[Summary table with calculations will be added in Phase 5]'; summaryPlaceholder.style.fontStyle = 'italic'; summarySection.appendChild(summaryPlaceholder); container.appendChild(summarySection); } else { const placeholder = summarySection.querySelector('#capacitySummaryPlaceholder'); if (placeholder) placeholder.style.display = 'block'; const table = summarySection.querySelector('table'); if(table) table.style.display = 'none'; }
+     if (!summarySection) { 
+        summarySection = document.createElement('div'); 
+        summarySection.id = 'capacitySummarySection'; 
+        summarySection.style.border = '1px solid #666'; 
+        summarySection.style.backgroundColor = '#f0f0f0'; 
+        summarySection.style.padding = '15px'; 
+        summarySection.style.marginTop = '20px'; 
+        const summaryTitle = document.createElement('h3'); 
+        summaryTitle.textContent = 'Calculated Net Project Capacity Summary'; 
+        summarySection.appendChild(summaryTitle); 
+        const summaryPlaceholder = document.createElement('p'); 
+        summaryPlaceholder.id = 'capacitySummaryPlaceholder'; 
+        summaryPlaceholder.textContent = ''; 
+        summaryPlaceholder.style.fontStyle = 'italic'; summarySection.appendChild(summaryPlaceholder); 
+        container.appendChild(summarySection); 
+    } else { 
+        const placeholder = summarySection.querySelector('#capacitySummaryPlaceholder'); 
+        if (placeholder) placeholder.style.display = 'block'; 
+        const table = summarySection.querySelector('table');
+         if(table) table.style.display = 'none'; 
+        }
 
      let saveButtonContainer = document.getElementById('capacitySaveButtonContainer');
       if (!saveButtonContainer) {
