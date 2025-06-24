@@ -58,12 +58,12 @@ Manage Detailed Planning
 [Done] - Capacaity Forecasting / contraints
 [Done] -- Add gains in AI engineers - hours saved by AI means more capacity to the team
 [Done] -- Ensure that when a team has AI engineers, they are excluded from team capacity constraints for leave and meetings overheads
+[Done] - Fixed by Google's Jules UX fixes - - Fix table of contents for documentation - clickthrough on links don't all work
 
 ------------
 IN PROGRESS
 ------------
-UX fixes
-- Fix table of contents for documentation - clickthrough on links don't all work
+
 
 
 Manage Roadmap & Backlog
