@@ -242,54 +242,85 @@ function setPlanningScenario(scenario) {
 window.setPlanningScenario = setPlanningScenario;
 
 /**
- * REVISED (v8 - Aligned with Capacity Tuning) - Generates the Team Load Summary table.
- * - This function is now fully dependent on the 'calculatedCapacityMetrics' object.
- * - It clearly distinguishes between gross headcounts (for reference) and the scenario capacity limit (which can be gross or net).
- * - "Funded HC" column correctly shows the funded HUMAN count.
- * - "Team BIS" and "Effective BIS" columns correctly show the TOTAL headcount including AI.
- * - "Scenario Capacity Limit" correctly reflects the gross or net SDE Years for the selected scenario.
+ * REVISED (v11 - UX Wording) - Generates the Team Load Summary table.
+ * - Makes the 'Scenario Capacity' column header dynamic to reflect the selected scenario and state (Gross/Net).
  */
 function generateTeamLoadSummaryTable() {
-    console.log("Generating Team Load Summary Table (v8 - Fully Aligned)...");
+    console.log("Generating Team Load Summary Table (v11 - UX Wording)...");
 
-    // --- Get Containers & Pre-checks ---
     const summaryContainer = document.getElementById('teamLoadSummarySection');
     if (!summaryContainer) { console.error("Missing Team Load Summary container."); return; }
     const summaryTable = summaryContainer.querySelector('#teamLoadSummaryTable');
     const summaryTableBody = summaryTable?.querySelector('#teamLoadSummaryTableBody');
     const summaryTableFoot = summaryTable?.querySelector('#teamLoadSummaryTableFoot');
-    if (!summaryTable || !summaryTableBody || !summaryTableFoot) { console.error("Missing Team Load Summary table structure."); return; }
-    summaryTableBody.innerHTML = ''; summaryTableFoot.innerHTML = '';
+    let summaryTableHead = summaryTable?.querySelector('thead');
+    if (!summaryTableHead) {
+        summaryTableHead = summaryTable.createTHead();
+    }
+    
+    if (!summaryTable || !summaryTableBody || !summaryTableFoot || !summaryTableHead) {
+        console.error("Missing Team Load Summary table structure (tbody, tfoot, or thead).");
+        return;
+    }
+    summaryTableHead.innerHTML = '';
+    summaryTableBody.innerHTML = '';
+    summaryTableFoot.innerHTML = '';
 
     if (!currentSystemData || !currentSystemData.yearlyInitiatives || !currentSystemData.teams) { return; }
 
-    // --- 1. Get the Authoritative Calculated Metrics ---
-    // The calling function (generatePlanningTable) is now responsible for ensuring this exists.
     const calculatedMetrics = currentSystemData.calculatedCapacityMetrics;
     if (!calculatedMetrics) {
         console.error("generateTeamLoadSummaryTable cannot run: calculatedCapacityMetrics is missing.");
         summaryContainer.querySelector('h4').textContent += " - ERROR: Metrics not calculated!";
         return;
     }
-
+    
     const teams = currentSystemData.teams || [];
     const scenarioKey = planningCapacityScenario === 'funded' ? 'FundedHC' : (planningCapacityScenario === 'team_bis' ? 'TeamBIS' : 'EffectiveBIS');
     const isNetCapacityUsed = applyCapacityConstraintsToggle;
 
-    // --- 2. Determine Overall ATL/BTL Limit for Initiative Filtering ---
     const summaryAtlBtlLimit = isNetCapacityUsed ? calculatedMetrics.totals[scenarioKey].netYrs : calculatedMetrics.totals[scenarioKey].grossYrs;
-    const scenarioName = `${isNetCapacityUsed ? 'Net' : 'Gross'} ${scenarioKey}`;
-    console.log(`Team Load Summary using limit: ${summaryAtlBtlLimit.toFixed(2)} (${scenarioName})`);
-
-    // Update collapsible header title
+    const scenarioNameForTitle = `${isNetCapacityUsed ? 'Net' : 'Gross'} ${scenarioKey.replace('BIS', ' BIS')}`;
+    
     const summaryTitleHeader = summaryContainer.querySelector('h4');
     if (summaryTitleHeader) {
         const toggleSpan = summaryTitleHeader.querySelector('span.toggle-indicator');
-        summaryTitleHeader.textContent = ` Team Load Summary (for ATL Initiatives - Scenario: ${scenarioName})`;
+        summaryTitleHeader.textContent = ` Team Load Summary (for ATL Initiatives - Scenario: ${scenarioNameForTitle})`;
         if (toggleSpan) { summaryTitleHeader.insertBefore(toggleSpan, summaryTitleHeader.firstChild); }
     }
+    
+    // --- 1. Generate Table Headers with Dynamic Column ---
+    const headerRow = summaryTableHead.insertRow();
+    
+    // ** CHANGE: Create the dynamic header text **
+    const scenarioDisplayName = scenarioKey.replace('BIS', ' BIS');
+    const stateDisplayName = isNetCapacityUsed ? 'Net' : 'Gross';
+    const dynamicHeaderText = `${scenarioDisplayName} Capacity (${stateDisplayName})`;
+    
+    const headers = [
+        { text: 'Team', title: 'Team Name' },
+        { text: 'Funded HC (Humans)', title: 'Budgeted headcount for human engineers.' },
+        { text: 'Team BIS (Humans)', title: 'Actual human engineers on the team.' },
+        { text: 'Away BIS (Humans)', title: 'Borrowed human engineers.' },
+        { text: 'AI Engineers', title: 'Count of AI Software Engineers contributing to the team (on-team and away).' },
+        { text: '(+) AI Productivity Gain', title: 'The effective SDE/Year capacity gained from AI tooling, applied to human engineers.' },
+        { text: 'AI Gain %', title: 'The configured productivity gain percentage for the team.' },
+        // ** Use the dynamic header text **
+        { text: dynamicHeaderText, title: 'The total planning capacity for the team under the selected scenario and state (Gross or Net).' },
+        { text: 'Assigned ATL SDEs', title: 'The sum of SDE estimates for this team from initiatives Above The Line.' },
+        { text: 'Remaining Capacity (ATL)', title: 'Scenario Capacity minus Assigned ATL SDEs.' },
+        { text: 'ATL Status', title: 'Indicates if the team is overloaded based on ATL work.' }
+    ];
 
-    // --- 3. Recalculate Assigned ATL SDEs per Team using the determined limit ---
+    headers.forEach(h => {
+        const th = document.createElement('th');
+        th.textContent = h.text;
+        th.title = h.title;
+        headerRow.appendChild(th);
+    });
+
+    // --- 2. Populate Table Body and Footer ---
+    // The rest of the function remains identical to the previous version (v10).
     const sortedInitiatives = [...currentSystemData.yearlyInitiatives].sort((a, b) => { if (a.isProtected && !b.isProtected) return -1; if (!a.isProtected && b.isProtected) return 1; return 0; });
     let overallCumulativeSde = 0;
     const teamAtlSdeAssigned = teams.reduce((acc, team) => { acc[team.teamId] = 0; return acc; }, {});
@@ -304,53 +335,53 @@ function generateTeamLoadSummaryTable() {
                 }
             });
         } else {
-            break; // Stop accumulating once BTL is hit
+            break;
         }
     }
-    // --- END Assigned SDE Calculation ---
 
-
-    // --- 4. Populate Summary Table Body ---
-    let totalAssignedAtlSdeOverall = 0;
-    let totalScenarioCapacityOverall = 0;
-    let totalFundedHCGross = 0;
-    let totalTeamBISGross = 0;
-    let totalEffectiveBISGross = 0;
+    let totalFundedHCGross = 0, totalTeamBISHumans = 0, totalAwayBISHumans = 0, totalAIEngineers = 0;
+    let totalProductivityGain = 0, totalScenarioCapacity = 0, totalAssignedAtlSde = 0;
 
     teams.sort((a, b) => (a?.teamName || '').localeCompare(b?.teamName || '')).forEach(team => {
         if (!team || !team.teamId) return;
-
         const teamId = team.teamId;
         const teamMetrics = calculatedMetrics[teamId];
-        if (!teamMetrics) { console.warn(`Metrics not found for teamId: ${teamId}. Skipping summary row.`); return; }
-
+        if (!teamMetrics) { console.warn(`Metrics not found for teamId: ${teamId}.`); return; }
+        
+        const teamAIBIS = (team.engineers || []).filter(name => currentSystemData.allKnownEngineers.find(e => e.name === name)?.attributes?.isAISWE).length;
+        const awayAIBIS = (team.awayTeamMembers || []).filter(m => m.attributes?.isAISWE).length;
+        const aiEngineers = teamAIBIS + awayAIBIS;
+        const teamBISHumans = teamMetrics.TeamBIS.humanHeadcount;
+        const effectiveBISHumans = teamMetrics.EffectiveBIS.humanHeadcount;
+        const awayBISHumans = effectiveBISHumans - teamBISHumans;
+        const productivityGain = teamMetrics[scenarioKey].deductionsBreakdown.aiProductivityGainYrs || 0;
+        const productivityPercent = team.teamCapacityAdjustments?.aiProductivityGainPercent || 0;
+        const scenarioCapacity = isNetCapacityUsed ? teamMetrics[scenarioKey].netYrs : teamMetrics[scenarioKey].grossYrs;
         const assignedAtlSde = teamAtlSdeAssigned[teamId] || 0;
+        const remainingCapacity = scenarioCapacity - assignedAtlSde;
 
-        // Get the specific capacity limit for THIS team based on the toggle state
-        const displayTeamScenarioLimit = isNetCapacityUsed ? teamMetrics[scenarioKey].netYrs : teamMetrics[scenarioKey].grossYrs;
-        const remainingCapacity = displayTeamScenarioLimit - assignedAtlSde;
-
-        // Accumulate totals for the footer
-        totalAssignedAtlSdeOverall += assignedAtlSde;
-        totalScenarioCapacityOverall += displayTeamScenarioLimit;
         totalFundedHCGross += teamMetrics.FundedHC.humanHeadcount;
-        totalTeamBISGross += teamMetrics.TeamBIS.totalHeadcount;
-        totalEffectiveBISGross += teamMetrics.EffectiveBIS.totalHeadcount;
+        totalTeamBISHumans += teamBISHumans;
+        totalAwayBISHumans += awayBISHumans;
+        totalAIEngineers += aiEngineers;
+        totalProductivityGain += productivityGain;
+        totalScenarioCapacity += scenarioCapacity;
+        totalAssignedAtlSde += assignedAtlSde;
 
         let statusText = '✅ OK'; let statusColor = 'green';
         if (remainingCapacity < 0) { statusText = '🛑 Overloaded'; statusColor = 'red'; }
-        else if (remainingCapacity < 0.5 && displayTeamScenarioLimit > 0) { statusText = '⚠️ Near Limit'; statusColor = 'darkorange'; }
+        else if (remainingCapacity < 0.5 && scenarioCapacity > 0) { statusText = '⚠️ Near Limit'; statusColor = 'darkorange'; }
 
         const row = summaryTableBody.insertRow();
         row.insertCell().textContent = team.teamIdentity || team.teamName || teamId;
-        // ** ALIGNED COLUMNS **
-        row.insertCell().textContent = teamMetrics.FundedHC.humanHeadcount.toFixed(2);       // Correctly shows HUMAN funded count
-        row.insertCell().textContent = teamMetrics.TeamBIS.totalHeadcount.toFixed(2);        // Correctly shows TOTAL team BIS (human+AI)
-        row.insertCell().textContent = (teamMetrics.EffectiveBIS.totalHeadcount - teamMetrics.TeamBIS.totalHeadcount).toFixed(2); // Correctly shows Away BIS
-        row.insertCell().textContent = teamMetrics.EffectiveBIS.totalHeadcount.toFixed(2);     // Correctly shows TOTAL effective BIS
-        // ** END ALIGNED COLUMNS **
+        row.insertCell().textContent = teamMetrics.FundedHC.humanHeadcount.toFixed(2);
+        row.insertCell().textContent = teamBISHumans.toFixed(2);
+        row.insertCell().textContent = awayBISHumans.toFixed(2);
+        row.insertCell().textContent = aiEngineers.toFixed(2);
+        row.insertCell().textContent = `+${productivityGain.toFixed(2)}`;
+        row.insertCell().textContent = `${productivityPercent.toFixed(0)}%`;
+        row.insertCell().textContent = scenarioCapacity.toFixed(2);
         row.insertCell().textContent = assignedAtlSde.toFixed(2);
-        row.insertCell().textContent = displayTeamScenarioLimit.toFixed(2);
         const remainingCell = row.insertCell();
         remainingCell.textContent = remainingCapacity.toFixed(2);
         remainingCell.style.color = remainingCapacity < 0 ? 'red' : 'green';
@@ -359,31 +390,25 @@ function generateTeamLoadSummaryTable() {
         statusCell.style.color = statusColor;
         statusCell.style.fontWeight = 'bold';
 
-        // Styling
-        Array.from(row.cells).forEach((cell, index) => {
-            cell.style.textAlign = index === 0 ? 'left' : 'center';
-        });
+        Array.from(row.cells).forEach((cell, index) => { cell.style.textAlign = index === 0 ? 'left' : 'center'; });
     });
 
-    // --- 5. Populate Footer ---
     const footerRow = summaryTableFoot.insertRow();
-    const totalAwayBISGross = totalEffectiveBISGross - totalTeamBISGross;
     footerRow.insertCell().textContent = 'Totals';
     footerRow.insertCell().textContent = totalFundedHCGross.toFixed(2);
-    footerRow.insertCell().textContent = totalTeamBISGross.toFixed(2);
-    footerRow.insertCell().textContent = totalAwayBISGross.toFixed(2);
-    footerRow.insertCell().textContent = totalEffectiveBISGross.toFixed(2);
-    footerRow.insertCell().textContent = totalAssignedAtlSdeOverall.toFixed(2);
-    footerRow.insertCell().textContent = totalScenarioCapacityOverall.toFixed(2);
+    footerRow.insertCell().textContent = totalTeamBISHumans.toFixed(2);
+    footerRow.insertCell().textContent = totalAwayBISHumans.toFixed(2);
+    footerRow.insertCell().textContent = totalAIEngineers.toFixed(2);
+    footerRow.insertCell().textContent = `+${totalProductivityGain.toFixed(2)}`;
+    footerRow.insertCell().textContent = '';
+    footerRow.insertCell().textContent = totalScenarioCapacity.toFixed(2);
+    footerRow.insertCell().textContent = totalAssignedAtlSde.toFixed(2);
     const totalRemainingCell = footerRow.insertCell();
-    totalRemainingCell.textContent = (totalScenarioCapacityOverall - totalAssignedAtlSdeOverall).toFixed(2);
-    totalRemainingCell.style.color = (totalScenarioCapacityOverall - totalAssignedAtlSdeOverall) < 0 ? 'red' : 'green';
-    footerRow.insertCell().textContent = ''; // Empty status cell
+    totalRemainingCell.textContent = (totalScenarioCapacity - totalAssignedAtlSde).toFixed(2);
+    totalRemainingCell.style.color = (totalScenarioCapacity - totalAssignedAtlSde) < 0 ? 'red' : 'green';
+    footerRow.insertCell().textContent = '';
 
-    // Styling
-    Array.from(footerRow.cells).forEach((cell, index) => {
-        cell.style.textAlign = index === 0 ? 'left' : 'center';
-    });
+    Array.from(footerRow.cells).forEach((cell, index) => { cell.style.textAlign = index === 0 ? 'left' : 'center'; });
 }
 window.generateTeamLoadSummaryTable = generateTeamLoadSummaryTable; // Make global if needed
 
@@ -463,14 +488,18 @@ function generatePlanningTable() {
         const teamBisButtonTitle = `Use Team BIS. Gross: ${calculatedMetrics.totals.TeamBIS.grossYrs.toFixed(2)}, Net: ${calculatedMetrics.totals.TeamBIS.netYrs.toFixed(2)}`;
         const fundedHcButtonTitle = `Use Funded HC. Gross: ${calculatedMetrics.totals.FundedHC.grossYrs.toFixed(2)}, Net: ${calculatedMetrics.totals.FundedHC.netYrs.toFixed(2)}`;
 
+        // ** CHANGE: Updated toggle label text and tooltip **
+        const toggleTooltip = "Toggling this ON applies all configured capacity constraints (leave, overhead, etc.) AND adds any productivity gains from AI tooling to calculate the Net capacity.";
+        const toggleLabelText = "Apply Constraints & AI Gains (Net)";
+
         scenarioControlDiv.innerHTML = `
             <strong style="margin-right: 10px;">Calculate ATL/BTL using:</strong>
             <button type="button" style="${planningCapacityScenario === 'effective' ? activeButtonStyle : inactiveButtonStyle}" title="${effectiveButtonTitle}" onclick="setPlanningScenario('effective')">Effective BIS</button>
             <button type="button" style="${planningCapacityScenario === 'team_bis' ? activeButtonStyle : inactiveButtonStyle}" title="${teamBisButtonTitle}" onclick="setPlanningScenario('team_bis')">Team BIS</button>
             <button type="button" style="${planningCapacityScenario === 'funded' ? activeButtonStyle : inactiveButtonStyle}" title="${fundedHcButtonTitle}" onclick="setPlanningScenario('funded')">Funded HC</button>
-            <label style="margin-left: 20px; font-size: 0.9em; cursor: pointer; vertical-align: middle;" title="Apply calculated capacity constraints (leave, overhead, AI gains, etc.) to ATL/BTL calculation.">
+            <label style="margin-left: 20px; font-size: 0.9em; cursor: pointer; vertical-align: middle;" title="${toggleTooltip}">
                 <input type="checkbox" id="applyConstraintsToggle" style="vertical-align: middle;" onchange="toggleCapacityConstraints(this.checked)" ${applyCapacityConstraintsToggle ? 'checked' : ''}>
-                Apply Capacity Constraints?
+                ${toggleLabelText}
             </label>
             <button type="button" id="savePlanButton"
                     style="${baseButtonStyle} background-color: #dc3545; color: white; border-color: #dc3545; margin-left: 25px;"
