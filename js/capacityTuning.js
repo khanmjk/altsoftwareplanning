@@ -1,3 +1,5 @@
+// js/capacityTuning.js
+
 /** NEW Function - Shows the Capacity Configuration View */
 function showCapacityConfigView() {
     console.log("Switching to Capacity Configuration View (Focus Mode)...");
@@ -18,8 +20,6 @@ function showCapacityConfigView() {
     generateTeamConstraintsForms();
     // ---------------------------
 
-    // Placeholder for future content generation
-    console.log("Capacity Config View displayed. Content generation will be added in next phase.");
     // (Phase 5+)
     updateCapacityCalculationsAndDisplay();
 
@@ -322,14 +322,14 @@ function generateGlobalConstraintsForm() {
     // --- Append Global Section ---
     console.log("Finished generating Global Constraints Form.");
 }
-window.generateGlobalConstraintsForm = generateGlobalConstraintsForm; // Make global if needed
+window.generateGlobalConstraintsForm = generateGlobalConstraintsForm;
 
 /**
- * REVISED - Calculates capacity metrics, accounting for AI vs. Human engineers
- * and the new rule for Funded Headcount.
+ * REVISED - Calculates capacity metrics, accounting for AI vs. Human engineers,
+ * the new rule for Funded Headcount, and the new AI Productivity Gain.
  */
 function calculateAllCapacityMetrics() {
-    console.log("Calculating all capacity metrics (AI-Aware with new FundedHC rule)...");
+    console.log("Calculating all capacity metrics (AI-Aware with Productivity Gain)...");
     if (!currentSystemData || !currentSystemData.capacityConfiguration || !currentSystemData.teams) {
         console.error("Cannot calculate metrics: Missing core data (config or teams).");
         return { totals: { TeamBIS: {}, EffectiveBIS: {}, FundedHC: {} } };
@@ -341,7 +341,7 @@ function calculateAllCapacityMetrics() {
     const workingDaysPerYear = capacityConfig.workingDaysPerYear || 261;
     const sdesPerSdeYear = 1;
     const globalLeaveTypes = capacityConfig.leaveTypes || [];
-    const workingDays = workingDaysPerYear || 1;
+    const workingDays = workingDaysPerYear || 1; // Safeguard for division by zero
 
     const teamMetrics = {};
     const totals = {
@@ -351,7 +351,7 @@ function calculateAllCapacityMetrics() {
     };
 
     ['TeamBIS', 'EffectiveBIS', 'FundedHC'].forEach(scenario => {
-        totals[scenario].deductionsBreakdown = { stdLeaveYrs: 0, varLeaveYrs: 0, holidayYrs: 0, orgEventYrs: 0, teamActivityYrs: 0, overheadYrs: 0 };
+        totals[scenario].deductionsBreakdown = { stdLeaveYrs: 0, varLeaveYrs: 0, holidayYrs: 0, orgEventYrs: 0, teamActivityYrs: 0, overheadYrs: 0, aiProductivityGainYrs: 0 };
     });
 
     (teams || []).forEach(team => {
@@ -400,28 +400,36 @@ function calculateAllCapacityMetrics() {
                     humanHeadcount = teamHumanBIS + awayHumanMembers;
                     break;
                 case 'FundedHC':
-                    // ** NEW LOGIC AS PER USER'S INSTRUCTION **
-                    // Funded HC is for humans. AI engineers are an additive capacity on top of that.
                     humanHeadcount = team.fundedHeadcount || 0;
-                    totalHeadcount = humanHeadcount + teamAIBIS + awayAIMembers; // Funded Humans + Current AI
+                    totalHeadcount = humanHeadcount + teamAIBIS + awayAIMembers;
                     break;
             }
 
-            // Gross capacity is based on TOTAL headcount
             const grossYrs = totalHeadcount * sdesPerSdeYear;
 
-            // Deductions are calculated based on HUMAN headcount
-            const breakdown = {
+            const deductionsBreakdown = {
                 stdLeaveYrs: (stdLeave_days_per_sde / workingDays) * humanHeadcount,
-                varLeaveYrs: variable_leave_total_team_days / workingDays, // This is a total team impact, not per-SDE
+                varLeaveYrs: variable_leave_total_team_days / workingDays,
                 holidayYrs: (holidays_days_per_sde / workingDays) * humanHeadcount,
                 orgEventYrs: (orgEvents_days_per_sde / workingDays) * humanHeadcount,
                 teamActivityYrs: (teamActivityImpacts.daysPerSDE / workingDays) * humanHeadcount + (teamActivityImpacts.totalTeamDaysDuration / workingDays),
-                overheadYrs: (overhead_days_per_sde / workingDays) * humanHeadcount
+                overheadYrs: (overhead_days_per_sde / workingDays) * humanHeadcount,
+                aiProductivityGainYrs: 0 // Initialize gain
             };
 
-            const totalDeductYrs = Object.values(breakdown).reduce((sum, val) => sum + (val || 0), 0);
-            const netYrs = grossYrs - totalDeductYrs;
+            const totalDeductYrs = Object.values(deductionsBreakdown).reduce((sum, val) => sum + (val || 0), 0);
+            
+            // --- NEW: Calculate and apply AI Productivity Gain ---
+            const aiProductivityGainPercent = team.teamCapacityAdjustments?.aiProductivityGainPercent || 0;
+            const humanGrossYrs = humanHeadcount * sdesPerSdeYear;
+            // All deductions are already based on human headcount
+            const humanNetWorkYrs_BeforeGain = humanGrossYrs - totalDeductYrs;
+            const aiGainInSdeYears = humanNetWorkYrs_BeforeGain * (aiProductivityGainPercent / 100);
+            
+            deductionsBreakdown.aiProductivityGainYrs = aiGainInSdeYears;
+
+            const netYrs = (grossYrs - totalDeductYrs) + aiGainInSdeYears;
+            // --- END NEW ---
 
             teamMetrics[team.teamId][scenario] = {
                 totalHeadcount: totalHeadcount,
@@ -429,7 +437,7 @@ function calculateAllCapacityMetrics() {
                 grossYrs: grossYrs,
                 deductYrs: totalDeductYrs,
                 netYrs: netYrs,
-                deductionsBreakdown: breakdown
+                deductionsBreakdown: deductionsBreakdown
             };
 
             totals[scenario].totalHeadcount += totalHeadcount;
@@ -437,18 +445,16 @@ function calculateAllCapacityMetrics() {
             totals[scenario].grossYrs += grossYrs;
             totals[scenario].deductYrs += totalDeductYrs;
             totals[scenario].netYrs += netYrs;
-            if (breakdown) {
-                Object.keys(breakdown).forEach(key => {
-                    totals[scenario].deductionsBreakdown[key] = (totals[scenario].deductionsBreakdown[key] || 0) + (breakdown[key] || 0);
-                });
-            }
+            
+            Object.keys(deductionsBreakdown).forEach(key => {
+                totals[scenario].deductionsBreakdown[key] = (totals[scenario].deductionsBreakdown[key] || 0) + (deductionsBreakdown[key] || 0);
+            });
         });
     });
 
-    console.log("Finished calculating AI-aware metrics with new FundedHC rule.");
+    console.log("Finished calculating AI-aware metrics with productivity gain.");
     return { ...teamMetrics, totals: totals };
 }
-
 window.calculateAllCapacityMetrics = calculateAllCapacityMetrics;
 
 /**
@@ -528,7 +534,7 @@ function generateCapacitySummaryDisplay(calculatedMetrics, selectedScenario) {
         { text: `Headcount (${selectedScenario})`, title: 'Total headcount (Human + AI) for the selected scenario' },
         { text: 'Gross (SDE Yrs)', title: 'Total SDE Years before deductions' },
         { text: '(-) Deduct (SDE Yrs)', title: 'Total deductions (Leave, Overhead, etc.) applied to HUMAN engineers' },
-        { text: '(=) Net Project (SDE Yrs)', title: 'Remaining capacity for project work' }
+        { text: '(=) Net Project (SDE Yrs)', title: 'Remaining capacity for project work (including AI gains)' }
     ];
     headers.forEach(hdr => {
         const th = document.createElement('th');
@@ -540,7 +546,7 @@ function generateCapacitySummaryDisplay(calculatedMetrics, selectedScenario) {
     });
 
     const tbody = summaryTable.createTBody();
-    const totals = calculatedMetrics.totals[selectedScenario] || { totalHeadcount: 0, humanHeadcount: 0, grossYrs: 0, deductYrs: 0, netYrs: 0 };
+    const totals = calculatedMetrics.totals[selectedScenario] || { totalHeadcount: 0, humanHeadcount: 0, grossYrs: 0, deductYrs: 0, netYrs: 0, deductionsBreakdown: {} };
 
     (currentSystemData.teams || []).forEach(team => {
         if (!team || !team.teamId) return;
@@ -571,6 +577,8 @@ function generateCapacitySummaryDisplay(calculatedMetrics, selectedScenario) {
         if (teamMetrics.netYrs <= 0) {
             netCell.style.backgroundColor = '#f8d7da';
             netCell.title = 'Warning: Net Project Capacity is zero or negative!';
+        } else {
+            netCell.style.backgroundColor = '#d4edda';
         }
 
         Array.from(row.cells).forEach((cell, i) => { if (i > 0) cell.style.textAlign = 'center'; });
@@ -602,6 +610,8 @@ function generateCapacitySummaryDisplay(calculatedMetrics, selectedScenario) {
     if (totals.netYrs <= 0) {
         netTotalCell.style.backgroundColor = '#f8d7da';
         netTotalCell.title = 'Warning: Total Net Project Capacity is zero or negative!';
+    } else {
+        netTotalCell.style.backgroundColor = '#d4edda';
     }
     Array.from(footerRow.cells).forEach((cell, i) => {
         cell.style.borderTop = '2px solid #666';
@@ -612,7 +622,7 @@ window.generateCapacitySummaryDisplay = generateCapacitySummaryDisplay;
 
 /**
  * REVISED - Generates an enhanced narrative that explains the AI vs. Human calculation
- * and highlights the "AI Capacity Dividend" at both the org and team level.
+ * and highlights the "AI Capacity Dividend" and "AI Productivity Gain" at both the org and team level.
  */
 function generateCapacityNarrative(calculatedMetrics, selectedScenario) {
     console.log(`Attempting to generate Enhanced AI-Aware Capacity Narrative for scenario: ${selectedScenario}...`);
@@ -683,8 +693,6 @@ function generateCapacityNarrative(calculatedMetrics, selectedScenario) {
 
 
     const teams = currentSystemData.teams;
-    const capacityConfig = currentSystemData.capacityConfiguration;
-    const workingDays = capacityConfig.workingDaysPerYear || 261;
     const totals = calculatedMetrics.totals;
 
     const toFixed = (num, places = 2) => (num || 0).toFixed(places);
@@ -692,7 +700,6 @@ function generateCapacityNarrative(calculatedMetrics, selectedScenario) {
 
     let narrativeHTML = '';
 
-    // --- NEW: Enhanced Overall Summary ---
     const totalScenarioHeadcount = totals[selectedScenario]?.totalHeadcount || 0;
     const humanScenarioHeadcount = totals[selectedScenario]?.humanHeadcount || 0;
     const aiScenarioHeadcount = totalScenarioHeadcount - humanScenarioHeadcount;
@@ -700,10 +707,9 @@ function generateCapacityNarrative(calculatedMetrics, selectedScenario) {
     narrativeHTML += `<p><strong>Overall Capacity Summary (${selectedScenario}):</strong> In this scenario, the organization has a total headcount of <strong>${toFixed(totalScenarioHeadcount, 1)}</strong>, composed of <strong>${toFixed(humanScenarioHeadcount, 1)} Human Engineers</strong> and <strong>${toFixed(aiScenarioHeadcount, 1)} AI Engineers</strong>. This provides a Gross Capacity of <strong>${toFixed(totals[selectedScenario]?.grossYrs)} SDE Years</strong>.</p>`;
 
     const totalDeductions = totals[selectedScenario]?.deductYrs || 0;
-    const avgDeductionPerHuman = humanScenarioHeadcount > 0 ? totalDeductions / humanScenarioHeadcount : 0;
-    const totalAIDividend = avgDeductionPerHuman * aiScenarioHeadcount;
+    const totalAIGain = totals[selectedScenario]?.deductionsBreakdown?.aiProductivityGainYrs || 0;
 
-    narrativeHTML += `<p>All time-based deductions (leave, overhead, etc.) are applied exclusively to the human engineers, amounting to a total reduction of <strong>${toFixed(totalDeductions)} SDE Years</strong>. By utilizing AI Engineers who are not subject to these deductions, the organization gains an estimated <strong>"AI Capacity Dividend" of ${toFixed(totalAIDividend)} SDE Years</strong>. This dividend represents the capacity that would have been lost if the AI engineers were human.</p>`;
+    narrativeHTML += `<p>All time-based deductions (leave, overhead, etc.) are applied exclusively to the human engineers, amounting to a total reduction of <strong>${toFixed(totalDeductions)} SDE Years</strong>. However, productivity enhancements from AI tooling provide a gain of <strong>${toFixed(totalAIGain)} SDE Years</strong>.</p>`;
     narrativeHTML += `<p>After accounting for all factors, the final estimated <strong>Net Project Capacity for the organization is ${toFixed(totals[selectedScenario]?.netYrs)} SDE Years</strong>.</p>`;
     narrativeHTML += `<hr style='border:none; border-top: 1px solid #ccc; margin: 1.5em 0;'>`;
 
@@ -716,17 +722,13 @@ function generateCapacityNarrative(calculatedMetrics, selectedScenario) {
         if (!teamMetrics) { return; }
 
         const aiHeadcount = teamMetrics.totalHeadcount - teamMetrics.humanHeadcount;
+        const teamAIGain = teamMetrics.deductionsBreakdown?.aiProductivityGainYrs || 0;
 
         narrativeHTML += `<p><strong><u>${teamName}</u>:</strong> Based on a total headcount of <strong>${toFixed(teamMetrics.totalHeadcount, 1)}</strong> (${toFixed(teamMetrics.humanHeadcount, 1)} Humans, ${toFixed(aiHeadcount, 1)} AI), the Gross Capacity is <strong>${toFixed(teamMetrics.grossYrs)} SDE Years</strong>.`;
 
-        if (aiHeadcount > 0) {
-            const perHumanDeductions = teamMetrics.humanHeadcount > 0 ? teamMetrics.deductYrs / teamMetrics.humanHeadcount : 0;
-            const aiCapacityDividend = perHumanDeductions * aiHeadcount;
-
-            narrativeHTML += ` Capacity sinks (leave, overhead, etc.) are applied only to the human engineers, resulting in a deduction of <strong>${toFixed(teamMetrics.deductYrs)} SDE Years</strong>.`;
-            narrativeHTML += ` By utilizing <strong>${toFixed(aiHeadcount, 1)} AI engineers</strong>, the team gains an estimated <strong>"AI Capacity Dividend" of ${toFixed(aiCapacityDividend)} SDE Years</strong>.`;
-        } else {
-            narrativeHTML += ` Capacity sinks like leave and overhead result in a total deduction of <strong>${toFixed(teamMetrics.deductYrs)} SDE Years</strong>.`;
+        narrativeHTML += ` Capacity sinks applied to human engineers result in a deduction of <strong>${toFixed(teamMetrics.deductYrs)} SDE Years</strong>.`;
+        if (teamAIGain > 0) {
+            narrativeHTML += ` An estimated <strong>${toFixed(teamAIGain)} SDE Years</strong> are regained through AI tooling productivity enhancements.`;
         }
 
         narrativeHTML += ` The final Net Project Capacity for this team is <strong>${toFixed(teamMetrics.netYrs)} SDE Years</strong>.</p>`;
@@ -738,10 +740,10 @@ function generateCapacityNarrative(calculatedMetrics, selectedScenario) {
 window.generateCapacityNarrative = generateCapacityNarrative;
 
 /**
- * REVISED - Generates the Waterfall chart. No logic change needed, as it correctly uses the AI-aware calculated metrics.
+ * REVISED - Generates the Waterfall chart, now including an "AI Gain" bar.
  */
 function generateCapacityWaterfallChart(calculatedMetrics, selectedScenario) {
-    console.log(`Generating Capacity Waterfall Chart section for scenario: ${selectedScenario}...`);
+    console.log(`Generating Capacity Waterfall Chart with AI Gain for scenario: ${selectedScenario}...`);
 
     const ORG_VIEW_ID = '__ORG_VIEW__';
 
@@ -864,7 +866,7 @@ function generateCapacityWaterfallChart(calculatedMetrics, selectedScenario) {
         return;
     }
 
-    const labels = ['Gross', 'Holidays', 'Org Events', 'Std Leave', 'Var Leave', 'Activities', 'Overhead', 'Net Project'];
+    const labels = ['Gross', 'Holidays', 'Org Events', 'Std Leave', 'Var Leave', 'Activities', 'Overhead', 'AI Gain', 'Net Project'];
     const dataValues = [];
     const colors = [];
     const borderColors = [];
@@ -876,31 +878,37 @@ function generateCapacityWaterfallChart(calculatedMetrics, selectedScenario) {
     const varLeaveYrs = viewData.deductionsBreakdown.varLeaveYrs || 0;
     const activityYrs = viewData.deductionsBreakdown.teamActivityYrs || 0;
     const overheadYrs = viewData.deductionsBreakdown.overheadYrs || 0;
+    const aiGainYrs = viewData.deductionsBreakdown.aiProductivityGainYrs || 0; // New
     const netYrs = viewData.netYrs || 0;
 
     let currentLevel = 0;
 
+    // Gross Bar
     dataValues.push([currentLevel, grossYrs]);
     colors.push('rgba(75, 192, 192, 0.6)');
     borderColors.push('rgba(75, 192, 192, 1)');
     currentLevel = grossYrs;
 
+    // Deduction Bars
     const deductions = [holidayYrs, orgEventYrs, stdLeaveYrs, varLeaveYrs, activityYrs, overheadYrs];
     const deductionColors = [
         'rgba(255, 99, 132, 0.6)', 'rgba(255, 159, 64, 0.6)', 'rgba(255, 205, 86, 0.6)',
         'rgba(153, 102, 255, 0.6)', 'rgba(201, 203, 207, 0.6)', 'rgba(54, 162, 235, 0.6)'
     ];
     deductions.forEach((deduction, index) => {
-        if (typeof deduction !== 'number' || isNaN(deduction) || deduction === 0) {
-            dataValues.push([currentLevel, currentLevel]);
-        } else {
-             dataValues.push([currentLevel, currentLevel - deduction]);
-             currentLevel -= deduction;
-        }
-         colors.push(deductionColors[index % deductionColors.length]);
-         borderColors.push(deductionColors[index % deductionColors.length].replace('0.6', '1'));
+        dataValues.push([currentLevel, currentLevel - deduction]);
+        colors.push(deductionColors[index % deductionColors.length]);
+        borderColors.push(deductionColors[index % deductionColors.length].replace('0.6', '1'));
+        currentLevel -= deduction;
     });
 
+    // AI Gain Bar (goes UP)
+    dataValues.push([currentLevel, currentLevel + aiGainYrs]);
+    colors.push('rgba(40, 167, 69, 0.6)'); // Green for gain
+    borderColors.push('rgba(40, 167, 69, 1)');
+    currentLevel += aiGainYrs;
+
+    // Final Net Bar
     dataValues.push([0, netYrs]);
     colors.push('rgba(75, 192, 192, 0.6)');
     borderColors.push('rgba(75, 192, 192, 1)');
@@ -942,6 +950,8 @@ function generateCapacityWaterfallChart(calculatedMetrics, selectedScenario) {
                                 const change = end - start;
                                 if (context.label === 'Gross' || context.label === 'Net Project') {
                                      label += `${end.toFixed(2)} SDE Yrs`;
+                                } else if (context.label === 'AI Gain') {
+                                    label += `+${change.toFixed(2)} SDE Yrs`;
                                 } else {
                                      label += `${change.toFixed(2)} SDE Yrs`;
                                 }
@@ -1008,10 +1018,10 @@ function saveCapacityConfiguration() {
 window.saveCapacityConfiguration = saveCapacityConfiguration;
 
 /**
- * REVISED - Generates the forms for team-specific constraints.
+ * REVISED - Generates the forms for team-specific constraints, now including AI Productivity Gain.
  */
 function generateTeamConstraintsForms() {
-    console.log("Generating Team Constraints Forms (AI-Aware)...");
+    console.log("Generating Team Constraints Forms (AI-Aware with Productivity Gain)...");
     const container = document.getElementById('capacityConfigView');
     if (!container) { console.error("Container #capacityConfigView not found."); return; }
     if (!currentSystemData || !currentSystemData.teams || !currentSystemData.capacityConfiguration?.leaveTypes) { console.error("Missing teams or global leaveTypes data."); return; }
@@ -1121,7 +1131,17 @@ function generateTeamConstraintsForms() {
         console.log(`Rendering details for team index ${teamIndex}`);
         detailsContainer.innerHTML = '';
         const team = currentSystemData.teams[teamIndex]; if (!team) return;
-         if (!team.teamCapacityAdjustments) { team.teamCapacityAdjustments = { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }}, teamActivities: [], recurringOverhead: [] }; } else { if (!team.teamCapacityAdjustments.leaveUptakeEstimates) team.teamCapacityAdjustments.leaveUptakeEstimates = []; if (!team.teamCapacityAdjustments.variableLeaveImpact) team.teamCapacityAdjustments.variableLeaveImpact = { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }}; if (!team.teamCapacityAdjustments.teamActivities) team.teamCapacityAdjustments.teamActivities = []; if (!team.teamCapacityAdjustments.recurringOverhead) team.teamCapacityAdjustments.recurringOverhead = []; const varLeave = team.teamCapacityAdjustments.variableLeaveImpact; if (!varLeave.maternity) varLeave.maternity = { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }; if (!varLeave.paternity) varLeave.paternity = { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }; if (!varLeave.familyResp) varLeave.familyResp = { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }; if (!varLeave.medical) varLeave.medical = { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }; }
+        if (!team.teamCapacityAdjustments) {
+            team.teamCapacityAdjustments = { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }}, teamActivities: [], recurringOverhead: [], aiProductivityGainPercent: 0 };
+        } else {
+            if (!team.teamCapacityAdjustments.leaveUptakeEstimates) team.teamCapacityAdjustments.leaveUptakeEstimates = [];
+            if (!team.teamCapacityAdjustments.variableLeaveImpact) team.teamCapacityAdjustments.variableLeaveImpact = { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }};
+            if (!team.teamCapacityAdjustments.teamActivities) team.teamCapacityAdjustments.teamActivities = [];
+            if (!team.teamCapacityAdjustments.recurringOverhead) team.teamCapacityAdjustments.recurringOverhead = [];
+            if (team.teamCapacityAdjustments.aiProductivityGainPercent === undefined) team.teamCapacityAdjustments.aiProductivityGainPercent = 0; // Backward compatibility
+            const varLeave = team.teamCapacityAdjustments.variableLeaveImpact;
+            if (!varLeave.maternity) varLeave.maternity = { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }; if (!varLeave.paternity) varLeave.paternity = { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }; if (!varLeave.familyResp) varLeave.familyResp = { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }; if (!varLeave.medical) varLeave.medical = { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 };
+        }
 
          const stdLeaveTitle = document.createElement('h5'); stdLeaveTitle.textContent = 'Standard Leave Uptake Estimate (%)'; stdLeaveTitle.style.marginTop = '10px'; stdLeaveTitle.title = 'Estimate % of Org Default leave days taken per SDE (e.g., 80%). Blank=100%. Affects Annual, Sick, Study, etc.'; detailsContainer.appendChild(stdLeaveTitle); const stdLeaveTable = document.createElement('table'); stdLeaveTable.style.marginLeft = '20px'; stdLeaveTable.style.width = 'auto';
          stdLeaveTable.innerHTML = `<thead> <tr> <th style="text-align: left; padding: 4px 8px;">Leave Type</th> <th style="text-align: center; padding: 4px 8px;" title="Estimated % uptake for this team (0-100). Blank=100%">Team Uptake (%)</th> <th style="text-align: center; padding: 4px 8px;" title="Calculated Effective Days/SDE (Default * Uptake %)">Effective Days/SDE</th> </tr> </thead> <tbody></tbody>`;
@@ -1250,6 +1270,48 @@ function generateTeamConstraintsForms() {
         overheadContainer.appendChild(overheadInput);
         detailsContainer.appendChild(overheadContainer);
         updateInputWarning(overheadInput, (parseFloat(overheadInput.value) > 40) ? 'Value exceeds 40 Hrs/Week/SDE. Is this realistic?' : '');
+
+        // --- NEW: AI Productivity Gain Section ---
+        const productivityTitle = document.createElement('h5');
+        productivityTitle.textContent = 'AI Tooling Productivity';
+        productivityTitle.style.marginTop = '15px';
+        detailsContainer.appendChild(productivityTitle);
+
+        const productivityContainer = document.createElement('div');
+        productivityContainer.style.marginLeft = '20px';
+
+        const productivityLabel = document.createElement('label');
+        productivityLabel.htmlFor = `aiProductivityGain_${teamIndex}`;
+        productivityLabel.textContent = 'Productivity Gain from AI Tools (%): ';
+        productivityLabel.title = 'Estimate the percentage of productivity gain for HUMAN engineers on this team from using AI-assisted tools (e.g., Copilot, internal AI platforms). This gain is applied after all capacity sinks are deducted.';
+        productivityLabel.style.display = 'inline-block';
+        productivityLabel.style.marginRight = '10px';
+
+        const productivityInput = document.createElement('input');
+        productivityInput.type = 'number';
+        productivityInput.id = `aiProductivityGain_${teamIndex}`;
+        productivityInput.min = '0';
+        productivityInput.step = '1';
+        productivityInput.value = team.teamCapacityAdjustments.aiProductivityGainPercent || 0;
+        productivityInput.style.width = '70px';
+        productivityInput.setAttribute('data-team-index', teamIndex);
+
+        productivityInput.addEventListener('change', (e) => {
+            const tIdx = parseInt(e.target.getAttribute('data-team-index'));
+            const targetTeam = currentSystemData.teams[tIdx];
+            if (!targetTeam?.teamCapacityAdjustments) return;
+            
+            const value = parseFloat(e.target.value) || 0;
+            targetTeam.teamCapacityAdjustments.aiProductivityGainPercent = value;
+            e.target.value = value;
+            console.log(`Updated aiProductivityGainPercent for team ${tIdx} to ${value}`);
+            updateCapacityCalculationsAndDisplay();
+        });
+        
+        productivityContainer.appendChild(productivityLabel);
+        productivityContainer.appendChild(productivityInput);
+        detailsContainer.appendChild(productivityContainer);
+        // --- END NEW SECTION ---
     };
 
     teams.forEach((team, teamIndex) => {
@@ -1280,6 +1342,38 @@ function generateTeamConstraintsForms() {
         container.appendChild(saveButtonContainer);
     }
 
-    console.log("Finished setting up Team Constraints structure (AI-Aware).");
+    console.log("Finished setting up Team Constraints structure (AI-Aware with Productivity Gain).");
 }
 window.generateTeamConstraintsForms = generateTeamConstraintsForms;
+
+/**
+ * REVISED - Helper function to format the deduction breakdown, now including the AI gain.
+ */
+function formatDeductionTooltip(breakdown) {
+    if (!breakdown) {
+        return "Breakdown not available.";
+    }
+    const stdLeave = breakdown.stdLeaveYrs || 0;
+    const varLeave = breakdown.varLeaveYrs || 0;
+    const holidays = breakdown.holidayYrs || 0;
+    const orgEvents = breakdown.orgEventYrs || 0;
+    const teamActs = breakdown.teamActivityYrs || 0;
+    const overhead = breakdown.overheadYrs || 0;
+    const aiGain = breakdown.aiProductivityGainYrs || 0;
+
+    let tooltipString = `Deductions (SDE Yrs):\n` +
+        `  Std Leave: -${stdLeave.toFixed(2)}\n` +
+        `  Var Leave: -${varLeave.toFixed(2)}\n` +
+        `  Holidays: -${holidays.toFixed(2)}\n` +
+        `  Org Events: -${orgEvents.toFixed(2)}\n` +
+        `  Team Acts: -${teamActs.toFixed(2)}\n` +
+        `  Overhead: -${overhead.toFixed(2)}`;
+    
+    if (aiGain > 0) {
+        tooltipString += `\n\nGains (SDE Yrs):\n` +
+                         `  AI Productivity: +${aiGain.toFixed(2)}`;
+    }
+    
+    return tooltipString;
+}
+// --- End Helper ---

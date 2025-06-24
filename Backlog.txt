@@ -55,6 +55,9 @@ Manage Detailed Planning
 [Done] - Fixed by Google's Jules - [Feature] For all visualizations add a toggle button to show/hide platform components
 [Done] - Fixed by Google's Jules - - Fix the UI display in "Service Relationships Visualization" caroussel. The drop down list for services, remains stuck on "All Services View" despite selecting a service from the drop down list. Expected behavior: The selected service must show as the heading in the list, only show "All Services View" when "All Services View" is selected, otherwise the selected service must show in the list entry.
 [Done] - Fixed by Google's Jules - [Bug] - Fix issue when adding new engineer in Edit System Page, when adding team members to the "Available Engineers (System Pool)". The question "Is AI engineer?" there is no way to select Yes or No. so it defaults to AI Engineer even when the resource is a human! Need a checkbox added and apply logic correctly.
+[Done] - Capacaity Forecasting / contraints
+[Done] -- Add gains in AI engineers - hours saved by AI means more capacity to the team
+[Done] -- Ensure that when a team has AI engineers, they are excluded from team capacity constraints for leave and meetings overheads
 
 ------------
 IN PROGRESS
@@ -106,11 +109,6 @@ Year Planning
 
 Team Editing
 -- We support away team only from an incoming perspective (i.e. help provided to the team), but we could also consider concept of outgoing away team (I.e. the team lends engineers to other teams)
-
-Capacaity Forecasting / contraints
--- Add gains in AI engineers - hours saved by AI means more capacity to the team
--- Ensure that when a team has AI engineers, they are excluded from team capacity constraints for leave and meetings overheads
-
 
 AI enhancements
 - Create a top-level menu for "AI-Assistant" - a page that allows the user to interact through a chat interface on interrogating the selected system
