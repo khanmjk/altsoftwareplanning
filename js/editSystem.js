@@ -814,8 +814,6 @@ function displayTeamsForEditing(teamsDataToDisplay, expandedTeamIndex = -1) {
             true, true, 'Enter New Engineer Name to Add to System Pool',
             (newEngineerNameInput, currentTeamEditIndex) => {
                 if (!newEngineerNameInput || newEngineerNameInput.trim() === '') {
-            (newEngineerNameInput, currentTeamEditIndex) => {
-                if (!newEngineerNameInput || newEngineerNameInput.trim() === '') {
                     alert("Engineer name cannot be empty."); return null;
                 }
                 const name = newEngineerNameInput.trim();
@@ -826,13 +824,11 @@ function displayTeamsForEditing(teamsDataToDisplay, expandedTeamIndex = -1) {
 
                 const levelStr = prompt(`Enter level (1-7) for new engineer "${name}":`, "1");
                 if (levelStr === null) return null;
-                if (levelStr === null) return null;
                 const level = parseInt(levelStr);
                 if (isNaN(level) || level < 1 || level > 7) {
                     alert("Invalid level. Please enter a number between 1 and 7."); return null;
                 }
                 const yearsStr = prompt(`Enter years of experience for "${name}":`, "0");
-                if (yearsStr === null) return null;
                 if (yearsStr === null) return null;
                 const yearsOfExperience = parseInt(yearsStr) || 0;
                 const skillsStr = prompt(`Enter skills for "${name}" (comma-separated):`, "");
@@ -856,8 +852,6 @@ function displayTeamsForEditing(teamsDataToDisplay, expandedTeamIndex = -1) {
                     attributes: { isAISWE, aiAgentType, skills, yearsOfExperience }
                 };
                 if (!currentSystemData.allKnownEngineers) currentSystemData.allKnownEngineers = [];
-                currentSystemData.allKnownEngineers.push(newEngineerData);
-                console.log("Added new engineer to global pool:", newEngineerData);
                 currentSystemData.allKnownEngineers.push(newEngineerData);
                 console.log("Added new engineer to global pool:", newEngineerData);
                 displayTeamsForEditing(currentSystemData.teams, currentTeamEditIndex); // Refresh all team UIs
