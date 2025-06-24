@@ -312,20 +312,29 @@ function generateUniqueId(prefix = 'id') {
  */
 function customSlugify(str) {
     if (typeof str !== 'string') return '';
+    const AMPERSAND_PLACEHOLDER = '_AMPERSANDREPLACEMENT_'; // Unique placeholder
+
     let s = str.toString().trim()
         .toLowerCase()
         // Remove leading numbers and dots like "1. ", "2.3. "
         .replace(/^\d+(\.\d+)*\.\s*/, '')
-        // Replace '&' with '-and-' before other replacements to avoid '--'
-        .replace(/\s*&\s*/g, '-and-')
+        // Replace '&' (and surrounding spaces) with a placeholder
+        .replace(/\s*&\s*/g, AMPERSAND_PLACEHOLDER)
+        // Replace any remaining '&' (e.g., if no spaces like "foo&bar")
+        .replace(/&/g, AMPERSAND_PLACEHOLDER)
         // Replace spaces and common punctuation with a single hyphen
         .replace(/\s+|[/\\?,:()!"“„#$'%~`´]/g, '-')
-        // Remove any characters that are not word characters (letters, numbers, underscore) or hyphens
+        // Remove any characters that are not word characters (letters, numbers, underscore) or hyphens.
+        // (Placeholder contains underscores and letters, so it's safe as \w includes underscore)
         .replace(/[^\w-]+/g, '')
         // Replace multiple hyphens with a single hyphen
         .replace(/-+/g, '-')
         // Trim leading/trailing hyphens that might result
         .replace(/^-+|-+$/g, '');
+
+    // Replace the placeholder with the desired double hyphen
+    s = s.replace(new RegExp(AMPERSAND_PLACEHOLDER, 'g'), '--');
+
     return s;
 }
 
