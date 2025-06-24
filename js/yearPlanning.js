@@ -242,69 +242,44 @@ function setPlanningScenario(scenario) {
 window.setPlanningScenario = setPlanningScenario;
 
 /**
- * REVISED (v7 - Apply Constraints Sync) - Generates the Team Load Summary table.
- * - Reads applyCapacityConstraintsToggle state.
- * - Uses calculatedCapacityMetrics when toggle is ON to determine:
- * - The overall ATL/BTL limit for filtering initiatives.
- * - The per-team Scenario Capacity Limit displayed.
- * - The Remaining Capacity calculation.
- * - Updates column headers dynamically based on Net/Gross usage.
+ * REVISED (v8 - Aligned with Capacity Tuning) - Generates the Team Load Summary table.
+ * - This function is now fully dependent on the 'calculatedCapacityMetrics' object.
+ * - It clearly distinguishes between gross headcounts (for reference) and the scenario capacity limit (which can be gross or net).
+ * - "Funded HC" column correctly shows the funded HUMAN count.
+ * - "Team BIS" and "Effective BIS" columns correctly show the TOTAL headcount including AI.
+ * - "Scenario Capacity Limit" correctly reflects the gross or net SDE Years for the selected scenario.
  */
 function generateTeamLoadSummaryTable() {
-    console.log("Generating Team Load Summary Table (v7 - Apply Constraints Sync)...");
+    console.log("Generating Team Load Summary Table (v8 - Fully Aligned)...");
 
-    // --- Get Containers ---
-    const summaryContentDiv = document.getElementById('teamLoadSummaryContent');
+    // --- Get Containers & Pre-checks ---
     const summaryContainer = document.getElementById('teamLoadSummarySection');
-    if (!summaryContentDiv || !summaryContainer) { console.error("Missing Team Load Summary elements (contentDiv or container)."); return; }
-    const summaryTable = summaryContentDiv.querySelector('#teamLoadSummaryTable');
+    if (!summaryContainer) { console.error("Missing Team Load Summary container."); return; }
+    const summaryTable = summaryContainer.querySelector('#teamLoadSummaryTable');
     const summaryTableBody = summaryTable?.querySelector('#teamLoadSummaryTableBody');
     const summaryTableFoot = summaryTable?.querySelector('#teamLoadSummaryTableFoot');
-    if (!summaryTable || !summaryTableBody || !summaryTableFoot) { console.error("Missing Team Load Summary table/tbody/tfoot elements."); return; }
-    summaryTableBody.innerHTML = ''; summaryTableFoot.innerHTML = ''; // Clear previous content
+    if (!summaryTable || !summaryTableBody || !summaryTableFoot) { console.error("Missing Team Load Summary table structure."); return; }
+    summaryTableBody.innerHTML = ''; summaryTableFoot.innerHTML = '';
 
-    // --- Data Checks ---
-    if (!currentSystemData || !currentSystemData.yearlyInitiatives || !currentSystemData.teams) { /* ... error handling ... */ return; }
+    if (!currentSystemData || !currentSystemData.yearlyInitiatives || !currentSystemData.teams) { return; }
 
-    // --- Get Pre-Calculated Capacity Metrics & Check Availability ---
+    // --- 1. Get the Authoritative Calculated Metrics ---
+    // The calling function (generatePlanningTable) is now responsible for ensuring this exists.
     const calculatedMetrics = currentSystemData.calculatedCapacityMetrics;
-    const metricsAvailable = !!calculatedMetrics;
-
-    // --- Calculate Gross Capacity Totals (Overall & Per Team) ---
-    let totalFundedHC = 0, totalTeamBIS = 0, totalAwayTeamBIS = 0;
-    const teamCapacities = {}; // Stores GROSS { fundedHC, teamBIS, awayBIS, effectiveBIS } per teamId
-    const teams = currentSystemData.teams || [];
-    teams.forEach(team => {
-        if (!team || !team.teamId) return;
-        const funded = team.fundedHeadcount ?? 0;
-        const teamBIS = team.engineers?.length ?? 0;
-        const awayBIS = team.awayTeamMembers?.length ?? 0;
-        const effectiveBIS = teamBIS + awayBIS;
-        totalFundedHC += funded; totalTeamBIS += teamBIS; totalAwayTeamBIS += awayBIS;
-        teamCapacities[team.teamId] = { fundedHC: funded, teamBIS: teamBIS, awayBIS: awayBIS, effectiveBIS: effectiveBIS };
-    });
-    const totalEffectiveBIS = totalTeamBIS + totalAwayTeamBIS;
-
-    // --- *** Determine Overall ATL/BTL Limit FOR SUMMARY (Conditional on Toggle) *** ---
-    let summaryAtlBtlLimit;
-    let isNetCapacityUsed = false;
-    let scenarioName = ''; // For display
-    const scenarioKey = planningCapacityScenario === 'funded' ? 'FundedHC' : (planningCapacityScenario === 'team_bis' ? 'TeamBIS' : 'EffectiveBIS');
-
-    if (applyCapacityConstraintsToggle && metricsAvailable && calculatedMetrics.totals?.[scenarioKey]) {
-        // USE NET CAPACITY
-        summaryAtlBtlLimit = calculatedMetrics.totals[scenarioKey].netYrs;
-        isNetCapacityUsed = true;
-        scenarioName = `Net ${scenarioKey}`;
-        console.log(`Summary Table using NET capacity limit: ${summaryAtlBtlLimit.toFixed(2)}`);
-    } else {
-        // USE GROSS CAPACITY
-        if (planningCapacityScenario === 'funded') { summaryAtlBtlLimit = totalFundedHC; scenarioName = 'Gross Funded HC'; }
-        else if (planningCapacityScenario === 'team_bis') { summaryAtlBtlLimit = totalTeamBIS; scenarioName = 'Gross Team BIS'; }
-        else { summaryAtlBtlLimit = totalEffectiveBIS; scenarioName = 'Gross Effective BIS';} // Default to effective
-        console.log(`Summary Table using GROSS capacity limit: ${summaryAtlBtlLimit.toFixed(2)}`);
+    if (!calculatedMetrics) {
+        console.error("generateTeamLoadSummaryTable cannot run: calculatedCapacityMetrics is missing.");
+        summaryContainer.querySelector('h4').textContent += " - ERROR: Metrics not calculated!";
+        return;
     }
-    // --- End Limit Determination for Summary ---
+
+    const teams = currentSystemData.teams || [];
+    const scenarioKey = planningCapacityScenario === 'funded' ? 'FundedHC' : (planningCapacityScenario === 'team_bis' ? 'TeamBIS' : 'EffectiveBIS');
+    const isNetCapacityUsed = applyCapacityConstraintsToggle;
+
+    // --- 2. Determine Overall ATL/BTL Limit for Initiative Filtering ---
+    const summaryAtlBtlLimit = isNetCapacityUsed ? calculatedMetrics.totals[scenarioKey].netYrs : calculatedMetrics.totals[scenarioKey].grossYrs;
+    const scenarioName = `${isNetCapacityUsed ? 'Net' : 'Gross'} ${scenarioKey}`;
+    console.log(`Team Load Summary using limit: ${summaryAtlBtlLimit.toFixed(2)} (${scenarioName})`);
 
     // Update collapsible header title
     const summaryTitleHeader = summaryContainer.querySelector('h4');
@@ -314,117 +289,101 @@ function generateTeamLoadSummaryTable() {
         if (toggleSpan) { summaryTitleHeader.insertBefore(toggleSpan, summaryTitleHeader.firstChild); }
     }
 
-    // --- *** Recalculate Assigned ATL SDEs per Team using summaryAtlBtlLimit *** ---
+    // --- 3. Recalculate Assigned ATL SDEs per Team using the determined limit ---
     const sortedInitiatives = [...currentSystemData.yearlyInitiatives].sort((a, b) => { if (a.isProtected && !b.isProtected) return -1; if (!a.isProtected && b.isProtected) return 1; return 0; });
     let overallCumulativeSde = 0;
-    let teamAtlSdeAssigned = {}; // Stores { teamId: totalSDE }
-    teams.forEach(team => { if(team && team.teamId) teamAtlSdeAssigned[team.teamId] = 0; }); // Initialize
+    const teamAtlSdeAssigned = teams.reduce((acc, team) => { acc[team.teamId] = 0; return acc; }, {});
 
-    sortedInitiatives.forEach(initiative => {
-        let initiativeTotalSde = 0;
-        (initiative.assignments || []).forEach(a => { initiativeTotalSde += a.sdeYears; });
-        const potentialCumulative = overallCumulativeSde + initiativeTotalSde;
-
-        // Check if adding this initiative *keeps* it within the determined limit (Net or Gross)
-        if (potentialCumulative <= summaryAtlBtlLimit) {
-             overallCumulativeSde = potentialCumulative; // Update cumulative ONLY if ATL
-            // Add assignments to team totals
+    for (const initiative of sortedInitiatives) {
+        const initiativeTotalSde = (initiative.assignments || []).reduce((sum, a) => sum + a.sdeYears, 0);
+        if (overallCumulativeSde + initiativeTotalSde <= summaryAtlBtlLimit) {
+            overallCumulativeSde += initiativeTotalSde;
             (initiative.assignments || []).forEach(assignment => {
-                 if (teamAtlSdeAssigned.hasOwnProperty(assignment.teamId)) {
-                     teamAtlSdeAssigned[assignment.teamId] += assignment.sdeYears;
-                 }
+                if (teamAtlSdeAssigned.hasOwnProperty(assignment.teamId)) {
+                    teamAtlSdeAssigned[assignment.teamId] += assignment.sdeYears;
+                }
             });
         } else {
-             // Stop accumulating once BTL is hit according to the summary's limit
-             // Do not process further initiatives for this summary table
-             return; // Exit the forEach loop early (optimization)
+            break; // Stop accumulating once BTL is hit
         }
-    });
-    // --- End Assigned SDE Calculation ---
+    }
+    // --- END Assigned SDE Calculation ---
 
-    // --- Populate Summary Table Body ---
+
+    // --- 4. Populate Summary Table Body ---
     let totalAssignedAtlSdeOverall = 0;
     let totalScenarioCapacityOverall = 0;
+    let totalFundedHCGross = 0;
+    let totalTeamBISGross = 0;
+    let totalEffectiveBISGross = 0;
 
-    teams.sort((a,b) => (a?.teamName || a?.teamIdentity || '').localeCompare(b?.teamName || b?.teamIdentity || ''))
-         .forEach(team => {
+    teams.sort((a, b) => (a?.teamName || '').localeCompare(b?.teamName || '')).forEach(team => {
         if (!team || !team.teamId) return;
+
         const teamId = team.teamId;
-        const grossCapacity = teamCapacities[teamId]; // Get GROSS capacities
-        const assignedAtlSde = teamAtlSdeAssigned[teamId] || 0; // Get potentially NET-determined ATL SDEs
-        if (!grossCapacity) { console.warn(`Gross capacity data not found for teamId: ${teamId}. Skipping summary row.`); return; }
+        const teamMetrics = calculatedMetrics[teamId];
+        if (!teamMetrics) { console.warn(`Metrics not found for teamId: ${teamId}. Skipping summary row.`); return; }
 
-        // *** Determine the Scenario Capacity Limit to DISPLAY (Net or Gross) ***
-        let displayTeamScenarioLimit = 0;
-        if (isNetCapacityUsed && metricsAvailable && calculatedMetrics[teamId]?.[scenarioKey]) {
-            displayTeamScenarioLimit = calculatedMetrics[teamId][scenarioKey].netYrs;
-        } else { // Use Gross
-            if (planningCapacityScenario === 'funded') { displayTeamScenarioLimit = grossCapacity?.fundedHC ?? 0; }
-            else if (planningCapacityScenario === 'team_bis') { displayTeamScenarioLimit = grossCapacity?.teamBIS ?? 0; }
-            else { displayTeamScenarioLimit = grossCapacity?.effectiveBIS ?? 0; }
-        }
-        // --- End Display Limit Determination ---
+        const assignedAtlSde = teamAtlSdeAssigned[teamId] || 0;
 
+        // Get the specific capacity limit for THIS team based on the toggle state
+        const displayTeamScenarioLimit = isNetCapacityUsed ? teamMetrics[scenarioKey].netYrs : teamMetrics[scenarioKey].grossYrs;
         const remainingCapacity = displayTeamScenarioLimit - assignedAtlSde;
+
+        // Accumulate totals for the footer
         totalAssignedAtlSdeOverall += assignedAtlSde;
         totalScenarioCapacityOverall += displayTeamScenarioLimit;
+        totalFundedHCGross += teamMetrics.FundedHC.humanHeadcount;
+        totalTeamBISGross += teamMetrics.TeamBIS.totalHeadcount;
+        totalEffectiveBISGross += teamMetrics.EffectiveBIS.totalHeadcount;
 
         let statusText = '✅ OK'; let statusColor = 'green';
         if (remainingCapacity < 0) { statusText = '🛑 Overloaded'; statusColor = 'red'; }
         else if (remainingCapacity < 0.5 && displayTeamScenarioLimit > 0) { statusText = '⚠️ Near Limit'; statusColor = 'darkorange'; }
 
         const row = summaryTableBody.insertRow();
-        row.insertCell().textContent = team.teamIdentity || team.teamName || teamId;            // Col 0: Team Name
-        row.insertCell().textContent = (grossCapacity?.fundedHC ?? 0).toFixed(2);               // Col 1: Funded HC (Gross)
-        row.insertCell().textContent = (grossCapacity?.teamBIS ?? 0).toFixed(2);                // Col 2: Team BIS (Gross)
-        row.insertCell().textContent = (grossCapacity?.awayBIS ?? 0).toFixed(2);                // Col 3: Away BIS (Gross)
-        row.insertCell().textContent = (grossCapacity?.effectiveBIS ?? 0).toFixed(2);           // Col 4: Effective BIS (Gross)
-        row.insertCell().textContent = assignedAtlSde.toFixed(2);                               // Col 5: Assigned ATL SDEs (potentially Net-based)
-        row.insertCell().textContent = displayTeamScenarioLimit.toFixed(2);                     // Col 6: Scenario Limit (potentially Net)
-        const remainingCell = row.insertCell();                                                 // Col 7: Remaining Capacity
-            remainingCell.textContent = remainingCapacity.toFixed(2);
-            remainingCell.style.color = remainingCapacity < 0 ? 'red' : 'green';
-        const statusCell = row.insertCell();                                                    // Col 8: ATL Status
-            statusCell.textContent = statusText;
-            statusCell.style.color = statusColor;
+        row.insertCell().textContent = team.teamIdentity || team.teamName || teamId;
+        // ** ALIGNED COLUMNS **
+        row.insertCell().textContent = teamMetrics.FundedHC.humanHeadcount.toFixed(2);       // Correctly shows HUMAN funded count
+        row.insertCell().textContent = teamMetrics.TeamBIS.totalHeadcount.toFixed(2);        // Correctly shows TOTAL team BIS (human+AI)
+        row.insertCell().textContent = (teamMetrics.EffectiveBIS.totalHeadcount - teamMetrics.TeamBIS.totalHeadcount).toFixed(2); // Correctly shows Away BIS
+        row.insertCell().textContent = teamMetrics.EffectiveBIS.totalHeadcount.toFixed(2);     // Correctly shows TOTAL effective BIS
+        // ** END ALIGNED COLUMNS **
+        row.insertCell().textContent = assignedAtlSde.toFixed(2);
+        row.insertCell().textContent = displayTeamScenarioLimit.toFixed(2);
+        const remainingCell = row.insertCell();
+        remainingCell.textContent = remainingCapacity.toFixed(2);
+        remainingCell.style.color = remainingCapacity < 0 ? 'red' : 'green';
+        const statusCell = row.insertCell();
+        statusCell.textContent = statusText;
+        statusCell.style.color = statusColor;
+        statusCell.style.fontWeight = 'bold';
 
-        // Apply Styling
-        const cells = Array.from(row.cells);
-        cells.forEach((cell, index) => {
-            cell.style.border = '1px solid #ccc';
-            cell.style.padding = '4px 6px';
-            if (index === 0) { cell.style.textAlign = 'left';}
-            else if (index === cells.length - 1) { cell.style.textAlign = 'center'; }
-            else { cell.style.textAlign = 'center'; }
+        // Styling
+        Array.from(row.cells).forEach((cell, index) => {
+            cell.style.textAlign = index === 0 ? 'left' : 'center';
         });
-    }); // End teams.forEach
-
-    // --- Populate Footer ---
-    const footerRow = summaryTableFoot.insertRow();
-    footerRow.insertCell().textContent = 'Totals';                                             // Col 0
-    footerRow.insertCell().textContent = totalFundedHC.toFixed(2);                             // Col 1
-    footerRow.insertCell().textContent = totalTeamBIS.toFixed(2);                              // Col 2
-    footerRow.insertCell().textContent = totalAwayTeamBIS.toFixed(2);                          // Col 3
-    footerRow.insertCell().textContent = totalEffectiveBIS.toFixed(2);                         // Col 4
-    footerRow.insertCell().textContent = totalAssignedAtlSdeOverall.toFixed(2);                // Col 5
-    footerRow.insertCell().textContent = totalScenarioCapacityOverall.toFixed(2);              // Col 6
-    const totalRemainingCell = footerRow.insertCell();                                         // Col 7
-        totalRemainingCell.textContent = (totalScenarioCapacityOverall - totalAssignedAtlSdeOverall).toFixed(2);
-        totalRemainingCell.style.color = (totalScenarioCapacityOverall - totalAssignedAtlSdeOverall) < 0 ? 'red' : 'green';
-    footerRow.insertCell().textContent = '';                                                   // Col 8 (Status)
-
-    // Apply Footer Styling
-    const footerCells = Array.from(footerRow.cells);
-    footerCells.forEach((cell, index) => {
-        cell.style.border = '1px solid #ccc';
-        cell.style.padding = '4px 6px';
-        cell.style.backgroundColor = '#f8f9fa';
-        if (index === 0) { cell.style.textAlign = 'left'; }
-        else if (index === footerCells.length - 1) { cell.style.textAlign = 'center';}
-        else { cell.style.textAlign = 'center'; }
     });
 
-    console.log("Finished generating Team Load Summary Table (v7 - Apply Constraints Sync).");
+    // --- 5. Populate Footer ---
+    const footerRow = summaryTableFoot.insertRow();
+    const totalAwayBISGross = totalEffectiveBISGross - totalTeamBISGross;
+    footerRow.insertCell().textContent = 'Totals';
+    footerRow.insertCell().textContent = totalFundedHCGross.toFixed(2);
+    footerRow.insertCell().textContent = totalTeamBISGross.toFixed(2);
+    footerRow.insertCell().textContent = totalAwayBISGross.toFixed(2);
+    footerRow.insertCell().textContent = totalEffectiveBISGross.toFixed(2);
+    footerRow.insertCell().textContent = totalAssignedAtlSdeOverall.toFixed(2);
+    footerRow.insertCell().textContent = totalScenarioCapacityOverall.toFixed(2);
+    const totalRemainingCell = footerRow.insertCell();
+    totalRemainingCell.textContent = (totalScenarioCapacityOverall - totalAssignedAtlSdeOverall).toFixed(2);
+    totalRemainingCell.style.color = (totalScenarioCapacityOverall - totalAssignedAtlSdeOverall) < 0 ? 'red' : 'green';
+    footerRow.insertCell().textContent = ''; // Empty status cell
+
+    // Styling
+    Array.from(footerRow.cells).forEach((cell, index) => {
+        cell.style.textAlign = index === 0 ? 'left' : 'center';
+    });
 }
 window.generateTeamLoadSummaryTable = generateTeamLoadSummaryTable; // Make global if needed
 
@@ -437,75 +396,80 @@ function toggleCapacityConstraints(isChecked) {
 // Make it globally accessible for the checkbox's onchange
 window.toggleCapacityConstraints = toggleCapacityConstraints;
 
-/** REVISED (v6) - Generates planning table - Persistent Green/Red Team Cells & Scoped Row Styles */
+/**
+ * REVISED (v7 - Aligned with Capacity Tuning)
+ * Generates the planning table, ensuring it uses the single source of truth for capacity calculations.
+ * - If capacity metrics are not pre-calculated, it generates them on the fly.
+ * - Always uses 'grossYrs' or 'netYrs' from the calculated metrics object for ATL/BTL calculations.
+ * - Aligns per-team cell coloring with the authoritative metrics.
+ * - Removes all local/redundant capacity calculations.
+ */
 function generatePlanningTable() {
-    console.log("Generating planning table (v6 - Persistent Team Colors)...");
+    console.log("Generating planning table (v7 - Aligned with Capacity Tuning)...");
     const planningViewDiv = document.getElementById('planningView');
     const capacitySummaryDiv = document.getElementById('planningCapacitySummary');
     const scenarioControlDiv = document.getElementById('planningScenarioControl');
     const tableContainer = document.getElementById('planningTableContainer');
 
-    // --- Clear previous content ONLY from relevant areas ---
+    // --- Clear previous content ---
     if (capacitySummaryDiv) capacitySummaryDiv.innerHTML = ''; else console.error("Missing #planningCapacitySummary div");
     if (scenarioControlDiv) scenarioControlDiv.innerHTML = ''; else console.error("Missing #planningScenarioControl div");
     if (tableContainer) tableContainer.innerHTML = ''; else console.error("Missing #planningTableContainer div");
 
     if (!currentSystemData || !currentSystemData.yearlyInitiatives || !currentSystemData.teams) {
-        if (tableContainer) tableContainer.innerHTML = '<p style="color: orange;">No planning data loaded or no initiatives/teams found. Use "Edit System" to load or define data.</p>';
-        if (capacitySummaryDiv) capacitySummaryDiv.innerHTML = 'Load a system to see capacity.';
+        if (tableContainer) tableContainer.innerHTML = '<p style="color: orange;">No planning data loaded or no initiatives/teams found.</p>';
         return;
     }
 
-    // --- 1. Calculate Detailed Capacity (Overall & Per Team) --- (No change)
-    let totalFundedHC = 0, totalTeamBIS = 0, totalAwayTeamBIS = 0;
-    const teamCapacities = {}; // Store { fundedHC, teamBIS, effectiveBIS } per teamId
-    const teams = currentSystemData.teams || [];
-    teams.forEach(team => {
-        const funded = team.fundedHeadcount ?? 0;
-        const teamBIS = team.engineers?.length ?? 0;
-        const awayBIS = team.awayTeamMembers?.length ?? 0;
-        const effectiveBIS = teamBIS + awayBIS;
-        totalFundedHC += funded;
-        totalTeamBIS += teamBIS;
-        totalAwayTeamBIS += awayBIS;
-        teamCapacities[team.teamId] = { fundedHC: funded, teamBIS: teamBIS, effectiveBIS: effectiveBIS };
-    });
-    const totalEffectiveBIS = totalTeamBIS + totalAwayTeamBIS;
+    // --- 1. ENSURE CAPACITY METRICS ARE AVAILABLE (THE CORE FIX) ---
+    // Check if the canonical metrics object exists. If not, calculate it now.
+    if (!currentSystemData.calculatedCapacityMetrics) {
+        console.warn("calculatedCapacityMetrics not found. Generating on the fly for Year Planning view.");
+        // This ensures the view can function correctly even if the user hasn't visited the tuning page.
+        currentSystemData.calculatedCapacityMetrics = calculateAllCapacityMetrics();
+    }
+    const calculatedMetrics = currentSystemData.calculatedCapacityMetrics;
+    const metricsAvailable = !!calculatedMetrics; // Should always be true now.
+    // --- END CORE FIX ---
 
-    // --- 2. Update Capacity Summary Display --- (No change)
-    if (capacitySummaryDiv) { /* ... same as v5 ... */
+
+    // --- 2. Get Capacity Totals DIRECTLY from Calculated Metrics ---
+    // No more local calculations. These values are the single source of truth.
+    const totalFundedHC = calculatedMetrics.totals.FundedHC.humanHeadcount;
+    const totalTeamBIS = calculatedMetrics.totals.TeamBIS.totalHeadcount;
+    const totalEffectiveBIS = calculatedMetrics.totals.EffectiveBIS.totalHeadcount;
+    const totalAwayTeamBIS = totalEffectiveBIS - calculatedMetrics.totals.TeamBIS.totalHeadcount; // Derived for display
+    // --- END SOURCING FROM METRICS ---
+
+
+    // --- 3. Update Capacity Summary Display (Using data from metrics) ---
+    if (capacitySummaryDiv) {
         capacitySummaryDiv.innerHTML = `
-            <span title="Finance Approved Headcount" style="margin-right: 15px;">Funded HC: <strong style="color: #28a745;">${totalFundedHC.toFixed(2)}</strong></span> |
-            <span title="Actual Team Members" style="margin-right: 15px;">Team BIS: <strong style="color: #17a2b8;">${totalTeamBIS.toFixed(2)}</strong></span> |
+            <span title="Finance Approved Headcount (Humans)" style="margin-right: 15px;">Funded HC: <strong style="color: #28a745;">${totalFundedHC.toFixed(2)}</strong></span> |
+            <span title="Actual Team Members (Humans + AI)" style="margin-right: 15px;">Team BIS: <strong style="color: #17a2b8;">${totalTeamBIS.toFixed(2)}</strong></span> |
             <span title="Borrowed / Away-Team Members" style="margin-right: 15px;">Away BIS: <strong style="color: #ffc107;">${totalAwayTeamBIS.toFixed(2)}</strong></span> |
-            <span title="Total Effective Capacity (Team + Away)">Effective BIS: <strong style="color: #007bff;">${totalEffectiveBIS.toFixed(2)}</strong></span>
+            <span title="Total Effective Capacity (Team + Away)" style="color: #007bff;">Effective BIS: <strong style="color: #007bff;">${totalEffectiveBIS.toFixed(2)}</strong></span>
         `;
     }
 
-    const scenarioKey = planningCapacityScenario === 'funded' ? 'FundedHC' : (planningCapacityScenario === 'team_bis' ? 'TeamBIS' : 'EffectiveBIS');
-    const calculatedMetrics = currentSystemData.calculatedCapacityMetrics; // Get stored metrics
-    const metricsAvailable = !!calculatedMetrics; // Check if metrics exist
-    if (!metricsAvailable) {
-        console.warn("Calculated capacity metrics not found in currentSystemData. Capacity constraints cannot be applied.");
-        // Optionally reset the toggle state if metrics are missing after load?
-        // applyCapacityConstraintsToggle = false;
-    }
 
-    // --- 3. Add/Update Scenario Toggle UI --- (No change)
-    if (scenarioControlDiv) { /* ... same as v5 ... */
+    // --- 4. Add/Update Scenario Toggle UI ---
+    if (scenarioControlDiv) {
         const baseButtonStyle = 'padding: 5px 10px; margin-left: 10px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; font-size: 0.9em;';
         const activeButtonStyle = baseButtonStyle + ' background-color: #007bff; color: white; border-color: #0056b3; font-weight: bold;';
         const inactiveButtonStyle = baseButtonStyle + ' background-color: #e9ecef; color: #495057;';
-        const effectiveButtonStyle = (planningCapacityScenario === 'effective') ? activeButtonStyle : inactiveButtonStyle;
-        const fundedButtonStyle = (planningCapacityScenario === 'funded') ? activeButtonStyle : inactiveButtonStyle;
-        const teamBisButtonStyle = (planningCapacityScenario === 'team_bis') ? activeButtonStyle : inactiveButtonStyle;
+
+        const effectiveButtonTitle = `Use Effective BIS. Gross: ${calculatedMetrics.totals.EffectiveBIS.grossYrs.toFixed(2)}, Net: ${calculatedMetrics.totals.EffectiveBIS.netYrs.toFixed(2)}`;
+        const teamBisButtonTitle = `Use Team BIS. Gross: ${calculatedMetrics.totals.TeamBIS.grossYrs.toFixed(2)}, Net: ${calculatedMetrics.totals.TeamBIS.netYrs.toFixed(2)}`;
+        const fundedHcButtonTitle = `Use Funded HC. Gross: ${calculatedMetrics.totals.FundedHC.grossYrs.toFixed(2)}, Net: ${calculatedMetrics.totals.FundedHC.netYrs.toFixed(2)}`;
+
         scenarioControlDiv.innerHTML = `
             <strong style="margin-right: 10px;">Calculate ATL/BTL using:</strong>
-            <button type="button" id="btnEffectiveBIS" style="${effectiveButtonStyle}" title="Use Effective BIS (${totalEffectiveBIS.toFixed(2)}) = Team + Away" onclick="setPlanningScenario('effective')">Effective BIS</button>
-            <button type="button" id="btnTeamBIS" style="${teamBisButtonStyle}" title="Use Team BIS (${totalTeamBIS.toFixed(2)}) = Only Team Members" onclick="setPlanningScenario('team_bis')">Team BIS</button>
-            <button type="button" id="btnFundedHC" style="${fundedButtonStyle}" title="Use Funded HC (${totalFundedHC.toFixed(2)}) = Budgeted Headcount" onclick="setPlanningScenario('funded')">Funded HC</button>
-            <label style="margin-left: 20px; font-size: 0.9em; cursor: ${metricsAvailable ? 'pointer' : 'not-allowed'}; vertical-align: middle;" title="${metricsAvailable ? 'Apply calculated capacity constraints (leave, overhead, etc.) to ATL/BTL calculation (Might be less than before!). Look at Tune Capacity Constraints page to understand more!' : 'Capacity constraints not calculated or saved. Go to \'Tune Capacity Constraints\'.'}">
-                <input type="checkbox" id="applyConstraintsToggle" style="vertical-align: middle;" onchange="toggleCapacityConstraints(this.checked)" ${applyCapacityConstraintsToggle ? 'checked' : ''} ${metricsAvailable ? '' : 'disabled'}>
+            <button type="button" style="${planningCapacityScenario === 'effective' ? activeButtonStyle : inactiveButtonStyle}" title="${effectiveButtonTitle}" onclick="setPlanningScenario('effective')">Effective BIS</button>
+            <button type="button" style="${planningCapacityScenario === 'team_bis' ? activeButtonStyle : inactiveButtonStyle}" title="${teamBisButtonTitle}" onclick="setPlanningScenario('team_bis')">Team BIS</button>
+            <button type="button" style="${planningCapacityScenario === 'funded' ? activeButtonStyle : inactiveButtonStyle}" title="${fundedHcButtonTitle}" onclick="setPlanningScenario('funded')">Funded HC</button>
+            <label style="margin-left: 20px; font-size: 0.9em; cursor: pointer; vertical-align: middle;" title="Apply calculated capacity constraints (leave, overhead, AI gains, etc.) to ATL/BTL calculation.">
+                <input type="checkbox" id="applyConstraintsToggle" style="vertical-align: middle;" onchange="toggleCapacityConstraints(this.checked)" ${applyCapacityConstraintsToggle ? 'checked' : ''}>
                 Apply Capacity Constraints?
             </label>
             <button type="button" id="savePlanButton"
@@ -514,118 +478,94 @@ function generatePlanningTable() {
                 Save Current Plan Order & Estimates
             </button>
         `;
-
-        // --- Re-attach listener AFTER button is added to DOM ---
-        // We need to find the button *after* innerHTML is set
-        setTimeout(() => { // Use timeout to ensure DOM update
+        setTimeout(() => {
             const savePlanButton = document.getElementById('savePlanButton');
             if (savePlanButton) {
-                 // Remove old listener if it exists from previous renders (safer)
-                 savePlanButton.removeEventListener('click', handleSavePlan);
-                 // Add the listener
                  savePlanButton.addEventListener('click', handleSavePlan);
-                 console.log("Attached click listener to moved Save button.");
-            } else {
-                 console.error("Could not find moved Save button to attach listener.");
             }
        }, 0);
-       // --- End of setTimeout block ---    
-    
-    } // End of the if (scenarioControlDiv) block
-    
-    // Determine Overall ATL/BTL Limit based on scenario
-    // --- 5. Determine Overall ATL/BTL Limit (Conditional on Toggle) ---
+    }
+
+
+    // --- 5. Determine Overall ATL/BTL Limit (ALIGNED LOGIC) ---
     let atlBtlCapacityLimit;
-    let isNetCapacityUsed = false;
-    // Determine the key needed to look up metrics based on the button state
+    const scenarioKey = planningCapacityScenario === 'funded' ? 'FundedHC' : (planningCapacityScenario === 'team_bis' ? 'TeamBIS' : 'EffectiveBIS');
 
     if (applyCapacityConstraintsToggle && metricsAvailable) {
-        // USE NET CAPACITY
-        atlBtlCapacityLimit = calculatedMetrics.totals?.[scenarioKey]?.netYrs ?? 0; // Use Net SDE Years from stored metrics
-        isNetCapacityUsed = true;
+        atlBtlCapacityLimit = calculatedMetrics.totals[scenarioKey].netYrs;
         console.log(`Using NET capacity limit for ATL/BTL: ${atlBtlCapacityLimit.toFixed(2)} (Scenario: ${scenarioKey})`);
-        // Disable toggle in UI if metrics are still missing (shouldn't happen if check passed, but safe)
-        const toggleInput = document.getElementById('applyConstraintsToggle');
-        if(toggleInput && !calculatedMetrics.totals?.[scenarioKey]) {
-             console.warn(`Metrics for scenario ${scenarioKey} missing, disabling toggle.`);
-             toggleInput.checked = false;
-             toggleInput.disabled = true;
-             applyCapacityConstraintsToggle = false; // Reset state variable too
-             isNetCapacityUsed = false; // Fallback to gross
-             // Recalculate limit using Gross
-             if (planningCapacityScenario === 'funded') { atlBtlCapacityLimit = totalFundedHC; }
-             else if (planningCapacityScenario === 'team_bis') { atlBtlCapacityLimit = totalTeamBIS; }
-             else { atlBtlCapacityLimit = totalEffectiveBIS; }
-             console.log(`FALLBACK to GROSS capacity limit: ${atlBtlCapacityLimit.toFixed(2)}`);
-        }
-
     } else {
-        // USE GROSS CAPACITY (Original behavior)
-        if (planningCapacityScenario === 'funded') { atlBtlCapacityLimit = totalFundedHC; }
-        else if (planningCapacityScenario === 'team_bis') { atlBtlCapacityLimit = totalTeamBIS; }
-        else { atlBtlCapacityLimit = totalEffectiveBIS; } // Default to effective
+        atlBtlCapacityLimit = calculatedMetrics.totals[scenarioKey].grossYrs;
         console.log(`Using GROSS capacity limit for ATL/BTL: ${atlBtlCapacityLimit.toFixed(2)} (Scenario: ${scenarioKey})`);
-        // Ensure toggle is unchecked if metrics were unavailable when it was initially rendered
-        if(!metricsAvailable) {
-            applyCapacityConstraintsToggle = false;
-            const toggleInput = document.getElementById('applyConstraintsToggle');
-             if(toggleInput) {
-                toggleInput.checked = false;
-                toggleInput.disabled = true;
-             }
-        }
     }
-    // --- End Limit Determination ---
+    // --- END ALIGNED LOGIC ---
 
+
+    // --- 6. Generate Team Load Summary ---
+    // This call assumes generateTeamLoadSummaryTable() will also be updated to use calculatedMetrics.
     generateTeamLoadSummaryTable();
 
-    // --- 4. Prepare Table Structure ---
+
+    // --- 7. Prepare & Generate Main Planning Table ---
     const tableWrapper = document.createElement('div'); tableWrapper.id = 'planningTableWrapper';
     const table = document.createElement('table'); table.style.width = '100%'; table.style.borderCollapse = 'collapse'; table.id = 'planningTable';
     const thead = document.createElement('thead'); const headerRow = document.createElement('tr');
     const fixedHeaders = ['Protected', 'Title', 'ID', 'Description', 'Total SDE Years', 'Cumulative SDE Years', 'Capacity Status', 'ATL/BTL'];
     fixedHeaders.forEach(text => { const th = document.createElement('th'); th.textContent = text; th.style.border = '1px solid #ccc'; th.style.padding = '8px'; th.style.textAlign = 'left'; th.style.whiteSpace = 'nowrap'; headerRow.appendChild(th); });
+
+    const teams = currentSystemData.teams || [];
     const teamHeaderMap = new Map();
-    teams.forEach((team, index) => { 
-      const th = document.createElement('th'); 
-      const teamDisplayIdentity = team.teamIdentity || team.teamId || 'Unknown'; // Use ID if identity missing
-      const teamFullName = team.teamName || teamDisplayIdentity; // Use full name or identity/ID for title
-      th.textContent = teamDisplayIdentity; // Display the identity
-      th.title = `Team: ${teamFullName}\nIdentity: ${teamDisplayIdentity}\n(Funded: ${teamCapacities[team.teamId]?.fundedHC.toFixed(2)}, Team BIS: ${teamCapacities[team.teamId]?.teamBIS.toFixed(2)}, Eff. BIS: ${teamCapacities[team.teamId]?.effectiveBIS.toFixed(2)})`; // Update title
-      th.setAttribute('data-team-id', team.teamId); th.style.border = '1px solid #ccc'; 
-      th.style.padding = '8px'; 
-      th.style.textAlign = 'center'; 
-      th.style.writingMode = 'vertical-lr'; 
-      th.style.textOrientation = 'mixed'; 
-      th.style.whiteSpace = 'nowrap'; 
-      th.style.minWidth = '35px'; 
-      th.style.maxWidth = '35px'; 
-      headerRow.appendChild(th); 
-      teamHeaderMap.set(fixedHeaders.length + index, team.teamId); 
+    teams.forEach((team, index) => {
+      const th = document.createElement('th');
+      const teamDisplayIdentity = team.teamIdentity || team.teamId || 'Unknown';
+      const teamFullName = team.teamName || teamDisplayIdentity;
+      const teamMetrics = calculatedMetrics[team.teamId];
+      const teamTitle = `Team: ${teamFullName}\nIdentity: ${teamDisplayIdentity}\n` +
+                        `Funded HC: ${teamMetrics.FundedHC.humanHeadcount.toFixed(2)}\n` +
+                        `Team BIS: ${teamMetrics.TeamBIS.totalHeadcount.toFixed(2)}\n` +
+                        `Eff. BIS: ${teamMetrics.EffectiveBIS.totalHeadcount.toFixed(2)}`;
+      th.textContent = teamDisplayIdentity;
+      th.title = teamTitle;
+      th.setAttribute('data-team-id', team.teamId);
+      Object.assign(th.style, {
+          border: '1px solid #ccc', padding: '8px', textAlign: 'center', writingMode: 'vertical-lr',
+          textOrientation: 'mixed', whiteSpace: 'nowrap', minWidth: '35px', maxWidth: '35px'
+      });
+      headerRow.appendChild(th);
+      teamHeaderMap.set(fixedHeaders.length + index, team.teamId);
     });
     thead.appendChild(headerRow); table.appendChild(thead);
     const tbody = document.createElement('tbody'); tbody.id = 'planningTableBody';
 
 
-    // --- 5. Sort Initiatives & Populate Body ---
-    const sortedInitiatives = [...currentSystemData.yearlyInitiatives].sort((a, b) => { /* ... same sort ... */ if (a.isProtected && !b.isProtected) return -1; if (!a.isProtected && b.isProtected) return 1; return 0; });
-    let cumulativeSdeTotal = 0; // Overall cumulative
-    let teamCumulativeSde = {}; // { teamId: cumulativeValue }
-    teams.forEach(team => { teamCumulativeSde[team.teamId] = 0; }); // Initialize
+    const sortedInitiatives = [...currentSystemData.yearlyInitiatives].sort((a, b) => { if (a.isProtected && !b.isProtected) return -1; if (!a.isProtected && b.isProtected) return 1; return 0; });
+    let cumulativeSdeTotal = 0;
+    let teamCumulativeSde = {};
+    teams.forEach(team => { teamCumulativeSde[team.teamId] = 0; });
 
     sortedInitiatives.forEach((initiative, rowIndex) => {
         if (!initiative || !initiative.initiativeId) { console.warn("Skipping invalid initiative data at index:", rowIndex); return; }
-        const row = tbody.insertRow(); row.setAttribute('data-initiative-id', initiative.initiativeId); row.style.borderBottom = '1px solid #eee'; row.style.padding = '2px 0';
-        // Drag and drop setup (No change)
-        row.setAttribute('draggable', !initiative.isProtected); row.addEventListener('dragover', handleDragOver); row.addEventListener('dragleave', handleDragLeave); row.addEventListener('drop', handleDrop); row.addEventListener('dragend', handleDragEnd); if (!initiative.isProtected) { row.addEventListener('dragstart', handleDragStart); row.style.cursor = 'move'; } else { row.style.cursor = 'default'; }
+        const row = tbody.insertRow();
+        row.setAttribute('data-initiative-id', initiative.initiativeId);
+        row.style.borderBottom = '1px solid #eee';
+        row.style.padding = '2px 0';
+        row.setAttribute('draggable', !initiative.isProtected);
+        row.addEventListener('dragover', handleDragOver);
+        row.addEventListener('dragleave', handleDragLeave);
+        row.addEventListener('drop', handleDrop);
+        row.addEventListener('dragend', handleDragEnd);
+        if (!initiative.isProtected) {
+            row.addEventListener('dragstart', handleDragStart);
+            row.style.cursor = 'move';
+        } else {
+            row.style.cursor = 'default';
+        }
 
-        // Fixed Cells (Protected, Title, ID, Desc) - No changes
         const protectedCell = row.insertCell(); const protectedCheckbox = document.createElement('input'); protectedCheckbox.type = 'checkbox'; protectedCheckbox.checked = initiative.isProtected; protectedCheckbox.setAttribute('data-initiative-id', initiative.initiativeId); protectedCheckbox.style.cursor = 'pointer'; protectedCheckbox.onchange = handleProtectedChange; protectedCell.appendChild(protectedCheckbox); protectedCell.style.textAlign = 'center';
         const titleCell = row.insertCell(); titleCell.textContent = initiative.title || 'No Title'; titleCell.style.fontWeight = initiative.isProtected ? 'bold' : 'normal';
         const idCell = row.insertCell(); idCell.textContent = initiative.initiativeId; idCell.style.fontSize = '0.8em'; idCell.style.color = '#555';
         const descCell = row.insertCell(); const descText = initiative.description || ''; descCell.textContent = descText.length > 50 ? descText.substring(0, 47) + '...' : descText; descCell.title = descText;
 
-        // Placeholder cells for overall totals/status
         const totalSdeCell = row.insertCell(); totalSdeCell.style.textAlign = 'right';
         const cumSdeCell = row.insertCell(); cumSdeCell.style.textAlign = 'right';
         const statusCell = row.insertCell(); statusCell.style.textAlign = 'center';
@@ -634,116 +574,75 @@ function generatePlanningTable() {
         let initiativeTotalSde = 0;
         const assignmentsMap = new Map((initiative.assignments || []).map(a => [a.teamId, a.sdeYears]));
 
-        // *** REVISED: Per-Team Cell Coloring Logic ***
         teamHeaderMap.forEach((teamId, colIndex) => {
             const teamCell = row.insertCell();
             const currentEstimate = assignmentsMap.get(teamId) || 0;
-            teamCumulativeSde[teamId] += currentEstimate; // Increment this team's cumulative
+            teamCumulativeSde[teamId] += currentEstimate;
 
-            // Estimate Input (still needed)
             const estimateInput = document.createElement('input');
             estimateInput.type = 'number'; estimateInput.min = '0'; estimateInput.step = '0.25'; estimateInput.value = currentEstimate > 0 ? currentEstimate.toFixed(2) : '';
-            estimateInput.setAttribute('data-initiative-id', initiative.initiativeId); estimateInput.setAttribute('data-team-id', teamId);
-            estimateInput.style.width = '60px'; estimateInput.style.textAlign = 'right';
-            estimateInput.style.border = 'none';
-            estimateInput.style.backgroundColor = 'transparent'; // Make input see-through
+            estimateInput.setAttribute('data-initiative-id', initiative.initiativeId);
+            estimateInput.setAttribute('data-team-id', teamId);
+            Object.assign(estimateInput.style, { width: '60px', textAlign: 'right', border: 'none', backgroundColor: 'transparent' });
             estimateInput.addEventListener('change', handleEstimateChange);
             teamCell.appendChild(estimateInput);
             teamCell.style.textAlign = 'center';
 
-            // Determine team's scenario limit
-            // --- Determine team's limit and apply color based on toggle state ---
             let teamLimit = 0;
             let teamLimitType = '';
-            let teamLimitValueStr = 'N/A';
-            const currentTeamCumulative = teamCumulativeSde[teamId]; // Cumulative remains the same calculation
-
-            if (isNetCapacityUsed && metricsAvailable && calculatedMetrics[teamId]?.[scenarioKey]) {
-                // USE NET CAPACITY FOR COLORING
+            if (applyCapacityConstraintsToggle && metricsAvailable) {
                 teamLimit = calculatedMetrics[teamId]?.[scenarioKey]?.netYrs ?? 0;
                 teamLimitType = `Net ${scenarioKey}`;
-                teamLimitValueStr = teamLimit.toFixed(2);
-                if (currentTeamCumulative <= teamLimit) {
-                    teamCell.style.backgroundColor = '#d4edda'; // Green
-                    teamCell.title = `Cumulative: ${currentTeamCumulative.toFixed(2)} / Limit (${teamLimitType}: ${teamLimitValueStr}) - OK`;
-                } else {
-                    teamCell.style.backgroundColor = '#f8d7da'; // Red
-                    teamCell.title = `Cumulative: ${currentTeamCumulative.toFixed(2)} / Limit (${teamLimitType}: ${teamLimitValueStr}) - Overloaded`;
-                }
             } else {
-                // USE GROSS CAPACITY FOR COLORING (Original behavior)
-                const teamGrossCapacityData = teamCapacities[teamId];
-                if (planningCapacityScenario === 'funded') { teamLimit = teamGrossCapacityData?.fundedHC ?? 0; teamLimitType = `Gross Funded HC`; }
-                else if (planningCapacityScenario === 'team_bis') { teamLimit = teamGrossCapacityData?.teamBIS ?? 0; teamLimitType = `Gross Team BIS`; }
-                else { teamLimit = teamGrossCapacityData?.effectiveBIS ?? 0; teamLimitType = `Gross Effective BIS`; }
-                teamLimitValueStr = teamLimit.toFixed(2);
-
-                if (currentTeamCumulative <= teamLimit) {
-                    teamCell.style.backgroundColor = '#d4edda'; // Green
-                    teamCell.title = `Cumulative: ${currentTeamCumulative.toFixed(2)} / Limit (${teamLimitType}: ${teamLimitValueStr}) - OK`;
-                } else {
-                    teamCell.style.backgroundColor = '#f8d7da'; // Red
-                    teamCell.title = `Cumulative: ${currentTeamCumulative.toFixed(2)} / Limit (${teamLimitType}: ${teamLimitValueStr}) - Overloaded`;
-                }
+                teamLimit = calculatedMetrics[teamId]?.[scenarioKey]?.grossYrs ?? 0;
+                teamLimitType = `Gross ${scenarioKey}`;
             }
-             // --- End Conditional Coloring ---
+
+            const currentTeamCumulative = teamCumulativeSde[teamId];
+            if (currentTeamCumulative <= teamLimit) {
+                teamCell.style.backgroundColor = '#d4edda'; // Green
+                teamCell.title = `Cumulative: ${currentTeamCumulative.toFixed(2)} / Limit (${teamLimitType}: ${teamLimit.toFixed(2)}) - OK`;
+            } else {
+                teamCell.style.backgroundColor = '#f8d7da'; // Red
+                teamCell.title = `Cumulative: ${currentTeamCumulative.toFixed(2)} / Limit (${teamLimitType}: ${teamLimit.toFixed(2)}) - Overloaded`;
+            }
 
             initiativeTotalSde += currentEstimate;
-        }); // End teamHeaderMap.forEach
+        });
 
-        // Calculate and display OVERALL row totals and status
         totalSdeCell.textContent = initiativeTotalSde.toFixed(2);
         cumulativeSdeTotal += initiativeTotalSde;
         cumSdeCell.textContent = cumulativeSdeTotal.toFixed(2);
 
-        // Overall Capacity Status (vs Team BIS and Funded HC) - No change
-         if (cumulativeSdeTotal <= totalTeamBIS) { statusCell.textContent = '✅'; statusCell.title = `Within Team BIS (${totalTeamBIS.toFixed(2)})`; statusCell.style.backgroundColor = '#d4edda';} else if (cumulativeSdeTotal <= totalFundedHC) { statusCell.textContent = '⚠️'; statusCell.title = `Exceeds Team BIS (${totalTeamBIS.toFixed(2)}), Within Funded HC (${totalFundedHC.toFixed(2)}). Requires hiring or away-team.`; statusCell.style.backgroundColor = '#fff3cd'; } else { statusCell.textContent = '🛑'; statusCell.title = `Exceeds Funded HC (${totalFundedHC.toFixed(2)})`; statusCell.style.backgroundColor = '#f8d7da'; }
+        if (cumulativeSdeTotal <= totalTeamBIS) { statusCell.textContent = '✅'; statusCell.title = `Within Team BIS (${totalTeamBIS.toFixed(2)})`; statusCell.style.backgroundColor = '#d4edda';}
+        else if (cumulativeSdeTotal <= totalFundedHC) { statusCell.textContent = '⚠️'; statusCell.title = `Exceeds Team BIS (${totalTeamBIS.toFixed(2)}), Within Funded HC (${totalFundedHC.toFixed(2)}).`; statusCell.style.backgroundColor = '#fff3cd'; }
+        else { statusCell.textContent = '🛑'; statusCell.title = `Exceeds Funded HC (${totalFundedHC.toFixed(2)})`; statusCell.style.backgroundColor = '#f8d7da'; }
 
-        // Overall ATL/BTL Status (vs Scenario Limit) - No change in text/color logic
         const isBTL = cumulativeSdeTotal > atlBtlCapacityLimit;
         if (!isBTL) {
             atlBtlCell.textContent = 'ATL'; atlBtlCell.style.color = 'green';
-            // Add nuance tooltips (No change)
-            /* ... tooltips comparing scenario limit vs other limits ... */
-             if (planningCapacityScenario === 'effective' && cumulativeSdeTotal > totalFundedHC) { row.style.opacity = '0.8'; row.title = 'ATL (vs Effective BIS), but BTL vs Funded HC.'; } else if (planningCapacityScenario === 'team_bis' && cumulativeSdeTotal > totalEffectiveBIS) { row.style.opacity = '0.8'; row.title = 'ATL (vs Team BIS), but BTL vs Effective BIS.'; } else if (planningCapacityScenario === 'team_bis' && cumulativeSdeTotal > totalFundedHC) { row.style.opacity = '0.8'; row.title = 'ATL (vs Team BIS), but BTL vs Funded HC.'; } else if (planningCapacityScenario === 'funded' && cumulativeSdeTotal > totalEffectiveBIS) { row.style.opacity = '0.8'; row.title = 'ATL (vs Funded HC), but BTL vs Effective BIS.'; } else { row.style.opacity = '1'; row.title = ''; }
         } else {
             atlBtlCell.textContent = 'BTL'; atlBtlCell.style.color = 'red';
         }
 
-        // *** REVISED: Apply Row Styling ONLY to Fixed Columns ***
         row.querySelectorAll('td').forEach((cell, idx) => {
-            if (idx < fixedHeaders.length) { // Apply only to fixed columns
+            if (idx < fixedHeaders.length) {
                 if (initiative.isProtected) {
-                    cell.style.backgroundColor = '#f8f9fa'; // Gray for protected fixed cells
+                    cell.style.backgroundColor = '#f8f9fa';
                 } else if (isBTL) {
-                    cell.style.backgroundColor = '#ffeeee'; // Light red for BTL fixed cells
-                } else {
-                    // Set default for non-protected, non-BTL fixed cells (except status cell)
-                    if (idx !== fixedHeaders.indexOf('Capacity Status')) {
-                       cell.style.backgroundColor = '#fff'; // Default white
-                    }
+                    cell.style.backgroundColor = '#ffeeee';
                 }
             }
-            // Ensure Capacity Status cell retains its independent color
-            if (idx === fixedHeaders.indexOf('Capacity Status')) {
-                 if (cumulativeSdeTotal <= totalTeamBIS) { cell.style.backgroundColor = '#d4edda';} else if (cumulativeSdeTotal <= totalFundedHC) { cell.style.backgroundColor = '#fff3cd'; } else { cell.style.backgroundColor = '#f8d7da'; }
-                 // Also override if protected/BTL applies to fixed columns
-                 if (initiative.isProtected) cell.style.backgroundColor = '#f8f9fa';
-                 else if (isBTL) cell.style.backgroundColor = '#ffeeee';
-            }
         });
+    });
 
-    }); // End sortedInitiatives.forEach
-
-    // --- Assemble the table structure ---
     table.appendChild(tbody);
     tableWrapper.appendChild(table);
     if (tableContainer) { tableContainer.appendChild(tableWrapper); }
-    // --- End Assemble Table Structure ---
 
     adjustPlanningTableHeight();
-    console.log("Finished generating planning table (v6 - Persistent Team Colors).");
-} // --- End generatePlanningTable ---
+    console.log("Finished generating ALIGNED planning table (v7).");
+}
 
 /** Dynamically adjusts the max-height of the planning table scroll wrapper */
 function adjustPlanningTableHeight() {
