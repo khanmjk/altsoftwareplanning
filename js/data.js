@@ -1,7 +1,7 @@
 // js/data.js
 
 /** Define a unique key for local storage **/
-const LOCAL_STORAGE_KEY = 'architectureVisualization_systems_v3'; // Updated to v3
+const LOCAL_STORAGE_KEY = 'architectureVisualization_systems_v4'; // Updated to v4 roadmap changes
 
 const STANDARD_WORK_PACKAGE_PHASES = [
     "Requirements & Definition",

@@ -819,8 +819,7 @@ function renderRoadmapTable() {
 /**
  * Generates the HTML structure for the Add/Edit Initiative form fields
  * INSIDE the provided formElement (which is the modal's form).
- * MODIFIED: Themes input changed to multi-select.
- * MODIFIED AGAIN: Replaced Impacted Service IDs with a Team Assignments section.
+ * MODIFIED: Added planningYear input.
  */
 function generateRoadmapInitiativeFormFields(formElement) {
     if (!formElement) {
@@ -852,7 +851,7 @@ function generateRoadmapInitiativeFormFields(formElement) {
             if (multiple) {
                 input.multiple = true;
                 input.size = Math.min(5, (options || []).length + 1); // +1 for potential placeholder
-                input.style.height = 'auto'; 
+                input.style.height = 'auto';
             }
             if (options) {
                 options.forEach(opt => {
@@ -868,7 +867,7 @@ function generateRoadmapInitiativeFormFields(formElement) {
         }
         input.id = elementId;
         input.name = elementId; // Ensure name attribute is set for form.elements access
-        input.className = 'form-control'; 
+        input.className = 'form-control';
         if (placeholder) input.placeholder = placeholder;
 
         div.appendChild(input);
@@ -885,6 +884,8 @@ function generateRoadmapInitiativeFormFields(formElement) {
     const statusOptions = ALL_INITIATIVE_STATUSES.map(s => ({ value: s, text: s }));
     mainDetailsFieldset.appendChild(createFormGroup('Status:', 'initiativeStatus', 'select', statusOptions));
     mainDetailsFieldset.appendChild(createFormGroup('Target Due Date:', 'initiativeTargetDueDate', 'date'));
+    const currentYear = new Date().getFullYear();
+    mainDetailsFieldset.appendChild(createFormGroup('Planning Year:', 'initiativePlanningYear', 'number', null, '', `${currentYear}`));
     mainDetailsFieldset.appendChild(createFormGroup('PM Capacity/Team Notes:', 'initiativePmCapacityNotes', 'textarea'));
     formElement.appendChild(mainDetailsFieldset);
 
@@ -907,7 +908,7 @@ function generateRoadmapInitiativeFormFields(formElement) {
         const themesGroup = createFormGroup('Themes:', 'initiativeThemes', 'text', null, '', 'No themes defined.');
         const themesTextInput = themesGroup.querySelector('input');
         if (themesTextInput) {
-            themesTextInput.disabled = true; 
+            themesTextInput.disabled = true;
             themesTextInput.style.display = 'none';
             themesTextInput.parentNode.insertBefore(themesHelpText, themesTextInput.nextSibling);
         }
@@ -941,7 +942,7 @@ function generateRoadmapInitiativeFormFields(formElement) {
     roiFieldset.appendChild(createFormGroup('Business Case Link (URL):', 'roiBusinessCaseLink', 'text'));
     roiFieldset.appendChild(createFormGroup('Override Justification:', 'roiOverrideJustification', 'textarea'));
     formElement.appendChild(roiFieldset);
-    
+
     // NEW: Team Assignments Section
     const teamAssignmentsFieldset = document.createElement('fieldset');
     teamAssignmentsFieldset.style.border = '1px solid #ddd';
@@ -1010,21 +1011,18 @@ function generateRoadmapInitiativeFormFields(formElement) {
     addAssignmentButton.textContent = 'Add/Update Assignment';
     addAssignmentButton.className = 'btn-secondary'; // Secondary button style
     assignmentControlsDiv.appendChild(addAssignmentButton);
-    
+
     teamAssignmentsFieldset.appendChild(assignmentControlsDiv);
     formElement.appendChild(teamAssignmentsFieldset);
     // END NEW: Team Assignments Section
 
-    // Remove original impactedServiceIds text input field generation
-    // formElement.appendChild(createFormGroup('Impacted Service IDs (comma-separated):', 'initiativeImpactedServiceIds', 'text', null, '', 'e.g., service-id1,service-id2'));
-
-    console.log("Roadmap initiative form fields generated into modal with Team Assignments section.");
+    console.log("Roadmap initiative form fields generated into modal with Team Assignments section and Planning Year.");
 }
+
 
 /**
  * Populates the Add/Edit modal form with data from an existing initiative.
- * MODIFIED: To handle multi-select for themes.
- * MODIFIED AGAIN: To handle Team Assignments section.
+ * MODIFIED: To populate planningYear.
  */
 function populateRoadmapInitiativeForm_modal(initiative) {
     if (!initiative) return;
@@ -1037,18 +1035,19 @@ function populateRoadmapInitiativeForm_modal(initiative) {
     form.elements['initiativeDescription_modal_roadmap'].value = initiative.description || '';
     form.elements['initiativeStatus_modal_roadmap'].value = initiative.status || 'Backlog';
     form.elements['initiativeTargetDueDate_modal_roadmap'].value = initiative.targetDueDate || '';
+    form.elements['initiativePlanningYear_modal_roadmap'].value = initiative.attributes?.planningYear || new Date().getFullYear();
     form.elements['initiativePmCapacityNotes_modal_roadmap'].value = initiative.attributes?.pmCapacityNotes || '';
-    
+
     const themesSelect = form.elements['initiativeThemes_modal_roadmap'];
     if (themesSelect && themesSelect.type === 'select-multiple') {
         const initiativeThemeIds = initiative.themes || [];
         for (let i = 0; i < themesSelect.options.length; i++) {
             themesSelect.options[i].selected = initiativeThemeIds.includes(themesSelect.options[i].value);
         }
-    } else if (themesSelect) { 
+    } else if (themesSelect) {
         themesSelect.value = (initiative.themes || []).join(', ');
     }
-    
+
     form.elements['initiativePrimaryGoalId_modal_roadmap'].value = initiative.primaryGoalId || '';
 
     // Populate owner and projectManager
@@ -1074,15 +1073,14 @@ function populateRoadmapInitiativeForm_modal(initiative) {
     form.elements['roiCalculationMethodology_modal_roadmap'].value = roi.calculationMethodology || '';
     form.elements['roiBusinessCaseLink_modal_roadmap'].value = roi.businessCaseLink || '';
     form.elements['roiOverrideJustification_modal_roadmap'].value = roi.overrideJustification || '';
-    
+
     // Note: The actual display of assignments is handled by displayTempRoadmapAssignments_modal
     // which reads from tempRoadmapAssignments_modal. This temp store is populated in openRoadmapModalForEdit.
 }
 
 /**
  * Handles saving the initiative (add or edit) from the modal.
- * MODIFIED: To read from multi-select for themes.
- * MODIFIED AGAIN: To use tempRoadmapAssignments_modal for team assignments.
+ * MODIFIED: To save planningYear.
  */
 function handleSaveRoadmapInitiative_modal() {
     const modalElements = getRoadmapModalElements();
@@ -1100,7 +1098,7 @@ function handleSaveRoadmapInitiative_modal() {
                 selectedThemeIds.push(themesSelect.options[i].value);
             }
         }
-    } else if (themesSelect) { 
+    } else if (themesSelect) {
         selectedThemeIds = themesSelect.value.split(',').map(t => t.trim()).filter(t => t);
     }
 
@@ -1130,7 +1128,8 @@ function handleSaveRoadmapInitiative_modal() {
             attributes: {}
         },
         attributes: {
-            pmCapacityNotes: form.elements['initiativePmCapacityNotes_modal_roadmap'].value.trim()
+            pmCapacityNotes: form.elements['initiativePmCapacityNotes_modal_roadmap'].value.trim(),
+            planningYear: parseInt(form.elements['initiativePlanningYear_modal_roadmap'].value) || new Date().getFullYear()
         }
     };
 
@@ -1170,8 +1169,8 @@ function handleSaveRoadmapInitiative_modal() {
         // Preserve fields not editable in this modal (isProtected, workPackageIds).
         // Assignments are now taken from initiativeData (which got them from tempRoadmapAssignments_modal)
         const preservedData = {
-            isProtected: existingInitiative?.isProtected || false, 
-            workPackageIds: existingInitiative?.workPackageIds || [], 
+            isProtected: existingInitiative?.isProtected || false,
+            workPackageIds: existingInitiative?.workPackageIds || [],
             attributes: {...(existingInitiative?.attributes || {}), ...initiativeData.attributes}, // Merge attributes
             roi: {...(existingInitiative?.roi || {}), ...initiativeData.roi} // Merge ROI
         };
@@ -1186,7 +1185,7 @@ function handleSaveRoadmapInitiative_modal() {
     } else {
         // For new initiatives, ensure other necessary fields are initialized if not already
         initiativeData.workPackageIds = initiativeData.workPackageIds || [];
-        initiativeData.isProtected = initiativeData.isProtected || false; 
+        initiativeData.isProtected = initiativeData.isProtected || false;
         const added = addInitiative(initiativeData); // addInitiative in utils.js should handle default assignments if needed
         if (added) success = true;
     }
