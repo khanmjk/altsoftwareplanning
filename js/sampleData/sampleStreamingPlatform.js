@@ -198,7 +198,7 @@ const sampleYearlyInitiativesStreamView = [
         targetDueDate: null, actualCompletionDate: null, status: 'Committed',
         themes: ['theme-eng-excellence-sv', 'theme-platform-stability-sv'], primaryGoalId: 'goal-stability-sv-2025',
         projectManager: null, owner: { type: 'seniorManager', id: 'srMgr1', name: 'Director Dave' }, technicalPOC: { type: 'sdm', id: 'sdm1', name: 'Alice Johnson' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "Standard KTLO allocation, ongoing." }
+        workPackageIds: [], attributes: { pmCapacityNotes: "Standard KTLO allocation, ongoing.", planningYear: 2025 }
     },
     {
         initiativeId: 'init-sv-oncall', title: 'On-Call / Production Support', description: 'Dedicated capacity for handling live site issues and production incidents.', isProtected: true,
@@ -211,7 +211,7 @@ const sampleYearlyInitiativesStreamView = [
         targetDueDate: null, actualCompletionDate: null, status: 'Committed',
         themes: ['theme-platform-stability-sv'], primaryGoalId: 'goal-stability-sv-2025',
         projectManager: null, owner: { type: 'seniorManager', id: 'srMgr1', name: 'Director Dave' }, technicalPOC: { type: 'sdm', id: 'sdm2', name: 'Emily Clark' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "Standard On-Call allocation, ongoing." }
+        workPackageIds: [], attributes: { pmCapacityNotes: "Standard On-Call allocation, ongoing.", planningYear: 2025 }
     },
     {
         initiativeId: 'init-sv-security', title: 'Mandatory Security Hardening (Compliance)', description: 'Address critical security vulnerabilities and ensure compliance (e.g., SOC2, GDPR).', isProtected: true,
@@ -221,7 +221,7 @@ const sampleYearlyInitiativesStreamView = [
         targetDueDate: "2025-06-30", actualCompletionDate: null, status: 'Committed',
         themes: ['theme-security-sv', 'theme-compliance-sv'], primaryGoalId: 'goal-security-compliance-sv-2025',
         projectManager: { type: 'projectManager', id: 'pmSV001', name: 'Eleanor Planwell' }, owner: { type: 'seniorManager', id: 'srMgr2', name: 'VP Victoria' }, technicalPOC: { type: 'sdm', id: 'sdm5', name: 'Ian Turner' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "Coordination across multiple teams needed for these security updates." }
+        workPackageIds: [], attributes: { pmCapacityNotes: "Coordination across multiple teams needed for these security updates.", planningYear: 2025 }
     },
     {
         initiativeId: 'init-sv-001', title: 'AV1 Codec Support', description: 'Implement AV1 codec for improved streaming efficiency.', isProtected: false,
@@ -231,7 +231,7 @@ const sampleYearlyInitiativesStreamView = [
         targetDueDate: "2025-09-30", actualCompletionDate: null, status: 'Committed',
         themes: ['theme-user-experience-sv', 'theme-cost-reduction-sv'], primaryGoalId: 'goal-ux-enhancement-sv-2025',
         projectManager: { type: 'projectManager', id: 'pmSV001', name: 'Eleanor Planwell' }, owner: { type: 'sdm', id: 'sdm2', name: 'Emily Clark' }, technicalPOC: { type: 'engineer', id: 'engEmilyClark_team2_sv', name: 'Emily Clark (Spartans)' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "Team Spartans (Streaming) lead, Crusaders (Content) for ingestion changes." }
+        workPackageIds: [], attributes: { pmCapacityNotes: "Team Spartans (Streaming) lead, Crusaders (Content) for ingestion changes.", planningYear: 2025 }
     },
     {
         initiativeId: 'init-sv-002', title: 'Tiered Subscription Model', description: 'Launch new subscription tiers (Basic, Premium, Family).', isProtected: false,
@@ -241,7 +241,7 @@ const sampleYearlyInitiativesStreamView = [
         targetDueDate: "2025-12-15", actualCompletionDate: null, status: 'Committed',
         themes: ['theme-revenue-growth-sv'], primaryGoalId: 'goal-revenue-sv-2025',
         projectManager: { type: 'projectManager', id: 'pmSV002', name: 'Marcus Scope' }, owner: { type: 'pmt', id: 'pmt3', name: 'Jane Parker' }, technicalPOC: { type: 'sdm', id: 'sdm5', name: 'Ian Turner' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "Major effort for Finance Team, UX and Comms support." }
+        workPackageIds: [], attributes: { pmCapacityNotes: "Major effort for Finance Team, UX and Comms support.", planningYear: 2025 }
     },
     {
         initiativeId: 'init-sv-003', title: 'Recommendation Algorithm V3', description: 'Develop and deploy next-gen recommendation engine.', isProtected: false,
@@ -251,7 +251,7 @@ const sampleYearlyInitiativesStreamView = [
         targetDueDate: "2025-10-31", actualCompletionDate: null, status: 'Committed',
         themes: ['theme-user-experience-sv', 'theme-innovation-sv'], primaryGoalId: 'goal-ux-enhancement-sv-2025',
         projectManager: { type: 'projectManager', id: 'pmSV001', name: 'Eleanor Planwell' }, owner: { type: 'sdm', id: 'sdm4', name: 'Grace Lee' }, technicalPOC: { type: 'engineer', id: 'engGraceLee_team4_sv', name: 'Grace Lee (Olympus)' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "" }
+        workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2025 }
     },
     {
         initiativeId: 'init-sv-004', title: 'Expand CDN to South America', description: 'Set up CDN infrastructure in SA region.', isProtected: false, 
@@ -261,7 +261,7 @@ const sampleYearlyInitiativesStreamView = [
         targetDueDate: "2026-03-31", actualCompletionDate: null, status: 'Backlog',
         themes: ['theme-global-expansion-sv'], primaryGoalId: 'goal-expansion-sv-2026',
         projectManager: null, owner: { type: 'sdm', id: 'sdm2', name: 'Emily Clark' }, technicalPOC: { type: 'engineer', id: 'engDanielThompson_team2_sv', name: 'Daniel Thompson (Spartans)' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "" }
+        workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2026 }
     },
     {
         initiativeId: 'init-sv-005', title: 'User Profile Enhancements', description: 'Add customizable avatars and viewing preferences.', isProtected: false, 
@@ -271,7 +271,7 @@ const sampleYearlyInitiativesStreamView = [
         targetDueDate: "2025-08-31", actualCompletionDate: null, status: 'Committed',
         themes: ['theme-user-experience-sv'], primaryGoalId: 'goal-ux-enhancement-sv-2025',
         projectManager: { type: 'projectManager', id: 'pmSV001', name: 'Eleanor Planwell' }, owner: { type: 'pmt', id: 'pmt1', name: 'Bob Smith' }, technicalPOC: { type: 'sdm', id: 'sdm1', name: 'Alice Johnson' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "" }
+        workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2025 }
     },
     {
         initiativeId: 'init-sv-006', title: 'Content Search Facets', description: 'Improve search with filters for genre, rating, year.', isProtected: false, 
@@ -281,7 +281,7 @@ const sampleYearlyInitiativesStreamView = [
         targetDueDate: "2025-07-31", actualCompletionDate: null, status: 'Committed',
         themes: ['theme-user-experience-sv'], primaryGoalId: 'goal-ux-enhancement-sv-2025',
         projectManager: null, owner: { type: 'pmt', id: 'pmt1', name: 'Bob Smith' }, technicalPOC: { type: 'sdm', id: 'sdm8', name: 'Zoe King' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "" }
+        workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2025 }
     },
     {
         initiativeId: 'init-sv-007', title: 'Offline Viewing Improvements', description: 'Enhance download stability and management.', isProtected: false, 
@@ -291,7 +291,7 @@ const sampleYearlyInitiativesStreamView = [
         targetDueDate: "2025-10-15", actualCompletionDate: null, status: 'Committed',
         themes: ['theme-user-experience-sv'], primaryGoalId: 'goal-ux-enhancement-sv-2025',
         projectManager: null, owner: { type: 'sdm', id: 'sdm2', name: 'Emily Clark' }, technicalPOC: { type: 'engineer', id: 'engOliviaBrown_team2_sv', name: 'Olivia Brown (Spartans)' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "" }
+        workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2025 }
     },
     {
         initiativeId: 'init-sv-008', title: 'A/B Testing Framework', description: 'Build internal framework for feature A/B testing.', isProtected: false, 
@@ -301,7 +301,7 @@ const sampleYearlyInitiativesStreamView = [
         targetDueDate: "2025-11-30", actualCompletionDate: null, status: 'Committed',
         themes: ['theme-eng-excellence-sv'], primaryGoalId: 'goal-stability-sv-2025',
         projectManager: { type: 'projectManager', id: 'pmSV002', name: 'Marcus Scope' }, owner: { type: 'sdm', id: 'sdm7', name: 'Natalie Green' }, technicalPOC: { type: 'engineer', id: 'engNatalieGreen_team7_sv', name: 'Natalie Green (Dragons)' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "" }
+        workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2025 }
     },
     {
         initiativeId: 'init-sv-009', title: 'Parental Controls V2', description: 'Granular controls per profile and content rating.', isProtected: false, 
@@ -311,7 +311,7 @@ const sampleYearlyInitiativesStreamView = [
         targetDueDate: "2025-08-15", actualCompletionDate: null, status: 'Committed',
         themes: ['theme-compliance-sv', 'theme-user-experience-sv'], primaryGoalId: 'goal-security-compliance-sv-2025', 
         projectManager: null, owner: { type: 'pmt', id: 'pmt1', name: 'Bob Smith' }, technicalPOC: { type: 'sdm', id: 'sdm1', name: 'Alice Johnson' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "" }
+        workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2025 }
     },
     {
         initiativeId: 'init-sv-010', title: 'Interactive Content POC', description: 'Proof-of-concept for choose-your-own-adventure style content.', isProtected: false, 
@@ -321,7 +321,7 @@ const sampleYearlyInitiativesStreamView = [
         targetDueDate: "2025-07-31", actualCompletionDate: null, status: 'Backlog', 
         themes: ['theme-innovation-sv'], primaryGoalId: 'goal-ux-enhancement-sv-2025',
         projectManager: null, owner: { type: 'pmt', id: 'pmt2', name: 'Frank Thompson' }, technicalPOC: { type: 'sdm', id: 'sdm3', name: 'Carol Davis' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "" }
+        workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2025 }
     },
     {
         initiativeId: 'init-sv-011', title: 'Payment Gateway Integration (New Region)', description: 'Add local payment options for APAC.', isProtected: false, 
@@ -331,7 +331,7 @@ const sampleYearlyInitiativesStreamView = [
         targetDueDate: "2026-01-31", actualCompletionDate: null, status: 'Backlog',
         themes: ['theme-global-expansion-sv'], primaryGoalId: 'goal-expansion-sv-2026', 
         projectManager: { type: 'projectManager', id: 'pmSV002', name: 'Marcus Scope' }, owner: { type: 'pmt', id: 'pmt3', name: 'Jane Parker' }, technicalPOC: { type: 'sdm', id: 'sdm5', name: 'Ian Turner' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "" }
+        workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2026 }
     },
     {
         initiativeId: 'init-sv-012', title: 'Real-time Analytics Dashboard', description: 'Internal dashboard for viewing concurrency and errors.', isProtected: false, 
@@ -341,7 +341,7 @@ const sampleYearlyInitiativesStreamView = [
         targetDueDate: "2025-09-15", actualCompletionDate: null, status: 'Committed',
         themes: ['theme-platform-stability-sv', 'theme-eng-excellence-sv'], primaryGoalId: 'goal-stability-sv-2025',
         projectManager: null, owner: { type: 'sdm', id: 'sdm7', name: 'Natalie Green' }, technicalPOC: { type: 'engineer', id: 'engAndrewHall_team7_sv', name: 'Andrew Hall (Dragons)' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "" }
+        workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2025 }
     },
     {
         initiativeId: 'init-sv-013', title: 'Watch Party Feature', description: 'Allow users to watch content synchronously with friends.', isProtected: false, 
@@ -351,7 +351,7 @@ const sampleYearlyInitiativesStreamView = [
         targetDueDate: "2025-11-30", actualCompletionDate: null, status: 'Committed',
         themes: ['theme-user-experience-sv', 'theme-innovation-sv'], primaryGoalId: 'goal-ux-enhancement-sv-2025',
         projectManager: { type: 'projectManager', id: 'pmSV001', name: 'Eleanor Planwell' }, owner: { type: 'pmt', id: 'pmt1', name: 'Bob Smith' }, technicalPOC: { type: 'sdm', id: 'sdm1', name: 'Alice Johnson' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "" }
+        workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2025 }
     },
     {
         initiativeId: 'init-sv-014', title: 'Metadata Enrichment AI', description: 'Use AI to auto-tag content metadata.', isProtected: false, 
@@ -361,7 +361,7 @@ const sampleYearlyInitiativesStreamView = [
         targetDueDate: "2025-12-31", actualCompletionDate: null, status: 'Backlog',
         themes: ['theme-eng-excellence-sv', 'theme-cost-reduction-sv'], primaryGoalId: null,
         projectManager: null, owner: { type: 'sdm', id: 'sdm3', name: 'Carol Davis' }, technicalPOC: { type: 'engineer', id: 'engCarolDavis_team3_sv', name: 'Carol Davis (Crusaders)' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "" }
+        workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2025 }
     },
     {
         initiativeId: 'init-sv-015', title: 'GDPR Data Deletion Automation', description: 'Automate user data deletion requests for GDPR.', isProtected: false, 
@@ -371,7 +371,7 @@ const sampleYearlyInitiativesStreamView = [
         targetDueDate: "2025-05-31", actualCompletionDate: null, status: 'Committed',
         themes: ['theme-compliance-sv', 'theme-platform-stability-sv'], primaryGoalId: 'goal-security-compliance-sv-2025',
         projectManager: { type: 'projectManager', id: 'pmSV001', name: 'Eleanor Planwell' }, owner: { type: 'sdm', id: 'sdm1', name: 'Alice Johnson' }, technicalPOC: { type: 'engineer', id: 'engMarkEvans_team1_sv', name: 'Mark Evans (Avengers)' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "" }
+        workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2025 }
     },
     {
         initiativeId: 'init-sv-016', title: 'Improved Subtitle Customization', description: 'Allow users to change subtitle font, size, color.', isProtected: false, 
@@ -381,7 +381,7 @@ const sampleYearlyInitiativesStreamView = [
         targetDueDate: "2025-06-30", actualCompletionDate: null, status: 'Committed',
         themes: ['theme-user-experience-sv', 'theme-compliance-sv'], primaryGoalId: 'goal-ux-enhancement-sv-2025',
         projectManager: null, owner: { type: 'pmt', id: 'pmt1', name: 'Bob Smith' }, technicalPOC: { type: 'engineer', id: 'engSophiaLee_team1_sv', name: 'Sophia Lee (Avengers)' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "" }
+        workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2025 }
     },
     {
         initiativeId: 'init-sv-017', title: 'Search Performance Optimization', description: 'Reduce search latency by 50%.', isProtected: false, 
@@ -391,7 +391,7 @@ const sampleYearlyInitiativesStreamView = [
         targetDueDate: "2025-09-30", actualCompletionDate: null, status: 'Committed',
         themes: ['theme-eng-excellence-sv', 'theme-user-experience-sv'], primaryGoalId: 'goal-ux-enhancement-sv-2025',
         projectManager: null, owner: { type: 'sdm', id: 'sdm8', name: 'Zoe King' }, technicalPOC: { type: 'engineer', id: 'engZoeKing_team8_sv', name: 'Zoe King (Search)' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "" }
+        workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2025 }
     },
     {
         initiativeId: 'init-sv-018', title: 'Gift Subscriptions', description: 'Allow users to purchase subscriptions for others.', isProtected: false, 
@@ -401,7 +401,7 @@ const sampleYearlyInitiativesStreamView = [
         targetDueDate: "2025-11-15", actualCompletionDate: null, status: 'Backlog',
         themes: ['theme-revenue-growth-sv'], primaryGoalId: 'goal-revenue-sv-2025',
         projectManager: { type: 'projectManager', id: 'pmSV002', name: 'Marcus Scope' }, owner: { type: 'pmt', id: 'pmt3', name: 'Jane Parker' }, technicalPOC: { type: 'sdm', id: 'sdm5', name: 'Ian Turner' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "" }
+        workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2025 }
     },
     {
         initiativeId: 'init-sv-019', title: 'Video Player Accessibility Audit & Fixes', description: 'Ensure player meets WCAG AA standards.', isProtected: false, 
@@ -411,7 +411,7 @@ const sampleYearlyInitiativesStreamView = [
         targetDueDate: "2025-08-31", actualCompletionDate: null, status: 'Committed',
         themes: ['theme-compliance-sv', 'theme-user-experience-sv'], primaryGoalId: 'goal-security-compliance-sv-2025',
         projectManager: null, owner: { type: 'pmt', id: 'pmt1', name: 'Bob Smith' }, technicalPOC: { type: 'engineer', id: 'engJohnDoe_team1_sv', name: 'John Doe (Avengers)' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "" } 
+        workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2025 } 
     },
     {
         initiativeId: 'init-sv-020', title: 'Reduce Streaming Startup Time', description: 'Optimize playback start time for users.', isProtected: false, 
@@ -421,7 +421,7 @@ const sampleYearlyInitiativesStreamView = [
         targetDueDate: "2025-12-31", actualCompletionDate: null, status: 'Committed',
         themes: ['theme-user-experience-sv', 'theme-eng-excellence-sv'], primaryGoalId: 'goal-ux-enhancement-sv-2025',
         projectManager: null, owner: { type: 'sdm', id: 'sdm2', name: 'Emily Clark' }, technicalPOC: { type: 'engineer', id: 'engDanielThompson_team2_sv', name: 'Daniel Thompson (Spartans)' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "" }
+        workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2025 }
     },
     {
         initiativeId: 'init-sv-021', title: 'Content Partner Reporting Portal', description: 'Allow content partners to view performance data.', isProtected: false, 
@@ -431,7 +431,7 @@ const sampleYearlyInitiativesStreamView = [
         targetDueDate: "2026-02-28", actualCompletionDate: null, status: 'Backlog',
         themes: ['theme-partnerships-sv'], primaryGoalId: null, 
         projectManager: { type: 'projectManager', id: 'pmSV002', name: 'Marcus Scope' }, owner: { type: 'pmt', id: 'pmt2', name: 'Frank Thompson' }, technicalPOC: { type: 'sdm', id: 'sdm7', name: 'Natalie Green' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "" }
+        workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2026 }
     },
     {
         initiativeId: 'init-sv-022', title: 'Personalized Push Notifications', description: 'Send targeted notifications based on viewing habits.', isProtected: false, 
@@ -441,7 +441,7 @@ const sampleYearlyInitiativesStreamView = [
         targetDueDate: "2025-10-31", actualCompletionDate: null, status: 'Backlog',
         themes: ['theme-user-experience-sv', 'theme-innovation-sv'], primaryGoalId: 'goal-ux-enhancement-sv-2025',
         projectManager: null, owner: { type: 'pmt', id: 'pmt2', name: 'Frank Thompson' }, technicalPOC: { type: 'sdm', id: 'sdm6', name: 'Karen Adams' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "" }
+        workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2025 }
     }
 ];
 
