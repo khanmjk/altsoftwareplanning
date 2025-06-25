@@ -59,13 +59,19 @@ Manage Detailed Planning
 [Done] -- Add gains in AI engineers - hours saved by AI means more capacity to the team
 [Done] -- Ensure that when a team has AI engineers, they are excluded from team capacity constraints for leave and meetings overheads
 [Done] - Fixed by Google's Jules UX fixes - - Fix table of contents for documentation - clickthrough on links don't all work
+[Done] - Technical Debt - 5. Address Data Model Extensibility (Revisit from Backlog):
+         Description: Review the existing data structures (e.g., for teams, services, initiatives) and implement the previously discussed strategy for making them more extensible. This might involve adding a generic attributes or customFields property to key data objects to allow for easier addition of new information without constant schema changes.
+         Impact: Reduces the friction for adding new features that require storing more data, ensuring the application can evolve more smoothly.
+
+* Make sure to clean up Yearly Planning view:
+-- There needs to be link from year plan to the backlog page (ATL items must be considered as "committed" in the backlog item status, whilst BTL items must get assigned to "backlog" state). 
+When generated the roadmap view, the planning status in the year plan for initiatives as ATL/BTL - must drive the backlog and roadmap.
+-- Remove Add new initiative from year plan so that the rule becomes year plan must always pull from the backlog. The backlog should be the main source of truth for initiatives / roadmap
+-- Thinking we should add some other attributes to initiatives like type: Egnineering, Product, BusinessOps, Security, Compliance, Legal, etc.
 
 ------------
 IN PROGRESS
 ------------
-
-
-
 Manage Roadmap & Backlog
 -- Similar to the year planning page, but focused on roadmap / backlog management (does not need to show ATL/BTL logic), just an interactive table to pull the latest backlog of initiatives, ability to add and remove initiatives. The Year plan and Roadmap must share the same data model (year plan shows more details / attributes than the roadmap)
 -- Generate roadmap table view (by quarter), should be interactive to filter by org, team
@@ -78,11 +84,7 @@ Manage Roadmap & Backlog
 -- It must be possible to generate a roadmap view per team for software managers to focus on their team or org-specific commitments
 -- It must be possible to display a graph visualization (similar to system visualizations) of service impact and relations to initiatives and work package dependencies
 
-* Make sure to clean up Yearly Planning view:
--- There needs to be link from year plan to the backlog page (ATL items must be considered as "committed" in the backlog item status, whilst BTL items must get assigned to "backlog" state). 
-When generated the roadmap view, the planning status in the year plan for initiatives as ATL/BTL - must drive the backlog and roadmap.
--- Remove Add new initiative from year plan so that the rule becomes year plan must always pull from the backlog. The backlog should be the main source of truth for initiatives / roadmap
--- Thinking we should add some other attributes to initiatives like type: Egnineering, Product, BusinessOps, Security, Compliance, Legal, etc.
+
 
 ------
 TO DO
@@ -156,10 +158,6 @@ Impact: Improves data integrity, makes debugging easier, and provides a clearer 
 4. Develop a Set of "Data Getter" Utilities for Views:
 Description: Create specific functions in utils.js (or the new data service layer) that views can call to get pre-formatted or aggregated data needed for display, instead of views doing complex data lookups themselves. For example, Utils.getFormattedEngineerDetails(engineerName) or Utils.getTeamCapacitySummary(teamId, scenario).
 Impact: Simplifies the logic in view-specific files (like orgView.js, yearPlanning.js), making them more focused on presentation and easier to adapt if the underlying currentSystemData structure evolves.
-
-5. Address Data Model Extensibility (Revisit from Backlog):
-Description: Review the existing data structures (e.g., for teams, services, initiatives) and implement the previously discussed strategy for making them more extensible. This might involve adding a generic attributes or customFields property to key data objects to allow for easier addition of new information without constant schema changes.
-Impact: Reduces the friction for adding new features that require storing more data, ensuring the application can evolve more smoothly.
 
 6. Standardize UI Component Creation (Beyond Tables):
 Description: We've started with the EnhancedTableWidget. Identify other UI patterns that are repeated (e.g., dual-list selectors, collapsible sections, input forms) and consider creating simple, reusable component-like functions or classes for them in utils.js or a components directory.
