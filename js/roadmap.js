@@ -819,7 +819,7 @@ function renderRoadmapTable() {
 /**
  * Generates the HTML structure for the Add/Edit Initiative form fields
  * INSIDE the provided formElement (which is the modal's form).
- * MODIFIED: Added planningYear input.
+ * MODIFIED: Removed planningYear input and made targetDueDate required.
  */
 function generateRoadmapInitiativeFormFields(formElement) {
     if (!formElement) {
@@ -829,7 +829,7 @@ function generateRoadmapInitiativeFormFields(formElement) {
     formElement.innerHTML = ''; // Clear existing form content
 
     // Helper to create form group
-    const createFormGroup = (labelText, idSuffix, inputType = 'text', options = null, value = '', placeholder = '', multiple = false) => {
+    const createFormGroup = (labelText, idSuffix, inputType = 'text', options = null, value = '', placeholder = '', multiple = false, isRequired = false) => {
         const elementId = `${idSuffix}_modal_roadmap`; // Unique ID for modal elements
         const div = document.createElement('div');
         div.style.marginBottom = '12px';
@@ -869,6 +869,7 @@ function generateRoadmapInitiativeFormFields(formElement) {
         input.name = elementId; // Ensure name attribute is set for form.elements access
         input.className = 'form-control';
         if (placeholder) input.placeholder = placeholder;
+        if (isRequired) input.required = true; // Set required attribute
 
         div.appendChild(input);
         return div;
@@ -879,13 +880,11 @@ function generateRoadmapInitiativeFormFields(formElement) {
     mainDetailsFieldset.style.border = '1px solid #ddd'; mainDetailsFieldset.style.padding = '10px'; mainDetailsFieldset.style.marginBottom = '15px';
     const mainLegend = document.createElement('legend'); mainLegend.textContent = 'Core Details'; mainLegend.style.fontWeight = 'bold';
     mainDetailsFieldset.appendChild(mainLegend);
-    mainDetailsFieldset.appendChild(createFormGroup('Title:', 'initiativeTitle', 'text'));
+    mainDetailsFieldset.appendChild(createFormGroup('Title:', 'initiativeTitle', 'text', null, '', '', false, true)); // Title is required
     mainDetailsFieldset.appendChild(createFormGroup('Description:', 'initiativeDescription', 'textarea'));
     const statusOptions = ALL_INITIATIVE_STATUSES.map(s => ({ value: s, text: s }));
     mainDetailsFieldset.appendChild(createFormGroup('Status:', 'initiativeStatus', 'select', statusOptions));
-    mainDetailsFieldset.appendChild(createFormGroup('Target Due Date:', 'initiativeTargetDueDate', 'date'));
-    const currentYear = new Date().getFullYear();
-    mainDetailsFieldset.appendChild(createFormGroup('Planning Year:', 'initiativePlanningYear', 'number', null, '', `${currentYear}`));
+    mainDetailsFieldset.appendChild(createFormGroup('Target Due Date:', 'initiativeTargetDueDate', 'date', null, '', '', false, true)); // Target Due Date is required
     mainDetailsFieldset.appendChild(createFormGroup('PM Capacity/Team Notes:', 'initiativePmCapacityNotes', 'textarea'));
     formElement.appendChild(mainDetailsFieldset);
 
@@ -943,7 +942,7 @@ function generateRoadmapInitiativeFormFields(formElement) {
     roiFieldset.appendChild(createFormGroup('Override Justification:', 'roiOverrideJustification', 'textarea'));
     formElement.appendChild(roiFieldset);
 
-    // NEW: Team Assignments Section
+    // Team Assignments Section
     const teamAssignmentsFieldset = document.createElement('fieldset');
     teamAssignmentsFieldset.style.border = '1px solid #ddd';
     teamAssignmentsFieldset.style.padding = '10px';
@@ -1016,13 +1015,13 @@ function generateRoadmapInitiativeFormFields(formElement) {
     formElement.appendChild(teamAssignmentsFieldset);
     // END NEW: Team Assignments Section
 
-    console.log("Roadmap initiative form fields generated into modal with Team Assignments section and Planning Year.");
+    console.log("Roadmap initiative form fields generated into modal.");
 }
 
 
 /**
  * Populates the Add/Edit modal form with data from an existing initiative.
- * MODIFIED: To populate planningYear.
+ * MODIFIED: Removed population of planningYear.
  */
 function populateRoadmapInitiativeForm_modal(initiative) {
     if (!initiative) return;
@@ -1035,7 +1034,6 @@ function populateRoadmapInitiativeForm_modal(initiative) {
     form.elements['initiativeDescription_modal_roadmap'].value = initiative.description || '';
     form.elements['initiativeStatus_modal_roadmap'].value = initiative.status || 'Backlog';
     form.elements['initiativeTargetDueDate_modal_roadmap'].value = initiative.targetDueDate || '';
-    form.elements['initiativePlanningYear_modal_roadmap'].value = initiative.attributes?.planningYear || new Date().getFullYear();
     form.elements['initiativePmCapacityNotes_modal_roadmap'].value = initiative.attributes?.pmCapacityNotes || '';
 
     const themesSelect = form.elements['initiativeThemes_modal_roadmap'];
@@ -1080,7 +1078,7 @@ function populateRoadmapInitiativeForm_modal(initiative) {
 
 /**
  * Handles saving the initiative (add or edit) from the modal.
- * MODIFIED: To save planningYear.
+ * MODIFIED: Calculates planningYear from the mandatory targetDueDate.
  */
 function handleSaveRoadmapInitiative_modal() {
     const modalElements = getRoadmapModalElements();
@@ -1089,6 +1087,34 @@ function handleSaveRoadmapInitiative_modal() {
         return;
     }
     const form = modalElements.formElement;
+
+    // --- Validation for required fields ---
+    const title = form.elements['initiativeTitle_modal_roadmap'].value.trim();
+    const targetDueDateValue = form.elements['initiativeTargetDueDate_modal_roadmap'].value;
+
+    if (!title) {
+        alert("Initiative Title is required.");
+        form.elements['initiativeTitle_modal_roadmap'].focus();
+        return;
+    }
+    if (!targetDueDateValue) {
+        alert("Target Due Date is required.");
+        form.elements['initiativeTargetDueDate_modal_roadmap'].focus();
+        return;
+    }
+
+    // --- Derive Planning Year from Target Due Date ---
+    let derivedPlanningYear;
+    try {
+        const date = new Date(targetDueDateValue + 'T00:00:00');
+        if (isNaN(date.getTime())) throw new Error("Invalid date format");
+        derivedPlanningYear = date.getFullYear();
+    } catch (e) {
+        alert("Invalid Target Due Date. Please use the format YYYY-MM-DD.");
+        form.elements['initiativeTargetDueDate_modal_roadmap'].focus();
+        return;
+    }
+    // --- End Derivation ---
 
     let selectedThemeIds = [];
     const themesSelect = form.elements['initiativeThemes_modal_roadmap'];
@@ -1106,15 +1132,14 @@ function handleSaveRoadmapInitiative_modal() {
     const initiativeAssignments = JSON.parse(JSON.stringify(tempRoadmapAssignments_modal));
 
     const initiativeData = {
-        title: form.elements['initiativeTitle_modal_roadmap'].value.trim(),
+        title: title,
         description: form.elements['initiativeDescription_modal_roadmap'].value.trim(),
         status: form.elements['initiativeStatus_modal_roadmap'].value,
-        targetDueDate: form.elements['initiativeTargetDueDate_modal_roadmap'].value || null,
+        targetDueDate: targetDueDateValue || null,
         themes: selectedThemeIds,
         primaryGoalId: form.elements['initiativePrimaryGoalId_modal_roadmap'].value || null,
-        assignments: initiativeAssignments, // Use the assignments from the modal's temp store
-        impactedServiceIds: [], // Keep as per earlier decision if still needed, or remove. For now, setting to empty.
-                                // If you still need to manage impactedServiceIds distinctly, add a UI for it.
+        assignments: initiativeAssignments,
+        impactedServiceIds: [],
         roi: {
             category: form.elements['roiCategory_modal_roadmap'].value.trim() || null,
             valueType: form.elements['roiValueType_modal_roadmap'].value.trim() || null,
@@ -1129,7 +1154,7 @@ function handleSaveRoadmapInitiative_modal() {
         },
         attributes: {
             pmCapacityNotes: form.elements['initiativePmCapacityNotes_modal_roadmap'].value.trim(),
-            planningYear: parseInt(form.elements['initiativePlanningYear_modal_roadmap'].value) || new Date().getFullYear()
+            planningYear: derivedPlanningYear // Use the derived year
         }
     };
 
@@ -1156,44 +1181,33 @@ function handleSaveRoadmapInitiative_modal() {
         initiativeData.projectManager = null;
     }
 
-    if (!initiativeData.title) {
-        alert("Initiative Title is required.");
-        return;
-    }
-
     let success = false;
     let action = "added";
     if (currentEditingInitiativeId) {
         action = "updated";
         const existingInitiative = currentSystemData.yearlyInitiatives.find(i => i.initiativeId === currentEditingInitiativeId);
-        // Preserve fields not editable in this modal (isProtected, workPackageIds).
-        // Assignments are now taken from initiativeData (which got them from tempRoadmapAssignments_modal)
         const preservedData = {
             isProtected: existingInitiative?.isProtected || false,
             workPackageIds: existingInitiative?.workPackageIds || [],
-            attributes: {...(existingInitiative?.attributes || {}), ...initiativeData.attributes}, // Merge attributes
-            roi: {...(existingInitiative?.roi || {}), ...initiativeData.roi} // Merge ROI
+            attributes: {...(existingInitiative?.attributes || {}), ...initiativeData.attributes},
+            roi: {...(existingInitiative?.roi || {}), ...initiativeData.roi}
         };
-        // Combine, ensuring initiativeData (from form) takes precedence for fields it manages.
         const finalUpdateData = {...existingInitiative, ...initiativeData, ...preservedData, initiativeId: currentEditingInitiativeId };
-        // Ensure impactedServiceIds is explicitly handled or cleared if it's no longer part of this form's direct management
         finalUpdateData.impactedServiceIds = existingInitiative?.impactedServiceIds || [];
-
 
         const updated = updateInitiative(currentEditingInitiativeId, finalUpdateData);
         if (updated) success = true;
     } else {
-        // For new initiatives, ensure other necessary fields are initialized if not already
         initiativeData.workPackageIds = initiativeData.workPackageIds || [];
         initiativeData.isProtected = initiativeData.isProtected || false;
-        const added = addInitiative(initiativeData); // addInitiative in utils.js should handle default assignments if needed
+        const added = addInitiative(initiativeData);
         if (added) success = true;
     }
 
     if (success) {
-        saveSystemChanges(); // Persist to localStorage
-        renderRoadmapTable(); // Refresh the main roadmap table
-        closeRoadmapModal();  // Close and clear the modal
+        saveSystemChanges();
+        renderRoadmapTable();
+        closeRoadmapModal();
         alert(`Initiative ${action} successfully.`);
     } else {
         alert(`Failed to ${action} initiative.`);
