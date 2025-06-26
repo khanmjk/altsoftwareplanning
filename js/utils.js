@@ -502,3 +502,60 @@ function formatDateToQuarterYear(dateString) {
         return ""; // Invalid date format
     }
 }
+
+/**
+ * Ensures all initiatives have a consistent `planningYear` attribute,
+ * deriving it from the `targetDueDate` if available, or setting a default.
+ * This function modifies the initiatives in place.
+ * @param {Array<object>} initiatives - The array of yearly initiatives from currentSystemData.
+ */
+function ensureInitiativePlanningYears(initiatives) {
+    if (!initiatives || !Array.isArray(initiatives)) {
+        console.warn("ensureInitiativePlanningYears: Initiatives array is invalid.");
+        return;
+    }
+
+    const currentYear = new Date().getFullYear();
+
+    initiatives.forEach(initiative => {
+        if (!initiative.attributes) {
+            initiative.attributes = {};
+        }
+
+        let planningYear = null;
+
+        // 1. Derive year from targetDueDate if it exists and is valid
+        if (initiative.targetDueDate) {
+            try {
+                // Using luxon for robust date parsing, assuming it's available via index.html.
+                let date;
+                if (typeof luxon !== 'undefined') {
+                    date = luxon.DateTime.fromISO(initiative.targetDueDate);
+                    if (date.isValid) {
+                        planningYear = date.year;
+                    }
+                } else {
+                    // Fallback to native Date if luxon is not present.
+                    // Note: Native parsing can be inconsistent across browsers for non-standard formats.
+                    const nativeDate = new Date(initiative.targetDueDate + 'T00:00:00');
+                    if (!isNaN(nativeDate.getTime())) {
+                        planningYear = nativeDate.getFullYear();
+                    }
+                }
+            } catch (e) {
+                console.warn(`Could not parse targetDueDate "${initiative.targetDueDate}" for initiative ID ${initiative.initiativeId}.`, e);
+            }
+        }
+
+        // 2. If no valid year could be derived, set defaults
+        if (planningYear === null) {
+            planningYear = currentYear;
+            // Set targetDueDate to the last day of the now-assigned planning year
+            initiative.targetDueDate = `${planningYear}-12-31`;
+        }
+
+        // 3. Assign the final, consistent planningYear to the initiative's attributes
+        initiative.attributes.planningYear = planningYear;
+    });
+    console.log("Finished ensuring all initiatives have a consistent planningYear.");
+}

@@ -1,3 +1,5 @@
+// js/yearPlanning.js
+
 // Global variable to store the currently selected planning year
 let currentPlanningYear = new Date().getFullYear();
 
@@ -451,10 +453,10 @@ function toggleCapacityConstraints(isChecked) {
 window.toggleCapacityConstraints = toggleCapacityConstraints;
 
 /**
- * REVISED - Generates the planning table, filtering initiatives by the selected planning year.
+ * REVISED - Generates the planning table, dynamically populating the year selector
+ * based on initiative data and ensuring data consistency.
  */
 function generatePlanningTable() {
-    console.log(`Generating planning table for year: ${currentPlanningYear}...`);
     const planningViewDiv = document.getElementById('planningView');
     const capacitySummaryDiv = document.getElementById('planningCapacitySummary');
     const scenarioControlDiv = document.getElementById('planningScenarioControl');
@@ -465,9 +467,60 @@ function generatePlanningTable() {
     if (scenarioControlDiv) scenarioControlDiv.innerHTML = ''; else console.error("Missing #planningScenarioControl div");
     if (tableContainer) tableContainer.innerHTML = ''; else console.error("Missing #planningTableContainer div");
 
-    if (!currentSystemData || !currentSystemData.yearlyInitiatives || !currentSystemData.teams) {
-        if (tableContainer) tableContainer.innerHTML = '<p style="color: orange;">No planning data loaded or no initiatives/teams found.</p>';
+    if (!currentSystemData || !currentSystemData.teams) {
+        if (tableContainer) tableContainer.innerHTML = '<p style="color: orange;">No planning data loaded or no teams found.</p>';
         return;
+    }
+
+    // --- 1. Ensure Data Consistency (New Requirement) ---
+    // This helper function (from utils.js) will sync planningYear with targetDueDate
+    if (typeof ensureInitiativePlanningYears === 'function') {
+        ensureInitiativePlanningYears(currentSystemData.yearlyInitiatives);
+    } else {
+        console.warn("`ensureInitiativePlanningYears` function not found. Year data may be inconsistent.");
+    }
+    // --- End Data Consistency ---
+
+    // --- 2. Dynamically build the Year Selector (New Requirement) ---
+    const calendarYear = new Date().getFullYear();
+    let availableYears = [];
+
+    if (currentSystemData.yearlyInitiatives && currentSystemData.yearlyInitiatives.length > 0) {
+        const yearsFromData = new Set(currentSystemData.yearlyInitiatives.map(init => init.attributes.planningYear).filter(year => year));
+        availableYears = Array.from(yearsFromData);
+    }
+
+    // If no years found in data, default to the current year
+    if (availableYears.length === 0) {
+        availableYears.push(calendarYear);
+    }
+    // Ensure the current calendar year is always an option
+    if (!availableYears.includes(calendarYear)) {
+        availableYears.push(calendarYear);
+    }
+
+    availableYears.sort((a, b) => a - b); // Sort years in ascending order
+
+    // Ensure currentPlanningYear is a valid choice, default to current year or first available
+    if (!availableYears.includes(currentPlanningYear)) {
+        currentPlanningYear = availableYears.includes(calendarYear) ? calendarYear : availableYears[0];
+    }
+
+    let yearOptionsHTML = availableYears.map(year =>
+        `<option value="${year}" ${year === currentPlanningYear ? 'selected' : ''}>${year}</option>`
+    ).join('');
+
+    const yearSelectorHTML = `
+        <label for="planningYearSelector" style="font-weight: bold; margin-left: 10px;">Planning Year:</label>
+        <select id="planningYearSelector" onchange="setPlanningYear(this.value)" style="padding: 5px; border-radius: 4px;">
+            ${yearOptionsHTML}
+        </select>
+    `;
+    // --- End Dynamic Year Selector Logic ---
+
+
+    if (capacitySummaryDiv) {
+        capacitySummaryDiv.innerHTML = `${yearSelectorHTML}`;
     }
 
     if (!currentSystemData.calculatedCapacityMetrics) {
@@ -482,18 +535,6 @@ function generatePlanningTable() {
     const totalEffectiveBIS = calculatedMetrics.totals.EffectiveBIS.totalHeadcount;
     const totalAwayTeamBIS = totalEffectiveBIS - calculatedMetrics.totals.TeamBIS.totalHeadcount;
 
-    const yearSelectorHTML = `
-        <label for="planningYearSelector" style="font-weight: bold; margin-left: 10px;">Planning Year (3YP cy):</label>
-        <select id="planningYearSelector" onchange="setPlanningYear(this.value)" style="padding: 5px; border-radius: 4px;">
-            <option value="${currentPlanningYear - 1}">${currentPlanningYear -1}</option>
-            <option value="${currentPlanningYear}" selected>${currentPlanningYear}</option>
-            <option value="${currentPlanningYear + 1}">${currentPlanningYear + 1}</option>
-        </select>
-    `;
-
-    if (capacitySummaryDiv) {
-        capacitySummaryDiv.innerHTML = `${yearSelectorHTML}`;
-    }
 
     if (scenarioControlDiv) {
         const baseButtonStyle = 'padding: 5px 10px; margin-left: 10px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; font-size: 0.9em;';
