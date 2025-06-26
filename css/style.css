@@ -1820,4 +1820,132 @@ a:focus {
     text-shadow: 0 0 2px #fff; /* Make text readable over the bar */
 }
 
+/* --- New Styles for Accomplishments Widget --- */
+
+.accomplishments-container {
+    padding: 10px;
+}
+
+.accomplishment-card {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-left: 5px solid #28a745; /* Green to signify success */
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.accomplishment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.accomplishment-title {
+    margin: 0;
+    font-size: 1.15em;
+    font-weight: 600;
+    color: #212529;
+}
+
+.accomplishment-date {
+    font-size: 0.85em;
+    font-weight: 500;
+    color: #6c757d;
+    background-color: #e9ecef;
+    padding: 3px 8px;
+    border-radius: 10px;
+}
+
+.accomplishment-description {
+    font-size: 0.9em;
+    color: #495057;
+    margin-top: 0;
+    margin-bottom: 12px;
+}
+
+.accomplishment-footer {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85em;
+    color: #6c757d;
+    border-top: 1px solid #e9ecef;
+    padding-top: 10px;
+    margin-top: 5px;
+}
+
+/* --- Styles for Enhanced Accomplishments Widget --- */
+
+.accomplishments-container {
+    padding: 10px;
+}
+
+.accomplishment-card {
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-left: 5px solid #28a745; /* Green to signify success */
+    border-radius: 4px;
+    padding: 15px 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.accomplishment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.accomplishment-title {
+    margin: 0;
+    font-size: 1.15em;
+    font-weight: 600;
+    color: #212529;
+}
+
+.accomplishment-date {
+    font-size: 0.85em;
+    font-weight: 500;
+    color: #6c757d;
+    background-color: #e9ecef;
+    padding: 3px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+
+.accomplishment-description {
+    font-size: 0.9em;
+    color: #495057;
+    margin-top: 0;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.accomplishment-details {
+    font-size: 0.9em;
+    line-height: 1.7;
+    color: #495057;
+    margin-bottom: 15px;
+}
+
+.accomplishment-details strong {
+    color: #212529;
+}
+
+
+.accomplishment-footer {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85em;
+    color: #6c757d;
+    border-top: 1px solid #e9ecef;
+    padding-top: 10px;
+    margin-top: 5px;
+}
+
+
 /* Add any additional styles as needed */          
