@@ -4,6 +4,7 @@ let roadmapTimelineTable = null; // To hold the Tabulator instance for this spec
 
 /**
  * Initializes the entire Roadmap Table View widget.
+ * This is the main entry point called from dashboard.js.
  */
 function initializeRoadmapTableView() {
     console.log("Initializing new Quarterly Roadmap Swimlane View widget...");
@@ -15,7 +16,7 @@ function initializeRoadmapTableView() {
 
     container.innerHTML = `
         <div id="roadmapTableFilters" style="margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border: 1px solid #ddd; border-radius: 4px; display: flex; flex-wrap: wrap; align-items: center; gap: 20px;">
-        </div>
+            </div>
         <div id="quarterlyRoadmapContainer" style="overflow-x: auto;"></div>
     `;
 
@@ -25,7 +26,6 @@ function initializeRoadmapTableView() {
 
 /**
  * Generates the interactive filter dropdowns for Org and Team.
- * MODIFIED: Implements cascading logic for the team filter based on the org filter.
  */
 function generateRoadmapTableFilters() {
     const filtersContainer = document.getElementById('roadmapTableFilters');
@@ -56,7 +56,6 @@ function generateRoadmapTableFilters() {
     (currentSystemData.seniorManagers || []).forEach(sm => {
         orgOptions += `<option value="${sm.seniorManagerId}">${sm.seniorManagerName}</option>`;
     });
-    // When the org filter changes, we must update the team filter's options AND re-render the table
     const handleOrgChange = () => {
         updateTeamFilterOptions();
         renderQuarterlyRoadmap();
@@ -72,25 +71,24 @@ function generateRoadmapTableFilters() {
     teamLabel.style.marginRight = '5px';
     const teamSelect = document.createElement('select');
     teamSelect.id = 'roadmapTeamFilter';
-    teamSelect.onchange = renderQuarterlyRoadmap; // Just re-render the table on change
+    teamSelect.onchange = renderQuarterlyRoadmap;
     
     teamFilterDiv.appendChild(teamLabel);
     teamFilterDiv.appendChild(teamSelect);
     filtersContainer.appendChild(teamFilterDiv);
 
-    // Initial population of the team filter
     updateTeamFilterOptions();
 }
 
 /**
- * NEW Helper Function: Updates the options in the team filter based on the selected organization.
+ * Updates the options in the team filter based on the selected organization.
  */
 function updateTeamFilterOptions() {
     const orgFilterValue = document.getElementById('roadmapOrgFilter')?.value || 'all';
     const teamSelect = document.getElementById('roadmapTeamFilter');
     if (!teamSelect) return;
 
-    teamSelect.innerHTML = ''; // Clear current options
+    teamSelect.innerHTML = '';
     teamSelect.add(new Option('All Teams', 'all'));
 
     let teamsToShow = [];
@@ -170,6 +168,7 @@ function prepareDataForQuarterlyRoadmap() {
 
 /**
  * Renders the new quarterly roadmap table.
+ * FIX: Displays team breakdown correctly even if only one team from an org is assigned.
  */
 function renderQuarterlyRoadmap() {
     const container = document.getElementById('quarterlyRoadmapContainer');
@@ -229,10 +228,15 @@ function renderQuarterlyRoadmap() {
                         const orgAssignments = (init.assignments || []).filter(a => teamsInOrg.has(a.teamId));
                         const orgSde = orgAssignments.reduce((sum, a) => sum + (a.sdeYears || 0), 0);
 
-                        let breakdownHTML = orgAssignments.length > 1 ? orgAssignments.map(a => {
-                            const team = currentSystemData.teams.find(t => t.teamId === a.teamId);
-                            return `<div class="initiative-sde-breakdown">${team ? (team.teamIdentity || team.teamName) : "Unknown"}: ${a.sdeYears.toFixed(2)}</div>`;
-                        }).join('') : '';
+                        let breakdownHTML = '';
+                        // *** FIX: Show breakdown if ANY teams from the org are assigned ***
+                        if (orgAssignments.length > 0) { 
+                            breakdownHTML = orgAssignments.map(a => {
+                                const team = currentSystemData.teams.find(t => t.teamId === a.teamId);
+                                const teamName = team ? (team.teamIdentity || team.teamName) : "Unknown Team";
+                                return `<div class="initiative-sde-breakdown">${teamName}: ${a.sdeYears.toFixed(2)}</div>`;
+                            }).join('');
+                        }
                         
                         sdeDisplayHTML = `<div class="initiative-sde">Org Total: ${orgSde.toFixed(2)} of ${totalSde.toFixed(2)} SDEs</div>${breakdownHTML}`;
                     } else {
@@ -258,6 +262,7 @@ function renderQuarterlyRoadmap() {
     
     container.innerHTML = tableHTML;
 }
+
 
 /**
  * Helper function to get the quarter (Q1, Q2, Q3, Q4) from a date string.
