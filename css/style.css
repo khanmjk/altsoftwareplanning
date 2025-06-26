@@ -1710,5 +1710,82 @@ a:focus {
     margin-bottom: 5px;
 }
 
+/* --- Styles for Mini Initiative Cards in Goal View --- */
+
+.initiatives-list {
+    list-style-type: none; /* We are using divs now, not LIs */
+    padding-left: 0;
+    margin-top: 10px;
+    font-size: 0.9em;
+}
+
+.no-initiatives-text {
+    font-style: italic;
+    color: #6c757d;
+    padding: 10px 0;
+}
+
+.mini-initiative-card {
+    /* display: flex; was removed to allow children to stack vertically */
+    padding: 8px;
+    margin-bottom: 5px;
+    border-radius: 3px;
+    border: 1px solid #e9ecef;
+    border-left-width: 4px;
+}
+
+.mini-card-title {
+    flex-grow: 1;
+    padding-right: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mini-card-sde {
+    flex-shrink: 0;
+    font-weight: 500;
+    font-size: 0.9em;
+    color: #495057;
+}
+
+/* Status colors for mini-cards, matching the main initiative cards */
+.mini-initiative-card.status-backlog { border-left-color: #6c757d; }
+.mini-initiative-card.status-defined { border-left-color: #17a2b8; }
+.mini-initiative-card.status-committed { border-left-color: #007bff; }
+.mini-initiative-card.status-in-progress { border-left-color: #ffc107; }
+.mini-initiative-card.status-completed { border-left-color: #28a745; }
+
+/* Special style for BTL initiatives */
+.mini-initiative-card.btl {
+    background-color: #fff3cd; /* A light yellow to indicate caution */
+    border-left-color: #dc3545; /* Red border to signify risk */
+}
+
+/* --- Styles for SDE Breakdown in Mini Initiative Cards --- */
+
+.mini-card-main-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.mini-card-breakdown {
+    padding-left: 15px;
+    margin-top: 5px;
+    font-size: 0.85em; /* Slightly smaller for compactness */
+    color: #555;
+    border-top: 1px solid #f0f0f0;
+    padding-top: 5px;
+    line-height: 1.5; /* Allow text to wrap nicely */
+}
+
+/* This class is no longer used, so it can be removed */
+/*
+.breakdown-item {
+    line-height: 1.4;
+}
+*/
 
 /* Add any additional styles as needed */          

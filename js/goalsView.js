@@ -70,7 +70,7 @@ function prepareGoalData() {
             }
         }
         
-        const finalContributingTeams = new Set(contributingTeams);
+        let finalContributingTeams = new Set(contributingTeams);
         if (teamFilter !== 'all') {
             if(!finalContributingTeams.has(teamFilter)) return null;
         } else if (orgFilter !== 'all') {
@@ -91,10 +91,21 @@ function prepareGoalData() {
         const totalInitiatives = initiativesForYear.length;
 
         let overallStatus = 'On Track';
+        let statusReason = 'All initiatives are on track.';
+
         if (totalInitiatives > 0 && completedInitiatives === totalInitiatives) {
             overallStatus = 'Completed';
-        } else if (initiativesForYear.some(init => (init.attributes.planningStatusFundedHc === 'BTL') || (new Date(init.targetDueDate) < new Date() && init.status !== 'Completed'))) {
-            overallStatus = 'At Risk';
+            statusReason = 'All linked initiatives for this period are completed.';
+        } else {
+            const atRiskInitiatives = initiativesForYear.filter(init => 
+                (init.attributes.planningStatusFundedHc === 'BTL') || 
+                (new Date(init.targetDueDate) < new Date() && init.status !== 'Completed')
+            );
+
+            if (atRiskInitiatives.length > 0) {
+                overallStatus = 'At Risk';
+                statusReason = `At risk due to: ${atRiskInitiatives.map(i => `'${i.title}'`).join(', ')}.`;
+            }
         }
         
         const contributingThemes = new Set();
@@ -108,6 +119,7 @@ function prepareGoalData() {
             displayCompletedCount: completedInitiatives,
             displayTotalInitiatives: totalInitiatives,
             displayStatus: overallStatus,
+            displayStatusReason: statusReason,
             displayContributingTeams: Array.from(contributingTeams),
             displayThemes: Array.from(contributingThemes),
             displayInitiatives: initiativesForYear 
@@ -120,7 +132,7 @@ function prepareGoalData() {
 
 /**
  * Renders the Strategic Goal Cards into the container.
- * MODIFIED: Replaces <details> with <div> and adds a dedicated event listener for toggling.
+ * MODIFIED: Initiative breakdown is now a comma-separated list.
  */
 function renderGoalsView() {
     const container = document.getElementById('goalCardsContainer');
@@ -135,37 +147,53 @@ function renderGoalsView() {
 
     container.innerHTML = ''; 
     const themeMap = new Map((currentSystemData.definedThemes || []).map(t => [t.themeId, t.name]));
+    const teamMap = new Map((currentSystemData.teams || []).map(t => [t.teamId, t.teamIdentity || t.teamName]));
 
     goalData.forEach(goal => {
-        const teamMap = new Map((currentSystemData.teams || []).map(t => [t.teamId, t.teamIdentity || t.teamName]));
         const teamNames = goal.displayContributingTeams.map(tid => teamMap.get(tid) || 'Unknown').join(', ');
         const themeNames = goal.displayThemes.map(tid => themeMap.get(tid) || 'Uncategorized').join(', ');
 
         const card = document.createElement('div');
         card.className = `goal-card status-${goal.displayStatus.toLowerCase().replace(' ', '-')}`;
 
-        // Using a unique ID for the list of initiatives to toggle it specifically
         const initiativesListId = `initiatives-list-${goal.goalId}`;
+        
+        const initiativeCardsHTML = goal.displayInitiatives.map(init => {
+            const totalSde = (init.assignments || []).reduce((s,a) => s + (a.sdeYears || 0), 0);
+            const statusClass = `status-${(init.status || 'backlog').toLowerCase().replace(/\s+/g, '-')}`;
+            const isBTL = init.attributes.planningStatusFundedHc === 'BTL' ? 'btl' : '';
+            
+            // ** THE FIX IS HERE **
+            const breakdownHTML = (init.assignments || [])
+                .filter(assignment => assignment.sdeYears > 0) // Only show teams with assigned SDEs
+                .map(assignment => {
+                    const teamName = teamMap.get(assignment.teamId) || 'Unknown';
+                    return `<strong>${teamName}</strong>: ${assignment.sdeYears.toFixed(2)}`;
+                })
+                .join(', ');
+
+            return `
+                <div class="mini-initiative-card ${statusClass} ${isBTL}">
+                    <div class="mini-card-main-row">
+                        <span class="mini-card-title">${init.title}</span>
+                        <span class="mini-card-sde">Total: ${totalSde.toFixed(2)} SDEs</span>
+                    </div>
+                    <div class="mini-card-breakdown">
+                        ${breakdownHTML || 'No SDEs assigned'}
+                    </div>
+                </div>`;
+        }).join('') || `<div class="no-initiatives-text">No initiatives match the current filter.</div>`;
 
         card.innerHTML = `
             <div class="goal-card-header">
                 <h3>${goal.name}</h3>
-                <span class="goal-status">${goal.displayStatus}</span>
+                <span class="goal-status" title="${goal.displayStatusReason}">${goal.displayStatus}</span>
             </div>
             <p class="goal-description"><em>${goal.description || 'No description provided.'}</em></p>
             <div class="goal-metrics">
-                <div>
-                    <span class="metric-value">${goal.displayTotalSde.toFixed(2)}</span>
-                    <span class="metric-label">Total SDE-Years</span>
-                </div>
-                <div>
-                    <span class="metric-value">${goal.displayTotalInitiatives}</span>
-                    <span class="metric-label">Total Initiatives</span>
-                </div>
-                <div>
-                    <span class="metric-value">${goal.displayCompletedCount} / ${goal.displayTotalInitiatives}</span>
-                    <span class="metric-label">Progress</span>
-                </div>
+                <div><span class="metric-value">${goal.displayTotalSde.toFixed(2)}</span><span class="metric-label">Total SDE-Years</span></div>
+                <div><span class="metric-value">${goal.displayTotalInitiatives}</span><span class="metric-label">Total Initiatives</span></div>
+                <div><span class="metric-value">${goal.displayCompletedCount} / ${goal.displayTotalInitiatives}</span><span class="metric-label">Progress</span></div>
             </div>
             <div class="goal-ownership">
                 <strong>Owner:</strong> ${goal.owner?.name || 'N/A'}<br>
@@ -182,15 +210,14 @@ function renderGoalsView() {
                 <div class="toggle-summary" data-target-id="${initiativesListId}">
                     View Linked Initiatives (${goal.displayInitiatives.length}) <span class="toggle-arrow">▼</span>
                 </div>
-                <ul id="${initiativesListId}" class="initiatives-list" style="display: none;">
-                    ${goal.displayInitiatives.map(init => `<li>${init.title} - (Status: ${init.status}) - (${(init.assignments || []).reduce((s,a) => s + (a.sdeYears || 0), 0).toFixed(2)} SDEs)</li>`).join('') || `<li>No initiatives match the current filter.</li>`}
-                </ul>
+                <div id="${initiativesListId}" class="initiatives-list" style="display: none;">
+                    ${initiativeCardsHTML}
+                </div>
             </div>
         `;
         container.appendChild(card);
     });
 
-    // --- NEW: Add event listeners AFTER all cards are rendered ---
     container.querySelectorAll('.toggle-summary').forEach(toggle => {
         toggle.addEventListener('click', () => {
             const targetId = toggle.getAttribute('data-target-id');
