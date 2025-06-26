@@ -4,7 +4,6 @@ let roadmapTimelineTable = null; // To hold the Tabulator instance for this spec
 
 /**
  * Initializes the entire Roadmap Table View widget.
- * This is the main entry point called from dashboard.js.
  */
 function initializeRoadmapTableView() {
     console.log("Initializing new Quarterly Roadmap Swimlane View widget...");
@@ -15,8 +14,8 @@ function initializeRoadmapTableView() {
     }
 
     container.innerHTML = `
-        <div id="roadmapTableFilters" style="margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border: 1px solid #ddd; border-radius: 4px; display: flex; flex-wrap: wrap; align-items: center; gap: 20px;">
-            </div>
+        <div id="roadmapTableFilters" style="margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border: 1px solid #ddd; border-radius: 4px;">
+        </div>
         <div id="quarterlyRoadmapContainer" style="overflow-x: auto;"></div>
     `;
 
@@ -25,58 +24,154 @@ function initializeRoadmapTableView() {
 }
 
 /**
- * Generates the interactive filter dropdowns for Org and Team.
+ * Generates the interactive filter dropdowns, including a custom multi-select for themes.
+ * MODIFIED: Ensures all filters are created within a single flexbox container for proper alignment.
  */
 function generateRoadmapTableFilters() {
     const filtersContainer = document.getElementById('roadmapTableFilters');
     if (!filtersContainer) return;
 
     filtersContainer.innerHTML = ''; // Clear existing filters
+    filtersContainer.style.display = 'flex';
+    filtersContainer.style.flexWrap = 'wrap';
+    filtersContainer.style.alignItems = 'center';
+    filtersContainer.style.gap = '20px';
 
-    const createFilter = (id, labelText, options, onChange) => {
+
+    const createDropdownFilter = (id, labelText, options) => {
         const div = document.createElement('div');
         const label = document.createElement('label');
         label.htmlFor = id;
         label.textContent = labelText;
         label.style.fontWeight = 'bold';
         label.style.marginRight = '5px';
-        
         const select = document.createElement('select');
         select.id = id;
-        select.onchange = onChange;
         select.innerHTML = options;
-        
         div.appendChild(label);
         div.appendChild(select);
         return div;
     };
 
-    // --- Organization (Senior Manager) Filter ---
+    // --- Org Filter ---
     let orgOptions = '<option value="all">All Organizations</option>';
     (currentSystemData.seniorManagers || []).forEach(sm => {
         orgOptions += `<option value="${sm.seniorManagerId}">${sm.seniorManagerName}</option>`;
     });
-    const handleOrgChange = () => {
+    const orgFilter = createDropdownFilter('roadmapOrgFilter', 'Filter by Organization:', orgOptions);
+    orgFilter.querySelector('select').onchange = () => {
         updateTeamFilterOptions();
         renderQuarterlyRoadmap();
     };
-    filtersContainer.appendChild(createFilter('roadmapOrgFilter', 'Filter by Organization:', orgOptions, handleOrgChange));
+    filtersContainer.appendChild(orgFilter);
 
-    // --- Team Filter (initially empty, will be populated) ---
-    const teamFilterDiv = document.createElement('div');
-    const teamLabel = document.createElement('label');
-    teamLabel.htmlFor = 'roadmapTeamFilter';
-    teamLabel.textContent = 'Filter by Team:';
-    teamLabel.style.fontWeight = 'bold';
-    teamLabel.style.marginRight = '5px';
-    const teamSelect = document.createElement('select');
-    teamSelect.id = 'roadmapTeamFilter';
-    teamSelect.onchange = renderQuarterlyRoadmap;
+    // --- Team Filter ---
+    const teamFilter = createDropdownFilter('roadmapTeamFilter', 'Filter by Team:', '<option value="all">All Teams</option>');
+    teamFilter.querySelector('select').onchange = renderQuarterlyRoadmap;
+    filtersContainer.appendChild(teamFilter);
+
+    // --- Custom Theme Multi-Select Dropdown ---
+    const themeFilterWrapper = document.createElement('div');
+    themeFilterWrapper.style.display = 'flex';
+    themeFilterWrapper.style.alignItems = 'center';
+
+    const themeLabel = document.createElement('label');
+    themeLabel.textContent = 'Filter by Theme:';
+    themeLabel.style.fontWeight = 'bold';
+    themeLabel.style.marginRight = '5px';
+    themeFilterWrapper.appendChild(themeLabel);
+
+    const dropdownContainer = document.createElement('div');
+    dropdownContainer.className = 'custom-multiselect-dropdown';
     
-    teamFilterDiv.appendChild(teamLabel);
-    teamFilterDiv.appendChild(teamSelect);
-    filtersContainer.appendChild(teamFilterDiv);
+    const dropdownButton = document.createElement('button');
+    dropdownButton.id = 'theme-dropdown-button';
+    dropdownButton.className = 'dropdown-button';
+    dropdownButton.type = 'button';
+    
+    const dropdownPanel = document.createElement('div');
+    dropdownPanel.id = 'theme-dropdown-panel';
+    dropdownPanel.className = 'dropdown-panel';
+    
+    const selectAllContainer = document.createElement('div');
+    selectAllContainer.className = 'select-all-container';
+    const selectAllCheckbox = document.createElement('input');
+    selectAllCheckbox.type = 'checkbox';
+    selectAllCheckbox.id = 'theme-select-all';
+    const selectAllLabel = document.createElement('label');
+    selectAllLabel.htmlFor = 'theme-select-all';
+    selectAllLabel.textContent = 'Select/Clear All';
+    selectAllContainer.appendChild(selectAllCheckbox);
+    selectAllContainer.appendChild(selectAllLabel);
+    dropdownPanel.appendChild(selectAllContainer);
 
+    const themeItemsContainer = document.createElement('div');
+    themeItemsContainer.className = 'dropdown-items-container';
+    (currentSystemData.definedThemes || []).forEach(theme => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'dropdown-item';
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = `theme_filter_${theme.themeId}`;
+        checkbox.value = theme.themeId;
+        checkbox.className = 'theme-checkbox-item';
+        const label = document.createElement('label');
+        label.htmlFor = checkbox.id;
+        label.textContent = theme.name;
+        itemDiv.appendChild(checkbox);
+        itemDiv.appendChild(label);
+        themeItemsContainer.appendChild(itemDiv);
+    });
+    dropdownPanel.appendChild(themeItemsContainer);
+    
+    dropdownContainer.appendChild(dropdownButton);
+    dropdownContainer.appendChild(dropdownPanel);
+    themeFilterWrapper.appendChild(dropdownContainer);
+    filtersContainer.appendChild(themeFilterWrapper);
+
+    // --- Logic for the custom dropdown ---
+    const updateButtonText = () => {
+        const checkboxes = dropdownPanel.querySelectorAll('.theme-checkbox-item:checked');
+        const total = dropdownPanel.querySelectorAll('.theme-checkbox-item').length;
+        if (checkboxes.length === total || checkboxes.length === 0) {
+            dropdownButton.textContent = 'All Themes';
+            selectAllCheckbox.checked = checkboxes.length === total;
+            selectAllCheckbox.indeterminate = false;
+        } else {
+            dropdownButton.textContent = `${checkboxes.length} Theme(s) Selected`;
+            selectAllCheckbox.indeterminate = true;
+        }
+    };
+
+    const allCheckboxes = Array.from(dropdownPanel.querySelectorAll('.theme-checkbox-item'));
+
+    selectAllCheckbox.addEventListener('change', () => {
+        allCheckboxes.forEach(cb => cb.checked = selectAllCheckbox.checked);
+        updateButtonText();
+        renderQuarterlyRoadmap();
+    });
+
+    allCheckboxes.forEach(cb => {
+        cb.addEventListener('change', () => {
+            updateButtonText();
+            renderQuarterlyRoadmap();
+        });
+    });
+    
+    dropdownButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdownPanel.classList.toggle('show');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!dropdownContainer.contains(e.target)) {
+            dropdownPanel.classList.remove('show');
+        }
+    });
+
+    selectAllCheckbox.checked = true;
+    allCheckboxes.forEach(cb => cb.checked = true);
+    updateButtonText();
     updateTeamFilterOptions();
 }
 
@@ -115,15 +210,18 @@ function updateTeamFilterOptions() {
 
 /**
  * Prepares and structures the data for the quarterly roadmap display.
+ * MODIFIED: Now filters by theme using checkboxes.
  */
 function prepareDataForQuarterlyRoadmap() {
     const yearFilter = dashboardPlanningYear; 
     const orgFilter = document.getElementById('roadmapOrgFilter')?.value || 'all';
     const teamFilter = document.getElementById('roadmapTeamFilter')?.value || 'all';
+    
+    const themeCheckboxes = document.querySelectorAll('#theme-dropdown-panel input.theme-checkbox-item:checked');
+    const selectedThemes = Array.from(themeCheckboxes).map(cb => cb.value);
 
     let initiatives = currentSystemData.yearlyInitiatives || [];
 
-    // --- Filter Initiatives ---
     if (yearFilter !== 'all') {
         initiatives = initiatives.filter(init => init.attributes.planningYear == yearFilter);
     }
@@ -144,7 +242,15 @@ function prepareDataForQuarterlyRoadmap() {
         initiatives = initiatives.filter(init => (init.assignments || []).some(a => a.teamId === teamFilter));
     }
 
-    // --- Group Data by Theme, then by Quarter ---
+    const allThemeIds = (currentSystemData.definedThemes || []).map(t => t.themeId);
+    if (selectedThemes.length < allThemeIds.length) {
+        initiatives = initiatives.filter(init => {
+            const initThemes = init.themes || [];
+            if (initThemes.length === 0) return false;
+            return initThemes.some(themeId => selectedThemes.includes(themeId));
+        });
+    }
+
     const roadmapData = {};
     const themeMap = new Map((currentSystemData.definedThemes || []).map(t => [t.themeId, t.name]));
 
@@ -156,6 +262,11 @@ function prepareDataForQuarterlyRoadmap() {
 
         assignedThemes.forEach(themeId => {
             const themeName = themeMap.get(themeId) || "Uncategorized";
+            
+            if (selectedThemes.length < allThemeIds.length && !selectedThemes.includes(themeId)) {
+                return;
+            }
+
             if (!roadmapData[themeName]) {
                 roadmapData[themeName] = { Q1: [], Q2: [], Q3: [], Q4: [] };
             }
@@ -166,9 +277,9 @@ function prepareDataForQuarterlyRoadmap() {
     return roadmapData;
 }
 
+
 /**
  * Renders the new quarterly roadmap table.
- * FIX: Displays team breakdown correctly even if only one team from an org is assigned.
  */
 function renderQuarterlyRoadmap() {
     const container = document.getElementById('quarterlyRoadmapContainer');
@@ -179,12 +290,26 @@ function renderQuarterlyRoadmap() {
     const orgFilter = document.getElementById('roadmapOrgFilter')?.value || 'all';
     const teamFilter = document.getElementById('roadmapTeamFilter')?.value || 'all';
 
-    if (themes.length === 0) {
+    if (Object.keys(roadmapData).length === 0) {
         container.innerHTML = `<p style="text-align: center; color: #777; margin-top: 20px;">No initiatives match the current filter criteria.</p>`;
         return;
     }
 
     let tableHTML = `<table class="quarterly-roadmap-table">`;
+    tableHTML += `<thead>...</thead>`; // Keep it short, no change here
+    tableHTML += `<tbody>`;
+    themes.forEach(themeName => {
+        // ... no changes to this loop ...
+    });
+    tableHTML += `</tbody></table>`;
+    
+    // The existing rendering logic is preserved, so we just call it.
+    // For brevity, I am not repeating the full inner HTML generation of the table,
+    // as it remains unchanged from the previous version.
+    // The key is that `prepareDataForQuarterlyRoadmap` now returns the correctly filtered data.
+    
+    // Re-paste the existing render logic for completeness:
+    tableHTML = `<table class="quarterly-roadmap-table">`;
     tableHTML += `
         <thead>
             <tr>
@@ -229,7 +354,6 @@ function renderQuarterlyRoadmap() {
                         const orgSde = orgAssignments.reduce((sum, a) => sum + (a.sdeYears || 0), 0);
 
                         let breakdownHTML = '';
-                        // *** FIX: Show breakdown if ANY teams from the org are assigned ***
                         if (orgAssignments.length > 0) { 
                             breakdownHTML = orgAssignments.map(a => {
                                 const team = currentSystemData.teams.find(t => t.teamId === a.teamId);
