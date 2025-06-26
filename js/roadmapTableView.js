@@ -6,20 +6,10 @@ let roadmapTimelineTable = null; // To hold the Tabulator instance for this spec
  * Initializes the Quarterly Roadmap Table View widget.
  */
 function initializeRoadmapTableView() {
-    console.log("Initializing Quarterly Roadmap Swimlane View widget...");
     const container = document.getElementById('roadmapTimelineWidget');
-    if (!container) {
-        console.error("Roadmap Timeline Widget container not found.");
-        return;
-    }
-
-    container.innerHTML = `
-        <div id="roadmapTableFilters" class="widget-filter-bar">
-        </div>
-        <div id="quarterlyRoadmapContainer" style="overflow-x: auto;"></div>
-    `;
-
-    generateRoadmapTableFilters();
+    if (!container) { return; }
+    container.innerHTML = `<div id="roadmapTableFilters" class="widget-filter-bar"></div><div id="quarterlyRoadmapContainer" style="overflow-x: auto;"></div>`;
+    generateRoadmapTableFilters('', renderQuarterlyRoadmap);
     renderQuarterlyRoadmap(); 
 }
 
@@ -27,36 +17,22 @@ function initializeRoadmapTableView() {
  * NEW: Initializes the 3-Year Plan (3YP) Roadmap View widget.
  */
 function initialize3YPRoadmapView() {
-    console.log("Initializing 3-Year Plan (3YP) Roadmap View widget...");
     const container = document.getElementById('threeYearPlanWidget');
-    if (!container) {
-        console.error("3YP Roadmap Widget container not found.");
-        return;
-    }
-
-    container.innerHTML = `
-        <div id="roadmapTableFilters3YP" class="widget-filter-bar">
-        </div>
-        <div id="threeYearPlanContainer" style="overflow-x: auto;"></div>
-    `;
-    
-    generateRoadmapTableFilters('3YP'); // Pass a suffix to create unique IDs
+    if (!container) { return; }
+    container.innerHTML = `<div id="roadmapTableFilters3YP" class="widget-filter-bar"></div><div id="threeYearPlanContainer" style="overflow-x: auto;"></div>`;
+    generateRoadmapTableFilters('3YP', render3YPRoadmap);
     render3YPRoadmap();
 }
-
 
 /**
  * Generates the interactive filter dropdowns, including a custom multi-select for themes.
  */
-function generateRoadmapTableFilters(idSuffix = '') {
+function generateRoadmapTableFilters(idSuffix = '', renderCallback, options = { includeThemes: true }) {
     const containerId = 'roadmapTableFilters' + idSuffix;
     const filtersContainer = document.getElementById(containerId);
-    if (!filtersContainer) {
-        console.error(`Filter container #${containerId} not found.`);
-        return;
-    }
+    if (!filtersContainer) { return; }
 
-    filtersContainer.innerHTML = '';
+    filtersContainer.innerHTML = ''; 
 
     const createDropdownFilter = (id, labelText, options) => {
         const div = document.createElement('div');
@@ -72,8 +48,6 @@ function generateRoadmapTableFilters(idSuffix = '') {
         return div;
     };
 
-    const renderFunction = idSuffix === '3YP' ? render3YPRoadmap : renderQuarterlyRoadmap;
-
     // --- Org Filter ---
     let orgOptions = '<option value="all">All Organizations</option>';
     (currentSystemData.seniorManagers || []).forEach(sm => {
@@ -82,113 +56,107 @@ function generateRoadmapTableFilters(idSuffix = '') {
     const orgFilter = createDropdownFilter('roadmapOrgFilter' + idSuffix, 'Filter by Organization:', orgOptions);
     orgFilter.querySelector('select').onchange = () => {
         updateTeamFilterOptions(idSuffix);
-        renderFunction();
+        renderCallback();
     };
     filtersContainer.appendChild(orgFilter);
 
     // --- Team Filter ---
     const teamFilter = createDropdownFilter('roadmapTeamFilter' + idSuffix, 'Filter by Team:', '<option value="all">All Teams</option>');
-    teamFilter.querySelector('select').onchange = renderFunction;
+    teamFilter.querySelector('select').onchange = renderCallback;
     filtersContainer.appendChild(teamFilter);
 
-    // --- Custom Theme Multi-Select Dropdown ---
-    const themeFilterWrapper = document.createElement('div');
-    themeFilterWrapper.className = 'filter-item';
+    // --- Conditional Theme Filter ---
+    if (options.includeThemes) {
+        const themeFilterWrapper = document.createElement('div');
+        themeFilterWrapper.className = 'filter-item';
+        const themeLabel = document.createElement('label');
+        themeLabel.textContent = 'Filter by Theme:';
+        themeFilterWrapper.appendChild(themeLabel);
 
-    const themeLabel = document.createElement('label');
-    themeLabel.textContent = 'Filter by Theme:';
-    themeFilterWrapper.appendChild(themeLabel);
+        const dropdownContainer = document.createElement('div');
+        dropdownContainer.className = 'custom-multiselect-dropdown';
+        
+        const dropdownButton = document.createElement('button');
+        dropdownButton.id = 'theme-dropdown-button' + idSuffix;
+        dropdownButton.className = 'dropdown-button';
+        dropdownButton.type = 'button';
+        
+        const dropdownPanel = document.createElement('div');
+        dropdownPanel.id = 'theme-dropdown-panel' + idSuffix;
+        dropdownPanel.className = 'dropdown-panel';
+        
+        const selectAllContainer = document.createElement('div');
+        selectAllContainer.className = 'select-all-container';
+        const selectAllCheckbox = document.createElement('input');
+        selectAllCheckbox.type = 'checkbox';
+        selectAllCheckbox.id = 'theme-select-all' + idSuffix;
+        const selectAllLabel = document.createElement('label');
+        selectAllLabel.htmlFor = selectAllCheckbox.id;
+        selectAllLabel.textContent = 'Select/Clear All';
+        selectAllContainer.appendChild(selectAllCheckbox);
+        selectAllContainer.appendChild(selectAllLabel);
+        dropdownPanel.appendChild(selectAllContainer);
 
-    const dropdownContainer = document.createElement('div');
-    dropdownContainer.className = 'custom-multiselect-dropdown';
-    
-    const dropdownButton = document.createElement('button');
-    dropdownButton.id = 'theme-dropdown-button' + idSuffix;
-    dropdownButton.className = 'dropdown-button';
-    dropdownButton.type = 'button';
-    
-    const dropdownPanel = document.createElement('div');
-    dropdownPanel.id = 'theme-dropdown-panel' + idSuffix;
-    dropdownPanel.className = 'dropdown-panel';
-    
-    const selectAllContainer = document.createElement('div');
-    selectAllContainer.className = 'select-all-container';
-    const selectAllCheckbox = document.createElement('input');
-    selectAllCheckbox.type = 'checkbox';
-    selectAllCheckbox.id = 'theme-select-all' + idSuffix;
-    const selectAllLabel = document.createElement('label');
-    selectAllLabel.htmlFor = selectAllCheckbox.id;
-    selectAllLabel.textContent = 'Select/Clear All';
-    selectAllContainer.appendChild(selectAllCheckbox);
-    selectAllContainer.appendChild(selectAllLabel);
-    dropdownPanel.appendChild(selectAllContainer);
-
-    const themeItemsContainer = document.createElement('div');
-    themeItemsContainer.className = 'dropdown-items-container';
-    (currentSystemData.definedThemes || []).forEach(theme => {
-        const itemDiv = document.createElement('div');
-        itemDiv.className = 'dropdown-item';
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.id = `theme_filter_${theme.themeId}` + idSuffix;
-        checkbox.value = theme.themeId;
-        checkbox.className = 'theme-checkbox-item';
-        const label = document.createElement('label');
-        label.htmlFor = checkbox.id;
-        label.textContent = theme.name;
-        itemDiv.appendChild(checkbox);
-        itemDiv.appendChild(label);
-        themeItemsContainer.appendChild(itemDiv);
-    });
-    dropdownPanel.appendChild(themeItemsContainer);
-    
-    dropdownContainer.appendChild(dropdownButton);
-    dropdownContainer.appendChild(dropdownPanel);
-    themeFilterWrapper.appendChild(dropdownContainer);
-    filtersContainer.appendChild(themeFilterWrapper);
-
-    const updateButtonText = () => {
-        const checkboxes = dropdownPanel.querySelectorAll('.theme-checkbox-item:checked');
-        const total = dropdownPanel.querySelectorAll('.theme-checkbox-item').length;
-        if (checkboxes.length === total || checkboxes.length === 0) {
-            dropdownButton.textContent = 'All Themes';
-            selectAllCheckbox.checked = checkboxes.length === total;
-            selectAllCheckbox.indeterminate = false;
-        } else {
-            dropdownButton.textContent = `${checkboxes.length} Theme(s) Selected`;
-            selectAllCheckbox.indeterminate = true;
-        }
-    };
-
-    const allCheckboxes = Array.from(dropdownPanel.querySelectorAll('.theme-checkbox-item'));
-
-    selectAllCheckbox.addEventListener('change', () => {
-        allCheckboxes.forEach(cb => cb.checked = selectAllCheckbox.checked);
-        updateButtonText();
-        renderFunction();
-    });
-
-    allCheckboxes.forEach(cb => {
-        cb.addEventListener('change', () => {
-            updateButtonText();
-            renderFunction();
+        const themeItemsContainer = document.createElement('div');
+        themeItemsContainer.className = 'dropdown-items-container';
+        (currentSystemData.definedThemes || []).forEach(theme => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'dropdown-item';
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = `theme_filter_${theme.themeId}` + idSuffix;
+            checkbox.value = theme.themeId;
+            checkbox.className = 'theme-checkbox-item';
+            const label = document.createElement('label');
+            label.htmlFor = checkbox.id;
+            label.textContent = theme.name;
+            itemDiv.appendChild(checkbox);
+            itemDiv.appendChild(label);
+            themeItemsContainer.appendChild(itemDiv);
         });
-    });
+        dropdownPanel.appendChild(themeItemsContainer);
+        
+        dropdownContainer.appendChild(dropdownButton);
+        dropdownContainer.appendChild(dropdownPanel);
+        themeFilterWrapper.appendChild(dropdownContainer);
+        filtersContainer.appendChild(themeFilterWrapper);
+
+        const updateButtonText = () => {
+            const checkboxes = dropdownPanel.querySelectorAll('.theme-checkbox-item:checked');
+            const total = dropdownPanel.querySelectorAll('.theme-checkbox-item').length;
+            if (checkboxes.length === total || checkboxes.length === 0) {
+                dropdownButton.textContent = 'All Themes';
+                selectAllCheckbox.checked = checkboxes.length === total;
+                selectAllCheckbox.indeterminate = false;
+            } else {
+                dropdownButton.textContent = `${checkboxes.length} Theme(s) Selected`;
+                selectAllCheckbox.indeterminate = true;
+            }
+        };
+
+        const allCheckboxes = Array.from(dropdownPanel.querySelectorAll('.theme-checkbox-item'));
+
+        selectAllCheckbox.addEventListener('change', () => {
+            allCheckboxes.forEach(cb => cb.checked = selectAllCheckbox.checked);
+            updateButtonText();
+            renderCallback();
+        });
+
+        allCheckboxes.forEach(cb => {
+            cb.addEventListener('change', () => {
+                updateButtonText();
+                renderCallback();
+            });
+        });
+        
+        dropdownButton.addEventListener('click', (e) => { e.stopPropagation(); dropdownPanel.classList.toggle('show'); });
+        document.addEventListener('click', (e) => { if (!dropdownContainer.contains(e.target)) { dropdownPanel.classList.remove('show'); } });
+
+        selectAllCheckbox.checked = true;
+        allCheckboxes.forEach(cb => cb.checked = true);
+        updateButtonText();
+    }
     
-    dropdownButton.addEventListener('click', (e) => {
-        e.stopPropagation();
-        dropdownPanel.classList.toggle('show');
-    });
-
-    document.addEventListener('click', (e) => {
-        if (!dropdownContainer.contains(e.target)) {
-            dropdownPanel.classList.remove('show');
-        }
-    });
-
-    selectAllCheckbox.checked = true;
-    allCheckboxes.forEach(cb => cb.checked = true);
-    updateButtonText();
     updateTeamFilterOptions(idSuffix);
 }
 

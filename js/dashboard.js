@@ -4,11 +4,11 @@
 let investmentDoughnutChart = null;
 let investmentTrendChart = null;
 
-// The year filter for the doughnut chart
 let dashboardPlanningYear = 'all'; 
 
 // State for the new dashboard carousel
 const dashboardItems = [
+    { id: 'strategicGoalsWidget', title: 'Strategic Goals Dashboard', generator: initializeGoalsView },
     { id: 'investmentDistributionWidget', title: 'Investment Distribution by Theme', generator: () => generateInvestmentDistributionChart(dashboardPlanningYear) },
     { id: 'investmentTrendWidget', title: 'Investment Trend Over Time', generator: generateInvestmentTrendChart },
     { id: 'roadmapTimelineWidget', title: 'Roadmap by Quarter', generator: initializeRoadmapTableView },
@@ -35,7 +35,7 @@ function showDashboardView() {
 function initializeDashboard() {
     console.log("Initializing dashboard content with carousel...");
     generateDashboardLayout();
-    showDashboardWidget(currentDashboardIndex); // Show the initial widget
+    showDashboardWidget(currentDashboardIndex);
 }
 
 /**
@@ -43,9 +43,7 @@ function initializeDashboard() {
  */
 function handleDashboardYearChange(selectedYear) {
     dashboardPlanningYear = selectedYear;
-    console.log(`Doughnut chart year filter changed to: ${dashboardPlanningYear}`);
-    
-    // Re-render the currently visible widget to apply the filter
+    console.log(`Year filter changed to: ${dashboardPlanningYear}`);
     const currentWidget = dashboardItems[currentDashboardIndex];
     currentWidget.generator();
 }
@@ -76,26 +74,11 @@ function generateDashboardLayout() {
                 <button onclick="navigateDashboard(1)">Next &gt;</button>
             </div>
             
-            <div id="investmentDistributionWidget" class="dashboard-carousel-item" style="display: none;">
-                <p class="widget-subtitle" style="font-size: 0.9em; color: #666; text-align: center; margin-top: 0; margin-bottom: 15px;">Shows investment breakdown for the selected period.</p>
-                <div class="chart-container" style="position: relative; height:400px; width:80vw; max-width: 600px; margin: auto;">
-                    <canvas id="investmentDistributionChart"></canvas>
-                </div>
-                <div id="investmentTableContainer" style="margin-top: 20px;"></div>
-            </div>
-
-            <div id="investmentTrendWidget" class="dashboard-carousel-item" style="display: none;">
-                 <p class="widget-subtitle" style="font-size: 0.9em; color: #666; text-align: center; margin-top: 0; margin-bottom: 15px;">Compares the percentage of total effort allocated to each theme, year over year.</p>
-                <div class="chart-container" style="position: relative; height:450px; width:95%; margin: auto;">
-                    <canvas id="investmentTrendChart"></canvas>
-                </div>
-            </div>
-
-            <div id="roadmapTimelineWidget" class="dashboard-carousel-item" style="display: none;">
-            </div>
-
-            <div id="threeYearPlanWidget" class="dashboard-carousel-item" style="display: none;">
-            </div>
+            <div id="strategicGoalsWidget" class="dashboard-carousel-item" style="display: none;"></div>
+            <div id="investmentDistributionWidget" class="dashboard-carousel-item" style="display: none;"></div>
+            <div id="investmentTrendWidget" class="dashboard-carousel-item" style="display: none;"></div>
+            <div id="roadmapTimelineWidget" class="dashboard-carousel-item" style="display: none;"></div>
+            <div id="threeYearPlanWidget" class="dashboard-carousel-item" style="display: none;"></div>
         </div>
     `;
 }
@@ -107,7 +90,6 @@ function generateYearSelectorHTML() {
     let availableYears = [...new Set((currentSystemData.yearlyInitiatives || []).map(init => init.attributes.planningYear).filter(Boolean))].sort((a, b) => a - b);
     if (availableYears.length === 0) availableYears.push(new Date().getFullYear());
     
-    // Set 'all' as default if not already set, or if last selection isn't in the list
     if (!dashboardPlanningYear || (dashboardPlanningYear !== 'all' && !availableYears.includes(parseInt(dashboardPlanningYear)))) {
         dashboardPlanningYear = 'all';
     }
@@ -129,17 +111,21 @@ function showDashboardWidget(index) {
     document.getElementById('dashboardTitle').textContent = widgetToShow.title;
     const elementToShow = document.getElementById(widgetToShow.id);
 
-    // Show/hide the main year filter based on the widget
     const yearFilterContainer = document.getElementById('dashboardYearSelectorContainer');
     if (yearFilterContainer) {
-        // CORRECTED: Show the filter for the quarterly roadmap as well.
-        const isFilterApplicable = ['investmentDistributionWidget', 'investmentTrendWidget', 'roadmapTimelineWidget'].includes(widgetToShow.id);
+        const isFilterApplicable = ['strategicGoalsWidget', 'investmentDistributionWidget', 'investmentTrendWidget', 'roadmapTimelineWidget'].includes(widgetToShow.id);
         yearFilterContainer.style.display = isFilterApplicable ? 'block' : 'none';
     }
     
     if(elementToShow) {
         elementToShow.style.display = 'block';
-        // This function call is what renders the content inside the now-visible container
+        if (elementToShow.innerHTML === '') {
+            if (widgetToShow.id === 'investmentDistributionWidget') {
+                elementToShow.innerHTML = `<p class="widget-subtitle" style="font-size: 0.9em; color: #666; text-align: center; margin-top: 0; margin-bottom: 15px;">Shows investment breakdown for the selected period.</p><div class="chart-container" style="position: relative; height:400px; width:80vw; max-width: 600px; margin: auto;"><canvas id="investmentDistributionChart"></canvas></div><div id="investmentTableContainer" style="margin-top: 20px;"></div>`;
+            } else if (widgetToShow.id === 'investmentTrendWidget') {
+                elementToShow.innerHTML = `<p class="widget-subtitle" style="font-size: 0.9em; color: #666; text-align: center; margin-top: 0; margin-bottom: 15px;">Compares the percentage of total effort allocated to each theme, year over year.</p><div class="chart-container" style="position: relative; height:450px; width:95%; margin: auto;"><canvas id="investmentTrendChart"></canvas></div>`;
+            }
+        }
         widgetToShow.generator();
     }
 }
@@ -259,6 +245,8 @@ function processInvestmentData(selectedYear) {
     const investmentByTheme = {};
 
     themeMap.forEach(name => { investmentByTheme[name] = 0; });
+    investmentByTheme['Uncategorized'] = 0;
+
 
     const initiatives = selectedYear === 'all'
         ? currentSystemData.yearlyInitiatives
@@ -267,13 +255,17 @@ function processInvestmentData(selectedYear) {
     initiatives.forEach(initiative => {
         if (initiative.status === 'Completed') return;
         const totalSdeYears = (initiative.assignments || []).reduce((sum, a) => sum + (a.sdeYears || 0), 0);
-        if (totalSdeYears > 0 && initiative.themes && initiative.themes.length > 0) {
-            initiative.themes.forEach(themeId => {
-                const themeName = themeMap.get(themeId);
-                if (themeName) {
-                    investmentByTheme[themeName] += totalSdeYears;
-                }
-            });
+        if (totalSdeYears > 0) {
+            if (initiative.themes && initiative.themes.length > 0) {
+                initiative.themes.forEach(themeId => {
+                    const themeName = themeMap.get(themeId);
+                    if (themeName) {
+                        investmentByTheme[themeName] += totalSdeYears;
+                    }
+                });
+            } else {
+                investmentByTheme['Uncategorized'] += totalSdeYears;
+            }
         }
     });
     

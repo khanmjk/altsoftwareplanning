@@ -1542,5 +1542,123 @@ a:focus {
     border: 1px solid #ced4da;
 }
 
+/* --- New Styles for Strategic Goals Dashboard --- */
+
+.goal-cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 20px;
+    padding: 10px;
+}
+
+.goal-card {
+    border: 1px solid #ddd;
+    border-left-width: 5px;
+    border-radius: 5px;
+    padding: 15px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Status Colors */
+.goal-card.status-on-track { border-left-color: #007bff; }
+.goal-card.status-at-risk { border-left-color: #ffc107; }
+.goal-card.status-completed { border-left-color: #28a745; }
+
+.goal-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.goal-card-header h3 {
+    margin: 0;
+    font-size: 1.25em;
+    color: #333;
+}
+
+.goal-status {
+    font-weight: bold;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    color: #fff;
+}
+.status-on-track .goal-status { background-color: #007bff; }
+.status-at-risk .goal-status { background-color: #ffc107; color: #212529;}
+.status-completed .goal-status { background-color: #28a745; }
+
+
+.goal-description {
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: 15px;
+    flex-grow: 1; /* Pushes content down */
+}
+
+.goal-metrics {
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
+    padding: 10px 0;
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 15px;
+}
+
+.metric-value {
+    display: block;
+    font-size: 1.5em;
+    font-weight: 600;
+    color: #0056b3;
+}
+
+.metric-label {
+    font-size: 0.8em;
+    color: #6c757d;
+}
+
+.goal-ownership, .goal-teams {
+    font-size: 0.9em;
+    line-height: 1.5;
+    margin-bottom: 15px;
+}
+
+.goal-initiatives-toggle details {
+    border-top: 1px dashed #ccc;
+    padding-top: 10px;
+}
+
+.goal-initiatives-toggle summary {
+    cursor: pointer;
+    font-weight: bold;
+    color: #0056b3;
+}
+.goal-initiatives-toggle ul {
+    list-style-type: disc;
+    padding-left: 20px;
+    margin-top: 10px;
+    font-size: 0.9em;
+}
+.goal-initiatives-toggle li {
+    margin-bottom: 5px;
+}
+
+/* --- Style for Themes on Goal Cards --- */
+.goal-themes {
+    font-size: 0.9em;
+    line-height: 1.5;
+    margin-bottom: 15px;
+    color: #495057;
+}
+
+.goal-themes strong {
+    color: #212529;
+}
+
+
 
 /* Add any additional styles as needed */          
