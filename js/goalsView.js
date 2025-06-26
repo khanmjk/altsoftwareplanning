@@ -23,6 +23,7 @@ function initializeGoalsView() {
 
 /**
  * Prepares the data for the Strategic Goals view, including all calculations.
+ * MODIFIED: Now calculates team-by-team SDE totals for tooltips.
  */
 function prepareGoalData() {
     const yearFilter = dashboardPlanningYear;
@@ -113,6 +114,15 @@ function prepareGoalData() {
             (init.themes || []).forEach(t => contributingThemes.add(t));
         });
 
+        // ** NEW: Calculate SDE breakdown for the tooltip **
+        const sdeBreakdownByTeam = {};
+        initiativesForYear.forEach(init => {
+            (init.assignments || []).forEach(assignment => {
+                sdeBreakdownByTeam[assignment.teamId] = (sdeBreakdownByTeam[assignment.teamId] || 0) + assignment.sdeYears;
+            });
+        });
+
+
         return {
             ...goal,
             displayTotalSde: totalSde,
@@ -121,6 +131,7 @@ function prepareGoalData() {
             displayStatus: overallStatus,
             displayStatusReason: statusReason,
             displayContributingTeams: Array.from(contributingTeams),
+            displaySdeBreakdown: sdeBreakdownByTeam, // Add breakdown to data
             displayThemes: Array.from(contributingThemes),
             displayInitiatives: initiativesForYear 
         };
@@ -132,7 +143,7 @@ function prepareGoalData() {
 
 /**
  * Renders the Strategic Goal Cards into the container.
- * MODIFIED: Initiative breakdown is now a comma-separated list.
+ * MODIFIED: Adds progress bar and SDE breakdown tooltip.
  */
 function renderGoalsView() {
     const container = document.getElementById('goalCardsContainer');
@@ -157,32 +168,26 @@ function renderGoalsView() {
         card.className = `goal-card status-${goal.displayStatus.toLowerCase().replace(' ', '-')}`;
 
         const initiativesListId = `initiatives-list-${goal.goalId}`;
-        
         const initiativeCardsHTML = goal.displayInitiatives.map(init => {
             const totalSde = (init.assignments || []).reduce((s,a) => s + (a.sdeYears || 0), 0);
             const statusClass = `status-${(init.status || 'backlog').toLowerCase().replace(/\s+/g, '-')}`;
             const isBTL = init.attributes.planningStatusFundedHc === 'BTL' ? 'btl' : '';
-            
-            // ** THE FIX IS HERE **
-            const breakdownHTML = (init.assignments || [])
-                .filter(assignment => assignment.sdeYears > 0) // Only show teams with assigned SDEs
-                .map(assignment => {
-                    const teamName = teamMap.get(assignment.teamId) || 'Unknown';
-                    return `<strong>${teamName}</strong>: ${assignment.sdeYears.toFixed(2)}`;
-                })
-                .join(', ');
-
-            return `
-                <div class="mini-initiative-card ${statusClass} ${isBTL}">
-                    <div class="mini-card-main-row">
-                        <span class="mini-card-title">${init.title}</span>
-                        <span class="mini-card-sde">Total: ${totalSde.toFixed(2)} SDEs</span>
-                    </div>
-                    <div class="mini-card-breakdown">
-                        ${breakdownHTML || 'No SDEs assigned'}
-                    </div>
-                </div>`;
+            const breakdownHTML = (init.assignments || []).filter(a => a.sdeYears > 0).map(a => `<strong>${teamMap.get(a.teamId) || '??'}</strong>: ${a.sdeYears.toFixed(2)}`).join(', ');
+            return `<div class="mini-initiative-card ${statusClass} ${isBTL}"><div class="mini-card-main-row"><span class="mini-card-title">${init.title}</span><span class="mini-card-sde">Total: ${totalSde.toFixed(2)} SDEs</span></div><div class="mini-card-breakdown">${breakdownHTML || 'No SDEs assigned'}</div></div>`;
         }).join('') || `<div class="no-initiatives-text">No initiatives match the current filter.</div>`;
+
+        // ** NEW: Generate SDE breakdown tooltip and progress bar **
+        const sdeTooltipText = Object.entries(goal.displaySdeBreakdown)
+            .map(([teamId, sde]) => `• ${teamMap.get(teamId) || 'Unknown'}: ${sde.toFixed(2)} SDEs`)
+            .join('\n');
+        
+        const progressPercentage = goal.displayTotalInitiatives > 0 ? (goal.displayCompletedCount / goal.displayTotalInitiatives) * 100 : 0;
+        const progressBarHTML = `
+            <div class="progress-bar-container" title="${progressPercentage.toFixed(0)}% Complete">
+                <div class="progress-bar-fill" style="width: ${progressPercentage}%;"></div>
+                <span class="progress-bar-text">${goal.displayCompletedCount} / ${goal.displayTotalInitiatives}</span>
+            </div>
+        `;
 
         card.innerHTML = `
             <div class="goal-card-header">
@@ -191,9 +196,45 @@ function renderGoalsView() {
             </div>
             <p class="goal-description"><em>${goal.description || 'No description provided.'}</em></p>
             <div class="goal-metrics">
-                <div><span class="metric-value">${goal.displayTotalSde.toFixed(2)}</span><span class="metric-label">Total SDE-Years</span></div>
-                <div><span class="metric-value">${goal.displayTotalInitiatives}</span><span class="metric-label">Total Initiatives</span></div>
-                <div><span class="metric-value">${goal.displayCompletedCount} / ${goal.displayTotalInitiatives}</span><span class="metric-label">Progress</span></div>
+                <div title="${sdeTooltipText}">
+                    <span class="metric-value">${goal.displayTotalSde.toFixed(2)}</span>
+                    <span class="metric-label">Total SDE-Years</span>
+                </div>
+                <div>
+                    <span class="metric-value">${goal.displayTotalInitiatives}</span>
+                    <span class="metric-label">Total Initiatives</span>
+                </div>
+                <div class="metric-progress">
+                    ${progressBarHTML}
+                    <span class="metric-label">Progress</span>
+                </div>
+            </div>
+            <div class="goal-ownership">...</div>
+            <div class="goal-teams">...</div>
+            <div class="goal-themes">...</div>
+            <div class="goal-initiatives-toggle">...</div>
+        `;
+        // For brevity, the static parts of innerHTML are omitted but should be the same as the previous version.
+        // Full replacement below:
+        card.innerHTML = `
+            <div class="goal-card-header">
+                <h3>${goal.name}</h3>
+                <span class="goal-status" title="${goal.displayStatusReason}">${goal.displayStatus}</span>
+            </div>
+            <p class="goal-description"><em>${goal.description || 'No description provided.'}</em></p>
+            <div class="goal-metrics">
+                <div title="${sdeTooltipText}">
+                    <span class="metric-value">${goal.displayTotalSde.toFixed(2)}</span>
+                    <span class="metric-label">Total SDE-Years</span>
+                </div>
+                <div>
+                    <span class="metric-value">${goal.displayTotalInitiatives}</span>
+                    <span class="metric-label">Total Initiatives</span>
+                </div>
+                <div class="metric-progress">
+                    ${progressBarHTML}
+                    <span class="metric-label">Progress</span>
+                </div>
             </div>
             <div class="goal-ownership">
                 <strong>Owner:</strong> ${goal.owner?.name || 'N/A'}<br>
@@ -215,6 +256,7 @@ function renderGoalsView() {
                 </div>
             </div>
         `;
+
         container.appendChild(card);
     });
 

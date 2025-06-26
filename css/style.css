@@ -1781,11 +1781,43 @@ a:focus {
     line-height: 1.5; /* Allow text to wrap nicely */
 }
 
-/* This class is no longer used, so it can be removed */
-/*
-.breakdown-item {
-    line-height: 1.4;
+/* --- Styles for Goal Card Enhancements (Progress Bar) --- */
+
+.metric-progress {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 33%; /* Ensure it takes up its third of the space */
 }
-*/
+
+.progress-bar-container {
+    width: 90%;
+    height: 20px;
+    background-color: #e9ecef;
+    border-radius: 10px;
+    margin-bottom: 5px;
+    position: relative;
+    overflow: hidden; /* Ensures fill stays inside */
+    border: 1px solid #dee2e6;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background-color: #28a745; /* Green for progress */
+    border-radius: 8px;
+    transition: width 0.5s ease-in-out;
+}
+
+.progress-bar-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.8em;
+    font-weight: bold;
+    color: #212529;
+    text-shadow: 0 0 2px #fff; /* Make text readable over the bar */
+}
 
 /* Add any additional styles as needed */          
