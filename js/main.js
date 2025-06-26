@@ -197,15 +197,9 @@ function switchView(targetViewId, newMode = null) {
             }
 
             if (mainMenu) mainMenu.style.display = 'none';
-            if (editMenu) {
-                const isOverview = (targetViewId === 'visualizationCarousel');
-                editMenu.style.display = isOverview ? 'block' : 'none';
-            }
+            if (editMenu) editMenu.style.display = 'block'; // ALWAYS show for any system view
             if (returnHomeBtn) returnHomeBtn.style.display = 'block';
-            const isOverviewForBackButton = (targetViewId === 'visualizationCarousel');
-            if (backButton) {
-                 backButton.style.display = isOverviewForBackButton ? 'none' : 'block';
-            }
+            if (backButton) backButton.style.display = 'none'; // ALWAYS hide this now
 
         } else { // Showing the Home Screen
             currentMode = Modes.NAVIGATION;
@@ -1132,6 +1126,7 @@ function initializeEventListeners() {
     document.querySelector('.menu button:nth-child(4)')?.addEventListener('click', resetToDefaults);
 
     // Edit Menu Buttons
+    document.getElementById('systemOverviewButton')?.addEventListener('click', showSystemOverview); 
     document.getElementById('editSystemButton')?.addEventListener('click', () => enterEditMode());
     document.getElementById('viewOrgChartButton')?.addEventListener('click', showOrganogramView);
     document.getElementById('viewEngineerListButton')?.addEventListener('click', showEngineerTableView);

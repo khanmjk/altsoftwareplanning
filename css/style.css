@@ -241,14 +241,6 @@ p#systemDescription {
   font-size: 0.875rem;
   z-index: auto;
 }
-#backToSystemViewButton { /* Will be moved into #globalNavButtons */
-  position: static; /* Remove fixed positioning */
-  padding: 6px 12px;
-  font-size: 0.875rem;
-  z-index: auto;
-  margin-right: 5px; /* Add some space if both are visible */
-}
-
 
 /* === End Phase UX.A1 === */
 

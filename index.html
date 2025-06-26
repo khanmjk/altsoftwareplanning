@@ -42,12 +42,14 @@
         <div id="topBar">
             <span id="appTitle">Software Management Tools</span>
             <div id="mainActions">
-                <div class="menu"> <button onclick="showSavedSystems()">Load System</button>
-                    <button onclick="createNewSystem()">New System</button>
-                    <button id="deleteSystemButton" class="btn-danger" onclick="deleteSystem()">Delete System</button>
-                    <button onclick="resetToDefaults()">Reset Defaults</button>
+                <div class="menu"> 
+                    <button>Load System</button>
+                    <button>New System</button>
+                    <button id="deleteSystemButton" class="btn-danger">Delete System</button>
+                    <button>Reset Defaults</button>
                 </div>
                 <div class="edit-menu" style="display: none;"> 
+                    <button id="systemOverviewButton">System Overview</button> 
                     <button id="editSystemButton">Edit System</button>
                     <button id="viewOrgChartButton">Inspect Org Design</button>
                     <button id="viewEngineerListButton">Engineers List</button>
@@ -59,9 +61,8 @@
                 </div>
             </div>
             <div id="globalNavButtons">
-                <button id="backToSystemViewButton" onclick="showSystemOverview()" style="display: none;">Back to System</button>
                 <button id="returnHomeButton" onclick="returnToHome()" style="display: none;">Home</button>
-            </div>
+            </div>      
         </div>
 
         <div class="main-content-area">
