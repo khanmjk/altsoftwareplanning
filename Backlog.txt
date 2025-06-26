@@ -89,6 +89,8 @@ Manage Roadmap & Backlog
 ------
 TO DO
 ------
+- Now that we have a goals dashboard view, we need to think about introducing an interface to manage the lifecycle of goals
+
 - Working on creating a reusable modern table widget leveraging tabular library
 Moving Filtering to EnhancedTableWidget:
 Now that the immediate filter display issues in the Engineer List (using direct Tabulator configuration) are resolved, the next logical step for the widget itself is to abstract that filtering logic.

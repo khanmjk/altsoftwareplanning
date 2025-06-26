@@ -2,7 +2,6 @@
 
 /**
  * Initializes the entire Strategic Goals View widget.
- * This is the main entry point called from dashboard.js.
  */
 function initializeGoalsView() {
     console.log("Initializing Strategic Goals Dashboard widget...");
@@ -12,14 +11,12 @@ function initializeGoalsView() {
         return;
     }
 
-    // CORRECTED: The ID now correctly matches what generateRoadmapTableFilters expects ('roadmapTableFilters' + 'Goals')
     container.innerHTML = `
         <div id="roadmapTableFiltersGoals" class="widget-filter-bar">
         </div>
         <div id="goalCardsContainer" class="goal-cards-container"></div>
     `;
-
-    // Generate filters (Org & Team only) and pass the render function specific to this view
+    
     generateRoadmapTableFilters('Goals', renderGoalsView, { includeThemes: false });
     renderGoalsView();
 }
@@ -48,7 +45,6 @@ function prepareGoalData() {
             return null;
         }
 
-        let initiativesToDisplay = initiativesForYear;
         const contributingTeams = new Set();
         initiativesForYear.forEach(init => {
             (init.assignments || []).forEach(a => contributingTeams.add(a.teamId));
@@ -73,11 +69,10 @@ function prepareGoalData() {
                 return null;
             }
         }
-
-        // After all filtering, if there are no teams from the selection contributing, hide the card.
-        let finalContributingTeams = new Set(contributingTeams);
+        
+        const finalContributingTeams = new Set(contributingTeams);
         if (teamFilter !== 'all') {
-            finalContributingTeams = new Set([teamFilter]);
+            if(!finalContributingTeams.has(teamFilter)) return null;
         } else if (orgFilter !== 'all') {
             const teamsInOrg = new Set();
             (currentSystemData.sdms || []).forEach(sdm => {
@@ -87,10 +82,9 @@ function prepareGoalData() {
                     });
                 }
             });
-            finalContributingTeams = new Set([...contributingTeams].filter(x => teamsInOrg.has(x)));
+            const intersection = new Set([...finalContributingTeams].filter(x => teamsInOrg.has(x)));
+            if (intersection.size === 0) return null;
         }
-
-        if(finalContributingTeams.size === 0) return null;
 
         const totalSde = initiativesForYear.reduce((sum, init) => sum + (init.assignments || []).reduce((s, a) => s + (a.sdeYears || 0), 0), 0);
         const completedInitiatives = initiativesForYear.filter(init => init.status === 'Completed').length;
@@ -102,7 +96,7 @@ function prepareGoalData() {
         } else if (initiativesForYear.some(init => (init.attributes.planningStatusFundedHc === 'BTL') || (new Date(init.targetDueDate) < new Date() && init.status !== 'Completed'))) {
             overallStatus = 'At Risk';
         }
-
+        
         const contributingThemes = new Set();
         initiativesForYear.forEach(init => {
             (init.themes || []).forEach(t => contributingThemes.add(t));
@@ -126,6 +120,7 @@ function prepareGoalData() {
 
 /**
  * Renders the Strategic Goal Cards into the container.
+ * MODIFIED: Replaces <details> with <div> and adds a dedicated event listener for toggling.
  */
 function renderGoalsView() {
     const container = document.getElementById('goalCardsContainer');
@@ -146,9 +141,11 @@ function renderGoalsView() {
         const teamNames = goal.displayContributingTeams.map(tid => teamMap.get(tid) || 'Unknown').join(', ');
         const themeNames = goal.displayThemes.map(tid => themeMap.get(tid) || 'Uncategorized').join(', ');
 
-
         const card = document.createElement('div');
         card.className = `goal-card status-${goal.displayStatus.toLowerCase().replace(' ', '-')}`;
+
+        // Using a unique ID for the list of initiatives to toggle it specifically
+        const initiativesListId = `initiatives-list-${goal.goalId}`;
 
         card.innerHTML = `
             <div class="goal-card-header">
@@ -182,14 +179,31 @@ function renderGoalsView() {
                 <strong>Strategic Themes:</strong> ${themeNames || 'None'}
             </div>
             <div class="goal-initiatives-toggle">
-                <details>
-                    <summary>View Linked Initiatives (${goal.displayInitiatives.length}) ▼</summary>
-                    <ul>
-                        ${goal.displayInitiatives.map(init => `<li>${init.title} - (Status: ${init.status}) - (${(init.assignments || []).reduce((s,a) => s + (a.sdeYears || 0), 0).toFixed(2)} SDEs)</li>`).join('')}
-                    </ul>
-                </details>
+                <div class="toggle-summary" data-target-id="${initiativesListId}">
+                    View Linked Initiatives (${goal.displayInitiatives.length}) <span class="toggle-arrow">▼</span>
+                </div>
+                <ul id="${initiativesListId}" class="initiatives-list" style="display: none;">
+                    ${goal.displayInitiatives.map(init => `<li>${init.title} - (Status: ${init.status}) - (${(init.assignments || []).reduce((s,a) => s + (a.sdeYears || 0), 0).toFixed(2)} SDEs)</li>`).join('') || `<li>No initiatives match the current filter.</li>`}
+                </ul>
             </div>
         `;
         container.appendChild(card);
+    });
+
+    // --- NEW: Add event listeners AFTER all cards are rendered ---
+    container.querySelectorAll('.toggle-summary').forEach(toggle => {
+        toggle.addEventListener('click', () => {
+            const targetId = toggle.getAttribute('data-target-id');
+            const targetList = document.getElementById(targetId);
+            const arrow = toggle.querySelector('.toggle-arrow');
+
+            if (targetList) {
+                const isHidden = targetList.style.display === 'none';
+                targetList.style.display = isHidden ? 'block' : 'none';
+                if (arrow) {
+                    arrow.textContent = isHidden ? '▲' : '▼';
+                }
+            }
+        });
     });
 }

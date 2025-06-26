@@ -1543,15 +1543,19 @@ a:focus {
 }
 
 /* --- New Styles for Strategic Goals Dashboard --- */
-
 .goal-cards-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-    gap: 20px;
+    /* Switched from Grid to a more flexible Column layout */
+    column-count: 3; /* Start with 3 columns, adjust as needed */
+    column-gap: 20px;
     padding: 10px;
 }
 
 .goal-card {
+    /* This property prevents a card from breaking across columns */
+    break-inside: avoid;
+    margin-bottom: 20px; /* Use margin for vertical spacing */
+    
+    /* Keep all other goal-card styles the same */
     border: 1px solid #ddd;
     border-left-width: 5px;
     border-radius: 5px;
@@ -1562,6 +1566,18 @@ a:focus {
     flex-direction: column;
 }
 
+/* Add media queries to make the column count responsive */
+@media (max-width: 1200px) {
+    .goal-cards-container {
+        column-count: 2;
+    }
+}
+
+@media (max-width: 768px) {
+    .goal-cards-container {
+        column-count: 1;
+    }
+}
 /* Status Colors */
 .goal-card.status-on-track { border-left-color: #007bff; }
 .goal-card.status-at-risk { border-left-color: #ffc107; }
@@ -1659,6 +1675,40 @@ a:focus {
     color: #212529;
 }
 
+/* --- Styles for a better Goal Card Toggle --- */
+
+.goal-initiatives-toggle {
+    border-top: 1px dashed #ccc;
+    padding-top: 10px;
+    margin-top: 10px; /* Added margin for better spacing */
+}
+
+.toggle-summary {
+    cursor: pointer;
+    font-weight: bold;
+    color: #0056b3;
+    display: inline-block; /* Make it behave like a link */
+}
+
+.toggle-summary:hover {
+    text-decoration: underline;
+}
+
+.toggle-arrow {
+    display: inline-block;
+    transition: transform 0.2s ease-in-out;
+}
+
+.initiatives-list {
+    list-style-type: disc;
+    padding-left: 20px;
+    margin-top: 10px;
+    font-size: 0.9em;
+}
+
+.initiatives-list li {
+    margin-bottom: 5px;
+}
 
 
 /* Add any additional styles as needed */          
