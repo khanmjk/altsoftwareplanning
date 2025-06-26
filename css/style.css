@@ -1300,4 +1300,109 @@ a:focus {
     box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 /* --- End Style --- */
+
+/* --- Quarterly Roadmap Table Styles --- */
+.quarterly-roadmap-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed; /* Ensures columns are of equal width */
+}
+
+.quarterly-roadmap-table thead th {
+    background-color: #e9ecef;
+    border: 1px solid #dee2e6;
+    padding: 12px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.quarterly-roadmap-table tbody td {
+    border: 1px solid #dee2e6;
+    vertical-align: top;
+    padding: 0;
+}
+
+.quarterly-roadmap-table .theme-cell {
+    font-weight: 600;
+    background-color: #f8f9fa;
+    padding: 10px;
+    text-align: left;
+    width: 200px; /* Fixed width for the theme column */
+}
+
+.quarterly-roadmap-table .quarter-cell {
+    padding: 8px;
+    min-height: 80px; /* Ensures rows have some height even if empty */
+}
+
+.initiative-card {
+    background-color: #ffffff;
+    border: 1px solid #ccc;
+    border-left: 5px solid #007bff; /* Blue accent color */
+    border-radius: 4px;
+    padding: 8px;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    cursor: help; /* Indicates more info on hover */
+}
+
+.initiative-title {
+    font-weight: 500;
+    font-size: 0.9em;
+    margin-bottom: 4px;
+}
+
+.initiative-sde {
+    font-size: 0.8em;
+    color: #555;
+    text-align: right;
+}
+
+/* --- Quarterly Roadmap Table Polish --- */
+
+.quarterly-roadmap-table .quarter-cell {
+    background-color: #fdfdfd; /* Very light gray for empty cells */
+    min-height: 80px;
+    padding: 8px;
+}
+
+.initiative-card {
+    transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+.initiative-card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border-color: #999;
+}
+
+/* --- Styling for Team Breakdown in Org Filter --- */
+.initiative-sde-breakdown {
+    font-size: 0.8em; /* Maintain the slightly smaller size for detail */
+    color: #555;
+    text-align: right;
+    white-space: nowrap; /* Prevent team names from wrapping */
+    overflow: hidden;
+    text-overflow: ellipsis; /* Add ellipsis for very long team names */
+}
+
+/* --- Final Polish for Quarterly Roadmap Widget --- */
+
+.initiative-card {
+    border-left-width: 5px;
+    transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+    cursor: pointer; /* Change cursor to indicate it's clickable */
+}
+
+.initiative-card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border-color: #333; /* Darken border on hover */
+}
+
+/* Status Indicator Colors */
+.initiative-card.status-backlog { border-left-color: #6c757d; } /* Gray */
+.initiative-card.status-defined { border-left-color: #17a2b8; } /* Teal */
+.initiative-card.status-committed { border-left-color: #007bff; } /* Blue */
+.initiative-card.status-in-progress { border-left-color: #ffc107; } /* Yellow */
+.initiative-card.status-completed { border-left-color: #28a745; } /* Green */
+
 /* Add any additional styles as needed */          

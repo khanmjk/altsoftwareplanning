@@ -18,6 +18,7 @@
     <script type="text/javascript" src="https://oss.sheetjs.com/sheetjs/xlsx.full.min.js"></script>
 
     <script src="js/components/enhancedTableWidget.js"></script>
+    <script src="js/documentation.js"></script>
     <script src="js/data.js"></script>
     <script src="js/sampleData/sampleStreamingPlatform.js"></script>
     <script src="js/sampleData/sampleContactCenterPlatform.js"></script>
@@ -29,7 +30,10 @@
     <script src="js/orgView.js"></script>
     <script src="js/yearPlanning.js"></script>
     <script src="js/capacityTuning.js"></script>
-    <script src="js/roadmap.js"></script> <head>
+    <script src="js/roadmap.js"></script>
+    <script src="js/roadmapTableView.js"></script> <head></head>
+    <script src="js/dashboard.js"></script>
+
         <meta charset="UTF-8">
     </head>
     <body>
@@ -45,7 +49,9 @@
                     <button id="viewOrgChartButton" onclick="showOrganogramView()">Inspect Org Design</button>
                     <button id="viewEngineerListButton" onclick="showEngineerTableView()">Engineers List</button>
                     <button id="manageYearPlanButton" onclick="showPlanningView()">Year Plan</button>
-                    <button id="manageRoadmapButton" onclick="showRoadmapView()">Roadmap & Backlog</button> <button id="tuneCapacityButton" onclick="showCapacityConfigView()">Capacity Tuning</button>
+                    <button id="manageRoadmapButton" onclick="showRoadmapView()">Roadmap & Backlog</button> 
+                    <button id="dashboardViewButton" onclick="showDashboardView()">Dashboard</button>
+                    <button id="tuneCapacityButton" onclick="showCapacityConfigView()">Capacity Tuning</button>
                     <button id="sdmForecastButton" onclick="showSdmForecastingView()">Resource Forecasting</button>
                 </div>
             </div>
@@ -229,6 +235,8 @@
                     </div>
                 
             </div>
+            <div id="dashboardView" style="display:none; margin-top: 20px;">
+            </div>
 
             <div id="capacityConfigView" style="display:none; margin-top: 20px; max-width: 90%; margin-left: auto; margin-right: auto;">                
             </div>
@@ -286,103 +294,6 @@
         <script>
 
         /* JavaScript Code */
-
-
-        /**
-         * Fetches README.md, converts Markdown to HTML, displays it,
-         * and handles internal anchor link scrolling.
-         * Uses custom slugify for markdown-it-anchor.
-         */
-        async function loadAndDisplayDocumentation() {
-            const contentDiv = document.getElementById('documentationContent');
-            if (!contentDiv) {
-                console.error("LAD_SLUGIFY: Documentation content div not found.");
-                return;
-            }
-            console.log("LAD_SLUGIFY: Attempting to load documentation.");
-
-            const readmeUrl = 'https://raw.githubusercontent.com/khanmjk/altsoftwareplanning/refs/heads/main/README.md';
-
-            if (typeof window.markdownit === 'undefined') {
-                const errorMsg = "LAD_SLUGIFY: FATAL - window.markdownit is UNDEFINED. Cannot render documentation.";
-                console.error(errorMsg);
-                contentDiv.innerHTML = `<p style="color:red;">${errorMsg}</p>`;
-                return;
-            } else {
-                console.log("LAD_SLUGIFY: window.markdownit is DEFINED.");
-            }
-
-            let md = window.markdownit({
-                html: true,
-                linkify: true,
-                typographer: true
-            });
-
-            if (typeof window.markdownItAnchor === 'function' && typeof window.customSlugify === 'function') {
-                console.log("LAD_SLUGIFY: markdown-it-anchor and customSlugify are DEFINED. Applying anchor plugin.");
-                try {
-                    md = md.use(window.markdownItAnchor, {
-                        permalink: window.markdownItAnchor.permalink.headerLink(),
-                        level: [1, 2, 3, 4, 5, 6],
-                        slugify: s => window.customSlugify(s) // Ensure window.customSlugify is called
-                    });
-                } catch (e) {
-                    console.error("LAD_SLUGIFY: Error applying markdown-it-anchor:", e);
-                }
-            } else {
-                if (typeof window.markdownItAnchor !== 'function') {
-                    console.warn("LAD_SLUGIFY: window.markdownItAnchor is UNDEFINED. Links may not function as expected.");
-                }
-                if (typeof window.customSlugify !== 'function') {
-                    console.warn("LAD_SLUGIFY: window.customSlugify is UNDEFINED. Links may not use custom slugs.");
-                }
-            }
-
-            contentDiv.innerHTML = '<p><em>Fetching latest documentation from GitHub...</em></p>';
-
-            try {
-                const response = await fetch(readmeUrl);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status} while fetching README.`);
-                }
-                const markdownText = await response.text();
-                console.log("LAD_SLUGIFY: Successfully fetched README.md");
-
-                const htmlContent = md.render(markdownText);
-                contentDiv.innerHTML = htmlContent;
-                console.log("LAD_SLUGIFY: Documentation rendered.");
-
-                // Re-attach internal link listeners
-                const internalLinks = contentDiv.querySelectorAll('a[href^="#"]');
-                internalLinks.forEach(link => {
-                    link.addEventListener('click', function(event) {
-                        event.preventDefault();
-                        const targetId = this.getAttribute('href').substring(1);
-                        const targetElement = document.getElementById(targetId);
-
-                        if (targetElement && contentDiv.contains(targetElement)) {
-                            const contentDivScrollTop = contentDiv.scrollTop;
-                            const contentDivRect = contentDiv.getBoundingClientRect();
-                            const targetElementRect = targetElement.getBoundingClientRect();
-                            const targetOffsetFromContentDivTop = targetElementRect.top - contentDivRect.top;
-                            let scrollToPosition = contentDivScrollTop + targetOffsetFromContentDivTop - 10; // Small offset
-                            scrollToPosition = Math.max(0, scrollToPosition);
-                            contentDiv.scrollTop = scrollToPosition;
-                            console.log(`LAD_SLUGIFY: Scrolled to: #${targetId}`);
-                        } else {
-                            console.warn(`LAD_SLUGIFY: Target element for link #${targetId} not found or not within contentDiv.`);
-                            const generatedIds = Array.from(contentDiv.querySelectorAll('[id]')).map(el => el.id);
-                            console.log("LAD_SLUGIFY: Available IDs in documentation content:", generatedIds);
-                        }
-                    });
-                });
-                console.log("LAD_SLUGIFY: Internal link listeners attached.");
-
-            } catch (error) {
-                console.error("LAD_SLUGIFY: Failed to load or render documentation:", error);
-                contentDiv.innerHTML = `<p style="color:red;">Could not load documentation. Details: ${error.message}</p>`;
-            }
-        }
 
         // Call the function to save sample systems on page load
         saveSampleSystemsToLocalStorage();
@@ -569,120 +480,3 @@
             }
 
         }
-
-        /** REVISED (v2) Exit Edit Mode - Calls showSystemOverview which uses switchView */
-        function exitEditMode() {
-            if (currentMode === Modes.CREATING) {
-                // If cancelling creation, go all the way home
-                if (confirm('Are you sure you want to cancel creating the new system? All unsaved changes will be lost.')) {
-                    returnToHome(); // Use the refactored returnToHome
-                }
-                // If user cancels the confirm dialog, do nothing, stay in edit mode.
-            } else {
-                // If cancelling an edit, simply go back to the system overview
-                console.log("Exiting edit mode, returning to system overview...");
-                showSystemOverview(); // Use the refactored showSystemOverview
-            }
-        }
-
-        /** REVISED (v5) Shows the Organogram View using switchView */
-        // Modify showOrganogramView to include the new section
-        /** REVISED (v5) Shows the Organogram View using switchView */
-        function showOrganogramView() {
-            console.log("Switching to Organization Chart View + Add Resource Section...");
-            if (!currentSystemData) { alert("Please load a system first."); return; }
-
-            switchView('organogramView');
-
-            try {
-                generateOrganogram();
-            } catch (error) {
-                console.error("Error generating Organogram:", error);
-                document.getElementById('organogramContent').innerHTML = `<p style="color:red;">Error generating chart.</p>`;
-            }
-            try {
-                generateTeamTable(currentSystemData);
-            } catch (error) {
-                console.error("Error generating Team Table:", error);
-                document.getElementById('teamBreakdown').innerHTML = `<p style="color:red;">Error generating team table.</p>`;
-            }
-
-            // --- Generate and append the "Add New Resource" section ---
-            const organogramViewDiv = document.getElementById('organogramView');
-            if (organogramViewDiv) {
-                generateAddNewResourceSection(organogramViewDiv); // Pass the main container
-            } else {
-                console.error("'organogramView' div not found to append 'Add New Resource' section.");
-            }
-            // --- End ---
-        }
-        window.showOrganogramView = showOrganogramView;
-
-        /** REVISED (v3) Shows the Engineer Table View using switchView */
-        function showEngineerTableView() {
-            console.log("Switching to Engineer Table View (Focus Mode)...");
-            if (!currentSystemData) { alert("Please load a system first."); return; }
-
-            switchView('engineerTableView'); // Switch view, hides others, shows buttons
-
-            // Generate and show engineer table
-            try {
-                generateEngineerTable(); // Generate with default sort
-            } catch (error) {
-                console.error("Error generating Engineer Table:", error);
-                const engineerTableContainer = document.getElementById('engineerTableView');
-                if(engineerTableContainer) engineerTableContainer.innerHTML = `<p style="color:red;">Error generating engineer table. Check console.</p>`;
-            }
-        }
-
-        // Make it globally accessible (if not already done)
-        window.showEngineerTableView = showEngineerTableView;
-
-        /** REVISED (v9) Shows the Yearly Planning View using switchView */
-        function showPlanningView() {
-            console.log("Switching to Yearly Planning View (Focus Mode)...");
-            if (!currentSystemData) { alert("Please load a system first."); return; }
-
-            switchView('planningView', Modes.PLANNING); // Switch view and set mode
-
-            try {
-                // Generate the table content
-                generatePlanningTable(); // This also generates the summary table now
-
-                // Listener for savePlanButton is now attached within generatePlanningTable
-
-                // Adjust table height AFTER view is visible and content generated
-                adjustPlanningTableHeight();
-
-            } catch (error) {
-                console.error("Error generating Planning View content:", error);
-                const planningViewDiv = document.getElementById('planningView');
-                if(planningViewDiv) planningViewDiv.innerHTML = `<p style="color:red;">Error generating planning view. Check console.</p>`;
-            }
-        }
-
-        // Attach functions to the global window object
-        window.showPlanningView = showPlanningView; // Ensure global access
-        window.showSavedSystems = showSavedSystems;
-        window.createNewSystem = createNewSystem;
-        window.resetToDefaults = resetToDefaults;
-        window.returnToHome = returnToHome;
-        //window.showPlanningView = showPlanningView; // Already done above
-
-        // --- Window Resize Listener for Planning Table Height ---
-        let resizeTimeout;
-        window.addEventListener('resize', () => {
-            // Debounce resize events to avoid excessive calculations
-            clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(() => {
-                // Only adjust if the planning view is currently visible
-                const planningViewDiv = document.getElementById('planningView');
-                if (planningViewDiv && planningViewDiv.style.display !== 'none') {
-                    adjustPlanningTableHeight();
-                }
-            }, 150); // Adjust timeout (milliseconds) as needed
-        });
-
-        </script>
-    </body>
-</html>

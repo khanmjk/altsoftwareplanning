@@ -107,7 +107,7 @@ window.onload = function() {
 };
 
 /**
- * REVISED (v10 - Fixed console.log_debug and View Transitions)
+ * REVISED (v11 - Dashboard Fix)
  * Central function to manage switching between main views.
  */
 function switchView(targetViewId, newMode = null) {
@@ -117,7 +117,7 @@ function switchView(targetViewId, newMode = null) {
         'systemEditForm', 'visualizationCarousel', 'serviceDependenciesTable',
         'organogramView', 'engineerTableView', 'planningView',
         'capacityConfigView', 'sdmForecastingView', 'toolDocumentationSection',
-        'roadmapView' // << NEW VIEW ID
+        'roadmapView', 'dashboardView' // Now includes dashboard
     ];
     const documentationSection = document.getElementById('toolDocumentationSection');
 
@@ -172,7 +172,8 @@ function switchView(targetViewId, newMode = null) {
             if (pageTitleH1 && currentSystemData) {
                 let titleSuffix = '';
                 if (targetViewId === 'planningView') titleSuffix = ' - Year Plan';
-                else if (targetViewId === 'roadmapView') titleSuffix = ' - Roadmap & Backlog'; // << NEW SUFFIX
+                else if (targetViewId === 'roadmapView') titleSuffix = ' - Roadmap & Backlog';
+                else if (targetViewId === 'dashboardView') titleSuffix = ' - Dashboard';
                 else if (targetViewId === 'organogramView') titleSuffix = ' - Organization Overview';
                 else if (targetViewId === 'engineerTableView') titleSuffix = ' - Engineer List';
                 else if (targetViewId === 'systemEditForm') titleSuffix = ' - Edit System';
@@ -250,14 +251,21 @@ function switchView(targetViewId, newMode = null) {
     if (!document.startViewTransition) {
         console.warn("View Transitions API not supported by this browser. Switching view directly.");
         updateDOMForViewChange();
+        // Manually trigger post-switch logic for direct switches
         if (targetViewId === 'visualizationCarousel' && typeof showVisualization === 'function') {
             showVisualization(0);
         }
         if (targetViewId === 'planningView' && typeof adjustPlanningTableHeight === 'function') {
-            const planningTableContainer = document.getElementById('planningTableContainer');
-            if (planningTableContainer && planningTableContainer.offsetParent !== null) {
+             const planningTableContainer = document.getElementById('planningTableContainer');
+             if (planningTableContainer && planningTableContainer.offsetParent !== null) {
                  adjustPlanningTableHeight();
-            }
+             }
+        }
+        if (targetViewId === 'roadmapView' && typeof initializeRoadmapView === 'function') {
+            initializeRoadmapView();
+        }
+        if (targetViewId === 'dashboardView' && typeof initializeDashboard === 'function') {
+            initializeDashboard();
         }
         console.log(`View switched directly. Current mode: ${currentMode}`);
         return;
@@ -273,6 +281,7 @@ function switchView(targetViewId, newMode = null) {
 
     transition.finished.then(() => {
         console.debug("View transition finished.");
+        // Trigger post-switch logic AFTER the transition is complete
         if (targetViewId === 'visualizationCarousel' && typeof showVisualization === 'function') {
             showVisualization(0);
         }
@@ -282,9 +291,12 @@ function switchView(targetViewId, newMode = null) {
                  adjustPlanningTableHeight();
             }
         }
-        // << NEW: Call roadmap generation if roadmapView is shown
         if (targetViewId === 'roadmapView' && typeof initializeRoadmapView === 'function') {
             initializeRoadmapView();
+        }
+        // FIX: Call the new initializer function, not the view-switcher
+        if (targetViewId === 'dashboardView' && typeof initializeDashboard === 'function') {
+            initializeDashboard();
         }
     }).catch(err => {
         console.error("View transition 'finished' phase error:", err);
