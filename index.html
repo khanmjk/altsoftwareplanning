@@ -182,7 +182,7 @@
             </div>
 
             <div id="planningView" style="display:none; margin-top: 20px;">
-                <div id="planningCapacitySummary" style="margin-bottom: 15px; font-weight: bold;">
+                <div id="planningCapacitySummary" style="margin-bottom: 15px; font-weight: bold; padding: 8px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">
                     </div>
 
                 <div id="planningScenarioControl" style="margin-bottom: 15px; padding: 8px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">
@@ -218,44 +218,7 @@
                     </div>
                 </div>
 
-                <div id="planningTableContainer">
-                    </div>
-                <div id="addInitiativeSection" style="margin-top: 20px; padding: 15px; border: 1px solid #ccc;">
-                    <h3 onclick="toggleCollapsibleSection('addInitiativeContent', 'addInitiativeToggle')" title="Click to expand/collapse">
-                        <span id="addInitiativeToggle" class="toggle-indicator">(+) </span> Add New Initiative
-                    </h3>
-
-                    <div id="addInitiativeContent" style="display: none;">
-                    <div style="margin-bottom: 10px;">
-                        <label for="newInitiativeTitle" style="display: block;">Title:</label>
-                        <input type="text" id="newInitiativeTitle" placeholder="Initiative Title" style="width: 90%;">
-                    </div>
-                    <div style="margin-bottom: 10px;">
-                        <label for="newInitiativeDescription" style="display: block;">Description:</label>
-                        <textarea id="newInitiativeDescription" placeholder="Description" rows="2" style="width: 90%;"></textarea>
-                    </div>
-                    <div style="margin-bottom: 10px;">
-                        <label for="newInitiativeGoalId" style="display: block;">Related Business Goal ID (Optional):</label>
-                        <input type="text" id="newInitiativeGoalId" placeholder="Optional: Business Goal ID" style="width: 90%;">
-                    </div>
-
-                    <hr>
-                    <h4>Team Assignments:</h4>
-                    <div id="newInitiativeAssignmentsDisplay" style="margin-bottom: 10px; min-height: 30px; background-color: #f8f9fa; padding: 5px; border: 1px solid #eee;">
-                    </div>
-                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                        <label for="newInitiativeTeamSelect" style="margin-right: 5px;">Team:</label>
-                        <select id="newInitiativeTeamSelect" style="margin-right: 10px;">
-                            <option value="">-- Select Team --</option>
-                        </select>
-                        <label for="newInitiativeSdeYears" style="margin-right: 5px;">SDE Years:</label>
-                        <input type="number" id="newInitiativeSdeYears" step="0.25" min="0" placeholder="e.g., 1.5" style="width: 80px; margin-right: 10px;">
-                        <button type="button" id="addTeamAssignmentButton">Add Assignment</button>
-                    </div>
-
-                    <hr>
-                    <button type="button" id="addInitiativeButton" class="btn-primary">Add Initiative to Plan</button>
-                    </div>
+                <div id="planningTableContainer">                
                 </div>
             </div>
             <div id="roadmapView" style="display:none; margin-top: 20px; max-width: 95%; margin-left: auto; margin-right: auto;">
@@ -686,19 +649,6 @@
                 // Generate the table content
                 generatePlanningTable(); // This also generates the summary table now
 
-                // --- Populate Team Select & Attach Listeners ---
-                populateTeamSelect();
-                // Add listeners only once (using data attribute check)
-                const addAssignButton = document.getElementById('addTeamAssignmentButton');
-                if (addAssignButton && !addAssignButton.hasAttribute('data-listener-attached')) {
-                    addAssignButton.addEventListener('click', handleAddTeamAssignment);
-                    addAssignButton.setAttribute('data-listener-attached', 'true');
-                }
-                const addInitButton = document.getElementById('addInitiativeButton');
-                if (addInitButton && !addInitButton.hasAttribute('data-listener-attached')) {
-                    addInitButton.addEventListener('click', handleAddInitiative);
-                    addInitButton.setAttribute('data-listener-attached', 'true');
-                }
                 // Listener for savePlanButton is now attached within generatePlanningTable
 
                 // Adjust table height AFTER view is visible and content generated

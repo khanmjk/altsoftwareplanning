@@ -749,7 +749,10 @@ function createNewSystem() {
             owner: null,          
             technicalPOC: null,   
             workPackageIds: [],
-            attributes: { pmCapacityNotes: "" }
+            attributes: { 
+                pmCapacityNotes: "",
+                planningYear: new Date().getFullYear() // Add planningYear
+            }
         }
     ];
 

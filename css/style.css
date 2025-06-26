@@ -1273,4 +1273,31 @@ a:focus {
     animation: simpleFadeIn 0.3s ease-out forwards;
 }
 
+/* --- Style for Planning Year Selector --- */
+#planningScenarioControl label[for="planningYearSelector"] {
+    font-weight: bold;
+    margin-left: 20px;
+}
+
+#planningYearSelector {
+    padding: 5px 8px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    background-color: #fff;
+    font-size: 0.9em;
+    margin-left: 5px;
+    cursor: pointer;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+#planningYearSelector:hover {
+    border-color: #adb5bd;
+}
+
+#planningYearSelector:focus {
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+/* --- End Style --- */
 /* Add any additional styles as needed */          

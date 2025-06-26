@@ -1,3 +1,6 @@
+// Global variable to store the currently selected planning year
+let currentPlanningYear = new Date().getFullYear();
+
 /** Handles changes to the 'Protected' checkbox in the planning table */
 function handleProtectedChange(event) {
     const checkbox = event.target;
@@ -260,7 +263,7 @@ function generateTeamLoadSummaryTable() {
     if (!summaryTableHead) {
         summaryTableHead = summaryTable.createTHead();
     }
-    
+
     if (!summaryTable || !summaryTableBody || !summaryTableFoot || !summaryTableHead) {
         console.error("Missing Team Load Summary table structure.");
         return;
@@ -277,27 +280,27 @@ function generateTeamLoadSummaryTable() {
         summaryContainer.querySelector('h4').textContent += " - ERROR: Metrics not calculated!";
         return;
     }
-    
+
     const teams = currentSystemData.teams || [];
     const scenarioKey = planningCapacityScenario === 'funded' ? 'FundedHC' : (planningCapacityScenario === 'team_bis' ? 'TeamBIS' : 'EffectiveBIS');
     const isNetCapacityUsed = applyCapacityConstraintsToggle;
 
     const summaryAtlBtlLimit = isNetCapacityUsed ? calculatedMetrics.totals[scenarioKey].netYrs : calculatedMetrics.totals[scenarioKey].grossYrs;
     const scenarioNameForTitle = `${isNetCapacityUsed ? 'Net' : 'Gross'} ${scenarioKey.replace('BIS', ' BIS')}`;
-    
+
     const summaryTitleHeader = summaryContainer.querySelector('h4');
     if (summaryTitleHeader) {
         const toggleSpan = summaryTitleHeader.querySelector('span.toggle-indicator');
         summaryTitleHeader.textContent = ` Team Load Summary (for ATL Initiatives - Scenario: ${scenarioNameForTitle})`;
         if (toggleSpan) { summaryTitleHeader.insertBefore(toggleSpan, summaryTitleHeader.firstChild); }
     }
-    
+
     // --- 1. Generate Table Headers with NEW Sinks Column ---
     const headerRow = summaryTableHead.insertRow();
     const scenarioDisplayName = scenarioKey.replace('BIS', ' BIS');
     const stateDisplayName = isNetCapacityUsed ? 'Net' : 'Gross';
     const dynamicHeaderText = `${scenarioDisplayName} Capacity (${stateDisplayName})`;
-    
+
     const headers = [
         { text: 'Team', title: 'Team Name' },
         { text: 'Funded HC (Humans)', title: 'Budgeted headcount for human engineers.' },
@@ -322,7 +325,15 @@ function generateTeamLoadSummaryTable() {
     });
 
     // --- 2. Prepare Data for Body ---
-    const sortedInitiatives = [...currentSystemData.yearlyInitiatives].sort((a, b) => { if (a.isProtected && !b.isProtected) return -1; if (!a.isProtected && b.isProtected) return 1; return 0; });
+    const initiativesForYear = (currentSystemData.yearlyInitiatives || []).filter(
+        init => init.attributes.planningYear == currentPlanningYear
+    );
+    const sortedInitiatives = [...initiativesForYear].sort((a, b) => {
+        if (a.isProtected && !b.isProtected) return -1;
+        if (!a.isProtected && b.isProtected) return 1;
+        return 0;
+    });
+
     let overallCumulativeSde = 0;
     const teamAtlSdeAssigned = teams.reduce((acc, team) => { acc[team.teamId] = 0; return acc; }, {});
 
@@ -348,18 +359,18 @@ function generateTeamLoadSummaryTable() {
         const teamId = team.teamId;
         const teamMetrics = calculatedMetrics[teamId];
         if (!teamMetrics) { console.warn(`Metrics not found for teamId: ${teamId}.`); return; }
-        
+
         const teamAIBIS = (team.engineers || []).filter(name => currentSystemData.allKnownEngineers.find(e => e.name === name)?.attributes?.isAISWE).length;
         const awayAIBIS = (team.awayTeamMembers || []).filter(m => m.attributes?.isAISWE).length;
         const aiEngineers = teamAIBIS + awayAIBIS;
-        
+
         const teamBISHumans = teamMetrics.TeamBIS.humanHeadcount;
         const effectiveBISHumans = teamMetrics.EffectiveBIS.humanHeadcount;
         const awayBISHumans = effectiveBISHumans - teamBISHumans;
 
         // ** NEW SINKS LOGIC **
         const sinks = isNetCapacityUsed ? (teamMetrics[scenarioKey].deductYrs || 0) : 0;
-        
+
         const productivityGain = teamMetrics[scenarioKey].deductionsBreakdown.aiProductivityGainYrs || 0;
         const productivityPercent = team.teamCapacityAdjustments?.aiProductivityGainPercent || 0;
         const scenarioCapacity = isNetCapacityUsed ? teamMetrics[scenarioKey].netYrs : teamMetrics[scenarioKey].grossYrs;
@@ -386,7 +397,7 @@ function generateTeamLoadSummaryTable() {
         row.insertCell().textContent = teamBISHumans.toFixed(2);
         row.insertCell().textContent = awayBISHumans.toFixed(2);
         row.insertCell().textContent = aiEngineers.toFixed(2);
-        
+
         // ** NEW SINKS CELL **
         const sinksCell = row.insertCell();
         sinksCell.textContent = isNetCapacityUsed ? `-${sinks.toFixed(2)}` : '—';
@@ -396,11 +407,11 @@ function generateTeamLoadSummaryTable() {
         row.insertCell().textContent = `${productivityPercent.toFixed(0)}%`;
         row.insertCell().textContent = scenarioCapacity.toFixed(2);
         row.insertCell().textContent = assignedAtlSde.toFixed(2);
-        
+
         const remainingCell = row.insertCell();
         remainingCell.textContent = remainingCapacity.toFixed(2);
         remainingCell.style.color = remainingCapacity < 0 ? 'red' : 'green';
-        
+
         const statusCell = row.insertCell();
         statusCell.textContent = statusText;
         statusCell.style.color = statusColor;
@@ -440,15 +451,10 @@ function toggleCapacityConstraints(isChecked) {
 window.toggleCapacityConstraints = toggleCapacityConstraints;
 
 /**
- * REVISED (v7 - Aligned with Capacity Tuning)
- * Generates the planning table, ensuring it uses the single source of truth for capacity calculations.
- * - If capacity metrics are not pre-calculated, it generates them on the fly.
- * - Always uses 'grossYrs' or 'netYrs' from the calculated metrics object for ATL/BTL calculations.
- * - Aligns per-team cell coloring with the authoritative metrics.
- * - Removes all local/redundant capacity calculations.
+ * REVISED - Generates the planning table, filtering initiatives by the selected planning year.
  */
 function generatePlanningTable() {
-    console.log("Generating planning table (v7 - Aligned with Capacity Tuning)...");
+    console.log(`Generating planning table for year: ${currentPlanningYear}...`);
     const planningViewDiv = document.getElementById('planningView');
     const capacitySummaryDiv = document.getElementById('planningCapacitySummary');
     const scenarioControlDiv = document.getElementById('planningScenarioControl');
@@ -464,39 +470,31 @@ function generatePlanningTable() {
         return;
     }
 
-    // --- 1. ENSURE CAPACITY METRICS ARE AVAILABLE (THE CORE FIX) ---
-    // Check if the canonical metrics object exists. If not, calculate it now.
     if (!currentSystemData.calculatedCapacityMetrics) {
         console.warn("calculatedCapacityMetrics not found. Generating on the fly for Year Planning view.");
-        // This ensures the view can function correctly even if the user hasn't visited the tuning page.
         currentSystemData.calculatedCapacityMetrics = calculateAllCapacityMetrics();
     }
     const calculatedMetrics = currentSystemData.calculatedCapacityMetrics;
-    const metricsAvailable = !!calculatedMetrics; // Should always be true now.
-    // --- END CORE FIX ---
+    const metricsAvailable = !!calculatedMetrics;
 
-
-    // --- 2. Get Capacity Totals DIRECTLY from Calculated Metrics ---
-    // No more local calculations. These values are the single source of truth.
     const totalFundedHC = calculatedMetrics.totals.FundedHC.humanHeadcount;
     const totalTeamBIS = calculatedMetrics.totals.TeamBIS.totalHeadcount;
     const totalEffectiveBIS = calculatedMetrics.totals.EffectiveBIS.totalHeadcount;
-    const totalAwayTeamBIS = totalEffectiveBIS - calculatedMetrics.totals.TeamBIS.totalHeadcount; // Derived for display
-    // --- END SOURCING FROM METRICS ---
+    const totalAwayTeamBIS = totalEffectiveBIS - calculatedMetrics.totals.TeamBIS.totalHeadcount;
 
+    const yearSelectorHTML = `
+        <label for="planningYearSelector" style="font-weight: bold; margin-left: 10px;">Planning Year (3YP cy):</label>
+        <select id="planningYearSelector" onchange="setPlanningYear(this.value)" style="padding: 5px; border-radius: 4px;">
+            <option value="${currentPlanningYear - 1}">${currentPlanningYear -1}</option>
+            <option value="${currentPlanningYear}" selected>${currentPlanningYear}</option>
+            <option value="${currentPlanningYear + 1}">${currentPlanningYear + 1}</option>
+        </select>
+    `;
 
-    // --- 3. Update Capacity Summary Display (Using data from metrics) ---
     if (capacitySummaryDiv) {
-        capacitySummaryDiv.innerHTML = `
-            <span title="Finance Approved Headcount (Humans)" style="margin-right: 15px;">Funded HC: <strong style="color: #28a745;">${totalFundedHC.toFixed(2)}</strong></span> |
-            <span title="Actual Team Members (Humans + AI)" style="margin-right: 15px;">Team BIS: <strong style="color: #17a2b8;">${totalTeamBIS.toFixed(2)}</strong></span> |
-            <span title="Borrowed / Away-Team Members" style="margin-right: 15px;">Away BIS: <strong style="color: #ffc107;">${totalAwayTeamBIS.toFixed(2)}</strong></span> |
-            <span title="Total Effective Capacity (Team + Away)" style="color: #007bff;">Effective BIS: <strong style="color: #007bff;">${totalEffectiveBIS.toFixed(2)}</strong></span>
-        `;
+        capacitySummaryDiv.innerHTML = `${yearSelectorHTML}`;
     }
 
-
-    // --- 4. Add/Update Scenario Toggle UI ---
     if (scenarioControlDiv) {
         const baseButtonStyle = 'padding: 5px 10px; margin-left: 10px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; font-size: 0.9em;';
         const activeButtonStyle = baseButtonStyle + ' background-color: #007bff; color: white; border-color: #0056b3; font-weight: bold;';
@@ -506,7 +504,6 @@ function generatePlanningTable() {
         const teamBisButtonTitle = `Use Team BIS. Gross: ${calculatedMetrics.totals.TeamBIS.grossYrs.toFixed(2)}, Net: ${calculatedMetrics.totals.TeamBIS.netYrs.toFixed(2)}`;
         const fundedHcButtonTitle = `Use Funded HC. Gross: ${calculatedMetrics.totals.FundedHC.grossYrs.toFixed(2)}, Net: ${calculatedMetrics.totals.FundedHC.netYrs.toFixed(2)}`;
 
-        // ** CHANGE: Updated toggle label text and tooltip **
         const toggleTooltip = "Toggling this ON applies all configured capacity constraints (leave, overhead, etc.) AND adds any productivity gains from AI tooling to calculate the Net capacity.";
         const toggleLabelText = "Apply Constraints & AI Gains (Net)";
 
@@ -519,10 +516,11 @@ function generatePlanningTable() {
                 <input type="checkbox" id="applyConstraintsToggle" style="vertical-align: middle;" onchange="toggleCapacityConstraints(this.checked)" ${applyCapacityConstraintsToggle ? 'checked' : ''}>
                 ${toggleLabelText}
             </label>
+
             <button type="button" id="savePlanButton"
                     style="${baseButtonStyle} background-color: #dc3545; color: white; border-color: #dc3545; margin-left: 25px;"
-                    title="Save the current order and estimates for all initiatives in this plan.">
-                Save Current Plan Order & Estimates
+                    title="Save the current plan for year ${currentPlanningYear}. This updates initiative statuses based on ATL/BTL.">
+                Save Plan for ${currentPlanningYear}
             </button>
         `;
         setTimeout(() => {
@@ -533,8 +531,6 @@ function generatePlanningTable() {
        }, 0);
     }
 
-
-    // --- 5. Determine Overall ATL/BTL Limit (ALIGNED LOGIC) ---
     let atlBtlCapacityLimit;
     const scenarioKey = planningCapacityScenario === 'funded' ? 'FundedHC' : (planningCapacityScenario === 'team_bis' ? 'TeamBIS' : 'EffectiveBIS');
 
@@ -545,11 +541,7 @@ function generatePlanningTable() {
         atlBtlCapacityLimit = calculatedMetrics.totals[scenarioKey].grossYrs;
         console.log(`Using GROSS capacity limit for ATL/BTL: ${atlBtlCapacityLimit.toFixed(2)} (Scenario: ${scenarioKey})`);
     }
-    // --- END ALIGNED LOGIC ---
 
-
-    // --- 6. Generate Team Load Summary ---
-    // This call assumes generateTeamLoadSummaryTable() will also be updated to use calculatedMetrics.
     generateTeamLoadSummaryTable();
 
 
@@ -585,7 +577,16 @@ function generatePlanningTable() {
     const tbody = document.createElement('tbody'); tbody.id = 'planningTableBody';
 
 
-    const sortedInitiatives = [...currentSystemData.yearlyInitiatives].sort((a, b) => { if (a.isProtected && !b.isProtected) return -1; if (!a.isProtected && b.isProtected) return 1; return 0; });
+    const initiativesForYear = (currentSystemData.yearlyInitiatives || []).filter(
+        init => init.attributes.planningYear == currentPlanningYear
+    );
+
+    const sortedInitiatives = [...initiativesForYear].sort((a, b) => {
+        if (a.isProtected && !b.isProtected) return -1;
+        if (!a.isProtected && b.isProtected) return 1;
+        return 0;
+    });
+
     let cumulativeSdeTotal = 0;
     let teamCumulativeSde = {};
     teams.forEach(team => { teamCumulativeSde[team.teamId] = 0; });
@@ -666,6 +667,7 @@ function generatePlanningTable() {
         else { statusCell.textContent = '🛑'; statusCell.title = `Exceeds Funded HC (${totalFundedHC.toFixed(2)})`; statusCell.style.backgroundColor = '#f8d7da'; }
 
         const isBTL = cumulativeSdeTotal > atlBtlCapacityLimit;
+        initiative.attributes.planningStatusFundedHc = isBTL ? 'BTL' : 'ATL';
         if (!isBTL) {
             atlBtlCell.textContent = 'ATL'; atlBtlCell.style.color = 'green';
         } else {
@@ -690,6 +692,7 @@ function generatePlanningTable() {
     adjustPlanningTableHeight();
     console.log("Finished generating ALIGNED planning table (v7).");
 }
+
 
 /** Dynamically adjusts the max-height of the planning table scroll wrapper */
 function adjustPlanningTableHeight() {
@@ -724,182 +727,53 @@ function adjustPlanningTableHeight() {
     tableWrapper.style.maxHeight = `${calculatedMaxHeight}px`;
 }
 
-/** Populates the team selection dropdown in the 'Add Initiative' section */
-function populateTeamSelect() {
-    const select = document.getElementById('newInitiativeTeamSelect');
-    if (!select) return;
-
-    // Clear existing options except the placeholder
-    select.length = 1; // Keep only the "-- Select Team --" option
-
-    (currentSystemData.teams || []).forEach(team => {
-        const option = document.createElement('option');
-        option.value = team.teamId;
-        option.textContent = team.teamIdentity || team.teamName || team.teamId;
-        select.appendChild(option);
-    });
-}
-
-/** Updates the display area showing temporary team assignments */
-function displayTempAssignments() {
-    const displayDiv = document.getElementById('newInitiativeAssignmentsDisplay');
-    if (!displayDiv) return;
-    // Store the current scroll position if needed, though for this short list it might not matter
-    // const scrollPosition = displayDiv.scrollTop;
-    displayDiv.innerHTML = ''; // Clear current display
-
-    tempAssignments.forEach((assignment, index) => {
-        const team = (currentSystemData.teams || []).find(t => t.teamId === assignment.teamId);
-        const teamName = team ? (team.teamIdentity || team.teamName) : assignment.teamId;
-        const assignmentDiv = document.createElement('div');
-        assignmentDiv.style.marginBottom = '3px';
-        assignmentDiv.textContent = `${teamName}: ${assignment.sdeYears.toFixed(2)} SDE Years `;
-
-        const removeButton = document.createElement('button');
-        removeButton.textContent = 'Remove';
-        removeButton.style.marginLeft = '10px';
-        removeButton.style.fontSize = '0.8em';
-        removeButton.onclick = () => {
-            tempAssignments.splice(index, 1); // Remove from array
-            displayTempAssignments(); // Refresh display
-        };
-        assignmentDiv.appendChild(removeButton);
-        displayDiv.appendChild(assignmentDiv);
-
-        // *** ADD THIS FOR ANIMATION ***
-        // Apply animation only if this item was just added (e.g., it's the last one)
-        // This is a heuristic; a more robust way would be to flag new items.
-        // For simplicity now, let's animate all items on each redraw of this small list.
-        assignmentDiv.classList.add('new-item-added-fade-in'); // Use the simpler fade-in
-        // Remove class after animation to allow re-animation if list rebuilds
-        setTimeout(() => {
-            assignmentDiv.classList.remove('new-item-added-fade-in');
-        }, 350); // Duration slightly longer than animation
-        // *****************************
-    });
-    // displayDiv.scrollTop = scrollPosition; // Restore scroll position if needed
-}
-
-/** Handles clicking the 'Add Assignment' button */
-function handleAddTeamAssignment() {
-    const teamSelect = document.getElementById('newInitiativeTeamSelect');
-    const sdeYearsInput = document.getElementById('newInitiativeSdeYears');
-    const teamId = teamSelect.value;
-    const sdeYears = parseFloat(sdeYearsInput.value);
-
-    // Validation
-    if (!teamId) {
-        alert('Please select a team.');
-        return;
-    }
-    if (isNaN(sdeYears) || sdeYears <= 0) {
-        alert('Please enter a valid positive number for SDE Years.');
-        return;
-    }
-
-    // Check if team already assigned in temp list
-    const existingIndex = tempAssignments.findIndex(a => a.teamId === teamId);
-    if (existingIndex > -1) {
-        // Update existing assignment
-        tempAssignments[existingIndex].sdeYears = sdeYears;
-        console.log(`Updated assignment for team ${teamId} to ${sdeYears}`);
-    } else {
-        // Add new assignment
-        tempAssignments.push({ teamId: teamId, sdeYears: sdeYears });
-        console.log(`Added assignment for team ${teamId}: ${sdeYears}`);
-    }
-
-    // Refresh display and clear inputs
-    displayTempAssignments();
-    teamSelect.selectedIndex = 0; // Reset dropdown
-    sdeYearsInput.value = '';
-}
-
-/** Handles clicking the 'Add Initiative to Plan' button */
-function handleAddInitiative() {
-    const titleInput = document.getElementById('newInitiativeTitle');
-    const descriptionInput = document.getElementById('newInitiativeDescription');
-    const goalIdInput = document.getElementById('newInitiativeGoalId');
-
-    const title = titleInput.value.trim();
-    const description = descriptionInput.value.trim();
-    const goalId = goalIdInput.value.trim() || null; // Use null if empty
-
-    // Validation
-    if (!title) {
-        alert('Initiative Title cannot be empty.');
-        return;
-    }
-    if (tempAssignments.length === 0) {
-        alert('Please add at least one team assignment.');
-        return;
-    }
-
-    // Create new initiative object
-    const newInitiative = {
-        initiativeId: 'init-' + Date.now() + '-' + Math.floor(Math.random() * 1000), // Simple unique ID
-        title: title,
-        description: description,
-        relatedBusinessGoalId: goalId,
-        isProtected: false, // New initiatives are not protected by default
-        assignments: [...tempAssignments] // Copy the temporary assignments
-    };
-
-    // Add to main data structure
-    if (!currentSystemData.yearlyInitiatives) {
-        currentSystemData.yearlyInitiatives = [];
-    }
-    currentSystemData.yearlyInitiatives.push(newInitiative);
-    console.log("Added new initiative:", newInitiative);
-
-    // Clear form and temporary data
-    titleInput.value = '';
-    descriptionInput.value = '';
-    goalIdInput.value = '';
-    tempAssignments = [];
-    displayTempAssignments(); // Clear display area
-
-    // Refresh the main planning table
-    generatePlanningTable();
-}
-
-/** Handles clicking the 'Save Current Plan' button */
+/**
+ * REVISED - Saves the plan, updating initiative statuses based on ATL/BTL status for the current year.
+ */
 function handleSavePlan() {
-    console.log("Attempting to save plan from planning view...");
+    console.log(`Saving plan for year ${currentPlanningYear}...`);
 
     if (!currentSystemData || !currentSystemData.systemName) {
         alert("Cannot save plan: No system data loaded or system name is missing.");
         return;
     }
 
-    // --- Perform Pre-Save Actions ---
-    // Ensure global platform dependencies reflect assignments before saving
-    buildGlobalPlatformDependencies();
-    // Validate engineer assignments (important if edits happened elsewhere)
-    if (!validateEngineerAssignments()) {
-        // Validation function already shows an alert
-        return;
-    }
-    // Add any other planning-specific validations here if needed later
-    // --- End Pre-Save Actions ---
+    const initiativesForYear = (currentSystemData.yearlyInitiatives || []).filter(
+        init => init.attributes.planningYear == currentPlanningYear
+    );
 
+    initiativesForYear.forEach(initiative => {
+        const planningStatus = initiative.attributes.planningStatusFundedHc;
 
-    // --- Save the ENTIRE currentSystemData object to Local Storage ---
-    // The yearlyInitiatives array within currentSystemData should reflect the current order and estimates.
+        if (initiative.status === "Completed") {
+            // Do nothing, it remains "Completed"
+        } else if (planningStatus === 'ATL') {
+            if (initiative.status === "Backlog" || initiative.status === "Defined") {
+                initiative.status = "Committed";
+            }
+        } else if (planningStatus === 'BTL') {
+            if (initiative.status === "Committed" || initiative.status === "In Progress") {
+                initiative.status = "Backlog";
+            }
+        }
+    });
+
     try {
-        const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
-        const systemNameKey = currentSystemData.systemName; // Use the name stored in the data
-
-        // Save the current data under its name
-        systems[systemNameKey] = currentSystemData;
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
-
-        alert(`Plan for system "${systemNameKey}" saved successfully.`);
-        console.log('System changes saved to local storage via Save Plan button.');
-
+        saveSystemChanges();
+        alert(`Plan for ${currentPlanningYear} saved successfully. Initiative statuses have been updated.`);
+        // Optionally, refresh the table to show any visual changes reflecting status updates
+        generatePlanningTable();
     } catch (error) {
-        console.error("Error saving system to local storage:", error);
-        alert("An error occurred while trying to save the plan. Please check the console for details.");
+        console.error("Error saving plan:", error);
+        alert("An error occurred while saving the plan. Please check the console for details.");
     }
-    
+}
+
+/**
+ * Sets the planning year and redraws the table.
+ */
+function setPlanningYear(year) {
+    currentPlanningYear = parseInt(year);
+    console.log(`Planning year changed to: ${currentPlanningYear}`);
+    generatePlanningTable();
 }
