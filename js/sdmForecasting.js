@@ -989,3 +989,5 @@ function updateMonthlyHeadcount_SDM(monthIndex, newHeadcount) {
 }
 
 // ========= END SDM Resource Forecasting Tool Code =========
+
+window.showSdmForecastingView = showSdmForecastingView;

@@ -1087,3 +1087,6 @@ function handleAddNewResource() {
     }
 }
 
+window.showOrganogramView = showOrganogramView;
+window.showEngineerTableView = showEngineerTableView;
+

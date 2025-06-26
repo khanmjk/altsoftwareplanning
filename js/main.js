@@ -97,6 +97,8 @@ window.onload = function() {
         console.warn("Documentation resize handle not found in window.onload.");
     }
 
+    initializeEventListeners();
+
     // Save sample systems if none exist
     saveSampleSystemsToLocalStorage(); // Moved here to ensure it runs before potential initial switchView
 
@@ -1042,3 +1044,109 @@ function showRoadmapView() {
     // by switchView's transition.finished callback, which will call initializeRoadmapView.
 }
 window.showRoadmapView = showRoadmapView;
+
+/**
+ * Shows the Organization Chart view.
+ */
+function showOrganogramView() {
+    console.log("Switching to Organogram View...");
+    if (!currentSystemData) {
+        alert("Please load a system first.");
+        return;
+    }
+    switchView('organogramView', 'browse');
+    // The generateOrganogram and generateTeamTable functions should be called
+    // automatically by the logic within switchView or an initializer for that view.
+    // If not, they can be called here.
+    if (typeof generateOrganogram === 'function') {
+        generateOrganogram();
+    }
+    if (typeof generateTeamTable === 'function') {
+        generateTeamTable(currentSystemData);
+    }
+}
+
+/**
+ * Shows the Engineer List table view.
+ */
+function showEngineerTableView() {
+    console.log("Switching to Engineer Table View...");
+    if (!currentSystemData) {
+        alert("Please load a system first.");
+        return;
+    }
+    switchView('engineerTableView', 'browse');
+    if (typeof generateEngineerTable === 'function') {
+        generateEngineerTable();
+    }
+}
+
+/**
+ * Shows the Yearly Planning view.
+ */
+function showPlanningView() {
+    console.log("Switching to Year Planning View...");
+    if (!currentSystemData) {
+        alert("Please load a system first.");
+        return;
+    }
+    switchView('planningView', 'planning');
+    if (typeof generatePlanningTable === 'function') {
+        generatePlanningTable();
+    }
+}
+
+// Ensure the functions are globally accessible for the old onclick attributes,
+// or for the new event listener setup.
+window.showOrganogramView = showOrganogramView;
+window.showEngineerTableView = showEngineerTableView;
+window.showPlanningView = showPlanningView;
+
+// It's also best practice to move enterEditMode here from index.html
+function enterEditMode(creatingNewSystem = false) {
+    const mode = creatingNewSystem ? Modes.CREATING : Modes.EDITING;
+    console.log(`Entering mode: ${mode}`);
+    currentMode = mode;
+
+    if (!currentSystemData) {
+        alert("No system data to edit.");
+        returnToHome();
+        return;
+    }
+    // This function will call switchView internally
+    showSystemEditForm(currentSystemData);
+}
+window.enterEditMode = enterEditMode;
+
+/**
+ * NEW: Initializes all event listeners for the top bar.
+ * This is the recommended modern approach.
+ */
+function initializeEventListeners() {
+    console.log("Initializing event listeners...");
+    
+    // Main Menu Buttons
+    document.querySelector('.menu button:nth-child(1)')?.addEventListener('click', showSavedSystems);
+    document.querySelector('.menu button:nth-child(2)')?.addEventListener('click', createNewSystem);
+    document.getElementById('deleteSystemButton')?.addEventListener('click', deleteSystem);
+    document.querySelector('.menu button:nth-child(4)')?.addEventListener('click', resetToDefaults);
+
+    // Edit Menu Buttons
+    document.getElementById('editSystemButton')?.addEventListener('click', () => enterEditMode());
+    document.getElementById('viewOrgChartButton')?.addEventListener('click', showOrganogramView);
+    document.getElementById('viewEngineerListButton')?.addEventListener('click', showEngineerTableView);
+    document.getElementById('manageYearPlanButton')?.addEventListener('click', showPlanningView);
+    document.getElementById('manageRoadmapButton')?.addEventListener('click', showRoadmapView);
+    document.getElementById('dashboardViewButton')?.addEventListener('click', showDashboardView);
+    document.getElementById('tuneCapacityButton')?.addEventListener('click', showCapacityConfigView);
+    document.getElementById('sdmForecastButton')?.addEventListener('click', showSdmForecastingView);
+
+    // Global Nav Buttons
+    document.getElementById('backToSystemViewButton')?.addEventListener('click', showSystemOverview);
+    document.getElementById('returnHomeButton')?.addEventListener('click', returnToHome);
+
+    console.log("Event listeners initialized.");
+}
+
+window.enterEditMode = enterEditMode;
+

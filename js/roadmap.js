@@ -1306,3 +1306,6 @@ window.handleDeleteInitiativeButtonFromTable = function(initiativeId) {
         }
     }
 };
+
+window.showRoadmapView = showRoadmapView;
+

@@ -1446,3 +1446,6 @@ function formatDeductionTooltip(breakdown) {
     return tooltipString;
 }
 // --- End Helper ---
+
+window.showCapacityConfigView = showCapacityConfigView;
+

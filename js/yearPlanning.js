@@ -818,3 +818,5 @@ function setPlanningYear(year) {
     console.log(`Planning year changed to: ${currentPlanningYear}`);
     generatePlanningTable();
 }
+
+window.showPlanningView = showPlanningView;

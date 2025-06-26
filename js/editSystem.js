@@ -1504,3 +1504,170 @@ function handleTeamInputChange(event) {
     }
 }
 
+/** REVISED (v4) Show System Edit Form using switchView */
+function showSystemEditForm(systemData) {
+    console.log("Entering Edit System form (Focus Mode)...");
+    if (!systemData) { console.error("showSystemEditForm called without systemData."); return; }
+
+    // Use switchView to handle showing the form and managing buttons/title
+    switchView('systemEditForm', Modes.EDITING); // Explicitly set EDITING mode
+
+    // --- Populate form fields ---
+    const nameInput = document.getElementById('systemNameInput');
+    const descInput = document.getElementById('systemDescriptionInput');
+    if(nameInput) nameInput.value = systemData.systemName || '';
+    if(descInput) descInput.value = systemData.systemDescription || '';
+    console.log("Populated edit form: Name=", nameInput?.value, "Desc=", descInput?.value);
+
+    // Populate services and teams (existing logic)
+    try {
+        displayServicesForEditing(systemData.services || [], 'editServicesManagement');
+        displayTeamsForEditing(systemData.teams || []);
+    } catch (error) {
+        console.error("Error populating services/teams in edit form:", error);
+        const editFormDiv = document.getElementById('systemEditForm');
+        if(editFormDiv) editFormDiv.innerHTML = `<p style="color:red;">Error populating form details. Check console.</p>`;
+    }
+
+}
+
+/** Save System Details **/
+function saveSystemDetails() {
+    // Get updated system name and description
+    console.log("*** 1 document.getElementById('systemNameInput').value",document.getElementById('systemNameInput').value);
+    console.log("*** 2 document.getElementById('systemDescriptionInput'",document.getElementById('systemDescriptionInput').value);
+
+    const systemNameInput = document.getElementById('systemNameInput');
+    const systemDescriptionTextarea = document.getElementById('systemDescriptionInput');
+
+    console.log("*** 3 systemNameInput = ", systemNameInput.value);
+    console.log("*** 4 systemDescriptionTextarea = ", systemDescriptionTextarea.value);
+
+    const oldSystemName = currentSystemData.systemName;
+    const newSystemName = systemNameInput.value.trim();
+
+    if (!newSystemName) {
+        alert('System name cannot be empty.');
+        return;
+    }
+
+    currentSystemData.systemName = newSystemName;
+    currentSystemData.systemDescription = systemDescriptionTextarea.value.trim();
+
+    // Save currentSystemData to local storage
+    const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
+
+    systems[newSystemName] = currentSystemData;
+
+    console.log('Saving to local storage:', systems);
+
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
+
+    alert('System details saved, please continue to update the services and teams. Note: If you changed the system name, it is treated as a new system');
+
+    if (currentMode == Modes.EDITING) {
+    // Update UI components
+    generateTeamTable(currentSystemData);
+    generateServiceDependenciesTable();
+    updateServiceVisualization();
+    updateDependencyVisualization();
+    }
+}
+
+/** Save All Changes **/
+
+/** REVISED Save All Changes - Handles Creation and Updates */
+function saveAllChanges() {
+//    if (currentMode !== Modes.CREATING && currentMode !== Modes.EDITING) {
+//         alert('Not in creation or edit mode. No changes to save.');
+//         return;
+//    }
+
+    // --- Get Final System Name and Description from Form ---
+    const systemNameInput = document.getElementById('systemNameInput');
+    const systemDescriptionTextarea = document.getElementById('systemDescriptionInput');
+    const finalSystemName = systemNameInput.value.trim();
+    const finalSystemDescription = systemDescriptionTextarea.value.trim();
+
+    if (!finalSystemName) {
+        alert('System Name cannot be empty. Please enter a name before saving.');
+        systemNameInput.focus(); // Focus the input field
+        return;
+    }
+    // Basic check for description, can be optional
+    if (!finalSystemDescription) {
+        if (!confirm('System Description is empty. Save anyway?')) {
+            systemDescriptionTextarea.focus();
+            return;
+        }
+    }
+    // --- Update currentSystemData with final name/desc ---
+    // This ensures the object being saved has the correct top-level info
+    const oldSystemNameKey = currentSystemData.systemName; // Store the name *before* updating
+    currentSystemData.systemName = finalSystemName;
+    currentSystemData.systemDescription = finalSystemDescription;
+    console.log(`Attempting to save system as: "${finalSystemName}"`);
+
+    // --- Perform Validation ---
+    // Ensure engineer assignments are valid before saving
+    if (!validateEngineerAssignments()) {
+        // If validation fails, revert name/desc change in the data object
+        // to avoid potential mismatches if user cancels or tries again.
+        currentSystemData.systemName = oldSystemNameKey;
+        currentSystemData.systemDescription = document.getElementById('systemDescriptionInput').value; // Or revert based on how it was before validation
+        return; // Stop the save
+    }
+    // Add other validation checks here if needed (e.g., required fields for teams/services)
+
+    // --- Save to Local Storage ---
+    try {
+        const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
+
+        // Check if renaming an existing system or creating a new one
+        if (currentMode === Modes.EDITING && oldSystemNameKey && oldSystemNameKey !== finalSystemName) {
+            // If the name changed during editing, remove the old entry
+            if (systems[oldSystemNameKey]) {
+                delete systems[oldSystemNameKey];
+                console.log(`Removed old system entry for key: "${oldSystemNameKey}" due to rename.`);
+            }
+        }
+        // Check if overwriting another system with the new name (relevant for 'Create New' if name exists)
+        if (systems[finalSystemName] && (currentMode === Modes.CREATING || oldSystemNameKey !== finalSystemName)) {
+            if (!confirm(`A system named "${finalSystemName}" already exists. Overwrite it?`)) {
+                // Revert data object name change before cancelling
+                currentSystemData.systemName = oldSystemNameKey;
+                currentSystemData.systemDescription = document.getElementById('systemDescriptionInput').value; // Revert desc too
+                return; // User cancelled overwrite
+            }
+        }
+
+
+        // Save the current data under the final name
+        systems[finalSystemName] = currentSystemData;
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
+
+        alert(`System "${finalSystemName}" saved successfully.`);
+
+        // --- Post-Save Actions ---
+        if (currentMode === Modes.CREATING) {
+            // After successfully creating, switch to Browse mode for the new system
+            currentMode = Modes.Browse;
+            // Optionally reload the view for the newly saved system
+            loadSavedSystem(finalSystemName); // Load it properly
+        } else {
+            // If editing, maybe exit edit mode or refresh views
+            exitEditMode(); // Go back to Browse mode
+        }
+
+    } catch (error) {
+        console.error("Error saving system to local storage:", error);
+        alert("An error occurred while trying to save the system. Please check the console for details.");
+        // Revert data object name change on error
+        currentSystemData.systemName = oldSystemNameKey;
+        currentSystemData.systemDescription = document.getElementById('systemDescriptionInput').value;
+    }
+
+}
+
+window.showSystemEditForm = showSystemEditForm;
+

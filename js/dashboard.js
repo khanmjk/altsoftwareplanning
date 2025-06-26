@@ -336,3 +336,6 @@ function formatTooltipLabel(context, total) {
     }
     return label;
 }
+
+window.showDashboardView = showDashboardView;
+
