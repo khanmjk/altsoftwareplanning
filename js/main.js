@@ -1148,5 +1148,14 @@ function initializeEventListeners() {
     console.log("Event listeners initialized.");
 }
 
-window.enterEditMode = enterEditMode;
+window.showOrganogramView = showOrganogramView;
+window.showEngineerTableView = showEngineerTableView;
+window.showPlanningView = showPlanningView;
+window.showRoadmapView = showRoadmapView;
+window.showSystemOverview = showSystemOverview;
+window.returnToHome = returnToHome;
+window.createNewSystem = createNewSystem;
+window.deleteSystem = deleteSystem;
+window.resetToDefaults = resetToDefaults;
+window.showSavedSystems = showSavedSystems;
 
