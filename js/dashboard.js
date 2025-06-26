@@ -3,9 +3,11 @@
 // --- Globals for Dashboard State ---
 let investmentDoughnutChart = null;
 let investmentTrendChart = null;
+
+// The year filter for the doughnut chart
 let dashboardPlanningYear = 'all'; 
 
-// State for the dashboard carousel
+// State for the new dashboard carousel
 const dashboardItems = [
     { id: 'investmentDistributionWidget', title: 'Investment Distribution by Theme', generator: () => generateInvestmentDistributionChart(dashboardPlanningYear) },
     { id: 'investmentTrendWidget', title: 'Investment Trend Over Time', generator: generateInvestmentTrendChart },
@@ -27,12 +29,12 @@ function showDashboardView() {
 }
 
 /**
- * Initializes all content for the dashboard.
+ * Initializes all content for the dashboard. Called by switchView.
  */
 function initializeDashboard() {
     console.log("Initializing dashboard content with carousel...");
     generateDashboardLayout();
-    showDashboardWidget(currentDashboardIndex);
+    showDashboardWidget(currentDashboardIndex); // Show the initial widget
 }
 
 /**
@@ -55,7 +57,7 @@ function handleDashboardYearChange(selectedYear) {
 
 /**
  * Main function to create the carousel shell and its static elements.
- * FIX: Restored the full inner HTML for each widget container.
+ * REVISED: Removes h2 and h3 titles for a cleaner look.
  */
 function generateDashboardLayout() {
     const container = document.getElementById('dashboardView');
@@ -84,7 +86,7 @@ function generateDashboardLayout() {
             </div>
 
             <div id="investmentTrendWidget" class="dashboard-carousel-item" style="display: none;">
-                <p class="widget-subtitle" style="font-size: 0.9em; color: #666; text-align: center; margin-top: 0; margin-bottom: 15px;">Compares the percentage of total effort allocated to each theme, year over year.</p>
+                 <p class="widget-subtitle" style="font-size: 0.9em; color: #666; text-align: center; margin-top: 0; margin-bottom: 15px;">Compares the percentage of total effort allocated to each theme, year over year.</p>
                 <div class="chart-container" style="position: relative; height:450px; width:95%; margin: auto;">
                     <canvas id="investmentTrendChart"></canvas>
                 </div>

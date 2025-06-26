@@ -1,5 +1,7 @@
 // js/roadmapTableView.js
 
+let roadmapTimelineTable = null; // To hold the Tabulator instance for this specific view
+
 /**
  * Initializes the entire Roadmap Table View widget.
  * This is the main entry point called from dashboard.js.
@@ -14,20 +16,22 @@ function initializeRoadmapTableView() {
 
     container.innerHTML = `
         <div id="roadmapTableFilters" style="margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border: 1px solid #ddd; border-radius: 4px; display: flex; flex-wrap: wrap; align-items: center; gap: 20px;">
-            </div>
+        </div>
         <div id="quarterlyRoadmapContainer" style="overflow-x: auto;"></div>
     `;
 
     generateRoadmapTableFilters();
-    renderQuarterlyRoadmap(); // Initial render
+    renderQuarterlyRoadmap(); 
 }
 
 /**
- * Generates the interactive filter dropdowns for Year, Org, and Team.
+ * Generates the interactive filter dropdowns for Org and Team.
  */
 function generateRoadmapTableFilters() {
     const filtersContainer = document.getElementById('roadmapTableFilters');
     if (!filtersContainer) return;
+
+    filtersContainer.innerHTML = ''; // Clear existing filters
 
     const createFilter = (id, labelText, options) => {
         const div = document.createElement('div');
@@ -47,13 +51,6 @@ function generateRoadmapTableFilters() {
         return div;
     };
 
-    // Year Filter (uses the main dashboard year filter for consistency)
-    const yearOptions = document.getElementById('dashboardYearSelector')?.innerHTML || '<option value="all">All Years</option>';
-    filtersContainer.appendChild(createFilter('roadmapYearFilter', 'Filter by Year:', yearOptions));
-    // Set its initial value from the main dashboard filter
-    document.getElementById('roadmapYearFilter').value = dashboardPlanningYear;
-
-
     // Org (Senior Manager) Filter
     let orgOptions = '<option value="all">All Organizations</option>';
     (currentSystemData.seniorManagers || []).forEach(sm => {
@@ -69,12 +66,15 @@ function generateRoadmapTableFilters() {
     filtersContainer.appendChild(createFilter('roadmapTeamFilter', 'Filter by Team:', teamOptions));
 }
 
+
 /**
  * Prepares and structures the data for the quarterly roadmap display.
+ * FIX: Correctly handles initiatives with multiple themes.
  * @returns {object} - A structured object grouping initiatives by theme and then by quarter.
  */
 function prepareDataForQuarterlyRoadmap() {
-    const yearFilter = document.getElementById('roadmapYearFilter')?.value || 'all';
+    // Note: This widget now uses the main dashboard year filter.
+    const yearFilter = dashboardPlanningYear; 
     const orgFilter = document.getElementById('roadmapOrgFilter')?.value || 'all';
     const teamFilter = document.getElementById('roadmapTeamFilter')?.value || 'all';
 
@@ -109,11 +109,15 @@ function prepareDataForQuarterlyRoadmap() {
         const quarter = getQuarterFromDate(init.targetDueDate);
         if (!quarter) return;
 
-        (init.themes || []).forEach(themeId => {
+        const assignedThemes = init.themes && init.themes.length > 0 ? init.themes : ['uncategorized'];
+
+        // *** FIX: Loop through ALL assigned themes for an initiative ***
+        assignedThemes.forEach(themeId => {
             const themeName = themeMap.get(themeId) || "Uncategorized";
             if (!roadmapData[themeName]) {
                 roadmapData[themeName] = { Q1: [], Q2: [], Q3: [], Q4: [] };
             }
+            // Add the initiative to the correct quarter for this theme
             roadmapData[themeName][quarter].push(init);
         });
     });
@@ -137,7 +141,6 @@ function renderQuarterlyRoadmap() {
     }
 
     let tableHTML = `<table class="quarterly-roadmap-table">`;
-    // --- Header ---
     tableHTML += `
         <thead>
             <tr>
@@ -149,14 +152,13 @@ function renderQuarterlyRoadmap() {
             </tr>
         </thead>
     `;
-    // --- Body ---
     tableHTML += `<tbody>`;
     themes.forEach(themeName => {
         tableHTML += `<tr>`;
         tableHTML += `<td class="theme-cell">${themeName}</td>`;
         for (let i = 1; i <= 4; i++) {
             const quarterKey = `Q${i}`;
-            const initiatives = roadmapData[themeName][quarterKey];
+            const initiatives = roadmapData[themeName]?.[quarterKey] || []; // Safely access initiatives
             tableHTML += `<td><div class="quarter-cell">`;
             if (initiatives.length > 0) {
                 initiatives.forEach(init => {

@@ -74,7 +74,7 @@ IN PROGRESS
 ------------
 Manage Roadmap & Backlog
 [Done] -- Similar to the year planning page, but focused on roadmap / backlog management (does not need to show ATL/BTL logic), just an interactive table to pull the latest backlog of initiatives, ability to add and remove initiatives. The Year plan and Roadmap must share the same data model (year plan shows more details / attributes than the roadmap)
--- Generate roadmap table view (by quarter), should be interactive to filter by org, team
+[Done] -- Generate roadmap table view (by quarter), should be interactive to filter by org, team
 [Done] -- The backlog items can have 1..many initiatives
 [Done] -- Initiatives can be associated with 1..many themes or tags that are linked to a business goal / strategy, like Revenue, Cost Optimization, Engineering Excellence, UX/Usability, Accessibility, Security, Product Feature enhancements
 -- It must be possible to generate a view of business objectives and strategies from the backlog
