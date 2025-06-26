@@ -3,11 +3,9 @@
 // --- Globals for Dashboard State ---
 let investmentDoughnutChart = null;
 let investmentTrendChart = null;
-
-// The year filter for the doughnut chart
 let dashboardPlanningYear = 'all'; 
 
-// State for the dashboard carousel, now including the roadmap timeline
+// State for the dashboard carousel
 const dashboardItems = [
     { id: 'investmentDistributionWidget', title: 'Investment Distribution by Theme', generator: () => generateInvestmentDistributionChart(dashboardPlanningYear) },
     { id: 'investmentTrendWidget', title: 'Investment Trend Over Time', generator: generateInvestmentTrendChart },
@@ -29,12 +27,12 @@ function showDashboardView() {
 }
 
 /**
- * Initializes all content for the dashboard. Called by switchView.
+ * Initializes all content for the dashboard.
  */
 function initializeDashboard() {
     console.log("Initializing dashboard content with carousel...");
     generateDashboardLayout();
-    showDashboardWidget(currentDashboardIndex); // Show the initial widget
+    showDashboardWidget(currentDashboardIndex);
 }
 
 /**
@@ -43,14 +41,21 @@ function initializeDashboard() {
 function handleDashboardYearChange(selectedYear) {
     dashboardPlanningYear = selectedYear;
     console.log(`Doughnut chart year filter changed to: ${dashboardPlanningYear}`);
-    const currentWidget = dashboardItems[currentDashboardIndex];
-    if (currentWidget.id === 'investmentDistributionWidget') {
-        currentWidget.generator();
+    
+    // Also update the year filter in the roadmap widget if it exists
+    const roadmapYearFilter = document.getElementById('roadmapYearFilter');
+    if (roadmapYearFilter) {
+        roadmapYearFilter.value = selectedYear;
     }
+
+    // Re-render the currently visible widget to apply the filter
+    const currentWidget = dashboardItems[currentDashboardIndex];
+    currentWidget.generator();
 }
 
 /**
  * Main function to create the carousel shell and its static elements.
+ * FIX: Restored the full inner HTML for each widget container.
  */
 function generateDashboardLayout() {
     const container = document.getElementById('dashboardView');
@@ -71,7 +76,7 @@ function generateDashboardLayout() {
             </div>
             
             <div id="investmentDistributionWidget" class="dashboard-carousel-item" style="display: none;">
-                <p style="font-size: 0.9em; color: #666; text-align: center; margin-top: 0; margin-bottom: 15px;">Shows investment breakdown for the selected period.</p>
+                <p class="widget-subtitle" style="font-size: 0.9em; color: #666; text-align: center; margin-top: 0; margin-bottom: 15px;">Shows investment breakdown for the selected period.</p>
                 <div class="chart-container" style="position: relative; height:400px; width:80vw; max-width: 600px; margin: auto;">
                     <canvas id="investmentDistributionChart"></canvas>
                 </div>
@@ -79,7 +84,7 @@ function generateDashboardLayout() {
             </div>
 
             <div id="investmentTrendWidget" class="dashboard-carousel-item" style="display: none;">
-                <p style="font-size: 0.9em; color: #666; text-align: center; margin-top: 0; margin-bottom: 15px;">Compares the percentage of total effort allocated to each theme, year over year.</p>
+                <p class="widget-subtitle" style="font-size: 0.9em; color: #666; text-align: center; margin-top: 0; margin-bottom: 15px;">Compares the percentage of total effort allocated to each theme, year over year.</p>
                 <div class="chart-container" style="position: relative; height:450px; width:95%; margin: auto;">
                     <canvas id="investmentTrendChart"></canvas>
                 </div>
@@ -95,23 +100,14 @@ function generateDashboardLayout() {
  * Generates the HTML for the year selector dropdown.
  */
 function generateYearSelectorHTML() {
-    const calendarYear = new Date().getFullYear();
-    let availableYears = [];
-    if (currentSystemData && currentSystemData.yearlyInitiatives) {
-        const yearsFromData = new Set(currentSystemData.yearlyInitiatives.map(init => init.attributes.planningYear).filter(year => year));
-        availableYears = Array.from(yearsFromData);
-    }
-    if (availableYears.length === 0) availableYears.push(calendarYear);
-    if (!availableYears.includes(calendarYear)) availableYears.push(calendarYear);
-    availableYears.sort((a, b) => a - b);
-
-    let yearOptionsHTML = '<option value="all">All Years</option>' + availableYears.map(year =>
-        `<option value="${year}" ${year == dashboardPlanningYear ? 'selected' : ''}>${year}</option>`
-    ).join('');
+    let availableYears = [...new Set((currentSystemData.yearlyInitiatives || []).map(init => init.attributes.planningYear).filter(Boolean))].sort((a, b) => a - b);
+    if (availableYears.length === 0) availableYears.push(new Date().getFullYear());
+    
+    let yearOptionsHTML = '<option value="all">All Years</option>' + availableYears.map(year => `<option value="${year}" ${year == dashboardPlanningYear ? 'selected' : ''}>${year}</option>`).join('');
     
     return `
         <div style="margin-bottom: 20px; text-align: left;">
-            <label for="dashboardYearSelector" style="font-weight: bold; margin-right: 10px;">Filter Single-Year View:</label>
+            <label for="dashboardYearSelector" style="font-weight: bold; margin-right: 10px;">Filter by Year:</label>
             <select id="dashboardYearSelector" onchange="handleDashboardYearChange(this.value)" style="padding: 5px; border-radius: 4px;">
                 ${yearOptionsHTML}
             </select>
@@ -124,18 +120,14 @@ function generateYearSelectorHTML() {
  */
 function showDashboardWidget(index) {
     currentDashboardIndex = index;
-    const allItems = document.querySelectorAll('.dashboard-carousel-item');
-    const titleElement = document.getElementById('dashboardTitle');
-
-    allItems.forEach(item => item.style.display = 'none');
+    document.querySelectorAll('.dashboard-carousel-item').forEach(item => item.style.display = 'none');
     
     const widgetToShow = dashboardItems[index];
+    document.getElementById('dashboardTitle').textContent = widgetToShow.title;
     const elementToShow = document.getElementById(widgetToShow.id);
-
-    if (elementToShow) {
+    if(elementToShow) {
         elementToShow.style.display = 'block';
-        titleElement.textContent = widgetToShow.title;
-        // Generate the content for the widget when it's shown
+        // This function call is what renders the content inside the now-visible container
         widgetToShow.generator();
     }
 }
@@ -144,13 +136,7 @@ function showDashboardWidget(index) {
  * Navigates the dashboard carousel forward or backward.
  */
 function navigateDashboard(direction) {
-    let newIndex = currentDashboardIndex + direction;
-    if (newIndex >= dashboardItems.length) {
-        newIndex = 0;
-    }
-    if (newIndex < 0) {
-        newIndex = dashboardItems.length - 1;
-    }
+    let newIndex = (currentDashboardIndex + direction + dashboardItems.length) % dashboardItems.length;
     showDashboardWidget(newIndex);
 }
 
@@ -159,7 +145,10 @@ function navigateDashboard(direction) {
  */
 function generateInvestmentDistributionChart() {
     const canvas = document.getElementById('investmentDistributionChart');
-    if (!canvas) { console.error("Canvas for doughnut chart not found."); return; }
+    if (!canvas) { 
+        console.error("Canvas for doughnut chart not found. Bailing out of render."); 
+        return; 
+    }
     if (investmentDoughnutChart) investmentDoughnutChart.destroy();
 
     const data = processInvestmentData(dashboardPlanningYear);
@@ -178,7 +167,7 @@ function generateInvestmentDistributionChart() {
             responsive: true, maintainAspectRatio: false,
             plugins: {
                 legend: { position: 'top' },
-                title: { display: false }, // Title is handled by the carousel
+                title: { display: false },
                 tooltip: { callbacks: { label: (context) => formatTooltipLabel(context, data.total) } }
             }
         }
@@ -232,7 +221,7 @@ function generateInvestmentTrendChart() {
             },
             plugins: {
                 legend: { position: 'top' },
-                title: { display: false }, // Title is handled by the carousel
+                title: { display: false },
                 tooltip: {
                     callbacks: {
                         label: function(context) {
