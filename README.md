@@ -44,19 +44,22 @@
     * [Roadmap & Backlog Management](#roadmap--backlog-management)
         * [Roadmap Table](#roadmap-table)
         * [Status Filtering](#status-filtering)
-        * [Adding & Editing Initiatives (Modal)](#adding--editing-initiatives-modal)
+        * [Adding & Editing Initiatives (Modal & Inline)](#adding--editing-initiatives-modal--inline)
     * [Yearly Planning](#yearly-planning)
         * [Planning Table](#planning-table-1)
         * [Capacity Scenarios & Constraints Toggle](#capacity-scenarios--constraints-toggle)
         * [Protected Initiatives](#protected-initiatives-1)
         * [Drag & Drop Prioritization](#drag--drop-prioritization-1)
-        * [Adding New Initiatives (to Plan)](#adding-new-initiatives-to-plan)
-        * [Enhanced Team Load Summary Table](#enhanced-team-load-summary-table)
+    * [Strategic Dashboard](#strategic-dashboard)
+        * [Dashboard Carousel](#dashboard-carousel)
+        * [Investment Distribution by Theme](#investment-distribution-by-theme)
+        * [Investment Trend Over Time](#investment-trend-over-time)
+        * [Roadmap by Quarter (Swimlane View)](#roadmap-by-quarter-swimlane-view)
     * [SDM Resource Forecasting Model](#sdm-resource-forecasting-model)
     * [Tool Documentation (Home Page)](#tool-documentation-home-page)
 5.  [Basic Workflow Example](#basic-workflow-example)
 6.  [Tips & Best Practices](#tips--best-practices)
-7.  [Known Limitations (MVP)](#known-limitations-mvp)
+7.  [Known Limitations (MVP)](#known-limitation-mvp)
 8.  [Future Enhancements (Backlog Highlights)](#future-enhancements-backlog-highlights)
 
 ---
@@ -71,6 +74,7 @@ This tool provides a unified platform to:
 * **Plan Capacity & Resources:** Configure detailed capacity constraints (leave, overheads, team activities, etc.) and AI productivity gains to understand true team availability (Net Project SDE Years).
 * **Manage Roadmaps & Backlogs:** Define, prioritize, and manage initiatives from backlog through to completion, focusing on strategic alignment and product management needs.
 * **Execute Yearly Planning:** Commit initiatives to a yearly plan, assign detailed engineering estimates, and track against calculated team capacities.
+* **Gain Strategic Insights:** Use the dashboard to visualize investment allocation by theme and track strategic trends over time.
 * **Forecast Team Growth:** Model SDE hiring, ramp-up, and attrition, factoring in detailed capacity constraints to predict resource availability.
 
 The ultimate goal is to enable better-informed decision-making for software delivery, resource allocation, and strategic planning.
@@ -184,7 +188,7 @@ Understanding these core entities is key to using the tool effectively. Most ent
     * `primaryGoalId` (string): Links to a `goal` in `currentSystemData.goals`.
     * `projectManager`, `owner`, `technicalPOC`: Objects like `{ type, id, name }` linking to personnel.
     * `workPackageIds` (array of strings): Links to `workPackages`.
-    * `attributes`: An extensible object, now including `pmCapacityNotes` (string) for product manager notes on high-level capacity or team impact.
+    * `attributes`: An extensible object, now including `pmCapacityNotes` (string) for product manager notes on high-level capacity or team impact and `planningYear` (number) which is the primary field for associating an initiative with a planning year.
 
 ### Capacity Configuration
 
@@ -331,11 +335,11 @@ Accessible from the system overview page.
 ### Roadmap & Backlog Management
 
 * Click **"Roadmap & Backlog"** from the system overview page.
-* This view is designed for Product Managers and strategic planners to manage the pipeline of initiatives.
+* This view is the single source of truth for creating and managing the pipeline of all initiatives.
 
 #### Roadmap Table
 
-* An interactive table (powered by Tabulator via `EnhancedTableWidget`) displaying initiatives.
+* An interactive table (powered by Tabulator via `EnhancedTableWidget`) displaying all initiatives.
 * **Columns include:** Title, Description, Status, Owner, ROI Summary (Category: Value), Target Quarter/Yr, Target Due Date, and Themes. Additional ROI details and PM Capacity Notes are available as hidden columns.
 * Supports sorting and filtering on all columns.
 * Detailed SDE year assignments per team are managed in the "Yearly Planning" view to separate concerns.
@@ -345,33 +349,26 @@ Accessible from the system overview page.
 * Filter initiatives by status: "All", "Backlog", "Defined", "Committed", "In Progress", "Completed".
 * The table defaults to showing all initiatives.
 
-#### Adding & Editing Initiatives (Modal)
+#### Adding & Editing Initiatives (Modal & Inline)
 
-* Click "Add New Initiative" or an "Edit" button in a row to open a **modal dialog**.
-* The modal form allows comprehensive editing of initiative details:
-    * Core: Title, Description, Status, Target Due Date.
-    * Strategic: Themes (comma-separated), Primary Goal, Owner, Project Manager.
-    * ROI: All fields within the ROI object.
-    * Product Manager Notes: A dedicated text field (`pmCapacityNotes`) for high-level capacity considerations or team impact notes.
-    * Impacted Services.
-* "Save" and "Cancel" buttons are provided within the modal.
+* Click "Add New Initiative" or an "Edit" button in a row to open a **modal dialog** for comprehensive editing.
+* Key fields like Title, Owner, Target Due Date, and Themes are also **editable directly within the table** for quick adjustments.
 
 ### Yearly Planning
 
-* Click **"Year Plan"** from the system overview page. This view is now fully aligned with the detailed model from the **Capacity Tuning** page. If capacity metrics haven't been saved, they will be calculated on the fly for this view.
+* Click **"Year Plan"** from the system overview page. This view consumes data from the central Roadmap/Backlog.
 
 #### Planning Table
 
-* Interactive table to manage and prioritize yearly initiatives.
-* **Columns:** Protected, Title, ID, Description, Total SDE Years (per initiative), Cumulative SDE Years (overall), Capacity Status (vs. Team BIS & Funded HC), ATL/BTL (vs. selected scenario), and a column for SDE Year estimate per team (cells colored Green/Red based on team's capacity for the selected scenario).
-    *(Future columns based on data model: ROI, Target Due Date, Delivery Quarter, Status, Themes, Primary Goal, Owner, Project Manager)*
+* Interactive table to manage and prioritize initiatives for a specific year.
+* **Dynamic Year Selector:** The planning view is driven by a year selector, which is dynamically populated based on the `planningYear` attribute of your initiatives. This ensures you only plan for years that have defined work.
+* **Columns:** Protected, Title, ID, Description, Total SDE Years (per initiative), Cumulative SDE Years (overall), Capacity Status, ATL/BTL, and a column for SDE Year estimate per team.
+* **No "Add Initiative" Button:** All initiatives must now originate from the Roadmap/Backlog page to enforce a single source of truth.
 
 #### Capacity Scenarios & Constraints Toggle
 
 * **Capacity Scenarios:** Buttons at the top allow selecting the capacity scenario (Effective BIS, Team BIS, or Funded HC) used for the ATL/BTL cut-off and per-team cell coloring.
-* **Apply Constraints & AI Gains (Net):** A checkbox that provides a powerful toggle between two planning realities:
-    * **Unchecked (Gross):** The plan is calculated against the **Gross SDE Years** for the selected scenario. This represents the team's on-paper capacity, including the full headcount of both human and AI engineers.
-    * **Checked (Net):** The plan is calculated against the **Net Project SDE Years**. This is the realistic capacity after subtracting all time sinks (leave, overhead, events) and adding the **AI Productivity Gain**. This view shows what the team can realistically deliver.
+* **Apply Constraints & AI Gains (Net):** A checkbox that provides a powerful toggle between two planning realities: Gross capacity vs. Net (realistic) capacity after accounting for all sinks and AI gains.
 
 #### Protected Initiatives
 
@@ -381,24 +378,42 @@ Accessible from the system overview page.
 
 * Reorder non-protected initiatives to change priority; table recalculates dynamically.
 
-#### Adding New Initiatives (to Plan)
-
-* Collapsible section to add initiatives with title, description, optional goal ID, and SDE Year assignments.
-    *(Future: inputs for ROI, due date, status, themes, owner, PM)*
-
 #### Enhanced Team Load Summary Table
 
-* A collapsible, detailed table that provides a clear and transparent breakdown of each team's capacity for the selected scenario.
-* **Human-Centric Columns:** Displays `Funded HC (Humans)`, `Team BIS (Humans)`, and `Away BIS (Humans)` to clearly show the human component of the workforce.
-* **AI Contribution Columns:** Explicitly shows the number of `AI Engineers` and the calculated `(+) AI Productivity Gain` in SDE Years, making their impact clear.
-* **Dynamic Capacity Column:** The main capacity column's header is now dynamic (e.g., "FundedHC Capacity (Net)") to reflect the exact scenario and state (Gross/Net) being viewed.
-* **Sinks Column:** When constraints are applied, a new `(-) Sinks` column appears, showing the total SDE Years deducted for leave, overhead, etc., providing full transparency into the Net capacity calculation.
+* A collapsible, detailed table that provides a clear and transparent breakdown of each team's capacity for the selected scenario, explicitly showing Human vs. AI contributions, capacity sinks, and AI productivity gains.
+
+### Strategic Dashboard
+
+* Click **"Dashboard"** from the system overview page.
+* Provides high-level strategic insights into your planning data.
+
+#### Dashboard Carousel
+
+* Navigate through different dashboard widgets using "Previous" and "Next" buttons.
+
+#### Investment Distribution by Theme
+
+* A doughnut chart and summary table showing the percentage of total SDE-Year investment allocated to each strategic theme.
+* A global "Filter by Year" dropdown allows for analyzing a specific year or all years combined.
+
+#### Investment Trend Over Time
+
+* A 100% stacked bar chart that visualizes how theme-based investment percentages evolve year-over-year, making it easy to spot strategic shifts.
+
+#### Roadmap by Quarter (Swimlane View)
+
+* A theme-based swimlane view of the roadmap, with columns for Q1, Q2, Q3, and Q4.
+* **Cascading Filters:** Filter the view by Organization (Senior Manager) and Team. The team filter is context-aware, updating its options based on the selected organization.
+* **Contextual SDE Display:** The effort displayed on each initiative card is context-aware:
+    * When filtered by organization, it shows the "Org Total" SDEs and provides a team-by-team breakdown.
+    * When filtered by a team, it shows that team's specific effort relative to the total.
+* **Interactive Cards:** Click on any initiative card to open the detailed "Edit Initiative" modal. Cards are also color-coded by their status.
 
 ### SDM Resource Forecasting Model
 
 * Click **"Resource Forecasting"** from the system overview page.
 * Models team headcount and effective SDE availability over 52 weeks.
-* **Inputs:** Team selection (auto-populates Funded Size, Current Engineers), Avg Hiring Time, Ramp-up Time, Annual Attrition Rate, Target Week to Close Gap.
+* **Inputs:** Team selection, Avg Hiring Time, Ramp-up Time, Annual Attrition Rate, Target Week to Close Gap.
 * **Capacity Integration:** Uses **Net Available Days per Week per SDE** (from "Tune Capacity Constraints") for the selected team, automatically factoring in configured leave, holidays, overhead, etc.
 * **Outputs:** Monthly/Weekly resource tables, Forecast Chart (Effective Engineers, Total Ramped Up, Total Headcount, Attrition, Funded Size), Hiring Info.
 * Includes an **FAQ & Model Insights** section.
@@ -424,22 +439,26 @@ Accessible from the system overview page.
 4.  **Manage Roadmap & Backlog:**
     * Navigate to "Roadmap & Backlog".
     * Add new initiatives, define their strategic attributes (goals, themes, ROI, owner, PM notes, etc.), and set their initial status (e.g., "Backlog", "Defined").
-    * Edit existing initiatives as they evolve.
+    * Edit existing initiatives as they evolve, either inline or via the modal.
 5.  **Tune Capacity Constraints:**
     * Navigate to "Capacity Tuning".
     * Set global working days, holidays, org events, and default leave days.
     * For each team, configure leave uptake %, variable leave impact, team activities, recurring overhead, and **AI productivity gain %**.
     * Review the summary, narrative, and waterfall chart.
     * **Save All Capacity Configuration**.
-6.  **Manage Yearly Plan:**
+6.  **Analyze Dashboard Views:**
+    * Navigate to the **"Dashboard"**.
+    * Use the carousel to switch between the "Investment Distribution", "Investment Trend", and "Roadmap by Quarter" widgets.
+    * Use the filters to analyze data for specific years, organizations, or teams.
+7.  **Manage Yearly Plan:**
     * Navigate to "Year Plan".
-    * Pull in "Committed" initiatives from the backlog/roadmap or add new ones specific to the plan.
+    * Select a planning year from the dynamic dropdown.
     * Assign detailed SDE Year estimates per team.
     * Mark critical initiatives as "Protected". Drag and drop to prioritize.
     * Use "Capacity Scenarios" and the "Apply Constraints & AI Gains (Net)?" toggle to analyze.
     * Review the "Enhanced Team Load Summary" table to see detailed capacity and loading.
     * **Save Current Plan Order & Estimates**.
-7.  **Forecast Resources (Optional):** Navigate to "Resource Forecasting" for team-specific hiring and availability modeling.
+8.  **Forecast Resources (Optional):** Navigate to "Resource Forecasting" for team-specific hiring and availability modeling.
 
 ---
 
@@ -462,7 +481,6 @@ Accessible from the system overview page.
 * **No True Skill Matching:** While skills are tracked for engineers, there's no automated matching to initiative requirements for resource suggestions.
 * **UI for Advanced Planning Entities:** While the data model supports Goals, Themes, Project Managers, Work Packages, and Plan Archiving, dedicated UI views for managing all aspects of these (beyond basic linking in initiatives or adding PMs to a roster) are still under development or planned.
 * **Manual Refresh for Some Cross-View Updates:** Some complex data interdependencies might occasionally require a manual refresh of a view (e.g., by navigating away and back) if a direct data-driven UI update isn't immediately implemented for all edge cases.
-* **Roadmap Views:** Advanced roadmap visualizations (timeline, by theme as charts, etc.) are planned for future iterations of the "Roadmap & Backlog" feature.
 
 ---
 
@@ -470,7 +488,6 @@ Accessible from the system overview page.
 
 This tool is an evolving MVP. Key future enhancements include:
 
-* **Full Roadmap & Backlog Management Module:** Dedicated UI for managing initiatives by status, themes, goals; generating multi-year roadmap views (timeline, chart by theme); import capabilities. (Phase 1 - Core table and CRUD - is complete).
 * **Detailed Planning Module:** UI for managing Goals (linking initiatives), Work Packages (phases, status, team assignments, dependencies), and task breakdowns.
 * **Enhanced Yearly Planning UI:** Full UI support for editing all new initiative fields (ROI, due dates, personnel, etc.) directly in the planning table or a detail panel. UI for managing `archivedYearlyPlans`.
 * **AI-Powered Enhancements:**
