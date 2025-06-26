@@ -26,7 +26,6 @@ function initializeRoadmapTableView() {
 
 /**
  * Generates the interactive filter dropdowns for Org and Team.
- * This function no longer creates a year filter, as it's now handled globally by the dashboard.
  */
 function generateRoadmapTableFilters() {
     const filtersContainer = document.getElementById('roadmapTableFilters');
@@ -123,7 +122,7 @@ function prepareDataForQuarterlyRoadmap() {
 
 /**
  * Renders the new quarterly roadmap table.
- * MODIFIED: Conditionally renders SDE display based on team filter.
+ * MODIFIED: Displays the specific team name in the SDE label when filtered.
  */
 function renderQuarterlyRoadmap() {
     const container = document.getElementById('quarterlyRoadmapContainer');
@@ -165,9 +164,11 @@ function renderQuarterlyRoadmap() {
 
                     // ** NEW LOGIC FOR SDE DISPLAY **
                     if (teamFilter !== 'all') {
+                        const team = currentSystemData.teams.find(t => t.teamId === teamFilter);
+                        const teamName = team ? (team.teamIdentity || team.teamName) : "Team";
                         const teamAssignment = (init.assignments || []).find(a => a.teamId === teamFilter);
                         const teamSde = teamAssignment ? (teamAssignment.sdeYears || 0) : 0;
-                        sdeDisplayHTML = `<div class="initiative-sde">Team: ${teamSde.toFixed(2)} of ${totalSde.toFixed(2)} SDEs</div>`;
+                        sdeDisplayHTML = `<div class="initiative-sde">${teamName}: ${teamSde.toFixed(2)} of ${totalSde.toFixed(2)} SDEs</div>`;
                     } else {
                         sdeDisplayHTML = `<div class="initiative-sde">(${totalSde.toFixed(2)} SDEs)</div>`;
                     }
