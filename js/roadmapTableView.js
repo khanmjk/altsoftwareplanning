@@ -3,10 +3,10 @@
 let roadmapTimelineTable = null; // To hold the Tabulator instance for this specific view
 
 /**
- * Initializes the entire Roadmap Table View widget.
+ * Initializes the Quarterly Roadmap Table View widget.
  */
 function initializeRoadmapTableView() {
-    console.log("Initializing new Quarterly Roadmap Swimlane View widget...");
+    console.log("Initializing Quarterly Roadmap Swimlane View widget...");
     const container = document.getElementById('roadmapTimelineWidget');
     if (!container) {
         console.error("Roadmap Timeline Widget container not found.");
@@ -14,7 +14,7 @@ function initializeRoadmapTableView() {
     }
 
     container.innerHTML = `
-        <div id="roadmapTableFilters" style="margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border: 1px solid #ddd; border-radius: 4px;">
+        <div id="roadmapTableFilters" class="widget-filter-bar">
         </div>
         <div id="quarterlyRoadmapContainer" style="overflow-x: auto;"></div>
     `;
@@ -24,27 +24,46 @@ function initializeRoadmapTableView() {
 }
 
 /**
- * Generates the interactive filter dropdowns, including a custom multi-select for themes.
- * MODIFIED: Ensures all filters are created within a single flexbox container for proper alignment.
+ * NEW: Initializes the 3-Year Plan (3YP) Roadmap View widget.
  */
-function generateRoadmapTableFilters() {
-    const filtersContainer = document.getElementById('roadmapTableFilters');
-    if (!filtersContainer) return;
+function initialize3YPRoadmapView() {
+    console.log("Initializing 3-Year Plan (3YP) Roadmap View widget...");
+    const container = document.getElementById('threeYearPlanWidget');
+    if (!container) {
+        console.error("3YP Roadmap Widget container not found.");
+        return;
+    }
 
-    filtersContainer.innerHTML = ''; // Clear existing filters
-    filtersContainer.style.display = 'flex';
-    filtersContainer.style.flexWrap = 'wrap';
-    filtersContainer.style.alignItems = 'center';
-    filtersContainer.style.gap = '20px';
+    container.innerHTML = `
+        <div id="roadmapTableFilters3YP" class="widget-filter-bar">
+        </div>
+        <div id="threeYearPlanContainer" style="overflow-x: auto;"></div>
+    `;
+    
+    generateRoadmapTableFilters('3YP'); // Pass a suffix to create unique IDs
+    render3YPRoadmap();
+}
 
+
+/**
+ * Generates the interactive filter dropdowns, including a custom multi-select for themes.
+ */
+function generateRoadmapTableFilters(idSuffix = '') {
+    const containerId = 'roadmapTableFilters' + idSuffix;
+    const filtersContainer = document.getElementById(containerId);
+    if (!filtersContainer) {
+        console.error(`Filter container #${containerId} not found.`);
+        return;
+    }
+
+    filtersContainer.innerHTML = '';
 
     const createDropdownFilter = (id, labelText, options) => {
         const div = document.createElement('div');
+        div.className = 'filter-item';
         const label = document.createElement('label');
         label.htmlFor = id;
         label.textContent = labelText;
-        label.style.fontWeight = 'bold';
-        label.style.marginRight = '5px';
         const select = document.createElement('select');
         select.id = id;
         select.innerHTML = options;
@@ -53,53 +72,52 @@ function generateRoadmapTableFilters() {
         return div;
     };
 
+    const renderFunction = idSuffix === '3YP' ? render3YPRoadmap : renderQuarterlyRoadmap;
+
     // --- Org Filter ---
     let orgOptions = '<option value="all">All Organizations</option>';
     (currentSystemData.seniorManagers || []).forEach(sm => {
         orgOptions += `<option value="${sm.seniorManagerId}">${sm.seniorManagerName}</option>`;
     });
-    const orgFilter = createDropdownFilter('roadmapOrgFilter', 'Filter by Organization:', orgOptions);
+    const orgFilter = createDropdownFilter('roadmapOrgFilter' + idSuffix, 'Filter by Organization:', orgOptions);
     orgFilter.querySelector('select').onchange = () => {
-        updateTeamFilterOptions();
-        renderQuarterlyRoadmap();
+        updateTeamFilterOptions(idSuffix);
+        renderFunction();
     };
     filtersContainer.appendChild(orgFilter);
 
     // --- Team Filter ---
-    const teamFilter = createDropdownFilter('roadmapTeamFilter', 'Filter by Team:', '<option value="all">All Teams</option>');
-    teamFilter.querySelector('select').onchange = renderQuarterlyRoadmap;
+    const teamFilter = createDropdownFilter('roadmapTeamFilter' + idSuffix, 'Filter by Team:', '<option value="all">All Teams</option>');
+    teamFilter.querySelector('select').onchange = renderFunction;
     filtersContainer.appendChild(teamFilter);
 
     // --- Custom Theme Multi-Select Dropdown ---
     const themeFilterWrapper = document.createElement('div');
-    themeFilterWrapper.style.display = 'flex';
-    themeFilterWrapper.style.alignItems = 'center';
+    themeFilterWrapper.className = 'filter-item';
 
     const themeLabel = document.createElement('label');
     themeLabel.textContent = 'Filter by Theme:';
-    themeLabel.style.fontWeight = 'bold';
-    themeLabel.style.marginRight = '5px';
     themeFilterWrapper.appendChild(themeLabel);
 
     const dropdownContainer = document.createElement('div');
     dropdownContainer.className = 'custom-multiselect-dropdown';
     
     const dropdownButton = document.createElement('button');
-    dropdownButton.id = 'theme-dropdown-button';
+    dropdownButton.id = 'theme-dropdown-button' + idSuffix;
     dropdownButton.className = 'dropdown-button';
     dropdownButton.type = 'button';
     
     const dropdownPanel = document.createElement('div');
-    dropdownPanel.id = 'theme-dropdown-panel';
+    dropdownPanel.id = 'theme-dropdown-panel' + idSuffix;
     dropdownPanel.className = 'dropdown-panel';
     
     const selectAllContainer = document.createElement('div');
     selectAllContainer.className = 'select-all-container';
     const selectAllCheckbox = document.createElement('input');
     selectAllCheckbox.type = 'checkbox';
-    selectAllCheckbox.id = 'theme-select-all';
+    selectAllCheckbox.id = 'theme-select-all' + idSuffix;
     const selectAllLabel = document.createElement('label');
-    selectAllLabel.htmlFor = 'theme-select-all';
+    selectAllLabel.htmlFor = selectAllCheckbox.id;
     selectAllLabel.textContent = 'Select/Clear All';
     selectAllContainer.appendChild(selectAllCheckbox);
     selectAllContainer.appendChild(selectAllLabel);
@@ -112,7 +130,7 @@ function generateRoadmapTableFilters() {
         itemDiv.className = 'dropdown-item';
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
-        checkbox.id = `theme_filter_${theme.themeId}`;
+        checkbox.id = `theme_filter_${theme.themeId}` + idSuffix;
         checkbox.value = theme.themeId;
         checkbox.className = 'theme-checkbox-item';
         const label = document.createElement('label');
@@ -129,7 +147,6 @@ function generateRoadmapTableFilters() {
     themeFilterWrapper.appendChild(dropdownContainer);
     filtersContainer.appendChild(themeFilterWrapper);
 
-    // --- Logic for the custom dropdown ---
     const updateButtonText = () => {
         const checkboxes = dropdownPanel.querySelectorAll('.theme-checkbox-item:checked');
         const total = dropdownPanel.querySelectorAll('.theme-checkbox-item').length;
@@ -148,13 +165,13 @@ function generateRoadmapTableFilters() {
     selectAllCheckbox.addEventListener('change', () => {
         allCheckboxes.forEach(cb => cb.checked = selectAllCheckbox.checked);
         updateButtonText();
-        renderQuarterlyRoadmap();
+        renderFunction();
     });
 
     allCheckboxes.forEach(cb => {
         cb.addEventListener('change', () => {
             updateButtonText();
-            renderQuarterlyRoadmap();
+            renderFunction();
         });
     });
     
@@ -172,15 +189,16 @@ function generateRoadmapTableFilters() {
     selectAllCheckbox.checked = true;
     allCheckboxes.forEach(cb => cb.checked = true);
     updateButtonText();
-    updateTeamFilterOptions();
+    updateTeamFilterOptions(idSuffix);
 }
+
 
 /**
  * Updates the options in the team filter based on the selected organization.
  */
-function updateTeamFilterOptions() {
-    const orgFilterValue = document.getElementById('roadmapOrgFilter')?.value || 'all';
-    const teamSelect = document.getElementById('roadmapTeamFilter');
+function updateTeamFilterOptions(idSuffix = '') {
+    const orgFilterValue = document.getElementById('roadmapOrgFilter' + idSuffix)?.value || 'all';
+    const teamSelect = document.getElementById('roadmapTeamFilter' + idSuffix);
     if (!teamSelect) return;
 
     teamSelect.innerHTML = '';
@@ -208,23 +226,25 @@ function updateTeamFilterOptions() {
     });
 }
 
-/**
- * Prepares and structures the data for the quarterly roadmap display.
- * MODIFIED: Now filters by theme using checkboxes.
- */
+// =================================================================
+// QUARTERLY ROADMAP FUNCTIONS
+// =================================================================
+
 function prepareDataForQuarterlyRoadmap() {
-    const yearFilter = dashboardPlanningYear; 
     const orgFilter = document.getElementById('roadmapOrgFilter')?.value || 'all';
     const teamFilter = document.getElementById('roadmapTeamFilter')?.value || 'all';
-    
     const themeCheckboxes = document.querySelectorAll('#theme-dropdown-panel input.theme-checkbox-item:checked');
     const selectedThemes = Array.from(themeCheckboxes).map(cb => cb.value);
+    const yearFilter = dashboardPlanningYear; // Use the global variable from dashboard.js
 
     let initiatives = currentSystemData.yearlyInitiatives || [];
 
+    // ** THE FIX IS HERE **
+    // Only apply the year filter if a specific year is selected
     if (yearFilter !== 'all') {
         initiatives = initiatives.filter(init => init.attributes.planningYear == yearFilter);
     }
+    // ** END FIX **
 
     if (orgFilter !== 'all') {
         const teamsInOrg = new Set();
@@ -277,10 +297,6 @@ function prepareDataForQuarterlyRoadmap() {
     return roadmapData;
 }
 
-
-/**
- * Renders the new quarterly roadmap table.
- */
 function renderQuarterlyRoadmap() {
     const container = document.getElementById('quarterlyRoadmapContainer');
     if (!container) return;
@@ -289,27 +305,18 @@ function renderQuarterlyRoadmap() {
     const themes = Object.keys(roadmapData).sort();
     const orgFilter = document.getElementById('roadmapOrgFilter')?.value || 'all';
     const teamFilter = document.getElementById('roadmapTeamFilter')?.value || 'all';
-
+    
+    // This function's rendering logic is unchanged.
+    // For brevity, I am not repeating the full inner HTML generation of the table,
+    // as it remains the same.
+    
+    // Re-paste the existing render logic for completeness:
     if (Object.keys(roadmapData).length === 0) {
         container.innerHTML = `<p style="text-align: center; color: #777; margin-top: 20px;">No initiatives match the current filter criteria.</p>`;
         return;
     }
 
     let tableHTML = `<table class="quarterly-roadmap-table">`;
-    tableHTML += `<thead>...</thead>`; // Keep it short, no change here
-    tableHTML += `<tbody>`;
-    themes.forEach(themeName => {
-        // ... no changes to this loop ...
-    });
-    tableHTML += `</tbody></table>`;
-    
-    // The existing rendering logic is preserved, so we just call it.
-    // For brevity, I am not repeating the full inner HTML generation of the table,
-    // as it remains unchanged from the previous version.
-    // The key is that `prepareDataForQuarterlyRoadmap` now returns the correctly filtered data.
-    
-    // Re-paste the existing render logic for completeness:
-    tableHTML = `<table class="quarterly-roadmap-table">`;
     tableHTML += `
         <thead>
             <tr>
@@ -343,39 +350,20 @@ function renderQuarterlyRoadmap() {
                     } else if (orgFilter !== 'all') {
                         const teamsInOrg = new Set();
                         (currentSystemData.sdms || []).forEach(sdm => {
-                            if (sdm.seniorManagerId === orgFilter) {
-                                (currentSystemData.teams || []).forEach(team => {
-                                    if (team.sdmId === sdm.sdmId) teamsInOrg.add(team.teamId);
-                                });
-                            }
+                            if (sdm.seniorManagerId === orgFilter) { (currentSystemData.teams || []).forEach(team => { if (team.sdmId === sdm.sdmId) teamsInOrg.add(team.teamId); }); }
                         });
-                        
                         const orgAssignments = (init.assignments || []).filter(a => teamsInOrg.has(a.teamId));
                         const orgSde = orgAssignments.reduce((sum, a) => sum + (a.sdeYears || 0), 0);
-
                         let breakdownHTML = '';
                         if (orgAssignments.length > 0) { 
-                            breakdownHTML = orgAssignments.map(a => {
-                                const team = currentSystemData.teams.find(t => t.teamId === a.teamId);
-                                const teamName = team ? (team.teamIdentity || team.teamName) : "Unknown Team";
-                                return `<div class="initiative-sde-breakdown">${teamName}: ${a.sdeYears.toFixed(2)}</div>`;
-                            }).join('');
+                            breakdownHTML = orgAssignments.map(a => { const team = currentSystemData.teams.find(t => t.teamId === a.teamId); const teamName = team ? (team.teamIdentity || team.teamName) : "Unknown Team"; return `<div class="initiative-sde-breakdown">${teamName}: ${a.sdeYears.toFixed(2)}</div>`; }).join('');
                         }
-                        
                         sdeDisplayHTML = `<div class="initiative-sde">Org Total: ${orgSde.toFixed(2)} of ${totalSde.toFixed(2)} SDEs</div>${breakdownHTML}`;
                     } else {
                         sdeDisplayHTML = `<div class="initiative-sde">(${totalSde.toFixed(2)} SDEs)</div>`;
                     }
-
                     const statusClass = `status-${(init.status || 'backlog').toLowerCase().replace(/\s+/g, '-')}`;
-                    tableHTML += `
-                        <div class="initiative-card ${statusClass}" 
-                             title="${init.description || init.title}" 
-                             onclick="openRoadmapModalForEdit('${init.initiativeId}')">
-                            <div class="initiative-title">${init.title}</div>
-                            ${sdeDisplayHTML}
-                        </div>
-                    `;
+                    tableHTML += `<div class="initiative-card ${statusClass}" title="${init.description || init.title}" onclick="openRoadmapModalForEdit('${init.initiativeId}')"><div class="initiative-title">${init.title}</div>${sdeDisplayHTML}</div>`;
                 });
             }
             tableHTML += `</div></td>`;
@@ -383,14 +371,10 @@ function renderQuarterlyRoadmap() {
         tableHTML += `</tr>`;
     });
     tableHTML += `</tbody></table>`;
-    
     container.innerHTML = tableHTML;
 }
 
 
-/**
- * Helper function to get the quarter (Q1, Q2, Q3, Q4) from a date string.
- */
 function getQuarterFromDate(dateString) {
     if (!dateString) return null;
     try {
@@ -400,7 +384,106 @@ function getQuarterFromDate(dateString) {
         if (month >= 7 && month <= 9) return 'Q3';
         if (month >= 10 && month <= 12) return 'Q4';
         return null;
-    } catch (e) {
-        return null;
+    } catch (e) { return null; }
+}
+
+// =================================================================
+// 3-YEAR PLAN (3YP) FUNCTIONS
+// =================================================================
+
+function prepareDataFor3YPRoadmap() {
+    const orgFilter = document.getElementById('roadmapOrgFilter3YP')?.value || 'all';
+    const teamFilter = document.getElementById('roadmapTeamFilter3YP')?.value || 'all';
+    const themeCheckboxes = document.querySelectorAll('#theme-dropdown-panel3YP input.theme-checkbox-item:checked');
+    const selectedThemes = Array.from(themeCheckboxes).map(cb => cb.value);
+
+    let initiatives = currentSystemData.yearlyInitiatives || [];
+    
+    if (orgFilter !== 'all') {
+        const teamsInOrg = new Set();
+        (currentSystemData.sdms || []).forEach(sdm => { if (sdm.seniorManagerId === orgFilter) { (currentSystemData.teams || []).forEach(team => { if (team.sdmId === sdm.sdmId) teamsInOrg.add(team.teamId); }); } });
+        initiatives = initiatives.filter(init => (init.assignments || []).some(a => teamsInOrg.has(a.teamId)));
     }
+    
+    if (teamFilter !== 'all') {
+        initiatives = initiatives.filter(init => (init.assignments || []).some(a => a.teamId === teamFilter));
+    }
+    
+    const allThemeIds = (currentSystemData.definedThemes || []).map(t => t.themeId);
+    if (selectedThemes.length < allThemeIds.length) {
+        initiatives = initiatives.filter(init => {
+            const initThemes = init.themes || [];
+            if (initThemes.length === 0) return false;
+            return initThemes.some(themeId => selectedThemes.includes(themeId));
+        });
+    }
+
+    const roadmapData = {};
+    const themeMap = new Map((currentSystemData.definedThemes || []).map(t => [t.themeId, t.name]));
+    const currentYear = new Date().getFullYear();
+
+    initiatives.forEach(init => {
+        const planningYear = init.attributes.planningYear;
+        if (!planningYear) return;
+
+        let yearBucket;
+        if (planningYear === currentYear) { yearBucket = 'Current Year'; } 
+        else if (planningYear === currentYear + 1) { yearBucket = 'Next Year'; } 
+        else if (planningYear > currentYear + 1) { yearBucket = 'Future'; } 
+        else { return; }
+
+        const assignedThemes = init.themes && init.themes.length > 0 ? init.themes : ['uncategorized'];
+        assignedThemes.forEach(themeId => {
+            const themeName = themeMap.get(themeId) || "Uncategorized";
+
+            if (selectedThemes.length < allThemeIds.length && !selectedThemes.includes(themeId)) {
+                return;
+            }
+
+            if (!roadmapData[themeName]) {
+                roadmapData[themeName] = { 'Current Year': [], 'Next Year': [], 'Future': [] };
+            }
+            roadmapData[themeName][yearBucket].push(init);
+        });
+    });
+
+    return roadmapData;
+}
+
+function render3YPRoadmap() {
+    const container = document.getElementById('threeYearPlanContainer');
+    if (!container) return;
+
+    const roadmapData = prepareDataFor3YPRoadmap();
+    const themes = Object.keys(roadmapData).sort();
+    const currentYear = new Date().getFullYear();
+
+    if (Object.keys(roadmapData).length === 0) {
+        container.innerHTML = `<p style="text-align: center; color: #777; margin-top: 20px;">No initiatives match the current filter criteria for the 3YP view.</p>`;
+        return;
+    }
+
+    let tableHTML = `<table class="quarterly-roadmap-table">`;
+    tableHTML += `<thead><tr><th>Theme</th><th>Current Year (${currentYear})</th><th>Next Year (${currentYear + 1})</th><th>Future (${currentYear + 2}+)</th></tr></thead>`;
+    tableHTML += `<tbody>`;
+    themes.forEach(themeName => {
+        tableHTML += `<tr><td class="theme-cell">${themeName}</td>`;
+        ['Current Year', 'Next Year', 'Future'].forEach(yearBucket => {
+            const initiatives = roadmapData[themeName]?.[yearBucket] || [];
+            tableHTML += `<td><div class="quarter-cell">`;
+            if (initiatives.length > 0) {
+                 initiatives.sort((a,b) => (a.title || '').localeCompare(b.title || '')).forEach(init => {
+                    const totalSde = (init.assignments || []).reduce((sum, a) => sum + (a.sdeYears || 0), 0);
+                    let sdeDisplayHTML = `<div class="initiative-sde">(${totalSde.toFixed(2)} SDEs)</div>`;
+                    const statusClass = `status-${(init.status || 'backlog').toLowerCase().replace(/\s+/g, '-')}`;
+                    tableHTML += `<div class="initiative-card ${statusClass}" title="${init.description || init.title}" onclick="openRoadmapModalForEdit('${init.initiativeId}')"><div class="initiative-title">${init.title}</div>${sdeDisplayHTML}</div>`;
+                });
+            }
+            tableHTML += `</div></td>`;
+        });
+        tableHTML += `</tr>`;
+    });
+    tableHTML += `</tbody></table>`;
+    
+    container.innerHTML = tableHTML;
 }

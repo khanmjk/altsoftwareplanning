@@ -11,7 +11,8 @@ let dashboardPlanningYear = 'all';
 const dashboardItems = [
     { id: 'investmentDistributionWidget', title: 'Investment Distribution by Theme', generator: () => generateInvestmentDistributionChart(dashboardPlanningYear) },
     { id: 'investmentTrendWidget', title: 'Investment Trend Over Time', generator: generateInvestmentTrendChart },
-    { id: 'roadmapTimelineWidget', title: 'Roadmap by Quarter', generator: initializeRoadmapTableView }
+    { id: 'roadmapTimelineWidget', title: 'Roadmap by Quarter', generator: initializeRoadmapTableView },
+    { id: 'threeYearPlanWidget', title: '3-Year Plan (3YP)', generator: initialize3YPRoadmapView }
 ];
 let currentDashboardIndex = 0;
 // --- End Globals ---
@@ -44,12 +45,6 @@ function handleDashboardYearChange(selectedYear) {
     dashboardPlanningYear = selectedYear;
     console.log(`Doughnut chart year filter changed to: ${dashboardPlanningYear}`);
     
-    // Also update the year filter in the roadmap widget if it exists
-    const roadmapYearFilter = document.getElementById('roadmapYearFilter');
-    if (roadmapYearFilter) {
-        roadmapYearFilter.value = selectedYear;
-    }
-
     // Re-render the currently visible widget to apply the filter
     const currentWidget = dashboardItems[currentDashboardIndex];
     currentWidget.generator();
@@ -57,7 +52,6 @@ function handleDashboardYearChange(selectedYear) {
 
 /**
  * Main function to create the carousel shell and its static elements.
- * REVISED: Removes h2 and h3 titles for a cleaner look.
  */
 function generateDashboardLayout() {
     const container = document.getElementById('dashboardView');
@@ -69,7 +63,12 @@ function generateDashboardLayout() {
     const yearSelectorHTML = generateYearSelectorHTML();
 
     container.innerHTML = `
-        ${yearSelectorHTML}
+        <div id="dashboardYearSelectorContainer" style="margin-bottom: 20px; text-align: left;">
+             <label for="dashboardYearSelector" style="font-weight: bold; margin-right: 10px;">Filter by Year:</label>
+            <select id="dashboardYearSelector" onchange="handleDashboardYearChange(this.value)" style="padding: 5px; border-radius: 4px;">
+                ${yearSelectorHTML}
+            </select>
+        </div>
         <div id="dashboardCarousel" style="position: relative; border: 1px solid #ddd; padding: 10px; background-color: #fff; border-radius: 5px;">
             <div style="text-align: center; margin-bottom: 15px;">
                 <button onclick="navigateDashboard(-1)">&lt; Previous</button>
@@ -93,7 +92,10 @@ function generateDashboardLayout() {
             </div>
 
             <div id="roadmapTimelineWidget" class="dashboard-carousel-item" style="display: none;">
-                </div>
+            </div>
+
+            <div id="threeYearPlanWidget" class="dashboard-carousel-item" style="display: none;">
+            </div>
         </div>
     `;
 }
@@ -105,16 +107,15 @@ function generateYearSelectorHTML() {
     let availableYears = [...new Set((currentSystemData.yearlyInitiatives || []).map(init => init.attributes.planningYear).filter(Boolean))].sort((a, b) => a - b);
     if (availableYears.length === 0) availableYears.push(new Date().getFullYear());
     
-    let yearOptionsHTML = '<option value="all">All Years</option>' + availableYears.map(year => `<option value="${year}" ${year == dashboardPlanningYear ? 'selected' : ''}>${year}</option>`).join('');
+    // Set 'all' as default if not already set, or if last selection isn't in the list
+    if (!dashboardPlanningYear || (dashboardPlanningYear !== 'all' && !availableYears.includes(parseInt(dashboardPlanningYear)))) {
+        dashboardPlanningYear = 'all';
+    }
+
+    let yearOptionsHTML = '<option value="all" ' + (dashboardPlanningYear === 'all' ? 'selected' : '') + '>All Years</option>' + 
+                          availableYears.map(year => `<option value="${year}" ${year == dashboardPlanningYear ? 'selected' : ''}>${year}</option>`).join('');
     
-    return `
-        <div style="margin-bottom: 20px; text-align: left;">
-            <label for="dashboardYearSelector" style="font-weight: bold; margin-right: 10px;">Filter by Year:</label>
-            <select id="dashboardYearSelector" onchange="handleDashboardYearChange(this.value)" style="padding: 5px; border-radius: 4px;">
-                ${yearOptionsHTML}
-            </select>
-        </div>
-    `;
+    return yearOptionsHTML;
 }
 
 /**
@@ -127,6 +128,15 @@ function showDashboardWidget(index) {
     const widgetToShow = dashboardItems[index];
     document.getElementById('dashboardTitle').textContent = widgetToShow.title;
     const elementToShow = document.getElementById(widgetToShow.id);
+
+    // Show/hide the main year filter based on the widget
+    const yearFilterContainer = document.getElementById('dashboardYearSelectorContainer');
+    if (yearFilterContainer) {
+        // CORRECTED: Show the filter for the quarterly roadmap as well.
+        const isFilterApplicable = ['investmentDistributionWidget', 'investmentTrendWidget', 'roadmapTimelineWidget'].includes(widgetToShow.id);
+        yearFilterContainer.style.display = isFilterApplicable ? 'block' : 'none';
+    }
+    
     if(elementToShow) {
         elementToShow.style.display = 'block';
         // This function call is what renders the content inside the now-visible container
@@ -338,4 +348,3 @@ function formatTooltipLabel(context, total) {
 }
 
 window.showDashboardView = showDashboardView;
-

@@ -1511,5 +1511,36 @@ a:focus {
     align-items: center;
 }
 
+/* --- Styles for Shared Dashboard Filter Bar --- */
+.widget-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 20px;
+    padding: 10px; 
+    background-color: #f8f9fa; 
+    border: 1px solid #ddd; 
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+.widget-filter-bar .filter-item {
+    display: flex;
+    align-items: center;
+}
+
+.widget-filter-bar .filter-item label {
+    font-weight: bold;
+    margin-right: 5px;
+    white-space: nowrap;
+}
+
+.widget-filter-bar .filter-item select,
+.widget-filter-bar .filter-item .dropdown-button {
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.25rem;
+    border: 1px solid #ced4da;
+}
+
 
 /* Add any additional styles as needed */          
