@@ -1397,4 +1397,18 @@ a:focus {
 .initiative-card.status-in-progress { border-left-color: #ffc107; } /* Yellow */
 .initiative-card.status-completed { border-left-color: #28a745; } /* Green */
 
+/* Style for the currently active/selected top navigation button */
+#topBar .edit-menu button.active-nav-button {
+    color: #ffffff; /* White text */
+    background-color: #007bff; /* A distinct blue color */
+    font-weight: 600; /* Make text slightly bolder */
+}
+
+/* Ensure the active button doesn't change on hover to avoid confusion */
+#topBar .edit-menu button.active-nav-button:hover {
+    background-color: #007bff; /* Keep the same blue on hover */
+    cursor: default; /* Optional: change cursor to show it's already selected */
+}
+
+
 /* Add any additional styles as needed */          

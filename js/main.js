@@ -60,6 +60,19 @@ let draggedRowElement = null;
 // Store temporary assignments before adding initiative
 let tempAssignments = [];
 
+// Maps a view's container ID to the ID of the button that activates it.
+const VIEW_TO_BUTTON_MAP = {
+    'visualizationCarousel': 'systemOverviewButton',
+    'systemEditForm': 'editSystemButton',
+    'organogramView': 'viewOrgChartButton',
+    'engineerTableView': 'viewEngineerListButton',
+    'planningView': 'manageYearPlanButton',
+    'roadmapView': 'manageRoadmapButton',
+    'dashboardView': 'dashboardViewButton',
+    'capacityConfigView': 'tuneCapacityButton',
+    'sdmForecastingView': 'sdmForecastButton'
+};
+
 // --- Trigger Top Bar Animation ---
 document.addEventListener('DOMContentLoaded', function() {
     const topBar = document.getElementById('topBar');
@@ -297,6 +310,22 @@ function switchView(targetViewId, newMode = null) {
     }).catch(err => {
         console.error("View transition 'finished' phase error:", err);
     });
+
+    // --- NEW: Handle Active Button Highlighting ---
+    const allNavButtons = document.querySelectorAll('#topBar .edit-menu button');
+    allNavButtons.forEach(btn => {
+        btn.classList.remove('active-nav-button');
+    });
+
+    const activeButtonId = VIEW_TO_BUTTON_MAP[targetViewId];
+    if (activeButtonId) {
+        const activeButton = document.getElementById(activeButtonId);
+        if (activeButton) {
+            activeButton.classList.add('active-nav-button');
+        }
+    }
+    // --- END NEW SECTION ---
+
 
     console.log(`View switched (attempted with transition). Current mode: ${currentMode}`);
 }
