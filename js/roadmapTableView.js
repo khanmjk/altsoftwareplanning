@@ -4,7 +4,6 @@ let roadmapTimelineTable = null; // To hold the Tabulator instance for this spec
 
 /**
  * Initializes the entire Roadmap Table View widget.
- * This is the main entry point called from dashboard.js.
  */
 function initializeRoadmapTableView() {
     console.log("Initializing new Quarterly Roadmap Swimlane View widget...");
@@ -16,7 +15,7 @@ function initializeRoadmapTableView() {
 
     container.innerHTML = `
         <div id="roadmapTableFilters" style="margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border: 1px solid #ddd; border-radius: 4px; display: flex; flex-wrap: wrap; align-items: center; gap: 20px;">
-            </div>
+        </div>
         <div id="quarterlyRoadmapContainer" style="overflow-x: auto;"></div>
     `;
 
@@ -71,7 +70,7 @@ function generateRoadmapTableFilters() {
  * Prepares and structures the data for the quarterly roadmap display.
  */
 function prepareDataForQuarterlyRoadmap() {
-    const yearFilter = dashboardPlanningYear; // Use the global dashboard year filter
+    const yearFilter = dashboardPlanningYear; 
     const orgFilter = document.getElementById('roadmapOrgFilter')?.value || 'all';
     const teamFilter = document.getElementById('roadmapTeamFilter')?.value || 'all';
 
@@ -122,7 +121,7 @@ function prepareDataForQuarterlyRoadmap() {
 
 /**
  * Renders the new quarterly roadmap table.
- * MODIFIED: Displays contextual SDE totals for Org and Team filters, with team breakdowns for Org filter.
+ * FIX: Correctly calculates and displays the SDE breakdown for organization and team filters.
  */
 function renderQuarterlyRoadmap() {
     const container = document.getElementById('quarterlyRoadmapContainer');
@@ -163,7 +162,7 @@ function renderQuarterlyRoadmap() {
                     const totalSde = (init.assignments || []).reduce((sum, a) => sum + (a.sdeYears || 0), 0);
                     let sdeDisplayHTML = '';
 
-                    // ** NEW HIERARCHICAL LOGIC FOR SDE DISPLAY **
+                    // ** CORRECTED HIERARCHICAL LOGIC FOR SDE DISPLAY **
                     if (teamFilter !== 'all') {
                         const team = currentSystemData.teams.find(t => t.teamId === teamFilter);
                         const teamName = team ? (team.teamIdentity || team.teamName) : "Team";
@@ -183,22 +182,22 @@ function renderQuarterlyRoadmap() {
                         const orgAssignments = (init.assignments || []).filter(a => teamsInOrg.has(a.teamId));
                         const orgSde = orgAssignments.reduce((sum, a) => sum + (a.sdeYears || 0), 0);
 
-                        let breakdownHTML = '';
-                        if (orgAssignments.length > 1) { // Only show breakdown if multiple teams from org are involved
-                            breakdownHTML = orgAssignments.map(a => {
-                                const team = currentSystemData.teams.find(t => t.teamId === a.teamId);
-                                const teamName = team ? (team.teamIdentity || team.teamName) : "Unknown Team";
-                                return `<div class="initiative-sde-breakdown">${teamName}: ${a.sdeYears.toFixed(2)}</div>`;
-                            }).join('');
-                        }
+                        let breakdownHTML = orgAssignments.map(a => {
+                            const team = currentSystemData.teams.find(t => t.teamId === a.teamId);
+                            const teamName = team ? (team.teamIdentity || team.teamName) : "Unknown Team";
+                            return `<div class="initiative-sde-breakdown">${teamName}: ${a.sdeYears.toFixed(2)}</div>`;
+                        }).join('');
                         
                         sdeDisplayHTML = `<div class="initiative-sde">Org Total: ${orgSde.toFixed(2)} of ${totalSde.toFixed(2)} SDEs</div>${breakdownHTML}`;
                     } else {
                         sdeDisplayHTML = `<div class="initiative-sde">(${totalSde.toFixed(2)} SDEs)</div>`;
                     }
 
+                    const statusClass = `status-${(init.status || 'backlog').toLowerCase().replace(/\s+/g, '-')}`;
                     tableHTML += `
-                        <div class="initiative-card" title="${init.description || init.title}">
+                        <div class="initiative-card ${statusClass}" 
+                             title="${init.description || init.title}" 
+                             onclick="openRoadmapModalForEdit('${init.initiativeId}')">
                             <div class="initiative-title">${init.title}</div>
                             ${sdeDisplayHTML}
                         </div>

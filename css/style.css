@@ -1385,4 +1385,24 @@ a:focus {
     text-overflow: ellipsis; /* Add ellipsis for very long team names */
 }
 
+/* --- Final Polish for Quarterly Roadmap Widget --- */
+
+.initiative-card {
+    border-left-width: 5px;
+    transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+    cursor: pointer; /* Change cursor to indicate it's clickable */
+}
+
+.initiative-card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border-color: #333; /* Darken border on hover */
+}
+
+/* Status Indicator Colors */
+.initiative-card.status-backlog { border-left-color: #6c757d; } /* Gray */
+.initiative-card.status-defined { border-left-color: #17a2b8; } /* Teal */
+.initiative-card.status-committed { border-left-color: #007bff; } /* Blue */
+.initiative-card.status-in-progress { border-left-color: #ffc107; } /* Yellow */
+.initiative-card.status-completed { border-left-color: #28a745; } /* Green */
+
 /* Add any additional styles as needed */          
