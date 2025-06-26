@@ -2,6 +2,8 @@
 
 // Global variable to hold the chart instance
 let investmentChart = null;
+// Global variable to store the currently selected dashboard year
+let dashboardPlanningYear = 'all'; 
 
 /**
  * Main function to trigger the display of the Dashboard view.
@@ -14,8 +16,6 @@ function showDashboardView() {
         return;
     }
     // This function's only job is to tell switchView what to do.
-    // The actual content generation is now handled by initializeDashboard,
-    // which is called by switchView's callback.
     switchView('dashboardView', 'dashboard');
 }
 
@@ -26,11 +26,12 @@ function showDashboardView() {
 function initializeDashboard() {
     console.log("Initializing dashboard content...");
     generateDashboardLayout();
-    generateInvestmentDistributionChart();
+    // Initially generate the chart and table for "All Years"
+    generateInvestmentDistributionChart(dashboardPlanningYear); 
 }
 
 /**
- * Sets up the basic layout for the dashboard view.
+ * Sets up the basic layout for the dashboard view, including the new year filter.
  */
 function generateDashboardLayout() {
     const container = document.getElementById('dashboardView');
@@ -39,9 +40,38 @@ function generateDashboardLayout() {
         return;
     }
 
-    // This styling is just an example, can be moved to CSS
+    // --- Dynamically build the Year Selector ---
+    const calendarYear = new Date().getFullYear();
+    let availableYears = [];
+
+    if (currentSystemData && currentSystemData.yearlyInitiatives && currentSystemData.yearlyInitiatives.length > 0) {
+        const yearsFromData = new Set(currentSystemData.yearlyInitiatives.map(init => init.attributes.planningYear).filter(year => year));
+        availableYears = Array.from(yearsFromData);
+    }
+    if (availableYears.length === 0) {
+        availableYears.push(calendarYear);
+    }
+    availableYears.sort((a, b) => a - b);
+
+    // Create dropdown options, adding "All Years" at the beginning
+    let yearOptionsHTML = '<option value="all">All Years</option>';
+    yearOptionsHTML += availableYears.map(year =>
+        `<option value="${year}" ${year == dashboardPlanningYear ? 'selected' : ''}>${year}</option>`
+    ).join('');
+    
+    const yearSelectorHTML = `
+        <div style="margin-bottom: 20px; text-align: right;">
+            <label for="dashboardYearSelector" style="font-weight: bold; margin-right: 10px;">Filter by Year:</label>
+            <select id="dashboardYearSelector" onchange="handleDashboardYearChange(this.value)" style="padding: 5px; border-radius: 4px;">
+                ${yearOptionsHTML}
+            </select>
+        </div>
+    `;
+    // --- End Dynamic Year Selector Logic ---
+
     container.innerHTML = `
         <h2>Strategic Investment Dashboard</h2>
+        ${yearSelectorHTML}
         <div class="dashboard-widget" style="background-color: #fff; border: 1px solid #ddd; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
             <h3>Investment Distribution by Theme (SDE-Years)</h3>
             <div class="chart-container" style="position: relative; height:400px; width:80vw; max-width: 600px; margin: auto;">
@@ -49,13 +79,25 @@ function generateDashboardLayout() {
             </div>
             <div id="investmentTableContainer" style="margin-top: 20px;"></div>
         </div>
-        `;
+    `;
 }
 
 /**
- * Calculates the investment distribution and renders the chart.
+ * Handles the change event from the year selector dropdown.
+ * @param {string} selectedYear - The year selected by the user ('all' or a number).
  */
-function generateInvestmentDistributionChart() {
+function handleDashboardYearChange(selectedYear) {
+    dashboardPlanningYear = selectedYear;
+    console.log(`Dashboard year changed to: ${dashboardPlanningYear}`);
+    generateInvestmentDistributionChart(dashboardPlanningYear);
+}
+
+
+/**
+ * Calculates the investment distribution and renders the chart for a specific year.
+ * @param {string} selectedYear - The year to filter by, or 'all'.
+ */
+function generateInvestmentDistributionChart(selectedYear) {
     if (!currentSystemData || !currentSystemData.yearlyInitiatives || !currentSystemData.definedThemes) {
         console.warn("Missing data for investment chart (initiatives or themes).");
         return;
@@ -64,15 +106,19 @@ function generateInvestmentDistributionChart() {
     const themeMap = new Map(currentSystemData.definedThemes.map(theme => [theme.themeId, theme.name]));
     const investmentByTheme = {};
 
-    // Initialize all themes with 0 investment to ensure they appear in the data
+    // Initialize all themes with 0 investment
     themeMap.forEach((name, id) => {
         investmentByTheme[name] = 0;
     });
 
-    // Calculate SDE Years per theme
-    currentSystemData.yearlyInitiatives.forEach(initiative => {
-        // Only include initiatives that haven't been completed in the investment calculation
-        if (initiative.status === 'Completed') return;
+    // Filter initiatives by the selected year (if not 'all')
+    const filteredInitiatives = selectedYear === 'all'
+        ? currentSystemData.yearlyInitiatives
+        : currentSystemData.yearlyInitiatives.filter(init => init.attributes.planningYear == selectedYear);
+
+    // Calculate SDE Years per theme from the filtered list
+    filteredInitiatives.forEach(initiative => {
+        if (initiative.status === 'Completed') return; // Exclude completed work
 
         const totalSdeYears = (initiative.assignments || []).reduce((sum, assignment) => sum + (assignment.sdeYears || 0), 0);
         
@@ -104,11 +150,13 @@ function generateInvestmentDistributionChart() {
         return;
     }
     
-    // Destroy existing chart instance if it exists
     if (investmentChart) {
         investmentChart.destroy();
-        investmentChart = null;
     }
+
+    const chartTitle = selectedYear === 'all' 
+        ? 'SDE-Year Allocation by Strategic Theme (All Years)' 
+        : `SDE-Year Allocation by Strategic Theme (${selectedYear})`;
 
     investmentChart = new Chart(canvas, {
         type: 'doughnut',
@@ -122,7 +170,7 @@ function generateInvestmentDistributionChart() {
                 },
                 title: {
                     display: true,
-                    text: 'SDE-Year Allocation by Strategic Theme (Planned Work)'
+                    text: chartTitle
                 },
                 tooltip: {
                     callbacks: {
