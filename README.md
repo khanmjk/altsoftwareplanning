@@ -25,36 +25,20 @@
     * [Work Packages](#work-packages)
     * [Archived Yearly Plans](#archived-yearly-plans)
 4.  [Key Features](#key-features)
-    * [System Overview & Visualizations](#system-overview--visualizations)
-        * [Carousel Navigation](#carousel-navigation)
-        * [System Visualization](#system-visualization-1)
-        * [Team Relationships Visualization](#team-relationships-visualization-1)
-        * [Service Relationships Visualization](#service-relationships-visualization-1)
-        * [Service Dependency Visualization & Table](#service-dependency-visualization--table-1)
-    * [Editing System Data](#editing-system-data)
-    * [Organizational Views](#organizational-views)
-        * [Organization Chart (Org Chart)](#organization-chart-org-chart-1)
-        * [Team Breakdown Table](#team-breakdown-table-1)
-        * [Engineer Resource List](#engineer-resource-list-1)
-        * [Adding New Resources](#adding-new-resources)
-    * [Tune Capacity Constraints](#tune-capacity-constraints)
-        * [Global Configuration](#global-configuration-1)
-        * [Team-Specific Adjustments & AI Productivity](#team-specific-adjustments--ai-productivity)
-        * [Calculated Capacity Summary, Narrative & Waterfall Chart](#calculated-capacity-summary-narrative--waterfall-chart-1)
-    * [Roadmap & Backlog Management](#roadmap--backlog-management)
-        * [Roadmap Table](#roadmap-table)
-        * [Status Filtering](#status-filtering)
-        * [Adding & Editing Initiatives (Modal & Inline)](#adding--editing-initiatives-modal--inline)
-    * [Yearly Planning](#yearly-planning)
-        * [Planning Table](#planning-table-1)
-        * [Capacity Scenarios & Constraints Toggle](#capacity-scenarios--constraints-toggle)
-        * [Protected Initiatives](#protected-initiatives-1)
-        * [Drag & Drop Prioritization](#drag--drop-prioritization-1)
+    * [System Navigation](#system-navigation)
     * [Strategic Dashboard](#strategic-dashboard)
         * [Dashboard Carousel](#dashboard-carousel)
+        * [Strategic Goals Dashboard](#strategic-goals-dashboard)
+        * [Accomplishments View](#accomplishments-view)
         * [Investment Distribution by Theme](#investment-distribution-by-theme)
         * [Investment Trend Over Time](#investment-trend-over-time)
-        * [Roadmap by Quarter (Swimlane View)](#roadmap-by-quarter-swimlane-view)
+        * [Roadmap by Quarter & 3-Year Plan](#roadmap-by-quarter--3-year-plan)
+    * [System Overview & Visualizations](#system-overview--visualizations)
+    * [Editing System Data](#editing-system-data)
+    * [Organizational Views](#organizational-views)
+    * [Tune Capacity Constraints](#tune-capacity-constraints)
+    * [Roadmap & Backlog Management](#roadmap--backlog-management)
+    * [Yearly Planning](#yearly-planning)
     * [SDM Resource Forecasting Model](#sdm-resource-forecasting-model)
     * [Tool Documentation (Home Page)](#tool-documentation-home-page)
 5.  [Basic Workflow Example](#basic-workflow-example)
@@ -74,7 +58,7 @@ This tool provides a unified platform to:
 * **Plan Capacity & Resources:** Configure detailed capacity constraints (leave, overheads, team activities, etc.) and AI productivity gains to understand true team availability (Net Project SDE Years).
 * **Manage Roadmaps & Backlogs:** Define, prioritize, and manage initiatives from backlog through to completion, focusing on strategic alignment and product management needs.
 * **Execute Yearly Planning:** Commit initiatives to a yearly plan, assign detailed engineering estimates, and track against calculated team capacities.
-* **Gain Strategic Insights:** Use the dashboard to visualize investment allocation by theme and track strategic trends over time.
+* **Gain Strategic Insights:** Use the dashboard to visualize investment allocation, track strategic trends over time, and monitor progress towards business goals.
 * **Forecast Team Growth:** Model SDE hiring, ramp-up, and attrition, factoring in detailed capacity constraints to predict resource availability.
 
 The ultimate goal is to enable better-informed decision-making for software delivery, resource allocation, and strategic planning.
@@ -231,165 +215,33 @@ Understanding these core entities is key to using the tool effectively. Most ent
 
 ## 4. Key Features
 
-### System Overview & Visualizations
+### System Navigation
 
-Accessible after loading a system. Provides multiple views of your architecture and organization through a modernized card-based UI with a persistent top navigation bar.
-
-#### Carousel Navigation
-
-* Use the "< Previous" and "Next >" buttons to cycle through different visualizations. The title in the center indicates the current view.
-
-#### System Visualization
-
-* Displays services (colored by owning team), their APIs, and their connections to platform dependencies.
-* Shows service-to-service dependencies and API-to-API dependencies.
-* Interactive: Zoom, pan, hover over nodes for tooltips.
-
-#### Team Relationships Visualization
-
-* Shows teams as nodes, colored by their identity.
-* Links between teams indicate dependencies based on the services they own.
-* Hover for team details (SDM, PMT, services owned, etc.).
-
-#### Service Relationships Visualization
-
-* Select a specific service from the dropdown (or "All Services View").
-* Visualizes the selected service, its direct dependencies (upstream services it relies on), and platform dependencies.
-* If a specific service is selected, it is highlighted.
-
-#### Service Dependency Visualization & Table
-
-* Select a service from the dropdown.
-* Displays a force-directed graph showing the selected service and its direct upstream and downstream service dependencies, as well as platform dependencies.
-* Hover over nodes to see their connections highlighted.
-* The **Service Dependencies Table** (appears below the carousel when this visualization is active) provides a tabular view of all services, their owners, and their upstream/downstream/platform dependencies.
-
-### Editing System Data
-
-* Click **"Edit System"** from the system overview page.
-* Modify:
-    * System Name and Description.
-    * **Services:** Add, delete, or edit services, their APIs, and their dependencies (service & platform).
-    * **Teams:** Add, delete, or edit teams, assign services, assign SDMs/PMTs, manage engineers (including AI SWEs), and manage away-team members.
-    * **Personnel:** Project Managers, Goals, and Defined Themes can be managed (future: dedicated UIs for these).
-* Use dual-list selectors for assigning services, SDMs, PMTs, engineers, and dependencies.
-* Click **"Save All Changes"** to persist all modifications. Click **"Cancel"** to discard changes and return to the system overview.
-
-### Organizational Views
-
-Accessible from the system overview page.
-
-#### Organization Chart (Org Chart)
-
-* Click **"Inspect Org Design"**.
-* Displays an HTML-based hierarchical view: System Name -> Senior Managers -> SDMs -> Teams.
-* Team nodes show Funded HC vs. Builders In Seats (BIS) and annotations for **away-team members and their sources**.
-
-#### Team Breakdown Table
-
-* Displayed below the Org Chart.
-* A detailed table of each team, grouped by Senior Manager and SDM.
-* Columns: Senior Manager, SDM, Team Identity, Team Name, PMT, **Team BIS**, Funded HC, **Effective BIS**, **BIS Hiring Gap**, **Engineers (Name, Level, AI Type if applicable)**, **Away-Team Members (Name, Level, Source, AI Type if applicable)**, and Services Owned.
-* Includes totals for key capacity metrics.
-
-#### Engineer Resource List
-
-* Click **"Engineers List"**.
-* Utilizes an **Enhanced Table Widget** for a sortable, filterable, and exportable (CSV, JSON, XLSX) view of all engineers in `allKnownEngineers`.
-* **Columns:** Engineer Name, Level, Type (Human/AI), AI Agent Type, Skills, Years of Experience, current Team Identity, SDM Name, Senior Manager Name. Many columns are editable directly in the table.
-* The table header summarizes total Funded HC, Team BIS, Away BIS, Effective BIS, and Hiring Gap for the organization.
-
-#### Adding New Resources
-
-* The "Inspect Org Design" view includes a section to "Add New Resource to Organisation," allowing direct addition of Engineers (Human or AI), SDMs, Senior Managers, and PMTs to the system's roster.
-
-### Tune Capacity Constraints
-
-* Click **"Capacity Tuning"** from the system overview page.
-* This page allows defining factors that reduce raw engineering capacity and account for AI-driven productivity gains.
-
-#### Global Configuration
-
-* **Standard Working Days Per Year:** Basis for SDE Year calculations.
-* **Standard Hours Per Day:** Used for converting weekly overhead hours to days.
-* **Public Holidays (Days/Year):** Global holidays impacting all teams.
-* **Organization-Wide Events:** Events like hackathons (Name, Est. Days/SDE).
-* **Standard Leave Types:** Define default estimated days/SDE for types like Annual, Sick, Study, In-Lieu.
-
-#### Team-Specific Adjustments & AI Productivity
-
-* Collapsible sections for each team.
-* **Standard Leave Uptake Estimate (%):** Percentage of global default days this team's members typically take for each standard leave type.
-* **Variable Leave Impact Estimate:** Input total team days lost for types like Maternity, Paternity, Medical, Family Responsibility (Number of SDEs affected * Avg. Days per SDE).
-* **Team Activities:** Define non-recurring team-specific events (e.g., training, conferences). Estimate impact either as "Days/SDE" or "Total Team Days".
-* **Recurring Overhead:** Estimate average hours per SDE per week spent on recurring meetings, admin, ceremonies, etc. (e.g., `avgOverheadHoursPerWeekPerSDE`).
-* **AI Tooling Productivity Gain (%):** Estimate the percentage of productivity gain for human engineers on the team from using AI-assisted tools. This gain is applied after all capacity sinks are deducted to calculate the final Net Capacity.
-
-#### Calculated Capacity Summary, Narrative & Waterfall Chart
-
-* **Summary Table:** Dynamically updates to show, for the selected scenario (Effective BIS, Team BIS, Funded HC): Team Identity, Headcount (for the scenario), Gross SDE Years, (-) Total Deductions (SDE Years - with tooltip for breakdown of sinks like leave, holidays, activities, overhead), and (=) Net Project SDE Years. Displays warnings if net capacity is zero or negative.
-* **Narrative Section (Collapsible):** Provides a detailed written explanation of capacity calculations, breaking down how gross capacity is reduced by various sinks at global and team levels, including explicit calculation parameters and reconciliation of deductions.
-* **Waterfall Chart (Collapsible):** Visualizes the capacity reduction from Gross SDE Years to Net Project SDE Years for the selected team or the entire organization, showing the impact of each deduction category (Holidays, Org Events, Std Leave, Var Leave, Activities, Overhead) and the positive impact of AI Productivity Gains.
-* Click **"Save All Capacity Configuration"** to persist settings and calculated metrics.
-
-### Roadmap & Backlog Management
-
-* Click **"Roadmap & Backlog"** from the system overview page.
-* This view is the single source of truth for creating and managing the pipeline of all initiatives.
-
-#### Roadmap Table
-
-* An interactive table (powered by Tabulator via `EnhancedTableWidget`) displaying all initiatives.
-* **Columns include:** Title, Description, Status, Owner, ROI Summary (Category: Value), Target Quarter/Yr, Target Due Date, and Themes. Additional ROI details and PM Capacity Notes are available as hidden columns.
-* Supports sorting and filtering on all columns.
-* Detailed SDE year assignments per team are managed in the "Yearly Planning" view to separate concerns.
-
-#### Status Filtering
-
-* Filter initiatives by status: "All", "Backlog", "Defined", "Committed", "In Progress", "Completed".
-* The table defaults to showing all initiatives.
-
-#### Adding & Editing Initiatives (Modal & Inline)
-
-* Click "Add New Initiative" or an "Edit" button in a row to open a **modal dialog** for comprehensive editing.
-* Key fields like Title, Owner, Target Due Date, and Themes are also **editable directly within the table** for quick adjustments.
-
-### Yearly Planning
-
-* Click **"Year Plan"** from the system overview page. This view consumes data from the central Roadmap/Backlog.
-
-#### Planning Table
-
-* Interactive table to manage and prioritize initiatives for a specific year.
-* **Dynamic Year Selector:** The planning view is driven by a year selector, which is dynamically populated based on the `planningYear` attribute of your initiatives. This ensures you only plan for years that have defined work.
-* **Columns:** Protected, Title, ID, Description, Total SDE Years (per initiative), Cumulative SDE Years (overall), Capacity Status, ATL/BTL, and a column for SDE Year estimate per team.
-* **No "Add Initiative" Button:** All initiatives must now originate from the Roadmap/Backlog page to enforce a single source of truth.
-
-#### Capacity Scenarios & Constraints Toggle
-
-* **Capacity Scenarios:** Buttons at the top allow selecting the capacity scenario (Effective BIS, Team BIS, or Funded HC) used for the ATL/BTL cut-off and per-team cell coloring.
-* **Apply Constraints & AI Gains (Net):** A checkbox that provides a powerful toggle between two planning realities: Gross capacity vs. Net (realistic) capacity after accounting for all sinks and AI gains.
-
-#### Protected Initiatives
-
-* Lock initiatives at the top of the plan; they cannot be dragged below non-protected items.
-
-#### Drag & Drop Prioritization
-
-* Reorder non-protected initiatives to change priority; table recalculates dynamically.
-
-#### Enhanced Team Load Summary Table
-
-* A collapsible, detailed table that provides a clear and transparent breakdown of each team's capacity for the selected scenario, explicitly showing Human vs. AI contributions, capacity sinks, and AI productivity gains.
+Once a system is loaded, a persistent navigation bar appears at the top, giving you one-click access to all major views for that system. The currently active view is highlighted for context. Click **"Home"** to return to the system selection screen.
 
 ### Strategic Dashboard
 
-* Click **"Dashboard"** from the system overview page.
-* Provides high-level strategic insights into your planning data.
+Click **"Dashboard"** from the top navigation bar to access a set of high-level widgets for strategic analysis.
 
 #### Dashboard Carousel
 
 * Navigate through different dashboard widgets using "Previous" and "Next" buttons.
+
+#### Strategic Goals Dashboard
+
+* **Purpose:** To track progress against high-level business objectives for a selected year.
+* **Features:** Displays a set of "Goal Cards," one for each strategic goal.
+    * **At-a-glance Metrics:** Each card shows the total SDE investment, number of linked initiatives, and a visual progress bar.
+    * **Contextual Status:** The overall status (`On Track`, `At Risk`, `Completed`) provides an immediate health check. Hover over the status for a tooltip explaining the reason.
+    * **Ownership & Teams:** Clearly lists the goal's owner, PM, and technical POC, as well as all teams contributing to the goal's initiatives.
+    * **Drill-Down:** Expand a card to see a detailed list of the specific initiatives supporting that goal, including a team-by-team SDE breakdown for each.
+
+#### Accomplishments View
+
+* **Purpose:** To celebrate and report on successfully completed work.
+* **Features:** Shows a list of all initiatives that have a status of "Completed."
+    * Each accomplishment card displays the initiative title, completion date, and description.
+    * It provides rich context by showing the strategic goal it supported, the themes it belonged to, the key owners, contributing teams, and the final team effort in SDE-Years.
 
 #### Investment Distribution by Theme
 
@@ -400,28 +252,55 @@ Accessible from the system overview page.
 
 * A 100% stacked bar chart that visualizes how theme-based investment percentages evolve year-over-year, making it easy to spot strategic shifts.
 
-#### Roadmap by Quarter (Swimlane View)
+#### Roadmap by Quarter & 3-Year Plan
 
-* A theme-based swimlane view of the roadmap, with columns for Q1, Q2, Q3, and Q4.
-* **Cascading Filters:** Filter the view by Organization (Senior Manager) and Team. The team filter is context-aware, updating its options based on the selected organization.
-* **Contextual SDE Display:** The effort displayed on each initiative card is context-aware:
-    * When filtered by organization, it shows the "Org Total" SDEs and provides a team-by-team breakdown.
-    * When filtered by a team, it shows that team's specific effort relative to the total.
-* **Interactive Cards:** Click on any initiative card to open the detailed "Edit Initiative" modal. Cards are also color-coded by their status.
+* **Purpose:** To visualize the product roadmap from both tactical and strategic perspectives.
+* **Features:**
+    * **Roadmap by Quarter:** A theme-based swimlane view with columns for Q1, Q2, Q3, and Q4 of a selected year.
+    * **3-Year Plan (3YP):** A similar swimlane view with columns for the "Current Year," "Next Year," and "Future," providing a long-range strategic outlook.
+    * Both views are interactive and can be filtered by Organization, Team, and Theme.
+
+### System Overview & Visualizations
+
+Accessible by clicking **"System Overview"**. Provides multiple views of your architecture and organization.
+
+* **Carousel Navigation:** Use the "< Previous" and "Next >" buttons to cycle through different visualizations.
+* **System Visualization:** Displays services, their APIs, and platform dependencies.
+* **Team Relationships Visualization:** Shows how teams are interconnected based on service dependencies.
+* **Service Relationships Visualization:** Visualizes a specific service and its direct dependencies.
+* **Service Dependency Visualization & Table:** A force-directed graph and a table detailing upstream and downstream dependencies for a selected service.
+
+### Editing System Data
+
+* Click **"Edit System"** from the top navigation bar.
+* Modify: System Name, Description, Services, APIs, Teams, and manage assignments for Engineers, SDMs, and PMTs.
+* Click **"Save All Changes"** to persist all modifications.
+
+### Organizational Views
+
+* Click **"Inspect Org Design"** to see an organization chart and a detailed team breakdown table.
+* Click **"Engineers List"** for a sortable and exportable list of all engineers.
+
+### Tune Capacity Constraints
+
+* Click **"Capacity Tuning"** from the top navigation bar.
+* This page allows defining factors that impact engineering capacity, such as leave, overhead, and AI-driven productivity gains, to calculate a realistic Net Project Capacity for each team.
+
+### Roadmap & Backlog Management
+
+* Click **"Roadmap & Backlog"** to manage the pipeline of all initiatives. This is the source of truth for creating and defining work before it is committed to a yearly plan.
+
+### Yearly Planning
+
+* Click **"Year Plan"** to commit initiatives, assign detailed engineering estimates, and track progress against calculated team capacities using the Above The Line / Below The Line (ATL/BTL) system.
 
 ### SDM Resource Forecasting Model
 
-* Click **"Resource Forecasting"** from the system overview page.
-* Models team headcount and effective SDE availability over 52 weeks.
-* **Inputs:** Team selection, Avg Hiring Time, Ramp-up Time, Annual Attrition Rate, Target Week to Close Gap.
-* **Capacity Integration:** Uses **Net Available Days per Week per SDE** (from "Tune Capacity Constraints") for the selected team, automatically factoring in configured leave, holidays, overhead, etc.
-* **Outputs:** Monthly/Weekly resource tables, Forecast Chart (Effective Engineers, Total Ramped Up, Total Headcount, Attrition, Funded Size), Hiring Info.
-* Includes an **FAQ & Model Insights** section.
+* Click **"Resource Forecasting"** to access a tool for modeling team headcount and effective SDE availability over 52 weeks, factoring in hiring, attrition, and capacity constraints.
 
 ### Tool Documentation (Home Page)
 
 * The application's home page (when no system is loaded) features a collapsible section displaying this `README.md` file directly.
-* This ensures users have easy access to up-to-date information about the tool's features, data model, and usage.
 
 ---
 
@@ -448,7 +327,7 @@ Accessible from the system overview page.
     * **Save All Capacity Configuration**.
 6.  **Analyze Dashboard Views:**
     * Navigate to the **"Dashboard"**.
-    * Use the carousel to switch between the "Investment Distribution", "Investment Trend", and "Roadmap by Quarter" widgets.
+    * Use the carousel to switch between the Strategic Goals, Accomplishments, Investment, and Roadmap widgets.
     * Use the filters to analyze data for specific years, organizations, or teams.
 7.  **Manage Yearly Plan:**
     * Navigate to "Year Plan".
@@ -464,23 +343,19 @@ Accessible from the system overview page.
 
 ## 6. Tips & Best Practices
 
-* **Save Regularly:** Use the "Save" buttons frequently, especially "Save All Changes" in Edit System and "Save All Capacity Configuration" in Capacity Tuning, and "Save Current Plan" in Year Plan.
+* **Save Regularly:** Use the "Save" buttons frequently to persist your changes.
 * **Iterative Definition:** Start with high-level entities and gradually add detail.
-* **Consistent Naming:** Use clear and consistent names for all entities.
-* **Data Model First:** For new complex features, define the data model structure in `js/data.js` and update sample/default data before building the UI.
-* **Leverage Tooltips:** Hover over labels, buttons, and column headers for explanations.
-* **Use the Narrative:** The Capacity Tuning narrative provides a detailed story of your capacity calculations – use it to validate your inputs.
-* **Roadmap vs. Year Plan:** Use the "Roadmap & Backlog" view for broader strategic planning and initiative definition. Use the "Year Plan" view for detailed engineering capacity allocation and commitment for a specific period.
+* **Use the Dashboard:** Regularly check the Strategic Goals and Accomplishments dashboards to track progress and celebrate wins.
+* **Roadmap vs. Year Plan:** Use the "Roadmap & Backlog" view for broader strategic planning and the "Year Plan" view for detailed engineering capacity allocation.
 
 ---
 
 ## 7. Known Limitations (MVP)
 
-* **Single User, Local Storage:** Data is saved in your browser's local storage. No backend server or multi-user collaboration.
+* **Single User, Local Storage:** Data is saved in your browser's local storage. No multi-user collaboration.
 * **Limited Import/Export:** General import/export for initiatives/plans to CSV/Excel is a future enhancement (though tables built with `EnhancedTableWidget` like Engineer List and Roadmap Table support export).
 * **No True Skill Matching:** While skills are tracked for engineers, there's no automated matching to initiative requirements for resource suggestions.
-* **UI for Advanced Planning Entities:** While the data model supports Goals, Themes, Project Managers, Work Packages, and Plan Archiving, dedicated UI views for managing all aspects of these (beyond basic linking in initiatives or adding PMs to a roster) are still under development or planned.
-* **Manual Refresh for Some Cross-View Updates:** Some complex data interdependencies might occasionally require a manual refresh of a view (e.g., by navigating away and back) if a direct data-driven UI update isn't immediately implemented for all edge cases.
+* **UI for Advanced Planning Entities:** While the data model supports Goals, Themes, Project Managers, Work Packages, and Plan Archiving, dedicated UI views for managing all aspects of these are still under development or planned.
 
 ---
 

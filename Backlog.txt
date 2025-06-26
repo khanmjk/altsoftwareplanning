@@ -81,7 +81,7 @@ Manage Roadmap & Backlog
 [Done] -- It must be possible to show a visual representation of the initiatives by theme so the senior engineering or product leader can gauge the distribution of investments by theme or tags
 [Done] -- It must be possible to generate a roadmap view per team for software managers to focus on their team or org-specific commitments
 [Done] -- It must be possible to generate a view of business objectives and strategies from the backlog
--- It must be possible to generate a view of completed goals, initiatives or work packages
+[Done] -- It must be possible to generate a view of completed goals, initiatives or work packages
 -- It must be possible to display a graph visualization (similar to system visualizations) of service impact and relations to initiatives and work package dependencies
 
 
