@@ -7,10 +7,11 @@ let investmentTrendChart = null;
 // The year filter for the doughnut chart
 let dashboardPlanningYear = 'all'; 
 
-// State for the new dashboard carousel
+// State for the dashboard carousel, now including the roadmap timeline
 const dashboardItems = [
     { id: 'investmentDistributionWidget', title: 'Investment Distribution by Theme', generator: () => generateInvestmentDistributionChart(dashboardPlanningYear) },
-    { id: 'investmentTrendWidget', title: 'Investment Trend Over Time', generator: generateInvestmentTrendChart }
+    { id: 'investmentTrendWidget', title: 'Investment Trend Over Time', generator: generateInvestmentTrendChart },
+    { id: 'roadmapTimelineWidget', title: 'Roadmap by Quarter', generator: initializeRoadmapTableView }
 ];
 let currentDashboardIndex = 0;
 // --- End Globals ---
@@ -41,7 +42,7 @@ function initializeDashboard() {
  */
 function handleDashboardYearChange(selectedYear) {
     dashboardPlanningYear = selectedYear;
-    console.log(`Doughnut chart year changed to: ${dashboardPlanningYear}`);
+    console.log(`Doughnut chart year filter changed to: ${dashboardPlanningYear}`);
     const currentWidget = dashboardItems[currentDashboardIndex];
     if (currentWidget.id === 'investmentDistributionWidget') {
         currentWidget.generator();
@@ -50,7 +51,6 @@ function handleDashboardYearChange(selectedYear) {
 
 /**
  * Main function to create the carousel shell and its static elements.
- * REVISED: Removes h2 and h3 titles for a cleaner look.
  */
 function generateDashboardLayout() {
     const container = document.getElementById('dashboardView');
@@ -79,19 +79,20 @@ function generateDashboardLayout() {
             </div>
 
             <div id="investmentTrendWidget" class="dashboard-carousel-item" style="display: none;">
-                 <p style="font-size: 0.9em; color: #666; text-align: center; margin-top: 0; margin-bottom: 15px;">Compares the percentage of total effort allocated to each theme, year over year.</p>
+                <p style="font-size: 0.9em; color: #666; text-align: center; margin-top: 0; margin-bottom: 15px;">Compares the percentage of total effort allocated to each theme, year over year.</p>
                 <div class="chart-container" style="position: relative; height:450px; width:95%; margin: auto;">
                     <canvas id="investmentTrendChart"></canvas>
                 </div>
             </div>
+
+            <div id="roadmapTimelineWidget" class="dashboard-carousel-item" style="display: none;">
+                </div>
         </div>
     `;
 }
 
-
 /**
  * Generates the HTML for the year selector dropdown.
- * @returns {string} The HTML string for the select element and its label.
  */
 function generateYearSelectorHTML() {
     const calendarYear = new Date().getFullYear();
@@ -120,7 +121,6 @@ function generateYearSelectorHTML() {
 
 /**
  * Hides all dashboard widgets and shows the one at the specified index.
- * @param {number} index - The index of the widget to show from the dashboardItems array.
  */
 function showDashboardWidget(index) {
     currentDashboardIndex = index;
@@ -135,14 +135,13 @@ function showDashboardWidget(index) {
     if (elementToShow) {
         elementToShow.style.display = 'block';
         titleElement.textContent = widgetToShow.title;
-        // Generate the chart for the widget when it's shown
+        // Generate the content for the widget when it's shown
         widgetToShow.generator();
     }
 }
 
 /**
  * Navigates the dashboard carousel forward or backward.
- * @param {number} direction - -1 for previous, 1 for next.
  */
 function navigateDashboard(direction) {
     let newIndex = currentDashboardIndex + direction;
@@ -179,7 +178,7 @@ function generateInvestmentDistributionChart() {
             responsive: true, maintainAspectRatio: false,
             plugins: {
                 legend: { position: 'top' },
-                title: { display: false }, // Title is now handled by the carousel
+                title: { display: false }, // Title is handled by the carousel
                 tooltip: { callbacks: { label: (context) => formatTooltipLabel(context, data.total) } }
             }
         }
@@ -233,7 +232,7 @@ function generateInvestmentTrendChart() {
             },
             plugins: {
                 legend: { position: 'top' },
-                title: { display: false }, // Title is now handled by the carousel
+                title: { display: false }, // Title is handled by the carousel
                 tooltip: {
                     callbacks: {
                         label: function(context) {
