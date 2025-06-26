@@ -16,7 +16,7 @@ function initializeRoadmapTableView() {
 
     container.innerHTML = `
         <div id="roadmapTableFilters" style="margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border: 1px solid #ddd; border-radius: 4px; display: flex; flex-wrap: wrap; align-items: center; gap: 20px;">
-        </div>
+            </div>
         <div id="quarterlyRoadmapContainer" style="overflow-x: auto;"></div>
     `;
 
@@ -26,6 +26,7 @@ function initializeRoadmapTableView() {
 
 /**
  * Generates the interactive filter dropdowns for Org and Team.
+ * This function no longer creates a year filter, as it's now handled globally by the dashboard.
  */
 function generateRoadmapTableFilters() {
     const filtersContainer = document.getElementById('roadmapTableFilters');
@@ -69,12 +70,9 @@ function generateRoadmapTableFilters() {
 
 /**
  * Prepares and structures the data for the quarterly roadmap display.
- * FIX: Correctly handles initiatives with multiple themes.
- * @returns {object} - A structured object grouping initiatives by theme and then by quarter.
  */
 function prepareDataForQuarterlyRoadmap() {
-    // Note: This widget now uses the main dashboard year filter.
-    const yearFilter = dashboardPlanningYear; 
+    const yearFilter = dashboardPlanningYear; // Use the global dashboard year filter
     const orgFilter = document.getElementById('roadmapOrgFilter')?.value || 'all';
     const teamFilter = document.getElementById('roadmapTeamFilter')?.value || 'all';
 
@@ -111,13 +109,11 @@ function prepareDataForQuarterlyRoadmap() {
 
         const assignedThemes = init.themes && init.themes.length > 0 ? init.themes : ['uncategorized'];
 
-        // *** FIX: Loop through ALL assigned themes for an initiative ***
         assignedThemes.forEach(themeId => {
             const themeName = themeMap.get(themeId) || "Uncategorized";
             if (!roadmapData[themeName]) {
                 roadmapData[themeName] = { Q1: [], Q2: [], Q3: [], Q4: [] };
             }
-            // Add the initiative to the correct quarter for this theme
             roadmapData[themeName][quarter].push(init);
         });
     });
@@ -127,6 +123,7 @@ function prepareDataForQuarterlyRoadmap() {
 
 /**
  * Renders the new quarterly roadmap table.
+ * MODIFIED: Conditionally renders SDE display based on team filter.
  */
 function renderQuarterlyRoadmap() {
     const container = document.getElementById('quarterlyRoadmapContainer');
@@ -134,6 +131,7 @@ function renderQuarterlyRoadmap() {
 
     const roadmapData = prepareDataForQuarterlyRoadmap();
     const themes = Object.keys(roadmapData).sort();
+    const teamFilter = document.getElementById('roadmapTeamFilter')?.value || 'all';
 
     if (themes.length === 0) {
         container.innerHTML = `<p style="text-align: center; color: #777; margin-top: 20px;">No initiatives match the current filter criteria.</p>`;
@@ -158,15 +156,26 @@ function renderQuarterlyRoadmap() {
         tableHTML += `<td class="theme-cell">${themeName}</td>`;
         for (let i = 1; i <= 4; i++) {
             const quarterKey = `Q${i}`;
-            const initiatives = roadmapData[themeName]?.[quarterKey] || []; // Safely access initiatives
+            const initiatives = roadmapData[themeName]?.[quarterKey] || [];
             tableHTML += `<td><div class="quarter-cell">`;
             if (initiatives.length > 0) {
                 initiatives.forEach(init => {
-                    const sde = (init.assignments || []).reduce((sum, a) => sum + (a.sdeYears || 0), 0).toFixed(2);
+                    const totalSde = (init.assignments || []).reduce((sum, a) => sum + (a.sdeYears || 0), 0);
+                    let sdeDisplayHTML = '';
+
+                    // ** NEW LOGIC FOR SDE DISPLAY **
+                    if (teamFilter !== 'all') {
+                        const teamAssignment = (init.assignments || []).find(a => a.teamId === teamFilter);
+                        const teamSde = teamAssignment ? (teamAssignment.sdeYears || 0) : 0;
+                        sdeDisplayHTML = `<div class="initiative-sde">Team: ${teamSde.toFixed(2)} of ${totalSde.toFixed(2)} SDEs</div>`;
+                    } else {
+                        sdeDisplayHTML = `<div class="initiative-sde">(${totalSde.toFixed(2)} SDEs)</div>`;
+                    }
+
                     tableHTML += `
                         <div class="initiative-card" title="${init.description || init.title}">
                             <div class="initiative-title">${init.title}</div>
-                            <div class="initiative-sde">(${sde} SDEs)</div>
+                            ${sdeDisplayHTML}
                         </div>
                     `;
                 });
@@ -183,8 +192,6 @@ function renderQuarterlyRoadmap() {
 
 /**
  * Helper function to get the quarter (Q1, Q2, Q3, Q4) from a date string.
- * @param {string} dateString - The date string in "YYYY-MM-DD" format.
- * @returns {string|null} The quarter string or null if date is invalid.
  */
 function getQuarterFromDate(dateString) {
     if (!dateString) return null;

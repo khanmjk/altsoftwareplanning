@@ -1358,4 +1358,20 @@ a:focus {
     text-align: right;
 }
 
+/* --- Quarterly Roadmap Table Polish --- */
+
+.quarterly-roadmap-table .quarter-cell {
+    background-color: #fdfdfd; /* Very light gray for empty cells */
+    min-height: 80px;
+    padding: 8px;
+}
+
+.initiative-card {
+    transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+.initiative-card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border-color: #999;
+}
 /* Add any additional styles as needed */          
