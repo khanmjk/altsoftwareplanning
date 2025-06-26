@@ -1,11 +1,19 @@
 // js/dashboard.js
 
-// Global variables to hold the chart instances
+// --- Globals for Dashboard State ---
 let investmentDoughnutChart = null;
 let investmentTrendChart = null;
 
-// Global variable to store the currently selected dashboard year for the doughnut chart
-let dashboardPlanningYear = 'all';
+// The year filter for the doughnut chart
+let dashboardPlanningYear = 'all'; 
+
+// State for the new dashboard carousel
+const dashboardItems = [
+    { id: 'investmentDistributionWidget', title: 'Investment Distribution by Theme', generator: () => generateInvestmentDistributionChart(dashboardPlanningYear) },
+    { id: 'investmentTrendWidget', title: 'Investment Trend Over Time', generator: generateInvestmentTrendChart }
+];
+let currentDashboardIndex = 0;
+// --- End Globals ---
 
 /**
  * Main function to trigger the display of the Dashboard view.
@@ -20,18 +28,30 @@ function showDashboardView() {
 }
 
 /**
- * Initializes all content for the dashboard. This is called by switchView.
+ * Initializes all content for the dashboard. Called by switchView.
  */
 function initializeDashboard() {
-    console.log("Initializing dashboard content...");
+    console.log("Initializing dashboard content with carousel...");
     generateDashboardLayout();
-    // Generate both the doughnut chart (for the selected year) and the trend chart (for all years)
-    generateInvestmentDistributionChart(dashboardPlanningYear);
-    generateInvestmentTrendChart();
+    showDashboardWidget(currentDashboardIndex); // Show the initial widget
 }
 
 /**
- * Sets up the basic HTML layout for the dashboard view, including containers for both charts.
+ * Handles the change event from the year selector dropdown.
+ * This now also needs to re-render the current widget if it's the doughnut chart.
+ */
+function handleDashboardYearChange(selectedYear) {
+    dashboardPlanningYear = selectedYear;
+    console.log(`Dashboard year filter changed to: ${dashboardPlanningYear}`);
+    // Re-generate the currently visible widget to apply the filter
+    const currentWidget = dashboardItems[currentDashboardIndex];
+    if (currentWidget.id === 'investmentDistributionWidget') {
+        currentWidget.generator();
+    }
+}
+
+/**
+ * Main function to create the carousel shell and its static elements.
  */
 function generateDashboardLayout() {
     const container = document.getElementById('dashboardView');
@@ -40,7 +60,41 @@ function generateDashboardLayout() {
         return;
     }
 
-    // --- Dynamic Year Selector for the Doughnut Chart ---
+    const yearSelectorHTML = generateYearSelectorHTML(); // Get year selector HTML
+
+    container.innerHTML = `
+        <h2>Strategic Investment Dashboard</h2>
+        ${yearSelectorHTML}
+        <div id="dashboardCarousel" style="position: relative; border: 1px solid #ddd; padding: 10px; background-color: #fff; border-radius: 5px;">
+            <div style="text-align: center; margin-bottom: 10px;">
+                <button onclick="navigateDashboard(-1)">&lt; Previous</button>
+                <span id="dashboardTitle" style="margin: 0 15px; font-weight: bold; font-size: 1.1em;"></span>
+                <button onclick="navigateDashboard(1)">Next &gt;</button>
+            </div>
+            
+            <div id="investmentDistributionWidget" class="dashboard-carousel-item" style="display: none;">
+                <p style="font-size: 0.9em; color: #666; text-align: center; margin-top: 0; margin-bottom: 15px;">Shows investment breakdown for the selected period.</p>
+                <div class="chart-container" style="position: relative; height:400px; width:80vw; max-width: 600px; margin: auto;">
+                    <canvas id="investmentDistributionChart"></canvas>
+                </div>
+                <div id="investmentTableContainer" style="margin-top: 20px;"></div>
+            </div>
+
+            <div id="investmentTrendWidget" class="dashboard-carousel-item" style="display: none;">
+                <p style="font-size: 0.9em; color: #666; text-align: center; margin-top: 0; margin-bottom: 15px;">Compares the percentage of total effort allocated to each theme, year over year.</p>
+                <div class="chart-container" style="position: relative; height:450px; width:95%; margin: auto;">
+                    <canvas id="investmentTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * Generates the HTML for the year selector dropdown.
+ * @returns {string} The HTML string for the select element and its label.
+ */
+function generateYearSelectorHTML() {
     const calendarYear = new Date().getFullYear();
     let availableYears = [];
     if (currentSystemData && currentSystemData.yearlyInitiatives) {
@@ -55,56 +109,62 @@ function generateDashboardLayout() {
         `<option value="${year}" ${year == dashboardPlanningYear ? 'selected' : ''}>${year}</option>`
     ).join('');
     
-    const yearSelectorHTML = `
-        <div style="margin-bottom: 20px; text-align: right;">
+    return `
+        <div style="margin-bottom: 20px; text-align: left;">
             <label for="dashboardYearSelector" style="font-weight: bold; margin-right: 10px;">Filter Single-Year View:</label>
             <select id="dashboardYearSelector" onchange="handleDashboardYearChange(this.value)" style="padding: 5px; border-radius: 4px;">
                 ${yearOptionsHTML}
             </select>
         </div>
     `;
-
-    container.innerHTML = `
-        <h2>Strategic Investment Dashboard</h2>
-        ${yearSelectorHTML}
-        <div class="dashboard-widget" style="background-color: #fff; border: 1px solid #ddd; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
-            <h3>Investment Distribution by Theme (SDE-Years)</h3>
-            <p style="font-size: 0.9em; color: #666; text-align: center; margin-top: -10px; margin-bottom: 15px;">Shows investment breakdown for the selected period.</p>
-            <div class="chart-container" style="position: relative; height:400px; width:80vw; max-width: 600px; margin: auto;">
-                <canvas id="investmentDistributionChart"></canvas>
-            </div>
-            <div id="investmentTableContainer" style="margin-top: 20px;"></div>
-        </div>
-
-        <div class="dashboard-widget" style="background-color: #fff; border: 1px solid #ddd; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
-            <h3>Investment Trend by Theme (% Allocation Over Time)</h3>
-            <p style="font-size: 0.9em; color: #666; text-align: center; margin-top: -10px; margin-bottom: 15px;">Compares the percentage of total effort allocated to each theme, year over year.</p>
-            <div class="chart-container" style="position: relative; height:450px; width:95%; margin: auto;">
-                <canvas id="investmentTrendChart"></canvas>
-            </div>
-        </div>
-    `;
 }
 
 /**
- * Handles the change event from the year selector dropdown for the doughnut chart.
+ * Hides all dashboard widgets and shows the one at the specified index.
+ * @param {number} index - The index of the widget to show from the dashboardItems array.
  */
-function handleDashboardYearChange(selectedYear) {
-    dashboardPlanningYear = selectedYear;
-    console.log(`Doughnut chart year changed to: ${dashboardPlanningYear}`);
-    generateInvestmentDistributionChart(dashboardPlanningYear);
+function showDashboardWidget(index) {
+    currentDashboardIndex = index;
+    const allItems = document.querySelectorAll('.dashboard-carousel-item');
+    const titleElement = document.getElementById('dashboardTitle');
+
+    allItems.forEach(item => item.style.display = 'none');
+    
+    const widgetToShow = dashboardItems[index];
+    const elementToShow = document.getElementById(widgetToShow.id);
+
+    if (elementToShow) {
+        elementToShow.style.display = 'block';
+        titleElement.textContent = widgetToShow.title;
+        // Generate the chart for the widget when it's shown
+        widgetToShow.generator();
+    }
 }
 
 /**
- * Calculates and renders the doughnut chart for a specific year.
- * @param {string} selectedYear - The year to filter by, or 'all'.
+ * Navigates the dashboard carousel forward or backward.
+ * @param {number} direction - -1 for previous, 1 for next.
  */
-function generateInvestmentDistributionChart(selectedYear) {
+function navigateDashboard(direction) {
+    let newIndex = currentDashboardIndex + direction;
+    if (newIndex >= dashboardItems.length) {
+        newIndex = 0;
+    }
+    if (newIndex < 0) {
+        newIndex = dashboardItems.length - 1;
+    }
+    showDashboardWidget(newIndex);
+}
+
+/**
+ * Renders the doughnut chart for investment distribution.
+ */
+function generateInvestmentDistributionChart() {
     const canvas = document.getElementById('investmentDistributionChart');
     if (!canvas) { console.error("Canvas for doughnut chart not found."); return; }
     if (investmentDoughnutChart) investmentDoughnutChart.destroy();
 
-    const data = processInvestmentData(selectedYear);
+    const data = processInvestmentData(dashboardPlanningYear);
     
     investmentDoughnutChart = new Chart(canvas, {
         type: 'doughnut',
@@ -120,31 +180,31 @@ function generateInvestmentDistributionChart(selectedYear) {
             responsive: true, maintainAspectRatio: false,
             plugins: {
                 legend: { position: 'top' },
-                title: { display: true, text: `SDE-Year Allocation for: ${selectedYear === 'all' ? 'All Years' : selectedYear}` },
+                title: { display: true, text: `SDE-Year Allocation for: ${dashboardPlanningYear === 'all' ? 'All Years' : dashboardPlanningYear}` },
                 tooltip: { callbacks: { label: (context) => formatTooltipLabel(context, data.total) } }
             }
         }
     });
-
+    
     generateInvestmentTable(data);
 }
 
 /**
- * Generates the new 100% stacked bar chart for investment trends.
+ * Renders the 100% stacked bar chart for investment trends.
  */
 function generateInvestmentTrendChart() {
     const canvas = document.getElementById('investmentTrendChart');
     if (!canvas) { console.error("Canvas for trend chart not found."); return; }
     if (investmentTrendChart) investmentTrendChart.destroy();
     
-    // --- Data Processing for Stacked Bar Chart ---
-    const allYears = [...new Set(currentSystemData.yearlyInitiatives.map(init => init.attributes.planningYear).filter(Boolean))].sort();
+    const allYears = [...new Set(currentSystemData.yearlyInitiatives.map(init => init.attributes.planningYear).filter(Boolean))].sort((a,b) => a - b);
     const allThemes = [...new Set(currentSystemData.definedThemes.map(t => t.name))];
-    const themeColors = {'#4E79A7':0, '#F28E2B':1, '#E15759':2, '#76B7B2':3, '#59A14F':4, '#EDC948':5, '#B07AA1':6, '#FF9DA7':7, '#9C755F':8, '#BAB0AC':9};
+    const themeColors = ['#4E79A7', '#F28E2B', '#E15759', '#76B7B2', '#59A14F', '#EDC948', '#B07AA1', '#FF9DA7', '#9C755F', '#BAB0AC'];
+    
     const datasets = allThemes.map((themeName, index) => ({
         label: themeName,
         data: [],
-        backgroundColor: Object.keys(themeColors)[index % Object.keys(themeColors).length],
+        backgroundColor: themeColors[index % themeColors.length],
     }));
 
     allYears.forEach(year => {
@@ -164,15 +224,12 @@ function generateInvestmentTrendChart() {
 
     investmentTrendChart = new Chart(canvas, {
         type: 'bar',
-        data: {
-            labels: allYears,
-            datasets: datasets
-        },
+        data: { labels: allYears, datasets: datasets },
         options: {
             responsive: true, maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
             scales: {
-                x: { stacked: true },
+                x: { stacked: true, grid: { display: false } },
                 y: { stacked: true, max: 100, ticks: { callback: (value) => `${value}%` } }
             },
             plugins: {
@@ -197,8 +254,6 @@ function generateInvestmentTrendChart() {
 
 /**
  * Helper function to process initiative data for a given year.
- * @param {string} selectedYear - The year to filter by ('all' or a number).
- * @returns {object} An object containing labels, sdeValues, and total.
  */
 function processInvestmentData(selectedYear) {
     const themeMap = new Map(currentSystemData.definedThemes.map(theme => [theme.themeId, theme.name]));
@@ -236,7 +291,6 @@ function processInvestmentData(selectedYear) {
 
 /**
  * Generates the summary table for the doughnut chart.
- * @param {object} data - The processed data object from processInvestmentData.
  */
 function generateInvestmentTable(data) {
     const container = document.getElementById('investmentTableContainer');
@@ -283,9 +337,6 @@ function generateInvestmentTable(data) {
 
 /**
  * Formats the tooltip label for the doughnut chart.
- * @param {object} context - The tooltip context from Chart.js.
- * @param {number} total - The total SDE years for percentage calculation.
- * @returns {string} The formatted label string.
  */
 function formatTooltipLabel(context, total) {
     let label = context.label || '';
