@@ -38,12 +38,10 @@ function initializeDashboard() {
 
 /**
  * Handles the change event from the year selector dropdown.
- * This now also needs to re-render the current widget if it's the doughnut chart.
  */
 function handleDashboardYearChange(selectedYear) {
     dashboardPlanningYear = selectedYear;
-    console.log(`Dashboard year filter changed to: ${dashboardPlanningYear}`);
-    // Re-generate the currently visible widget to apply the filter
+    console.log(`Doughnut chart year changed to: ${dashboardPlanningYear}`);
     const currentWidget = dashboardItems[currentDashboardIndex];
     if (currentWidget.id === 'investmentDistributionWidget') {
         currentWidget.generator();
@@ -52,6 +50,7 @@ function handleDashboardYearChange(selectedYear) {
 
 /**
  * Main function to create the carousel shell and its static elements.
+ * REVISED: Removes h2 and h3 titles for a cleaner look.
  */
 function generateDashboardLayout() {
     const container = document.getElementById('dashboardView');
@@ -60,15 +59,14 @@ function generateDashboardLayout() {
         return;
     }
 
-    const yearSelectorHTML = generateYearSelectorHTML(); // Get year selector HTML
+    const yearSelectorHTML = generateYearSelectorHTML();
 
     container.innerHTML = `
-        <h2>Strategic Investment Dashboard</h2>
         ${yearSelectorHTML}
         <div id="dashboardCarousel" style="position: relative; border: 1px solid #ddd; padding: 10px; background-color: #fff; border-radius: 5px;">
-            <div style="text-align: center; margin-bottom: 10px;">
+            <div style="text-align: center; margin-bottom: 15px;">
                 <button onclick="navigateDashboard(-1)">&lt; Previous</button>
-                <span id="dashboardTitle" style="margin: 0 15px; font-weight: bold; font-size: 1.1em;"></span>
+                <span id="dashboardTitle" style="margin: 0 15px; font-weight: bold; font-size: 1.4em; color: #333;"></span>
                 <button onclick="navigateDashboard(1)">Next &gt;</button>
             </div>
             
@@ -81,7 +79,7 @@ function generateDashboardLayout() {
             </div>
 
             <div id="investmentTrendWidget" class="dashboard-carousel-item" style="display: none;">
-                <p style="font-size: 0.9em; color: #666; text-align: center; margin-top: 0; margin-bottom: 15px;">Compares the percentage of total effort allocated to each theme, year over year.</p>
+                 <p style="font-size: 0.9em; color: #666; text-align: center; margin-top: 0; margin-bottom: 15px;">Compares the percentage of total effort allocated to each theme, year over year.</p>
                 <div class="chart-container" style="position: relative; height:450px; width:95%; margin: auto;">
                     <canvas id="investmentTrendChart"></canvas>
                 </div>
@@ -89,6 +87,7 @@ function generateDashboardLayout() {
         </div>
     `;
 }
+
 
 /**
  * Generates the HTML for the year selector dropdown.
@@ -180,7 +179,7 @@ function generateInvestmentDistributionChart() {
             responsive: true, maintainAspectRatio: false,
             plugins: {
                 legend: { position: 'top' },
-                title: { display: true, text: `SDE-Year Allocation for: ${dashboardPlanningYear === 'all' ? 'All Years' : dashboardPlanningYear}` },
+                title: { display: false }, // Title is now handled by the carousel
                 tooltip: { callbacks: { label: (context) => formatTooltipLabel(context, data.total) } }
             }
         }
@@ -234,7 +233,7 @@ function generateInvestmentTrendChart() {
             },
             plugins: {
                 legend: { position: 'top' },
-                title: { display: true, text: 'Investment Percentage by Theme Over Time' },
+                title: { display: false }, // Title is now handled by the carousel
                 tooltip: {
                     callbacks: {
                         label: function(context) {
