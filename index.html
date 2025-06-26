@@ -29,7 +29,9 @@
     <script src="js/orgView.js"></script>
     <script src="js/yearPlanning.js"></script>
     <script src="js/capacityTuning.js"></script>
-    <script src="js/roadmap.js"></script> <head>
+    <script src="js/roadmap.js"></script>
+    <script src="js/dashboard.js"></script> 
+    <head>
         <meta charset="UTF-8">
     </head>
     <body>
@@ -45,7 +47,9 @@
                     <button id="viewOrgChartButton" onclick="showOrganogramView()">Inspect Org Design</button>
                     <button id="viewEngineerListButton" onclick="showEngineerTableView()">Engineers List</button>
                     <button id="manageYearPlanButton" onclick="showPlanningView()">Year Plan</button>
-                    <button id="manageRoadmapButton" onclick="showRoadmapView()">Roadmap & Backlog</button> <button id="tuneCapacityButton" onclick="showCapacityConfigView()">Capacity Tuning</button>
+                    <button id="manageRoadmapButton" onclick="showRoadmapView()">Roadmap & Backlog</button> 
+                    <button id="dashboardViewButton" onclick="showDashboardView()">Dashboard</button>
+                    <button id="tuneCapacityButton" onclick="showCapacityConfigView()">Capacity Tuning</button>
                     <button id="sdmForecastButton" onclick="showSdmForecastingView()">Resource Forecasting</button>
                 </div>
             </div>
@@ -228,6 +232,8 @@
                 <div id="roadmapTableContainer" style="margin-bottom: 20px;">
                     </div>
                 
+            </div>
+            <div id="dashboardView" style="display:none; margin-top: 20px;">
             </div>
 
             <div id="capacityConfigView" style="display:none; margin-top: 20px; max-width: 90%; margin-left: auto; margin-right: auto;">                
