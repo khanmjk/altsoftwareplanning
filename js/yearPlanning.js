@@ -327,9 +327,9 @@ function generateTeamLoadSummaryTable() {
     });
 
     // --- 2. Prepare Data for Body ---
-    const initiativesForYear = (currentSystemData.yearlyInitiatives || []).filter(
-        init => init.attributes.planningYear == currentPlanningYear
-    );
+    const initiativesForYear = (currentSystemData.yearlyInitiatives || [])
+        .filter(init => init.attributes.planningYear == currentPlanningYear && init.status !== 'Completed'); // <-- FIX: Exclude "Completed"
+        
     const sortedInitiatives = [...initiativesForYear].sort((a, b) => {
         if (a.isProtected && !b.isProtected) return -1;
         if (!a.isProtected && b.isProtected) return 1;
@@ -457,6 +457,7 @@ window.toggleCapacityConstraints = toggleCapacityConstraints;
  * based on initiative data and ensuring data consistency.
  */
 function generatePlanningTable() {
+    console.log(`Generating planning table for year: ${currentPlanningYear}...`);
     const planningViewDiv = document.getElementById('planningView');
     const capacitySummaryDiv = document.getElementById('planningCapacitySummary');
     const scenarioControlDiv = document.getElementById('planningScenarioControl');
@@ -617,10 +618,9 @@ function generatePlanningTable() {
     thead.appendChild(headerRow); table.appendChild(thead);
     const tbody = document.createElement('tbody'); tbody.id = 'planningTableBody';
 
-
-    const initiativesForYear = (currentSystemData.yearlyInitiatives || []).filter(
-        init => init.attributes.planningYear == currentPlanningYear
-    );
+    // FIX: Filter out "Completed" initiatives before sorting and displaying
+    const initiativesForYear = (currentSystemData.yearlyInitiatives || [])
+        .filter(init => init.attributes.planningYear == currentPlanningYear && init.status !== 'Completed');
 
     const sortedInitiatives = [...initiativesForYear].sort((a, b) => {
         if (a.isProtected && !b.isProtected) return -1;

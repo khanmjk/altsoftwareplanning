@@ -643,94 +643,172 @@ function prepareRoadmapDataForTable() {
 }
 
 /**
- * Defines columns for the roadmap table.
- * MODIFIED: Added columns for "Assigned Teams" and "Total Initial SDEs".
+ * Defines columns for the roadmap table, now with inline editors.
  */
 function defineRoadmapTableColumns() {
+    
+    // Helper to generate editor params for personnel (Owner) dropdowns
+    const getPersonnelEditorParams = () => {
+        const options = [{ label: "- No Owner -", value: "" }];
+        (currentSystemData.sdms || []).forEach(p => options.push({ label: `${p.sdmName} (SDM)`, value: `sdm:${p.sdmId}` }));
+        (currentSystemData.pmts || []).forEach(p => options.push({ label: `${p.pmtName} (PMT)`, value: `pmt:${p.pmtId}` }));
+        (currentSystemData.seniorManagers || []).forEach(p => options.push({ label: `${p.seniorManagerName} (Sr. Mgr)`, value: `seniorManager:${p.seniorManagerId}` }));
+        return { values: options, autocomplete: true };
+    };
+
+    // Helper to generate editor params for Themes multi-select
+    const getThemeEditorParams = () => {
+        const options = (currentSystemData.definedThemes || []).map(theme => ({
+            label: theme.name,
+            value: theme.themeId
+        }));
+        return { values: options, multiselect: true };
+    };
+
     const columns = [
         {
             title: "Title", field: "title", minWidth: 200, headerFilter: "input", frozen:true,
-            tooltip: function(e, cell){ return cell.getValue(); }
+            tooltip: (e, cell) => cell.getValue(),
+            editor: "input",
+            cellEdited: (cell) => {
+                const initiative = cell.getRow().getData();
+                updateInitiative(initiative.id, { title: cell.getValue() });
+                saveSystemChanges();
+            }
         },
         {
             title: "Description", field: "description", minWidth: 250, hozAlign: "left",
-            formatter: "textarea", headerFilter: "input", tooltip: function(e, cell){ return cell.getValue(); }
+            formatter: "textarea", headerFilter: "input", tooltip: (e, cell) => cell.getValue(),
+            editor: "textarea", // Enable inline editing for description
+            cellEdited: (cell) => {
+                const initiative = cell.getRow().getData();
+                updateInitiative(initiative.id, { description: cell.getValue() });
+                saveSystemChanges();
+            }
         },
         {
-            title: "Status", field: "status", width: 110, headerFilter: "list",
+            title: "Status", field: "status", width: 120, headerFilter: "list",
             headerFilterParams: { values: ["", ...ALL_INITIATIVE_STATUSES], clearable: true, autocomplete: true },
-            headerFilterFunc: "="
+            headerFilterFunc: "=",
+            editor: "list",
+            editorParams: { values: ALL_INITIATIVE_STATUSES },
+            cellEdited: (cell) => {
+                const initiative = cell.getRow().getData();
+                const newValue = cell.getValue();
+                const oldValue = cell.getOldValue();
+                
+                if (newValue === "Completed") {
+                    const today = luxon.DateTime.now().startOf('day');
+                    const dueDate = luxon.DateTime.fromISO(initiative.targetDueDate).startOf('day');
+                    
+                    if (oldValue !== "Committed") {
+                        alert("Error: Only 'Committed' initiatives can be marked as 'Completed'.");
+                        cell.restoreOldValue();
+                        return;
+                    }
+                    if (dueDate > today) {
+                        alert("Error: Cannot mark an initiative as 'Completed' before its due date has passed.");
+                        cell.restoreOldValue();
+                        return;
+                    }
+                    updateInitiative(initiative.id, { status: newValue });
+                    saveSystemChanges();
+                    
+                } else {
+                    alert("Status updates (other than to 'Completed') are managed by the Year Plan ATL/BTL process.");
+                    cell.restoreOldValue();
+                }
+            }
         },
-        // NEW: Assigned Teams Column
         {
             title: "Assigned Teams", field: "assignedTeamsDisplay", minWidth: 180, headerFilter: "input",
             tooltip: (e, cell) => cell.getValue() || "N/A",
-            formatter: "textarea" // Allow multiline if many teams
+            formatter: "textarea"
         },
-        // NEW: Total Initial SDEs Column
         {
             title: "SDE/Yr Estimates", field: "totalInitialSdesDisplay", width: 100, hozAlign: "center", headerFilter: "input", sorter: "number",
             tooltip: (e, cell) => `Total initial SDE estimate: ${cell.getValue()}`
         },
         {
-            title: "Owner", field: "ownerDisplay", width: 140, headerFilter: "input",
-            tooltip: function(e, cell){ return cell.getValue(); }
+            title: "Owner", field: "owner", width: 140, headerFilter: "input",
+            formatter: (cell) => cell.getValue()?.name || "N/A",
+            editor: "list",
+            editorParams: getPersonnelEditorParams,
+            cellEdited: (cell) => {
+                const initiative = cell.getRow().getData();
+                const ownerValue = cell.getValue();
+                let newOwnerObject = null;
+                if (ownerValue) {
+                    const [type, id] = ownerValue.split(':');
+                    const options = getPersonnelEditorParams().values;
+                    const selectedOption = options.find(opt => opt.value === ownerValue);
+                    const name = selectedOption ? selectedOption.label.replace(/ \(.+\)/, '') : id;
+                    newOwnerObject = { type, id, name };
+                }
+                updateInitiative(initiative.id, { owner: newOwnerObject });
+                saveSystemChanges();
+                // FIX: Update the cell's underlying row data so the formatter works correctly
+                cell.getRow().update({ owner: newOwnerObject });
+            },
+            tooltip: (e, cell) => cell.getValue()?.name || "N/A"
         },
         {
             title: "ROI Summary", field: "roiSummaryDisplay", minWidth: 180, hozAlign: "left",
-            tooltip: function(e, cell){ return cell.getValue(); },
-            headerFilter: "input", headerFilterPlaceholder: "Filter ROI..."
-        },
-        {
-            title: "ROI Type", field: "roi.valueType", minWidth: 120, hozAlign: "left",
-            headerFilter: "input", tooltip: (e, cell) => cell.getValue() || "N/A",
+            tooltip: (e, cell) => cell.getValue(), headerFilter: "input", headerFilterPlaceholder: "Filter ROI..."
         },
         {
             title: "Target Quarter/Yr", field: "targetQuarterYearDisplay", width: 110, hozAlign: "center",
-            tooltip: function(e, cell){ return cell.getValue() || "N/A"; }, headerFilter: "input",
-            sorter: function(a, b, aRow, bRow, column, dir, sorterParams){ /* ... sorter logic ... */
-                const date_a_str = aRow.getData().targetDueDate;
-                const date_b_str = bRow.getData().targetDueDate;
-                let date_a = null;
-                if (date_a_str && typeof date_a_str === 'string' && date_a_str.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                    const parsedA = luxon.DateTime.fromISO(date_a_str);
-                    if (parsedA.isValid) date_a = parsedA;
-                }
-                let date_b = null;
-                if (date_b_str && typeof date_b_str === 'string' && date_b_str.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                    const parsedB = luxon.DateTime.fromISO(date_b_str);
-                    if (parsedB.isValid) date_b = parsedB;
-                }
-                const aIsNull = (date_a === null); const bIsNull = (date_b === null);
-                if (aIsNull && bIsNull) return 0; if (aIsNull) return 1; if (bIsNull) return -1;
-                return date_a.valueOf() - date_b.valueOf();
+            tooltip: (e, cell) => cell.getValue() || "N/A", headerFilter: "input",
+            sorter: (a, b, aRow, bRow) => {
+                const dateA = aRow.getData().targetDueDate ? luxon.DateTime.fromISO(aRow.getData().targetDueDate) : null;
+                const dateB = bRow.getData().targetDueDate ? luxon.DateTime.fromISO(bRow.getData().targetDueDate) : null;
+                if (!dateA?.isValid && !dateB?.isValid) return 0;
+                if (!dateA?.isValid) return 1;
+                if (!dateB?.isValid) return -1;
+                return dateA - dateB;
             }
         },
         {
-            title: "Target Due Date", field: "targetDueDate", width: 110, hozAlign: "center",
-            tooltip: function(e, cell){ return cell.getValue() ? cell.getValue() : "Not set"; },
+            title: "Target Due Date", field: "targetDueDate", width: 120, hozAlign: "center",
+            tooltip: (e, cell) => cell.getValue() || "Not set",
             headerFilter: "input", headerFilterPlaceholder: "YYYY-MM-DD",
-            sorter: function(a, b, aRow, bRow, column, dir, sorterParams) { /* ... sorter logic ... */
-                const val_a = a; const val_b = b;
-                let dateA = null;
-                if (val_a && typeof val_a === 'string' && val_a.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                    const parsedA = luxon.DateTime.fromISO(val_a);
-                    if (parsedA.isValid) dateA = parsedA;
-                }
-                let dateB = null;
-                if (val_b && typeof val_b === 'string' && val_b.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                    const parsedB = luxon.DateTime.fromISO(val_b);
-                    if (parsedB.isValid) dateB = parsedB;
-                }
-                const aIsNull = (dateA === null); const bIsNull = (dateB === null);
-                if (aIsNull && bIsNull) return 0; if (aIsNull) return 1; if (bIsNull) return -1;
-                return dateA.valueOf() - dateB.valueOf();
+            editor: "date",
+            editorParams: { format: "yyyy-MM-dd" },
+            cellEdited: (cell) => {
+                const initiative = cell.getRow().getData();
+                const newDate = cell.getValue();
+                const newYear = newDate ? luxon.DateTime.fromISO(newDate).year : new Date().getFullYear();
+                
+                updateInitiative(initiative.id, { 
+                    targetDueDate: newDate, 
+                    attributes: { ...initiative.attributes, planningYear: newYear }
+                });
+                saveSystemChanges();
+                
+                cell.getRow().update({ targetQuarterYearDisplay: formatDateToQuarterYear(newDate) });
             }
         },
         {
-            title: "Themes", field: "themeNamesDisplay", minWidth: 150,
-            formatter: (cell) => cell.getValue() || "", headerFilter: "input",
-            tooltip: function(e, cell){ return cell.getValue() || "N/A"; }, sorter: "string"
+            title: "Themes", field: "themes", minWidth: 150, headerFilter: "input",
+            formatter: (cell) => {
+                const themeIds = cell.getValue() || [];
+                const themeMap = new Map((currentSystemData.definedThemes || []).map(t => [t.themeId, t.name]));
+                return themeIds.map(id => themeMap.get(id) || id).join(', ');
+            },
+            editor: "list",
+            editorParams: getThemeEditorParams,
+            cellEdited: (cell) => {
+                const initiative = cell.getRow().getData();
+                const newThemeIds = cell.getValue() || [];
+                updateInitiative(initiative.id, { themes: newThemeIds });
+                saveSystemChanges();
+            },
+            tooltip: (e, cell) => {
+                const themeIds = cell.getValue() || [];
+                if (themeIds.length === 0) return "N/A";
+                const themeMap = new Map((currentSystemData.definedThemes || []).map(t => [t.themeId, t.name]));
+                return themeIds.map(id => themeMap.get(id) || id).join(', ');
+            }
         },
         {
             title: "Actions", width: 120, hozAlign: "center", headerSort: false,
@@ -743,24 +821,13 @@ function defineRoadmapTableColumns() {
         }
     ];
 
-    const roiFields = ["category", "currency", "timeHorizonMonths", "confidenceLevel", "calculationMethodology", "businessCaseLink", "overrideJustification"];
-    roiFields.forEach(field => {
-        columns.push({
-            title: `ROI: ${field.replace(/([A-Z])/g, ' $1').trim()}`,
-            field: `roi.${field}`, visible: false, minWidth:150,
-            headerFilter: "input", download: true, tooltip: function(e, cell){ return cell.getValue(); }
-        });
-    });
-    columns.push({
-        title: "ROI: Estimated Value", field: "roi.estimatedValue", visible: false, minWidth: 150,
-        headerFilter: "input", download: true, tooltip: function(e, cell){ return cell.getValue(); }
-    });
-    columns.push({ title: "PM Capacity Notes", field: "attributes.pmCapacityNotes", visible: false, minWidth: 200, headerFilter: "input", formatter: "textarea", download: true, tooltip: function(e, cell){ return cell.getValue(); } });
-    columns.push({ title: "Primary Goal ID", field: "primaryGoalId", visible: false, minWidth: 150, headerFilter: "input", download: true, tooltip: function(e, cell){ return cell.getValue(); } });
-    columns.push({ title: "Project Manager", field: "projectManager.name", visible: false, minWidth: 150, headerFilter: "input", download: true, tooltip: function(e, cell){ return cell.getValue(); } });
+    // Hidden columns for export
+    columns.push({ title: "ROI: Category", field: "roi.category", visible: false, download: true });
+    columns.push({ title: "ROI: Est. Value", field: "roi.estimatedValue", visible: false, download: true });
 
     return columns;
 }
+
 
 /**
  * Renders the roadmap table using Tabulator.
@@ -779,7 +846,7 @@ function renderRoadmapTable() {
     const tabulatorOptions = {
         data: tableData,
         columns: columnDefinitions,
-        layout: "fitColumns", // << CHANGED layout to fitColumns
+        layout: "fitColumns",
         responsiveLayout: "hide",
         pagination: "local",
         paginationSize: 30,
@@ -795,8 +862,8 @@ function renderRoadmapTable() {
             roadmapTable.destroy();
         }
         roadmapTable = new EnhancedTableWidget(tableContainer, {
-            ...tabulatorOptions, // Spread the common options
-            uniqueIdField: 'id', // Specific to EnhancedTableWidget if it uses it
+            ...tabulatorOptions,
+            uniqueIdField: 'id',
             exportCsvFileName: 'roadmap_initiatives.csv',
             exportJsonFileName: 'roadmap_initiatives.json',
             exportXlsxFileName: 'roadmap_initiatives.xlsx',
@@ -809,8 +876,8 @@ function renderRoadmapTable() {
             roadmapTable.destroy();
         }
         roadmapTable = new Tabulator(tableContainer, {
-            ...tabulatorOptions, // Spread the common options
-            height: "600px", // May need to set height if not using EnhancedTableWidget's auto-height logic
+            ...tabulatorOptions,
+            height: "600px",
         });
         console.log("Roadmap table rendered using direct Tabulator with fitColumns layout.");
     }
@@ -1110,7 +1177,7 @@ function handleSaveRoadmapInitiative_modal() {
         if (isNaN(date.getTime())) throw new Error("Invalid date format");
         derivedPlanningYear = date.getFullYear();
     } catch (e) {
-        alert("Invalid Target Due Date. Please use the format YYYY-MM-DD.");
+        alert("Invalid Target Due Date. Please use the formatVSFAULT-MM-DD.");
         form.elements['initiativeTargetDueDate_modal_roadmap'].focus();
         return;
     }
