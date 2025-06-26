@@ -4,7 +4,6 @@ let roadmapTimelineTable = null; // To hold the Tabulator instance for this spec
 
 /**
  * Initializes the entire Roadmap Table View widget.
- * This is the main entry point called from dashboard.js.
  */
 function initializeRoadmapTableView() {
     console.log("Initializing new Quarterly Roadmap Swimlane View widget...");
@@ -16,7 +15,7 @@ function initializeRoadmapTableView() {
 
     container.innerHTML = `
         <div id="roadmapTableFilters" style="margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border: 1px solid #ddd; border-radius: 4px; display: flex; flex-wrap: wrap; align-items: center; gap: 20px;">
-            </div>
+        </div>
         <div id="quarterlyRoadmapContainer" style="overflow-x: auto;"></div>
     `;
 
@@ -71,7 +70,7 @@ function generateRoadmapTableFilters() {
  * Prepares and structures the data for the quarterly roadmap display.
  */
 function prepareDataForQuarterlyRoadmap() {
-    const yearFilter = dashboardPlanningYear; // Use the global dashboard year filter
+    const yearFilter = dashboardPlanningYear;
     const orgFilter = document.getElementById('roadmapOrgFilter')?.value || 'all';
     const teamFilter = document.getElementById('roadmapTeamFilter')?.value || 'all';
 
@@ -122,7 +121,7 @@ function prepareDataForQuarterlyRoadmap() {
 
 /**
  * Renders the new quarterly roadmap table.
- * MODIFIED: Displays the specific team name in the SDE label when filtered.
+ * MODIFIED: Displays contextual SDE totals for Org and Team filters.
  */
 function renderQuarterlyRoadmap() {
     const container = document.getElementById('quarterlyRoadmapContainer');
@@ -130,6 +129,7 @@ function renderQuarterlyRoadmap() {
 
     const roadmapData = prepareDataForQuarterlyRoadmap();
     const themes = Object.keys(roadmapData).sort();
+    const orgFilter = document.getElementById('roadmapOrgFilter')?.value || 'all';
     const teamFilter = document.getElementById('roadmapTeamFilter')?.value || 'all';
 
     if (themes.length === 0) {
@@ -162,13 +162,24 @@ function renderQuarterlyRoadmap() {
                     const totalSde = (init.assignments || []).reduce((sum, a) => sum + (a.sdeYears || 0), 0);
                     let sdeDisplayHTML = '';
 
-                    // ** NEW LOGIC FOR SDE DISPLAY **
+                    // ** NEW HIERARCHICAL LOGIC FOR SDE DISPLAY **
                     if (teamFilter !== 'all') {
                         const team = currentSystemData.teams.find(t => t.teamId === teamFilter);
                         const teamName = team ? (team.teamIdentity || team.teamName) : "Team";
                         const teamAssignment = (init.assignments || []).find(a => a.teamId === teamFilter);
                         const teamSde = teamAssignment ? (teamAssignment.sdeYears || 0) : 0;
                         sdeDisplayHTML = `<div class="initiative-sde">${teamName}: ${teamSde.toFixed(2)} of ${totalSde.toFixed(2)} SDEs</div>`;
+                    } else if (orgFilter !== 'all') {
+                        const teamsInOrg = new Set();
+                        (currentSystemData.sdms || []).forEach(sdm => {
+                            if (sdm.seniorManagerId === orgFilter) {
+                                (currentSystemData.teams || []).forEach(team => {
+                                    if (team.sdmId === sdm.sdmId) teamsInOrg.add(team.teamId);
+                                });
+                            }
+                        });
+                        const orgSde = (init.assignments || []).reduce((sum, a) => teamsInOrg.has(a.teamId) ? sum + (a.sdeYears || 0) : sum, 0);
+                        sdeDisplayHTML = `<div class="initiative-sde">Org Total: ${orgSde.toFixed(2)} of ${totalSde.toFixed(2)} SDEs</div>`;
                     } else {
                         sdeDisplayHTML = `<div class="initiative-sde">(${totalSde.toFixed(2)} SDEs)</div>`;
                     }
