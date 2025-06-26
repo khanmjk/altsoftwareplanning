@@ -4,6 +4,7 @@ let roadmapTimelineTable = null; // To hold the Tabulator instance for this spec
 
 /**
  * Initializes the entire Roadmap Table View widget.
+ * This is the main entry point called from dashboard.js.
  */
 function initializeRoadmapTableView() {
     console.log("Initializing new Quarterly Roadmap Swimlane View widget...");
@@ -15,7 +16,7 @@ function initializeRoadmapTableView() {
 
     container.innerHTML = `
         <div id="roadmapTableFilters" style="margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border: 1px solid #ddd; border-radius: 4px; display: flex; flex-wrap: wrap; align-items: center; gap: 20px;">
-        </div>
+            </div>
         <div id="quarterlyRoadmapContainer" style="overflow-x: auto;"></div>
     `;
 
@@ -70,7 +71,7 @@ function generateRoadmapTableFilters() {
  * Prepares and structures the data for the quarterly roadmap display.
  */
 function prepareDataForQuarterlyRoadmap() {
-    const yearFilter = dashboardPlanningYear;
+    const yearFilter = dashboardPlanningYear; // Use the global dashboard year filter
     const orgFilter = document.getElementById('roadmapOrgFilter')?.value || 'all';
     const teamFilter = document.getElementById('roadmapTeamFilter')?.value || 'all';
 
@@ -121,7 +122,7 @@ function prepareDataForQuarterlyRoadmap() {
 
 /**
  * Renders the new quarterly roadmap table.
- * MODIFIED: Displays contextual SDE totals for Org and Team filters.
+ * MODIFIED: Displays contextual SDE totals for Org and Team filters, with team breakdowns for Org filter.
  */
 function renderQuarterlyRoadmap() {
     const container = document.getElementById('quarterlyRoadmapContainer');
@@ -178,8 +179,20 @@ function renderQuarterlyRoadmap() {
                                 });
                             }
                         });
-                        const orgSde = (init.assignments || []).reduce((sum, a) => teamsInOrg.has(a.teamId) ? sum + (a.sdeYears || 0) : sum, 0);
-                        sdeDisplayHTML = `<div class="initiative-sde">Org Total: ${orgSde.toFixed(2)} of ${totalSde.toFixed(2)} SDEs</div>`;
+                        
+                        const orgAssignments = (init.assignments || []).filter(a => teamsInOrg.has(a.teamId));
+                        const orgSde = orgAssignments.reduce((sum, a) => sum + (a.sdeYears || 0), 0);
+
+                        let breakdownHTML = '';
+                        if (orgAssignments.length > 1) { // Only show breakdown if multiple teams from org are involved
+                            breakdownHTML = orgAssignments.map(a => {
+                                const team = currentSystemData.teams.find(t => t.teamId === a.teamId);
+                                const teamName = team ? (team.teamIdentity || team.teamName) : "Unknown Team";
+                                return `<div class="initiative-sde-breakdown">${teamName}: ${a.sdeYears.toFixed(2)}</div>`;
+                            }).join('');
+                        }
+                        
+                        sdeDisplayHTML = `<div class="initiative-sde">Org Total: ${orgSde.toFixed(2)} of ${totalSde.toFixed(2)} SDEs</div>${breakdownHTML}`;
                     } else {
                         sdeDisplayHTML = `<div class="initiative-sde">(${totalSde.toFixed(2)} SDEs)</div>`;
                     }

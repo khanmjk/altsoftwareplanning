@@ -1374,4 +1374,15 @@ a:focus {
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     border-color: #999;
 }
+
+/* --- Styling for Team Breakdown in Org Filter --- */
+.initiative-sde-breakdown {
+    font-size: 0.8em; /* Maintain the slightly smaller size for detail */
+    color: #555;
+    text-align: right;
+    white-space: nowrap; /* Prevent team names from wrapping */
+    overflow: hidden;
+    text-overflow: ellipsis; /* Add ellipsis for very long team names */
+}
+
 /* Add any additional styles as needed */          
