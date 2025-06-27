@@ -63,16 +63,13 @@ Manage Detailed Planning
          Description: Review the existing data structures (e.g., for teams, services, initiatives) and implement the previously discussed strategy for making them more extensible. This might involve adding a generic attributes or customFields property to key data objects to allow for easier addition of new information without constant schema changes.
          Impact: Reduces the friction for adding new features that require storing more data, ensuring the application can evolve more smoothly.
 
-* Make sure to clean up Yearly Planning view:
--- There needs to be link from year plan to the backlog page (ATL items must be considered as "committed" in the backlog item status, whilst BTL items must get assigned to "backlog" state). 
-When generated the roadmap view, the planning status in the year plan for initiatives as ATL/BTL - must drive the backlog and roadmap.
--- Remove Add new initiative from year plan so that the rule becomes year plan must always pull from the backlog. The backlog should be the main source of truth for initiatives / roadmap
--- Thinking we should add some other attributes to initiatives like type: Egnineering, Product, BusinessOps, Security, Compliance, Legal, etc.
+[Done] Make sure to clean up Yearly Planning view:
+[Done] -- There needs to be link from year plan to the backlog page (ATL items must be considered as "committed" in the backlog item status, whilst BTL items must get assigned to "backlog" state). 
+[Done] When generated the roadmap view, the planning status in the year plan for initiatives as ATL/BTL - must drive the backlog and roadmap.
+[Done] -- Remove Add new initiative from year plan so that the rule becomes year plan must always pull from the backlog. The backlog should be the main source of truth for initiatives / roadmap
+[Done] -- Thinking we should add some other attributes to initiatives like type: Egnineering, Product, BusinessOps, Security, Compliance, Legal, etc.
 
-------------
-IN PROGRESS
-------------
-Manage Roadmap & Backlog
+[Done] Manage Roadmap & Backlog
 [Done] -- Similar to the year planning page, but focused on roadmap / backlog management (does not need to show ATL/BTL logic), just an interactive table to pull the latest backlog of initiatives, ability to add and remove initiatives. The Year plan and Roadmap must share the same data model (year plan shows more details / attributes than the roadmap)
 [Done] -- Generate roadmap table view (by quarter), should be interactive to filter by org, team
 [Done] -- The backlog items can have 1..many initiatives
@@ -82,8 +79,11 @@ Manage Roadmap & Backlog
 [Done] -- It must be possible to generate a roadmap view per team for software managers to focus on their team or org-specific commitments
 [Done] -- It must be possible to generate a view of business objectives and strategies from the backlog
 [Done] -- It must be possible to generate a view of completed goals, initiatives or work packages
--- It must be possible to display a graph visualization (similar to system visualizations) of service impact and relations to initiatives and work package dependencies
+[Done] - basic - needs improvement] -- It must be possible to display a graph visualization (similar to system visualizations) of service impact and relations to initiatives and work package dependencies
 
+------------
+IN PROGRESS
+------------
 
 
 ------
@@ -100,7 +100,6 @@ Implement the logic within EnhancedTableWidget to take these definitions and cor
 
 Utilities
 - Now that we've got export to excel, csv and json working, we need a utlity to generate these files from other places: planning table, overall system data dump, etc.
-
 
 UX
 -- Now that we can add resources to the system, we need to also support removing resources (when people leave) [Jules failed at this task]
