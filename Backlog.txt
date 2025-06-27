@@ -89,6 +89,32 @@ IN PROGRESS
 ------
 TO DO
 ------
+- Fix up Initiative Impact dashboard widget in impactView.js
+-- Make the visible window larger so the graph fits better - right now the nodes exceed the window - make the window larger
+-- When filtering by Intiatives:
+--- Use different colours to identify teams just like we do in System Visualization and Team Relationships Visualization (currently all teams appear as blue circles)
+--- Differentiate the services owned by teams, use different colours relative to the team colour (currently all service nodes appear as green circles) 
+--- When hovering over a service node, the tooltip is wrong: It shows Owner as team id, instead use the team identity
+--- When hovering over a team node, the tooltip is wrong: It shows SDM as the sdmid instead of the actual value, i.e. name of manager
+--- When hovering over the initiative node, enhance the tooltip by showing more details about the initiative: Owner, Due Dates
+--- Highlight the initiative node in a different colour, maybe a red outline, so we can see the selected initative under focus
+--- Generate a summary in a suitable format of the initiative selected (something that tells a story for that initiative)
+-- When filtering by Team:
+--- Include in the drop down list "All teams" to show the overall default view
+--- Similar changes as for initiatives: Use different colours for teams, and use data for values instead of IDs in the tooltips
+--- There should be a starting node showing the selected team from the filter - this would make the network graph clearer
+-- When filtering by Service:
+--- Highlight the selected service in focus so we can see it more clearly, just like we do in  Service Relationships Visualization
+--- Add tooltips as necessary to provide context for the arrows in the graph, straight lines, etc.
+--- Show dependency arros similar to how we currently do in Service Dependency Visualization
+- General UX guidelines for Initiative Impact widget:
+-- Increase size of team nodes so the text can fit - and split the text over two lines if too long (right now some text appears outside the node)
+-- Include appropriate legengs like we do in other visualizations in 
+-- Esure the thing being filtered (initiative, team or service) is clearly focused/highlighted in the graph that makes it stand out from other nodes
+-- Strive to make the widget responsive to the size of the graph so that the graph appears within the frame (no nodes should appear cut out from the frame)
+
+
+
 - Now that we have a goals dashboard view, we need to think about introducing an interface to manage the lifecycle of goals
 
 - Working on creating a reusable modern table widget leveraging tabular library
