@@ -96,7 +96,7 @@ TO DO
 --- Differentiate the services owned by teams, use different colours relative to the team colour (currently all service nodes appear as green circles) 
 --- When hovering over a service node, the tooltip is wrong: It shows Owner as team id, instead use the team identity
 --- When hovering over a team node, the tooltip is wrong: It shows SDM as the sdmid instead of the actual value, i.e. name of manager
---- When hovering over the initiative node, enhance the tooltip by showing more details about the initiative: Owner, Due Dates
+--- When hovering over the initiative node, enhance the tooltip by showing more details about the initiative: Owner, Due Dates, Teams impacted, Estimates per team, etc.
 --- Highlight the initiative node in a different colour, maybe a red outline, so we can see the selected initative under focus
 --- Generate a summary in a suitable format of the initiative selected (something that tells a story for that initiative)
 -- When filtering by Team:
@@ -112,6 +112,8 @@ TO DO
 -- Include appropriate legengs like we do in other visualizations in 
 -- Esure the thing being filtered (initiative, team or service) is clearly focused/highlighted in the graph that makes it stand out from other nodes
 -- Strive to make the widget responsive to the size of the graph so that the graph appears within the frame (no nodes should appear cut out from the frame)
+-- For team nodes, use toolip showing information about the team similar to the Team Visualization, and also some info on initiatives the team is impacted by
+-- When hovering over service nodes, include in tooltip, description about the service 
 
 
 
@@ -166,6 +168,8 @@ Bugs / Missing features
 - [UX] Include a Delete Resource section in the Organization view, make the Add and Delete resource sections collapsible. Remember to regenerate the team breakdown table to reflect changes.
 - [Feature] Add more default systems for demo purposes: Reference architectures for Android Stack, Chat GPT app, LLM system, etc.
 - [Feature] Organization Overview - show a view of traditional org chart with blocks
+- [Bug] - When filtering in the Service Dependency Visualization, the list is stuck on the first service, even though the selected service from the list is acted on, and the graph displays correctly - but the top service list doesn't show the selected service
+- [Feature] - In Service Dependency Visualization, use different colours for upstream and downstream dependent nodes
 
 
 Backlog Items: Technical Debt & Architectural Enhancements
