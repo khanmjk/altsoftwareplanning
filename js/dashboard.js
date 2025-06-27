@@ -13,7 +13,8 @@ const dashboardItems = [
     { id: 'investmentDistributionWidget', title: 'Investment Distribution by Theme', generator: () => generateInvestmentDistributionChart(dashboardPlanningYear) },
     { id: 'investmentTrendWidget', title: 'Investment Trend Over Time', generator: generateInvestmentTrendChart },
     { id: 'roadmapTimelineWidget', title: 'Roadmap by Quarter', generator: initializeRoadmapTableView },
-    { id: 'threeYearPlanWidget', title: '3-Year Plan (3YP)', generator: initialize3YPRoadmapView }
+    { id: 'threeYearPlanWidget', title: '3-Year Plan (3YP)', generator: initialize3YPRoadmapView },
+    { id: 'initiativeImpactWidget', title: 'Initiative Impact', generator: initializeImpactView }    
 ];
 let currentDashboardIndex = 0;
 // --- End Globals ---
@@ -77,7 +78,8 @@ function generateDashboardLayout() {
             <div id="investmentDistributionWidget" class="dashboard-carousel-item" style="display: none;"></div>
             <div id="investmentTrendWidget" class="dashboard-carousel-item" style="display: none;"></div>
             <div id="roadmapTimelineWidget" class="dashboard-carousel-item" style="display: none;"></div>
-            <div id="threeYearPlanWidget" class="dashboard-carousel-item" style="display: none;"></div>
+            <div id="threeYearPlanWidget" class="dashboard-carousel-item" style="display: none;"></div>      
+            <div id="initiativeImpactWidget" class="dashboard-carousel-item" style="display: none;"></div>
         </div>
     `;
 }
