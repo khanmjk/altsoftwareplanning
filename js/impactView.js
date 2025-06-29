@@ -24,14 +24,25 @@ function initializeImpactView() {
 
     const svgContainer = document.createElement('div');
     svgContainer.id = 'impact-graph-container';
+    svgContainer.style.border = '1px solid #ddd'; // Make window visible
 
     // Append controls first, then the SVG container
     container.appendChild(controlsContainer);
     container.appendChild(svgContainer);
-
+    
     const svg = d3.select(svgContainer).append("svg")
         .attr("width", "100%")
-        .attr("height", "700px");
+        .attr("height", "850px"); // Make the window larger
+
+    const summaryContainer = document.createElement('div');
+    summaryContainer.id = 'impact-summary-container';
+    summaryContainer.style.padding = '15px';
+    summaryContainer.style.marginTop = '10px';
+    summaryContainer.style.border = '1px solid #ddd';
+    summaryContainer.style.backgroundColor = '#f9f9f9';
+    summaryContainer.style.display = 'none'; // Initially hidden
+    container.appendChild(summaryContainer);
+
 
     // --- Create UI Controls ---
     const modeLabel = document.createElement('label');
@@ -87,6 +98,7 @@ function updateDynamicSelector(svg) {
             break;
         case 'team':
             items = (currentSystemData.teams || []).sort((a,b) => (a.teamIdentity || a.teamName).localeCompare(b.teamIdentity || b.teamName));
+            select.appendChild(new Option('All Teams', 'all'));
             items.forEach(item => select.appendChild(new Option(item.teamIdentity || item.teamName, item.teamId)));
             renderFunc = generateTeamImpactGraph;
             noItemsText = "No teams found.";
@@ -101,7 +113,7 @@ function updateDynamicSelector(svg) {
 
     select.onchange = (e) => renderFunc(e.target.value, svg);
 
-    if (items.length > 0) {
+    if (select.options.length > 0) {
         renderFunc(select.value, svg);
     } else {
         svg.selectAll("*").remove();
@@ -163,7 +175,7 @@ function generateInitiativeImpactGraph(selectedInitiativeId, svg) {
             }
         });
     }
-    renderImpactGraph(svg, nodes, links);
+    renderImpactGraph(svg, nodes, links, selectedInitiativeId);
 }
 
 /**
@@ -171,6 +183,11 @@ function generateInitiativeImpactGraph(selectedInitiativeId, svg) {
  * @param {string} selectedTeamId - The ID of the team to visualize.
  */
 function generateTeamImpactGraph(selectedTeamId, svg) {
+    if (selectedTeamId === 'all') {
+        generateAllTeamsImpactGraph(svg);
+        return;
+    }
+
     const team = currentSystemData.teams.find(t => t.teamId === selectedTeamId);
     if (!team) return;
 
@@ -207,7 +224,29 @@ function generateTeamImpactGraph(selectedTeamId, svg) {
         });
     });
 
-    renderImpactGraph(svg, nodes, links);
+    renderImpactGraph(svg, nodes, links, selectedTeamId);
+}
+
+/**
+ * Generates a graph showing all teams and their initiatives.
+ * @param {d3.Selection} svg - The D3 selection for the SVG element.
+ */
+function generateAllTeamsImpactGraph(svg) {
+    const nodes = [], links = [], nodeMap = new Map();
+    const addNode = (node) => { if (!nodeMap.has(node.id)) { nodeMap.set(node.id, node); nodes.push(node); } };
+
+    currentSystemData.teams.forEach(team => {
+        addNode({ id: team.teamId, name: team.teamIdentity || team.teamName, type: 'Team', data: team });
+    });
+
+    currentSystemData.yearlyInitiatives.forEach(initiative => {
+        addNode({ id: initiative.initiativeId, name: initiative.title, type: 'Initiative', data: initiative });
+        (initiative.assignments || []).forEach(assignment => {
+            links.push({ source: initiative.initiativeId, target: assignment.teamId, type: 'assignment', sde: assignment.sdeYears });
+        });
+    });
+
+    renderImpactGraph(svg, nodes, links, null); // No specific node is selected
 }
 
 /**
@@ -252,7 +291,7 @@ function generateServiceImpactGraph(selectedServiceName, svg) {
         });
     });
 
-    renderImpactGraph(svg, nodes, links);
+    renderImpactGraph(svg, nodes, links, selectedServiceName);
 }
 
 
@@ -262,75 +301,171 @@ function generateServiceImpactGraph(selectedServiceName, svg) {
  * @param {Array} nodes - Array of node objects.
  * @param {Array} links - Array of link objects.
  */
-function renderImpactGraph(svg, nodes, links) {
+function renderImpactGraph(svg, nodes, links, selectedId) {
     svg.selectAll("*").remove();
     const width = svg.node().getBoundingClientRect().width;
     const height = svg.node().getBoundingClientRect().height;
     
     const tooltip = d3.select("body").selectAll(".tooltip").data([null]).join("div").attr("class", "tooltip").style("opacity", 0);
 
-    // Calculate impact scores for sizing nodes
+    const teamColors = d3.scaleOrdinal(d3.schemeCategory10).domain(currentSystemData.teams.map(t => t.teamId));
     const serviceImpactCount = new Map();
     links.forEach(link => {
         if (link.type === 'impact') {
             serviceImpactCount.set(link.target.id, (serviceImpactCount.get(link.target.id) || 0) + 1);
         }
     });
-
     const initiativeStatusColors = { "Backlog": "#6c757d", "Defined": "#17a2b8", "Committed": "#007bff", "In Progress": "#ffc107", "Completed": "#28a745" };
-    const nodeTypeColors = d3.scaleOrdinal(d3.schemeCategory10).domain(['Team', 'Service']).range(['#1f77b4', '#2ca02c']);
 
     const simulation = d3.forceSimulation(nodes)
         .force("link", d3.forceLink(links).id(d => d.id).distance(d => d.type === 'owns' ? 80 : 150).strength(0.6))
-        .force("charge", d3.forceManyBody().strength(-600))
+        .force("charge", d3.forceManyBody().strength(-800))
         .force("center", d3.forceCenter(width / 2, height / 2))
-        .force("collide", d3.forceCollide().radius(d => (d.type === 'Initiative' ? 28 : (serviceImpactCount.get(d.id) || 0) * 5 + 20) + 10));
+        .force("collide", d3.forceCollide().radius(d => (d.type === 'Team' ? 40 : (d.type === 'Initiative' ? 28 : (serviceImpactCount.get(d.id) || 0) * 5 + 20)) + 10));
 
-    // Arrowheads
     svg.append('defs').selectAll('marker')
         .data(['depends_on', 'owns', 'impact', 'assignment'])
         .enter().append('marker')
         .attr('id', d => `arrow-${d}`)
         .attr('viewBox', '0 -5 10 10')
-        .attr('refX', d => d === 'owns' ? 28 : 22)
+        .attr('refX', 25)
         .attr('refY', 0).attr('markerWidth', 6).attr('markerHeight', 6).attr('orient', 'auto')
         .append('path').attr('d', 'M0,-5L10,0L0,5').attr('fill', '#999');
 
-    // Links (Paths)
     const link = svg.append("g").selectAll("path").data(links).join("path")
         .attr("stroke", "#999").attr("stroke-opacity", 0.7)
-        .attr("stroke-width", d => Math.max(1, (d.sde || 0.5) * 2)) // Weighted links
+        .attr("stroke-width", d => Math.max(1, (d.sde || 0.5) * 2))
         .attr('marker-end', d => `url(#arrow-${d.type})`)
-        .style("stroke-dasharray", d => d.type === 'owns' ? "3, 3" : "0");
-
-    // Nodes (Circles)
-    const node = svg.append("g").selectAll("circle").data(nodes).join("circle")
-        .attr("r", d => d.type === 'Initiative' ? 28 : (serviceImpactCount.get(d.id) || 0) * 4 + 18) // Dynamic sizing for services
-        .attr("fill", d => d.type === 'Initiative' ? (initiativeStatusColors[d.data.status] || '#ff7f0e') : nodeTypeColors(d.type))
-        .attr("stroke", "#fff").attr("stroke-width", 2)
-        .call(d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended))
-        .on("mouseover", (event, d) => tooltip.transition().duration(200).style("opacity", .9))
-        .on("mousemove", (event, d) => {
-            let content = `<strong>${d.type}:</strong> ${d.name}`;
-            if (d.type === 'Initiative') content += `<br>Status: ${d.data.status || 'N/A'}`;
-            if (d.type === 'Service') content += `<br>Owner: ${currentSystemData.services.find(s=>s.serviceName===d.id)?.owningTeamId || 'N/A'}`;
-            if (d.type === 'Team') content += `<br>SDM: ${currentSystemData.teams.find(t=>t.teamId===d.id)?.sdmId || 'N/A'}`;
+        .style("stroke-dasharray", d => d.type === 'owns' ? "3, 3" : "0")
+        .on("mouseover", (event, d) => {
+            tooltip.transition().duration(200).style("opacity", .9);
+            let content = `<strong>${d.type.replace('_', ' ')}</strong>`;
+            if (d.sde) content += `<br>SDE Years: ${d.sde}`;
             tooltip.html(content).style("left", (event.pageX + 15) + "px").style("top", (event.pageY - 15) + "px");
         })
         .on("mouseout", () => tooltip.transition().duration(500).style("opacity", 0));
-
-    // Labels (Text)
-    const label = svg.append("g").selectAll("text").data(nodes).join("text")
-        .attr("text-anchor", "middle").attr("dy", ".35em").style("font-size", "10px").style("pointer-events", "none")
-        .text(d => d.name);
 
     function dragstarted(event, d) { if (!event.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; }
     function dragged(event, d) { d.fx = event.x; d.fy = event.y; }
     function dragended(event, d) { if (!event.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; }
 
+    const nodeGroup = svg.append("g")
+        .selectAll("g")
+        .data(nodes)
+        .join("g")
+        .call(d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended));
+
+    nodeGroup.append("circle")
+        .attr("r", d => d.type === 'Team' ? 35 : (d.type === 'Initiative' ? 28 : (serviceImpactCount.get(d.id) || 0) * 4 + 18))
+        .attr("fill", d => {
+            if (d.type === 'Initiative') return initiativeStatusColors[d.data.status] || '#ff7f0e';
+            if (d.type === 'Team') return teamColors(d.id);
+            if (d.type === 'Service') {
+                const owningTeam = currentSystemData.teams.find(t => t.teamId === d.data.owningTeamId);
+                return owningTeam ? d3.color(teamColors(owningTeam.teamId)).brighter(0.5) : '#2ca02c';
+            }
+            return '#ccc';
+        })
+        .attr("stroke", d => d.id === selectedId ? 'red' : '#fff')
+        .attr("stroke-width", d => d.id === selectedId ? 4 : 2);
+
+    nodeGroup.on("mouseover", (event, d) => tooltip.transition().duration(200).style("opacity", .9))
+        .on("mousemove", (event, d) => {
+            let content = `<strong>${d.type}:</strong> ${d.name}`;
+            if (d.type === 'Initiative') {
+                const sdmName = d.data.owner.name || 'N/A';
+                const teamsImpacted = (d.data.assignments || []).map(a => currentSystemData.teams.find(t => t.teamId === a.teamId)?.teamIdentity || a.teamId).join(' / ');
+                const estimates = (d.data.assignments || []).map(a => `${currentSystemData.teams.find(t => t.teamId === a.teamId)?.teamIdentity}: ${a.sdeYears}`).join(', ');
+                content += `<br>Owner: ${sdmName}<br>Due: ${d.data.targetDueDate || 'N/A'}<br>Teams: ${teamsImpacted}<br>Estimates: ${estimates}`;
+            } else if (d.type === 'Service') {
+                const ownerTeam = currentSystemData.teams.find(t => t.teamId === d.data.owningTeamId);
+                content += `<br>Owner: ${ownerTeam?.teamIdentity || 'N/A'}<br>Description: ${d.data.serviceDescription || ''}`;
+            } else if (d.type === 'Team') {
+                const sdm = currentSystemData.sdms.find(s => s.sdmId === d.data.sdmId);
+                content += `<br>SDM: ${sdm?.sdmName || 'N/A'}`;
+            }
+            tooltip.html(content).style("left", (event.pageX + 15) + "px").style("top", (event.pageY - 15) + "px");
+        })
+        .on("mouseout", () => tooltip.transition().duration(500).style("opacity", 0));
+
+    nodeGroup.append("text")
+        .attr("text-anchor", "middle")
+        .attr("dy", ".35em")
+        .style("font-size", "10px")
+        .style("pointer-events", "none")
+        .text(d => d.name)
+        .call(wrap, d => d.type === 'Team' ? 60 : 50);
+
     simulation.on("tick", () => {
-        node.attr("cx", d => d.x).attr("cy", d => d.y);
-        label.attr("x", d => d.x).attr("y", d => d.y);
         link.attr('d', d => `M${d.source.x},${d.source.y} L${d.target.x},${d.target.y}`);
+        nodeGroup.attr("transform", d => `translate(${d.x},${d.y})`);
+    });
+
+    const legend = svg.append("g").attr("transform", `translate(20, 20)`);
+    const nodeTypes = ['Initiative', 'Team', 'Service'];
+    nodeTypes.forEach((type, i) => {
+        legend.append("circle").attr("cx", 0).attr("cy", i * 25).attr("r", 6).style("fill", type === 'Initiative' ? '#ff7f0e' : (type === 'Team' ? '#1f77b4' : '#2ca02c'));
+        legend.append("text").attr("x", 10).attr("y", i * 25).text(type).style("font-size", "12px").attr("alignment-baseline", "middle");
+    });
+
+    const summaryContainer = document.getElementById('impact-summary-container');
+    if (selectedId && nodes.some(n => n.id === selectedId && n.type === 'Initiative')) {
+        const initiative = nodes.find(n => n.id === selectedId).data;
+        summaryContainer.style.display = 'block';
+        summaryContainer.innerHTML = generateInitiativeSummary(initiative);
+    } else {
+        summaryContainer.style.display = 'none';
+    }
+}
+
+/**
+ * Generates a descriptive summary for an initiative.
+ * @param {object} initiative - The initiative data object.
+ * @returns {string} - An HTML string representing the summary.
+ */
+function generateInitiativeSummary(initiative) {
+    const ownerName = initiative.owner.name || 'N/A';
+    const teamsImpacted = (initiative.assignments || []).map(a => {
+        const team = currentSystemData.teams.find(t => t.teamId === a.teamId);
+        return `<li>${team?.teamIdentity || a.teamId}: ${a.sdeYears} SDE-Years</li>`;
+    }).join('');
+
+    return `
+        <h3>${initiative.title}</h3>
+        <p><strong>Owner:</strong> ${ownerName}</p>
+        <p><strong>Status:</strong> ${initiative.status || 'N/A'}</p>
+        <p><strong>Due Date:</strong> ${initiative.targetDueDate || 'N/A'}</p>
+        <p><strong>Description:</strong> ${initiative.description || 'No description provided.'}</p>
+        <h4>Impacted Teams & Estimates:</h4>
+        <ul>${teamsImpacted}</ul>
+    `;
+}
+
+/**
+ * Wraps long text labels into multiple lines.
+ * @param {d3.Selection} text - The D3 selection of text elements.
+ * @param {number} width - The maximum width for the text.
+ */
+function wrap(text, width) {
+    text.each(function() {
+        var text = d3.select(this),
+            words = text.text().split(/\s+/).reverse(),
+            word,
+            line = [],
+            lineNumber = 0,
+            lineHeight = 1.1, // ems
+            dy = parseFloat(text.attr("dy") || 0),
+            tspan = text.text(null).append("tspan").attr("x", 0).attr("dy", dy + "em");
+        
+        while (word = words.pop()) {
+            line.push(word);
+            tspan.text(line.join(" "));
+            if (tspan.node().getComputedTextLength() > width) {
+                line.pop();
+                tspan.text(line.join(" "));
+                line = [word];
+                tspan = text.append("tspan").attr("x", 0).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
+            }
+        }
     });
 }
