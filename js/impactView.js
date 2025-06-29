@@ -401,13 +401,6 @@ function renderImpactGraph(svg, nodes, links, selectedId) {
         nodeGroup.attr("transform", d => `translate(${d.x},${d.y})`);
     });
 
-    const legend = svg.append("g").attr("transform", `translate(20, 20)`);
-    const nodeTypes = ['Initiative', 'Team', 'Service'];
-    nodeTypes.forEach((type, i) => {
-        legend.append("circle").attr("cx", 0).attr("cy", i * 25).attr("r", 6).style("fill", type === 'Initiative' ? '#ff7f0e' : (type === 'Team' ? '#1f77b4' : '#2ca02c'));
-        legend.append("text").attr("x", 10).attr("y", i * 25).text(type).style("font-size", "12px").attr("alignment-baseline", "middle");
-    });
-
     const summaryContainer = document.getElementById('impact-summary-container');
     if (selectedId && nodes.some(n => n.id === selectedId && n.type === 'Initiative')) {
         const initiative = nodes.find(n => n.id === selectedId).data;
@@ -416,6 +409,64 @@ function renderImpactGraph(svg, nodes, links, selectedId) {
     } else {
         summaryContainer.style.display = 'none';
     }
+
+    // Dynamic Legend
+    const legendGroup = svg.append("g").attr("class", "legend").attr("transform", "translate(20, 20)");
+    const legendData = [];
+    const uniqueStatuses = [...new Set(nodes.filter(n => n.type === 'Initiative').map(n => n.data.status))].sort();
+    if (uniqueStatuses.length > 0) {
+        legendData.push({ label: 'Initiative Statuses', type: 'header' });
+        uniqueStatuses.forEach(status => {
+            legendData.push({ label: status || 'N/A', color: initiativeStatusColors[status] || '#ff7f0e', type: 'item' });
+        });
+    }
+
+    const teamsInView = nodes.filter(n => n.type === 'Team');
+    if (teamsInView.length > 0 && teamsInView.length < 10) { // Only show team legend if there are a manageable number
+        legendData.push({ label: 'Teams', type: 'header' });
+        teamsInView.forEach(teamNode => {
+            legendData.push({ label: teamNode.name, color: teamColors(teamNode.id), type: 'item' });
+        });
+    }
+
+    if (nodes.some(n => n.type === 'Service')) {
+        legendData.push({ label: 'Services', type: 'header' });
+        legendData.push({ label: 'Color derived from owning team', color: '#aaa', type: 'item' });
+    }
+
+    let yOffset = 0;
+    const legendItems = legendGroup.selectAll('.legend-item')
+        .data(legendData)
+        .enter()
+        .append('g')
+        .attr('class', 'legend-item')
+        .attr('transform', (d, i) => {
+            const transform = `translate(0, ${yOffset})`;
+            yOffset += d.type === 'header' ? 25 : 20;
+            return transform;
+        });
+
+    legendItems.filter(d => d.type === 'header')
+        .append('text')
+        .attr('x', 0)
+        .attr('y', 10)
+        .style('font-weight', 'bold')
+        .style('font-size', '12px')
+        .text(d => d.label);
+
+    const itemGroups = legendItems.filter(d => d.type === 'item');
+
+    itemGroups.append('circle')
+        .attr('cx', 5)
+        .attr('cy', 5)
+        .attr('r', 5)
+        .style('fill', d => d.color);
+
+    itemGroups.append('text')
+        .attr('x', 15)
+        .attr('y', 9)
+        .style('font-size', '11px')
+        .text(d => d.label);
 }
 
 /**
