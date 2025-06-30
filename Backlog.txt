@@ -81,16 +81,8 @@ Manage Detailed Planning
 [Done] -- It must be possible to generate a view of completed goals, initiatives or work packages
 [Done] - basic - needs improvement] -- It must be possible to display a graph visualization (similar to system visualizations) of service impact and relations to initiatives and work package dependencies
 
-------------
-IN PROGRESS
-------------
-
-
-------
-TO DO
-------
-- Fix up Initiative Impact dashboard widget in impactView.js
--- Make the visible window larger so the graph fits better - right now the nodes exceed the window - make the window larger
+[Done] - Fix up Initiative Impact dashboard widget in impactView.js
+[Done] -- Make the visible window larger so the graph fits better - right now the nodes exceed the window - make the window larger
 -- When filtering by Intiatives:
 [Done] --- Use different colours to identify teams just like we do in System Visualization and Team Relationships Visualization (currently all teams appear as blue circles)
 [Done] --- Differentiate the services owned by teams, use different colours relative to the team colour (currently all service nodes appear as green circles) 
@@ -108,14 +100,24 @@ TO DO
 [Done] --- Add tooltips as necessary to provide context for the arrows in the graph, straight lines, etc.
 [Done] --- Show dependency arros similar to how we currently do in Service Dependency Visualization
 - General UX guidelines for Initiative Impact widget:
--- Increase size of team nodes so the text can fit - and split the text over two lines if too long (right now some text appears outside the node)
--- Include appropriate legends like we do in other visualizations in 
+[Done] -- Increase size of team nodes so the text can fit - and split the text over two lines if too long (right now some text appears outside the node)
+[Done] -- Include appropriate legends like we do in other visualizations in 
 [Done] -- Esure the thing being filtered (initiative, team or service) is clearly focused/highlighted in the graph that makes it stand out from other nodes
--- Strive to make the widget responsive to the size of the graph so that the graph appears within the frame (no nodes should appear cut out from the frame)
+[Done] -- Strive to make the widget responsive to the size of the graph so that the graph appears within the frame (no nodes should appear cut out from the frame)
 [Done] -- For team nodes, use toolip showing information about the team similar to the Team Visualization, and also some info on initiatives the team is impacted by
 [Done] -- When hovering over service nodes, include in tooltip, description about the service 
 
+------------
+IN PROGRESS
+------------
 
+
+------
+TO DO
+------
+
+
+- Think about adding another dashboard widget for "demand by team per quarter" - to show a bar graph per quarter to see team load/demand impact
 
 - Now that we have a goals dashboard view, we need to think about introducing an interface to manage the lifecycle of goals
 
