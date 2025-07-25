@@ -1,3 +1,5 @@
+// js/orgView.js
+
 /**
  * Builds hierarchical data for Organogram.
  * MODIFIED: Iterates team.engineers (array of names) and looks up details
@@ -71,10 +73,33 @@ function buildHierarchyData() {
 }
 
 /**
- * Generates the Organogram using HTML structure.
- * No direct changes needed here due to engineer model, as buildHierarchyData handles it.
+ * Generates the entire Organogram View, including the new Resource Management section.
  */
 function generateOrganogram() {
+    console.log("Generating Organogram View...");
+    const viewContainer = document.getElementById('organogramView');
+    if (!viewContainer) {
+        console.error("Organogram view container not found.");
+        return;
+    }
+    viewContainer.innerHTML = `
+        <div id="organogramToolbar" style="margin-bottom: 10px;"></div>
+        <div id="organogramContent" style="border: 1px solid #ccc; padding: 15px;"></div>
+        <div id="resourceManagementSection" style="margin-top: 30px;"></div>
+        <div id="teamBreakdown" style="margin-top: 30px;"></div>
+    `;
+
+    generateOrganogramHtml();
+    generateResourceManagementSection();
+    generateTeamTable(currentSystemData); // Ensure team table is also generated
+}
+
+
+/**
+ * Generates the Organogram using HTML structure.
+ * (Renamed from generateOrganogram to avoid conflict with the new main function)
+ */
+function generateOrganogramHtml() {
     console.log("Generating Organogram HTML...");
     const hierarchicalData = buildHierarchyData();
     const container = document.getElementById('organogramContent');
@@ -113,10 +138,9 @@ function generateOrganogram() {
                     const annotation = ` <span style="color: #dc3545; font-style: italic; font-size: 0.9em;" title="Away-Team Sources: ${awaySourceText}">(+${node.awayTeamCount} Away)</span>`;
                     nodeContent += annotation;
                 }
-                // Display engineer names from node.children (which are already formatted by buildHierarchyData)
                 if (node.children && node.children.length > 0) {
                     nodeContent += '<ul style="list-style-type: none; padding-left: 15px; margin-top: 3px;">';
-                    node.children.forEach(engNode => { // These are engineer nodes from buildHierarchyData
+                    node.children.forEach(engNode => {
                         if (engNode.type === 'engineer') {
                              nodeContent += `<li style="font-size:0.85em;">${engNode.name}</li>`;
                         }
@@ -124,17 +148,12 @@ function generateOrganogram() {
                     nodeContent += '</ul>';
                 }
                 break;
-            // Engineer case is handled by team now, direct rendering of engineer nodes not needed at top levels.
-            // case 'engineer':
-            //     nodeContent = `<span style="font-size: 0.9em;">${node.name || 'N/A'}</span>`;
-            //     break;
             default:
                 nodeContent = `<strong>${node.name || 'Group'}</strong>`;
                 nodeStyle = 'color: #6c757d;';
         }
         html += `<span style="${nodeStyle}">${nodeContent}</span>`;
 
-        // Recursively add children for non-team, non-engineer types
         if (node.children && node.children.length > 0 && node.type !== 'team' && node.type !== 'engineer') {
             node.children.forEach(child => {
                  html += buildHtmlLevel(child, level + 1);
@@ -147,41 +166,185 @@ function generateOrganogram() {
     console.log("Finished generating Organogram HTML.");
 }
 
-// In js/orgView.js
+/**
+ * Generates the collapsible "Resource Management" section with Add and Delete forms.
+ */
+function generateResourceManagementSection() {
+    const container = document.getElementById('resourceManagementSection');
+    if (!container) return;
+
+    container.innerHTML = `
+        <div style="border: 1px solid #ccc; border-radius: 4px;">
+            <h3 onclick="toggleCollapsibleSection('addResourceContent', 'addResourceToggle')" style="cursor: pointer; margin: 0; padding: 10px; background-color: #e9ecef; border-bottom: 1px solid #ccc;">
+                <span id="addResourceToggle" class="toggle-indicator">(+) </span>Add New Resource
+            </h3>
+            <div id="addResourceContent" style="display: none; padding: 15px;"></div>
+            
+            <h3 onclick="toggleCollapsibleSection('deleteResourceContent', 'deleteResourceToggle')" style="cursor: pointer; margin: 0; padding: 10px; background-color: #e9ecef; border-top: 1px solid #ccc;">
+                <span id="deleteResourceToggle" class="toggle-indicator">(+) </span>Delete Resource
+            </h3>
+            <div id="deleteResourceContent" style="display: none; padding: 15px;"></div>
+        </div>
+    `;
+
+    generateAddNewResourceSection(document.getElementById('addResourceContent'));
+    generateDeleteResourceSection(document.getElementById('deleteResourceContent'));
+}
+
+/**
+ * Generates the "Delete Resource" form section.
+ */
+function generateDeleteResourceSection(containerElement) {
+    if (!containerElement) return;
+
+    containerElement.innerHTML = `
+        <div style="margin-bottom: 10px;">
+            <label for="deleteResourceType" style="display:block; margin-bottom:5px;">Resource Type:</label>
+            <select id="deleteResourceType" onchange="populateDeleteResourceDropdown()">
+                <option value="">-- Select Type --</option>
+                <option value="engineer">Engineer</option>
+                <option value="sdm">SDM</option>
+                <option value="sr_manager">Senior Manager</option>
+                <option value="pmt">PMT</option>
+            </select>
+        </div>
+        <div style="margin-bottom: 10px;">
+            <label for="deleteResourceSelect" style="display:block; margin-bottom:5px;">Resource to Delete:</label>
+            <select id="deleteResourceSelect">
+                <option value="">-- Select Resource --</option>
+            </select>
+        </div>
+        <button type="button" class="btn-danger" onclick="handleDeleteResource()">Delete Selected Resource</button>
+    `;
+}
+
+/**
+ * Populates the second dropdown in the delete section based on the selected resource type.
+ */
+function populateDeleteResourceDropdown() {
+    const resourceType = document.getElementById('deleteResourceType').value;
+    const selectDropdown = document.getElementById('deleteResourceSelect');
+    selectDropdown.innerHTML = '<option value="">-- Select Resource --</option>';
+
+    let resources = [];
+    switch (resourceType) {
+        case 'engineer':
+            resources = currentSystemData.allKnownEngineers || [];
+            resources.forEach(r => selectDropdown.add(new Option(r.name, r.name)));
+            break;
+        case 'sdm':
+            resources = currentSystemData.sdms || [];
+            resources.forEach(r => selectDropdown.add(new Option(r.sdmName, r.sdmId)));
+            break;
+        case 'sr_manager':
+            resources = currentSystemData.seniorManagers || [];
+            resources.forEach(r => selectDropdown.add(new Option(r.seniorManagerName, r.seniorManagerId)));
+            break;
+        case 'pmt':
+            resources = currentSystemData.pmts || [];
+            resources.forEach(r => selectDropdown.add(new Option(r.pmtName, r.pmtId)));
+            break;
+    }
+}
+
+/**
+ * Handles the logic for deleting a selected resource.
+ */
+function handleDeleteResource() {
+    const resourceType = document.getElementById('deleteResourceType').value;
+    const resourceId = document.getElementById('deleteResourceSelect').value;
+    const resourceName = document.getElementById('deleteResourceSelect').options[document.getElementById('deleteResourceSelect').selectedIndex]?.text;
+
+    if (!resourceType || !resourceId) {
+        alert("Please select a resource type and a specific resource to delete.");
+        return;
+    }
+
+    if (!confirm(`Are you sure you want to permanently delete "${resourceName}"? This action cannot be undone.`)) {
+        return;
+    }
+
+    let success = false;
+
+    switch (resourceType) {
+        case 'engineer':
+            const engIndex = currentSystemData.allKnownEngineers.findIndex(e => e.name === resourceId);
+            if (engIndex > -1) {
+                const engineer = currentSystemData.allKnownEngineers[engIndex];
+                // Remove from assigned team, if any
+                if (engineer.currentTeamId) {
+                    const team = currentSystemData.teams.find(t => t.teamId === engineer.currentTeamId);
+                    if (team && team.engineers) {
+                        team.engineers = team.engineers.filter(name => name !== engineer.name);
+                    }
+                }
+                // Remove from global roster
+                currentSystemData.allKnownEngineers.splice(engIndex, 1);
+                success = true;
+            }
+            break;
+        case 'sdm':
+            currentSystemData.sdms = currentSystemData.sdms.filter(s => s.sdmId !== resourceId);
+            // Un-assign from any teams
+            currentSystemData.teams.forEach(team => {
+                if (team.sdmId === resourceId) team.sdmId = null;
+            });
+            success = true;
+            break;
+        case 'sr_manager':
+            currentSystemData.seniorManagers = currentSystemData.seniorManagers.filter(s => s.seniorManagerId !== resourceId);
+            // Un-assign from any SDMs
+            currentSystemData.sdms.forEach(sdm => {
+                if (sdm.seniorManagerId === resourceId) sdm.seniorManagerId = null;
+            });
+            success = true;
+            break;
+        case 'pmt':
+            currentSystemData.pmts = currentSystemData.pmts.filter(p => p.pmtId !== resourceId);
+            // Un-assign from any teams
+            currentSystemData.teams.forEach(team => {
+                if (team.pmtId === resourceId) team.pmtId = null;
+            });
+            success = true;
+            break;
+    }
+
+    if (success) {
+        alert(`Resource "${resourceName}" has been deleted.`);
+        saveSystemChanges();
+        // Refresh the entire view to reflect data changes everywhere
+        generateOrganogram();
+    } else {
+        alert(`Could not find the specified resource to delete.`);
+    }
+}
+
 
 /**
  * Generates the Team Breakdown Table.
- * MODIFIED (v5 - Robust Lookup from data.js structure):
- * - Assumes team.engineers is an array of names.
- * - Performs case-insensitive, trimmed lookup of engineer details from systemData.allKnownEngineers.
- * - Logs specific names if details are not found in the roster.
+ * (No changes needed for this function, but it's required for the view)
  */
 function generateTeamTable(systemData) {
     console.log("[DEBUG V5] ENTER generateTeamTable");
 
     const teamTable = document.getElementById('teamTable');
+    const teamBreakdownDiv = document.getElementById('teamBreakdown'); // Get the parent container
+    if (!teamBreakdownDiv) return;
+
+    // If the table doesn't exist, create it.
     if (!teamTable) {
-        console.error("[DEBUG V5] EXIT generateTeamTable: Could not find #teamTable element.");
-        const teamBreakdownDiv = document.getElementById('teamBreakdown');
-        if (teamBreakdownDiv) {
-             teamBreakdownDiv.innerHTML = '<p style="color:red;">Error: HTML element for team table not found (ID: teamTable).</p>';
-        }
-        return;
+        const newTable = document.createElement('table');
+        newTable.id = 'teamTable';
+        newTable.innerHTML = '<thead></thead><tbody></tbody><tfoot></tfoot>';
+        teamBreakdownDiv.appendChild(newTable);
     }
-
-    const tableHead = teamTable.querySelector('thead');
-    const tableBody = teamTable.querySelector('tbody');
-    const tableFoot = teamTable.querySelector('tfoot');
-
-    if (!tableHead || !tableBody || !tableFoot) {
-        console.error("[DEBUG V5] EXIT generateTeamTable: Table structure incomplete (missing thead/tbody/tfoot).");
-        const teamBreakdownDiv = document.getElementById('teamBreakdown');
-        if (teamBreakdownDiv) {
-            teamBreakdownDiv.innerHTML = '<p style="color:red;">Error: Team table HTML structure is incomplete.</p>';
-        }
-        return;
-    }
-
+    
+    // Now get the final table and its parts
+    const finalTeamTable = document.getElementById('teamTable');
+    const tableHead = finalTeamTable.querySelector('thead');
+    const tableBody = finalTeamTable.querySelector('tbody');
+    const tableFoot = finalTeamTable.querySelector('tfoot');
+    
     tableBody.innerHTML = '';
     tableHead.innerHTML = '';
     tableFoot.innerHTML = '';
@@ -222,7 +385,7 @@ function generateTeamTable(systemData) {
     const sdms = systemData.sdms || [];
     const pmts = systemData.pmts || [];
     const seniorManagers = systemData.seniorManagers || [];
-    const allKnownEngineers = systemData.allKnownEngineers; // Source of truth for engineer details
+    const allKnownEngineers = systemData.allKnownEngineers;
 
     let totalFundedHC = 0; let totalTeamBIS = 0; let totalEffectiveBIS = 0;
 
@@ -311,7 +474,7 @@ function generateTeamTable(systemData) {
                 if (team.awayTeamMembers && team.awayTeamMembers.length > 0) {
                     awayTeamCell.innerHTML = team.awayTeamMembers.map(awayEng => {
                         if (typeof awayEng !== 'object' || awayEng === null) return 'Invalid Away Data';
-                        const attributes = awayEng.attributes || {}; // Assuming away members might also have attributes
+                        const attributes = awayEng.attributes || {};
                         const typeIndicator = attributes.isAISWE ? ` [AI - ${attributes.aiAgentType || 'General'}]` : '';
                         return `${awayEng.name || 'Unnamed'} (L${awayEng.level ?? '?'})${typeIndicator} - From: ${awayEng.sourceTeam || 'Unknown Source'}`;
                     }).join('<br>');
@@ -371,435 +534,17 @@ function generateTeamTable(systemData) {
     if (levelKeyElement) {
         levelKeyElement.innerHTML = `Level Key: L1-L7. [AI - Type] indicates an AI Software Engineer and its specialization.`;
     } else {
-        console.warn("[DEBUG V5] Could not find #levelKey element.");
+        const newLevelKey = document.createElement('p');
+        newLevelKey.id = 'levelKey';
+        newLevelKey.innerHTML = `Level Key: L1-L7. [AI - Type] indicates an AI Software Engineer and its specialization.`;
+        teamBreakdownDiv.insertBefore(newLevelKey, finalTeamTable);
     }
     console.log("[DEBUG V5] EXIT generateTeamTable - Successful completion.");
 }
-window.generateTeamTable = generateTeamTable;
-
-// END OF REPLACEMENT for generateTeamTable
-
-
-let engineerTableWidgetInstance = null; // Keep this global for the widget
-
-/**
- * Generates the Engineer List table by instantiating and configuring
- * the EnhancedTableWidget.
- * MODIFIED: Added a redraw call for Tabulator to fix initial display issues.
- */
-function generateEngineerTable() {
-    console.log("Generating Engineer List using EnhancedTableWidget...");
-    if (typeof updateEngineerTableHeading === 'function') {
-        updateEngineerTableHeading();
-    } else {
-        console.warn("updateEngineerTableHeading function not found.");
-    }
-
-    const tableData = prepareEngineerDataForTabulator(); // This function is already updated
-    const columnDefinitions = defineEngineerTableColumns(); // This function is already updated
-
-    const widgetContainerId = 'engineerTableWidgetContainer';
-    let widgetTargetDiv = document.getElementById(widgetContainerId);
-
-    if (!widgetTargetDiv) {
-        const engineerTableView = document.getElementById('engineerTableView');
-        if (!engineerTableView) {
-            console.error("Cannot find #engineerTableView to append widget container.");
-            return;
-        }
-        // Remove any old static table or old tabulator div if they exist
-        const oldStaticTable = engineerTableView.querySelector('table');
-        if (oldStaticTable) oldStaticTable.remove();
-        const oldTabulatorDiv = document.getElementById('engineerTableTabulator');
-        if (oldTabulatorDiv) oldTabulatorDiv.remove();
-
-        widgetTargetDiv = document.createElement('div');
-        widgetTargetDiv.id = widgetContainerId;
-        engineerTableView.appendChild(widgetTargetDiv);
-        console.log(`Created new widget container div with ID: ${widgetContainerId}`);
-    } else {
-        // If reusing, ensure it's empty if a previous widget was there but not properly destroyed
-        // This might happen if engineerTableWidgetInstance was nulled but DOM not cleared.
-        // widgetTargetDiv.innerHTML = ''; // Optional: Clear if issues persist with re-renders
-        console.log(`Using existing widget container div with ID: ${widgetContainerId}`);
-    }
-
-    // Destroy previous widget instance if it exists to prevent conflicts
-    if (engineerTableWidgetInstance) {
-        engineerTableWidgetInstance.destroy();
-        engineerTableWidgetInstance = null;
-        console.log("Previous Engineer List widget instance destroyed.");
-    }
-
-    // Create new instance of EnhancedTableWidget
-    try {
-        engineerTableWidgetInstance = new EnhancedTableWidget(widgetContainerId, {
-            data: tableData,
-            columns: columnDefinitions,
-            uniqueIdField: 'name',
-            paginationSize: 100,
-            paginationSizeSelector: [25, 50, 100, 250, 500],
-            initialSort: [{ column: "name", dir: "asc" }],
-            exportCsvFileName: 'engineer_list.csv',
-            exportJsonFileName: 'engineer_list.json',
-            exportXlsxFileName: 'engineer_list.xlsx',
-            exportSheetName: 'Engineers'
-            // cellEdited callback is now part of columnDefinitions
-        });
-        console.log("Engineer List EnhancedTableWidget instance created.");
-
-        // Force Tabulator to redraw after a very short delay
-        // This ensures the container is visible and has dimensions.
-        if (engineerTableWidgetInstance && engineerTableWidgetInstance.tabulatorInstance) {
-            setTimeout(() => {
-                console.debug("Attempting Tabulator redraw for Engineer List after short delay.");
-                engineerTableWidgetInstance.tabulatorInstance.redraw(true);
-            }, 100); // 100ms delay, can be adjusted
-        } else {
-            console.warn("Could not access tabulatorInstance for redraw inside generateEngineerTable.");
-        }
-    } catch (error) {
-        console.error("Error creating EnhancedTableWidget for Engineer List:", error);
-        if (widgetTargetDiv) {
-            widgetTargetDiv.innerHTML = "<p style='color:red;'>Error initializing engineer table widget. Check console.</p>";
-        }
-    }
-}
-
-// In js/orgView.js
-
-// Function: prepareEngineerDataForTabulator
-// MODIFIED: To extract and prepare new engineer attributes for the table.
-function prepareEngineerDataForTabulator() {
-    if (!currentSystemData || !currentSystemData.allKnownEngineers) {
-        console.warn("prepareEngineerDataForTabulator: currentSystemData.allKnownEngineers is missing.");
-        return [];
-    }
-
-    return currentSystemData.allKnownEngineers.map((engineer) => {
-        let sdmName = "N/A";
-        let seniorManagerName = "N/A";
-
-        if (engineer.currentTeamId) {
-            const team = (currentSystemData.teams || []).find(t => t.teamId === engineer.currentTeamId);
-            if (team) {
-                if (team.sdmId) {
-                    const sdm = (currentSystemData.sdms || []).find(s => s.sdmId === team.sdmId);
-                    if (sdm) {
-                        sdmName = sdm.sdmName;
-                        if (sdm.seniorManagerId) {
-                            const srMgr = (currentSystemData.seniorManagers || []).find(sm => sm.seniorManagerId === sdm.seniorManagerId);
-                            if (srMgr) {
-                                seniorManagerName = srMgr.seniorManagerName;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // Prepare data from attributes, ensuring defaults if attributes or nested fields are missing
-        const attributes = engineer.attributes || {}; // Ensure attributes object exists
-        const isAISWE = attributes.isAISWE || false;
-        const aiAgentType = isAISWE ? (attributes.aiAgentType || "General AI") : "-";
-        const skillsArray = Array.isArray(attributes.skills) ? attributes.skills : [];
-        const yearsOfExperience = typeof attributes.yearsOfExperience === 'number' ? attributes.yearsOfExperience : 0;
-
-        return {
-            name: engineer.name,
-            level: engineer.level,
-            teamId: engineer.currentTeamId,
-            sdmName: sdmName,
-            seniorManagerName: seniorManagerName,
-            // New fields from attributes
-            isAISWE: isAISWE, // Boolean, for formatter
-            aiAgentType: aiAgentType,
-            skills: skillsArray.join(', '), // Comma-separated string for display and editing
-            _skillsArray: skillsArray, // Keep original array for editing if needed, or parse from string
-            yearsOfExperience: yearsOfExperience
-        };
-    });
-}
-
-// Function: defineEngineerTableColumns
-// MODIFIED: Added new columns for Type (AI/Human), AI Agent Type, Skills (editable), and Years Exp.
-// These new columns are set to visible: false by default.
-// In js/orgView.js
-
-// Replace the existing defineEngineerTableColumns function with this:
-function defineEngineerTableColumns() {
-    console.log("Defining Engineer Table Columns (Tabulator list editor fix)..."); // Added console log
-    const engineerLevels = [
-        { label: "All", value: "" }, { label: "L1", value: 1 }, { label: "L2", value: 2 }, { label: "L3", value: 3 },
-        { label: "L4", value: 4 }, { label: "L5", value: 5 }, { label: "L6", value: 6 }, { label: "L7", value: 7 }
-    ];
-    // For Level Cell Editor
-    const levelCellEditorParams = {
-        values: engineerLevels.filter(l => l.value !== ""), // Exclude "All" from cell editor
-        autocomplete: false, // Consider true if list is very long
-        clearable: false // A level should probably always be set
-    };
-    // For Level Header Filter
-    const levelHeaderFilterParams = {
-        values: engineerLevels, // "All" is included for clearing filter
-        clearable: true,
-        autocomplete: true,
-        multiselect: false
-    };
-
-    // For Team Identity Cell Editor
-    const getTeamIdentityCellEditorParams = () => {
-        const teams = currentSystemData.teams || [];
-        const options = [{ label: "-- Unassign --", value: "" }]; // "" value for null teamId
-        (teams || []).forEach(team => { // Ensure teams is an array
-            const displayIdentity = team.teamIdentity || team.teamName || team.teamId;
-            if (displayIdentity) {
-                options.push({ label: String(displayIdentity), value: team.teamId });
-            }
-        });
-        // Sort options by label, keeping "-- Unassign --" at the top
-        options.sort((a, b) => {
-            if (a.value === "") return -1;
-            if (b.value === "") return 1;
-            return String(a.label).localeCompare(String(b.label));
-        });
-        return { values: options, autocomplete: true, clearable: true }; // enable autocomplete
-    };
-
-    // For Team Identity Header Filter
-    const getTeamIdentityHeaderFilterParams = () => {
-        const options = [{ label: "All", value: "" }];
-        const addedTeamIds = new Set([""]);
-
-        if (currentSystemData && currentSystemData.allKnownEngineers) {
-            (currentSystemData.allKnownEngineers || []).forEach(engineer => { // Ensure allKnownEngineers is an array
-                if (engineer.currentTeamId && !addedTeamIds.has(engineer.currentTeamId)) {
-                    const team = (currentSystemData.teams || []).find(t => t.teamId === engineer.currentTeamId);
-                    if (team) {
-                        const display = team.teamIdentity || team.teamName || team.teamId;
-                        options.push({ label: String(display), value: team.teamId });
-                        addedTeamIds.add(team.teamId);
-                    }
-                } else if (!engineer.currentTeamId && !addedTeamIds.has("_UNALLOCATED_")) {
-                    options.push({ label: "Unallocated", value: "_UNALLOCATED_" });
-                    addedTeamIds.add("_UNALLOCATED_");
-                }
-            });
-        }
-        options.sort((a,b) => {
-            if (a.value === "") return -1;
-            if (b.value === "") return 1;
-            if (a.value === "_UNALLOCATED_") return options.length -1; // Try to push Unallocated towards end
-            if (b.value === "_UNALLOCATED_") return -(options.length -1);
-            return String(a.label).localeCompare(String(b.label));
-        });
-        return { values: options, clearable: true, autocomplete: true };
-    };
-
-    // For SDM and Sr Manager Header Filters
-    const getNameHeaderFilterParams = (sourceArray, nameField) => {
-        const options = [{ label: "All", value: "" }];
-        if (sourceArray) {
-            const uniqueNames = {};
-            sourceArray.forEach(item => {
-                if (item && item[nameField]) {
-                    uniqueNames[item[nameField]] = item[nameField]; // Value is the name itself for filtering
-                }
-            });
-            Object.keys(uniqueNames).sort((a,b) => String(a).localeCompare(String(b))).forEach(name => {
-                 options.push({ label: name, value: name });
-            });
-        }
-        return { values: options, clearable: true, autocomplete: true };
-    };
-
-    // Generic formatter for cells that might be editable, to add an edit icon
-    const editableCellFormatter = (cell) => {
-        let value = cell.getValue();
-        const field = cell.getField();
-        const columnDef = cell.getColumn().getDefinition();
-
-        if (field === "level") {
-            const levelObj = engineerLevels.find(l => l.value === parseInt(value));
-            value = levelObj ? levelObj.label : String(value);
-        } else if (field === "teamId") {
-            const teamId = cell.getValue();
-            if (teamId) {
-                const team = (currentSystemData.teams || []).find(t => t.teamId === teamId);
-                value = team ? (team.teamIdentity || team.teamName || teamId) : `Missing (${teamId.slice(-4)})`;
-            } else {
-                value = "Unallocated";
-            }
-        }
-        // Skills and Years Exp. have their own formatters if needed, or are handled by prepare...
-
-        if (columnDef.editor && value !== undefined && value !== null && String(value).trim() !== "") { // Add edit icon if column is editable and has a value
-            return `${value} <span style='color:#007bff; font-size:0.8em; margin-left: 5px; cursor:pointer;' title='Edit ${columnDef.title || field}'>✏️</span>`;
-        }
-        return value; // Return value directly if no editor or if value is empty
-    };
-
-    return [
-        { title: "Engineer Name", field: "name", sorter: "string", minWidth: 180, frozen: true, editable: false, headerFilter: "input", headerFilterPlaceholder: "Filter by name...", accessorDownload: (v,d) => d.name },
-        {
-            title: "Level", field: "level", width: 100, hozAlign: "left", sorter: "number",
-            editor: "list", editorParams: levelCellEditorParams,
-            formatter: editableCellFormatter,
-            headerFilter: "list", headerFilterParams: levelHeaderFilterParams, headerFilterFunc: "=",
-            cellEdited: (cell) => {
-                const engineerName = cell.getRow().getData().name;
-                const newLevelValue = parseInt(cell.getValue()); // Editor should provide the value directly
-                if (isNaN(newLevelValue) || newLevelValue < 1 || newLevelValue > 7) {
-                    alert("Invalid level. Please select a valid level from the list.");
-                    cell.restoreOldValue();
-                    return;
-                }
-                const engineerGlobal = (currentSystemData.allKnownEngineers || []).find(e => e.name === engineerName);
-                if (engineerGlobal) {
-                    engineerGlobal.level = newLevelValue;
-                    console.log(`Updated level for ${engineerName} to ${newLevelValue} in allKnownEngineers.`);
-                    if (typeof saveSystemChanges === 'function') saveSystemChanges();
-                } else {
-                    console.error(`Engineer ${engineerName} not found in allKnownEngineers for level update.`);
-                }
-            },
-            accessorDownload: (v,d) => (engineerLevels.find(l => l.value === d.level) || {label: d.level}).label
-        },
-        {
-            title: "Type", field: "isAISWE", width: 70, hozAlign: "center",
-            formatter: (cell) => {
-                const isAI = cell.getValue();
-                return isAI ? '<i class="fas fa-robot" title="AI Engineer"></i>' : '<i class="fas fa-user" title="Human Engineer"></i>';
-            },
-            headerFilter: "list", // Changed from "select" to "list"
-            headerFilterParams: {
-                values: [ // Using array of objects for "list" header filter
-                    {label: "All", value: ""},
-                    {label: "AI", value: true},
-                    {label: "Human", value: false}
-                ]
-            },
-            visible: false,
-            download: true, accessorDownload: (v,d) => d.isAISWE ? "AI" : "Human"
-        },
-        {
-            title: "AI Agent Type", field: "aiAgentType", minWidth: 150, hozAlign: "left",
-            formatter: (cell) => cell.getValue() || "-",
-            headerFilter: "input", headerFilterPlaceholder: "Filter by AI Type...",
-            visible: false,
-            download: true, accessorDownload: (v,d) => d.aiAgentType === "-" ? "" : d.aiAgentType // Export blank if it was just a dash
-        },
-        {
-            title: "Skills", field: "skills", minWidth: 200, hozAlign: "left",
-            editor: "input",
-            formatter: editableCellFormatter,
-            headerFilter: "input", headerFilterPlaceholder: "Filter by skills (comma-sep)...",
-            visible: false,
-            cellEdited: (cell) => {
-                const engineerName = cell.getRow().getData().name;
-                const newSkillsString = cell.getValue();
-                const newSkillsArray = newSkillsString ? newSkillsString.split(',').map(s => s.trim()).filter(s => s) : [];
-                const engineerGlobal = (currentSystemData.allKnownEngineers || []).find(e => e.name === engineerName);
-                if (engineerGlobal) {
-                    if (!engineerGlobal.attributes) engineerGlobal.attributes = {isAISWE: false, aiAgentType: null, skills:[], yearsOfExperience:0};
-                    engineerGlobal.attributes.skills = newSkillsArray;
-                    console.log(`Updated skills for ${engineerName} to:`, newSkillsArray);
-                    if (typeof saveSystemChanges === 'function') saveSystemChanges();
-                }
-            },
-            download: true, accessorDownload: (v,d) => d.skills
-        },
-        {
-            title: "Years Exp.", field: "yearsOfExperience", width: 100, hozAlign: "right", sorter: "number",
-            formatter: (cell) => {
-                const val = cell.getValue();
-                return (typeof val === 'number') ? `${val} years` : (val || "-");
-            },
-            headerFilter: "number", headerFilterParams:{placeholder:"e.g. >2"}, // Tabulator uses headerFilterParams for placeholder
-            visible: false,
-            download: true, accessorDownload: (v,d) => d.yearsOfExperience
-        },
-        {
-            title: "Team Identity", field: "teamId", sorterParams: { alignEmptyValues: "top" }, minWidth: 170, hozAlign: "left",
-            editor: "list", editorParams: getTeamIdentityCellEditorParams,
-            formatter: editableCellFormatter,
-            headerFilter: "list", headerFilterParams: getTeamIdentityHeaderFilterParams,
-            headerFilterFunc: (headerValue, rowValue, rowData, filterParams) => {
-                if (headerValue === "") return true;
-                if (headerValue === "_UNALLOCATED_") return !rowValue;
-                return rowValue === headerValue;
-            },
-            cellEdited: (cell) => {
-                const engineerName = cell.getRow().getData().name;
-                const newAssignedTeamId = cell.getValue() === "" ? null : cell.getValue();
-                const engineerGlobal = (currentSystemData.allKnownEngineers || []).find(e => e.name === engineerName);
-                if (engineerGlobal) {
-                    const oldTeamId = engineerGlobal.currentTeamId;
-                    if (oldTeamId === newAssignedTeamId) return;
-
-                    engineerGlobal.currentTeamId = newAssignedTeamId;
-                    if (oldTeamId) {
-                        const oldTeam = (currentSystemData.teams || []).find(t => t.teamId === oldTeamId);
-                        if (oldTeam && Array.isArray(oldTeam.engineers)) {
-                            oldTeam.engineers = oldTeam.engineers.filter(name => name !== engineerName);
-                        }
-                    }
-                    if (newAssignedTeamId) {
-                        const newTeam = (currentSystemData.teams || []).find(t => t.teamId === newAssignedTeamId);
-                        if (newTeam) {
-                            if (!Array.isArray(newTeam.engineers)) newTeam.engineers = [];
-                            if (!newTeam.engineers.includes(engineerName)) {
-                                newTeam.engineers.push(engineerName);
-                            }
-                        }
-                    }
-                    console.log(`Moved engineer ${engineerName} from team ${oldTeamId || 'Unassigned'} to ${newAssignedTeamId || 'Unassigned'}.`);
-                    if (typeof saveSystemChanges === 'function') saveSystemChanges();
-                    // Refresh the table to reflect potential changes in Team Identity display and available options in other rows.
-                    if (typeof generateEngineerTable === 'function') generateEngineerTable();
-                }
-            },
-            accessorDownload: (v,d) => { const t = (currentSystemData.teams || []).find(team => team.teamId === d.teamId); return t ? (t.teamIdentity || t.teamName || d.teamId) : "Unallocated"; }
-        },
-        { title: "Manager (SDM)", field: "sdmName", sorter: "string", minWidth: 150, editable: false, headerFilter: "list", headerFilterParams: () => getNameHeaderFilterParams(currentSystemData.sdms, 'sdmName'), headerFilterFunc: "=", headerFilterPlaceholder: "Filter by SDM...", accessorDownload: (v,d) => d.sdmName },
-        { title: "Senior Manager", field: "seniorManagerName", sorter: "string", minWidth: 150, editable: false, headerFilter: "list", headerFilterParams: () => getNameHeaderFilterParams(currentSystemData.seniorManagers, 'seniorManagerName'), headerFilterFunc: "=", headerFilterPlaceholder: "Filter by Sr. Mgr...", accessorDownload: (v,d) => d.seniorManagerName },
-    ];
-}
-
-/**
- * Updates the H2 heading for the engineer table with summary stats.
- * MODIFIED: Calculates BIS based on `allKnownEngineers` that have a `currentTeamId`.
- */
-function updateEngineerTableHeading() {
-    const heading = document.getElementById('engineerTableHeading');
-    if (!currentSystemData || !heading) return;
-
-    let totalFundedHC = 0;
-    (currentSystemData.teams || []).forEach(team => {
-        totalFundedHC += team.fundedHeadcount ?? 0;
-    });
-
-    // Calculate Team BIS by counting engineers in allKnownEngineers that have a currentTeamId
-    const totalTeamBIS = (currentSystemData.allKnownEngineers || []).filter(eng => eng.currentTeamId).length;
-
-    // Calculate Away Team BIS (sum of awayTeamMembers arrays)
-    let totalAwayTeamBIS = 0;
-    (currentSystemData.teams || []).forEach(team => {
-        totalAwayTeamBIS += (team.awayTeamMembers || []).length;
-    });
-
-    const totalEffectiveBIS = totalTeamBIS + totalAwayTeamBIS;
-    const totalHiringGap = totalFundedHC - totalTeamBIS; // Gap is based on primary team members vs funded
-
-    heading.innerText = `Engineer Resource List (Funded: ${totalFundedHC} | Team BIS: ${totalTeamBIS} | Away BIS: ${totalAwayTeamBIS} | Effective BIS: ${totalEffectiveBIS} | Hiring Gap: ${totalHiringGap})`;
-    heading.style.color = totalHiringGap < 0 ? 'blue' : (totalHiringGap > 0 ? 'darkorange' : 'green');
-    heading.title = `Finance Approved Funding: ${totalFundedHC}\nActual Team Members (BIS): ${totalTeamBIS}\nAway-Team Members: ${totalAwayTeamBIS}\nTotal Effective Capacity (Team + Away): ${totalEffectiveBIS}\nHiring Gap (Funded - Team BIS): ${totalHiringGap}`;
-}
-
 
 /**
  * Generates the "Add New Resource" form section.
- * MODIFIED: Added fields for new engineer attributes (isAISWE, aiAgentType, skills, yearsOfExperience).
+ * (No changes needed for this function, but it's required for the view)
  */
 function generateAddNewResourceSection(containerElement) {
     console.log("Generating 'Add New Resource' section with new engineer attributes...");
@@ -810,26 +555,16 @@ function generateAddNewResourceSection(containerElement) {
 
     let sectionDiv = document.getElementById('addNewResourceSection');
     if (sectionDiv) {
-        sectionDiv.innerHTML = ''; // Clear if already exists for re-rendering
+        sectionDiv.innerHTML = '';
     } else {
         sectionDiv = document.createElement('div');
         sectionDiv.id = 'addNewResourceSection';
-        sectionDiv.style.marginTop = '30px';
-        sectionDiv.style.padding = '15px';
-        sectionDiv.style.border = '1px solid #ccc';
-        sectionDiv.style.backgroundColor = '#f9f9f9';
-        containerElement.appendChild(sectionDiv); // Append to the provided container
     }
-
-    const title = document.createElement('h3');
-    title.textContent = 'Add New Resource to Organisation';
-    sectionDiv.appendChild(title);
 
     const form = document.createElement('form');
     form.id = 'addNewResourceForm';
     form.onsubmit = function(event) { event.preventDefault(); handleAddNewResource(); };
 
-    // Resource Type Selector
     form.innerHTML += `
         <div style="margin-bottom: 10px;">
             <label for="newResourceType" style="display:block; margin-bottom:5px;">Resource Type:</label>
@@ -841,8 +576,6 @@ function generateAddNewResourceSection(containerElement) {
             </select>
         </div>
     `;
-
-    // Fields for Engineer - MODIFIED to include new attributes
     form.innerHTML += `
         <div id="newEngineerFields" class="resource-fields" style="border:1px solid #e0e0e0; padding:10px; border-radius:4px;">
             <h5 style="margin-top:0; margin-bottom:10px;">Engineer Details</h5>
@@ -872,7 +605,6 @@ function generateAddNewResourceSection(containerElement) {
             </div>
         </div>
     `;
-
     const srManagerOptions = (currentSystemData?.seniorManagers || []).map(sm => `<option value="${sm.seniorManagerId}">${sm.seniorManagerName}</option>`).join('');
     form.innerHTML += `
         <div id="newSdmFields" class="resource-fields" style="display:none; margin-bottom:10px; border:1px solid #e0e0e0; padding:10px; border-radius:4px;">
@@ -916,68 +648,12 @@ function generateAddNewResourceSection(containerElement) {
     submitButton.style.marginTop = '10px';
     form.appendChild(submitButton);
 
-    sectionDiv.appendChild(form);
-    toggleNewResourceFields(); // Initial call
-}
-
-/**
- * Toggles visibility of form fields based on selected resource type.
- * MODIFIED: Calls toggleAIAgentTypeField when engineer is selected.
- */
-function toggleNewResourceFields() {
-    const resourceType = document.getElementById('newResourceType').value;
-    document.querySelectorAll('#addNewResourceForm .resource-fields').forEach(div => {
-        div.style.display = 'none';
-        div.querySelectorAll('input, select').forEach(input => {
-            if (input.type !== 'select-one' && input.type !== 'checkbox') input.value = '';
-            else if (input.type === 'select-one') input.selectedIndex = 0;
-            else if (input.type === 'checkbox') input.checked = false;
-            input.required = false; // Reset required status
-        });
-    });
-
-    if (resourceType === 'engineer') {
-        document.getElementById('newEngineerFields').style.display = 'block';
-        document.getElementById('newEngineerName').required = true;
-        document.getElementById('newEngineerLevel').required = true;
-        // Years, Skills, AI Agent Type are not strictly required but will be collected
-        if (typeof toggleAIAgentTypeField === 'function') toggleAIAgentTypeField(); // Ensure AI type field visibility is correct
-    } else if (resourceType === 'sdm') {
-        document.getElementById('newSdmFields').style.display = 'block';
-        document.getElementById('newSdmName').required = true;
-    } else if (resourceType === 'sr_manager') {
-        document.getElementById('newSrManagerFields').style.display = 'block';
-        document.getElementById('newSrManagerName').required = true;
-    } else if (resourceType === 'pmt') {
-        document.getElementById('newPmtFields').style.display = 'block';
-        document.getElementById('newPmtName').required = true;
-    }
-}
-
-/**
- * Helper function to toggle AI Agent Type field visibility based on IsAISWE checkbox.
- * NEW function.
- */
-function toggleAIAgentTypeField() {
-    const isAISWECheckbox = document.getElementById('newEngineerIsAISWE');
-    const aiAgentTypeContainer = document.getElementById('aiAgentTypeContainer');
-    const aiAgentTypeInput = document.getElementById('newEngineerAIAgentType');
-
-    if (isAISWECheckbox && aiAgentTypeContainer && aiAgentTypeInput) {
-        if (isAISWECheckbox.checked) {
-            aiAgentTypeContainer.style.display = 'block';
-            aiAgentTypeInput.required = true; // Make AI type required if it's an AI SWE
-        } else {
-            aiAgentTypeContainer.style.display = 'none';
-            aiAgentTypeInput.required = false;
-            aiAgentTypeInput.value = '';
-        }
-    }
+    containerElement.appendChild(form);
+    toggleNewResourceFields();
 }
 
 /**
  * Handles adding a new resource to the system.
- * MODIFIED: Collects new attributes for engineers and saves them in the 'attributes' object.
  */
 function handleAddNewResource() {
     const resourceType = document.getElementById('newResourceType').value;
@@ -1004,7 +680,7 @@ function handleAddNewResource() {
                 const newEngineer = {
                     name,
                     level,
-                    currentTeamId: null, // Initially unassigned
+                    currentTeamId: null,
                     attributes: {
                         isAISWE,
                         aiAgentType: isAISWE ? (aiAgentType || "General AI") : null,
@@ -1062,28 +738,61 @@ function handleAddNewResource() {
         console.log("Added new resource to currentSystemData:", newResourceDataForLog);
         if (typeof saveSystemChanges === 'function') saveSystemChanges();
         document.getElementById('addNewResourceForm').reset();
-        toggleNewResourceFields(); // This will also call toggleAIAgentTypeField
+        toggleNewResourceFields();
 
-        // Refresh relevant views if they are currently displayed
-        if (document.getElementById('organogramView').style.display !== 'none') {
-            if (typeof generateOrganogram === 'function') generateOrganogram();
-            if (typeof generateTeamTable === 'function') generateTeamTable(currentSystemData); // Pass data
-        }
-        if (document.getElementById('engineerTableView').style.display !== 'none') {
-            if (typeof generateEngineerTable === 'function') generateEngineerTable();
-        }
-        // Update dropdowns in other forms if necessary (e.g., SDM list in team edit, Sr Mgr list here)
-        if (resourceType === 'sr_manager' && document.getElementById('assignSrManagerId')) {
-            const srManagerSelect = document.getElementById('assignSrManagerId');
-            const currentSrMgrs = currentSystemData.seniorManagers || [];
-            srManagerSelect.innerHTML = '<option value="">-- None --</option>' + currentSrMgrs.map(sm => `<option value="${sm.seniorManagerId}">${sm.seniorManagerName}</option>`).join('');
-        }
-        if (resourceType === 'sdm' && typeof displayTeamsForEditing === 'function' && document.getElementById('systemEditForm').style.display !== 'none') {
-            displayTeamsForEditing(currentSystemData.teams, -1); // Refresh team edit view to update SDM lists
-        }
-         if (resourceType === 'pmt' && typeof displayTeamsForEditing === 'function' && document.getElementById('systemEditForm').style.display !== 'none') {
-            displayTeamsForEditing(currentSystemData.teams, -1); // Refresh team edit view to update PMT lists
-        }
+        // Refresh the entire view to show the new resource in all relevant places
+        generateOrganogram();
     }
 }
 
+/**
+ * Toggles visibility of form fields based on selected resource type.
+ */
+function toggleNewResourceFields() {
+    const resourceType = document.getElementById('newResourceType').value;
+    document.querySelectorAll('#addNewResourceForm .resource-fields').forEach(div => {
+        div.style.display = 'none';
+        div.querySelectorAll('input, select').forEach(input => {
+            if (input.type !== 'select-one' && input.type !== 'checkbox') input.value = '';
+            else if (input.type === 'select-one') input.selectedIndex = 0;
+            else if (input.type === 'checkbox') input.checked = false;
+            input.required = false;
+        });
+    });
+
+    if (resourceType === 'engineer') {
+        document.getElementById('newEngineerFields').style.display = 'block';
+        document.getElementById('newEngineerName').required = true;
+        document.getElementById('newEngineerLevel').required = true;
+        if (typeof toggleAIAgentTypeField === 'function') toggleAIAgentTypeField();
+    } else if (resourceType === 'sdm') {
+        document.getElementById('newSdmFields').style.display = 'block';
+        document.getElementById('newSdmName').required = true;
+    } else if (resourceType === 'sr_manager') {
+        document.getElementById('newSrManagerFields').style.display = 'block';
+        document.getElementById('newSrManagerName').required = true;
+    } else if (resourceType === 'pmt') {
+        document.getElementById('newPmtFields').style.display = 'block';
+        document.getElementById('newPmtName').required = true;
+    }
+}
+
+/**
+ * Helper function to toggle AI Agent Type field visibility.
+ */
+function toggleAIAgentTypeField() {
+    const isAISWECheckbox = document.getElementById('newEngineerIsAISWE');
+    const aiAgentTypeContainer = document.getElementById('aiAgentTypeContainer');
+    const aiAgentTypeInput = document.getElementById('newEngineerAIAgentType');
+
+    if (isAISWECheckbox && aiAgentTypeContainer && aiAgentTypeInput) {
+        if (isAISWECheckbox.checked) {
+            aiAgentTypeContainer.style.display = 'block';
+            aiAgentTypeInput.required = true;
+        } else {
+            aiAgentTypeContainer.style.display = 'none';
+            aiAgentTypeInput.required = false;
+            aiAgentTypeInput.value = '';
+        }
+    }
+}

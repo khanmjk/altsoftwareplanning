@@ -1078,14 +1078,12 @@ function showOrganogramView() {
         return;
     }
     switchView('organogramView', 'browse');
-    // The generateOrganogram and generateTeamTable functions should be called
-    // automatically by the logic within switchView or an initializer for that view.
-    // If not, they can be called here.
+    // This single call now generates the org chart, the resource management sections,
+    // and the team breakdown table.
     if (typeof generateOrganogram === 'function') {
         generateOrganogram();
-    }
-    if (typeof generateTeamTable === 'function') {
-        generateTeamTable(currentSystemData);
+    } else {
+        console.error("generateOrganogram function not found in orgView.js");
     }
 }
 

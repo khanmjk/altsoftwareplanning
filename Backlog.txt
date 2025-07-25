@@ -107,11 +107,11 @@ Manage Detailed Planning
 [Done] -- For team nodes, use toolip showing information about the team similar to the Team Visualization, and also some info on initiatives the team is impacted by
 [Done] -- When hovering over service nodes, include in tooltip, description about the service 
 [Done] --- Think about adding another dashboard widget for "demand by team per quarter" - to show a bar graph per quarter to see team load/demand impact
-
+[Done] --- Now that we can add resources to the system, we need to also support removing resources (when people leave) [Jules failed at this task]
 ------------
 IN PROGRESS
 ------------
-[Done] Think about adding another dashboard widget for "demand by team per quarter" - to show a bar graph per quarter to see team load/demand impact
+
 
 ------
 TO DO
@@ -133,7 +133,6 @@ Utilities
 - Now that we've got export to excel, csv and json working, we need a utlity to generate these files from other places: planning table, overall system data dump, etc.
 
 UX
--- Now that we can add resources to the system, we need to also support removing resources (when people leave) [Jules failed at this task]
 -- Ability to export the system to JSON, CSV and Excel, from top level menu "Export System" [leveraging Tabular library's export functionality]
 
 Year Planning
