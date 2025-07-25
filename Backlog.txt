@@ -108,8 +108,6 @@ Manage Detailed Planning
 [Done] -- When hovering over service nodes, include in tooltip, description about the service 
 [Done] --- Think about adding another dashboard widget for "demand by team per quarter" - to show a bar graph per quarter to see team load/demand impact
 [Done] --- Now that we can add resources to the system, we need to also support removing resources (when people leave) [Jules failed at this task]
-[Done]- [UX] Include a Delete Resource section in the Organization view, make the Add and Delete resource sections collapsible. Remember to regenerate the team breakdown table to reflect changes.
-
 ------------
 IN PROGRESS
 ------------
@@ -169,6 +167,7 @@ AI enhancements
 
 Bugs / Missing features
 - [UX] Add ability remove an engineer from Engineer List table to account for attrition (the engineer must be removed from the main engineer list and all associate objects where engineer is associated with a team)
+- [UX] Include a Delete Resource section in the Organization view, make the Add and Delete resource sections collapsible. Remember to regenerate the team breakdown table to reflect changes.
 - [Feature] Add more default systems for demo purposes: Reference architectures for Android Stack, Chat GPT app, LLM system, etc.
 - [Feature] Organization Overview - show a view of traditional org chart with blocks
 - [Bug] - When filtering in the Service Dependency Visualization, the list is stuck on the first service, even though the selected service from the list is acted on, and the graph displays correctly - but the top service list doesn't show the selected service
