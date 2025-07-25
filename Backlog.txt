@@ -111,7 +111,7 @@ Manage Detailed Planning
 ------------
 IN PROGRESS
 ------------
-[Done] Think about adding another dashboard widget for "demand by team per quarter" - to show a bar graph per quarter to see team load/demand impact
+
 
 ------
 TO DO
