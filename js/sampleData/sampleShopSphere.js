@@ -324,7 +324,7 @@ const sampleYearlyInitiativesShopSphere = [
         workPackageIds: [], attributes: { pmCapacityNotes: "Major strategic push for 2026.", planningYear: 2026 }
     },
     {
-        initiativeId: 'init-ss-009', title: 'Live Video Shopping (POC)', description: 'POC for influencers to host live video streams to sell products.', isProtected: false,
+        initiativeId: 'init-ss-009', title: 'Live Video Shopping (POC)', description: 'POC for influencers to host live video streams to sell products.', isProtected: false, 
         assignments: [ { teamId: 'teamSS6', sdeYears: 1.0 }, { teamId: 'teamSS7', sdeYears: 0.5 } ],
         impactedServiceIds: ['WebGatewayService', 'SellerPortalService'], roi: { category: 'Innovation', valueType: 'Narrative', estimatedValue: 'Explore new shopping paradigm' }, targetDueDate: "2026-03-31", actualCompletionDate: null, status: 'Backlog',
         themes: ['theme-ss-feature', 'theme-ss-ai-ml'], primaryGoalId: 'goal-ss-conversion-2025',
@@ -335,9 +335,58 @@ const sampleYearlyInitiativesShopSphere = [
         initiativeId: 'init-ss-010', title: 'Carbon-Neutral Fulfillment Pipeline', description: 'Track and offset carbon emissions for all orders.', isProtected: false,
         assignments: [ { teamId: 'teamSS8', sdeYears: 1.0 }, { teamId: 'teamSS4', sdeYears: 0.5 } ],
         impactedServiceIds: ['AnalyticsPipelineService', 'OrderService'], roi: { category: 'Strategic', valueType: 'QualitativeScore', estimatedValue: 'ESG Goal' }, targetDueDate: "2026-12-31", actualCompletionDate: null, status: 'Backlog',
-        themes: ['theme-ss-platform-resilience'], primaryGoalId: 'goal-ss-stability-2025',
+        themes: ['theme-ss-platform-resilience'], primaryGoalId: 'goal-ss-esg-2026',
         projectManager: { type: 'projectManager', id: 'pmSS003', name: 'Kenji Velocity' }, owner: { type: 'sdm', id: 'sdmSS6', name: 'Li Wang' }, technicalPOC: { type: 'sdm', id: 'sdmSS6', name: 'Li Wang' },
         workPackageIds: [], attributes: { pmCapacityNotes: "Company-wide ESG initiative.", planningYear: 2026 }
+    },
+    {
+        initiativeId: 'init-ss-011', title: 'Warehouse Automation Integration (POC)', description: 'POC to integrate with fulfillment center robotics for real-time stock and order status.', isProtected: false,
+        assignments: [ { teamId: 'teamSS1', sdeYears: 1.0 }, { teamId: 'teamSS7', sdeYears: 0.5 } ],
+        impactedServiceIds: ['InventoryService', 'OrderService', 'SellerPortalService'], roi: { category: 'Innovation', valueType: 'CostReduction', estimatedValue: 'Future fulfillment efficiency' }, targetDueDate: "2026-09-30", actualCompletionDate: null, status: 'Backlog',
+        themes: ['theme-ss-cost', 'theme-ss-ai-ml'], primaryGoalId: 'goal-ss-stability-2025',
+        projectManager: null, owner: { type: 'sdm', id: 'sdmSS1', name: 'Anil Gupta' }, technicalPOC: { type: 'engineer', id: 'engBethanySmith_teamSS1_ss', name: 'Bethany Smith' },
+        workPackageIds: [], attributes: { pmCapacityNotes: "Explore integration with new automated warehouses.", planningYear: 2026 }
+    },
+    {
+        initiativeId: 'init-ss-012', title: 'ShopSphere Prime (v1)', description: 'Design and launch a "Prime" subscription for free shipping and exclusive benefits.', isProtected: false,
+        assignments: [ { teamId: 'teamSS4', sdeYears: 1.5 }, { teamId: 'teamSS5', sdeYears: 1.0 }, { teamId: 'teamSS6', sdeYears: 1.0 }, { teamId: 'teamSS1', sdeYears: 0.5 } ],
+        impactedServiceIds: ['OrderService', 'PaymentService', 'WebGatewayService', 'UserService'], roi: { category: 'Revenue Generation', valueType: 'Monetary', estimatedValue: '20M New ARR' }, targetDueDate: "2026-11-30", actualCompletionDate: null, status: 'Backlog',
+        themes: ['theme-ss-revenue', 'theme-ss-feature'], primaryGoalId: 'goal-ss-revenue-2026',
+        projectManager: { type: 'projectManager', id: 'pmSS002', name: 'Chloe Scope' }, owner: { type: 'seniorManager', id: 'srMgrSS2', name: 'David Lee' }, technicalPOC: { type: 'sdm', id: 'sdmSS3', name: 'Kenji Watanabe' },
+        workPackageIds: [], attributes: { pmCapacityNotes: "Major new revenue stream for 2026.", planningYear: 2026 }
+    },
+    // --- 2027 (3YP / FUTURE) ---
+    {
+        initiativeId: 'init-ss-013', title: 'Headless Commerce Platform (Phase 1)', description: 'Begin migrating to a fully headless architecture, decoupling all frontends.', isProtected: false,
+        assignments: [ { teamId: 'teamSS1', sdeYears: 2.0 }, { teamId: 'teamSS6', sdeYears: 1.5 }, { teamId: 'teamSS2', sdeYears: 0.5 } ],
+        impactedServiceIds: ['WebGatewayService', 'SearchService', 'ProductCatalogService'], roi: { category: 'Tech Debt', valueType: 'Productivity/Efficiency', estimatedValue: 'Enable faster feature dev' }, targetDueDate: "2027-12-31", actualCompletionDate: null, status: 'Backlog',
+        themes: ['theme-ss-platform-resilience', 'theme-ss-ux-perf'], primaryGoalId: 'goal-ss-platform-2027',
+        projectManager: { type: 'projectManager', id: 'pmSS001', name: 'Marcus Timeline' }, owner: { type: 'seniorManager', id: 'srMgrSS1', name: 'Sarah Chen' }, technicalPOC: { type: 'sdm', id: 'sdmSS4', name: 'Emily White' },
+        workPackageIds: [], attributes: { pmCapacityNotes: "Major multi-year architectural shift.", planningYear: 2027 }
+    },
+    {
+        initiativeId: 'init-ss-014', title: 'Hyper-Personalization Engine (v2)', description: 'Move beyond recommendations to a fully personalized DOM and user journey.', isProtected: false,
+        assignments: [ { teamId: 'teamSS3', sdeYears: 2.0 }, { teamId: 'teamSS8', sdeYears: 1.0 }, { teamId: 'teamSS6', sdeYears: 1.0 } ],
+        impactedServiceIds: ['RecommendationService', 'AnalyticsPipelineService', 'WebGatewayService'], roi: { category: 'Innovation', valueType: 'MetricImprovement', estimatedValue: 'NPS +10 points' }, targetDueDate: "2027-09-30", actualCompletionDate: null, status: 'Backlog',
+        themes: ['theme-ss-ai-ml', 'theme-ss-conversion'], primaryGoalId: 'goal-ss-search-2025',
+        projectManager: null, owner: { type: 'pmt', id: 'pmtSS2', name: 'Ben Carter' }, technicalPOC: { type: 'engineer', id: 'engHannahDavis_teamSS3_ss', name: 'Hannah Davis' },
+        workPackageIds: [], attributes: { pmCapacityNotes: "Long-term AI-driven vision.", planningYear: 2027 }
+    },
+    {
+        initiativeId: 'init-ss-015', title: 'Expand to LATAM Market', description: 'Launch ShopSphere in Brazil and Mexico.', isProtected: false,
+        assignments: [ { teamId: 'teamSS1', sdeYears: 1.0 }, { teamId: 'teamSS5', sdeYears: 1.5 } ],
+        impactedServiceIds: ['UserService', 'PaymentService', 'OrderService'], roi: { category: 'Strategic', valueType: 'MarketExpansion', estimatedValue: 'LATAM Market Entry' }, targetDueDate: "2027-12-31", actualCompletionDate: null, status: 'Backlog',
+        themes: ['theme-ss-revenue'], primaryGoalId: 'goal-ss-expansion-2027',
+        projectManager: { type: 'projectManager', id: 'pmSS002', name: 'Chloe Scope' }, owner: { type: 'seniorManager', id: 'srMgrSS2', name: 'David Lee' }, technicalPOC: { type: 'sdm', id: 'sdmSS3', name: 'Kenji Watanabe' },
+        workPackageIds: [], attributes: { pmCapacityNotes: "Follow-on from EU expansion.", planningYear: 2027 }
+    },
+    {
+        initiativeId: 'init-ss-016', title: 'Service Mesh Implementation', description: 'Roll out a full service mesh (e.g., Istio) for all microservices.', isProtected: false,
+        assignments: [ { teamId: 'teamSS1', sdeYears: 2.0 } ],
+        impactedServiceIds: [], roi: { category: 'Tech Debt', valueType: 'Productivity/Efficiency', estimatedValue: 'Standardize observability' }, targetDueDate: "2027-06-30", actualCompletionDate: null, status: 'Backlog',
+        themes: ['theme-ss-platform-resilience'], primaryGoalId: 'goal-ss-platform-2027',
+        projectManager: null, owner: { type: 'sdm', id: 'sdmSS1', name: 'Anil Gupta' }, technicalPOC: { type: 'engineer', id: 'engBethanySmith_teamSS1_ss', name: 'Bethany Smith' },
+        workPackageIds: [], attributes: { pmCapacityNotes: "Improve security, observability, and traffic management.", planningYear: 2027 }
     }
 ];
 
@@ -375,7 +424,7 @@ const sampleSystemDataShopSphere = {
         {
             goalId: 'goal-ss-stability-2025', name: 'Platform Resilience & Stability 2025', description: 'Ensure 99.99% uptime for critical services (Checkout, Payments) and reduce tech debt.', strategyLink: null,
             owner: { type: 'seniorManager', id: 'srMgrSS1', name: 'Sarah Chen' }, projectManager: { type: 'projectManager', id: 'pmSS001', name: 'Marcus Timeline' }, technicalPOC: { type: 'sdm', id: 'sdmSS1', name: 'Anil Gupta' },
-            initiativeIds: ['init-ss-ktlo', 'init-ss-oncall', 'init-ss-005', 'init-ss-010'], attributes: {}
+            initiativeIds: ['init-ss-ktlo', 'init-ss-oncall', 'init-ss-005', 'init-ss-010', 'init-ss-011'], attributes: {}
         },
         {
             goalId: 'goal-ss-security-2025', name: 'Achieve Security & Compliance Goals 2025', description: 'Pass all mandatory compliance audits (PCI 4.0) and remediate critical vulnerabilities.', strategyLink: null,
@@ -385,12 +434,12 @@ const sampleSystemDataShopSphere = {
         {
             goalId: 'goal-ss-conversion-2025', name: 'Increase Checkout Conversion by 5% 2025', description: 'Improve the user experience from discovery to payment to increase conversion rate.', strategyLink: null,
             owner: { type: 'seniorManager', id: 'srMgrSS2', name: 'David Lee' }, projectManager: { type: 'projectManager', id: 'pmSS001', name: 'Marcus Timeline' }, technicalPOC: { type: 'sdm', id: 'sdmSS4', name: 'Emily White' },
-            initiativeIds: ['init-ss-002', 'init-ss-003', 'init-ss-006', 'init-ss-009'], attributes: {}
+            initiativeIds: ['init-ss-002', 'init-ss-003', 'init-ss-006', 'init-ss-009', 'init-ss-013'], attributes: {}
         },
         {
             goalId: 'goal-ss-search-2025', name: 'Improve Search & Discovery 2025', description: 'Leverage AI/ML to improve search relevance and product discovery.', strategyLink: null,
             owner: { type: 'pmt', id: 'pmtSS2', name: 'Ben Carter' }, projectManager: null, technicalPOC: { type: 'sdm', id: 'sdmSS2', name: 'Maria Rodriguez' },
-            initiativeIds: ['init-ss-001'], attributes: {}
+            initiativeIds: ['init-ss-001', 'init-ss-014'], attributes: {}
         },
         {
             goalId: 'goal-ss-seller-2025', name: 'Grow Seller Platform Adoption by 20% 2025', description: 'Enhance seller tools to attract and retain more merchants.', strategyLink: null,
@@ -401,17 +450,37 @@ const sampleSystemDataShopSphere = {
             goalId: 'goal-ss-expansion-2026', name: 'Launch in EU Market 2026', description: 'Strategic goal to launch ShopSphere in Germany and France by end of 2026.', strategyLink: null,
             owner: { type: 'seniorManager', id: 'srMgrSS2', name: 'David Lee' }, projectManager: { type: 'projectManager', id: 'pmSS002', name: 'Chloe Scope' }, technicalPOC: { type: 'sdm', id: 'sdmSS1', name: 'Anil Gupta' },
             initiativeIds: ['init-ss-008'], attributes: {}
+        },
+        {
+            goalId: 'goal-ss-revenue-2026', name: 'Launch New Revenue Streams 2026', description: 'Launch ShopSphere Prime subscription program.', strategyLink: null,
+            owner: { type: 'seniorManager', id: 'srMgrSS2', name: 'David Lee' }, projectManager: { type: 'projectManager', id: 'pmSS002', name: 'Chloe Scope' }, technicalPOC: { type: 'sdm', id: 'sdmSS3', name: 'Kenji Watanabe' },
+            initiativeIds: ['init-ss-012'], attributes: {}
+        },
+        {
+            goalId: 'goal-ss-esg-2026', name: 'Meet ESG Commitments 2026', description: 'Fulfill company-wide Environmental, Social, and Governance commitments.', strategyLink: null,
+            owner: { type: 'seniorManager', id: 'srMgrSS1', name: 'Sarah Chen' }, projectManager: { type: 'projectManager', id: 'pmSS003', name: 'Kenji Velocity' }, technicalPOC: { type: 'sdm', id: 'sdmSS6', name: 'Li Wang' },
+            initiativeIds: ['init-ss-010'], attributes: {}
+        },
+        {
+            goalId: 'goal-ss-platform-2027', name: 'Evolve to Headless Platform 2027', description: 'Decouple frontend experiences from backend services to increase dev velocity.', strategyLink: null,
+            owner: { type: 'seniorManager', id: 'srMgrSS1', name: 'Sarah Chen' }, projectManager: { type: 'projectManager', id: 'pmSS001', name: 'Marcus Timeline' }, technicalPOC: { type: 'sdm', id: 'sdmSS4', name: 'Emily White' },
+            initiativeIds: ['init-ss-013', 'init-ss-016'], attributes: {}
+        },
+        {
+            goalId: 'goal-ss-expansion-2027', name: 'Expand to LATAM Market 2027', description: 'Launch ShopSphere in Brazil and Mexico.', strategyLink: null,
+            owner: { type: 'seniorManager', id: 'srMgrSS2', name: 'David Lee' }, projectManager: { type: 'projectManager', id: 'pmSS002', name: 'Chloe Scope' }, technicalPOC: { type: 'sdm', id: 'sdmSS3', name: 'Kenji Watanabe' },
+            initiativeIds: ['init-ss-015'], attributes: {}
         }
     ],
     definedThemes: [
-        { themeId: 'theme-ss-platform-resilience', name: 'Platform Resilience', description: 'Work related to stability, scalability, and tech debt reduction.', relatedGoalIds: ['goal-ss-stability-2025'], attributes: {} },
-        { themeId: 'theme-ss-security-compliance', name: 'Security & Compliance', description: 'Mandatory security, privacy, and compliance work (e.g., PCI, GDPR).', relatedGoalIds: ['goal-ss-security-2025'], attributes: {} },
-        { themeId: 'theme-ss-conversion', name: 'Conversion Optimization', description: 'Features directly aimed at improving the checkout conversion rate.', relatedGoalIds: ['goal-ss-conversion-2025'], attributes: {} },
-        { themeId: 'theme-ss-ux-perf', name: 'UX & Performance', description: 'Improving the frontend user experience and app performance.', relatedGoalIds: ['goal-ss-conversion-2025'], attributes: {} },
-        { themeId: 'theme-ss-ai-ml', name: 'AI/ML Innovation', description: 'Leveraging AI and Machine Learning for new features.', relatedGoalIds: ['goal-ss-search-2025'], attributes: {} },
+        { themeId: 'theme-ss-platform-resilience', name: 'Platform Resilience', description: 'Work related to stability, scalability, and tech debt reduction.', relatedGoalIds: ['goal-ss-stability-2025', 'goal-ss-platform-2027', 'goal-ss-esg-2026'], attributes: {} },
+        { themeId: 'theme-ss-security-compliance', name: 'Security & Compliance', description: 'Mandatory security, privacy, and compliance work (e.g., PCI, GDPR).', relatedGoalIds: ['goal-ss-security-2025', 'goal-ss-expansion-2026'], attributes: {} },
+        { themeId: 'theme-ss-conversion', name: 'Conversion Optimization', description: 'Features directly aimed at improving the checkout conversion rate.', relatedGoalIds: ['goal-ss-conversion-2025', 'goal-ss-search-2025', 'goal-ss-platform-2027'], attributes: {} },
+        { themeId: 'theme-ss-ux-perf', name: 'UX & Performance', description: 'Improving the frontend user experience and app performance.', relatedGoalIds: ['goal-ss-conversion-2025', 'goal-ss-platform-2027'], attributes: {} },
+        { themeId: 'theme-ss-ai-ml', name: 'AI/ML Innovation', description: 'Leveraging AI and Machine Learning for new features.', relatedGoalIds: ['goal-ss-search-2025', 'goal-ss-stability-2025', 'goal-ss-conversion-2025'], attributes: {} },
         { themeId: 'theme-ss-seller-success', name: 'Seller Success', description: 'Building tools and features for third-party sellers.', relatedGoalIds: ['goal-ss-seller-2025'], attributes: {} },
-        { themeId: 'theme-ss-revenue', name: 'New Revenue Streams', description: 'Initiatives that create new lines of revenue (e.g., Ads, new markets).', relatedGoalIds: ['goal-ss-seller-2025', 'goal-ss-expansion-2026'], attributes: {} },
-        { themeId: "theme-ss-feature", name: "New Product Feature", description: "General new features for customers.", relatedGoalIds: ['goal-ss-conversion-2025'], attributes: {} },
+        { themeId: 'theme-ss-revenue', name: 'New Revenue Streams', description: 'Initiatives that create new lines of revenue (e.g., Ads, new markets).', relatedGoalIds: ['goal-ss-seller-2025', 'goal-ss-expansion-2026', 'goal-ss-revenue-2026', 'goal-ss-expansion-2027'], attributes: {} },
+        { themeId: "theme-ss-feature", name: "New Product Feature", description: "General new features for customers.", relatedGoalIds: ['goal-ss-conversion-2025', 'goal-ss-revenue-2026'], attributes: {} },
         { themeId: 'theme-ss-cost', name: 'Cost Reduction', description: 'Initiatives focused on reducing infrastructure or operational costs.', relatedGoalIds: ['goal-ss-stability-2025'], attributes: {} }
     ],
     archivedYearlyPlans: [],
