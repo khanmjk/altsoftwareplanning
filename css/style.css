@@ -2025,11 +2025,10 @@ a:focus {
     cursor: pointer; /* Make the symbol itself clickable */
 }
 
-/* Position for the text element containing the toggle */
+/* This is the <text> element containing the toggle */
 .org-node-toggle {
     text-anchor: middle;
-    /* This positions the text element itself, not the text inside it */
-    transform: translateY(calc(50% - 8px)); /* Move to bottom edge */
+    /* No transform is needed; D3 positions it via 'y' attribute */
 }
 
 /* Hover effect for the node */
