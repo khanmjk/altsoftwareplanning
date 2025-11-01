@@ -1947,7 +1947,7 @@ a:focus {
     margin-top: 5px;
 }
 
-/* === NEW Styles for D3 Org Chart (Block View) === */
+//* === NEW Styles for D3 Org Chart (Block View) === */
 
 /* Style for the SVG links (lines) */
 .org-link {
@@ -1958,9 +1958,47 @@ a:focus {
 
 /* Style for the <g> element wrapping each node */
 .org-node {
-    cursor: pointer; /* Indicates nodes can be clicked (to collapse) */
     font-family: 'Inter', Arial, sans-serif;
 }
+
+/* Style the invisible <foreignObject> - no style needed */
+/* .org-node foreignObject { ... } */
+
+/* This is the <div> wrapper inside the <foreignObject> */
+.org-node-label-wrapper {
+    /* **REQUIRED:** These styles must be on the HTML element */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    padding: 5px;
+    box-sizing: border-box; 
+    text-align: center;
+    /* **REQUIRED:** Prevent inheriting SVG styles */
+    font-family: 'Inter', Arial, sans-serif;
+    color: #212529;
+}
+
+/* This is the primary name text */
+.org-node-label-name {
+    font-size: 14px; /* Larger font */
+    font-weight: 600;
+    word-wrap: break-word; /* Wrap long text */
+    max-height: 40px; /* Limit name to approx 2 lines */
+    overflow: hidden;
+}
+
+/* This is the secondary details text */
+.org-node-label-details {
+    font-size: 11px;
+    color: #555;
+    word-wrap: break-word;
+    max-height: 25px; /* Limit details to approx 2 lines */
+    overflow: hidden;
+}
+
 
 /* Style for the rectangle (the "block") */
 .org-node-rect {
@@ -1992,43 +2030,25 @@ a:focus {
     stroke: #adb5bd;
 }
 
-/* Style for text elements inside the node */
-.org-node-text {
-    font-size: 11px;
-    fill: #212529;
-}
-
-/* Style for the primary name text */
-.org-node-text.org-node-name {
-    font-weight: 600;
-    font-size: 13px;
-}
 /* Make root node text white */
-.org-type-root .org-node-text {
-    fill: #fff;
+.org-type-root .org-node-label-wrapper {
+    color: #fff; /* This will be inherited by children */
+}
+.org-type-root .org-node-label-details {
+    color: #eee; /* Lighter color for details on dark bg */
 }
 
-/* Style for the secondary details text */
-.org-node-text.org-node-details {
-    font-size: 10px;
-    fill: #555;
-}
-.org-type-root .org-node-text.org-node-details {
-    fill: #eee;
-}
 
 /* Style for the +/- toggle */
-.org-node-text.org-node-toggle {
+.org-node-toggle {
     font-size: 16px;
     font-weight: bold;
     fill: #6c757d;
-    cursor: pointer; /* Make the symbol itself clickable */
-}
-
-/* This is the <text> element containing the toggle */
-.org-node-toggle {
+    cursor: pointer;
     text-anchor: middle;
-    /* No transform is needed; D3 positions it via 'y' attribute */
+}
+.org-node-toggle:hover {
+    fill: #007bff;
 }
 
 /* Hover effect for the node */
@@ -2038,4 +2058,5 @@ a:focus {
 }
 
 /* === End D3 Org Chart Styles === */
+
 /* Add any additional styles as needed */          

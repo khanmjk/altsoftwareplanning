@@ -233,10 +233,11 @@ function renderHtmlOrgList() {
 }
 
 /**
- * NEW (v2): Generates the Organogram using a D3 Tree Layout (Top-Down).
+ * NEW (v4): Generates the Organogram using a D3 Tree Layout (Top-Down).
+ * MODIFIED: Uses <foreignObject> and adds correct xmlns attribute for HTML text wrapping.
  */
 function renderD3OrgChart() {
-    console.log("Generating D3 Org Chart (Top-Down Block View)...");
+    console.log("Generating D3 Org Chart (Top-Down, Text Wrap v4)...");
     const hierarchicalData = buildHierarchyData();
     const container = document.getElementById('organogramContent');
     
@@ -273,9 +274,8 @@ function renderD3OrgChart() {
 
     // Main group for chart content (for zooming)
     const g = svg.append("g");
-
+        
     // Create Tree Layout
-    // Use [width, height] for nodeSize to create a vertical layout
     const tree = d3.tree()
         .nodeSize([nodeWidth + horizontalSpacing, nodeHeight + verticalSpacing]);
 
@@ -307,29 +307,24 @@ function renderD3OrgChart() {
         const links = treeData.links();
 
         // Normalize for fixed-depth (y position)
-        // d.y is now vertical, d.x is horizontal
         nodes.forEach(d => { 
             d.y = d.depth * (nodeHeight + verticalSpacing) + nodeHeight; // y = depth * spacing
         }); 
         
         // --- LINKS ---
-        // Use a custom "elbow" path generator
         function elbow(d) {
-            // Path from source (parent) to target (child)
-            return `M ${d.source.x},${d.source.y + nodeHeight / 2}` + // Start at bottom-center of parent
-                   ` V ${d.target.y - verticalSpacing / 2}` +            // Go down vertically to halfway point
-                   ` H ${d.target.x}` +                               // Go horizontally to child's X
-                   ` V ${d.target.y - nodeHeight / 2}`;               // Go down to top-center of child
+            return `M ${d.source.x},${d.source.y + nodeHeight / 2}` + 
+                   ` V ${d.target.y - verticalSpacing / 2}` +
+                   ` H ${d.target.x}` +
+                   ` V ${d.target.y - nodeHeight / 2}`;
         }
         
         const link = g.selectAll(".org-link")
             .data(links, d => d.target.id);
 
-        // Enter new links at the parent's previous position.
         const linkEnter = link.enter().append("path")
             .attr("class", "org-link")
             .attr("d", d => {
-                // Start new links from the source's old position
                 const o = { x: source.x0 || source.x, y: source.y0 || source.y };
                 return `M ${o.x},${o.y + nodeHeight / 2}` +
                        ` V ${o.y + nodeHeight / 2}` +
@@ -340,14 +335,11 @@ function renderD3OrgChart() {
             .attr("stroke", "#ccc")
             .attr("stroke-width", 1.5);
 
-        // Transition links to their new position.
         link.merge(linkEnter).transition().duration(duration)
-            .attr("d", elbow); // Use the elbow path generator
+            .attr("d", elbow);
 
-        // Transition exiting nodes to the parent's new position.
         link.exit().transition().duration(duration)
             .attr("d", d => {
-                // Exit links to the source's new position
                 const o = { x: source.x, y: source.y };
                 return `M ${o.x},${o.y + nodeHeight / 2}` +
                        ` V ${o.y + nodeHeight / 2}` +
@@ -358,16 +350,14 @@ function renderD3OrgChart() {
 
         // --- NODES ---
         const node = g.selectAll(".org-node")
-            .data(nodes, d => d.data.id || d.data.name + Math.random()); // Use unique ID
+            .data(nodes, d => d.data.id || d.data.name + Math.random());
 
-        // Enter new nodes at the parent's previous position.
         const nodeEnter = node.enter().append("g")
             .attr("class", d => `org-node org-type-${d.data.type}`)
             .attr("transform", d => `translate(${source.x0 || source.x},${source.y0 || source.y})`)
             .style("opacity", 0)
             .on("click", (event, d) => {
-                // Toggle children
-                if (d.data.type === 'engineer') return; // Engineers can't be clicked
+                if (d.data.type === 'engineer') return;
                 if (d.children) {
                     d._children = d.children;
                     d.children = null;
@@ -375,7 +365,7 @@ function renderD3OrgChart() {
                     d.children = d._children;
                     d._children = null;
                 }
-                update(d); // Re-run the update
+                update(d);
             })
             .on("mouseover", (event, d) => {
                 let info = '';
@@ -404,40 +394,48 @@ function renderD3OrgChart() {
             .attr("class", "org-node-rect")
             .attr("width", nodeWidth)
             .attr("height", nodeHeight)
-            .attr("x", -nodeWidth / 2) // Center the rect
-            .attr("y", -nodeHeight / 2) // Center the rect
+            .attr("x", -nodeWidth / 2)
+            .attr("y", -nodeHeight / 2)
             .attr("rx", 4)
             .attr("ry", 4)
             .style("cursor", d => d.data.type !== 'engineer' ? "pointer" : "default");
 
-        // Add the primary name text
-        nodeEnter.append("text")
-            .attr("class", "org-node-text org-node-name")
-            .attr("dy", "-0.5em") // Position slightly above center
-            .attr("text-anchor", "middle")
-            .text(d => d.data.name);
+        // --- MODIFIED: Replace <text> with <foreignObject> for wrapping ---
+        const fo = nodeEnter.append("foreignObject")
+            .attr("x", -nodeWidth / 2)
+            .attr("y", -nodeHeight / 2)
+            .attr("width", nodeWidth)
+            .attr("height", nodeHeight)
+            .style("pointer-events", "none"); // Make FO transparent to clicks
 
-        // Add the secondary details text
-        nodeEnter.append("text")
-            .attr("class", "org-node-text org-node-details")
-            .attr("dy", "1.0em") // Position slightly below center
-            .attr("text-anchor", "middle")
-            .text(d => {
+        // Add HTML content inside the foreignObject
+        // **FIX:** Added the xmlns attribute
+        const div = fo.append("xhtml:div")
+            .attr("xmlns", "http://www.w3.org/1999/xhtml") 
+            .attr("class", "org-node-label-wrapper");
+            
+        div.append("xhtml:div")
+           .attr("class", "org-node-label-name")
+           .html(d => d.data.name);
+           
+        div.append("xhtml:div")
+           .attr("class", "org-node-label-details")
+           .html(d => {
                 if (d.data.type === 'team') return d.data.details;
                 if (d.data.type === 'engineer') return d.data.name.includes('[AI]') ? 'AI Software Engineer' : 'Software Engineer';
-                return d.data.type.replace('srMgr', 'Senior Manager'); // Simple title
+                return d.data.type.replace('srMgr', 'Senior Manager');
             });
+        // --- End <foreignObject> replacement ---
 
-        // Add expand/collapse indicator
+        // Add expand/collapse indicator (remains SVG text)
         nodeEnter.append("text")
-            .attr("class", "org-node-text org-node-toggle")
+            .attr("class", "org-node-toggle") // Use this class for styling
             .attr("text-anchor", "middle")
-            .attr("y", (nodeHeight / 2) + 16) // **FIXED:** Position BELOW the node box
+            .attr("y", (nodeHeight / 2) + 16) // Position BELOW the node box
             .text(d => {
                 if (d.data.type === 'engineer') return '';
                 return d._children ? '▼' : (d.children ? '▲' : '');
             });
-
 
         // Transition nodes to their new position.
         node.merge(nodeEnter).transition().duration(duration)
@@ -472,13 +470,11 @@ function renderD3OrgChart() {
     // After the first render, calculate bounds and center the chart
     const bounds = g.node().getBBox();
     const chartWidth = bounds.width;
-    const chartHeight = bounds.height;
     
     // Calculate scale to fit width (with some padding)
     const scale = Math.min(1, (width / (chartWidth + 100)) * 0.8);
     
     // Center the chart horizontally
-    // We want the root node's x-position (root.x) to be at the center of the viewport (width / 2)
     const tx = (width / 2) - (root.x * scale);
     const ty = 50; // 50px margin from top
     
@@ -495,9 +491,8 @@ function renderD3OrgChart() {
     svg.call(zoom)
        .call(zoom.transform, initialTransform); // Set initial view
 
-    console.log("D3 Org Chart (Top-Down) rendered.");
+    console.log("D3 Org Chart (Top-Down, Text Wrap) rendered.");
 }
-
 
 /**
  * Generates the Team Breakdown Table.
