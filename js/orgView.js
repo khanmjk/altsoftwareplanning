@@ -6,9 +6,10 @@ let currentOrgViewMode = 'd3'; // Default to the new D3 view
 /**
  * NEW: Initializes the entire Organization Overview page.
  * Sets up layout switchers and calls the default renderer.
+ * MODIFIED: Now handles 3 views (D3, List, Table).
  */
 function initializeOrgChartView() {
-    console.log("Initializing Organization Chart View with layout switcher...");
+    console.log("Initializing Organization Chart View with 3-way layout switcher...");
     const toolbar = document.getElementById('organogramToolbar');
     const content = document.getElementById('organogramContent');
     
@@ -17,16 +18,17 @@ function initializeOrgChartView() {
         return;
     }
 
-    // --- 1. Setup Toolbar Buttons ---
-    // We use the 'organogramToolbar' div from index.html
+    // --- 1. Setup Toolbar Buttons (Now with 3 buttons) ---
     toolbar.innerHTML = `
         <strong style="margin-right: 10px;">Chart Layout:</strong>
         <button id="orgViewModeD3" class="btn-secondary">Block View</button>
         <button id="orgViewModeList" class="btn-secondary">List View</button>
+        <button id="orgViewModeTable" class="btn-secondary">Org Table</button>
     `;
 
     const btnD3 = document.getElementById('orgViewModeD3');
     const btnList = document.getElementById('orgViewModeList');
+    const btnTable = document.getElementById('orgViewModeTable');
 
     // Button click handlers
     btnD3.addEventListener('click', () => {
@@ -39,44 +41,78 @@ function initializeOrgChartView() {
         updateOrgViewRenderer();
     });
 
+    btnTable.addEventListener('click', () => {
+        currentOrgViewMode = 'table';
+        updateOrgViewRenderer();
+    });
+
     // --- 2. Render the correct view based on the current mode ---
     updateOrgViewRenderer();
 
-    // --- 3. Render the Team Table (which is always visible) ---
-    if (typeof generateTeamTable === 'function') {
-        generateTeamTable(currentSystemData);
-    }
+    // --- 3. REMOVED: generateTeamTable() is no longer called here. ---
+    // It is now called by updateOrgViewRenderer() when mode is 'table'.
 }
 
 /**
  * NEW: Helper function to render the correct org chart based on the current mode.
+ * MODIFIED: Now controls visibility of organogramContent AND teamBreakdown.
  */
 function updateOrgViewRenderer() {
     const btnD3 = document.getElementById('orgViewModeD3');
     const btnList = document.getElementById('orgViewModeList');
+    const btnTable = document.getElementById('orgViewModeTable');
     
-    // Update button active states
+    // Get references to both content containers
+    const chartContainer = document.getElementById('organogramContent');
+    const tableContainer = document.getElementById('teamBreakdown');
+
+    if (!chartContainer || !tableContainer) {
+        console.error("Missing chart or table containers.");
+        return;
+    }
+
+    // Reset all button styles
+    btnD3.classList.add('btn-secondary');
+    btnD3.classList.remove('btn-primary');
+    btnList.classList.add('btn-secondary');
+    btnList.classList.remove('btn-primary');
+    btnTable.classList.add('btn-secondary');
+    btnTable.classList.remove('btn-primary');
+
+    // Hide both containers by default
+    chartContainer.style.display = 'none';
+    tableContainer.style.display = 'none';
+
     if (currentOrgViewMode === 'd3') {
-        btnD3.classList.add('btn-primary'); // Make active
+        btnD3.classList.add('btn-primary');
         btnD3.classList.remove('btn-secondary');
-        btnList.classList.add('btn-secondary'); // Make inactive
-        btnList.classList.remove('btn-primary');
         
+        chartContainer.style.display = 'block'; // Show chart container
         if (typeof renderD3OrgChart === 'function') {
-            renderD3OrgChart(); // Call the new D3 function
+            renderD3OrgChart(); // Call the D3 function
         } else {
             console.error("renderD3OrgChart function not found.");
         }
-    } else {
-        btnList.classList.add('btn-primary'); // Make active
+    } else if (currentOrgViewMode === 'list') {
+        btnList.classList.add('btn-primary');
         btnList.classList.remove('btn-secondary');
-        btnD3.classList.add('btn-secondary'); // Make inactive
-        btnD3.classList.remove('btn-primary');
-        
+
+        chartContainer.style.display = 'block'; // Show chart container
         if (typeof renderHtmlOrgList === 'function') {
             renderHtmlOrgList(); // Call the renamed "list" function
         } else {
             console.error("renderHtmlOrgList function not found.");
+        }
+    } else if (currentOrgViewMode === 'table') {
+        btnTable.classList.add('btn-primary');
+        btnTable.classList.remove('btn-secondary');
+
+        tableContainer.style.display = 'block'; // Show table container
+        if (typeof generateTeamTable === 'function') {
+            // This function renders the EnhancedTableWidget
+            generateTeamTable(currentSystemData); 
+        } else {
+            console.error("generateTeamTable function not found.");
         }
     }
 }
@@ -84,8 +120,6 @@ function updateOrgViewRenderer() {
 
 /**
  * Builds hierarchical data for Organogram.
- * MODIFIED: Iterates team.engineers (array of names) and looks up details
- * from currentSystemData.allKnownEngineers to build engineer nodes.
  * MODIFIED: Ensures all nodes (srMgr, sdm) have a generic `name` property for D3.
  */
 function buildHierarchyData() {
@@ -400,16 +434,15 @@ function renderD3OrgChart() {
             .attr("ry", 4)
             .style("cursor", d => d.data.type !== 'engineer' ? "pointer" : "default");
 
-        // --- MODIFIED: Replace <text> with <foreignObject> for wrapping ---
+        // Add <foreignObject> for text wrapping
         const fo = nodeEnter.append("foreignObject")
             .attr("x", -nodeWidth / 2)
             .attr("y", -nodeHeight / 2)
             .attr("width", nodeWidth)
             .attr("height", nodeHeight)
-            .style("pointer-events", "none"); // Make FO transparent to clicks
+            .style("pointer-events", "none"); 
 
-        // Add HTML content inside the foreignObject
-        // **FIX:** Added the xmlns attribute
+        // Add namespaced HTML div for content
         const div = fo.append("xhtml:div")
             .attr("xmlns", "http://www.w3.org/1999/xhtml") 
             .attr("class", "org-node-label-wrapper");
@@ -425,13 +458,12 @@ function renderD3OrgChart() {
                 if (d.data.type === 'engineer') return d.data.name.includes('[AI]') ? 'AI Software Engineer' : 'Software Engineer';
                 return d.data.type.replace('srMgr', 'Senior Manager');
             });
-        // --- End <foreignObject> replacement ---
 
-        // Add expand/collapse indicator (remains SVG text)
+        // Add expand/collapse indicator (SVG text)
         nodeEnter.append("text")
-            .attr("class", "org-node-toggle") // Use this class for styling
+            .attr("class", "org-node-toggle") 
             .attr("text-anchor", "middle")
-            .attr("y", (nodeHeight / 2) + 16) // Position BELOW the node box
+            .attr("y", (nodeHeight / 2) + 16) 
             .text(d => {
                 if (d.data.type === 'engineer') return '';
                 return d._children ? '▼' : (d.children ? '▲' : '');
@@ -467,262 +499,259 @@ function renderD3OrgChart() {
     update(root);
     
     // --- Initial Zoom & Pan ---
-    // After the first render, calculate bounds and center the chart
     const bounds = g.node().getBBox();
     const chartWidth = bounds.width;
     
-    // Calculate scale to fit width (with some padding)
     const scale = Math.min(1, (width / (chartWidth + 100)) * 0.8);
     
-    // Center the chart horizontally
     const tx = (width / 2) - (root.x * scale);
     const ty = 50; // 50px margin from top
     
     const initialTransform = d3.zoomIdentity.translate(tx, ty).scale(scale);
 
-    // Setup zoom behavior
     const zoom = d3.zoom()
         .scaleExtent([0.1, 2])
         .on("zoom", (event) => {
             g.attr("transform", event.transform);
         });
     
-    // Apply zoom to SVG and call the initial transform
     svg.call(zoom)
-       .call(zoom.transform, initialTransform); // Set initial view
+       .call(zoom.transform, initialTransform); 
 
     console.log("D3 Org Chart (Top-Down, Text Wrap) rendered.");
 }
 
+
+// Keep a global instance for the team table widget
+let teamTableWidgetInstance = null;
+
 /**
- * Generates the Team Breakdown Table.
- * MODIFIED (v5 - Robust Lookup from data.js structure):
- * - Assumes team.engineers is an array of names.
- * - Performs case-insensitive, trimmed lookup of engineer details from systemData.allKnownEngineers.
- * - Logs specific names if details are not found in the roster.
+ * NEW: Generates the Team Breakdown Table using EnhancedTableWidget.
+ * This replaces the old manual HTML table.
  */
-function generateTeamTable(systemData) {
-    console.log("[DEBUG V5] ENTER generateTeamTable");
+function generateTeamTable() {
+    console.log("Generating Team Breakdown Table using EnhancedTableWidget...");
+    
+    const tableData = prepareTeamDataForTabulator();
+    const columnDefinitions = defineTeamTableColumns();
 
-    const teamTable = document.getElementById('teamTable');
-    if (!teamTable) {
-        console.error("[DEBUG V5] EXIT generateTeamTable: Could not find #teamTable element.");
-        const teamBreakdownDiv = document.getElementById('teamBreakdown');
-        if (teamBreakdownDiv) {
-             teamBreakdownDiv.innerHTML = '<p style="color:red;">Error: HTML element for team table not found (ID: teamTable).</p>';
-        }
+    const widgetContainerId = 'teamBreakdown'; // We'll re-use the existing div
+    let widgetTargetDiv = document.getElementById(widgetContainerId);
+
+    if (!widgetTargetDiv) {
+        console.error("Cannot find #teamBreakdown div to render team table widget.");
         return;
     }
+    
+    // Clear the old content (like the H2 and p tags) to make way for the widget
+    widgetTargetDiv.innerHTML = ''; 
+    widgetTargetDiv.style.marginTop = '30px'; // Re-apply margin
 
-    const tableHead = teamTable.querySelector('thead');
-    const tableBody = teamTable.querySelector('tbody');
-    const tableFoot = teamTable.querySelector('tfoot');
-
-    if (!tableHead || !tableBody || !tableFoot) {
-        console.error("[DEBUG V5] EXIT generateTeamTable: Table structure incomplete (missing thead/tbody/tfoot).");
-        const teamBreakdownDiv = document.getElementById('teamBreakdown');
-        if (teamBreakdownDiv) {
-            teamBreakdownDiv.innerHTML = '<p style="color:red;">Error: Team table HTML structure is incomplete.</p>';
-        }
-        return;
+    // Destroy previous widget instance if it exists
+    if (teamTableWidgetInstance) {
+        teamTableWidgetInstance.destroy();
+        teamTableWidgetInstance = null;
+        console.log("Previous Team Table widget instance destroyed.");
     }
 
-    tableBody.innerHTML = '';
-    tableHead.innerHTML = '';
-    tableFoot.innerHTML = '';
-    console.log("[DEBUG V5] Cleared table head, body, and foot.");
+    // Create new instance of EnhancedTableWidget
+    try {
+        teamTableWidgetInstance = new EnhancedTableWidget(widgetContainerId, {
+            data: tableData,
+            columns: columnDefinitions,
+            uniqueIdField: 'teamId', // Use teamId as the unique key
+            paginationSize: 50,
+            paginationSizeSelector: [25, 50, 100, 250],
+            initialSort: [{ column: "seniorManagerName", dir: "asc" }, { column: "sdmName", dir: "asc" }],
+            exportCsvFileName: 'team_breakdown.csv',
+            exportJsonFileName: 'team_breakdown.json',
+            exportXlsxFileName: 'team_breakdown.xlsx',
+            exportSheetName: 'Team Breakdown',
+            layout: "fitData" // Use fitData to make it feel more like a table
+        });
+        console.log("Team Breakdown EnhancedTableWidget instance created.");
 
-    const headerRow = tableHead.insertRow();
-    const headersConfig = [
-        { text: 'Senior Manager', title: 'Senior Manager overseeing the SDM(s).' },
-        { text: 'SDM', title: 'Software Development Manager for the team(s).' },
-        { text: 'Team Identity', title: 'Unique identifier or codename for the team.' },
-        { text: 'Team Name', title: 'Official name of the team.' },
-        { text: 'PMT', title: 'Product Management counterpart for the team.' },
-        { text: 'Team BIS', title: 'Builders In Seats: Count of actual engineers assigned to this team (from team.engineers list).' },
-        { text: 'Finance Approved Funding', title: 'Official budgeted headcount allocated by finance.' },
-        { text: 'Effective BIS', title: 'Total building capacity including team members and away-team resources (Team BIS + Away-Team BIS).' },
-        { text: 'BIS Hiring Gap', title: 'Gap between Finance Approved Funding and actual Team BIS (Funded - Team BIS). Shows hiring need.' },
-        { text: 'Engineers (Level & Type)', title: 'List of engineers assigned to this team, their level, and if they are AI.' },
-        { text: 'Away-Team Members', title: 'List of engineers borrowed from other teams/orgs, their level, and source.' },
-        { text: 'Services Owned', title: 'List of services this team owns.' }
-     ];
-    headersConfig.forEach(config => {
-        const th = document.createElement('th');
-        th.textContent = config.text;
-        th.title = config.title;
-        Object.assign(th.style, { border: '1px solid #ccc', padding: '8px', textAlign: 'left', backgroundColor: '#f2f2f2', position: 'sticky', top: '0', zIndex: '1' });
-        headerRow.appendChild(th);
+    } catch (error) {
+        console.error("Error creating EnhancedTableWidget for Team Breakdown:", error);
+        widgetTargetDiv.innerHTML = "<p style='color:red;'>Error initializing team table widget. Check console.</p>";
+    }
+}
+window.generateTeamTable = generateTeamTable; // Make global if it isn't already
+
+
+/**
+ * NEW: Prepares flat data for the Team Breakdown Tabulator.
+ */
+function prepareTeamDataForTabulator() {
+    if (!currentSystemData || !currentSystemData.teams) {
+        console.warn("prepareTeamDataForTabulator: currentSystemData.teams is missing.");
+        return [];
+    }
+
+    // Create maps for efficient lookups
+    const sdmMap = new Map((currentSystemData.sdms || []).map(s => [s.sdmId, s]));
+    const srMgrMap = new Map((currentSystemData.seniorManagers || []).map(sm => [sm.seniorManagerId, sm]));
+    const pmtMap = new Map((currentSystemData.pmts || []).map(p => [p.pmtId, p]));
+    const engineerMap = new Map((currentSystemData.allKnownEngineers || []).map(e => [e.name, e]));
+    
+    let teamServicesMap = {};
+    (currentSystemData.services || []).forEach(service => { 
+        let teamId = service.owningTeamId; 
+        if (teamId) { 
+            if (!teamServicesMap[teamId]) teamServicesMap[teamId] = []; 
+            teamServicesMap[teamId].push(service.serviceName); 
+        } 
     });
 
-    if (!systemData || !systemData.teams || !Array.isArray(systemData.teams) || !systemData.allKnownEngineers || !Array.isArray(systemData.allKnownEngineers)) {
-        console.error("[DEBUG V5] EXIT generateTeamTable: Invalid or missing systemData.teams or systemData.allKnownEngineers. Check data loading and structure.");
-        let errRow = tableBody.insertRow(); let cell = errRow.insertCell();
-        cell.colSpan = headersConfig.length; cell.textContent = "Error: Core team or global engineer roster data is missing or invalid. Please check system data."; cell.style.color = 'red';
-        const levelKeyElement = document.getElementById('levelKey'); if (levelKeyElement) levelKeyElement.innerHTML = '';
-        return;
+    return currentSystemData.teams.map(team => {
+        const sdm = sdmMap.get(team.sdmId);
+        const seniorManager = sdm ? srMgrMap.get(sdm.seniorManagerId) : null;
+        const pmt = pmtMap.get(team.pmtId);
+
+        const teamBIS = (team.engineers || []).length;
+        const fundedHC = team.fundedHeadcount ?? 0;
+        const awayTeamBIS = (team.awayTeamMembers || []).length;
+        const effectiveBIS = teamBIS + awayTeamBIS;
+        const hiringGap = fundedHC - teamBIS;
+
+        // Get engineer details
+        const engineerDetails = (team.engineers || []).map(name => {
+            const eng = engineerMap.get(name);
+            if (eng) {
+                const type = eng.attributes?.isAISWE ? ` [AI]` : '';
+                return `${eng.name} (L${eng.level})${type}`;
+            }
+            return `${name} (Details Missing)`;
+        }).join('\n'); // Use newline for tooltip/clipboard
+
+        // Get away team details
+        const awayTeamDetails = (team.awayTeamMembers || []).map(away => {
+            const type = away.attributes?.isAISWE ? ` [AI]` : '';
+            return `${away.name} (L${away.level})${type} - From: ${away.sourceTeam}`;
+        }).join('\n');
+        
+        const servicesOwned = (teamServicesMap[team.teamId] || []).join('\n');
+
+        return {
+            teamId: team.teamId,
+            seniorManagerName: seniorManager ? seniorManager.seniorManagerName : "N/A",
+            sdmName: sdm ? sdm.sdmName : "N/A",
+            teamIdentity: team.teamIdentity || "N/A",
+            teamName: team.teamName || "N/A",
+            pmtName: pmt ? pmt.pmtName : "N/A",
+            teamBIS: teamBIS,
+            fundedHeadcount: fundedHC,
+            effectiveBIS: effectiveBIS,
+            hiringGap: hiringGap,
+            engineerDetails: engineerDetails,
+            awayTeamDetails: awayTeamDetails,
+            servicesOwned: servicesOwned
+        };
+    });
+}
+
+/**
+ * NEW HELPER: Generates header filter params for name-based dropdowns.
+ * @param {Array} sourceArray - The array to get unique names from (e.g., currentSystemData.sdms)
+ * @param {string} nameField - The field to use for the label/value (e.g., "sdmName")
+ * @returns {object} Parameters for Tabulator's headerFilterParams
+ */
+function getNameHeaderFilterParams(sourceArray, nameField) {
+    const options = [{ label: "All", value: "" }];
+    if (sourceArray) {
+        const uniqueNames = {};
+        sourceArray.forEach(item => {
+            if (item && item[nameField]) {
+                uniqueNames[item[nameField]] = item[nameField]; // Value is the name itself for filtering
+            }
+        });
+        Object.keys(uniqueNames).sort((a,b) => String(a).localeCompare(String(b))).forEach(name => {
+             options.push({ label: name, value: name });
+        });
     }
+    // Add an option for "N/A" (unassigned)
+    options.push({ label: "N/A", value: "N/A" });
+    return { values: options, clearable: true, autocomplete: true };
+};
 
-    const services = systemData.services || [];
-    const sdms = systemData.sdms || [];
-    const pmts = systemData.pmts || [];
-    const seniorManagers = systemData.seniorManagers || [];
-    const allKnownEngineers = systemData.allKnownEngineers; // Source of truth for engineer details
-
-    let totalFundedHC = 0; let totalTeamBIS = 0; let totalEffectiveBIS = 0;
-
-    const getSeniorManagerName = (srMgrId) => { if (!srMgrId) return 'No Senior Manager'; const srMgr = seniorManagers.find(s => s.seniorManagerId === srMgrId); return srMgr ? srMgr.seniorManagerName : `Unknown (${srMgrId.slice(-4)})`; };
-    const getSdmName = (sdmId) => { if (!sdmId) return 'No SDM'; const sdm = sdms.find(s => s.sdmId === sdmId); return sdm ? sdm.sdmName : `Unknown (${sdmId.slice(-4)})`; };
-    const getPmtName = (pmtId) => { if (!pmtId) return 'N/A'; const pmt = pmts.find(p => p.pmtId === pmtId); return pmt ? pmt.pmtName : `Unknown (${pmtId.slice(-4)})`; };
-
-    let teamServicesMap = {};
-    services.forEach(service => { let teamId = service.owningTeamId; if (teamId) { if (!teamServicesMap[teamId]) teamServicesMap[teamId] = []; teamServicesMap[teamId].push(service.serviceName); } });
-
-    let groupedData = {};
-    systemData.teams.forEach(team => { if (!team || !team.teamId) return; const sdm = sdms.find(s => s.sdmId === team.sdmId); const srMgrId = sdm ? (sdm.seniorManagerId || 'no-sr-mgr') : 'no-sdm'; const sdmIdValue = team.sdmId || 'no-sdm'; if (!groupedData[srMgrId]) groupedData[srMgrId] = {}; if (!groupedData[srMgrId][sdmIdValue]) groupedData[srMgrId][sdmIdValue] = []; groupedData[srMgrId][sdmIdValue].push(team); });
-
-    console.log("[DEBUG V5] Starting table body population. Number of known engineers in roster:", allKnownEngineers.length);
-    let rowCount = 0;
-    for (const srMgrId in groupedData) {
-        const srMgrData = groupedData[srMgrId];
-        const srMgrNameDisplay = (srMgrId === 'no-sr-mgr' || srMgrId === 'no-sdm') ? 'No Assigned Senior Manager' : getSeniorManagerName(srMgrId);
-        let isFirstRowForSrMgr = true;
-        let srMgrRowspan = 0;
-        for (const sdmIdValue in srMgrData) { srMgrRowspan += srMgrData[sdmIdValue].length; }
-
-        for (const sdmIdValue in srMgrData) {
-            const teamsInSdmGroup = srMgrData[sdmIdValue];
-            const sdmNameDisplay = (sdmIdValue === 'no-sdm') ? 'No Assigned SDM' : getSdmName(sdmIdValue);
-            let isFirstRowForSdm = true;
-
-            teamsInSdmGroup.forEach((team) => {
-                if (!team || !team.teamId) { console.warn("[DEBUG V5] Skipping invalid team in generateTeamTable:", team); return; }
-                let row = tableBody.insertRow();
-                rowCount++;
-
-                if (isFirstRowForSrMgr) { let srMgrCell = row.insertCell(); srMgrCell.innerText = srMgrNameDisplay; srMgrCell.rowSpan = srMgrRowspan; srMgrCell.style.verticalAlign = 'top'; isFirstRowForSrMgr = false; }
-                if (isFirstRowForSdm) { let sdmCell = row.insertCell(); sdmCell.innerText = sdmNameDisplay; sdmCell.rowSpan = teamsInSdmGroup.length; sdmCell.style.verticalAlign = 'top'; isFirstRowForSdm = false; }
-                row.insertCell().innerText = team.teamIdentity || 'N/A';
-                row.insertCell().innerText = team.teamName || 'N/A';
-                row.insertCell().innerText = getPmtName(team.pmtId);
-
-                const fundedHC = team.fundedHeadcount ?? 0;
-                const teamMemberEngineerNames = team.engineers || [];
-                const teamBIS = teamMemberEngineerNames.length;
-                const awayTeamBIS = (team.awayTeamMembers || []).length;
-                const effectiveBIS = teamBIS + awayTeamBIS;
-                const hiringGap = fundedHC - teamBIS;
-
-                const teamBISCell = row.insertCell(); teamBISCell.innerText = teamBIS; teamBISCell.style.textAlign = 'center';
-                row.insertCell().innerText = fundedHC.toFixed(0);
-                const effectiveBISCell = row.insertCell(); effectiveBISCell.innerText = effectiveBIS.toFixed(0); effectiveBISCell.title = `Team Members: ${teamBIS}, Away-Team: ${awayTeamBIS}`; effectiveBISCell.style.textAlign = 'center'; if (awayTeamBIS > 0) effectiveBISCell.style.fontWeight = 'bold';
-                let hiringGapCell = row.insertCell(); hiringGapCell.innerText = hiringGap; hiringGapCell.style.color = hiringGap < 0 ? 'blue' : (hiringGap > 0 ? 'orange' : 'green'); hiringGapCell.style.textAlign = 'center';
-                if (hiringGap < 0) { hiringGapCell.title = `Team BIS (${teamBIS}) exceeds Funded HC (${fundedHC}) by ${Math.abs(hiringGap)}`; hiringGapCell.style.fontWeight = 'bold'; }
-                else if (hiringGap > 0) { hiringGapCell.title = `Need to hire ${hiringGap} to reach Funded HC (${fundedHC})`; }
-                else { hiringGapCell.title = `Team BIS matches Funded HC`; }
-
-                totalFundedHC += fundedHC; totalTeamBIS += teamBIS; totalEffectiveBIS += effectiveBIS;
-
-                let engineersCell = row.insertCell();
-                if (teamMemberEngineerNames.length > 0) {
-                    engineersCell.innerHTML = teamMemberEngineerNames.map(engineerNameFromTeamLoop => {
-                        if (!engineerNameFromTeamLoop || typeof engineerNameFromTeamLoop !== 'string') {
-                            console.warn(`[V5 DEBUG] Invalid engineer name in team.engineers: '${engineerNameFromTeamLoop}' for team: ${team.teamIdentity}`);
-                            return `${String(engineerNameFromTeamLoop || 'Invalid Name In TeamList')} (Error: Bad Name Format)`;
-                        }
-                        const trimmedNameFromTeam = engineerNameFromTeamLoop.trim();
-                        const lowerTrimmedNameFromTeam = trimmedNameFromTeam.toLowerCase();
-
-                        const engDetails = allKnownEngineers.find(e =>
-                            e.name && typeof e.name === 'string' &&
-                            e.name.trim().toLowerCase() === lowerTrimmedNameFromTeam
-                        );
-
-                        if (engDetails) {
-                            const attributes = engDetails.attributes || {};
-                            const typeIndicator = attributes.isAISWE ? ` [AI - ${attributes.aiAgentType || 'General'}]` : '';
-                            return `${engDetails.name} (L${engDetails.level ?? '?'})${typeIndicator}`;
-                        } else {
-                            console.warn(`[V5 DEBUG - Lookup FAIL] Engineer name "${trimmedNameFromTeam}" (from team "${team.teamIdentity || team.teamId}") NOT FOUND in allKnownEngineers roster.`);
-                            return `${engineerNameFromTeamLoop} (Details Missing - Not in Roster)`;
-                        }
-                    }).join('<br>');
-                } else {
-                    engineersCell.innerText = 'None';
-                }
-                engineersCell.style.whiteSpace = 'pre-line';
-
-                let awayTeamCell = row.insertCell();
-                if (team.awayTeamMembers && team.awayTeamMembers.length > 0) {
-                    awayTeamCell.innerHTML = team.awayTeamMembers.map(awayEng => {
-                        if (typeof awayEng !== 'object' || awayEng === null) return 'Invalid Away Data';
-                        const attributes = awayEng.attributes || {}; // Assuming away members might also have attributes
-                        const typeIndicator = attributes.isAISWE ? ` [AI - ${attributes.aiAgentType || 'General'}]` : '';
-                        return `${awayEng.name || 'Unnamed'} (L${awayEng.level ?? '?'})${typeIndicator} - From: ${awayEng.sourceTeam || 'Unknown Source'}`;
-                    }).join('<br>');
-                } else {
-                    awayTeamCell.innerText = 'None';
-                }
-                Object.assign(awayTeamCell.style, { whiteSpace: 'pre-line', fontSize: '0.9em', color: '#333' });
-
-                let servicesOwnedCell = row.insertCell();
-                servicesOwnedCell.innerText = team.teamId && teamServicesMap[team.teamId] ? teamServicesMap[team.teamId].join(', ') : 'None';
-            });
+/**
+ * NEW: Defines the columns for the Team Breakdown Tabulator.
+ * MODIFIED: Uses "list" header filters for categorical columns.
+ */
+function defineTeamTableColumns() {
+    // Custom formatter for gap
+    const gapFormatter = (cell) => {
+        const value = cell.getValue();
+        if (value > 0) {
+            cell.getElement().style.color = "orange";
+            cell.getElement().title = `Need to hire ${value}`;
+        } else if (value < 0) {
+            cell.getElement().style.color = "blue";
+            cell.getElement().title = `Over-hired by ${Math.abs(value)}`;
+        } else {
+            cell.getElement().style.color = "green";
+            cell.getElement().title = `At hiring target`;
         }
-    }
-    console.log(`[DEBUG V5] Finished table body population. Inserted ${rowCount} rows.`);
-
-    const totalHiringGap = totalFundedHC - totalTeamBIS;
-    let footerRow1 = tableFoot.insertRow();
-    let totalsLabelCell = footerRow1.insertCell();
-    totalsLabelCell.textContent = 'Totals:';
-    totalsLabelCell.colSpan = 5;
-    Object.assign(totalsLabelCell.style, { textAlign: 'right', fontWeight: 'bold'});
-
-    const createFooterCell = (value, id) => {
-        let cell = footerRow1.insertCell();
-        cell.textContent = typeof value === 'number' ? value.toFixed(0) : String(value);
-        if (id) cell.id = id;
-        Object.assign(cell.style, { fontWeight: 'bold', textAlign: 'center', border: '1px solid #ccc', padding: '8px', backgroundColor: '#f8f9fa' });
-        return cell;
+        return value;
     };
 
-    createFooterCell(totalTeamBIS, 'totalTeamBIS');
-    createFooterCell(totalFundedHC, 'totalFundedHC');
-    createFooterCell(totalEffectiveBIS, 'totalEffectiveBIS');
-    const totalHiringGapCell = createFooterCell(totalHiringGap, 'totalGap');
-    totalHiringGapCell.style.color = totalHiringGap < 0 ? 'blue' : (totalHiringGap > 0 ? 'orange' : 'green');
+    // Custom formatter for multiline text
+    const multilineFormatter = (cell) => {
+        const value = cell.getValue();
+        return value ? value.replace(/\n/g, '<br>') : "None";
+    };
 
-    let remainingFooterCols = headersConfig.length - totalsLabelCell.colSpan - 4;
-    for(let i=0; i < remainingFooterCols; i++) {
-        const emptyCell = footerRow1.insertCell();
-        emptyCell.style.backgroundColor = '#f8f9fa';
-        emptyCell.style.border = '1px solid #ccc';
-    }
-
-    let footerRow2 = tableFoot.insertRow();
-    let gapNoteCell = footerRow2.insertCell();
-    gapNoteCell.colSpan = headersConfig.length;
-    gapNoteCell.id = 'gapNote';
-    Object.assign(gapNoteCell.style, { textAlign: 'right', fontStyle: 'italic', fontSize: '0.9em', paddingTop: '5px', borderTop: '1px solid #ddd'});
-    let gapNoteText = `Overall BIS Hiring Gap: ${totalHiringGap} (Finance Approved Funding vs Team BIS). `;
-    if (totalHiringGap > 0) gapNoteText += `Need to hire ${totalHiringGap}.`;
-    else if (totalHiringGap < 0) gapNoteText += `Over hiring target by ${Math.abs(totalHiringGap)}.`;
-    else gapNoteText += `At hiring target.`;
-    if (totalEffectiveBIS > totalTeamBIS) gapNoteText += ` Effective capacity boosted to ${totalEffectiveBIS.toFixed(0)} by away-teams.`
-    gapNoteCell.innerText = gapNoteText;
-
-    const levelKeyElement = document.getElementById('levelKey');
-    if (levelKeyElement) {
-        levelKeyElement.innerHTML = `Level Key: L1-L7. [AI - Type] indicates an AI Software Engineer and its specialization.`;
-    } else {
-        console.warn("[DEBUG V5] Could not find #levelKey element.");
-    }
-    console.log("[DEBUG V5] EXIT generateTeamTable - Successful completion.");
+    return [
+        { 
+            title: "Senior Manager", 
+            field: "seniorManagerName", 
+            minWidth: 150, 
+            frozen: true,
+            headerFilter: "list",
+            headerFilterParams: () => getNameHeaderFilterParams(currentSystemData.seniorManagers, 'seniorManagerName'),
+            headerFilterFunc: "="
+        },
+        { 
+            title: "SDM", 
+            field: "sdmName", 
+            minWidth: 150, 
+            frozen: true,
+            headerFilter: "list",
+            headerFilterParams: () => getNameHeaderFilterParams(currentSystemData.sdms, 'sdmName'),
+            headerFilterFunc: "="
+        },
+        { 
+            title: "Team Identity", 
+            field: "teamIdentity", 
+            minWidth: 150, 
+            frozen: true,
+            headerFilter: "list",
+            headerFilterParams: () => getNameHeaderFilterParams(currentSystemData.teams, 'teamIdentity'),
+            headerFilterFunc: "="
+        },
+        { 
+            title: "Team Name", 
+            field: "teamName", 
+            minWidth: 200, 
+            headerFilter: "input" // Team Name is free-text, so input is fine
+        },
+        { 
+            title: "PMT", 
+            field: "pmtName", 
+            minWidth: 150, 
+            headerFilter: "list",
+            headerFilterParams: () => getNameHeaderFilterParams(currentSystemData.pmts, 'pmtName'),
+            headerFilterFunc: "="
+        },
+        { title: "Team BIS", field: "teamBIS", width: 90, hozAlign: "center", sorter: "number", headerFilter: "number" },
+        { title: "Funded HC", field: "fundedHeadcount", width: 100, hozAlign: "center", sorter: "number", headerFilter: "number" },
+        { title: "Effective BIS", field: "effectiveBIS", width: 100, hozAlign: "center", sorter: "number", headerFilter: "number" },
+        { title: "Hiring Gap", field: "hiringGap", width: 100, hozAlign: "center", sorter: "number", formatter: gapFormatter, headerFilter: "number" },
+        { title: "Engineers", field: "engineerDetails", minWidth: 250, formatter: multilineFormatter, tooltip: true, headerFilter: "input", headerSort: false },
+        { title: "Away-Team", field: "awayTeamDetails", minWidth: 250, formatter: multilineFormatter, tooltip: true, headerFilter: "input", headerSort: false },
+        { title: "Services Owned", field: "servicesOwned", minWidth: 250, formatter: multilineFormatter, tooltip: true, headerFilter: "input", headerSort: false }
+    ];
 }
-window.generateTeamTable = generateTeamTable;
-
-// END OF REPLACEMENT for generateTeamTable
 
 
 let engineerTableWidgetInstance = null; // Keep this global for the widget
