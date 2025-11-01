@@ -1073,6 +1073,7 @@ window.showRoadmapView = showRoadmapView;
 
 /**
  * Shows the Organization Chart view.
+ * MODIFIED: Now calls the new initializeOrgChartView to handle layout switching.
  */
 function showOrganogramView() {
     console.log("Switching to Organogram View...");
@@ -1081,15 +1082,21 @@ function showOrganogramView() {
         return;
     }
     switchView('organogramView', 'browse');
-    // The generateOrganogram and generateTeamTable functions should be called
-    // automatically by the logic within switchView or an initializer for that view.
-    // If not, they can be called here.
-    if (typeof generateOrganogram === 'function') {
-        generateOrganogram();
+    
+    // MODIFIED: Call the new initializer instead of old direct functions
+    if (typeof initializeOrgChartView === 'function') {
+        initializeOrgChartView(); 
+    } else {
+        console.error("initializeOrgChartView function not found. Cannot render org view.");
     }
-    if (typeof generateTeamTable === 'function') {
-        generateTeamTable(currentSystemData);
-    }
+    
+    // REMOVED: These are now called by initializeOrgChartView
+    // if (typeof generateOrganogram === 'function') {
+    //     generateOrganogram();
+    // }
+    // if (typeof generateTeamTable === 'function') {
+    //     generateTeamTable(currentSystemData);
+    // }
 }
 
 /**

@@ -1,14 +1,100 @@
+// js/orgView.js
+
+// Keep track of the current org view mode
+let currentOrgViewMode = 'd3'; // Default to the new D3 view
+
+/**
+ * NEW: Initializes the entire Organization Overview page.
+ * Sets up layout switchers and calls the default renderer.
+ */
+function initializeOrgChartView() {
+    console.log("Initializing Organization Chart View with layout switcher...");
+    const toolbar = document.getElementById('organogramToolbar');
+    const content = document.getElementById('organogramContent');
+    
+    if (!toolbar || !content) {
+        console.error("Cannot initialize Org Chart view: toolbar or content div missing.");
+        return;
+    }
+
+    // --- 1. Setup Toolbar Buttons ---
+    // We use the 'organogramToolbar' div from index.html
+    toolbar.innerHTML = `
+        <strong style="margin-right: 10px;">Chart Layout:</strong>
+        <button id="orgViewModeD3" class="btn-secondary">Block View</button>
+        <button id="orgViewModeList" class="btn-secondary">List View</button>
+    `;
+
+    const btnD3 = document.getElementById('orgViewModeD3');
+    const btnList = document.getElementById('orgViewModeList');
+
+    // Button click handlers
+    btnD3.addEventListener('click', () => {
+        currentOrgViewMode = 'd3';
+        updateOrgViewRenderer();
+    });
+    
+    btnList.addEventListener('click', () => {
+        currentOrgViewMode = 'list';
+        updateOrgViewRenderer();
+    });
+
+    // --- 2. Render the correct view based on the current mode ---
+    updateOrgViewRenderer();
+
+    // --- 3. Render the Team Table (which is always visible) ---
+    if (typeof generateTeamTable === 'function') {
+        generateTeamTable(currentSystemData);
+    }
+}
+
+/**
+ * NEW: Helper function to render the correct org chart based on the current mode.
+ */
+function updateOrgViewRenderer() {
+    const btnD3 = document.getElementById('orgViewModeD3');
+    const btnList = document.getElementById('orgViewModeList');
+    
+    // Update button active states
+    if (currentOrgViewMode === 'd3') {
+        btnD3.classList.add('btn-primary'); // Make active
+        btnD3.classList.remove('btn-secondary');
+        btnList.classList.add('btn-secondary'); // Make inactive
+        btnList.classList.remove('btn-primary');
+        
+        if (typeof renderD3OrgChart === 'function') {
+            renderD3OrgChart(); // Call the new D3 function
+        } else {
+            console.error("renderD3OrgChart function not found.");
+        }
+    } else {
+        btnList.classList.add('btn-primary'); // Make active
+        btnList.classList.remove('btn-secondary');
+        btnD3.classList.add('btn-secondary'); // Make inactive
+        btnD3.classList.remove('btn-primary');
+        
+        if (typeof renderHtmlOrgList === 'function') {
+            renderHtmlOrgList(); // Call the renamed "list" function
+        } else {
+            console.error("renderHtmlOrgList function not found.");
+        }
+    }
+}
+
+
 /**
  * Builds hierarchical data for Organogram.
  * MODIFIED: Iterates team.engineers (array of names) and looks up details
  * from currentSystemData.allKnownEngineers to build engineer nodes.
+ * MODIFIED: Ensures all nodes (srMgr, sdm) have a generic `name` property for D3.
  */
 function buildHierarchyData() {
-    console.log("Building hierarchy data with new engineer model...");
+    console.log("Building hierarchy data (D3-compatible)...");
     if (!currentSystemData) return null;
 
-    const sdmMap = new Map((currentSystemData.sdms || []).map(sdm => [sdm.sdmId, { ...sdm, children: [], type: 'sdm' }]));
-    const srMgrMap = new Map((currentSystemData.seniorManagers || []).map(sr => [sr.seniorManagerId, { ...sr, children: [], type: 'srMgr' }]));
+    // Add `name` property for D3 compatibility
+    const sdmMap = new Map((currentSystemData.sdms || []).map(sdm => [sdm.sdmId, { ...sdm, name: sdm.sdmName, children: [], type: 'sdm' }]));
+    const srMgrMap = new Map((currentSystemData.seniorManagers || []).map(sr => [sr.seniorManagerId, { ...sr, name: sr.seniorManagerName, children: [], type: 'srMgr' }]));
 
     sdmMap.forEach(sdm => {
         if (sdm.seniorManagerId && srMgrMap.has(sdm.seniorManagerId)) {
@@ -16,7 +102,8 @@ function buildHierarchyData() {
         } else {
             const unassignedSrMgrKey = 'unassigned-sr-mgr';
             if (!srMgrMap.has(unassignedSrMgrKey)) {
-                srMgrMap.set(unassignedSrMgrKey, { seniorManagerId: unassignedSrMgrKey, seniorManagerName: 'Unassigned Senior Manager', children: [], type: 'srMgr' });
+                // Add `name` property for D3 compatibility
+                srMgrMap.set(unassignedSrMgrKey, { seniorManagerId: unassignedSrMgrKey, seniorManagerName: 'Unassigned Senior Manager', name: 'Unassigned Senior Manager', children: [], type: 'srMgr' });
             }
             if (sdm && sdm.sdmId) srMgrMap.get(unassignedSrMgrKey).children.push(sdm);
         }
@@ -49,10 +136,12 @@ function buildHierarchyData() {
         } else {
             const unassignedSdmKey = 'unassigned-sdm';
             if (!sdmMap.has(unassignedSdmKey)) {
-                sdmMap.set(unassignedSdmKey, { sdmId: unassignedSdmKey, sdmName: 'Unassigned SDM', children: [], type: 'sdm' });
+                // Add `name` property for D3 compatibility
+                sdmMap.set(unassignedSdmKey, { sdmId: unassignedSdmKey, sdmName: 'Unassigned SDM', name: 'Unassigned SDM', children: [], type: 'sdm' });
                 const unassignedSrMgrKey = 'unassigned-sr-mgr';
                 if (!srMgrMap.has(unassignedSrMgrKey)) {
-                     srMgrMap.set(unassignedSrMgrKey, { seniorManagerId: unassignedSrMgrKey, seniorManagerName: 'Unassigned Senior Manager', children: [], type: 'srMgr' });
+                     // Add `name` property for D3 compatibility
+                     srMgrMap.set(unassignedSrMgrKey, { seniorManagerId: unassignedSrMgrKey, seniorManagerName: 'Unassigned Senior Manager', name: 'Unassigned Senior Manager', children: [], type: 'srMgr' });
                 }
                 srMgrMap.get(unassignedSrMgrKey).children.push(sdmMap.get(unassignedSdmKey));
             }
@@ -71,11 +160,11 @@ function buildHierarchyData() {
 }
 
 /**
- * Generates the Organogram using HTML structure.
- * No direct changes needed here due to engineer model, as buildHierarchyData handles it.
+ * RENAMED: Was previously generateOrganogram()
+ * Generates the Organogram using HTML list structure.
  */
-function generateOrganogram() {
-    console.log("Generating Organogram HTML...");
+function renderHtmlOrgList() {
+    console.log("Generating Organogram HTML List...");
     const hierarchicalData = buildHierarchyData();
     const container = document.getElementById('organogramContent');
     if (!hierarchicalData || !container) {
@@ -115,7 +204,7 @@ function generateOrganogram() {
                 }
                 // Display engineer names from node.children (which are already formatted by buildHierarchyData)
                 if (node.children && node.children.length > 0) {
-                    nodeContent += '<ul style="list-style-type: none; padding-left: 15px; margin-top: 3px;">';
+                    nodeContent += '<ul style="list-style: none; padding-left: 15px; margin-top: 3px;">';
                     node.children.forEach(engNode => { // These are engineer nodes from buildHierarchyData
                         if (engNode.type === 'engineer') {
                              nodeContent += `<li style="font-size:0.85em;">${engNode.name}</li>`;
@@ -124,10 +213,6 @@ function generateOrganogram() {
                     nodeContent += '</ul>';
                 }
                 break;
-            // Engineer case is handled by team now, direct rendering of engineer nodes not needed at top levels.
-            // case 'engineer':
-            //     nodeContent = `<span style="font-size: 0.9em;">${node.name || 'N/A'}</span>`;
-            //     break;
             default:
                 nodeContent = `<strong>${node.name || 'Group'}</strong>`;
                 nodeStyle = 'color: #6c757d;';
@@ -144,10 +229,252 @@ function generateOrganogram() {
         return html;
     }
     container.innerHTML = buildHtmlLevel(hierarchicalData, 0);
-    console.log("Finished generating Organogram HTML.");
+    console.log("Finished generating Organogram HTML List.");
 }
 
-// In js/orgView.js
+/**
+ * NEW (v2): Generates the Organogram using a D3 Tree Layout (Top-Down).
+ */
+function renderD3OrgChart() {
+    console.log("Generating D3 Org Chart (Top-Down Block View)...");
+    const hierarchicalData = buildHierarchyData();
+    const container = document.getElementById('organogramContent');
+    
+    if (!hierarchicalData || !container) {
+        console.error("D3 Org Chart container or data not found.");
+        if(container) container.innerHTML = '<p style="color: red;">Could not generate D3 organogram data.</p>';
+        return;
+    }
+
+    container.innerHTML = ''; // Clear existing content
+    container.style.fontFamily = ''; // Unset inline style
+
+    // Get container size for responsive chart
+    const width = container.clientWidth || 960;
+    const height = 1200; // Fixed height, chart will be scrollable
+    
+    // Define node box sizes
+    const nodeWidth = 220;
+    const nodeHeight = 80;
+    const verticalSpacing = 100;   // Space BETWEEN nodes vertically
+    const horizontalSpacing = 20;   // Space BETWEEN nodes horizontally
+
+    // Create SVG
+    const svg = d3.select(container).append("svg")
+        .attr("width", "100%")
+        .attr("height", height)
+        .attr("viewBox", [0, 0, width, height])
+        .style("overflow", "auto"); // Enable overflow for zoom/pan
+
+    // Tooltip
+    const tooltip = d3.select("body").selectAll(".tooltip").data([null]).join("div")
+        .attr("class", "tooltip")
+        .style("opacity", 0);
+
+    // Main group for chart content (for zooming)
+    const g = svg.append("g");
+        // We will set the initial transform via zoom later
+
+    // Create Tree Layout
+    // **MODIFIED:** Use [width, height] for nodeSize to create a vertical layout
+    const tree = d3.tree()
+        .nodeSize([nodeWidth + horizontalSpacing, nodeHeight + verticalSpacing]);
+
+    // Create Hierarchy
+    const root = d3.hierarchy(hierarchicalData);
+    
+    // Assign `_children` for collapse/expand
+    root.descendants().forEach(d => {
+        d._children = d.children;
+        // Start with engineers collapsed
+        if (d.data.type === 'team') {
+            d.children = null;
+        }
+    });
+    
+    // Set initial position for the root node
+    root.x0 = width / 2;
+    root.y0 = nodeHeight; // Start near the top
+
+    const update = (source) => {
+        const duration = 250;
+        
+        // Recalculate layout
+        const treeData = tree(root);
+        
+        // Get nodes and links
+        const nodes = treeData.descendants().reverse();
+        const links = treeData.links();
+
+        // Normalize for fixed-depth (y position)
+        // **MODIFIED:** d.y is now vertical, d.x is horizontal
+        nodes.forEach(d => { 
+            d.y = d.depth * (nodeHeight + verticalSpacing) + nodeHeight; // y = depth * spacing
+        }); 
+        
+        // --- LINKS ---
+        // **MODIFIED:** Use d3.linkVertical() and swap x/y
+        const link = g.selectAll(".org-link")
+            .data(links, d => d.target.id);
+
+        // Enter new links at the parent's previous position.
+        const linkEnter = link.enter().append("path")
+            .attr("class", "org-link")
+            .attr("d", d3.linkVertical()
+                .x(d => source.x0 || source.x) // Use x0 for horizontal
+                .y(d => source.y0 || source.y)) // Use y0 for vertical
+            .attr("fill", "none")
+            .attr("stroke", "#ccc")
+            .attr("stroke-width", 1.5);
+
+        // Transition links to their new position.
+        link.merge(linkEnter).transition().duration(duration)
+            .attr("d", d3.linkVertical()
+                .x(d => d.x) // Target x
+                .y(d => d.y)); // Target y
+
+        // Transition exiting nodes to the parent's new position.
+        link.exit().transition().duration(duration)
+            .attr("d", d3.linkVertical()
+                .x(d => source.x) // Parent's new x
+                .y(d => source.y)) // Parent's new y
+            .remove();
+
+        // --- NODES ---
+        // **MODIFIED:** Swap x/y in transform
+        const node = g.selectAll(".org-node")
+            .data(nodes, d => d.data.id || d.data.name); // Use unique ID if possible
+
+        // Enter new nodes at the parent's previous position.
+        const nodeEnter = node.enter().append("g")
+            .attr("class", d => `org-node org-type-${d.data.type}`)
+            .attr("transform", d => `translate(${source.x0 || source.x},${source.y0 || source.y})`)
+            .style("opacity", 0)
+            .on("click", (event, d) => {
+                // Toggle children
+                if (d.children) {
+                    d._children = d.children;
+                    d.children = null;
+                } else {
+                    d.children = d._children;
+                    d._children = null;
+                }
+                update(d); // Re-run the update
+            })
+            .on("mouseover", (event, d) => {
+                let info = '';
+                switch(d.data.type) {
+                    case 'root': info = `<strong>System:</strong> ${d.data.name}`; break;
+                    case 'srMgr': info = `<strong>Sr. Manager:</strong> ${d.data.name}`; break;
+                    case 'sdm': info = `<strong>SDM:</strong> ${d.data.name}`; break;
+                    case 'team': 
+                        info = `<strong>Team:</strong> ${d.data.name}<br><strong>Details:</strong> ${d.data.details}`;
+                        if (d.data.awayTeamCount > 0) info += `<br><strong style='color: #dc3545;'>Away:</strong> +${d.data.awayTeamCount} (${d.data.awaySourceSummary})`;
+                        break;
+                    case 'engineer': info = `<strong>Engineer:</strong> ${d.data.name}`; break;
+                    default: info = d.data.name;
+                }
+                tooltip.transition().duration(200).style("opacity", .9);
+                tooltip.html(info)
+                       .style("left", (event.pageX + 15) + "px")
+                       .style("top", (event.pageY - 28) + "px");
+            })
+            .on("mouseout", () => {
+                tooltip.transition().duration(500).style("opacity", 0);
+            });
+
+        // Add the rectangle for the node
+        nodeEnter.append("rect")
+            .attr("class", "org-node-rect")
+            .attr("width", nodeWidth)
+            .attr("height", nodeHeight)
+            .attr("x", -nodeWidth / 2) // Center the rect
+            .attr("y", -nodeHeight / 2) // Center the rect
+            .attr("rx", 4)
+            .attr("ry", 4)
+            .style("cursor", d => d._children ? "pointer" : "default");
+
+        // Add the primary name text
+        nodeEnter.append("text")
+            .attr("class", "org-node-text org-node-name")
+            .attr("dy", "-0.5em") // Position slightly above center
+            .attr("text-anchor", "middle")
+            .text(d => d.data.name);
+
+        // Add the secondary details text
+        nodeEnter.append("text")
+            .attr("class", "org-node-text org-node-details")
+            .attr("dy", "1.0em") // Position slightly below center
+            .attr("text-anchor", "middle")
+            .text(d => {
+                if (d.data.type === 'team') return d.data.details;
+                if (d.data.type === 'engineer') return d.data.name.includes('[AI]') ? 'AI Software Engineer' : 'Software Engineer';
+                return d.data.type.replace('srMgr', 'Senior Manager'); // Simple title
+            });
+
+        // Add expand/collapse indicator
+        nodeEnter.append("text")
+            .attr("class", "org-node-text org-node-toggle")
+            .attr("x", 0) // Centered
+            .attr("y", (nodeHeight / 2) - 8) // Position bottom-center
+            .attr("text-anchor", "middle")
+            .style("font-family", "monospace")
+            .style("font-size", "14px")
+            .text(d => {
+                if (d.data.type === 'engineer') return '';
+                return d._children ? '▼' : (d.children ? '▲' : ''); // Use up/down arrows
+            });
+
+
+        // Transition nodes to their new position.
+        // **MODIFIED:** Swap x/y in transform
+        node.merge(nodeEnter).transition().duration(duration)
+            .attr("transform", d => `translate(${d.x},${d.y})`)
+            .style("opacity", 1);
+            
+        // Update toggle text on merge
+        node.merge(nodeEnter).select(".org-node-toggle")
+            .text(d => {
+                if (d.data.type === 'engineer') return '';
+                return d._children ? '▼' : (d.children ? '▲' : '');
+            });
+
+        // Transition exiting nodes to the parent's new position.
+        // **MODIFIED:** Swap x/y in transform
+        node.exit().transition().duration(duration)
+            .attr("transform", d => `translate(${source.x},${source.y})`)
+            .style("opacity", 0)
+            .remove();
+
+        // Stash the old positions for transition.
+        nodes.forEach(d => {
+            d.x0 = d.x;
+            d.y0 = d.y;
+        });
+
+        // --- Zoom ---
+        // **MODIFIED:** Adjust initial zoom
+        const initialScale = 0.8;
+        const initialTx = (width / 2) - (root.x * initialScale); // Center horizontally
+        const initialTy = nodeHeight; // Start with root node margin from top
+
+        svg.call(d3.zoom()
+            .scaleExtent([0.1, 2])
+            .on("zoom", (event) => {
+                g.attr("transform", event.transform);
+            }))
+            // Apply initial transform to center the view
+            .transition().duration(duration)
+            .call(d3.zoom().transform, d3.zoomIdentity.translate(initialTx, initialTy).scale(initialScale));
+
+    }; // End of update function
+
+    // Initial render
+    update(root);
+
+    console.log("D3 Org Chart (Top-Down) rendered.");
+}
+
 
 /**
  * Generates the Team Breakdown Table.
@@ -1066,8 +1393,9 @@ function handleAddNewResource() {
 
         // Refresh relevant views if they are currently displayed
         if (document.getElementById('organogramView').style.display !== 'none') {
-            if (typeof generateOrganogram === 'function') generateOrganogram();
-            if (typeof generateTeamTable === 'function') generateTeamTable(currentSystemData); // Pass data
+            if (typeof initializeOrgChartView === 'function') {
+                initializeOrgChartView(); // Re-run the full init
+            }
         }
         if (document.getElementById('engineerTableView').style.display !== 'none') {
             if (typeof generateEngineerTable === 'function') generateEngineerTable();
@@ -1086,4 +1414,3 @@ function handleAddNewResource() {
         }
     }
 }
-

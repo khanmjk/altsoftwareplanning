@@ -1947,5 +1947,96 @@ a:focus {
     margin-top: 5px;
 }
 
+/* === NEW Styles for D3 Org Chart (Block View) === */
 
+/* Style for the SVG links (lines) */
+.org-link {
+    fill: none;
+    stroke: #aaa; /* Softer gray line */
+    stroke-width: 1.5px;
+}
+
+/* Style for the <g> element wrapping each node */
+.org-node {
+    cursor: pointer; /* Indicates nodes can be clicked (to collapse) */
+    font-family: 'Inter', Arial, sans-serif;
+}
+
+/* Style for the rectangle (the "block") */
+.org-node-rect {
+    stroke-width: 1.5px;
+    stroke: #999;
+    fill: #fff; /* Default fill */
+    transition: fill 0.2s ease-in-out, stroke 0.2s ease-in-out;
+}
+
+/* Style node rectangles based on type */
+.org-type-root .org-node-rect {
+    fill: #232f3e; /* Dark blue, matching top bar */
+    stroke: #232f3e;
+}
+.org-type-srMgr .org-node-rect {
+    fill: #f0f8ff; /* Light alice blue */
+    stroke: #0056b3;
+}
+.org-type-sdm .org-node-rect {
+    fill: #f0f8ff; /* Light alice blue */
+    stroke: #007bff;
+}
+.org-type-team .org-node-rect {
+    fill: #e6fffa; /* Light teal/cyan */
+    stroke: #17a2b8;
+}
+.org-type-engineer .org-node-rect {
+    fill: #fdfdfd; /* Off-white */
+    stroke: #adb5bd;
+}
+
+/* Style for text elements inside the node */
+.org-node-text {
+    font-size: 11px;
+    fill: #212529;
+}
+
+/* Style for the primary name text */
+.org-node-text.org-node-name {
+    font-weight: 600;
+    font-size: 13px;
+}
+/* Make root node text white */
+.org-type-root .org-node-text {
+    fill: #fff;
+}
+
+/* Style for the secondary details text */
+.org-node-text.org-node-details {
+    font-size: 10px;
+    fill: #555;
+}
+.org-type-root .org-node-text.org-node-details {
+    fill: #eee;
+}
+
+/* Style for the +/- toggle */
+.org-node-text.org-node-toggle {
+    font-size: 16px;
+    font-weight: bold;
+    fill: #6c757d;
+    cursor: pointer; /* Make the symbol itself clickable */
+}
+
+/* Position for the text element containing the toggle */
+.org-node-toggle {
+    text-anchor: middle;
+    /* This positions the text element itself, not the text inside it */
+    transform: translateY(calc(50% - 8px)); /* Move to bottom edge */
+}
+
+/* Hover effect for the node */
+.org-node:hover .org-node-rect {
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    stroke-width: 2.5px;
+}
+
+/* === End D3 Org Chart Styles === */
 /* Add any additional styles as needed */          
