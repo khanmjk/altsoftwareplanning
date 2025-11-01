@@ -455,7 +455,8 @@ function saveSampleSystemsToLocalStorage() {
         const systemsToSave = {
             'StreamView': sampleSystemDataStreamView, // Ensure this is defined in data.js
             'ConnectPro': sampleSystemDataContactCenter, // Ensure this is defined in data.js
-            'ShopSphere': sampleSystemDataShopSphere // Add the new system
+            'ShopSphere': sampleSystemDataShopSphere,
+            'InsightAI': sampleSystemDataInsightAI // Add the new system
         };
 
         try {

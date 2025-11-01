@@ -1,7 +1,7 @@
 // js/data.js
 
 /** Define a unique key for local storage **/
-const LOCAL_STORAGE_KEY = 'architectureVisualization_systems_v5'; // Updated to v5 to add more sample systems
+const LOCAL_STORAGE_KEY = 'architectureVisualization_systems_v8'; 
 
 const STANDARD_WORK_PACKAGE_PHASES = [
     "Requirements & Definition",
