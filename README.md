@@ -74,7 +74,12 @@ Upon launching the application, you'll see the main menu on the top bar:
 * Click **"Load System"**.
 * A dialog will appear listing all previously saved systems.
 * Click the "Load" button next to the system you wish to work with.
-* The application comes with pre-configured sample systems (`StreamView` and `ConnectPro`) to help you explore its features.
+* The application comes with a rich library of pre-configured sample systems to help you explore its features. These include:
+    * **`StreamView`** (Video Streaming Platform)
+    * **`ConnectPro`** (Cloud Contact Center)
+    * **`ShopSphere`** (eCommerce Marketplace)
+    * **`InsightAI`** (Generative AI Platform)
+    * **`FinSecure`** (FinTech Neobank)
 
 ### Creating a New System
 
@@ -93,7 +98,7 @@ Upon launching the application, you'll see the main menu on the top bar:
 ### Resetting to Defaults
 
 * Click **"Reset Defaults"**.
-* **Caution:** This action will erase ALL currently saved systems and restore the initial sample systems (`StreamView`, `ConnectPro`). This cannot be undone.
+* **Caution:** This action will erase ALL currently saved systems and restore the initial sample systems (`StreamView`, `ConnectPro`, `ShopSphere`, `InsightAI`, and `FinSecure`). This cannot be undone.
 * A confirmation prompt will appear before deletion.
 
 ---
