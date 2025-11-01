@@ -454,7 +454,8 @@ function saveSampleSystemsToLocalStorage() {
         // Prepare systems object for saving (StreamView and ConnectPro)
         const systemsToSave = {
             'StreamView': sampleSystemDataStreamView, // Ensure this is defined in data.js
-            'ConnectPro': sampleSystemDataContactCenter // Ensure this is defined in data.js
+            'ConnectPro': sampleSystemDataContactCenter, // Ensure this is defined in data.js
+            'ShopSphere': sampleSystemDataShopSphere // Add the new system
         };
 
         try {
@@ -973,7 +974,7 @@ function validateEngineerAssignments() {
             const knownEngineer = currentSystemData.allKnownEngineers.find(ke => ke.name === engineerName);
             if (!knownEngineer) {
                 isValid = false;
-                errorMessages.push(`Engineer "${engineerName}" listed in team "${team.teamIdentity || team.teamId}" but not found in the global engineer roster (allKnownEngineers).`);
+                errorMessages.push(`Engineer "${engineerName}" listed in team "${team.teamIdentity || team.teamId}" but not found in the global engineer roster (allKnownEngineErrors).`);
             } else if (knownEngineer.currentTeamId !== team.teamId) {
                 isValid = false;
                 const assignedToTeam = knownEngineer.currentTeamId ?
@@ -1182,4 +1183,3 @@ window.createNewSystem = createNewSystem;
 window.deleteSystem = deleteSystem;
 window.resetToDefaults = resetToDefaults;
 window.showSavedSystems = showSavedSystems;
-
