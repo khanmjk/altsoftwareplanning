@@ -65,7 +65,6 @@ const VIEW_TO_BUTTON_MAP = {
     'visualizationCarousel': 'systemOverviewButton',
     'systemEditForm': 'editSystemButton',
     'organogramView': 'viewOrgChartButton',
-    'engineerTableView': 'viewEngineerListButton',
     'planningView': 'manageYearPlanButton',
     'roadmapView': 'manageRoadmapButton',
     'dashboardView': 'dashboardViewButton',
@@ -190,7 +189,6 @@ function switchView(targetViewId, newMode = null) {
                 else if (targetViewId === 'roadmapView') titleSuffix = ' - Roadmap & Backlog';
                 else if (targetViewId === 'dashboardView') titleSuffix = ' - Dashboard';
                 else if (targetViewId === 'organogramView') titleSuffix = ' - Organization Overview';
-                else if (targetViewId === 'engineerTableView') titleSuffix = ' - Engineer List';
                 else if (targetViewId === 'systemEditForm') titleSuffix = ' - Edit System';
                 else if (targetViewId === 'visualizationCarousel') titleSuffix = ' - Overview';
                 else if (targetViewId === 'capacityConfigView') titleSuffix = ' - Capacity Constraints';
@@ -1100,21 +1098,6 @@ function showOrganogramView() {
 }
 
 /**
- * Shows the Engineer List table view.
- */
-function showEngineerTableView() {
-    console.log("Switching to Engineer Table View...");
-    if (!currentSystemData) {
-        alert("Please load a system first.");
-        return;
-    }
-    switchView('engineerTableView', 'browse');
-    if (typeof generateEngineerTable === 'function') {
-        generateEngineerTable();
-    }
-}
-
-/**
  * Shows the Yearly Planning view.
  */
 function showPlanningView() {
@@ -1168,7 +1151,6 @@ function initializeEventListeners() {
     document.getElementById('systemOverviewButton')?.addEventListener('click', showSystemOverview); 
     document.getElementById('editSystemButton')?.addEventListener('click', () => enterEditMode());
     document.getElementById('viewOrgChartButton')?.addEventListener('click', showOrganogramView);
-    document.getElementById('viewEngineerListButton')?.addEventListener('click', showEngineerTableView);
     document.getElementById('manageYearPlanButton')?.addEventListener('click', showPlanningView);
     document.getElementById('manageRoadmapButton')?.addEventListener('click', showRoadmapView);
     document.getElementById('dashboardViewButton')?.addEventListener('click', showDashboardView);
