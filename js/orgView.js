@@ -24,11 +24,13 @@ function initializeOrgChartView() {
         <button id="orgViewModeD3" class="btn-secondary">Block View</button>
         <button id="orgViewModeList" class="btn-secondary">List View</button>
         <button id="orgViewModeTable" class="btn-secondary">Org Table</button>
+        <button id="orgViewModeEngineerList" class="btn-secondary">Engineer List</button>
     `;
 
     const btnD3 = document.getElementById('orgViewModeD3');
     const btnList = document.getElementById('orgViewModeList');
     const btnTable = document.getElementById('orgViewModeTable');
+    const btnEngineerList = document.getElementById('orgViewModeEngineerList');
 
     // Button click handlers
     btnD3.addEventListener('click', () => {
@@ -43,6 +45,11 @@ function initializeOrgChartView() {
 
     btnTable.addEventListener('click', () => {
         currentOrgViewMode = 'table';
+        updateOrgViewRenderer();
+    });
+
+    btnEngineerList.addEventListener('click', () => {
+        currentOrgViewMode = 'engineerList';
         updateOrgViewRenderer();
     });
 
@@ -61,10 +68,12 @@ function updateOrgViewRenderer() {
     const btnD3 = document.getElementById('orgViewModeD3');
     const btnList = document.getElementById('orgViewModeList');
     const btnTable = document.getElementById('orgViewModeTable');
+    const btnEngineerList = document.getElementById('orgViewModeEngineerList');
     
     // Get references to both content containers
     const chartContainer = document.getElementById('organogramContent');
     const tableContainer = document.getElementById('teamBreakdown');
+    const engineerListContainer = document.getElementById('orgEngineerListView');
 
     if (!chartContainer || !tableContainer) {
         console.error("Missing chart or table containers.");
@@ -78,10 +87,13 @@ function updateOrgViewRenderer() {
     btnList.classList.remove('btn-primary');
     btnTable.classList.add('btn-secondary');
     btnTable.classList.remove('btn-primary');
+    btnEngineerList.classList.add('btn-secondary');
+    btnEngineerList.classList.remove('btn-primary');
 
     // Hide both containers by default
     chartContainer.style.display = 'none';
     tableContainer.style.display = 'none';
+    engineerListContainer.style.display = 'none';
 
     if (currentOrgViewMode === 'd3') {
         btnD3.classList.add('btn-primary');
@@ -113,6 +125,16 @@ function updateOrgViewRenderer() {
             generateTeamTable(currentSystemData); 
         } else {
             console.error("generateTeamTable function not found.");
+        }
+    } else if (currentOrgViewMode === 'engineerList') {
+        btnEngineerList.classList.add('btn-primary');
+        btnEngineerList.classList.remove('btn-secondary');
+
+        engineerListContainer.style.display = 'block'; // Show engineer list container
+        if (typeof generateEngineerTable === 'function') {
+            generateEngineerTable();
+        } else {
+            console.error("generateEngineerTable function not found.");
         }
     }
 }
@@ -772,31 +794,21 @@ function generateEngineerTable() {
     const tableData = prepareEngineerDataForTabulator(); // This function is already updated
     const columnDefinitions = defineEngineerTableColumns(); // This function is already updated
 
-    const widgetContainerId = 'engineerTableWidgetContainer';
+    const widgetContainerId = 'orgEngineerListView';
     let widgetTargetDiv = document.getElementById(widgetContainerId);
 
     if (!widgetTargetDiv) {
-        const engineerTableView = document.getElementById('engineerTableView');
-        if (!engineerTableView) {
-            console.error("Cannot find #engineerTableView to append widget container.");
-            return;
-        }
-        // Remove any old static table or old tabulator div if they exist
-        const oldStaticTable = engineerTableView.querySelector('table');
-        if (oldStaticTable) oldStaticTable.remove();
-        const oldTabulatorDiv = document.getElementById('engineerTableTabulator');
-        if (oldTabulatorDiv) oldTabulatorDiv.remove();
-
-        widgetTargetDiv = document.createElement('div');
-        widgetTargetDiv.id = widgetContainerId;
-        engineerTableView.appendChild(widgetTargetDiv);
-        console.log(`Created new widget container div with ID: ${widgetContainerId}`);
-    } else {
-        // If reusing, ensure it's empty if a previous widget was there but not properly destroyed
-        // This might happen if engineerTableWidgetInstance was nulled but DOM not cleared.
-        // widgetTargetDiv.innerHTML = ''; // Optional: Clear if issues persist with re-renders
-        console.log(`Using existing widget container div with ID: ${widgetContainerId}`);
+        console.error("Cannot find #orgEngineerListView to append widget container.");
+        return;
     }
+
+    // Clear the container and add a heading
+    widgetTargetDiv.innerHTML = '<h2 id="orgEngineerTableHeading"></h2>';
+    const widgetInnerContainer = document.createElement('div');
+    widgetInnerContainer.id = 'orgEngineerTableWidgetContainer';
+    widgetTargetDiv.appendChild(widgetInnerContainer);
+
+    updateEngineerTableHeading(); // Call this after the heading element is created
 
     // Destroy previous widget instance if it exists to prevent conflicts
     if (engineerTableWidgetInstance) {
@@ -807,7 +819,7 @@ function generateEngineerTable() {
 
     // Create new instance of EnhancedTableWidget
     try {
-        engineerTableWidgetInstance = new EnhancedTableWidget(widgetContainerId, {
+        engineerTableWidgetInstance = new EnhancedTableWidget(widgetInnerContainer.id, {
             data: tableData,
             columns: columnDefinitions,
             uniqueIdField: 'name',
@@ -1145,7 +1157,7 @@ function defineEngineerTableColumns() {
  * MODIFIED: Calculates BIS based on `allKnownEngineers` that have a `currentTeamId`.
  */
 function updateEngineerTableHeading() {
-    const heading = document.getElementById('engineerTableHeading');
+    const heading = document.getElementById('orgEngineerTableHeading');
     if (!currentSystemData || !heading) return;
 
     let totalFundedHC = 0;
