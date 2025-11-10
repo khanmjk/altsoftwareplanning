@@ -6,7 +6,10 @@ DONE
 ----
 A lot has been done
 [Done] MVP shows functional system view, org chart, engineer list, manage year plan and tune capacity constraints pages
-[Done] Revisit the Yearly Planning page (planningView / generatePlanningTable). The goal will be to introduce a new control (like a toggle switch) labelled "Apply Capacity Constraints". When this is activated, the planning table's ATL/BTL calculation will switch from using the Gross capacity (Team BIS, Effective BIS, or Funded HC) to using the calculated Net Project SDE Years (Gross minus all the sinks we configured) for the corresponding scenario. This will give a much more realistic view of what can actually be delivered Above The Line.
+[Done] Revisit the Yearly Planning page (planningView / generatePlanningTable).
+The goal will be to introduce a new control (like a toggle switch) labelled "Apply Capacity Constraints".
+When this is activated, the planning table's ATL/BTL calculation will switch from using the Gross capacity (Team BIS, Effective BIS, or Funded HC) to using the calculated Net Project SDE Years (Gross minus all the sinks we configured) for the corresponding scenario.
+This will give a much more realistic view of what can actually be delivered Above The Line.
 [Done] Resource Forecasting - Incorporate the resource forecasting tool in the main app
 [Done] In system overview, only show the service dependencies table when the service dependency visualisation is selected from the carousel	
 [Done] Documentation - Generate comprehensive project wiki, readme and instructions about the tool
@@ -14,15 +17,19 @@ A lot has been done
 [Done] Refactored single index.html to multiple files by features, major refactor
 [Done] Refresh the MVP UX to look like a modernized webapp
 [Done] [Feature] No ability to add new engineers to team (regression)
-[Done] [Feature] Make the Engineer List editable as well, build common table widget
+[Done] [Feature] Make the Engineer List editable as well, build common table 
+widget
 [Done] [UX] Play around with transition animation concepts from this video: https://youtu.be/_-6LgEjEyzE?si=TUsX_vDzRFMITooG
-[Done] Enhance the team member structure by supporting AI SWEs to supplement the team. These AI SWE (software engineers) can have different skill levels too, similar to human: Intern, Junior, Intermediate, Senior. They could be added from a pool of AI agents
+[Done] Enhance the team member structure by supporting AI SWEs to supplement the team.
+These AI SWE (software engineers) can have different skill levels too, similar to human: Intern, Junior, Intermediate, Senior.
+They could be added from a pool of AI agents
 for away team work, or can be part of a team like any other human engineer
 [Done] Enhance data model to track engineer skillsets and perhaps degree qualifications, maybe even years of industry experience
 [Done] MAJOR DATA MODEL changes
 Data Model
 -- Inspect the data model structure and enhance the data model for future backlog items, create an easy way to extend the data structure without having to change a lot of existing code - so maybe add an attribute that allows for future additions to the model (extensible data structure)
--- Year Planning - Add ROI (Return on investment - some protected initiatives will override ROI) for prioritising initiatives, Target Due/Dates, Delivery Quarter columns to year plan table (updates to data model needed)
+-- Year Planning - Add 
+ROI (Return on investment - some protected initiatives will override ROI) for prioritising initiatives, Target Due/Dates, Delivery Quarter columns to year plan table (updates to data model needed)
 Manage Detailed Planning
 -- Concept of work packages
 -- Data model planning updates
@@ -30,7 +37,8 @@ Manage Detailed Planning
 -- A goal is comprised on 1 ... many initiatives
 --- A goal has an owner (person accountable for the goal delivery) - typically a product manager from the organisation
 --- A goal can have a project manager assigned to own the planning and tracking
---- A goal can have a technical point of contact (POC), the lead engineer or SDM
+--- A goal can have a technical point of contact (POC), the lead engineer 
+or SDM
 -- An initiative can have 1.. many work packages
 --- An initiative can have a project manager assigned
 --- An initiative can have an owner (either the goal owner, or someone else) accountable for delivery
@@ -41,78 +49,103 @@ Manage Detailed Planning
 -- A team has 1..many tasks to deliver
 --- Tasks can have 0..many dependencies on other tasks within the work package, or other work packages outside its work package
 -- A work package has 1..many delivery statuses (Not Started, In Progress, Delivered)
--- A work package has 1 .. many phases [Requirements, Design, Implementation, Integration testing, Security Testing, UAT/E2E Testing, Deployed]
+-- 
+A work package has 1 .. many phases [Requirements, Design, Implementation, Integration testing, Security Testing, UAT/E2E Testing, Deployed]
 -- A work package has a planned delivery date and actual delivery date (to track plan versus actual)
 -- A work package has total capacity metric (sum of all HC estimates per team associated with the work package)
 -- A work package can have one owner (someone accountable for the work package delivery)
 -- A work package can have 0..many dependencies on other work packages
 [Done] - Need to update SwitchView to cleanup if roadmap edit dialog was shown
-[Done] - Roadmap: Added ROI Type and used Theme name instead of theme ID
+[Done] - Roadmap: Added ROI Type and used Theme 
+name instead of theme ID
 [Done] - Fixed by Google's Jules - [UX] Use team identity instead of team name for "Owning Team" column in Service Dependencies table when Service Dependency Visualization is shown on the carousel
 [Done] - Fixed by Google's Jules - [UX] In the Team Relationships Visualization carousel, ensure the correct data structure attributes are used for "Size of Team" and "Engineer Names" as these currently show up as "undefined"
 [Done] - Fixed by Google's Jules - [UX]- [Bug] Apply consistent behaviour for displaying visualization graphs in caroussel - fix legends
-[Done] - Fixed by Google's Jules - [UX] Use consistent formatting for legends in the carousel (circles not blocks)
+[Done] - Fixed by Google's Jules - [UX] Use consistent 
+formatting for legends in the carousel (circles not blocks)
 [Done] - Fixed by Google's Jules - [Feature] For all visualizations add a toggle button to show/hide platform components
-[Done] - Fixed by Google's Jules - - Fix the UI display in "Service Relationships Visualization" caroussel. The drop down list for services, remains stuck on "All Services View" despite selecting a service from the drop down list. Expected behavior: The selected service must show as the heading in the list, only show "All Services View" when "All Services View" is selected, otherwise the selected service must show in the list entry.
-[Done] - Fixed by Google's Jules - [Bug] - Fix issue when adding new engineer in Edit System Page, when adding team members to the "Available Engineers (System Pool)". The question "Is AI engineer?" there is no way to select Yes or No. so it defaults to AI Engineer even when the resource is a human! Need a checkbox added and apply logic correctly.
+[Done] - Fixed by Google's Jules - - Fix the UI display in "Service Relationships Visualization" caroussel.
+The drop down list for services, remains stuck on "All Services View" despite selecting a service from the drop down list.
+Expected behavior: The selected service must show as the heading in the list, only show "All Services View" when "All Services View" is selected, otherwise the selected service must show in the list entry.
+[Done] - Fixed by Google's Jules - [Bug] - Fix issue when adding new engineer in Edit System Page, when adding team members to the "Available Engineers (System Pool)".
+The question "Is AI engineer?" there is no way to select Yes or No. so it defaults to AI Engineer even when the resource is a human!
+Need a checkbox added and apply logic correctly.
 [Done] - Capacaity Forecasting / contraints
 [Done] -- Add gains in AI engineers - hours saved by AI means more capacity to the team
 [Done] -- Ensure that when a team has AI engineers, they are excluded from team capacity constraints for leave and meetings overheads
 [Done] - Fixed by Google's Jules UX fixes - - Fix table of contents for documentation - clickthrough on links don't all work
 [Done] - Technical Debt - 5. Address Data Model Extensibility (Revisit from Backlog):
-         Description: Review the existing data structures (e.g., for teams, services, initiatives) and implement the previously discussed strategy for making them more extensible. This might involve adding a generic attributes or customFields property to key data objects to allow for easier addition of new information without constant schema changes.
-         Impact: Reduces the friction for adding new features that require storing more data, ensuring the application can evolve more smoothly.
-
+         Description: Review the existing data structures 
+(e.g., for teams, services, initiatives) and implement the previously discussed strategy for making them more extensible.
+This might involve adding a generic attributes or customFields property to key data objects to allow for easier addition of new information without constant schema changes.
+Impact: Reduces the friction for adding new features that require storing more data, ensuring the application can evolve more smoothly.
 [Done] Make sure to clean up Yearly Planning view:
-[Done] -- There needs to be link from year plan to the backlog page (ATL items must be considered as "committed" in the backlog item status, whilst BTL items must get assigned to "backlog" state). 
+[Done] -- There needs to be link from year plan to the backlog page (ATL items must be considered as "committed" in the backlog item status, whilst BTL items must get assigned to "backlog" state).
 [Done] When generated the roadmap view, the planning status in the year plan for initiatives as ATL/BTL - must drive the backlog and roadmap.
-[Done] -- Remove Add new initiative from year plan so that the rule becomes year plan must always pull from the backlog. The backlog should be the main source of truth for initiatives / roadmap
+[Done] -- Remove Add new initiative from year plan so that the rule becomes year plan must always pull from the backlog.
+The backlog should be the main source of truth for initiatives / roadmap
 [Done] -- Thinking we should add some other attributes to initiatives like type: Egnineering, Product, BusinessOps, Security, Compliance, Legal, etc.
 
 [Done] Manage Roadmap & Backlog
-[Done] -- Similar to the year planning page, but focused on roadmap / backlog management (does not need to show ATL/BTL logic), just an interactive table to pull the latest backlog of initiatives, ability to add and remove initiatives. The Year plan and Roadmap must share the same data model (year plan shows more details / attributes than the roadmap)
+[Done] -- Similar to the year planning page, but focused on roadmap / backlog management (does not need to show ATL/BTL logic), just an interactive table to pull the latest backlog of initiatives, ability to add and remove initiatives.
+The Year plan and Roadmap must share the same data model (year plan shows more details / attributes than the roadmap)
 [Done] -- Generate roadmap table view (by quarter), should be interactive to filter by org, team
 [Done] -- The backlog items can have 1..many initiatives
 [Done] -- Initiatives can be associated with 1..many themes or tags that are linked to a business goal / strategy, like Revenue, Cost Optimization, Engineering Excellence, UX/Usability, Accessibility, Security, Product Feature enhancements
 [Done] -- It must be possible to generate a 3 year plan (3YP) view of the roadmap, something like Current Year, Next Year, future
-[Done] -- It must be possible to show a visual representation of the initiatives by theme so the senior engineering or product leader can gauge the distribution of investments by theme or tags
+[Done] -- It 
+must be possible to show a visual representation of the initiatives by theme so the senior engineering or product leader can gauge the distribution of investments by theme
 [Done] -- It must be possible to generate a roadmap view per team for software managers to focus on their team or org-specific commitments
 [Done] -- It must be possible to generate a view of business objectives and strategies from the backlog
 [Done] -- It must be possible to generate a view of completed goals, initiatives or work packages
-[Done] - basic - needs improvement] -- It must be possible to display a graph visualization (similar to system visualizations) of service impact and relations to initiatives and work package dependencies
+[Done] - basic - needs improvement] -- It must be possible to display a graph 
+visualization (similar to system visualizations) of service impact and relations to initiatives and work package dependencies
 
 [Done] - Fix up Initiative Impact dashboard widget in impactView.js
 [Done] -- Make the visible window larger so the graph fits better - right now the nodes exceed the window - make the window larger
 -- When filtering by Intiatives:
 [Done] --- Use different colours to identify teams just like we do in System Visualization and Team Relationships Visualization (currently all teams appear as blue circles)
-[Done] --- Differentiate the services owned by teams, use different colours relative to the team colour (currently all service nodes appear as green circles) 
+[Done] --- Differentiate the services owned by teams, use different colours relative to the team colour (currently all service nodes appear as green 
+circles) 
 [Done] --- When hovering over a service node, the tooltip is wrong: It shows Owner as team id, instead use the team identity
 [Done] --- When hovering over a team node, the tooltip is wrong: It shows SDM as the sdmid instead of the actual value, i.e. name of manager
 [Done] --- When hovering over the initiative node, enhance the tooltip by showing more details about the initiative: Owner, Due Dates, Teams impacted, Estimates per team, etc.
 [Done] --- Highlight the initiative node in a different colour, maybe a red outline, so we can see the selected initative under focus
-[Done] --- Generate a summary in a suitable format of the initiative selected (something that tells a story for that initiative)
+[Done] --- Generate 
+a summary in a suitable format of the initiative selected (something that tells a story for that initiative)
 -- When filtering by Team:
 [Done] --- Include in the drop down list "All teams" to show the overall default view
 [Done] --- Similar changes as for initiatives: Use different colours for teams, and use data for values instead of IDs in the tooltips
 [Done] --- There should be a starting node showing the selected team from the filter - this would make the network graph clearer
 -- When filtering by Service:
-[Done] --- Highlight the selected service in focus so we can see it more clearly, just like we do in  Service Relationships Visualization
+[Done] --- Highlight the selected service in focus so we can see it more clearly, just 
+like we do in  Service Relationships Visualization
 [Done] --- Add tooltips as necessary to provide context for the arrows in the graph, straight lines, etc.
 [Done] --- Show dependency arros similar to how we currently do in Service Dependency Visualization
 - General UX guidelines for Initiative Impact widget:
 [Done] -- Increase size of team nodes so the text can fit - and split the text over two lines if too long (right now some text appears outside the node)
 [Done] -- Include appropriate legends like we do in other visualizations in 
-[Done] -- Esure the thing being filtered (initiative, team or service) is clearly focused/highlighted in the graph that makes it stand out from other nodes
+[Done] -- Esure the thing being filtered (initiative, team or service) is clearly 
+focused/highlighted in the graph that makes it stand out from other nodes
 [Done] -- Strive to make the widget responsive to the size of the graph so that the graph appears within the frame (no nodes should appear cut out from the frame)
 [Done] -- For team nodes, use toolip showing information about the team similar to the Team Visualization, and also some info on initiatives the team is impacted by
 [Done] -- When hovering over service nodes, include in tooltip, description about the service 
-[Done] --- Think about adding another dashboard widget for "demand by team per quarter" - to show a bar graph per quarter to see team load/demand impact
+[Done] --- Think about adding another dashboard widget for "demand by team per quarter" - to show a 
+bar graph per quarter to see team load/demand impact
 [Done] - [Feature] Add more default systems for demo purposes: Reference architectures for Android Stack, Chat GPT app, LLM system, etc.
 [Done] - [Feature] Organization Overview - show a view of traditional org chart with blocks
+
+
 ------------
 IN PROGRESS
 ------------
-
+- [AI Feature] Create a top-level menu for "AI-Assistant" - a page that allows the user to interact through a chat interface 
+on interrogating the selected system
+- [AI Feature] Implement AI-powered analysis (`getAnalysisFromPrompt`) to answer questions about the system (backend logic stubbed in aiService.js)
+- [AI Feature] Create an AI agent that can perform actions on the system with access to the code
+- [AI Feature] A cool feature would be to enable the user to recreate classic systems they wanted to learn about more, using the established data construct underlying the app (basically generate synthetic sample system architecture with a sample team/org structure)
+- [AI Feature] Solve for dynamic input of API key to use AI features (ask the 
+user to provide the name of their environment variable for the app to read local API key, not made public in the code or console log) (a local secure way of accessing user's API key. If the API key does not exist, no AI features exposed).
 
 ------
 TO DO
@@ -121,20 +154,23 @@ TO DO
 
 - Working on creating a reusable modern table widget leveraging tabular library
 Moving Filtering to EnhancedTableWidget:
-Now that the immediate filter display issues in the Engineer List (using direct Tabulator configuration) are resolved, the next logical step for the widget itself is to abstract that filtering logic.
+Now that the immediate filter display issues in the Engineer List (using direct Tabulator configuration) are resolved, the next logical 
+step for the widget itself is to abstract that filtering logic.
 When we resume work on the EnhancedTableWidget, we will:
 Define an API on the widget for how columns specify their filter type and options (e.g., columnDef.headerFilterType = 'select', columnDef.headerFilterOptions = [{label:'All', value:''}, ...]).
-Implement the logic within EnhancedTableWidget to take these definitions and correctly configure Tabulator's headerFilter and headerFilterParams for each column. This will include dynamically populating select lists from column data if specified.
-
+Implement the logic within EnhancedTableWidget to take these definitions and correctly configure Tabulator's headerFilter and headerFilterParams for each column.
+This will include dynamically populating select lists from column data if specified.
 Utilities
 - Now that we've got export to excel, csv and json working, we need a utlity to generate these files from other places: planning table, overall system data dump, etc.
 
 UX
+-- [UX] Fix "Create with AI" button layout, animation, and styling on home screen.
 -- Now that we can add resources to the system, we need to also support removing resources (when people leave) [Jules failed at this task]
 -- Ability to export the system to JSON, CSV and Excel, from top level menu "Export System" [leveraging Tabular library's export functionality]
 
 Year Planning
--- View planning by teams - for individual manager team planning. Allow managers to tune their teams estimates which will update the data model, year plan page uses latest changes)
+-- View planning by teams - for individual manager team planning.
+Allow managers to tune their teams estimates which will update the data model, year plan page uses latest changes)
 -- Add versioning when saving plans (up to 5 previous versions) - need to update data model structure
 -- Add ability to export the plan to CSV or Excel
 
@@ -142,13 +178,10 @@ Team Editing
 -- We support away team only from an incoming perspective (i.e. help provided to the team), but we could also consider concept of outgoing away team (I.e. the team lends engineers to other teams)
 
 AI enhancements
-- Create a top-level menu for "AI-Assistant" - a page that allows the user to interact through a chat interface on interrogating the selected system
--- Create an AI agent that can perform actions on the system with access to the code
--- A cool feature would be to enable the user to recreate classic systems they wanted to learn about more, using the established data construct underlying the app (basically generate synthetic sample system architecture with a sample team/org structure)
--- Advanced: We can allow the user to pass in a link to github repo, to analyse the repo and create the system architcture visualizations
 -- Ask questions about the system architecture
 -- Find out about the people / teams
--- Understand the current status of the backlog
+-- Understand the current status 
+of the backlog
 -- Inspect the year plan: which teams are underfunded? Which initiatives are ATL?
 -- Ask it to help identify bottlenecks: Inspect capacity contraints, find optimizations in the planning, suggest ideas to improve delivery plan
 -- Analyse the make-up of teams, flag risks like a team is funded mostly with junior engineers, doesn't have a senior engineer, etc. Flag hiring concerns.
@@ -156,7 +189,6 @@ AI enhancements
 -- Use AI to generate a delivery plan - classic ganntt chart using the year plan as input, work out a plan per team for the year
 -- Use AI to set-up recurring tasks to collect status updates for initiatives (detailed work package tracking feature)
 -- USe AI to generate graphs / views the webapp pages don't currently render - like a pie chart showing disribution of initiatives by themes
-- Solve for dynamic input of API key to use AI features (ask the user to provide the name of their environment variable for the app to read local API key, not made public in the code or console log) (a local secure way of accessing user's API key. If the API key does not exist, no AI features exposed).
 - Use AI to create a new system from a visual software architecture diagram
 - Use AI conversational chatbot to set up a new system, edit, or interact with the data associated with existing systems
 - Use AI to optimise the yearly planning
@@ -165,7 +197,9 @@ AI enhancements
 
 Bugs / Missing features
 - [UX] Add ability remove an engineer from Engineer List table to account for attrition (the engineer must be removed from the main engineer list and all associate objects where engineer is associated with a team)
-- [UX] Include a Delete Resource section in the Organization view, make the Add and Delete resource sections collapsible. Remember to regenerate the team breakdown table to reflect changes.
+- [UX] Include 
+a Delete Resource section in the Organization view, make the Add and Delete resource sections collapsible.
+Remember to regenerate the team breakdown table to reflect changes.
 - [Bug] - When filtering in the Service Dependency Visualization, the list is stuck on the first service, even though the selected service from the list is acted on, and the graph displays correctly - but the top service list doesn't show the selected service
 - [Feature] - In Service Dependency Visualization, use different colours for upstream and downstream dependent nodes
 
@@ -173,25 +207,29 @@ Bugs / Missing features
 Backlog Items: Technical Debt & Architectural Enhancements
 ============================================================
 1. Refactor Data Access and Manipulation into a Dedicated Service/Logic Layer:
-Description: Currently, data within currentSystemData is often manipulated directly by view-specific JavaScript files (e.g., orgView.js, editSystem.js). We should create a dedicated layer (e.g., in utils.js or a new dataService.js) with functions to manage CRUD operations (Create, Read, Update, Delete) and complex queries on currentSystemData. This will centralize business logic, improve testability, and make it easier to swap out data storage or UI layers in the future.
-Impact: Decouples presentation logic from data manipulation, preparing for potential backend integration (like DynamoDB) or UI framework changes (like React). Enhances code organization and maintainability.
+Description: Currently, data within currentSystemData is often manipulated directly by view-specific JavaScript files (e.g., orgView.js, editSystem.js).
+We should create a dedicated layer (e.g., in utils.js or a new dataService.js) with functions to manage CRUD operations (Create, Read, Update, Delete) and complex queries on currentSystemData.
+This will centralize business logic, improve testability, and make it easier to swap out data storage or UI layers in the future.
+Impact: Decouples presentation logic from data manipulation, preparing for potential backend integration (like DynamoDB) or UI framework changes (like React).
+Enhances code organization and maintainability.
 Complete and Roll Out EnhancedTableWidget to Other Applicable Tables:
 
-2. Description: Finish implementing the core features of EnhancedTableWidget (integrated column visibility, export controls, intelligent filtering). Then, systematically refactor other tables in the application (e.g., Team Breakdown, Service Dependencies, Capacity Summary, various tables in Capacity Tuning and SDM Forecasting) to use this common widget.
+2. Description: Finish implementing the core features of EnhancedTableWidget (integrated column visibility, export controls, intelligent filtering).
+Then, systematically refactor other tables in the application (e.g., Team Breakdown, Service Dependencies, Capacity Summary, various tables in Capacity Tuning and SDM Forecasting) to use this common widget.
 Impact: Provides a consistent, modern UX for all tables, reduces code duplication, and makes future table enhancements (like advanced responsiveness or global search) easier to implement system-wide.
-
 3. Formalize State Management for currentSystemData:
-Description: While currentSystemData acts as our central store, its updates are somewhat ad-hoc via direct manipulation and saveSystemChanges(). Consider adopting a more formal (albeit simple for vanilla JS) state management pattern to ensure updates are predictable and easier to trace, especially as the application grows. This could involve clearly defined update functions or a mini-pub/sub system for state changes.
+Description: While currentSystemData acts as our central store, its updates are somewhat ad-hoc via direct manipulation and saveSystemChanges().
+Consider adopting a more formal (albeit simple for vanilla JS) state management pattern to ensure updates are predictable and easier to trace, especially as the application grows.
+This could involve clearly defined update functions or a mini-pub/sub system for state changes.
 Impact: Improves data integrity, makes debugging easier, and provides a clearer data flow, which is beneficial for future scaling or framework adoption.
-
 4. Develop a Set of "Data Getter" Utilities for Views:
-Description: Create specific functions in utils.js (or the new data service layer) that views can call to get pre-formatted or aggregated data needed for display, instead of views doing complex data lookups themselves. For example, Utils.getFormattedEngineerDetails(engineerName) or Utils.getTeamCapacitySummary(teamId, scenario).
+Description: Create specific functions in utils.js (or the new data service layer) that views can call to get pre-formatted or aggregated data needed for display, instead of views doing complex data lookups themselves.
+For example, Utils.getFormattedEngineerDetails(engineerName) or Utils.getTeamCapacitySummary(teamId, scenario).
 Impact: Simplifies the logic in view-specific files (like orgView.js, yearPlanning.js), making them more focused on presentation and easier to adapt if the underlying currentSystemData structure evolves.
-
 6. Standardize UI Component Creation (Beyond Tables):
-Description: We've started with the EnhancedTableWidget. Identify other UI patterns that are repeated (e.g., dual-list selectors, collapsible sections, input forms) and consider creating simple, reusable component-like functions or classes for them in utils.js or a components directory.
+Description: We've started with the EnhancedTableWidget.
+Identify other UI patterns that are repeated (e.g., dual-list selectors, collapsible sections, input forms) and consider creating simple, reusable component-like functions or classes for them in utils.js or a components directory.
 Impact: Further reduces code duplication, ensures UI consistency, and speeds up development of new views.
-
 ==== Post MVP ===
 UX enhancements
 -- [Partially Done - needs rewrite port to modern framework like react] modernise the UX to a style of popular apps, maybe copy the AWS console UX styles?

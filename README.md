@@ -6,8 +6,10 @@
 
 1.  [Purpose](#purpose)
 2.  [Getting Started](#getting-started)
+    * [AI Assistant Settings](#ai-assistant-settings)
     * [Loading a Saved System](#loading-a-saved-system)
     * [Creating a New System](#creating-a-new-system)
+    * [Creating a New System with AI](#creating-a-new-system-with-ai)
     * [Deleting a System](#deleting-a-system)
     * [Resetting to Defaults](#resetting-to-defaults)
 3.  [Core Concepts & Data Model](#core-concepts--data-model)
@@ -25,6 +27,7 @@
     * [Work Packages](#work-packages)
     * [Archived Yearly Plans](#archived-yearly-plans)
 4.  [Key Features](#key-features)
+    * [AI Assistant](#ai-assistant)
     * [System Navigation](#system-navigation)
     * [Strategic Dashboard](#strategic-dashboard)
         * [Dashboard Carousel](#dashboard-carousel)
@@ -60,6 +63,7 @@ This tool provides a unified platform to:
 * **Execute Yearly Planning:** Commit initiatives to a yearly plan, assign detailed engineering estimates, and track against calculated team capacities.
 * **Gain Strategic Insights:** Use the dashboard to visualize investment allocation, track strategic trends over time, and monitor progress towards business goals.
 * **Forecast Team Growth:** Model SDE hiring, ramp-up, and attrition, factoring in detailed capacity constraints to predict resource availability.
+* **Accelerate Modeling with AI:** Use a powerful AI Assistant to generate entire, realistic sample systems and roadmaps from a single text prompt.
 
 The ultimate goal is to enable better-informed decision-making for software delivery, resource allocation, and strategic planning.
 
@@ -67,7 +71,15 @@ The ultimate goal is to enable better-informed decision-making for software deli
 
 ## 2. Getting Started
 
-Upon launching the application, you'll see the main menu on the top bar:
+Upon launching the application, you'll see the main menu on the top bar.
+
+### AI Assistant Settings
+
+* Click the **"AI Assistant"** button, which is always visible in the top bar.
+* Check the **"Enable AI Assistant Mode"** box.
+* Select your desired AI provider (e.g., "google-gemini").
+* Paste your personal **API key** into the text field. This key is saved *only* in your browser's local storage and is never sent to any server.
+* Click **"Save Settings"**.
 
 ### Loading a Saved System
 
@@ -89,6 +101,14 @@ Upon launching the application, you'll see the main menu on the top bar:
 * Proceed to define your services, teams, managers, and other relevant data.
 * Remember to click **"Save All Changes"** at the bottom of the edit page.
 
+### Creating a New System with AI
+
+* First, enable the AI Assistant and save your API key (see "AI Assistant Settings" above).
+* On the home screen, click the **"Create with AI"** button.
+* Enter a prompt describing the system you want to model (e.g., "A food delivery service like Uber Eats" or "A new FinTech bank").
+* The AI will generate a complete, realistic system, including a full org chart, a multi-year roadmap, and all service dependencies.
+* This new system is then saved to your local storage just like a manually created one.
+
 ### Deleting a System
 
 * Click **"Delete System"** from the home page menu.
@@ -98,7 +118,7 @@ Upon launching the application, you'll see the main menu on the top bar:
 ### Resetting to Defaults
 
 * Click **"Reset Defaults"**.
-* **Caution:** This action will erase ALL currently saved systems and restore the initial sample systems (`StreamView`, `ConnectPro`, `ShopSphere`, `InsightAI`, and `FinSecure`). This cannot be undone.
+* **Caution:** This action will erase ALL currently saved systems and restore the initial sample systems. This cannot be undone.
 * A confirmation prompt will appear before deletion.
 
 ---
@@ -220,6 +240,11 @@ Understanding these core entities is key to using the tool effectively. Most ent
 
 ## 4. Key Features
 
+### AI Assistant
+
+* **AI System Generation:** From the home screen, use the "Create with AI" button to generate a complete, realistic system and 3-year plan from a single text prompt.
+* **Settings Management:** A globally accessible "AI Assistant" button in the top bar allows you to enable/disable AI mode and securely save your API key in local storage.
+
 ### System Navigation
 
 Once a system is loaded, a persistent navigation bar appears at the top, giving you one-click access to all major views for that system. The currently active view is highlighted for context. Click **"Home"** to return to the system selection screen.
@@ -283,8 +308,7 @@ Accessible by clicking **"System Overview"**. Provides multiple views of your ar
 
 ### Organizational Views
 
-* Click **"Inspect Org Design"** to see an organization chart and a detailed team breakdown table.
-* Click **"Engineers List"** for a sortable and exportable list of all engineers.
+* Click **"Inspect Org Design"** to see an organization chart (in multiple layouts: Block, List, Table) and a detailed, editable list of all engineers in the system.
 
 ### Tune Capacity Constraints
 
@@ -311,7 +335,10 @@ Accessible by clicking **"System Overview"**. Provides multiple views of your ar
 
 ## 5. Basic Workflow Example
 
-1.  **Load or Create a System.**
+1.  **Load, Create, or Generate a System:**
+    * (Option A) Click **"Load System"** to load a sample like `ShopSphere`.
+    * (Option B) Click **"New System"** to start from scratch.
+    * (Option C) Enable the AI Assistant, then click **"Create with AI"** and provide a prompt.
 2.  **Define Core Data (Edit System / Org View):**
     * Set System Name and Description.
     * Add/Define **Project Managers**, **Goals**, and **Defined Themes**.
@@ -371,9 +398,10 @@ This tool is an evolving MVP. Key future enhancements include:
 * **Detailed Planning Module:** UI for managing Goals (linking initiatives), Work Packages (phases, status, team assignments, dependencies), and task breakdowns.
 * **Enhanced Yearly Planning UI:** Full UI support for editing all new initiative fields (ROI, due dates, personnel, etc.) directly in the planning table or a detail panel. UI for managing `archivedYearlyPlans`.
 * **AI-Powered Enhancements:**
+    * **[Done]** AI-assisted system modeling and data generation.
     * Conversational AI assistant for data querying and insights.
-    * AI-assisted system modeling and plan optimization.
     * Analysis of team composition and hiring risks.
+    * AI-assisted plan optimization.
 * **Data Access Layer Refactoring:** Complete the abstraction of data operations for easier future backend integration.
 * **EnhancedTableWidget Rollout:** Apply the widget to more tables (e.g., Planning Table, Team Load Summary) for consistent filtering/export.
 * **Collaboration & Cloud Sync:** For multi-user access and data persistence beyond local storage.
