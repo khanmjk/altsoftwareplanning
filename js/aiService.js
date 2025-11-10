@@ -63,19 +63,33 @@ function _getSystemGenerationPrompt() {
     const schemaExample = JSON.stringify(sampleSystemDataShopSphere, null, 2); // Using ShopSphere as a robust example
 
     return `
-You are an expert Software Architect and systems designer. Your sole task is to generate a complete, valid JSON object representing a software system based on a user's prompt.
+You are a seasoned VP of Engineering and strategic business partner, acting as a founding technology leader. Your purpose is to help a user create a tech business and organize their software development teams.
+
+Your sole task is to take a user's prompt (e.g., "An excel spreadsheet company," "A video streaming app") and generate a single, complete, valid JSON object representing the entire software system, organizational structure, and three-year roadmap. This JSON will be used in an educational tool for software managers.
 
 **RULES:**
-1.  **JSON ONLY:** You MUST respond with *nothing* but the valid JSON object. Do not include \`\`\`json ... \`\`\` or any explanatory text before or after the JSON block.
-2.  **ADHERE TO SCHEMA:** The JSON you generate MUST strictly follow the structure and data types of the example schema provided below.
-3.  **BE PLAUSIBLE:** Create realistic and plausible team names, service names, APIs, and initiatives that fit the user's prompt.
-4.  **POPULATE ALL FIELDS:** You must generate data for all key arrays: seniorManagers, sdms, pmts, projectManagers, teams, allKnownEngineers, services, yearlyInitiatives, goals, and definedThemes.
-5.  **ENSURE CONSISTENCY:**
+
+1.  **JSON ONLY:** You MUST respond with *nothing* but the valid, raw JSON object. Do not include \`\`\`json ... \`\`\` or any explanatory text before or after the JSON block.
+
+2.  **ADHERE TO SCHEMA:** The JSON you generate MUST strictly follow the structure and data types of the example schema provided below. This is the highest priority.
+
+3.  **REAL-WORLD INDUSTRY PRACTICE (Conway's Law):** The generated data must represent real-world industry practice. You must organize the software stack into teams. Teams own services that expose APIs. Services must have plausible upstream and downstream relationships (serviceDependencies). The organizational structure (managers, teams) and the software architecture (services) must be logically aligned.
+
+4.  **SYNTHESIZE A 3-YEAR ROADMAP:** You must synthesize a rich, detailed three-year roadmap. Populate the \`yearlyInitiatives\` array with initiatives for the next three years (e.g., 2025, 2026, 2027). This plan must be detailed:
+    * Create logical initiatives that build upon each other (e.g., Year 1: MVP & Compliance; Year 2: Scale & New Features; Year 3: Global Expansion).
+    * Include detailed SDE estimates in the \`assignments\` array for each initiative.
+    * Assign \`isProtected: true\` to plausible KTLO (Keep The Lights On) or mandatory compliance initiatives.
+
+5.  **POPULATE ALL FIELDS:** You must generate rich, plausible data for ALL key arrays: \`seniorManagers\`, \`sdms\`, \`pmts\`, \`projectManagers\`, \`teams\`, \`allKnownEngineers\` (including realistic skills, levels, and AI SWEs), \`services\`, \`yearlyInitiatives\`, \`goals\`, and \`definedThemes\`.
+    * The \`goals\` and \`definedThemes\` must logically connect to your 3-year roadmap.
+
+6.  **ENSURE CONSISTENCY (CRITICAL):**
     * All \`teamId\` values in the \`teams\` array must be unique.
     * All \`sdmId\`s in the \`sdms\` array must be unique.
-    * The \`owningTeamId\` in each service must match a \`teamId\` from the \`teams\` array.
-    * The \`sdmId\` and \`pmtId\` in each team must match an \`sdmId\` or \`pmtId\` from the respective arrays.
-    * Engineers in a team's \`engineers\` array must have their names listed in the \`allKnownEngineers\` array, and their \`currentTeamId\` in \`allKnownEngineers\` must match the team's \`teamId\`.
+    * The \`owningTeamId\` in each \`service\` must match a \`teamId\` from the \`teams\` array.
+    * The \`sdmId\` and \`pmtId\` in each \`team\` must match an \`sdmId\` or \`pmtId\` from the respective arrays.
+    * Engineers in a team's \`engineers\` array (which are *names*) must be listed in the \`allKnownEngineers\` array.
+    * The \`currentTeamId\` for an engineer in \`allKnownEngineers\` MUST match the \`teamId\` of the team they are in.
     * Initiative \`assignments\` must use valid \`teamId\`s.
     * Initiative \`themes\` must use valid \`themeId\`s from the \`definedThemes\` array.
     * Initiative \`primaryGoalId\` must use a valid \`goalId\` from the \`goals\` array.
@@ -93,7 +107,7 @@ Proceed to generate the new JSON object based on the user's prompt.
  * @returns {Promise<object|null>} Parsed JSON object or null.
  */
 async function _generateSystemWithGemini(systemPrompt, userPrompt, apiKey) {
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`;
 
     const requestBody = {
         "contents": [

@@ -229,43 +229,47 @@ async function handleCreateWithAi() {
         return;
     }
 
-    // Show a loading indicator (TBD)
     alert("AI is generating your system... This may take a moment.");
 
     try {
         const newSystemData = await generateSystemFromPrompt(prompt, globalSettings.ai.apiKey, globalSettings.ai.provider);
 
-        if (newSystemData && newSystemData.systemName && newSystemData.teams && newSystemData.services) {
-            // Success!
-            console.log("AI generation successful:", newSystemData);
-            
-            // Validate and augment the data just in case
-            currentSystemData = newSystemData; // Set as active
-            if (typeof loadSavedSystem === 'function') {
-                 // Save it first, then load it. This ensures it's in localStorage
-                 // and runs through the augmentation logic in loadSavedSystem.
-                 const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
-                 
-                 // Handle potential name collision
-                 let finalSystemName = newSystemData.systemName;
-                 if (systems[finalSystemName]) {
-                     finalSystemName = `${finalSystemName} (AI ${Date.now().toString().slice(-5)})`;
-                     newSystemData.systemName = finalSystemName;
-                 }
+        // --- THIS IS THE VALIDATION STEP ---
+        // Calls the new, complete function from utils.js
+        const { isValid, errors, warnings } = validateGeneratedSystem(newSystemData);
 
-                 systems[finalSystemName] = newSystemData;
-                 localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
-                 
-                 alert(`Successfully created system: "${finalSystemName}"! Loading it now.`);
-                 loadSavedSystem(finalSystemName);
-            } else {
-                 // Fallback if loadSavedSystem isn't available
-                 switchView('visualizationCarousel');
-            }
-        } else {
-            alert("AI generation failed to return a valid system object. Please try again or check the console.");
-            console.error("AI returned invalid data:", newSystemData);
+        if (!isValid) {
+            console.error("AI Generation Failed Validation:", errors);
+            // Show a detailed error to the user
+            const errorList = errors.slice(0, 10).join("\n- "); // Show top 10 errors
+            alert(`AI generation failed validation checks. The data is inconsistent. Please try again.\n\nErrors:\n- ${errorList}${errors.length > 10 ? '\n- ...and more.' : ''}`);
+            return;
         }
+
+        if (warnings.length > 0) {
+            console.warn("AI Generation Warnings:", warnings);
+            // We can still proceed, but it's good to know
+        }
+        // --- END OF VALIDATION STEP ---
+
+        // If we get here, the data is valid and passes our checks
+        console.log("AI generation successful and validated:", newSystemData);
+        
+        currentSystemData = newSystemData;
+        const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
+        
+        let finalSystemName = newSystemData.systemName;
+        if (systems[finalSystemName]) {
+            finalSystemName = `${finalSystemName} (AI ${Date.now().toString().slice(-5)})`;
+            newSystemData.systemName = finalSystemName;
+        }
+
+        systems[finalSystemName] = newSystemData;
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
+        
+        alert(`Successfully created system: "${finalSystemName}"! Loading it now.`);
+        loadSavedSystem(finalSystemName); // This will load and run the augmentation step.
+
     } catch (error) {
         alert("An error occurred during AI system generation. Please check the console.");
         console.error("Error in handleCreateWithAi:", error);

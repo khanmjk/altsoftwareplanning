@@ -559,3 +559,175 @@ function ensureInitiativePlanningYears(initiatives) {
     });
     console.log("Finished ensuring all initiatives have a consistent planningYear.");
 }
+
+/**
+ * Validates a newly generated AI system object against our core schema rules.
+ * This is a strict validator, not an augmenter. It checks for existence, 
+ * uniqueness, and relational integrity as defined in the AI generation prompt.
+ *
+ * @param {object} systemData The parsed JSON object from the AI.
+ * @returns {{isValid: boolean, errors: string[], warnings: string[]}}
+ */
+function validateGeneratedSystem(systemData) {
+    const errors = [];
+    const warnings = [];
+
+    // --- 1. Top-Level Existence Checks ---
+    if (!systemData || typeof systemData !== 'object' || Array.isArray(systemData)) {
+        return { isValid: false, errors: ["AI returned no data or the data was not a JSON object."], warnings };
+    }
+
+    const requiredString = (key) => {
+        if (!systemData[key] || typeof systemData[key] !== 'string' || systemData[key].trim() === '') {
+            errors.push(`Required top-level string "${key}" is missing or empty.`);
+        }
+    };
+
+    const requiredPopulatedArray = (key) => {
+        if (!Array.isArray(systemData[key])) {
+            errors.push(`Required field "${key}" is missing or not an array.`);
+            return false; // Cannot check contents
+        }
+        if (systemData[key].length === 0) {
+            errors.push(`Required array "${key}" must not be empty. AI must generate this data.`);
+            return false;
+        }
+        return true; // Array exists and is populated
+    };
+    
+    const optionalArray = (key) => {
+        if (!Array.isArray(systemData[key])) {
+            errors.push(`Field "${key}" is missing or not an array.`);
+            return false;
+        }
+        if (systemData[key].length === 0) {
+            warnings.push(`Array "${key}" is empty. AI should ideally populate this.`);
+        }
+        return true;
+    };
+
+    requiredString('systemName');
+    
+    // Check all required arrays. If these fail, we can't do integrity checks.
+    const criticalArrays = [
+        'teams', 'allKnownEngineers', 'services', 
+        'yearlyInitiatives', 'goals', 'definedThemes', 
+        'sdms', 'pmts'
+    ];
+    let canProceed = true;
+    for (const key of criticalArrays) {
+        if (!requiredPopulatedArray(key)) {
+            canProceed = false;
+        }
+    }
+    
+    // Check optional arrays (can be empty)
+    optionalArray('seniorManagers');
+    optionalArray('projectManagers');
+    
+    if (!canProceed) {
+        return { isValid: false, errors, warnings }; // Stop if basic structure is wrong
+    }
+
+    // --- 2. Build Look-up Sets & Check Uniqueness (Rule #6) ---
+    const teamIds = new Set();
+    const teamNames = new Set();
+    systemData.teams.forEach((team, i) => {
+        if (!team.teamId) errors.push(`Team at index ${i} is missing "teamId".`);
+        else if (teamIds.has(team.teamId)) errors.push(`Duplicate teamId found: ${team.teamId}`);
+        else teamIds.add(team.teamId);
+        
+        if (!team.teamName) errors.push(`Team ${team.teamId || `at index ${i}`} is missing "teamName".`);
+        else if (teamNames.has(team.teamName.toLowerCase())) warnings.push(`Duplicate teamName found: ${team.teamName}`);
+        else teamNames.add(team.teamName.toLowerCase());
+    });
+
+    const sdmIds = new Set();
+    systemData.sdms.forEach((sdm, i) => {
+        if (!sdm.sdmId) errors.push(`SDM at index ${i} is missing "sdmId".`);
+        else if (sdmIds.has(sdm.sdmId)) errors.push(`Duplicate sdmId found: ${sdm.sdmId}`);
+        else sdmIds.add(sdm.sdmId);
+    });
+
+    const pmtIds = new Set(systemData.pmts.map(p => p.pmtId).filter(Boolean));
+    const goalIds = new Set(systemData.goals.map(g => g.goalId).filter(Boolean));
+    const themeIds = new Set(systemData.definedThemes.map(t => t.themeId).filter(Boolean));
+    
+    const engineerNameMap = new Map();
+    const engineerNameCheck = new Set();
+    systemData.allKnownEngineers.forEach((eng, i) => {
+        if (!eng.name) errors.push(`Engineer at index ${i} is missing a "name".`);
+        else if (engineerNameCheck.has(eng.name.toLowerCase())) errors.push(`Duplicate engineer name found: ${eng.name}`);
+        else {
+            engineerNameCheck.add(eng.name.toLowerCase());
+            engineerNameMap.set(eng.name, eng); // Use exact case for map key
+        }
+    });
+
+    // --- 3. Relational Integrity Checks (Rule #6) ---
+
+    // Check Teams
+    systemData.teams.forEach(team => {
+        if (team.sdmId && !sdmIds.has(team.sdmId)) {
+            errors.push(`Team "${team.teamName}" uses a non-existent sdmId: ${team.sdmId}`);
+        }
+        if (team.pmtId && !pmtIds.has(team.pmtId)) {
+            errors.push(`Team "${team.teamName}" uses a non-existent pmtId: ${team.pmtId}`);
+        }
+        
+        // Check team.engineers against allKnownEngineers
+        for (const engName of (team.engineers || [])) {
+            if (!engineerNameMap.has(engName)) {
+                errors.push(`Team "${team.teamName}" lists an engineer "${engName}" who is not in 'allKnownEngineers'.`);
+            } else {
+                // Check consistency: Engineer's roster must list this team
+                const engData = engineerNameMap.get(engName);
+                if (engData.currentTeamId !== team.teamId) {
+                    errors.push(`Data inconsistency: Engineer "${engName}" is in Team "${team.teamName}"'s list, but their 'currentTeamId' in 'allKnownEngineers' is "${engData.currentTeamId}".`);
+                }
+            }
+        }
+    });
+
+    // Check allKnownEngineers for invalid team assignments
+    engineerNameMap.forEach((eng, engName) => {
+        if (eng.currentTeamId && !teamIds.has(eng.currentTeamId)) {
+            errors.push(`Engineer "${engName}" is assigned to a non-existent teamId: ${eng.currentTeamId}`);
+        }
+    });
+
+    // Check Services
+    systemData.services.forEach(service => {
+        if (service.owningTeamId && !teamIds.has(service.owningTeamId)) {
+            errors.push(`Service "${service.serviceName}" is owned by a non-existent teamId: ${service.owningTeamId}`);
+        }
+    });
+
+    // Check Initiatives
+    systemData.yearlyInitiatives.forEach(init => {
+        if (!init.initiativeId) errors.push('An initiative is missing its "initiativeId".');
+        
+        if (init.primaryGoalId && !goalIds.has(init.primaryGoalId)) {
+            errors.push(`Initiative "${init.title}" uses a non-existent primaryGoalId: ${init.primaryGoalId}`);
+        }
+        
+        for (const themeId of (init.themes || [])) {
+            if (!themeIds.has(themeId)) {
+                errors.push(`Initiative "${init.title}" uses a non-existent themeId: ${themeId}`);
+            }
+        }
+        
+        for (const assignment of (init.assignments || [])) {
+            if (!assignment.teamId || !teamIds.has(assignment.teamId)) {
+                errors.push(`Initiative "${init.title}" is assigned to a non-existent teamId: ${assignment.teamId || 'null'}`);
+            }
+        }
+    });
+    
+    // --- 4. Final Result ---
+    return {
+        isValid: errors.length === 0,
+        errors,
+        warnings
+    };
+}
