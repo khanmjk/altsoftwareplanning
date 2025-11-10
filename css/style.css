@@ -2133,4 +2133,35 @@ a:focus {
 }
 /* === End Modal Styles === */
 
+/* --- Fix for AI Button Layout & Styling --- */
+
+/* 1. Force the home screen menu to be a single, non-wrapping row */
+#topBar .menu {
+    display: flex;
+    flex-wrap: nowrap; /* Prevents wrapping */
+    align-items: center;
+}
+
+/* 2. Make the "Create with AI" button style MORE specific */
+/* This new rule is stronger and will override the default. */
+#topBar .menu #createWithAiButton {
+    color: #ffc107; /* Gold color */
+    font-weight: bold;
+    border: 1px solid #ffc107;
+    background-color: #3e4a5a; /* Darker background */
+}
+
+#topBar .menu #createWithAiButton:hover {
+    color: #fff;
+    background-color: #ffc107;
+    border-color: #ffc107;
+}
+
+/* 3. Add the Font Awesome icon */
+#topBar .menu #createWithAiButton::before {
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    content: "\f0d0"; /* "magic" icon */
+    margin-right: 8px;
+}
 /* Add any additional styles as needed */          
