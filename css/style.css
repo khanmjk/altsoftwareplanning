@@ -1947,7 +1947,7 @@ a:focus {
     margin-top: 5px;
 }
 
-//* === NEW Styles for D3 Org Chart (Block View) === */
+/* === NEW Styles for D3 Org Chart (Block View) === */
 
 /* Style for the SVG links (lines) */
 .org-link {
@@ -2058,5 +2058,79 @@ a:focus {
 }
 
 /* === End D3 Org Chart Styles === */
+
+/* === Modal Base Styles === */
+.modal {
+    display: none; /* Hidden by default (JS will override this) */
+    position: fixed; /* Stay in place */
+    z-index: 1050; /* Sit on top of everything else */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+}
+
+.modal-content-wrapper {
+    position: relative;
+    background-color: #fefefe;
+    margin: 10% auto; /* 10% from the top and centered */
+    padding: 0;
+    border: 1px solid #888;
+    width: 60%; /* Or your preferred width */
+    max-width: 700px; /* Max width */
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    padding: 12px 20px;
+    background-color: #e9ecef;
+    border-bottom: 1px solid #dee2e6;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.modal-body {
+    padding: 20px;
+    flex-grow: 1;
+    max-height: 60vh; /* Make body scrollable */
+    overflow-y: auto;
+}
+
+.modal-footer {
+    padding: 12px 20px;
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    text-align: right;
+}
+
+.close-button {
+    color: #6c757d;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+/* === End Modal Styles === */
 
 /* Add any additional styles as needed */          
