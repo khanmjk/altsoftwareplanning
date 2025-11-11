@@ -319,10 +319,14 @@ Your sole task is to take a user's prompt (e.g., "An excel spreadsheet company,"
 
 3.  **REAL-WORLD INDUSTRY PRACTICE (Conway's Law):** The generated data must represent real-world industry practice. You must organize the software stack into teams (2-Pizza teams). Teams own services that expose APIs. Services must have plausible upstream and downstream relationships (serviceDependencies). The organizational structure (managers, teams) and the software architecture (services) must be logically aligned.
 
-4.  **SYNTHESIZE A RICH, FRONT-LOADED 3-YEAR ROADMAP:** This is critical. You must generate a *rich and detailed* three-year plan. The plan must be **front-loaded**, reflecting a realistic startup environment.
-    * **Year 1 (e.g., 2025):** Must be very heavy. Generate approximately **20 initiatives**. Focus on MVP, core infrastructure, compliance, and initial features.
-    * **Year 2 (e.g., 2026):** Must be detailed. Generate approximately **10 initiatives**. Focus on scaling, new feature verticals, and addressing tech debt.
-    * **Year 3 (e.g., 2027):** Must be high-level. Generate approximately **7 initiatives**. Focus on global expansion, new R&D, and major architectural shifts.
+4.  **SYNTHESIZE A RICH, FRONT-LOADED 3-YEAR ROADMAP:** This is critical. You must generate a *rich and detailed* three-year plan. The plan must be **front-loaded**.
+    * **Year 1 (e.g., 2025):** Must be very heavy. Generate approximately **10-12 initiatives**. Focus on MVP, core infrastructure, compliance, and initial features.
+    * **Year 2 (e.g., 2026):** Must be detailed. Generate approximately **5-7 initiatives**. Focus on scaling, new feature verticals, and addressing tech debt.
+    * **Year 3 (e.g., 2027):** Must be high-level. Generate approximately **3-5 initiatives**. Focus on global expansion, new R&D, and major architectural shifts.
+    * **Assign Realistic Statuses:** This is critical. Do not set all initiatives to "Committed". The status must reflect a real-world plan for the *current* year (Year 1):
+        * **Year 1 (e.g., 2025):** Show a mix of statuses: "Completed" (for items that would be done by now), "In Progress" (for current items), "Committed" (for items planned this year), and "Backlog" or "Defined" (for items that are not yet funded).
+        * **Year 2 (e.g., 2026):** Statuses should mostly be "Defined" (scoped) or "Committed" (high-priority approved items).
+        * **Year 3 (e.g., 2027):** Statuses should mostly be "Backlog" or "Defined" (high-level ideas).
     * Include detailed SDE estimates in the \`assignments\` array for each initiative.
     * Assign \`isProtected: true\` to plausible KTLO (Keep The Lights On) or mandatory compliance initiatives.
 
