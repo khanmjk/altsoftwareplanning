@@ -140,7 +140,152 @@ function _getSystemGenerationPrompt() {
     
     // This is the most important part. We give the AI its persona, rules, and the exact schema.
     // We will use one of our sample data files as a perfect example.
-    const schemaExample = JSON.stringify(sampleSystemDataShopSphere, null, 2); // Using ShopSphere as a robust example
+    // !!!!! The LLM struggles with large inputs, so we must pick a smaller but still rich example. !!!!!
+    // const schemaExample = JSON.stringify(sampleSystemDataShopSphere, null, 2); // Using ShopSphere as a robust example
+
+    // !!!! Need to create a smaller example schema to fit within token limits !!!!
+    // [NEW] Define a minimal schema example instead of the full sample data
+    // !!!! This drastically reduces the input token count to prevent context window errors.
+    
+    const minimalSchemaExample = {
+      "systemName": "Example System",
+      "systemDescription": "A brief description of the system.",
+      "seniorManagers": [
+        { "seniorManagerId": "srMgr-example", "seniorManagerName": "Example Sr. Manager", "attributes": {} }
+      ],
+      "sdms": [
+        { "sdmId": "sdm-example", "sdmName": "Example SDM", "seniorManagerId": "srMgr-example", "attributes": {} }
+      ],
+      "pmts": [
+        { "pmtId": "pmt-example", "pmtName": "Example PMT", "attributes": {} }
+      ],
+      "projectManagers": [
+        { "pmId": "pm-example", "pmName": "Example Project Manager", "attributes": {} }
+      ],
+      "teams": [
+        {
+          "teamId": "team-example",
+          "teamName": "Example Team",
+          "teamIdentity": "Phoenix",
+          "fundedHeadcount": 5,
+          "engineers": ["Example Engineer 1 (L4)"],
+          "awayTeamMembers": [
+            { "name": "Contractor 1", "level": 3, "sourceTeam": "External", "attributes": {} }
+          ],
+          "sdmId": "sdm-example",
+          "pmtId": "pmt-example",
+          "teamCapacityAdjustments": {
+            "leaveUptakeEstimates": [],
+            "variableLeaveImpact": { "maternity": { "affectedSDEs": 0, "avgDaysPerAffectedSDE": 0 } },
+            "teamActivities": [],
+            "avgOverheadHoursPerWeekPerSDE": 6,
+            "aiProductivityGainPercent": 10
+          },
+          "attributes": {}
+        }
+      ],
+      "allKnownEngineers": [
+        {
+          "name": "Example Engineer 1 (L4)",
+          "level": 4,
+          "currentTeamId": "team-example",
+          "attributes": {
+            "isAISWE": false,
+            "aiAgentType": null,
+            "skills": ["Java", "AWS", "React"],
+            "yearsOfExperience": 5
+          }
+        },
+        {
+          "name": "AI-Bot-01",
+          "level": 4,
+          "currentTeamId": "team-example",
+          "attributes": {
+            "isAISWE": true,
+            "aiAgentType": "Code Generation",
+            "skills": ["Python", "Unit Tests"],
+            "yearsOfExperience": null
+          }
+        }
+      ],
+      "services": [
+        {
+          "serviceName": "ExampleService",
+          "serviceDescription": "The main service.",
+          "owningTeamId": "team-example",
+          "apis": [
+            { "apiName": "GetExampleAPI", "apiDescription": "Gets data.", "dependentApis": [], "attributes": {} }
+          ],
+          "serviceDependencies": [],
+          "platformDependencies": ["AWS S3", "PostgreSQL"],
+          "attributes": {}
+        }
+      ],
+      "capacityConfiguration": {
+        "workingDaysPerYear": 261,
+        "standardHoursPerDay": 8,
+        "globalConstraints": {
+          "publicHolidays": 10,
+          "orgEvents": [
+            { "id": "event-1", "name": "Global All-Hands", "estimatedDaysPerSDE": 1, "attributes": {} }
+          ]
+        },
+        "leaveTypes": [
+          { "id": "annual", "name": "Annual Leave", "defaultEstimatedDays": 20, "attributes": {} }
+        ],
+        "attributes": {}
+      },
+      "yearlyInitiatives": [
+        {
+          "initiativeId": "init-example-001",
+          "title": "Example Initiative (Year 1)",
+          "description": "An example initiative.",
+          "isProtected": true,
+          "assignments": [
+            { "teamId": "team-example", "sdeYears": 1.5 }
+          ],
+          "impactedServiceIds": ["ExampleService"],
+          "roi": {
+            "category": "Tech Debt",
+            "valueType": "QualitativeScore",
+            "estimatedValue": "Critical",
+            "currency": null,
+            "timeHorizonMonths": 12,
+            "confidenceLevel": "High",
+            "calculationMethodology": "N/A",
+            "businessCaseLink": null,
+            "overrideJustification": null,
+            "attributes": {}
+          },
+          "targetDueDate": "2025-12-31",
+          "actualCompletionDate": null,
+          "status": "Committed",
+          "themes": ["theme-example"],
+          "primaryGoalId": "goal-example",
+          "projectManager": { "type": "pm", "id": "pm-example", "name": "Example Project Manager" },
+          "owner": { "type": "sdm", "id": "sdm-example", "name": "Example SDM" },
+          "technicalPOC": { "type": "engineer", "id": "eng-example", "name": "Example Engineer 1 (L4)" },
+          "workPackageIds": [],
+          "attributes": {
+            "pmCapacityNotes": "Example note.",
+            "planningYear": 2025
+          }
+        }
+      ],
+      "goals": [
+        { "goalId": "goal-example", "name": "Example Goal 2025", "description": "...", "initiativeIds": ["init-example-001"], "attributes": {} }
+      ],
+      "definedThemes": [
+        { "themeId": "theme-example", "name": "Example Theme", "description": "...", "relatedGoalIds": ["goal-example"], "attributes": {} }
+      ],
+      "archivedYearlyPlans": [],
+      "workPackages": [],
+      "calculatedCapacityMetrics": null,
+      "attributes": {}
+    };
+
+    // [MODIFIED] Use the new minimal example
+    const schemaExample = JSON.stringify(minimalSchemaExample, null, 2);    
 
     const promptString = `
 You are a seasoned VP of Engineering and strategic business partner, acting as a founding technology leader. Your purpose is to help a user create a tech business and organize their software development teams.
@@ -199,7 +344,9 @@ async function _generateSystemWithGemini(systemPrompt, userPrompt, apiKey) {
     // this function MUST be refactored to call a secure server-side proxy
     // that manages the API key and makes the actual request to the Google API.
     
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`;
+    //const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`;
+// [MODIFIED] Switched from gemini-2.5-pro to gemini-2.5-flash, the correct model for this API endpoint.
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
     const requestBody = {
         "contents": [
@@ -335,7 +482,9 @@ async function _getAnalysisWithGemini(systemPrompt, userQuestion, apiKey) {
     // this function MUST be refactored to call a secure server-side proxy
     // that manages the API key and makes the actual request to the Google API.
 
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`;
+    //const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`;
+    // [MODIFIED] Switched from gemini-2.5-pro to gemini-2.5-flash
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;    
 
     const requestBody = {
         "contents": [
