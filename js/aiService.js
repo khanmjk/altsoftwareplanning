@@ -361,7 +361,7 @@ async function _generateSystemWithGemini(systemPrompt, userPrompt, apiKey) {
             "temperature": 0.5,
             "topK": 1,
             "topP": 1,
-            "maxOutputTokens": 8192,
+            "maxOutputTokens": 32000,
         },
     };
 
