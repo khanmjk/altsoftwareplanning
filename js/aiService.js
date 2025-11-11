@@ -1,5 +1,73 @@
 // js/aiService.js
+/**
+ * [NEW] A private helper to wrap fetch calls with exponential backoff.
+ * This is a best-practice coding pattern for handling transient server
+ * errors (5xx) or rate limits (429), which are common with LLM APIs.
+ *
+ * @param {string} url The API endpoint to fetch.
+ * @param {object} options The options object for the fetch call (method, headers, body).
+ * @param {number} maxRetries The maximum number of retries.
+ * @param {number} initialDelay The starting delay in milliseconds.
+ * @returns {Promise<Response>} A promise that resolves to the successful fetch Response.
+ * @throws {Error} Throws an error if retries fail or if a non-retryable error (4xx) occurs.
+ */
+async function _fetchWithRetry(url, options, maxRetries = 5, initialDelay = 1000) {
+    let attempt = 0;
+    while (attempt < maxRetries) {
+        try {
+            const response = await fetch(url, options);
 
+            // 1. Success case: The request was successful.
+            if (response.ok) {
+                return response;
+            }
+
+            // 2. Client Error (4xx): Don't retry. This is a permanent failure
+            //    (e.g., bad API key, malformed request).
+            if (response.status >= 400 && response.status < 500) {
+                const errorBody = await response.json();
+                console.error(`Fetch Error (4xx): ${response.status}. Not retrying.`, errorBody);
+                // We'll let the calling function format the specific error message.
+                throw new Error(`Google API request failed: ${errorBody.error?.message || response.statusText}`);
+            }
+
+            // 3. Server Error (5xx) or Rate Limit (429): This is a retry-able error.
+            if (response.status >= 500 || response.status === 429) {
+                console.warn(`Fetch Error (5xx/429): ${response.status}. Retrying... (Attempt ${attempt + 1}/${maxRetries})`);
+                // We throw an error to trigger the catch block's retry logic.
+                throw new Error(`Retryable error: ${response.statusText}`);
+            }
+            
+            // Handle other unexpected non-ok statuses
+            throw new Error(`Unhandled HTTP error: ${response.status}`);
+
+        } catch (error) {
+            // This catch block handles network errors AND our thrown retryable errors.
+            
+            // If the error was a non-retryable 4xx, re-throw it immediately.
+            if (error.message.includes("Google API request failed")) {
+                throw error;
+            }
+
+            console.warn(`Fetch attempt ${attempt + 1} failed: ${error.message}`);
+            attempt++;
+            
+            if (attempt >= maxRetries) {
+                console.error("Fetch failed after all retries.", error);
+                throw new Error(`API request failed after ${maxRetries} attempts. Last error: ${error.message}`);
+            }
+
+            // Calculate exponential backoff + jitter
+            const jitter = Math.random() * 1000; // Add up to 1 second of jitter
+            const delay = initialDelay * Math.pow(2, attempt - 1) + jitter;
+            
+            console.log(`Waiting ${delay.toFixed(0)}ms before next retry...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
+    }
+    // This line should not be reachable, but as a fallback:
+    throw new Error("API request failed after all retries.");
+}
 // --- AI System Generation ---
 
 /**
@@ -19,6 +87,9 @@ async function generateSystemFromPrompt(userPrompt, apiKey, provider) {
 
     // 2. Route to the correct provider-specific function
     try {
+        // TODO: [SECURITY] The apiKey is passed here from local storage.
+        // This is acceptable for local-only development but MUST NOT
+        // be deployed to a public website.
         switch (provider) {
             case 'google-gemini':
                 return await _generateSystemWithGemini(systemPrompt, userPrompt, apiKey);
@@ -104,9 +175,15 @@ Proceed to generate the new JSON object based on the user's prompt.
 
 /**
  * [PRIVATE] Calls the Google Gemini API to generate a system.
+ * [MODIFIED] Uses _fetchWithRetry to handle transient errors.
  * @returns {Promise<object|null>} Parsed JSON object or null.
  */
 async function _generateSystemWithGemini(systemPrompt, userPrompt, apiKey) {
+    // TODO: [SECURITY] This is a client-side call using a user-provided API key.
+    // This architecture is unsafe for production. Before merging to a public site,
+    // this function MUST be refactored to call a secure server-side proxy
+    // that manages the API key and makes the actual request to the Google API.
+    
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`;
 
     const requestBody = {
@@ -126,19 +203,19 @@ async function _generateSystemWithGemini(systemPrompt, userPrompt, apiKey) {
         },
     };
 
-    const response = await fetch(API_URL, {
+
+    // MODIFIED: Create the options object for fetch
+    const fetchOptions = {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody)
-    });
+    };
 
-    if (!response.ok) {
-        const errorBody = await response.json();
-        console.error("Gemini API Error:", errorBody);
-        throw new Error(`Google API request failed: ${errorBody.error?.message || response.statusText}`);
-    }
+    // MODIFIED: Call _fetchWithRetry instead of fetch
+    // The _fetchWithRetry function will handle retries and 4xx/5xx errors
+    const response = await _fetchWithRetry(API_URL, fetchOptions);
 
     const responseData = await response.json();
     
@@ -149,7 +226,7 @@ async function _generateSystemWithGemini(systemPrompt, userPrompt, apiKey) {
 
     const jsonString = responseData.candidates[0].content.parts[0].text;
     
-    // Clean the response: The AI *should* only return JSON, but sometimes includes ```json ... ```
+    // Clean the response
     const cleanedJsonString = jsonString.replace(/^```json\n/, '').replace(/\n```$/, '');
 
     try {
@@ -212,10 +289,16 @@ async function getAnalysisFromPrompt(userQuestion, contextJson, apiKey, provider
 
 /**
  * [PRIVATE] Calls the Google Gemini API to get analysis.
+ * [MODIFIED] Uses _fetchWithRetry to handle transient errors.
  * @returns {Promise<string|null>} Text answer or null.
  */
 async function _getAnalysisWithGemini(systemPrompt, userQuestion, apiKey) {
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+    // TODO: [SECURITY] This is a client-side call using a user-provided API key.
+    // This architecture is unsafe for production. Before merging to a public site,
+    // this function MUST be refactored to call a secure server-side proxy
+    // that manages the API key and makes the actual request to the Google API.
+
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`;
 
     const requestBody = {
         "contents": [
@@ -229,17 +312,15 @@ async function _getAnalysisWithGemini(systemPrompt, userQuestion, apiKey) {
         // Using default generation config for chat
     };
 
-    const response = await fetch(API_URL, {
+    // MODIFIED: Create the options object for fetch
+    const fetchOptions = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody)
-    });
+    };
 
-    if (!response.ok) {
-        const errorBody = await response.json();
-        console.error("Gemini API Error:", errorBody);
-        throw new Error(`Google API request failed: ${errorBody.error?.message || response.statusText}`);
-    }
+    // MODIFIED: Call _fetchWithRetry instead of fetch
+    const response = await _fetchWithRetry(API_URL, fetchOptions);
 
     const responseData = await response.json();
 
