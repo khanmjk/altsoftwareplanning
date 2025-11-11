@@ -14,11 +14,16 @@
 async function _fetchWithRetry(url, options, maxRetries = 5, initialDelay = 1000) {
     let attempt = 0;
     while (attempt < maxRetries) {
+        // [LOG] Added for debugging
+        console.log(`[AI-DEBUG] Fetch Attempt ${attempt + 1}/${maxRetries}: POST to ${url.split('?')[0]}`);
+        
         try {
             const response = await fetch(url, options);
 
             // 1. Success case: The request was successful.
             if (response.ok) {
+                // [LOG] Added for debugging
+                console.log(`[AI-DEBUG] Fetch Attempt ${attempt + 1} Succeeded (Status: ${response.status})`);
                 return response;
             }
 
@@ -26,14 +31,14 @@ async function _fetchWithRetry(url, options, maxRetries = 5, initialDelay = 1000
             //    (e.g., bad API key, malformed request).
             if (response.status >= 400 && response.status < 500) {
                 const errorBody = await response.json();
-                console.error(`Fetch Error (4xx): ${response.status}. Not retrying.`, errorBody);
+                console.error(`[AI-DEBUG] Fetch Error (4xx): ${response.status}. Not retrying.`, errorBody);
                 // We'll let the calling function format the specific error message.
                 throw new Error(`Google API request failed: ${errorBody.error?.message || response.statusText}`);
             }
 
             // 3. Server Error (5xx) or Rate Limit (429): This is a retry-able error.
             if (response.status >= 500 || response.status === 429) {
-                console.warn(`Fetch Error (5xx/429): ${response.status}. Retrying... (Attempt ${attempt + 1}/${maxRetries})`);
+                console.warn(`[AI-DEBUG] Fetch Error (5xx/429): ${response.status}. Retrying... (Attempt ${attempt + 1}/${maxRetries})`);
                 // We throw an error to trigger the catch block's retry logic.
                 throw new Error(`Retryable error: ${response.statusText}`);
             }
@@ -49,11 +54,11 @@ async function _fetchWithRetry(url, options, maxRetries = 5, initialDelay = 1000
                 throw error;
             }
 
-            console.warn(`Fetch attempt ${attempt + 1} failed: ${error.message}`);
+            console.warn(`[AI-DEBUG] Fetch attempt ${attempt + 1} failed: ${error.message}`);
             attempt++;
             
             if (attempt >= maxRetries) {
-                console.error("Fetch failed after all retries.", error);
+                console.error("[AI-DEBUG] Fetch failed after all retries.", error);
                 throw new Error(`API request failed after ${maxRetries} attempts. Last error: ${error.message}`);
             }
 
@@ -61,7 +66,7 @@ async function _fetchWithRetry(url, options, maxRetries = 5, initialDelay = 1000
             const jitter = Math.random() * 1000; // Add up to 1 second of jitter
             const delay = initialDelay * Math.pow(2, attempt - 1) + jitter;
             
-            console.log(`Waiting ${delay.toFixed(0)}ms before next retry...`);
+            console.log(`[AI-DEBUG] Waiting ${delay.toFixed(0)}ms before next retry...`);
             await new Promise(resolve => setTimeout(resolve, delay));
         }
     }
@@ -80,7 +85,8 @@ async function _fetchWithRetry(url, options, maxRetries = 5, initialDelay = 1000
  * @returns {Promise<object|null>} A promise that resolves to the new currentSystemData object or null on failure.
  */
 async function generateSystemFromPrompt(userPrompt, apiKey, provider) {
-    console.log(`AI: Routing system generation for provider: ${provider}`);
+    // [LOG] Added for debugging
+    console.log(`[AI-DEBUG] generateSystemFromPrompt: Routing for provider '${provider}' with prompt: "${userPrompt}"`);
     
     // 1. Get the shared "System Prompt" (the schema and rules)
     const systemPrompt = _getSystemGenerationPrompt();
@@ -129,11 +135,14 @@ async function generateSystemFromPrompt(userPrompt, apiKey, provider) {
  * @returns {string} The detailed system prompt.
  */
 function _getSystemGenerationPrompt() {
+    // [LOG] Added for debugging
+    console.log("[AI-DEBUG] _getSystemGenerationPrompt: Building master system prompt...");
+    
     // This is the most important part. We give the AI its persona, rules, and the exact schema.
     // We will use one of our sample data files as a perfect example.
     const schemaExample = JSON.stringify(sampleSystemDataShopSphere, null, 2); // Using ShopSphere as a robust example
 
-    return `
+    const promptString = `
 You are a seasoned VP of Engineering and strategic business partner, acting as a founding technology leader. Your purpose is to help a user create a tech business and organize their software development teams.
 
 Your sole task is to take a user's prompt (e.g., "An excel spreadsheet company," "A video streaming app") and generate a single, complete, valid JSON object representing the entire software system, organizational structure, and three-year roadmap. This JSON will be used in an educational tool for software managers.
@@ -171,6 +180,9 @@ ${schemaExample}
 
 Proceed to generate the new JSON object based on the user's prompt.
 `;
+    // [LOG] Added for debugging
+    console.log(`[AI-DEBUG] _getSystemGenerationPrompt: Master prompt length: ${promptString.length} chars.`);
+    return promptString;
 }
 
 /**
@@ -179,6 +191,9 @@ Proceed to generate the new JSON object based on the user's prompt.
  * @returns {Promise<object|null>} Parsed JSON object or null.
  */
 async function _generateSystemWithGemini(systemPrompt, userPrompt, apiKey) {
+    // [LOG] Added for debugging
+    console.log("[AI-DEBUG] _generateSystemWithGemini: Preparing to call Gemini for system generation...");
+    
     // TODO: [SECURITY] This is a client-side call using a user-provided API key.
     // This architecture is unsafe for production. Before merging to a public site,
     // this function MUST be refactored to call a secure server-side proxy
@@ -213,26 +228,41 @@ async function _generateSystemWithGemini(systemPrompt, userPrompt, apiKey) {
         body: JSON.stringify(requestBody)
     };
 
+    // [LOG] Added for debugging
+    console.log(`[AI-DEBUG] _generateSystemWithGemini: Calling _fetchWithRetry for ${API_URL.split('?')[0]}`);
+
     // MODIFIED: Call _fetchWithRetry instead of fetch
     // The _fetchWithRetry function will handle retries and 4xx/5xx errors
     const response = await _fetchWithRetry(API_URL, fetchOptions);
 
+    // [LOG] Added for debugging
+    console.log("[AI-DEBUG] _generateSystemWithGemini: Fetch successful. Parsing response data...");
+    
     const responseData = await response.json();
     
     if (!responseData.candidates || !responseData.candidates[0].content.parts[0].text) {
-        console.error("Invalid response structure from Gemini:", responseData);
+        console.error("[AI-DEBUG] Invalid response structure from Gemini:", responseData);
         throw new Error("Received an invalid response from the AI.");
     }
 
     const jsonString = responseData.candidates[0].content.parts[0].text;
     
+    // [LOG] Added for debugging
+    console.log(`[AI-DEBUG] _generateSystemWithGemini: Received raw response string (${jsonString.length} chars).`);
+
     // Clean the response
     const cleanedJsonString = jsonString.replace(/^```json\n/, '').replace(/\n```$/, '');
 
+    // [LOG] Added for debugging
+    console.log(`[AI-DEBUG] _generateSystemWithGemini: Cleaned JSON string. Attempting to parse...`);
+
     try {
-        return JSON.parse(cleanedJsonString);
+        const parsedJson = JSON.parse(cleanedJsonString);
+        // [LOG] Added for debugging
+        console.log("[AI-DEBUG] _generateSystemWithGemini: JSON parsed successfully.");
+        return parsedJson;
     } catch (e) {
-        console.error("Failed to parse JSON response from AI:", e);
+        console.error("[AI-DEBUG] _generateSystemWithGemini: FAILED to parse JSON response.", e);
         console.error("Raw AI response:", jsonString);
         throw new Error("The AI returned invalid JSON. Please try again.");
     }
@@ -255,7 +285,8 @@ async function _generateSystemWithGemini(systemPrompt, userPrompt, apiKey) {
  * @returns {Promise<string|null>} A promise that resolves to the AI's text answer or null on failure.
  */
 async function getAnalysisFromPrompt(userQuestion, contextJson, apiKey, provider) {
-    console.log(`AI: Routing analysis for provider: ${provider}`);
+    // [LOG] Added for debugging
+    console.log(`[AI-DEBUG] getAnalysisFromPrompt: Routing for provider '${provider}' with question: "${userQuestion}"`);
     
     // 1. Build the analysis prompt
     const systemPrompt = `You are a helpful software planning assistant. Analyze the following JSON data, which represents the user's current view, to answer their question.
@@ -265,6 +296,9 @@ async function getAnalysisFromPrompt(userQuestion, contextJson, apiKey, provider
     
     Answer the user's question based *only* on the data provided. Be concise and helpful.`;
     
+    // [LOG] Added for debugging
+    console.log(`[AI-DEBUG] getAnalysisFromPrompt: System prompt and context JSON length: ${systemPrompt.length} chars.`);
+
     // 2. Route to the correct provider
     try {
         switch (provider) {
@@ -293,6 +327,9 @@ async function getAnalysisFromPrompt(userQuestion, contextJson, apiKey, provider
  * @returns {Promise<string|null>} Text answer or null.
  */
 async function _getAnalysisWithGemini(systemPrompt, userQuestion, apiKey) {
+    // [LOG] Added for debugging
+    console.log("[AI-DEBUG] _getAnalysisWithGemini: Preparing to call Gemini for analysis...");
+    
     // TODO: [SECURITY] This is a client-side call using a user-provided API key.
     // This architecture is unsafe for production. Before merging to a public site,
     // this function MUST be refactored to call a secure server-side proxy
@@ -319,17 +356,28 @@ async function _getAnalysisWithGemini(systemPrompt, userQuestion, apiKey) {
         body: JSON.stringify(requestBody)
     };
 
+    // [LOG] Added for debugging
+    console.log(`[AI-DEBUG] _getAnalysisWithGemini: Calling _fetchWithRetry for ${API_URL.split('?')[0]}`);
+
     // MODIFIED: Call _fetchWithRetry instead of fetch
     const response = await _fetchWithRetry(API_URL, fetchOptions);
+
+    // [LOG] Added for debugging
+    console.log("[AI-DEBUG] _getAnalysisWithGemini: Fetch successful. Parsing response data...");
 
     const responseData = await response.json();
 
     if (!responseData.candidates || !responseData.candidates[0].content.parts[0].text) {
-        console.error("Invalid response structure from Gemini:", responseData);
+        console.error("[AI-DEBUG] Invalid response structure from Gemini:", responseData);
         throw new Error("Received an invalid response from the AI.");
     }
 
-    return responseData.candidates[0].content.parts[0].text;
+    const textResponse = responseData.candidates[0].content.parts[0].text;
+    
+    // [LOG] Added for debugging
+    console.log(`[AI-DEBUG] _getAnalysisWithGemini: Received analysis text: "${textResponse}"`);
+
+    return textResponse;
 }
 
 // TODO: Implement private analysis helpers for other providers
