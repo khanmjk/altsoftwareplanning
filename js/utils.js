@@ -562,19 +562,22 @@ function ensureInitiativePlanningYears(initiatives) {
 
 /**
  * Validates a newly generated AI system object against our core schema rules.
- * This is a strict validator, not an augmenter. It checks for existence, 
- * uniqueness, and relational integrity as defined in the AI generation prompt.
+ * [MODIFIED] Added console logs for debugging.
  *
  * @param {object} systemData The parsed JSON object from the AI.
  * @returns {{isValid: boolean, errors: string[], warnings: string[]}}
  */
 function validateGeneratedSystem(systemData) {
+    console.log("[AI-VALIDATE] Starting AI System Validation...");
     const errors = [];
     const warnings = [];
 
     // --- 1. Top-Level Existence Checks ---
+    console.log("[AI-VALIDATE] Checking top-level data structure...");
     if (!systemData || typeof systemData !== 'object' || Array.isArray(systemData)) {
-        return { isValid: false, errors: ["AI returned no data or the data was not a JSON object."], warnings };
+        errors.push("AI returned no data or the data was not a JSON object.");
+        console.error("[AI-VALIDATE] Basic structure validation FAILED. Data is not a valid object.");
+        return { isValid: false, errors, warnings };
     }
 
     const requiredString = (key) => {
@@ -608,7 +611,6 @@ function validateGeneratedSystem(systemData) {
 
     requiredString('systemName');
     
-    // [MODIFIED] Add all critical arrays and objects
     const criticalArrays = [
         'teams', 'allKnownEngineers', 'services', 
         'yearlyInitiatives', 'goals', 'definedThemes', 
@@ -621,7 +623,6 @@ function validateGeneratedSystem(systemData) {
         }
     }
     
-    // [NEW] Check for workPackages (can be empty, but must be an array)
     if (!Array.isArray(systemData.workPackages)) {
         errors.push(`Required field "workPackages" is missing or not an array.`);
         canProceed = false;
@@ -629,7 +630,6 @@ function validateGeneratedSystem(systemData) {
         warnings.push(`Array "workPackages" is empty. Rule #10 (Generate Work Packages) was not fully followed.`);
     }
 
-    // [NEW] Check for capacityConfiguration object
     if (!systemData.capacityConfiguration || typeof systemData.capacityConfiguration !== 'object') {
         errors.push(`Required field "capacityConfiguration" is missing or not an object.`);
         canProceed = false;
@@ -638,10 +638,14 @@ function validateGeneratedSystem(systemData) {
     optionalArray('seniorManagers');
     
     if (!canProceed) {
+        console.error("[AI-VALIDATE] Basic structure validation FAILED. Critical arrays or objects are missing.");
         return { isValid: false, errors, warnings }; // Stop if basic structure is wrong
     }
+    console.log("[AI-VALIDATE] Basic structure OK.");
+
 
     // --- 2. Build Look-up Sets & Check Uniqueness (Rule #6) ---
+    console.log("[AI-VALIDATE] Building look-up sets and checking uniqueness...");
     const teamIds = new Set();
     const teamNames = new Set();
     systemData.teams.forEach((team, i) => {
@@ -664,8 +668,8 @@ function validateGeneratedSystem(systemData) {
     const pmtIds = new Set(systemData.pmts.map(p => p.pmtId).filter(Boolean));
     const goalIds = new Set(systemData.goals.map(g => g.goalId).filter(Boolean));
     const themeIds = new Set(systemData.definedThemes.map(t => t.themeId).filter(Boolean));
-    const pmIds = new Set(systemData.projectManagers.map(p => p.pmId).filter(Boolean)); // [NEW]
-    const workPackageIds = new Set(systemData.workPackages.map(wp => wp.workPackageId).filter(Boolean)); // [NEW]
+    const pmIds = new Set(systemData.projectManagers.map(p => p.pmId).filter(Boolean));
+    const workPackageIds = new Set(systemData.workPackages.map(wp => wp.workPackageId).filter(Boolean));
     
     const engineerNameMap = new Map();
     const engineerNameCheck = new Set();
@@ -679,8 +683,10 @@ function validateGeneratedSystem(systemData) {
     });
 
     // --- 3. Relational Integrity Checks (Rule #6, 7, 9, 10) ---
+    console.log("[AI-VALIDATE] Checking relational integrity (links between data)...");
 
     // Check Teams
+    console.log(`[AI-VALIDATE] ... checking ${systemData.teams.length} Teams (SDMs, PMTs, Engineers, Capacity)...`);
     systemData.teams.forEach(team => {
         if (team.sdmId && !sdmIds.has(team.sdmId)) {
             errors.push(`Team "${team.teamName}" uses a non-existent sdmId: ${team.sdmId}`);
@@ -700,7 +706,6 @@ function validateGeneratedSystem(systemData) {
             }
         }
         
-        // [NEW] Check for Rule 9 (Capacity Constraints)
         if (!team.teamCapacityAdjustments || typeof team.teamCapacityAdjustments !== 'object') {
             errors.push(`Team "${team.teamName}" is missing "teamCapacityAdjustments" object.`);
         } else {
@@ -712,13 +717,13 @@ function validateGeneratedSystem(systemData) {
             }
         }
 
-        // [NEW] Check for Rule 5 (Attributes)
         if (!team.attributes || typeof team.attributes !== 'object') {
             warnings.push(`Team "${team.teamName}" is missing "attributes" object.`);
         }
     });
 
-    // Check allKnownEngineers for invalid team assignments
+    // Check allKnownEngineers
+    console.log(`[AI-VALIDATE] ... checking ${systemData.allKnownEngineers.length} Engineers (roster consistency)...`);
     engineerNameMap.forEach((eng, engName) => {
         if (eng.currentTeamId && !teamIds.has(eng.currentTeamId)) {
             errors.push(`Engineer "${engName}" is assigned to a non-existent teamId: ${eng.currentTeamId}`);
@@ -726,25 +731,25 @@ function validateGeneratedSystem(systemData) {
     });
 
     // Check Services
+    console.log(`[AI-VALIDATE] ... checking ${systemData.services.length} Services (Ownership, Dependencies, Attributes)...`);
     systemData.services.forEach(service => {
         if (service.owningTeamId && !teamIds.has(service.owningTeamId)) {
             errors.push(`Service "${service.serviceName}" is owned by a non-existent teamId: ${service.owningTeamId}`);
         }
         
-        // [NEW] Check for Rule 7 (Interconnections) - as warnings
         if (!service.serviceDependencies || service.serviceDependencies.length === 0) {
             warnings.push(`Service "${service.serviceName}" has no "serviceDependencies".`);
         }
         if (!service.platformDependencies || service.platformDependencies.length === 0) {
             warnings.push(`Service "${service.serviceName}" has no "platformDependencies".`);
         }
-        // [NEW] Check for Rule 5 (Attributes)
         if (!service.attributes || typeof service.attributes !== 'object') {
             warnings.push(`Service "${service.serviceName}" is missing "attributes" object.`);
         }
     });
 
     // Check Initiatives
+    console.log(`[AI-VALIDATE] ... checking ${systemData.yearlyInitiatives.length} Initiatives (Goals, Themes, Personnel, Work Packages)...`);
     systemData.yearlyInitiatives.forEach(init => {
         if (!init.initiativeId) errors.push('An initiative is missing its "initiativeId".');
         
@@ -764,7 +769,6 @@ function validateGeneratedSystem(systemData) {
             }
         }
         
-        // [NEW] Check for Rule 6 (Personnel Links)
         const checkPersonnel = (personnel, type) => {
             if (!personnel) {
                 warnings.push(`Initiative "${init.title}" is missing "${type}".`);
@@ -785,7 +789,6 @@ function validateGeneratedSystem(systemData) {
                     idSet = engineerNameMap; 
                     idField = 'name'; // Engineer is checked by name
                     break;
-                // 'seniorManager' is also a valid type
                 case 'seniorManager':
                      idSet = new Set(systemData.seniorManagers.map(sm => sm.seniorManagerId));
                      break;
@@ -794,7 +797,7 @@ function validateGeneratedSystem(systemData) {
                     return;
             }
             
-            const idToFind = personnel[idField];
+            const idToFind = (personnel.type === 'engineer') ? personnel.name : personnel.id; // Use name for engineer, id for others
             if (!idSet.has(idToFind)) {
                 errors.push(`Initiative "${init.title}" lists a non-existent ${type}: "${personnel.name}" (ID/Name: ${idToFind}).`);
             }
@@ -803,12 +806,10 @@ function validateGeneratedSystem(systemData) {
         checkPersonnel(init.projectManager, 'projectManager');
         checkPersonnel(init.technicalPOC, 'technicalPOC');
 
-        // [NEW] Check for Rule 7 (Interconnections) - as warning
         if (!init.impactedServiceIds || init.impactedServiceIds.length === 0) {
             warnings.push(`Initiative "${init.title}" has no "impactedServiceIds".`);
         }
 
-        // [NEW] Check for Rule 10 (Work Packages)
         if (!init.workPackageIds || !Array.isArray(init.workPackageIds)) {
             errors.push(`Initiative "${init.title}" is missing "workPackageIds" array.`);
         } else if (init.workPackageIds.length > 0) {
@@ -820,13 +821,13 @@ function validateGeneratedSystem(systemData) {
         }
     });
 
-    // [NEW] Check Work Packages
+    // Check Work Packages
+    console.log(`[AI-VALIDATE] ... checking ${systemData.workPackages.length} Work Packages (links back to initiatives)...`);
     systemData.workPackages.forEach(wp => {
         if (!wp.initiativeId || !systemData.yearlyInitiatives.some(i => i.initiativeId === wp.initiativeId)) {
             errors.push(`WorkPackage "${wp.workPackageId}" has an invalid or missing "initiativeId": ${wp.initiativeId}`);
         }
         
-        // Check that the parent initiative also links back to this WP
         const parentInit = systemData.yearlyInitiatives.find(i => i.initiativeId === wp.initiativeId);
         if (parentInit && (!parentInit.workPackageIds || !parentInit.workPackageIds.includes(wp.workPackageId))) {
              errors.push(`Data inconsistency: WorkPackage "${wp.workPackageId}" links to initiative "${parentInit.title}", but the initiative does not link back to it in its "workPackageIds" array.`);
@@ -835,6 +836,12 @@ function validateGeneratedSystem(systemData) {
 
     
     // --- 4. Final Result ---
+    if (errors.length > 0) {
+        console.error(`[AI-VALIDATE] Validation FAILED. Errors: ${errors.length}, Warnings: ${warnings.length}`);
+    } else {
+        console.log(`[AI-VALIDATE] Validation PASSED. Errors: 0, Warnings: ${warnings.length}`);
+    }
+    
     return {
         isValid: errors.length === 0,
         errors,
