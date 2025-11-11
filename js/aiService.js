@@ -147,7 +147,7 @@ function _getSystemGenerationPrompt() {
     // [NEW] Define a minimal schema example instead of the full sample data
     // !!!! This drastically reduces the input token count to prevent context window errors.
     
-    const minimalSchemaExample = {
+const minimalSchemaExample = {
       "systemName": "Example System",
       "systemDescription": "A brief description of the system.",
       "seniorManagers": [
@@ -265,7 +265,7 @@ function _getSystemGenerationPrompt() {
           "projectManager": { "type": "pm", "id": "pm-example", "name": "Example Project Manager" },
           "owner": { "type": "sdm", "id": "sdm-example", "name": "Example SDM" },
           "technicalPOC": { "type": "engineer", "id": "eng-example", "name": "Example Engineer 1 (L4)" },
-          "workPackageIds": [],
+          "workPackageIds": ["wp-example-001"], // This ID must be present below
           "attributes": {
             "pmCapacityNotes": "Example note.",
             "planningYear": 2025
@@ -279,11 +279,30 @@ function _getSystemGenerationPrompt() {
         { "themeId": "theme-example", "name": "Example Theme", "description": "...", "relatedGoalIds": ["goal-example"], "attributes": {} }
       ],
       "archivedYearlyPlans": [],
-      "workPackages": [],
+      // [MODIFIED] This array is no longer empty.
+      "workPackages": [
+        {
+          "workPackageId": "wp-example-001", // This ID matches the one in yearlyInitiatives
+          "initiativeId": "init-example-001",
+          "name": "Example Work Package",
+          "description": "The first phase of work for the example initiative.",
+          "owner": { "type": "sdm", "id": "sdm-example", "name": "Example SDM" },
+          "status": "Defined",
+          "deliveryPhases": [
+            { "phaseName": "Requirements & Definition", "status": "Completed", "startDate": "2025-01-01", "endDate": "2025-01-31", "notes": "Initial spec complete." }
+          ],
+          "plannedDeliveryDate": "2025-12-31",
+          "actualDeliveryDate": null,
+          "impactedTeamAssignments": [ { "teamId": "team-example", "sdeDaysEstimate": 100 } ],
+          "totalCapacitySDEdays": 100,
+          "impactedServiceIds": ["ExampleService"],
+          "dependencies": [],
+          "attributes": {}
+        }
+      ],
       "calculatedCapacityMetrics": null,
       "attributes": {}
     };
-
     // [MODIFIED] Use the new minimal example
     const schemaExample = JSON.stringify(minimalSchemaExample, null, 2);    
 
@@ -298,17 +317,19 @@ Your sole task is to take a user's prompt (e.g., "An excel spreadsheet company,"
 
 2.  **ADHERE TO SCHEMA:** The JSON you generate MUST strictly follow the structure and data types of the example schema provided below. This is the highest priority.
 
-3.  **REAL-WORLD INDUSTRY PRACTICE (Conway's Law):** The generated data must represent real-world industry practice. You must organize the software stack into teams. Teams own services that expose APIs. Services must have plausible upstream and downstream relationships (serviceDependencies). The organizational structure (managers, teams) and the software architecture (services) must be logically aligned.
+3.  **REAL-WORLD INDUSTRY PRACTICE (Conway's Law):** The generated data must represent real-world industry practice. You must organize the software stack into teams (2-Pizza teams). Teams own services that expose APIs. Services must have plausible upstream and downstream relationships (serviceDependencies). The organizational structure (managers, teams) and the software architecture (services) must be logically aligned.
 
-4.  **SYNTHESIZE A 3-YEAR ROADMAP:** You must synthesize a rich, detailed three-year roadmap. Populate the \`yearlyInitiatives\` array with initiatives for the next three years (e.g., 2025, 2026, 2027). This plan must be detailed:
-    * Create logical initiatives that build upon each other (e.g., Year 1: MVP & Compliance; Year 2: Scale & New Features; Year 3: Global Expansion).
+4.  **SYNTHESIZE A RICH, FRONT-LOADED 3-YEAR ROADMAP:** This is critical. You must generate a *rich and detailed* three-year plan. The plan must be **front-loaded**, reflecting a realistic startup environment.
+    * **Year 1 (e.g., 2025):** Must be very heavy. Generate approximately **20 initiatives**. Focus on MVP, core infrastructure, compliance, and initial features.
+    * **Year 2 (e.g., 2026):** Must be detailed. Generate approximately **10 initiatives**. Focus on scaling, new feature verticals, and addressing tech debt.
+    * **Year 3 (e.g., 2027):** Must be high-level. Generate approximately **7 initiatives**. Focus on global expansion, new R&D, and major architectural shifts.
     * Include detailed SDE estimates in the \`assignments\` array for each initiative.
     * Assign \`isProtected: true\` to plausible KTLO (Keep The Lights On) or mandatory compliance initiatives.
 
-5.  **POPULATE ALL FIELDS:** You must generate rich, plausible data for ALL key arrays: \`seniorManagers\`, \`sdms\`, \`pmts\`, \`projectManagers\`, \`teams\`, \`allKnownEngineers\` (including realistic skills, levels, and AI SWEs), \`services\`, \`yearlyInitiatives\`, \`goals\`, and \`definedThemes\`.
-    * The \`goals\` and \`definedThemes\` must logically connect to your 3-year roadmap.
+5.  **POPULATE ALL FIELDS AND ATTRIBUTES:** You must generate rich, plausible data for ALL key arrays: \`seniorManagers\`, \`sdms\`, \`pmts\`, \`projectManagers\`, \`teams\` (including \`awayTeamMembers\` for some), \`allKnownEngineers\` (including realistic \`attributes.skills\`, \`attributes.yearsOfExperience\`, and some \`attributes.isAISWE: true\`), \`services\`, \`yearlyInitiatives\`, \`goals\`, and \`definedThemes\`.
+    * **Crucially, you *must* also populate the \`attributes: {}\` object** for most items with 1-2 realistic, non-schema-defined pieces of metadata (e.g., {"cost-center": "123-A"} for a team, {"criticality": "high"} for a service).
 
-6.  **ENSURE CONSISTENCY (CRITICAL):**
+6.  **ENSURE 100% CONSISTENCY (CRITICAL):**
     * All \`teamId\` values in the \`teams\` array must be unique.
     * All \`sdmId\`s in the \`sdms\` array must be unique.
     * The \`owningTeamId\` in each \`service\` must match a \`teamId\` from the \`teams\` array.
@@ -318,6 +339,32 @@ Your sole task is to take a user's prompt (e.g., "An excel spreadsheet company,"
     * Initiative \`assignments\` must use valid \`teamId\`s.
     * Initiative \`themes\` must use valid \`themeId\`s from the \`definedThemes\` array.
     * Initiative \`primaryGoalId\` must use a valid \`goalId\` from the \`goals\` array.
+    * **Personnel Links:** The \`owner\`, \`projectManager\`, and \`technicalPOC\` objects on initiatives and goals *must* be valid. The \`id\` must correspond to a real \`sdmId\`, \`pmtId\`, \`pmId\`, or \`seniorManagerId\`, and the \`name\` must match. For \`technicalPOC\` of type 'engineer', the \`name\` must match an engineer in \`allKnownEngineers\`.
+
+7.  **CREATE DENSE INTERCONNECTIONS:** This is vital for the tool's planning features. The generated system *must* be highly interconnected.
+    * **Service Dependencies:** Services *must* have plausible \`serviceDependencies\`. Do not create a system where all services are isolated.
+    * **Platform Dependencies:** Services *must* list realistic \`platformDependencies\` (e.g., "AWS S3", "PostgreSQL", "Kafka", "AWS Lambda").
+    * **API Dependencies:** APIs *must* call other APIs. Populate \`dependentApis\` to show how services interact at a technical level.
+    * **Initiative Impact:** Initiatives *must* impact services. Populate \`impactedServiceIds\` for each initiative to show what parts of the system it touches.
+
+8.  **REALISTIC TEAM LOADING:** The \`sdeYears\` assignments in your roadmap must create realistic challenges. Some teams (especially platform or core product teams) should be heavily loaded or even overloaded in Year 1, reflecting real-world bottlenecks.
+
+9.  **SIMULATE REALISTIC CAPACITY CONSTRAINTS:** This is essential for the planning tool. You *must* populate the capacity model with realistic, non-zero data.
+    * Set \`capacityConfiguration.globalConstraints.publicHolidays\` to a realistic number (e.g., 8-12).
+    * Add 1-2 plausible \`orgEvents\` to \`globalConstraints.orgEvents\`.
+    * Set realistic \`defaultEstimatedDays\` for the defined \`leaveTypes\`.
+    * For *every* team in the \`teams\` array, you *must* provide realistic, non-zero values for \`teamCapacityAdjustments\`:
+        * Set \`avgOverheadHoursPerWeekPerSDE\` to a plausible number (e.g., 4-8 hours).
+        * Set \`aiProductivityGainPercent\` to a value between 5 and 25.
+        * Add 1-2 \`teamActivities\` (like training or offsites) for *some* teams.
+        * Add *some* non-zero data to \`variableLeaveImpact\` for at least a few teams (e.g., for 'maternity').
+
+10. **[NEW RULE] GENERATE WORK PACKAGES:** You *must* generate 1-3 \`workPackages\` for *at least 10-15 initiatives* (especially for Year 1).
+    * Each work package *must* have a valid \`initiativeId\`.
+    * Each work package *must* link to the initiative by also adding its \`workPackageId\` to the \`yearlyInitiatives.workPackageIds\` array.
+    * Each work package *must* have realistic \`deliveryPhases\` populated from this list: "${JSON.stringify(STANDARD_WORK_PACKAGE_PHASES)}".
+ 
+11.  **DO NOT TRUNCATE:** (This was old Rule 8) Your *entire* response must be a single, complete JSON object. Do not stop part-way. Ensure all brackets and braces are closed.
 
 **JSON SCHEMA EXAMPLE:**
 Here is an example of the exact JSON structure you must follow.

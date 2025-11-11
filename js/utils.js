@@ -608,11 +608,11 @@ function validateGeneratedSystem(systemData) {
 
     requiredString('systemName');
     
-    // Check all required arrays. If these fail, we can't do integrity checks.
+    // [MODIFIED] Add all critical arrays and objects
     const criticalArrays = [
         'teams', 'allKnownEngineers', 'services', 
         'yearlyInitiatives', 'goals', 'definedThemes', 
-        'sdms', 'pmts'
+        'sdms', 'pmts', 'projectManagers'
     ];
     let canProceed = true;
     for (const key of criticalArrays) {
@@ -621,9 +621,21 @@ function validateGeneratedSystem(systemData) {
         }
     }
     
-    // Check optional arrays (can be empty)
+    // [NEW] Check for workPackages (can be empty, but must be an array)
+    if (!Array.isArray(systemData.workPackages)) {
+        errors.push(`Required field "workPackages" is missing or not an array.`);
+        canProceed = false;
+    } else if (systemData.workPackages.length === 0) {
+        warnings.push(`Array "workPackages" is empty. Rule #10 (Generate Work Packages) was not fully followed.`);
+    }
+
+    // [NEW] Check for capacityConfiguration object
+    if (!systemData.capacityConfiguration || typeof systemData.capacityConfiguration !== 'object') {
+        errors.push(`Required field "capacityConfiguration" is missing or not an object.`);
+        canProceed = false;
+    }
+    
     optionalArray('seniorManagers');
-    optionalArray('projectManagers');
     
     if (!canProceed) {
         return { isValid: false, errors, warnings }; // Stop if basic structure is wrong
@@ -652,6 +664,8 @@ function validateGeneratedSystem(systemData) {
     const pmtIds = new Set(systemData.pmts.map(p => p.pmtId).filter(Boolean));
     const goalIds = new Set(systemData.goals.map(g => g.goalId).filter(Boolean));
     const themeIds = new Set(systemData.definedThemes.map(t => t.themeId).filter(Boolean));
+    const pmIds = new Set(systemData.projectManagers.map(p => p.pmId).filter(Boolean)); // [NEW]
+    const workPackageIds = new Set(systemData.workPackages.map(wp => wp.workPackageId).filter(Boolean)); // [NEW]
     
     const engineerNameMap = new Map();
     const engineerNameCheck = new Set();
@@ -664,7 +678,7 @@ function validateGeneratedSystem(systemData) {
         }
     });
 
-    // --- 3. Relational Integrity Checks (Rule #6) ---
+    // --- 3. Relational Integrity Checks (Rule #6, 7, 9, 10) ---
 
     // Check Teams
     systemData.teams.forEach(team => {
@@ -675,17 +689,32 @@ function validateGeneratedSystem(systemData) {
             errors.push(`Team "${team.teamName}" uses a non-existent pmtId: ${team.pmtId}`);
         }
         
-        // Check team.engineers against allKnownEngineers
         for (const engName of (team.engineers || [])) {
             if (!engineerNameMap.has(engName)) {
                 errors.push(`Team "${team.teamName}" lists an engineer "${engName}" who is not in 'allKnownEngineers'.`);
             } else {
-                // Check consistency: Engineer's roster must list this team
                 const engData = engineerNameMap.get(engName);
                 if (engData.currentTeamId !== team.teamId) {
                     errors.push(`Data inconsistency: Engineer "${engName}" is in Team "${team.teamName}"'s list, but their 'currentTeamId' in 'allKnownEngineers' is "${engData.currentTeamId}".`);
                 }
             }
+        }
+        
+        // [NEW] Check for Rule 9 (Capacity Constraints)
+        if (!team.teamCapacityAdjustments || typeof team.teamCapacityAdjustments !== 'object') {
+            errors.push(`Team "${team.teamName}" is missing "teamCapacityAdjustments" object.`);
+        } else {
+            if (typeof team.teamCapacityAdjustments.avgOverheadHoursPerWeekPerSDE !== 'number') {
+                warnings.push(`Team "${team.teamName}" is missing "avgOverheadHoursPerWeekPerSDE".`);
+            }
+            if (typeof team.teamCapacityAdjustments.aiProductivityGainPercent !== 'number') {
+                warnings.push(`Team "${team.teamName}" is missing "aiProductivityGainPercent".`);
+            }
+        }
+
+        // [NEW] Check for Rule 5 (Attributes)
+        if (!team.attributes || typeof team.attributes !== 'object') {
+            warnings.push(`Team "${team.teamName}" is missing "attributes" object.`);
         }
     });
 
@@ -700,6 +729,18 @@ function validateGeneratedSystem(systemData) {
     systemData.services.forEach(service => {
         if (service.owningTeamId && !teamIds.has(service.owningTeamId)) {
             errors.push(`Service "${service.serviceName}" is owned by a non-existent teamId: ${service.owningTeamId}`);
+        }
+        
+        // [NEW] Check for Rule 7 (Interconnections) - as warnings
+        if (!service.serviceDependencies || service.serviceDependencies.length === 0) {
+            warnings.push(`Service "${service.serviceName}" has no "serviceDependencies".`);
+        }
+        if (!service.platformDependencies || service.platformDependencies.length === 0) {
+            warnings.push(`Service "${service.serviceName}" has no "platformDependencies".`);
+        }
+        // [NEW] Check for Rule 5 (Attributes)
+        if (!service.attributes || typeof service.attributes !== 'object') {
+            warnings.push(`Service "${service.serviceName}" is missing "attributes" object.`);
         }
     });
 
@@ -722,7 +763,76 @@ function validateGeneratedSystem(systemData) {
                 errors.push(`Initiative "${init.title}" is assigned to a non-existent teamId: ${assignment.teamId || 'null'}`);
             }
         }
+        
+        // [NEW] Check for Rule 6 (Personnel Links)
+        const checkPersonnel = (personnel, type) => {
+            if (!personnel) {
+                warnings.push(`Initiative "${init.title}" is missing "${type}".`);
+                return;
+            }
+            if (!personnel.type || !personnel.id || !personnel.name) {
+                errors.push(`Initiative "${init.title}" has an incomplete "${type}" object.`);
+                return;
+            }
+            let idSet;
+            let idField = 'id';
+            
+            switch(personnel.type) {
+                case 'sdm': idSet = sdmIds; break;
+                case 'pmt': idSet = pmtIds; break;
+                case 'pm': idSet = pmIds; break;
+                case 'engineer': 
+                    idSet = engineerNameMap; 
+                    idField = 'name'; // Engineer is checked by name
+                    break;
+                // 'seniorManager' is also a valid type
+                case 'seniorManager':
+                     idSet = new Set(systemData.seniorManagers.map(sm => sm.seniorManagerId));
+                     break;
+                default:
+                    errors.push(`Initiative "${init.title}" has unknown personnel type "${personnel.type}" for "${type}".`);
+                    return;
+            }
+            
+            const idToFind = personnel[idField];
+            if (!idSet.has(idToFind)) {
+                errors.push(`Initiative "${init.title}" lists a non-existent ${type}: "${personnel.name}" (ID/Name: ${idToFind}).`);
+            }
+        };
+        checkPersonnel(init.owner, 'owner');
+        checkPersonnel(init.projectManager, 'projectManager');
+        checkPersonnel(init.technicalPOC, 'technicalPOC');
+
+        // [NEW] Check for Rule 7 (Interconnections) - as warning
+        if (!init.impactedServiceIds || init.impactedServiceIds.length === 0) {
+            warnings.push(`Initiative "${init.title}" has no "impactedServiceIds".`);
+        }
+
+        // [NEW] Check for Rule 10 (Work Packages)
+        if (!init.workPackageIds || !Array.isArray(init.workPackageIds)) {
+            errors.push(`Initiative "${init.title}" is missing "workPackageIds" array.`);
+        } else if (init.workPackageIds.length > 0) {
+            for (const wpId of init.workPackageIds) {
+                if (!workPackageIds.has(wpId)) {
+                    errors.push(`Initiative "${init.title}" links to a non-existent workPackageId: ${wpId}`);
+                }
+            }
+        }
     });
+
+    // [NEW] Check Work Packages
+    systemData.workPackages.forEach(wp => {
+        if (!wp.initiativeId || !systemData.yearlyInitiatives.some(i => i.initiativeId === wp.initiativeId)) {
+            errors.push(`WorkPackage "${wp.workPackageId}" has an invalid or missing "initiativeId": ${wp.initiativeId}`);
+        }
+        
+        // Check that the parent initiative also links back to this WP
+        const parentInit = systemData.yearlyInitiatives.find(i => i.initiativeId === wp.initiativeId);
+        if (parentInit && (!parentInit.workPackageIds || !parentInit.workPackageIds.includes(wp.workPackageId))) {
+             errors.push(`Data inconsistency: WorkPackage "${wp.workPackageId}" links to initiative "${parentInit.title}", but the initiative does not link back to it in its "workPackageIds" array.`);
+        }
+    });
+
     
     // --- 4. Final Result ---
     return {
