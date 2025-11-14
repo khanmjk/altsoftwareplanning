@@ -811,7 +811,7 @@ function validateGeneratedSystem(systemData) {
         }
 
         if (!init.workPackageIds || !Array.isArray(init.workPackageIds)) {
-            errors.push(`Initiative "${init.title}" is missing "workPackageIds" array.`);
+            warnings.push(`Initiative "${init.title}" is missing "workPackageIds" array.`);
         } else if (init.workPackageIds.length > 0) {
             for (const wpId of init.workPackageIds) {
                 if (!workPackageIds.has(wpId)) {

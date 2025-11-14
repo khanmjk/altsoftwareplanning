@@ -351,7 +351,11 @@ function switchView(targetViewId, newMode = null) {
     const documentationSection = document.getElementById('toolDocumentationSection');
 
     const updateDOMForViewChange = () => {
-         // --- Call closeRoadmapModal here ---
+        // --- Hide AI Stats Panel on ANY view change ---
+        const statsContainer = document.getElementById('aiGenerationStats');
+        if (statsContainer) statsContainer.style.display = 'none';   
+        
+        // --- Call closeRoadmapModal here ---
         if (typeof closeRoadmapModal === 'function') {
             console.log("switchView: Attempting to close roadmap modal if open.");
             closeRoadmapModal();
