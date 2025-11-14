@@ -135,25 +135,21 @@ bar graph per quarter to see team load/demand impact
 [Done] - [Feature] Add more default systems for demo purposes: Reference architectures for Android Stack, Chat GPT app, LLM system, etc.
 [Done] - [Feature] Organization Overview - show a view of traditional org chart with blocks
 [Done]- [AI Feature] A cool feature would be to enable the user to recreate classic systems they wanted to learn about more, using the established data construct underlying the app (basically generate synthetic sample system architecture with a sample team/org structure)
+[Done] - [AI] Let's limit the options to select Google gemini for the AI settings and grey out the other options for MVP
+[Done] - [AI] Be explicit in the LLM provider modal that users must use FREE API KEY, link them to Google AI studio to get the key, copy-and-paste the key in the app modal. Call out explicitly, if the user has their own private API key, the app is client side, executed on the browser using local storage
+[Done] - and put a disclaimer that using the app comes with risk I'm not liable for, if the user inputs their own private api key, instead of a free tier key from AI studio
+[Done] - [AI] Add some stats and metrics to show what was input into the LLM, what the LLM produced: tokens, characters, system summary details (not exhaustive)
+[Done] - [AI] Add some spinning animation when the Create with AI workflow is triggered and the app is waiting for the LLM system generation to complete
+[Done] - [AI] Update the app's readme documentation to cover all the new AI features
 
 ------------
 IN PROGRESS
 ------------
-- [AI] Let's limit the options to select Google gemini for the AI settings and grey out the other options for MVP
-- [AI] Be explicit in the LLM provider modal that users must use FREE API KEY, link them to Google AI studio to get the key, copy-and-paste the key in the app modal. Call out explicitly, if the user has their own private API key, the app is client side, executed on the browser using local storage
-and put a disclaimer that using the app comes with risk I'm not liable for, if the user inputs their own private api key, instead of a free tier key from AI studio
-- [AI] Add some stats and metrics to show what was input into the LLM, what the LLM produced: tokens, characters, system summary details (not exhaustive)
-- [AI] Add some spinning animation when the Create with AI workflow is triggered and the app is waiting for the LLM system generation to complete
-- [AI] Update the app's readme documentation to cover all the new AI features
 - [AI] Think about refactoring the codebase for AI files - like an AI folder to keep all ai-related files, especially if we're going down the agent route (like a planning agent, resource planning agent, etc.)
 - [AI] Explore generating architecture diagramming options, apart from the app's 3d node graphs
-
-- [AI Feature] Create a top-level menu for "AI-Assistant" - a page that allows the user to interact through a chat interface 
-on interrogating the selected system
+- [AI Feature] Create a top-level menu for "AI-Assistant" - a page that allows the user to interact through a chat interface on interrogating the selected system
 - [AI Feature] Implement AI-powered analysis (`getAnalysisFromPrompt`) to answer questions about the system (backend logic stubbed in aiService.js)
 - [AI Feature] Create an AI agent that can perform actions on the system with access to the code
-- [AI Feature] Solve for dynamic input of API key to use AI features (ask the 
-user to provide the name of their environment variable for the app to read local API key, not made public in the code or console log) (a local secure way of accessing user's API key. If the API key does not exist, no AI features exposed).
 
 ------
 TO DO

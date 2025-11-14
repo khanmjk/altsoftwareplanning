@@ -79,6 +79,7 @@ Upon launching the application, you'll see the main menu on the top bar.
 * Check the **"Enable AI Assistant Mode"** box.
 * Select your desired AI provider (currently limited to "google-gemini" for the MVP).
 * **Use a FREE API Key:** You must obtain a free-tier API key from **[Google AI Studio](https://aistudio.google.com/app/apikey)**.
+* **Note on Free Keys: Free-tier keys often have strict rate limits. If you see a **"503: Model Overloaded"** error, it means the service is busy. The application will retry several times, but you may need to wait and try again later.**
 * Paste your API key into the text field.
 * **Disclaimer:** This is a client-side application. Your API key is stored exclusively in your browser's local storage and is never sent to any server other than the selected LLM provider. Using this app comes with risks. The author is not liable for any issues that arise from using your own private (non-free-tier) API key.
 * Click **"Save Settings"**.
