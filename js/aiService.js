@@ -13,6 +13,7 @@
  */
 async function _fetchWithRetry(url, options, maxRetries = 5, initialDelay = 1000, spinnerP = null) {
     let attempt = 0;
+    let lastDetailedError = null; // Store the last detailed error    
     while (attempt < maxRetries) {
         // [LOG] Added for debugging
         console.log(`[AI-DEBUG] Fetch Attempt ${attempt + 1}/${maxRetries}: POST to ${url.split('?')[0]}`);
@@ -32,6 +33,7 @@ async function _fetchWithRetry(url, options, maxRetries = 5, initialDelay = 1000
             if (response.status >= 400 && response.status < 500) {
                 const errorBody = await response.json();
                 console.error(`[AI-DEBUG] Fetch Error (4xx): ${response.status}. Not retrying.`, errorBody);
+                lastDetailedError = new Error(errorMessage); // Store and throw detailed error   
                 // We'll let the calling function format the specific error message.
                 throw new Error(`Google API request failed: ${errorBody.error?.message || response.statusText}`);
             }
@@ -39,6 +41,12 @@ async function _fetchWithRetry(url, options, maxRetries = 5, initialDelay = 1000
             // 3. Server Error (5xx) or Rate Limit (429): This is a retry-able error.
             if (response.status >= 500 || response.status === 429) {
                 console.warn(`[AI-DEBUG] Fetch Error (5xx/429): ${response.status}. Retrying... (Attempt ${attempt + 1}/${maxRetries})`);
+
+                // Try to get the JSON body from the server error
+                let errorBody = null;
+                try { errorBody = await response.json(); } catch (e) { /* no json body */ }
+                const errorMessage = `API Error: ${errorBody?.error?.message || response.statusText} (Status: ${response.status})`;                
+                lastDetailedError = new Error(errorMessage); // Store the detailed 5xx error
                 // We throw an error to trigger the catch block's retry logic.
                 throw new Error(`Retryable error: ${response.statusText}`);
             }
@@ -58,8 +66,11 @@ async function _fetchWithRetry(url, options, maxRetries = 5, initialDelay = 1000
             attempt++;
             
             if (attempt >= maxRetries) {
-                console.error("[AI-DEBUG] Fetch failed after all retries.", error);
-                throw new Error(`API request failed after ${maxRetries} attempts. Last error: ${error.message}`);
+                console.error("[AI-DEBUG] Fetch failed after all retries.", lastDetailedError || error);
+
+                // Throw an error that includes the lastDetailedError.message
+                const finalErrorMessage = lastDetailedError ? lastDetailedError.message : error.message;
+                throw new Error(`API request failed after ${maxRetries} attempts. Last error: ${finalErrorMessage}`);                           
             }
 
             // Calculate exponential backoff + jitter
