@@ -32,6 +32,7 @@ async function _fetchWithRetry(url, options, maxRetries = 5, initialDelay = 1000
             //    (e.g., bad API key, malformed request).
             if (response.status >= 400 && response.status < 500) {
                 const errorBody = await response.json();
+                const errorMessage = `API Error: ${errorBody?.error?.message || response.statusText} (Status: ${response.status})`;
                 console.error(`[AI-DEBUG] Fetch Error (4xx): ${response.status}. Not retrying.`, errorBody);
                 lastDetailedError = new Error(errorMessage); // Store and throw detailed error   
                 // We'll let the calling function format the specific error message.
