@@ -39,6 +39,7 @@
     <script src="js/accomplishmentsView.js"></script> 
     <script src="js/impactView.js"></script>      
     <script src="js/dashboard.js"></script>
+    <script src="js/aiService.js"></script>
 
     <script src="js/main.js"></script>
 
@@ -53,6 +54,7 @@
                     <button>New System</button>
                     <button id="deleteSystemButton" class="btn-danger">Delete System</button>
                     <button>Reset Defaults</button>
+                    <button id="createWithAiButton" style="display: none;">Create with AI</button>                                                         
                 </div>
                 <div class="edit-menu" style="display: none;"> 
                     <button id="systemOverviewButton">System Overview</button> 
@@ -62,17 +64,23 @@
                     <button id="manageRoadmapButton">Roadmap & Backlog</button> 
                     <button id="dashboardViewButton">Dashboard</button>
                     <button id="tuneCapacityButton">Capacity Tuning</button>
-                    <button id="sdmForecastButton">Resource Forecasting</button>
+                    <button id="sdmForecastButton">Resource Forecasting</button>                 
                 </div>
             </div>
             <div id="globalNavButtons">
                 <button id="returnHomeButton" onclick="returnToHome()" style="display: none;">Home</button>
+                <button id="aiSettingsButton" class="btn-secondary" style="color: #ffc107;">AI Assistant</button>                
             </div>      
         </div>
 
         <div class="main-content-area">
             <h1 id="pageTitle">Software Management Tools</h1>
             <p id="systemDescription">Load a previously saved system or create a new software system</p>
+
+            <div id="aiGenerationStats" style="display: none; margin-top: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 4px; background-color: #f8f9fa; max-width: 90%; margin-left: auto; margin-right: auto;">
+                <h3>AI Generation Statistics</h3>
+                <pre style="white-space: pre-wrap; word-wrap: break-word;"></pre>
+            </div>
 
             <div id="toolDocumentationSection" style="margin-top: 20px; border: 1px solid #ccc; display: none; max-width: 90%; margin-left: auto; margin-right: auto;">
                 <h3 id="documentationHeader" style="cursor: pointer; margin: 0; padding: 10px; background-color: #e9ecef; border-bottom: 1px solid #ccc;" title="Click to expand/collapse documentation">
@@ -91,7 +99,7 @@
                 </div>
 
                 <div id="visualization" class="carousel-item" style="display: block;"> <button id="togglePlatformComponentsSystem" class="button" style="margin-bottom: 10px;">Hide Platforms</button>
-<svg id="systemSvg" style="width: 100%; height: 600px; border: 1px solid #ccc;"></svg>
+                <svg id="systemSvg" style="width: 100%; height: 600px; border: 1px solid #ccc;"></svg>
                     <div id="legend" class="legend"></div>
                 </div>
 
@@ -104,7 +112,7 @@
                     <select id="serviceSelection" onchange="updateServiceVisualization()" style="margin-bottom: 5px; display: block; margin-left: auto; margin-right: auto;">
                         </select>
                     <button id="togglePlatformComponentsService" class="button" style="margin-bottom: 10px;">Hide Platforms</button>
-<svg id="serviceSvg" style="width: 100%; height: 600px; border: 1px solid #ccc;"></svg>
+                    <svg id="serviceSvg" style="width: 100%; height: 600px; border: 1px solid #ccc;"></svg>
                     <div id="serviceLegend" class="legend"></div>
                 </div>
 
@@ -112,7 +120,7 @@
                     <select id="dependencyServiceSelection" onchange="updateDependencyVisualization()" style="margin-bottom: 5px; display: block; margin-left: auto; margin-right: auto;">
                         </select>
                     <button id="togglePlatformComponentsDependency" class="button" style="margin-bottom: 10px;">Hide Platforms</button>
-<svg id="dependencySvg" style="width: 100%; height: 600px; border: 1px solid #ccc;"></svg>
+                    <svg id="dependencySvg" style="width: 100%; height: 600px; border: 1px solid #ccc;"></svg>
                     <div id="dependencyLegend" class="legend"></div>
                 </div>
 
@@ -295,6 +303,62 @@
                     <button type="button" id="cancelRoadmapInitiativeEditButton_modal" class="btn-secondary" style="margin-left: 10px;" onclick="closeRoadmapModal()">Cancel</button>
                 </div>
             </div>
+        </div>    
+        <div id="aiSettingsModal" class="modal" style="display:none;">
+            <div class="modal-content-wrapper">
+                <div class="modal-header">
+                    <h3 id="aiSettingsModalTitle">AI Assistant Settings</h3>
+                    <span class="close-button" onclick="closeAiSettingsModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="aiSettingsForm">
+                        <div style="margin-bottom: 15px;">
+                            <input type="checkbox" id="aiModeEnabled" name="aiModeEnabled" style="margin-right: 8px; vertical-align: middle;">
+                            <label for="aiModeEnabled" style="font-weight: bold; vertical-align: middle;">Enable AI Assistant Mode</label>
+                        </div>
+
+                        <div id="aiConfigInputs" style="display:none;">
+                            <hr style="margin-bottom: 15px;">
+                            <div style="margin-bottom: 15px;">
+                                <label for="aiProviderSelect" style="display: block; margin-bottom: 5px;">LLM Provider:</label>
+                                <select id="aiProviderSelect" name="aiProviderSelect">
+                                    <option value="google-gemini">Google (Gemini Pro)</option>
+                                    <option value="openai-gpt4o" disabled>OpenAI (GPT-4o)</option>
+                                    <option value="anthropic-claude35" disabled>Anthropic (Claude 3.5 Sonnet)</option>
+                                    <option value="mistral-large" disabled>Mistral (Large 2)</option>
+                                    <option value="cohere-command-r" disabled>Cohere (Command R)</option>
+                                </select>
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label for="aiApiKeyInput" style="display: block; margin-bottom: 5px;">Your API Key:</label>
+                                <input type="password" id="aiApiKeyInput" name="aiApiKeyInput" style="width: 95%;" placeholder="Paste your API key here">
+                                <div class="api-key-disclaimer" style="font-size: 0.85em; color: #6c757d; margin-top: 8px; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; background-color: #f8f9fa;">
+                                    <p style="margin-top: 0; margin-bottom: 5px;">
+                                        You must use a <strong>FREE API key</strong>. You can get one from <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio</a>.
+                                    </p>
+                                    <p style="margin-bottom: 5px; color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; padding: 8px; border-radius: 4px;">
+                                        <strong>Note:</strong> Free-tier keys often have strict rate limits. If you see a <strong>"503: Model Overloaded"</strong> error, it means the service is busy. The app will retry, but you may need to wait and try again later.
+                                    </p>                                    
+                                    <p style="margin-bottom: 5px;">
+                                        <strong>Disclaimer:</strong> This is a client-side application. Your API key is stored exclusively in your browser's local storage and is never sent to any server other than the selected LLM provider. 
+                                    </p>
+                                    <p style="margin-bottom: 0;">
+                                        Using this app comes with risks. The author is not liable for any issues that arise from using your own private (non-free-tier) API key.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="saveAiSettingsButton" class="btn-primary">Save Settings</button>
+                    <button type="button" class="btn-secondary" style="margin-left: 10px;" onclick="closeAiSettingsModal()">Cancel</button>
+                </div>
+            </div>
         </div>
+        <div id="aiLoadingSpinner" class="spinner-overlay" style="display:none;">
+            <div class="spinner"></div>
+            <p>AI is generating your system... This may take a moment.</p>
+        </div>           
     </body>
 </html>

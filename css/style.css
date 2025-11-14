@@ -135,8 +135,9 @@ a:hover {
 #topBar #mainActions .edit-menu button:nth-child(3) { transition-delay: 0.15s; }
 #topBar #mainActions .menu button:nth-child(4),
 #topBar #mainActions .edit-menu button:nth-child(4) { transition-delay: 0.2s; }
-/* Add more if you have more than 4 buttons in .menu */
+#topBar #mainActions .menu button:nth-child(5),
 #topBar #mainActions .edit-menu button:nth-child(5) { transition-delay: 0.25s; }
+/* Add more if you have more than 5 buttons in .menu */
 #topBar #mainActions .edit-menu button:nth-child(6) { transition-delay: 0.3s; }
 
 
@@ -1947,7 +1948,7 @@ a:focus {
     margin-top: 5px;
 }
 
-//* === NEW Styles for D3 Org Chart (Block View) === */
+/* === NEW Styles for D3 Org Chart (Block View) === */
 
 /* Style for the SVG links (lines) */
 .org-link {
@@ -2058,5 +2059,148 @@ a:focus {
 }
 
 /* === End D3 Org Chart Styles === */
+
+/* === Modal Base Styles === */
+.modal {
+    display: none; /* Hidden by default (JS will override this) */
+    position: fixed; /* Stay in place */
+    z-index: 1050; /* Sit on top of everything else */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+}
+
+.modal-content-wrapper {
+    position: relative;
+    background-color: #fefefe;
+    margin: 10% auto; /* 10% from the top and centered */
+    padding: 0;
+    border: 1px solid #888;
+    width: 60%; /* Or your preferred width */
+    max-width: 700px; /* Max width */
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    padding: 12px 20px;
+    background-color: #e9ecef;
+    border-bottom: 1px solid #dee2e6;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.modal-body {
+    padding: 20px;
+    flex-grow: 1;
+    max-height: 60vh; /* Make body scrollable */
+    overflow-y: auto;
+}
+
+.modal-footer {
+    padding: 12px 20px;
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    text-align: right;
+}
+
+.close-button {
+    color: #6c757d;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+/* === End Modal Styles === */
+
+/* --- Fix for AI Button Layout & Styling --- */
+
+/* 1. Force the home screen menu to be a single, non-wrapping row */
+#topBar .menu {
+    display: flex;
+    flex-wrap: nowrap; /* Prevents wrapping */
+    align-items: center;
+}
+
+/* 2. Make the "Create with AI" button style MORE specific */
+/* This new rule is stronger and will override the default. */
+#topBar .menu #createWithAiButton {
+    color: #ffc107; /* Gold color */
+    font-weight: bold;
+    border: 1px solid #ffc107;
+    background-color: #3e4a5a; /* Darker background */
+}
+
+#topBar .menu #createWithAiButton:hover {
+    color: #fff;
+    background-color: #ffc107;
+    border-color: #ffc107;
+}
+
+/* 3. Add the Font Awesome icon */
+#topBar .menu #createWithAiButton::before {
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    content: "\f0d0"; /* "magic" icon */
+    margin-right: 8px;
+}
+
+/* --- AI Loading Spinner --- */
+.spinner-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    color: white;
+    text-align: center;
+}
+
+.spinner {
+    border: 8px solid #f3f3f3;
+    border-top: 8px solid #3498db;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1.5s linear infinite;
+    margin-bottom: 20px;
+}
+
+.spinner-overlay p {
+    font-size: 1.2em;
+    font-weight: 500;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
 
 /* Add any additional styles as needed */          

@@ -2,6 +2,7 @@
 
 /** Define a unique key for local storage **/
 const LOCAL_STORAGE_KEY = 'architectureVisualization_systems_v10'; 
+const APP_SETTINGS_KEY = 'architectureVisualization_appSettings_v1';
 
 const STANDARD_WORK_PACKAGE_PHASES = [
     "Requirements & Definition",

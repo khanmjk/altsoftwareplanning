@@ -11,6 +11,20 @@ let currentChartTeamId = '__ORG_VIEW__'; // To track which team's chart is displ
 let capacityChartInstance = null; // To hold the Chart.js instance
 let applyCapacityConstraintsToggle = false; // Default to OFF
 
+// --- Global App Settings ---
+const defaultSettings = {
+    ai: {
+        isEnabled: false,
+        provider: 'google-gemini',
+        apiKey: null
+    },
+    // We can add more settings here later, e.g.:
+    // theme: 'default',
+    // autoSave: false
+};
+let globalSettings = JSON.parse(JSON.stringify(defaultSettings)); // Our live settings object
+// --- End Global App Settings ---
+
 // --- Carousel State ---
 let currentVisualizationIndex = 0;
 const visualizationItems = [
@@ -86,6 +100,214 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// --- AI Assistant & Settings Functions ---
+
+/**
+ * Opens the AI settings modal and populates it from globalSettings.
+ */
+function openAiSettingsModal() {
+    console.log("Opening AI Settings Modal...");
+    // We don't need loadGlobalSettings() here, as it's loaded on startup
+    
+    const modal = document.getElementById('aiSettingsModal');
+    const checkbox = document.getElementById('aiModeEnabled');
+    const configInputs = document.getElementById('aiConfigInputs');
+    const providerSelect = document.getElementById('aiProviderSelect');
+    const apiKeyInput = document.getElementById('aiApiKeyInput');
+
+    if (checkbox) checkbox.checked = globalSettings.ai.isEnabled;
+    if (configInputs) configInputs.style.display = globalSettings.ai.isEnabled ? 'block' : 'none';
+    if (providerSelect) providerSelect.value = globalSettings.ai.provider;
+    if (apiKeyInput) apiKeyInput.value = globalSettings.ai.apiKey || '';
+    
+    if (modal) modal.style.display = 'block';
+}
+
+/**
+ * Closes the AI settings modal.
+ */
+function closeAiSettingsModal() {
+    const modal = document.getElementById('aiSettingsModal');
+    if (modal) modal.style.display = 'none';
+}
+
+/**
+ * Loads all app settings from localStorage into the globalSettings object.
+ */
+function loadGlobalSettings() {
+    const settingsString = localStorage.getItem(APP_SETTINGS_KEY);
+    if (settingsString) {
+        try {
+            const loadedSettings = JSON.parse(settingsString);
+            // Merge loaded settings with defaults to ensure all keys exist
+            globalSettings = { ...defaultSettings, ...loadedSettings };
+            // Deep merge for nested objects like 'ai'
+            if (loadedSettings.ai) {
+                globalSettings.ai = { ...defaultSettings.ai, ...loadedSettings.ai };
+            }
+            console.log("Loaded global settings from localStorage:", {
+                aiEnabled: globalSettings.ai.isEnabled,
+                aiProvider: globalSettings.ai.provider,
+                apiKeyExists: !!globalSettings.ai.apiKey
+            });
+        } catch (e) {
+            console.error("Error parsing global settings from localStorage:", e);
+            globalSettings = JSON.parse(JSON.stringify(defaultSettings)); // Reset to defaults
+        }
+    } else {
+        // No settings saved yet, use defaults
+        globalSettings = JSON.parse(JSON.stringify(defaultSettings));
+        console.log("No global settings found, using defaults.");
+    }
+    
+    // Update the UI based on loaded settings
+    const createWithAiButton = document.getElementById('createWithAiButton');
+    if (createWithAiButton && currentMode === Modes.NAVIGATION) {
+         createWithAiButton.style.display = globalSettings.ai.isEnabled ? 'inline-block' : 'none';
+    }
+}
+
+/**
+ * Saves the current state of the AI settings modal to globalSettings and localStorage.
+ */
+function saveGlobalSettings() {
+    console.log("Saving global settings...");
+    
+    // Read values from the AI modal
+    const checkbox = document.getElementById('aiModeEnabled');
+    const providerSelect = document.getElementById('aiProviderSelect');
+    const apiKeyInput = document.getElementById('aiApiKeyInput');
+
+    const isEnabled = checkbox ? checkbox.checked : false;
+    const provider = providerSelect ? providerSelect.value : 'google-gemini';
+    const apiKey = apiKeyInput ? apiKeyInput.value.trim() : null;
+
+    if (isEnabled && (!apiKey || apiKey.length === 0)) {
+        alert("Please enter a valid API Key to enable AI Assistant mode.");
+        if (checkbox) checkbox.checked = false; // Uncheck the box
+        globalSettings.ai.isEnabled = false; // Don't save 'enabled' state
+    } else {
+        globalSettings.ai.isEnabled = isEnabled;
+    }
+    
+    globalSettings.ai.provider = provider;
+    globalSettings.ai.apiKey = apiKey;
+
+    try {
+        localStorage.setItem(APP_SETTINGS_KEY, JSON.stringify(globalSettings));
+        console.log("Saved global settings to localStorage.");
+        
+        // Update the UI based on new settings
+        const createWithAiButton = document.getElementById('createWithAiButton');
+        if (createWithAiButton && currentMode === Modes.NAVIGATION) { // Only update if on home screen
+            createWithAiButton.style.display = globalSettings.ai.isEnabled ? 'inline-block' : 'none';
+        }
+        
+        closeAiSettingsModal();
+        alert("Settings saved.");
+
+    } catch (e) {
+        console.error("Error saving global settings to localStorage:", e);
+        alert("Error saving settings.");
+    }
+}
+
+/**
+ * Handles the "Create with AI" button click.
+ */
+async function handleCreateWithAi() {
+    // Read directly from the global settings
+    if (!globalSettings.ai.isEnabled || !globalSettings.ai.apiKey) {
+        alert("AI Assistant mode is not enabled or API key is missing. Please check AI settings.");
+        return;
+    }
+
+    const prompt = window.prompt("Describe the new software system you want to create (e.g., 'A video streaming service like Netflix', 'An e-commerce platform like Amazon'):");
+
+    if (!prompt || prompt.trim().length === 0) {
+        console.log("AI system generation cancelled by user.");
+        return;
+    }
+
+    const spinner = document.getElementById('aiLoadingSpinner');
+    const spinnerP = spinner ? spinner.querySelector('p') : null;
+    
+    if (spinner && spinnerP) {
+        spinnerP.textContent = 'AI is generating your system... This may take a moment.';
+        spinner.style.display = 'flex';
+    } 
+
+    // Hide stats from previous runs
+    const statsContainer = document.getElementById('aiGenerationStats');
+    if (statsContainer) statsContainer.style.display = 'none';
+
+    try {
+        const result = await generateSystemFromPrompt(prompt, globalSettings.ai.apiKey, globalSettings.ai.provider, spinnerP);
+        const newSystemData = result.data;
+        const stats = result.stats;
+
+        if (!newSystemData) {
+            // Error alerts are already handled in generateSystemFromPrompt
+            return;
+        }
+
+        // --- THIS IS THE VALIDATION STEP ---
+        const { isValid, errors, warnings } = validateGeneratedSystem(newSystemData);
+
+        if (!isValid) {
+            console.error("AI Generation Failed Validation:", errors);
+            const errorList = errors.slice(0, 10).join("\n- ");
+            alert(`AI generation failed validation checks. The data is inconsistent. Please try again.\n\nErrors:\n- ${errorList}${errors.length > 10 ? '\n- ...and more.' : ''}`);
+            return;
+        }
+
+        if (warnings.length > 0) {
+            console.warn("AI Generation Warnings:", warnings);
+        }
+        // --- END OF VALIDATION STEP ---
+
+        console.log("AI generation successful and validated:", newSystemData);
+        
+        currentSystemData = newSystemData;
+        const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
+        
+        let finalSystemName = newSystemData.systemName;
+        if (systems[finalSystemName]) {
+            finalSystemName = `${finalSystemName} (AI ${Date.now().toString().slice(-5)})`;
+            newSystemData.systemName = finalSystemName;
+        }
+
+        systems[finalSystemName] = newSystemData;
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
+        
+        // Display stats
+        if (stats && statsContainer) {
+            const statsPre = statsContainer.querySelector('pre');
+            if (statsPre) {
+                const statsString = `Input Characters: ${stats.inputChars.toLocaleString()}\n` +
+                                  `Output Characters: ${stats.outputChars.toLocaleString()}\n` +
+                                  `Output Tokens: ${stats.outputTokens.toLocaleString()}\n` +
+                                  `Total Tokens (est.): ${stats.totalTokens.toLocaleString()}\n\n` +
+                                  `System Prompt Summary:\n${stats.systemPromptSummary}`;
+                statsPre.textContent = statsString;
+                statsContainer.style.display = 'block';
+            }
+        }
+        
+        alert(`Successfully created and saved system: "${finalSystemName}"! Loading it now.`);
+        loadSavedSystem(finalSystemName);
+
+    } catch (error) {
+        // This existing alert will show the final error message after all retries fail.
+        alert("An error occurred during AI system generation. Please check the console.\nError: " + error.message);
+        console.error("Error in handleCreateWithAi:", error);
+    } finally {
+        if (spinner) spinner.style.display = 'none';
+        // Reset spinner text again in finally block for safety
+        if (spinnerP) spinnerP.textContent = 'AI is generating your system... This may take a moment.';
+    }
+}
+
 window.onload = function() {
     console.log("!!! window.onload: Page HTML and synchronous scripts loaded. !!!");
     currentMode = Modes.NAVIGATION;
@@ -110,6 +332,7 @@ window.onload = function() {
     }
 
     initializeEventListeners();
+    loadGlobalSettings();
 
     // Save sample systems if none exist
     saveSampleSystemsToLocalStorage(); // Moved here to ensure it runs before potential initial switchView
@@ -136,7 +359,11 @@ function switchView(targetViewId, newMode = null) {
     const documentationSection = document.getElementById('toolDocumentationSection');
 
     const updateDOMForViewChange = () => {
-         // --- Call closeRoadmapModal here ---
+        // --- Hide AI Stats Panel on ANY view change ---
+        const statsContainer = document.getElementById('aiGenerationStats');
+        if (statsContainer) statsContainer.style.display = 'none';   
+        
+        // --- Call closeRoadmapModal here ---
         if (typeof closeRoadmapModal === 'function') {
             console.log("switchView: Attempting to close roadmap modal if open.");
             closeRoadmapModal();
@@ -169,6 +396,7 @@ function switchView(targetViewId, newMode = null) {
         const mainMenu = document.querySelector('.menu');
         const returnHomeBtn = document.getElementById('returnHomeButton');
         const backButton = document.getElementById('backToSystemViewButton');
+        const createWithAiButton = document.getElementById('createWithAiButton');
 
         if (targetViewId) {
             currentMode = newMode || Modes.Browse;
@@ -182,6 +410,15 @@ function switchView(targetViewId, newMode = null) {
                     return; // Exit current execution
                 }
             }
+
+            // --- MODIFICATION ---
+            if (createWithAiButton) createWithAiButton.style.display = 'none';
+            
+            // (Future) Show the chat assistant if AI mode is on
+            // const chatAssistant = document.getElementById('aiChatAssistant');
+            // if (chatAssistant) chatAssistant.style.display = globalSettings.ai.isEnabled ? 'block' : 'none';
+            // --- END MODIFICATION ---
+
 
             if (pageTitleH1 && currentSystemData) {
                 let titleSuffix = '';
@@ -221,6 +458,16 @@ function switchView(targetViewId, newMode = null) {
             if (editMenu) editMenu.style.display = 'none';
             if (returnHomeBtn) returnHomeBtn.style.display = 'none';
             if (backButton) backButton.style.display = 'none';
+
+            // --- MODIFICATION ---
+            // Show "Create with AI" button ONLY if AI mode is enabled
+            if (createWithAiButton) {
+                createWithAiButton.style.display = globalSettings.ai.isEnabled ? 'inline-block' : 'none';
+            }
+            // (Future) Hide the chat assistant
+            // const chatAssistant = document.getElementById('aiChatAssistant');
+            // if (chatAssistant) chatAssistant.style.display = 'none';
+            // --- END MODIFICATION ---
 
             if (documentationSection) {
                 documentationSection.style.display = 'block';
@@ -1114,9 +1361,9 @@ function showPlanningView() {
 
 // Ensure the functions are globally accessible for the old onclick attributes,
 // or for the new event listener setup.
-window.showOrganogramView = showOrganogramView;
-window.showEngineerTableView = showEngineerTableView;
-window.showPlanningView = showPlanningView;
+if (typeof showOrganogramView === 'function') window.showOrganogramView = showOrganogramView;
+if (typeof showEngineerTableView === 'function') window.showEngineerTableView = showEngineerTableView;
+if (typeof showPlanningView === 'function') window.showPlanningView = showPlanningView;
 
 // It's also best practice to move enterEditMode here from index.html
 function enterEditMode(creatingNewSystem = false) {
@@ -1144,6 +1391,7 @@ function initializeEventListeners() {
     // Main Menu Buttons
     document.querySelector('.menu button:nth-child(1)')?.addEventListener('click', showSavedSystems);
     document.querySelector('.menu button:nth-child(2)')?.addEventListener('click', createNewSystem);
+    document.getElementById('createWithAiButton')?.addEventListener('click', handleCreateWithAi);    
     document.getElementById('deleteSystemButton')?.addEventListener('click', deleteSystem);
     document.querySelector('.menu button:nth-child(4)')?.addEventListener('click', resetToDefaults);
 
@@ -1156,21 +1404,36 @@ function initializeEventListeners() {
     document.getElementById('dashboardViewButton')?.addEventListener('click', showDashboardView);
     document.getElementById('tuneCapacityButton')?.addEventListener('click', showCapacityConfigView);
     document.getElementById('sdmForecastButton')?.addEventListener('click', showSdmForecastingView);
+    document.getElementById('aiSettingsButton')?.addEventListener('click', openAiSettingsModal); 
 
     // Global Nav Buttons
     document.getElementById('backToSystemViewButton')?.addEventListener('click', showSystemOverview);
     document.getElementById('returnHomeButton')?.addEventListener('click', returnToHome);
 
+    // --- MODIFIED LISTENERS FOR THE NEW MODAL ---
+    document.getElementById('saveAiSettingsButton')?.addEventListener('click', saveGlobalSettings); // <-- Changed function
+    document.querySelector('#aiSettingsModal .close-button')?.addEventListener('click', closeAiSettingsModal);
+    document.getElementById('aiModeEnabled')?.addEventListener('change', () => {
+        const configInputs = document.getElementById('aiConfigInputs');
+        if (configInputs) {
+            configInputs.style.display = document.getElementById('aiModeEnabled').checked ? 'block' : 'none';
+        }
+    });
+    // --- END MODIFIED LISTENERS ---
+    
+
     console.log("Event listeners initialized.");
 }
 
-window.showOrganogramView = showOrganogramView;
-window.showEngineerTableView = showEngineerTableView;
-window.showPlanningView = showPlanningView;
-window.showRoadmapView = showRoadmapView;
-window.showSystemOverview = showSystemOverview;
-window.returnToHome = returnToHome;
-window.createNewSystem = createNewSystem;
-window.deleteSystem = deleteSystem;
-window.resetToDefaults = resetToDefaults;
-window.showSavedSystems = showSavedSystems;
+
+
+if (typeof showOrganogramView === 'function') window.showOrganogramView = showOrganogramView;
+if (typeof showEngineerTableView === 'function') window.showEngineerTableView = showEngineerTableView;
+if (typeof showPlanningView === 'function') window.showPlanningView = showPlanningView;
+if (typeof showRoadmapView === 'function') window.showRoadmapView = showRoadmapView;
+if (typeof showSystemOverview === 'function') window.showSystemOverview = showSystemOverview;
+if (typeof returnToHome === 'function') window.returnToHome = returnToHome;
+if (typeof createNewSystem === 'function') window.createNewSystem = createNewSystem;
+if (typeof deleteSystem === 'function') window.deleteSystem = deleteSystem;
+if (typeof resetToDefaults === 'function') window.resetToDefaults = resetToDefaults;
+if (typeof showSavedSystems === 'function') window.showSavedSystems = showSavedSystems;
