@@ -230,6 +230,8 @@ async function handleCreateWithAi() {
     }
 
     alert("AI is generating your system... This may take a moment.");
+    const spinner = document.getElementById('aiLoadingSpinner');
+    if (spinner) spinner.style.display = 'flex';
 
     try {
         const newSystemData = await generateSystemFromPrompt(prompt, globalSettings.ai.apiKey, globalSettings.ai.provider);
@@ -273,6 +275,8 @@ async function handleCreateWithAi() {
     } catch (error) {
         alert("An error occurred during AI system generation. Please check the console.");
         console.error("Error in handleCreateWithAi:", error);
+    } finally {
+        if (spinner) spinner.style.display = 'none';
     }
 }
 

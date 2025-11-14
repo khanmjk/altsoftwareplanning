@@ -318,16 +318,26 @@
                                 <label for="aiProviderSelect" style="display: block; margin-bottom: 5px;">LLM Provider:</label>
                                 <select id="aiProviderSelect" name="aiProviderSelect">
                                     <option value="google-gemini">Google (Gemini Pro)</option>
-                                    <option value="openai-gpt4o">OpenAI (GPT-4o)</option>
-                                    <option value="anthropic-claude35">Anthropic (Claude 3.5 Sonnet)</option>
-                                    <option value="mistral-large">Mistral (Large 2)</option>
-                                    <option value="cohere-command-r">Cohere (Command R)</option>
+                                    <option value="openai-gpt4o" disabled>OpenAI (GPT-4o)</option>
+                                    <option value="anthropic-claude35" disabled>Anthropic (Claude 3.5 Sonnet)</option>
+                                    <option value="mistral-large" disabled>Mistral (Large 2)</option>
+                                    <option value="cohere-command-r" disabled>Cohere (Command R)</option>
                                 </select>
                             </div>
                             <div style="margin-bottom: 15px;">
                                 <label for="aiApiKeyInput" style="display: block; margin-bottom: 5px;">Your API Key:</label>
                                 <input type="password" id="aiApiKeyInput" name="aiApiKeyInput" style="width: 95%;" placeholder="Paste your API key here">
-                                <small style="color: #6c757d;">Your API key is saved only in your browser's local storage and is never sent to our servers.</small>
+                                <div class="api-key-disclaimer" style="font-size: 0.85em; color: #6c757d; margin-top: 8px; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; background-color: #f8f9fa;">
+                                    <p style="margin-top: 0; margin-bottom: 5px;">
+                                        You must use a <strong>FREE API key</strong>. You can get one from <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio</a>.
+                                    </p>
+                                    <p style="margin-bottom: 5px;">
+                                        <strong>Disclaimer:</strong> This is a client-side application. Your API key is stored exclusively in your browser's local storage and is never sent to any server other than the selected LLM provider. 
+                                    </p>
+                                    <p style="margin-bottom: 0;">
+                                        Using this app comes with risks. The author is not liable for any issues that arise from using your own private (non-free-tier) API key.
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </form>
@@ -337,6 +347,9 @@
                     <button type="button" class="btn-secondary" style="margin-left: 10px;" onclick="closeAiSettingsModal()">Cancel</button>
                 </div>
             </div>
+        <div id="aiLoadingSpinner" class="spinner-overlay" style="display:none;">
+            <div class="spinner"></div>
+            <p>AI is generating your system... This may take a moment.</p>
         </div>           
     </body>
 </html>
