@@ -135,8 +135,9 @@ a:hover {
 #topBar #mainActions .edit-menu button:nth-child(3) { transition-delay: 0.15s; }
 #topBar #mainActions .menu button:nth-child(4),
 #topBar #mainActions .edit-menu button:nth-child(4) { transition-delay: 0.2s; }
-/* Add more if you have more than 4 buttons in .menu */
+#topBar #mainActions .menu button:nth-child(5),
 #topBar #mainActions .edit-menu button:nth-child(5) { transition-delay: 0.25s; }
+/* Add more if you have more than 5 buttons in .menu */
 #topBar #mainActions .edit-menu button:nth-child(6) { transition-delay: 0.3s; }
 
 

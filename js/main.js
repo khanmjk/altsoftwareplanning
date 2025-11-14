@@ -163,7 +163,7 @@ function loadGlobalSettings() {
     // Update the UI based on loaded settings
     const createWithAiButton = document.getElementById('createWithAiButton');
     if (createWithAiButton && currentMode === Modes.NAVIGATION) {
-         createWithAiButton.style.display = globalSettings.ai.isEnabled ? 'block' : 'none';
+         createWithAiButton.style.display = globalSettings.ai.isEnabled ? 'inline-block' : 'none';
     }
 }
 
@@ -200,7 +200,7 @@ function saveGlobalSettings() {
         // Update the UI based on new settings
         const createWithAiButton = document.getElementById('createWithAiButton');
         if (createWithAiButton && currentMode === Modes.NAVIGATION) { // Only update if on home screen
-            createWithAiButton.style.display = globalSettings.ai.isEnabled ? 'block' : 'none';
+            createWithAiButton.style.display = globalSettings.ai.isEnabled ? 'inline-block' : 'none';
         }
         
         closeAiSettingsModal();
@@ -462,7 +462,7 @@ function switchView(targetViewId, newMode = null) {
             // --- MODIFICATION ---
             // Show "Create with AI" button ONLY if AI mode is enabled
             if (createWithAiButton) {
-                createWithAiButton.style.display = globalSettings.ai.isEnabled ? 'block' : 'none';
+                createWithAiButton.style.display = globalSettings.ai.isEnabled ? 'inline-block' : 'none';
             }
             // (Future) Hide the chat assistant
             // const chatAssistant = document.getElementById('aiChatAssistant');
