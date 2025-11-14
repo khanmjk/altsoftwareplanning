@@ -77,8 +77,10 @@ Upon launching the application, you'll see the main menu on the top bar.
 
 * Click the **"AI Assistant"** button, which is always visible in the top bar.
 * Check the **"Enable AI Assistant Mode"** box.
-* Select your desired AI provider (e.g., "google-gemini").
-* Paste your personal **API key** into the text field. This key is saved *only* in your browser's local storage and is never sent to any server.
+* Select your desired AI provider (currently limited to "google-gemini" for the MVP).
+* **Use a FREE API Key:** You must obtain a free-tier API key from **[Google AI Studio](https://aistudio.google.com/app/apikey)**.
+* Paste your API key into the text field.
+* **Disclaimer:** This is a client-side application. Your API key is stored exclusively in your browser's local storage and is never sent to any server other than the selected LLM provider. Using this app comes with risks. The author is not liable for any issues that arise from using your own private (non-free-tier) API key.
 * Click **"Save Settings"**.
 
 ### Loading a Saved System
@@ -106,7 +108,9 @@ Upon launching the application, you'll see the main menu on the top bar.
 * First, enable the AI Assistant and save your API key (see "AI Assistant Settings" above).
 * On the home screen, click the **"Create with AI"** button.
 * Enter a prompt describing the system you want to model (e.g., "A food delivery service like Uber Eats" or "A new FinTech bank").
+* A loading spinner will appear while the AI generates your system.
 * The AI will generate a complete, realistic system, including a full org chart, a multi-year roadmap, and all service dependencies.
+* Upon successful creation, a statistics panel will appear, showing details about the generation process, such as token count and character count.
 * This new system is then saved to your local storage just like a manually created one.
 
 ### Deleting a System
@@ -243,7 +247,9 @@ Understanding these core entities is key to using the tool effectively. Most ent
 ### AI Assistant
 
 * **AI System Generation:** From the home screen, use the "Create with AI" button to generate a complete, realistic system and 3-year plan from a single text prompt.
-* **Settings Management:** A globally accessible "AI Assistant" button in the top bar allows you to enable/disable AI mode and securely save your API key in local storage.
+* **Settings Management:** A globally accessible "AI Assistant" button in the top bar allows you to enable/disable AI mode and securely save your API key in local storage. The modal provides explicit instructions and disclaimers for using a free API key.
+* **Loading Animation:** A spinner provides visual feedback while the AI is processing your request.
+* **Generation Statistics:** After a system is created, a panel displays metrics about the LLM interaction, including token and character counts for the input and output.
 
 ### System Navigation
 

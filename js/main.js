@@ -229,32 +229,38 @@ async function handleCreateWithAi() {
         return;
     }
 
-    alert("AI is generating your system... This may take a moment.");
     const spinner = document.getElementById('aiLoadingSpinner');
     if (spinner) spinner.style.display = 'flex';
 
+    // Hide stats from previous runs
+    const statsContainer = document.getElementById('aiGenerationStats');
+    if (statsContainer) statsContainer.style.display = 'none';
+
     try {
-        const newSystemData = await generateSystemFromPrompt(prompt, globalSettings.ai.apiKey, globalSettings.ai.provider);
+        const result = await generateSystemFromPrompt(prompt, globalSettings.ai.apiKey, globalSettings.ai.provider);
+        const newSystemData = result.data;
+        const stats = result.stats;
+
+        if (!newSystemData) {
+            // Error alerts are already handled in generateSystemFromPrompt
+            return;
+        }
 
         // --- THIS IS THE VALIDATION STEP ---
-        // Calls the new, complete function from utils.js
         const { isValid, errors, warnings } = validateGeneratedSystem(newSystemData);
 
         if (!isValid) {
             console.error("AI Generation Failed Validation:", errors);
-            // Show a detailed error to the user
-            const errorList = errors.slice(0, 10).join("\n- "); // Show top 10 errors
+            const errorList = errors.slice(0, 10).join("\n- ");
             alert(`AI generation failed validation checks. The data is inconsistent. Please try again.\n\nErrors:\n- ${errorList}${errors.length > 10 ? '\n- ...and more.' : ''}`);
             return;
         }
 
         if (warnings.length > 0) {
             console.warn("AI Generation Warnings:", warnings);
-            // We can still proceed, but it's good to know
         }
         // --- END OF VALIDATION STEP ---
 
-        // If we get here, the data is valid and passes our checks
         console.log("AI generation successful and validated:", newSystemData);
         
         currentSystemData = newSystemData;
@@ -269,8 +275,22 @@ async function handleCreateWithAi() {
         systems[finalSystemName] = newSystemData;
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
         
-        alert(`Successfully created system: "${finalSystemName}"! Loading it now.`);
-        loadSavedSystem(finalSystemName); // This will load and run the augmentation step.
+        // Display stats
+        if (stats && statsContainer) {
+            const statsPre = statsContainer.querySelector('pre');
+            if (statsPre) {
+                const statsString = `Input Characters: ${stats.inputChars.toLocaleString()}\n` +
+                                  `Output Characters: ${stats.outputChars.toLocaleString()}\n` +
+                                  `Output Tokens: ${stats.outputTokens.toLocaleString()}\n` +
+                                  `Total Tokens (est.): ${stats.totalTokens.toLocaleString()}\n\n` +
+                                  `System Prompt Summary:\n${stats.systemPromptSummary}`;
+                statsPre.textContent = statsString;
+                statsContainer.style.display = 'block';
+            }
+        }
+        
+        alert(`Successfully created and saved system: "${finalSystemName}"! Loading it now.`);
+        loadSavedSystem(finalSystemName);
 
     } catch (error) {
         alert("An error occurred during AI system generation. Please check the console.");

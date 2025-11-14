@@ -98,34 +98,35 @@ async function generateSystemFromPrompt(userPrompt, apiKey, provider) {
         // be deployed to a public website.
         switch (provider) {
             case 'google-gemini':
+                // This function now returns an object { data, stats }
                 return await _generateSystemWithGemini(systemPrompt, userPrompt, apiKey);
             case 'openai-gpt4o':
                 // return await _generateSystemWithOpenAI(systemPrompt, userPrompt, apiKey);
                 console.warn("OpenAI generation not yet implemented.");
                 alert("AI provider 'OpenAI (GPT-4o)' is not yet implemented.");
-                return null; // TODO
+                return { data: null, stats: null }; // TODO
             case 'anthropic-claude35':
                 // return await _generateSystemWithAnthropic(systemPrompt, userPrompt, apiKey);
                 console.warn("Anthropic generation not yet implemented.");
                 alert("AI provider 'Anthropic (Claude 3.5 Sonnet)' is not yet implemented.");
-                return null; // TODO
+                return { data: null, stats: null }; // TODO
             case 'mistral-large':
                 console.warn("Mistral generation not yet implemented.");
                 alert("AI provider 'Mistral (Large 2)' is not yet implemented.");
-                return null; // TODO
+                return { data: null, stats: null }; // TODO
             case 'cohere-command-r':
                 console.warn("Cohere generation not yet implemented.");
                 alert("AI provider 'Cohere (Command R)' is not yet implemented.");
-                return null; // TODO
+                return { data: null, stats: null }; // TODO
             default:
                 console.error(`Unknown AI provider: ${provider}`);
                 alert(`AI System Generation for "${provider}" is not yet supported.`);
-                return null;
+                return { data: null, stats: null };
         }
     } catch (error) {
         console.error(`Error during AI generation with ${provider}:`, error);
         alert(`An error occurred while communicating with the AI. Check the console.\nError: ${error.message}`);
-        return null;
+        return { data: null, stats: null };
     }
 }
 
@@ -384,7 +385,7 @@ Proceed to generate the new JSON object based on the user's prompt.
 /**
  * [PRIVATE] Calls the Google Gemini API to generate a system.
  * [MODIFIED] Uses _fetchWithRetry to handle transient errors.
- * @returns {Promise<object|null>} Parsed JSON object or null.
+ * @returns {Promise<object|null>} An object containing the parsed JSON data and generation stats.
  */
 async function _generateSystemWithGemini(systemPrompt, userPrompt, apiKey) {
     // [LOG] Added for debugging
@@ -456,9 +457,22 @@ async function _generateSystemWithGemini(systemPrompt, userPrompt, apiKey) {
 
     try {
         const parsedJson = JSON.parse(cleanedJsonString);
-        // [LOG] Added for debugging
         console.log("[AI-DEBUG] _generateSystemWithGemini: JSON parsed successfully.");
-        return parsedJson;
+
+        // --- [NEW] Collect Stats ---
+        const usage = responseData.usageMetadata || {};
+        const stats = {
+            inputChars: systemPrompt.length + userPrompt.length,
+            outputChars: cleanedJsonString.length,
+            outputTokens: usage.candidatesTokenCount || 'N/A',
+            totalTokens: usage.totalTokenCount || 'N/A',
+            systemPromptSummary: systemPrompt.substring(0, 200) + "..."
+        };
+        console.log("[AI-DEBUG] Collected generation stats:", stats);
+        // --- End Stats ---
+
+        return { data: parsedJson, stats: stats };
+
     } catch (e) {
         console.error("[AI-DEBUG] _generateSystemWithGemini: FAILED to parse JSON response.", e);
         console.error("Raw AI response:", jsonString);
