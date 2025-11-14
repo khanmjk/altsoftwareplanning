@@ -11,7 +11,7 @@
  * @returns {Promise<Response>} A promise that resolves to the successful fetch Response.
  * @throws {Error} Throws an error if retries fail or if a non-retryable error (4xx) occurs.
  */
-async function _fetchWithRetry(url, options, maxRetries = 5, initialDelay = 1000) {
+async function _fetchWithRetry(url, options, maxRetries = 5, initialDelay = 1000, spinnerP = null) {
     let attempt = 0;
     while (attempt < maxRetries) {
         // [LOG] Added for debugging
@@ -65,6 +65,11 @@ async function _fetchWithRetry(url, options, maxRetries = 5, initialDelay = 1000
             // Calculate exponential backoff + jitter
             const jitter = Math.random() * 1000; // Add up to 1 second of jitter
             const delay = initialDelay * Math.pow(2, attempt - 1) + jitter;
+
+            // Update spinner text if element was provided
+            if (spinnerP) {
+                spinnerP.textContent = `AI service is busy (Attempt ${attempt}/${maxRetries}). Retrying in ${(delay / 1000).toFixed(1)}s...`;
+            }
             
             console.log(`[AI-DEBUG] Waiting ${delay.toFixed(0)}ms before next retry...`);
             await new Promise(resolve => setTimeout(resolve, delay));
@@ -84,7 +89,7 @@ async function _fetchWithRetry(url, options, maxRetries = 5, initialDelay = 1000
  * @param {string} provider The selected provider (e.g., "google-gemini").
  * @returns {Promise<object|null>} A promise that resolves to the new currentSystemData object or null on failure.
  */
-async function generateSystemFromPrompt(userPrompt, apiKey, provider) {
+async function generateSystemFromPrompt(userPrompt, apiKey, provider, spinnerP = null) {
     // [LOG] Added for debugging
     console.log(`[AI-DEBUG] generateSystemFromPrompt: Routing for provider '${provider}' with prompt: "${userPrompt}"`);
     
@@ -99,7 +104,7 @@ async function generateSystemFromPrompt(userPrompt, apiKey, provider) {
         switch (provider) {
             case 'google-gemini':
                 // This function now returns an object { data, stats }
-                return await _generateSystemWithGemini(systemPrompt, userPrompt, apiKey);
+                return await _generateSystemWithGemini(systemPrompt, userPrompt, apiKey, spinnerP);
             case 'openai-gpt4o':
                 // return await _generateSystemWithOpenAI(systemPrompt, userPrompt, apiKey);
                 console.warn("OpenAI generation not yet implemented.");
@@ -125,6 +130,7 @@ async function generateSystemFromPrompt(userPrompt, apiKey, provider) {
         }
     } catch (error) {
         console.error(`Error during AI generation with ${provider}:`, error);
+        // Changed this alert to show the specific error message
         alert(`An error occurred while communicating with the AI. Check the console.\nError: ${error.message}`);
         return { data: null, stats: null };
     }
@@ -308,7 +314,7 @@ const minimalSchemaExample = {
     const schemaExample = JSON.stringify(minimalSchemaExample, null, 2);    
 
     const promptString = `
-You are a seasoned VP of Engineering and strategic business partner, acting as a founding technology leader. Your purpose is to help a user create a tech business and organize their software development teams.
+You are a seasoned VP of Engineering and strategic business partner, acting as a founding technology leader. Your purpose is to help a user create a tech business and organize their software development teams. You are an expert in software team topologies and organizational structure design, taking the best from industry players like Google, Microsoft, Apple, Netflix, Amazon, etc.
 
 Your sole task is to take a user's prompt (e.g., "An excel spreadsheet company," "A video streaming app") and generate a single, complete, valid JSON object representing the entire software system, organizational structure, and three-year roadmap. This JSON will be used in an educational tool for software managers.
 
@@ -387,7 +393,7 @@ Proceed to generate the new JSON object based on the user's prompt.
  * [MODIFIED] Uses _fetchWithRetry to handle transient errors.
  * @returns {Promise<object|null>} An object containing the parsed JSON data and generation stats.
  */
-async function _generateSystemWithGemini(systemPrompt, userPrompt, apiKey) {
+async function _generateSystemWithGemini(systemPrompt, userPrompt, apiKey, spinnerP = null) {
     // [LOG] Added for debugging
     console.log("[AI-DEBUG] _generateSystemWithGemini: Preparing to call Gemini for system generation...");
     
@@ -397,7 +403,7 @@ async function _generateSystemWithGemini(systemPrompt, userPrompt, apiKey) {
     // that manages the API key and makes the actual request to the Google API.
     
     //const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`;
-// [MODIFIED] Switched from gemini-2.5-pro to gemini-2.5-flash, the correct model for this API endpoint.
+    //Switched from gemini-2.5-pro to gemini-2.5-flash, the correct model for this API endpoint.
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
     const requestBody = {
@@ -430,9 +436,8 @@ async function _generateSystemWithGemini(systemPrompt, userPrompt, apiKey) {
     // [LOG] Added for debugging
     console.log(`[AI-DEBUG] _generateSystemWithGemini: Calling _fetchWithRetry for ${API_URL.split('?')[0]}`);
 
-    // MODIFIED: Call _fetchWithRetry instead of fetch
     // The _fetchWithRetry function will handle retries and 4xx/5xx errors
-    const response = await _fetchWithRetry(API_URL, fetchOptions);
+    const response = await _fetchWithRetry(API_URL, fetchOptions, 5, 1000, spinnerP);
 
     // [LOG] Added for debugging
     console.log("[AI-DEBUG] _generateSystemWithGemini: Fetch successful. Parsing response data...");
@@ -573,7 +578,7 @@ async function _getAnalysisWithGemini(systemPrompt, userQuestion, apiKey) {
     // [LOG] Added for debugging
     console.log(`[AI-DEBUG] _getAnalysisWithGemini: Calling _fetchWithRetry for ${API_URL.split('?')[0]}`);
 
-    // MODIFIED: Call _fetchWithRetry instead of fetch
+    // MODIFIED: Call _fetchWithRetry instead of fetch. No spinner needed here.
     const response = await _fetchWithRetry(API_URL, fetchOptions);
 
     // [LOG] Added for debugging

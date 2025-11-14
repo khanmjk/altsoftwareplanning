@@ -230,14 +230,19 @@ async function handleCreateWithAi() {
     }
 
     const spinner = document.getElementById('aiLoadingSpinner');
-    if (spinner) spinner.style.display = 'flex';
+    const spinnerP = spinner ? spinner.querySelector('p') : null;
+    
+    if (spinner && spinnerP) {
+        spinnerP.textContent = 'AI is generating your system... This may take a moment.';
+        spinner.style.display = 'flex';
+    } 
 
     // Hide stats from previous runs
     const statsContainer = document.getElementById('aiGenerationStats');
     if (statsContainer) statsContainer.style.display = 'none';
 
     try {
-        const result = await generateSystemFromPrompt(prompt, globalSettings.ai.apiKey, globalSettings.ai.provider);
+        const result = await generateSystemFromPrompt(prompt, globalSettings.ai.apiKey, globalSettings.ai.provider, spinnerP);
         const newSystemData = result.data;
         const stats = result.stats;
 
@@ -293,10 +298,13 @@ async function handleCreateWithAi() {
         loadSavedSystem(finalSystemName);
 
     } catch (error) {
-        alert("An error occurred during AI system generation. Please check the console.");
+        // This existing alert will show the final error message after all retries fail.
+        alert("An error occurred during AI system generation. Please check the console.\nError: " + error.message);
         console.error("Error in handleCreateWithAi:", error);
     } finally {
         if (spinner) spinner.style.display = 'none';
+        // Reset spinner text again in finally block for safety
+        if (spinnerP) spinnerP.textContent = 'AI is generating your system... This may take a moment.';
     }
 }
 
