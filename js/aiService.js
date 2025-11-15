@@ -699,60 +699,74 @@ function _getMindMapPrompt() {
 }
 
 /**
- * [NEW] [PRIVATE] Calls the Google Imagen API to generate an image.
+ * [MODIFIED] [PRIVATE] Calls the Google Imagen API via the Vertex AI endpoint.
  * This is the REAL implementation.
  * @returns {Promise<object>} An object { isImage: true, imageUrl: string, altText: string }
  */
 async function _generateImageWithImagen(userPrompt, contextJson, apiKey) {
-    console.log("[AI-DEBUG] _generateImageWithImagen: Preparing to call REAL Imagen 3...");
+    console.log("[AI-DEBUG] _generateImageWithImagen: Preparing to call REAL Imagen 3 via Vertex AI...");
 
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:generateContent?key=${apiKey}`;
-
-    let imageSystemPrompt;
-    const promptLowerCase = userPrompt.toLowerCase();
-
-    if (promptLowerCase.includes('architecture') || promptLowerCase.includes('block diagram')) {
-        imageSystemPrompt = _getArchitecturePrompt();
-        console.log("[AI-DEBUG] Image Router: Selected Architecture Prompt");
-    } else if (promptLowerCase.includes('org chart') || promptLowerCase.includes('managers')) {
-        imageSystemPrompt = _getOrgChartPrompt();
-        console.log("[AI-DEBUG] Image Router: Selected Org Chart Prompt");
-    } else if (promptLowerCase.includes('mind map') || promptLowerCase.includes('flowchart')) {
-        imageSystemPrompt = _getMindMapPrompt();
-        console.log("[AI-DEBUG] Image Router: Selected Mind Map Prompt");
-    } else {
-        imageSystemPrompt = _getArchitecturePrompt();
-        console.warn("[AI-DEBUG] Image Router: No specific prompt matched. Defaulting to Architecture.");
+    // !!! IMPORTANT: REPLACE WITH YOUR PROJECT ID FROM GOOGLE CLOUD CONSOLE !!!
+    const GCP_PROJECT_ID = "gen-lang-client-0801101504"; // e.g., "gen-lang-client-0..."
+    const GCP_REGION = "us-central1"; // Imagen is often in us-central1
+    
+    if (GCP_PROJECT_ID === "YOUR-PROJECT-ID-HERE") {
+        throw new Error("Missing GCP_PROJECT_ID in js/aiService.js, _generateImageWithImagen");
     }
 
+    // [THE FIX] This is the correct Vertex AI endpoint for Imagen
+    const API_URL = `https://` + GCP_REGION + `-aiplatform.googleapis.com/v1/projects/` + GCP_PROJECT_ID + `/locations/` + GCP_REGION + `/publishers/google/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+
+    // 1. Build the new combined prompt (router)
+    let imageSystemPrompt;
+    const promptLowerCase = userPrompt.toLowerCase();
+    if (promptLowerCase.includes('architecture') || promptLowerCase.includes('block diagram')) {
+        imageSystemPrompt = _getArchitecturePrompt();
+        console.log("[AI-DEBUG] Image Router: Selected Architecture Prompt (Vertex)");
+    } else if (promptLowerCase.includes('org chart') || promptLowerCase.includes('managers')) {
+        imageSystemPrompt = _getOrgChartPrompt();
+        console.log("[AI-DEBUG] Image Router: Selected Org Chart Prompt (Vertex)");
+    } else if (promptLowerCase.includes('mind map') || promptLowerCase.includes('flowchart')) {
+        imageSystemPrompt = _getMindMapPrompt();
+        console.log("[AI-DEBUG] Image Router: Selected Mind Map Prompt (Vertex)");
+    } else {
+        imageSystemPrompt = _getArchitecturePrompt();
+        console.warn("[AI-DEBUG] Image Router: Defaulted to Architecture Prompt (Vertex)");
+    }
     const combinedPrompt = `${imageSystemPrompt}\n\nCONTEXT DATA:\n${contextJson}\n\nUSER PROMPT:\n${userPrompt}`;
 
+    // [THE FIX] This is the correct request body format for the Vertex AI API
     const requestBody = {
-        contents: [
-            {
-                parts: [
-                    { text: combinedPrompt }
-                ]
-            }
-        ]
-        // The model knows to return an image from a text part.
+      "instances": [
+        { "prompt": combinedPrompt }
+      ],
+      "parameters": {
+        "number_of_images": 1
+      }
     };
     
     const fetchOptions = {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+            'Content-Type': 'application/json'
+            // NOTE: This endpoint uses API Key in the URL, not a Bearer token
+        },
         body: JSON.stringify(requestBody)
     };
 
+    // Use the retry mechanism
     const response = await _fetchWithRetry(API_URL, fetchOptions);
     const responseData = await response.json();
 
-    const inlinePart = responseData?.candidates?.[0]?.content?.parts?.find(part => part?.inlineData?.data);
-    const base64ImageData = inlinePart?.inlineData?.data;
-    if (!base64ImageData) {
-        console.error("[AI-DEBUG] Invalid response structure from Imagen:", responseData);
+    // 2. Process the response
+    // The Vertex AI response has a different structure
+    if (!responseData.predictions || !responseData.predictions[0] || !responseData.predictions[0].bytesBase64Encoded) {
+        console.error("[AI-DEBUG] Invalid response structure from Vertex AI (Imagen):", responseData);
         throw new Error("Received an invalid or empty response from the Imagen AI.");
     }
+    
+    // 3. Convert Base64 to a Data URL
+    const base64ImageData = responseData.predictions[0].bytesBase64Encoded;
     const imageUrl = `data:image/png;base64,${base64ImageData}`;
 
     console.log(`[AI-DEBUG] _generateImageWithImagen: Successfully received and formatted image as data URL.`);
