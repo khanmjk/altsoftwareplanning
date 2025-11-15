@@ -730,10 +730,12 @@ async function _generateImageWithImagen(userPrompt, contextJson, apiKey) {
     const requestBody = {
         contents: [
             {
-                role: "user",
-                parts: [{ text: combinedPrompt }]
+                parts: [
+                    { text: combinedPrompt }
+                ]
             }
         ]
+        // The model knows to return an image from a text part.
     };
     
     const fetchOptions = {
