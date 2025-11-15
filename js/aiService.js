@@ -1,4 +1,6 @@
 // js/aiService.js
+// [NEW] Set to true to bypass API calls and return mock data for UI development
+const AI_ANALYSIS_MOCK_MODE = false;
 /**
  * [NEW] A private helper to wrap fetch calls with exponential backoff.
  * This is a best-practice coding pattern for handling transient server
@@ -516,14 +518,47 @@ async function _generateSystemWithGemini(systemPrompt, userPrompt, apiKey, spinn
 async function getAnalysisFromPrompt(userQuestion, contextJson, apiKey, provider) {
     // [LOG] Added for debugging
     console.log(`[AI-DEBUG] getAnalysisFromPrompt: Routing for provider '${provider}' with question: "${userQuestion}"`);
+
+    // --- [NEW] Mock Mode Implementation ---
+    if (AI_ANALYSIS_MOCK_MODE) {
+        console.warn("[AI-DEBUG] MOCK MODE ENABLED. Returning fake data without API call.");
+        // Simulate a network delay
+        await new Promise(resolve => setTimeout(resolve, 750));
+
+        // Check for specific questions to make the mock more interactive
+        if (userQuestion.toLowerCase().includes("overloaded")) {
+             return "This is a mock response. Based on the context from the 'planningView', the **Data Dragoons** team appears to be overloaded by 2.5 SDE-Years.";
+        }
+        if (userQuestion.toLowerCase().includes("how many teams")) {
+             return "This is a mock response. The provided context from 'organogramView' shows there are **8 teams** in this system.";
+        }
+
+        return `This is a mock AI response. I received your question: "${userQuestion}". I am analyzing the provided context, which is ${contextJson.length} characters long.`;
+    }
+    // --- [END NEW] ---
     
-    // 1. Build the analysis prompt
-    const systemPrompt = `You are a helpful software planning assistant. Analyze the following JSON data, which represents the user's current view, to answer their question.
+ // 1. Build the analysis prompt
+    const systemPrompt = `You are an expert Software Engineering Planning & Management Partner. Your goals are to:
+    1.  **Prioritize the CONTEXT DATA:** Base all your answers about the user's system (initiatives, teams, engineers, services) exclusively on the JSON data provided in the "CONTEXT DATA" section.
+    2.  **Use General Knowledge as a Fallback:** If the user asks a general knowledge question (e.g., "What is AWS?", "Define 'SDE-Year'"), and the answer is *not* in the CONTEXT DATA, you may use your own knowledge to provide a brief, helpful definition.
+    3.  **Be Clear:** When using your own knowledge, state it (e.g., "AWS CloudFront is a content delivery network..."). When using the context, be specific (e.g., "Based on the data, the 'Avengers' team...").
+    
+    4.  **Perform Expert Analysis & Provide Recommendations (Your Main Task):** If the user asks for an analysis, opinion, rating, or recommendation (e.g., "rate this," "find risks," "optimize this plan"), you MUST perform a deep analysis. Even for simple questions, you should *proactively* add these insights if you find them.
+        * **Architectural Analysis:** Use the \`services\` data (especially \`serviceDependencies\`) to comment on loose/tight coupling, potential bottlenecks, or how the architecture aligns with team structure (Conway's Law).
+        * **Organizational Analysis:** Use \`allKnownEngineers\` and \`teams\` data to analyze team composition. Proactively find and highlight risks like skill gaps, high junior-to-senior ratios, or single-person dependencies on a critical skill.
+        * **Capacity & Risk Analysis:** If the context includes \`capacityConfigView\` or \`planningView\` data, actively scrutinize it. Find anomalies. (e.g., "I notice the 'Avengers' have 20 hours/week of overhead while all other teams have 6. Is this correct?"). Call out opportunities to optimize leave schedules or other constraints.
+        * **Planning & Optimization Suggestions:** This is your most advanced task. When asked to analyze or optimize the \`planningView\`, do not just re-order initiatives.
+            a.  First, respect all \`isProtected: true\` initiatives.
+            b.  Then, to fit more work, you are empowered to **suggest specific reductions to SDE-Year estimates** for non-protected items.
+            c.  You must justify *why* (e.g., "The initiative 'Improve UI' is 2.5 SDE-Years, which seems high for a UI-only task. Reducing it to 1.5 might fit it Above The Line.").
+            d.  Recommend a new priority order based on \`roi\` and your new estimates.
     
     CONTEXT DATA:
     ${contextJson}
     
-    Answer the user's question based *only* on the data provided. Be concise and helpful.`;
+    Answer the user's question concisely and helpfully.
+    `;
+
     
     // [LOG] Added for debugging
     console.log(`[AI-DEBUG] getAnalysisFromPrompt: System prompt and context JSON length: ${systemPrompt.length} chars.`);
@@ -548,6 +583,11 @@ async function getAnalysisFromPrompt(userQuestion, contextJson, apiKey, provider
         console.error(`Error during AI analysis with ${provider}:`, error);
         return `An error occurred while communicating with the AI. Check the console.\nError: ${error.message}`;
     }
+}
+
+// Expose public functions to global scope for other modules
+if (typeof window !== 'undefined') {
+    window.getAnalysisFromPrompt = getAnalysisFromPrompt;
 }
 
 /**

@@ -11,6 +11,7 @@ let currentChartTeamId = '__ORG_VIEW__'; // To track which team's chart is displ
 let capacityChartInstance = null; // To hold the Chart.js instance
 let applyCapacityConstraintsToggle = false; // Default to OFF
 let lastAiGenerationStats = null; // Cache the latest AI stats for the modal
+let currentViewId = null; // Track the currently active view for AI context scraping
 
 // --- Global App Settings ---
 const defaultSettings = {
@@ -86,6 +87,55 @@ const VIEW_TO_BUTTON_MAP = {
     'capacityConfigView': 'tuneCapacityButton',
     'sdmForecastingView': 'sdmForecastButton'
 };
+
+// Fallback HTML snippets for components when fetch is unavailable (e.g., file:// protocol)
+const HTML_COMPONENT_FALLBACKS = {
+    'html/components/aiChatPanel.html': `
+<div id="aiChatPanel" style="position: fixed; bottom: 20px; right: 20px; width: 350px; height: 500px; background-color: #fff; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1040; display: none; flex-direction: column; resize: both; overflow: auto;">
+    <div class="modal-header" style="cursor: move; border-top-left-radius: 8px; border-top-right-radius: 8px;">
+        <h3 id="aiChatTitle" style="margin: 0; font-size: 1.2em;">AI Assistant</h3>
+        <span class="close-button" onclick="closeAiChatPanel()">&times;</span>
+    </div>
+    <div id="aiChatLog" style="flex-grow: 1; padding: 10px; overflow-y: auto; background-color: #f8f9fa; border-bottom: 1px solid #eee;">
+        <div class="chat-message ai-message">Hello! How can I help you analyze the current system?</div>
+    </div>
+    <div id="aiChatInputContainer" style="padding: 10px; border-top: 1px solid #ccc;">
+        <textarea id="aiChatInput" style="width: 100%; height: 60px; border: 1px solid #ccc; border-radius: 4px; resize: none; box-sizing: border-box; padding: 5px;" placeholder="Ask about the current view..."></textarea>
+        <button id="aiChatSendButton" class="btn-primary" style="width: 100%; margin-top: 5px;">Send</button>
+    </div>
+</div>`
+};
+
+/**
+ * Helper to load HTML components from files into target containers.
+ */
+async function loadHtmlComponent(url, targetId) {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
+        }
+        const html = await response.text();
+        const target = document.getElementById(targetId);
+        if (target) {
+            target.innerHTML = html;
+            return true;
+        } else {
+            console.warn(`HTML load target '${targetId}' not found in DOM.`);
+            return false;
+        }
+    } catch (error) {
+        console.error(`Failed to load component ${url}:`, error);
+        const fallbackHtml = HTML_COMPONENT_FALLBACKS[url];
+        const target = document.getElementById(targetId);
+        if (fallbackHtml && target) {
+            console.warn(`Injecting fallback HTML for component '${url}'.`);
+            target.innerHTML = fallbackHtml;
+            return true;
+        }
+        return false;
+    }
+}
 
 // --- Trigger Top Bar Animation ---
 document.addEventListener('DOMContentLoaded', function() {
@@ -356,9 +406,17 @@ async function handleCreateWithAi() {
     }
 }
 
-window.onload = function() {
+window.onload = async function() {
     console.log("!!! window.onload: Page HTML and synchronous scripts loaded. !!!");
     currentMode = Modes.NAVIGATION;
+
+    // Load HTML components before wiring up listeners
+    try {
+        await loadHtmlComponent('html/components/aiChatPanel.html', 'aiChatPanelContainer');
+        // Additional shared components can be added here in the future.
+    } catch (e) {
+        console.error("Failed to load essential HTML components on startup.", e);
+    }
 
     const docHeader = document.getElementById('documentationHeader');
     const docResizeHandle = document.getElementById('docResizeHandle');
@@ -397,6 +455,7 @@ window.onload = function() {
  */
 function switchView(targetViewId, newMode = null) {
     console.log(`Switching view to: ${targetViewId || 'Home'}, Mode: ${newMode || 'Auto'}`);
+    currentViewId = targetViewId;
 
     const allViewIds = [
         'systemEditForm', 'visualizationCarousel', 'serviceDependenciesTable',
@@ -422,6 +481,16 @@ function switchView(targetViewId, newMode = null) {
             console.warn("switchView: closeThemeManagementModal function not found. Theme modal might not be hidden correctly.");
         }
         // --- End modal closing logic ---       
+
+        // Show/Hide AI Chat Button
+        const aiChatButton = document.getElementById('aiChatButton');
+        if (aiChatButton) {
+            aiChatButton.style.display = (globalSettings.ai.isEnabled && targetViewId) ? 'inline-block' : 'none';
+        }
+        // Close chat panel on view switch
+        if (typeof closeAiChatPanel === 'function') {
+            closeAiChatPanel();
+        }
    
         allViewIds.forEach(id => {
             const element = document.getElementById(id);
@@ -1458,6 +1527,19 @@ function initializeEventListeners() {
     document.getElementById('tuneCapacityButton')?.addEventListener('click', showCapacityConfigView);
     document.getElementById('sdmForecastButton')?.addEventListener('click', showSdmForecastingView);
     document.getElementById('aiSettingsButton')?.addEventListener('click', openAiSettingsModal); 
+
+    // AI Chat Button
+    document.getElementById('aiChatButton')?.addEventListener('click', () => {
+        if (typeof openAiChatPanel === 'function') {
+            openAiChatPanel();
+        }
+    });
+    // Initialize the chat panel's internal listeners
+    if (typeof initializeAiChatPanel === 'function') {
+        initializeAiChatPanel();
+    } else {
+        console.error("main.js: initializeAiChatPanel() function not found. aiChatAssistant.js may not have loaded.");
+    }
 
     // Global Nav Buttons
     document.getElementById('backToSystemViewButton')?.addEventListener('click', showSystemOverview);

@@ -1,0 +1,203 @@
+/* css/components/aiChatPanel.css */
+#aiChatLog .chat-message {
+    padding: 8px 12px;
+    border-radius: 18px;
+    margin-bottom: 8px;
+    max-width: 85%;
+    line-height: 1.4;
+    font-size: 0.9em;
+}
+
+#aiChatLog .user-message {
+    background-color: #007bff;
+    color: white;
+    margin-left: auto;
+    border-bottom-right-radius: 4px;
+}
+
+#aiChatLog .ai-message {
+    background-color: #e9ecef;
+    color: #212529;
+    margin-right: auto;
+    border-bottom-left-radius: 4px;
+}
+
+#aiChatLog .chat-message.loading {
+    font-style: italic;
+    color: #6c757d;
+}
+
+/* --- [NEW] Styles for Markdown Content --- */
+
+.ai-message {
+    /* Make the message a positioning context for the copy button */
+    position: relative;
+}
+
+.ai-message p {
+    margin: 0 0 0.5em 0; /* Add space between paragraphs */
+}
+.ai-message p:last-child {
+    margin-bottom: 0;
+}
+
+.ai-message ul,
+.ai-message ol {
+    padding-left: 20px; /* Indent lists */
+    margin: 0.5em 0;
+}
+.ai-message li {
+    margin-bottom: 0.25em;
+    line-height: 1.5;
+}
+
+/* Inline code */
+.ai-message code {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    background-color: #f8f9fa; /* Light background */
+    border: 1px solid #dee2e6;
+    padding: 0.1em 0.4em;
+    border-radius: 3px;
+    font-size: 0.85em;
+}
+
+/* Code blocks */
+.ai-message pre {
+    background-color: #212529; /* Dark background for code blocks */
+    color: #f8f9fa;
+    padding: 10px;
+    border-radius: 4px;
+    overflow-x: auto; /* Allow horizontal scrolling */
+    font-size: 0.85em;
+    line-height: 1.4;
+}
+
+/* --- [NEW] Styles for Copy Button --- */
+.chat-copy-button {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: none;
+    border: none;
+    color: #6c757d; /* Muted gray */
+    cursor: pointer;
+    font-size: 0.9em;
+    padding: 3px 6px;
+    border-radius: 4px;
+    opacity: 0; /* Hide by default */
+    transition: opacity 0.2s ease, background-color 0.2s ease;
+}
+
+.ai-message:hover .chat-copy-button {
+    opacity: 1; /* Show on hover */
+}
+
+.chat-copy-button:hover {
+    background-color: #dee2e6; /* Light gray background on button hover */
+    color: #212529;
+}
+
+.chat-copy-button .fa-check {
+    color: #28a745; /* Green checkmark */
+}
+# --- [NEW] Styles for Markdown Content ---
+
+.ai-message {
+    /* Make the message a positioning context for the copy button */
+    position: relative;
+    /* Remove padding, as it will be on the child */
+}
+
+/* [NEW] This container holds the rendered markdown */
+.chat-content-container {
+    padding-right: 30px; /* Space for the copy button */
+}
+
+.ai-message p {
+    margin: 0 0 0.5em 0; /* Add space between paragraphs */
+}
+.ai-message p:last-child {
+    margin-bottom: 0;
+}
+
+.ai-message ul,
+.ai-message ol {
+    padding-left: 20px; /* Indent lists */
+    margin: 0.5em 0;
+}
+.ai-message li {
+    margin-bottom: 0.25em;
+    line-height: 1.5;
+}
+
+/* Inline code */
+.ai-message code {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    background-color: #f8f9fa; /* Light background */
+    border: 1px solid #dee2e6;
+    padding: 0.1em 0.4em;
+    border-radius: 3px;
+    font-size: 0.85em;
+}
+
+/* Code blocks */
+.ai-message pre {
+    background-color: #212529; /* Dark background for code blocks */
+    color: #f8f9fa;
+    padding: 10px;
+    border-radius: 4px;
+    overflow-x: auto; /* Allow horizontal scrolling */
+    font-size: 0.85em;
+    line-height: 1.4;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Markdown Tables */
+.ai-message table {
+    border-collapse: collapse;
+    margin: 1em 0;
+    font-size: 0.9em;
+    width: 100%;
+}
+.ai-message th,
+.ai-message td {
+    border: 1px solid #dee2e6;
+    padding: 6px 10px;
+}
+.ai-message th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+.ai-message tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+/* --- [NEW] Styles for Copy Button --- */
+.chat-copy-button {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: none;
+    border: none;
+    color: #6c757d; /* Muted gray */
+    cursor: pointer;
+    font-size: 0.9em;
+    padding: 3px 6px;
+    border-radius: 4px;
+    opacity: 0; /* Hide by default */
+    transition: opacity 0.2s ease, background-color 0.2s ease;
+}
+
+.ai-message:hover .chat-copy-button {
+    opacity: 1; /* Show on hover */
+}
+
+.chat-copy-button:hover {
+    background-color: #dee2e6; /* Light gray background on button hover */
+    color: #212529;
+}
+
+.chat-copy-button .fa-check {
+    color: #28a745; /* Green checkmark */
+}

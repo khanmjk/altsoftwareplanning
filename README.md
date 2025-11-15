@@ -7,6 +7,7 @@
 1.  [Purpose](#purpose)
 2.  [Getting Started](#getting-started)
     * [AI Assistant Settings](#ai-assistant-settings)
+    * [AI Assistant](#ai-assistant)
     * [Loading a Saved System](#loading-a-saved-system)
     * [Creating a New System](#creating-a-new-system)
     * [Creating a New System with AI](#creating-a-new-system-with-ai)
@@ -83,6 +84,45 @@ Upon launching the application, you'll see the main menu on the top bar.
 * Paste your API key into the text field.
 * **Disclaimer:** This is a client-side application. Your API key is stored exclusively in your browser's local storage and is never sent to any server other than the selected LLM provider. Using this app comes with risks. The author is not liable for any issues that arise from using your own private (non-free-tier) API key.
 * Click **"Save Settings"**.
+
+### AI Assistant
+
+* **AI System Generation:** From the home screen, use the "Create with AI" button to generate a complete, realistic system and 3-year plan from a single text prompt.
+* **Settings Management:** A globally accessible "AI Assistant" button in the top bar allows you to enable/disable AI mode and securely save your API key in local storage. The modal provides explicit instructions and disclaimers for using a free API key.
+* **Loading Animation:** A spinner provides visual feedback while the AI is processing your request.
+* **Generation Statistics:** After a system is created, a panel displays metrics about the LLM interaction, including token and character counts for the input and output.
+* **Context-Aware Chat:** Once a system is loaded, an "AI Chat" button appears. This opens a chat panel that allows you to ask questions about the *currently loaded system*. The AI's context is updated as you navigate, allowing you to ask specific questions about what you're seeing.
+
+#### Example Chat Questions
+
+Here are some examples of the types of expert-level questions you can ask the assistant, based on the view you are on:
+
+* **On "System Overview" (Visualizations):**
+    * "What is this system about?"
+    * "Which team owns the 'Content Delivery Service'?"
+    * "What services does the 'Recommendation Engine' depend on?"
+    * "Show me all upstream and downstream dependencies for the 'Payment Service'."
+
+* **On "Inspect Org Design" (Org Chart & Engineer List):**
+    * "Who is 'Emily Clark' and what are her skills?"
+    * "Give me a list of all AI Software Engineers and their agent types."
+    * "How many L5+ (Level 5 or higher) engineers are in the 'Core Platform' org?"
+    * "Who does 'Alice Johnson' report to?"
+
+* **On "Year Plan":**
+    * "Which teams are overloaded based on the current ATL/BTL line?"
+    * "What's the total Net SDE-Year capacity for the 'Avengers' team?"
+    * "Summarize all initiatives assigned to the 'Avengers' and their total SDE load."
+
+* **On "Capacity Tuning":**
+    * "Walk me through the capacity calculation for the 'Spartans' team."
+    * "What is the org-wide 'Net Project Capacity' in the 'EffectiveBIS' scenario?"
+    * "Which team has the highest 'aiProductivityGainPercent' configured and what is it?"
+
+* **On "Dashboard" (viewing a widget):**
+    * (Viewing 'Strategic Goals') "Which goals are 'At Risk' and why?"
+    * (Viewing 'Investment Distribution') "What's our biggest investment theme this year and how many SDE-Years are assigned to it?"
+    * (Viewing 'Team Demand') "Which team has the highest 'Backlog' demand in Q3?"
 
 ### Loading a Saved System
 
