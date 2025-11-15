@@ -52,6 +52,20 @@ const SUGGESTED_QUESTIONS = {
         { text: "What is the total 'AI Productivity Gain' across the org?" },
         { text: "Compare the 'Standard Leave' days for all teams." }
     ],
+    'systemEditForm': [
+        { text: "How do I add a new Team?" },
+        { text: "What's the difference between 'Engineers' and 'Away-Team Members'?" },
+        { text: "Find any services that don't have an owning team." },
+        { text: "Find any engineers in the roster who are not assigned to a team." },
+        { text: "Explain the 'Platform Dependencies' field for a service." }
+    ],
+    'sdmForecastingView': [
+        { text: "Explain the 'Effective Engineers' calculation." },
+        { text: "How does 'Annual Attrition Rate' affect this forecast?" },
+        { text: "What's the difference between 'Total Ramped Up Engineers' and 'Total Headcount'?" },
+        { text: "Analyze the hiring rate needed to close the gap by the target week." },
+        { text: "How do the 'Capacity Constraints' (like overhead) affect this forecast?" }
+    ],
     'default': [
         { text: "What is this system about?" },
         { text: "How many teams are there?" },
