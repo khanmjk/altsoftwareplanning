@@ -2,7 +2,7 @@
 // [NEW] Set to true to bypass API calls and return mock data for UI development
 const AI_ANALYSIS_MOCK_MODE = false;
 // [NEW] Set to true to bypass image API calls
-const AI_IMAGE_MOCK_MODE = true;
+const AI_IMAGE_MOCK_MODE = false;
 /**
  * [NEW] A private helper to wrap fetch calls with exponential backoff.
  * This is a best-practice coding pattern for handling transient server
@@ -654,18 +654,39 @@ async function _getAnalysisWithGemini(systemPrompt, userQuestion, apiKey) {
 }
 
 /**
+ * [NEW] Builds the system prompt for image generation.
+ * This instructs the AI on how to interpret the context data for drawing.
+ * @returns {string} The detailed system prompt for image generation.
+ */
+function _getImageGenerationSystemPrompt() {
+    return "You are a visual architect. Your task is to generate a clear, professional, block-and-arrow architecture diagram based on the user's prompt and the provided CONTEXT DATA.\n\n" +
+        "**RULES:**\n" +
+        "1.  **Grounding:** You MUST base your diagram *only* on the services, teams, and dependencies in the CONTEXT DATA. Do not invent services or relationships.\n" +
+        "2.  **Clarity:** The diagram must be simple, clean, and easy to read. Use logical groupings.\n" +
+        "3.  **How to Draw:**\n" +
+        "    * Use the `services` list to draw the main blocks.\n" +
+        "    * Use the `serviceDependencies` to draw arrows *between* the blocks.\n" +
+        "    * Use the `owningTeamId` to visually group or color-code services that belong to the same team.\n" +
+        "    * Label all blocks and arrows clearly.\n" +
+        "4.  **Format:** Generate a single, high-quality PNG image.";
+}
+
+/**
  * [NEW] [PRIVATE] Calls the Google Imagen API to generate an image.
  * This is the REAL implementation.
  * @returns {Promise<object>} An object { isImage: true, imageUrl: string, altText: string }
  */
 async function _generateImageWithImagen(userPrompt, contextJson, apiKey) {
-    console.log("[AI-DEBUG] _generateImageWithImagen: Preparing to call Imagen 3...");
+    console.log("[AI-DEBUG] _generateImageWithImagen: Preparing to call REAL Imagen 3...");
 
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:generateImages?key=${apiKey}`;
 
+    const imageSystemPrompt = _getImageGenerationSystemPrompt();
+    const combinedPrompt = `${imageSystemPrompt}\n\nCONTEXT DATA:\n${contextJson}\n\nUSER PROMPT:\n${userPrompt}`;
+
     const requestBody = {
-        "prompt": { "text": `CONTEXT: ${contextJson}\n\nPROMPT: ${userPrompt}` },
-        "config": { "number_of_images": 1 }
+        prompt: { text: combinedPrompt },
+        number_of_images: 1
     };
     
     const fetchOptions = {
@@ -677,12 +698,15 @@ async function _generateImageWithImagen(userPrompt, contextJson, apiKey) {
     const response = await _fetchWithRetry(API_URL, fetchOptions);
     const responseData = await response.json();
 
-    if (!responseData.images || !responseData.images[0].url) {
+    if (!responseData.images || !responseData.images[0] || !responseData.images[0].imageBytes) {
         console.error("[AI-DEBUG] Invalid response structure from Imagen:", responseData);
-        throw new Error("Received an invalid response from the Imagen AI.");
+        throw new Error("Received an invalid or empty response from the Imagen AI.");
     }
-    
-    const imageUrl = responseData.images[0].url;
+
+    const base64ImageData = responseData.images[0].imageBytes;
+    const imageUrl = `data:image/png;base64,${base64ImageData}`;
+
+    console.log(`[AI-DEBUG] _generateImageWithImagen: Successfully received and formatted image as data URL.`);
 
     return {
         isImage: true,
@@ -730,11 +754,11 @@ async function generateImageFromPrompt(userPrompt, contextJson, apiKey, provider
                 return await _generateImageWithImagen(userPrompt, contextJson, apiKey);
             default:
                 console.error(`Unknown AI provider for images: ${provider}`);
-                return `Image generation for "${provider}" is not yet supported.`;
+                throw new Error(`Image generation for "${provider}" is not yet supported.`);
         }
     } catch (error) {
         console.error(`Error during AI image generation with ${provider}:`, error);
-        return `An error occurred while communicating with the Image AI. Check the console.\nError: ${error.message}`;
+        throw new Error(`Image generation failed: ${error.message}`);
     }
 }
 

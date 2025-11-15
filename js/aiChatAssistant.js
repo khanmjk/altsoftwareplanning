@@ -8,6 +8,7 @@ let aiChatSendButton = null;
 
 // [NEW] Initialize markdown-it. It's already loaded in index.html.
 const md = window.markdownit();
+let cachedImageGenerationFn = null;
 // [MODIFIED] Store all suggested questions, now with image request flags.
 const SUGGESTED_QUESTIONS = {
     'planningView': [
@@ -284,7 +285,11 @@ async function handleAiImageSubmit(userQuestion) {
     const contextJson = scrapeCurrentViewContext();
     
     try {
-        const response = await generateImageFromPrompt(
+        const imageFn = resolveImageGenerationFunction();
+        if (!imageFn) {
+            throw new Error('AI image generation service is unavailable. Please ensure AI is enabled and an API key is saved.');
+        }
+        const response = await imageFn(
             question, 
             contextJson, 
             globalSettings.ai.apiKey,
@@ -294,7 +299,10 @@ async function handleAiImageSubmit(userQuestion) {
         if (loadingMessageEl && response && response.isImage) {
             loadingMessageEl.innerHTML = `
                 <p>Here is the generated diagram:</p>
-                <img src="${response.imageUrl}" alt="${response.altText}" class="chat-generated-image" />
+                <img src="${response.imageUrl}" 
+                     alt="${response.altText}" 
+                     class="chat-generated-image" 
+                     title="Right-click to copy or save this image" />
             `;
             loadingMessageEl.classList.remove('loading');
         } else {
@@ -628,6 +636,19 @@ async function waitForAnalysisFunction(maxAttempts = 5, delayMs = 200) {
             return window.getAnalysisFromPrompt;
         }
         await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+    return null;
+}
+
+function resolveImageGenerationFunction() {
+    if (cachedImageGenerationFn) return cachedImageGenerationFn;
+    if (typeof generateImageFromPrompt === 'function') {
+        cachedImageGenerationFn = generateImageFromPrompt;
+        return cachedImageGenerationFn;
+    }
+    if (typeof window !== 'undefined' && typeof window.generateImageFromPrompt === 'function') {
+        cachedImageGenerationFn = window.generateImageFromPrompt;
+        return cachedImageGenerationFn;
     }
     return null;
 }
