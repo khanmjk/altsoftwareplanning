@@ -6,6 +6,9 @@ let aiChatLog = null;
 let aiChatInput = null;
 let aiChatSendButton = null;
 
+// [NEW] Initialize markdown-it. It's already loaded in index.html.
+const md = window.markdownit();
+ 
 /**
  * Initializes the AI Chat Panel elements and attaches event listeners.
  * This is called once by main.js on startup.
@@ -118,15 +121,36 @@ async function handleAiChatSubmit() {
         );
         console.log('[AI CHAT] Received AI response.');
         
-        // 5. Update the loading message with the real response
+        // 5. [FIXED] Update the loading message with the real response
         if (loadingMessageEl) {
-            loadingMessageEl.textContent = aiResponse;
+            loadingMessageEl.innerHTML = md.render(aiResponse); // Render markdown
             loadingMessageEl.classList.remove('loading');
+            
+            // Add a copy button
+            const copyButton = document.createElement('button');
+            copyButton.className = 'chat-copy-button';
+            copyButton.innerHTML = '<i class="fas fa-copy"></i>';
+            copyButton.title = 'Copy raw text';
+            copyButton.dataset.rawText = aiResponse; // Store raw text for copying
+            copyButton.onclick = (e) => {
+                e.stopPropagation();
+                navigator.clipboard.writeText(aiResponse).then(() => {
+                    copyButton.innerHTML = '<i class="fas fa-check"></i>';
+                    setTimeout(() => {
+                        copyButton.innerHTML = '<i class="fas fa-copy"></i>';
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Failed to copy text: ', err);
+                });
+            };
+            loadingMessageEl.appendChild(copyButton);
         }
 
     } catch (error) {
         console.error("Error during AI chat submit:", error);
         if (loadingMessageEl) {
+            // [FIXED] Render error message as text, not markdown
+            loadingMessageEl.innerHTML = ''; // Clear "thinking..." text
             loadingMessageEl.textContent = `Error: ${error.message}`;
             loadingMessageEl.style.color = 'red';
             loadingMessageEl.classList.remove('loading');
@@ -140,17 +164,25 @@ async function handleAiChatSubmit() {
 }
 
 /**
- * Helper function to add a message to the chat log UI.
+ * [MODIFIED] Helper function to add a message to the chat log UI.
  */
 function addChatMessage(text, sender, isLoading = false) {
     if (!aiChatLog) return null;
     
     const messageDiv = document.createElement('div');
     messageDiv.className = `chat-message ${sender}-message`;
-    messageDiv.textContent = text;
     
     if (isLoading) {
         messageDiv.classList.add('loading');
+    }
+
+    if (sender === 'ai') {
+        // AI messages: Render as HTML.
+        // This will primarily be used for the "thinking..." message.
+        messageDiv.innerHTML = md.render(text); 
+    } else {
+        // User messages: Render as plain text to prevent self-XSS
+        messageDiv.textContent = text;
     }
     
     aiChatLog.appendChild(messageDiv);
