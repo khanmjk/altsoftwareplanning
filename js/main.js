@@ -1138,7 +1138,16 @@ window.returnToHome = returnToHome;
 /** Reset to Default Sample Systems **/
 function resetToDefaults() {
     if (confirm('This will erase all your saved systems and restore the default sample systems. Do you want to proceed?')) {
+        try {
+            localStorage.removeItem(LOCAL_STORAGE_KEY);
+            console.log('Cleared user systems from localStorage.');
+        } catch (error) {
+            console.error('Failed to clear local storage before resetting defaults:', error);
+            alert('Unable to reset defaults because local storage could not be cleared.');
+            return;
+        }
         saveSampleSystemsToLocalStorage(); // This will re-add the defaults
+        currentSystemData = null;
         alert('Systems have been reset to defaults.');
         returnToHome();
     }
