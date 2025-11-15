@@ -2216,3 +2216,40 @@ a:focus {
 }
 
 /* Add any additional styles as needed */          
+
+/* --- [MODIFIED] Main App Layout (for JS Resizing) --- */
+#appContainer {
+    display: flex;
+    flex-direction: row;
+    padding-top: 60px;
+    height: 100vh;
+    box-sizing: border-box;
+}
+
+.main-content-area {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 20px;
+    min-width: 0;
+}
+
+#chatResizeHandle {
+    width: 5px;
+    background-color: #ccc;
+    cursor: col-resize;
+    flex-shrink: 0;
+    display: none;
+}
+
+#chatResizeHandle:hover {
+    background-color: #007bff;
+}
+
+#aiChatPanelContainer {
+    width: 0;
+    height: calc(100vh - 60px);
+    flex-shrink: 0;
+    overflow: hidden;
+    background-color: #f8f9fa;
+}
+/* --- [END MODIFIED] --- */
