@@ -123,33 +123,64 @@ async function handleAiChatSubmit() {
         
         // 5. [FIXED] Update the loading message with the real response
         if (loadingMessageEl) {
-            loadingMessageEl.innerHTML = md.render(aiResponse); // Render markdown
+            // --- NEW STRUCTURE ---
+            // 1. Clear the "thinking..." text
+            loadingMessageEl.innerHTML = '';
             loadingMessageEl.classList.remove('loading');
+
+            // 2. Create a specific container for the content
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'chat-content-container';
+            contentDiv.innerHTML = md.render(aiResponse); // Render markdown
             
-            // Add a copy button
+            // 3. Create the copy button
             const copyButton = document.createElement('button');
             copyButton.className = 'chat-copy-button';
             copyButton.innerHTML = '<i class="fas fa-copy"></i>';
-            copyButton.title = 'Copy raw text';
-            copyButton.dataset.rawText = aiResponse; // Store raw text for copying
+            copyButton.title = 'Copy response';
+            
+            // 4. [THE FIX] Implement rich HTML copy
             copyButton.onclick = (e) => {
                 e.stopPropagation();
-                navigator.clipboard.writeText(aiResponse).then(() => {
-                    copyButton.innerHTML = '<i class="fas fa-check"></i>';
-                    setTimeout(() => {
-                        copyButton.innerHTML = '<i class="fas fa-copy"></i>';
-                    }, 2000);
-                }).catch(err => {
-                    console.error('Failed to copy text: ', err);
-                });
+                try {
+                    const htmlToCopy = contentDiv.innerHTML;
+                    const textToCopy = aiResponse; // The raw markdown as plain text fallback
+
+                    const htmlBlob = new Blob([htmlToCopy], { type: 'text/html' });
+                    const textBlob = new Blob([textToCopy], { type: 'text/plain' });
+
+                    const data = [new ClipboardItem({
+                        'text/html': htmlBlob,
+                        'text/plain': textBlob
+                    })];
+
+                    navigator.clipboard.write(data).then(() => {
+                        copyButton.innerHTML = '<i class="fas fa-check"></i>';
+                        setTimeout(() => {
+                            copyButton.innerHTML = '<i class="fas fa-copy"></i>';
+                        }, 2000);
+                    }).catch(err => {
+                        console.error('Failed to copy rich text: ', err);
+                        // Fallback to plain text copy if rich copy fails
+                        navigator.clipboard.writeText(textToCopy);
+                    });
+
+                } catch (err) {
+                    console.error('Error creating ClipboardItem. Falling back to plain text.', err);
+                    // Fallback for older browsers or errors
+                    navigator.clipboard.writeText(aiResponse);
+                }
             };
+            
+            // 5. Append new elements
+            loadingMessageEl.appendChild(contentDiv);
             loadingMessageEl.appendChild(copyButton);
+            // --- END NEW STRUCTURE ---
         }
 
     } catch (error) {
         console.error("Error during AI chat submit:", error);
         if (loadingMessageEl) {
-            // [FIXED] Render error message as text, not markdown
             loadingMessageEl.innerHTML = ''; // Clear "thinking..." text
             loadingMessageEl.textContent = `Error: ${error.message}`;
             loadingMessageEl.style.color = 'red';

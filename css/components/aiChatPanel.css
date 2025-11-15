@@ -105,7 +105,12 @@
 .ai-message {
     /* Make the message a positioning context for the copy button */
     position: relative;
-    padding-right: 35px; /* Add space for the copy button */
+    /* Remove padding, as it will be on the child */
+}
+
+/* [NEW] This container holds the rendered markdown */
+.chat-content-container {
+    padding-right: 30px; /* Space for the copy button */
 }
 
 .ai-message p {
