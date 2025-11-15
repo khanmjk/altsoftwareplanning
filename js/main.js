@@ -10,6 +10,7 @@ let currentCapacityScenario = 'EffectiveBIS'; // Default scenario for capacity s
 let currentChartTeamId = '__ORG_VIEW__'; // To track which team's chart is displayed
 let capacityChartInstance = null; // To hold the Chart.js instance
 let applyCapacityConstraintsToggle = false; // Default to OFF
+let lastAiGenerationStats = null; // Cache the latest AI stats for the modal
 
 // --- Global App Settings ---
 const defaultSettings = {
@@ -213,6 +214,63 @@ function saveGlobalSettings() {
 }
 
 /**
+ * Formats AI generation stats into a readable block of text.
+ */
+function formatAiStats(stats) {
+    if (!stats) return "No statistics were provided.";
+    const {
+        inputChars = 0,
+        outputChars = 0,
+        outputTokens = 0,
+        totalTokens = 0,
+        systemPromptSummary = ''
+    } = stats;
+
+    return `Input Characters: ${inputChars.toLocaleString()}
+Output Characters: ${outputChars.toLocaleString()}
+Output Tokens: ${outputTokens.toLocaleString()}
+Total Tokens (est.): ${totalTokens.toLocaleString()}
+
+System Prompt Summary:
+${systemPromptSummary}`.trim();
+}
+
+/**
+ * Shows the AI stats modal with the latest metrics.
+ */
+function showAiStatsModal(stats) {
+    const modal = document.getElementById('aiGenerationStatsModal');
+    const content = document.getElementById('aiGenerationStatsContent');
+    
+    if (!modal || !content) {
+        console.warn("AI Stats modal elements not found.");
+        return;
+    }
+
+    if (stats) {
+        lastAiGenerationStats = stats;
+    }
+
+    if (!lastAiGenerationStats) {
+        console.warn("No AI stats available to display.");
+        return;
+    }
+
+    content.textContent = formatAiStats(lastAiGenerationStats);
+    modal.style.display = 'block';
+}
+
+/**
+ * Hides the AI stats modal.
+ */
+function closeAiStatsModal() {
+    const modal = document.getElementById('aiGenerationStatsModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+/**
  * Handles the "Create with AI" button click.
  */
 async function handleCreateWithAi() {
@@ -237,9 +295,8 @@ async function handleCreateWithAi() {
         spinner.style.display = 'flex';
     } 
 
-    // Hide stats from previous runs
-    const statsContainer = document.getElementById('aiGenerationStats');
-    if (statsContainer) statsContainer.style.display = 'none';
+    // Hide stats modal from any previous run
+    closeAiStatsModal();
 
     try {
         const result = await generateSystemFromPrompt(prompt, globalSettings.ai.apiKey, globalSettings.ai.provider, spinnerP);
@@ -280,18 +337,9 @@ async function handleCreateWithAi() {
         systems[finalSystemName] = newSystemData;
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
         
-        // Display stats
-        if (stats && statsContainer) {
-            const statsPre = statsContainer.querySelector('pre');
-            if (statsPre) {
-                const statsString = `Input Characters: ${stats.inputChars.toLocaleString()}\n` +
-                                  `Output Characters: ${stats.outputChars.toLocaleString()}\n` +
-                                  `Output Tokens: ${stats.outputTokens.toLocaleString()}\n` +
-                                  `Total Tokens (est.): ${stats.totalTokens.toLocaleString()}\n\n` +
-                                  `System Prompt Summary:\n${stats.systemPromptSummary}`;
-                statsPre.textContent = statsString;
-                statsContainer.style.display = 'block';
-            }
+        // Display stats in modal
+        if (stats) {
+            showAiStatsModal(stats);
         }
         
         alert(`Successfully created and saved system: "${finalSystemName}"! Loading it now.`);
@@ -359,10 +407,6 @@ function switchView(targetViewId, newMode = null) {
     const documentationSection = document.getElementById('toolDocumentationSection');
 
     const updateDOMForViewChange = () => {
-        // --- Hide AI Stats Panel on ANY view change ---
-        const statsContainer = document.getElementById('aiGenerationStats');
-        if (statsContainer) statsContainer.style.display = 'none';   
-        
         // --- Call closeRoadmapModal here ---
         if (typeof closeRoadmapModal === 'function') {
             console.log("switchView: Attempting to close roadmap modal if open.");
