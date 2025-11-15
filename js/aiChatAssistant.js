@@ -395,6 +395,7 @@ function renderSuggestedQuestions() {
         }
 
         pill.onclick = () => {
+            console.log('[AI CHAT] Suggested question clicked:', question.text, { isImageRequest: !!question.isImageRequest });
             if (aiChatInput) {
                 aiChatInput.value = question.text;
             }

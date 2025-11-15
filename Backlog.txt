@@ -287,3 +287,4 @@ Connect UI to AI Service: We will wire up the chat UI to send the user's questio
 This will bring your vision for an interactive assistant to life, allowing you to ask questions like "Which teams are most at risk?" or "Analyze this team's senior engineers".
 
 TODO: Work with other LLM providers
+TODO: Add backend proxy for AI image generation (securely store user-provided API keys and enable browser clients hosted on GitHub Pages to call Imagen without exposing secrets)

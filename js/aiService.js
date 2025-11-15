@@ -658,7 +658,7 @@ async function _getAnalysisWithGemini(systemPrompt, userQuestion, apiKey) {
  * This instructs the AI on how to interpret the context data for drawing.
  * @returns {string} The detailed system prompt for image generation.
  */
-function _getImageGenerationSystemPrompt() {
+function _getArchitecturePrompt() {
     return "You are a visual architect. Your task is to generate a clear, professional, block-and-arrow architecture diagram based on the user's prompt and the provided CONTEXT DATA.\n\n" +
         "**RULES:**\n" +
         "1.  **Grounding:** You MUST base your diagram *only* on the services, teams, and dependencies in the CONTEXT DATA. Do not invent services or relationships.\n" +
@@ -668,6 +668,33 @@ function _getImageGenerationSystemPrompt() {
         "    * Use the `serviceDependencies` to draw arrows *between* the blocks.\n" +
         "    * Use the `owningTeamId` to visually group or color-code services that belong to the same team.\n" +
         "    * Label all blocks and arrows clearly.\n" +
+        "4.  **Format:** Generate a single, high-quality PNG image.";
+}
+
+function _getOrgChartPrompt() {
+    return "You are an organizational design assistant. Your task is to generate a clean, hierarchical organization chart based on the user's prompt and the provided CONTEXT DATA.\n\n" +
+        "**RULES:**\n" +
+        "1.  **Grounding:** You MUST base your diagram *only* on the personnel in the CONTEXT DATA. Do not invent people or teams.\n" +
+        "2.  **Clarity:** The diagram must be a simple, top-down hierarchy.\n" +
+        "3.  **How to Draw:**\n" +
+        "    * Use the `seniorManagers` as the top-level nodes.\n" +
+        "    * Use the `sdms` to draw the next level, linking them to their `seniorManagerId`.\n" +
+        "    * Use the `teams` to draw the next level, linking them to their `sdmId`.\n" +
+        "    * If the user asks for engineers, you can include `allKnownEngineers` linked to their `currentTeamId`.\n" +
+        "    * Label all blocks clearly with their names.\n" +
+        "4.  **Format:** Generate a single, high-quality PNG image.";
+}
+
+function _getMindMapPrompt() {
+    return "You are a strategic planning assistant. Your task is to generate a conceptual diagram (like a mind map or flowchart) based on the user's prompt and the provided CONTEXT DATA.\n\n" +
+        "**RULES:**\n" +
+        "1.  **Grounding:** You MUST base your diagram *only* on the items in the CONTEXT DATA (like `goals` or `initiatives`).\n" +
+        "2.  **Clarity:** The diagram must be logical and easy to follow.\n" +
+        "3.  **How to Draw:**\n" +
+        "    * Identify the central topic from the USER PROMPT (e.g., a specific goal or 'all goals').\n" +
+        "    * Use the CONTEXT DATA to create child nodes. For example, if the topic is a goal, the child nodes should be the `initiatives` linked to it.\n" +
+        "    * If the user asks for a flowchart, use the `workPackages` or `deliveryPhases` to show a simple sequence.\n" +
+        "    * Label all nodes clearly.\n" +
         "4.  **Format:** Generate a single, high-quality PNG image.";
 }
 
@@ -681,7 +708,23 @@ async function _generateImageWithImagen(userPrompt, contextJson, apiKey) {
 
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:generateImages?key=${apiKey}`;
 
-    const imageSystemPrompt = _getImageGenerationSystemPrompt();
+    let imageSystemPrompt;
+    const promptLowerCase = userPrompt.toLowerCase();
+
+    if (promptLowerCase.includes('architecture') || promptLowerCase.includes('block diagram')) {
+        imageSystemPrompt = _getArchitecturePrompt();
+        console.log("[AI-DEBUG] Image Router: Selected Architecture Prompt");
+    } else if (promptLowerCase.includes('org chart') || promptLowerCase.includes('managers')) {
+        imageSystemPrompt = _getOrgChartPrompt();
+        console.log("[AI-DEBUG] Image Router: Selected Org Chart Prompt");
+    } else if (promptLowerCase.includes('mind map') || promptLowerCase.includes('flowchart')) {
+        imageSystemPrompt = _getMindMapPrompt();
+        console.log("[AI-DEBUG] Image Router: Selected Mind Map Prompt");
+    } else {
+        imageSystemPrompt = _getArchitecturePrompt();
+        console.warn("[AI-DEBUG] Image Router: No specific prompt matched. Defaulting to Architecture.");
+    }
+
     const combinedPrompt = `${imageSystemPrompt}\n\nCONTEXT DATA:\n${contextJson}\n\nUSER PROMPT:\n${userPrompt}`;
 
     const requestBody = {
