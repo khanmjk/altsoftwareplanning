@@ -85,6 +85,20 @@ Upon launching the application, you'll see the main menu on the top bar.
 * **Disclaimer:** This is a client-side application. Your API key is stored exclusively in your browser's local storage and is never sent to any server other than the selected LLM provider. Using this app comes with risks. The author is not liable for any issues that arise from using your own private (non-free-tier) API key.
 * Click **"Save Settings"**.
 
+#### Image Generation Requirements
+
+The Imagen-powered diagram feature requires a couple of extra steps:
+
+1. **Run the app from a local dev server** (e.g., VS Code Live Server, `npm run dev`, `npx http-server`). Calls to `file:///…` origins are blocked by modern browsers.
+2. **Allow-list your dev origin in Google AI Studio / Google Cloud Console** for the API key you are using. Under *Application restrictions → Website restrictions* add the localhost origins you plan to use, for example:
+   * `http://localhost`
+   * `http://127.0.0.1`
+   * `http://localhost:*/*`
+   * `http://127.0.0.1:*/*`
+3. **Understand the limitation:** Because keys are stored in the browser, production hosting (e.g., GitHub Pages) cannot safely call Imagen. A backend proxy that stores the key securely is required for public deployments (see backlog item “Add backend proxy for AI image generation”).
+
+With those steps completed you can use the image suggestions in the AI Chat panel to request block diagrams, org charts, or mind maps.
+
 ### AI Assistant
 
 * **AI System Generation:** From the home screen, use the "Create with AI" button to generate a complete, realistic system and 3-year plan from a single text prompt.
@@ -92,6 +106,7 @@ Upon launching the application, you'll see the main menu on the top bar.
 * **Loading Animation:** A spinner provides visual feedback while the AI is processing your request.
 * **Generation Statistics:** After a system is created, a panel displays metrics about the LLM interaction, including token and character counts for the input and output.
 * **Context-Aware Chat:** Once a system is loaded, an "AI Chat" button appears. This opens a chat panel that allows you to ask questions about the *currently loaded system*. The AI's context is updated as you navigate, allowing you to ask specific questions about what you're seeing.
+* **Image Suggestions:** Certain suggested questions (e.g., “Generate a block diagram…”) will attempt to create diagrams via Imagen. Make sure the requirements above are satisfied; otherwise the chat will explain why image generation failed.
 
 #### Example Chat Questions
 

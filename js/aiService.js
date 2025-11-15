@@ -706,7 +706,7 @@ function _getMindMapPrompt() {
 async function _generateImageWithImagen(userPrompt, contextJson, apiKey) {
     console.log("[AI-DEBUG] _generateImageWithImagen: Preparing to call REAL Imagen 3...");
 
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:generateImages?key=${apiKey}`;
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:generateContent?key=${apiKey}`;
 
     let imageSystemPrompt;
     const promptLowerCase = userPrompt.toLowerCase();
@@ -728,8 +728,12 @@ async function _generateImageWithImagen(userPrompt, contextJson, apiKey) {
     const combinedPrompt = `${imageSystemPrompt}\n\nCONTEXT DATA:\n${contextJson}\n\nUSER PROMPT:\n${userPrompt}`;
 
     const requestBody = {
-        prompt: { text: combinedPrompt },
-        number_of_images: 1
+        contents: [
+            {
+                role: "user",
+                parts: [{ text: combinedPrompt }]
+            }
+        ]
     };
     
     const fetchOptions = {
@@ -741,12 +745,12 @@ async function _generateImageWithImagen(userPrompt, contextJson, apiKey) {
     const response = await _fetchWithRetry(API_URL, fetchOptions);
     const responseData = await response.json();
 
-    if (!responseData.images || !responseData.images[0] || !responseData.images[0].imageBytes) {
+    const inlinePart = responseData?.candidates?.[0]?.content?.parts?.find(part => part?.inlineData?.data);
+    const base64ImageData = inlinePart?.inlineData?.data;
+    if (!base64ImageData) {
         console.error("[AI-DEBUG] Invalid response structure from Imagen:", responseData);
         throw new Error("Received an invalid or empty response from the Imagen AI.");
     }
-
-    const base64ImageData = responseData.images[0].imageBytes;
     const imageUrl = `data:image/png;base64,${base64ImageData}`;
 
     console.log(`[AI-DEBUG] _generateImageWithImagen: Successfully received and formatted image as data URL.`);
