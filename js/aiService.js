@@ -1,4 +1,6 @@
 // js/aiService.js
+// [NEW] Set to true to bypass API calls and return mock data for UI development
+const AI_ANALYSIS_MOCK_MODE = true;
 /**
  * [NEW] A private helper to wrap fetch calls with exponential backoff.
  * This is a best-practice coding pattern for handling transient server
@@ -516,6 +518,24 @@ async function _generateSystemWithGemini(systemPrompt, userPrompt, apiKey, spinn
 async function getAnalysisFromPrompt(userQuestion, contextJson, apiKey, provider) {
     // [LOG] Added for debugging
     console.log(`[AI-DEBUG] getAnalysisFromPrompt: Routing for provider '${provider}' with question: "${userQuestion}"`);
+
+    // --- [NEW] Mock Mode Implementation ---
+    if (AI_ANALYSIS_MOCK_MODE) {
+        console.warn("[AI-DEBUG] MOCK MODE ENABLED. Returning fake data without API call.");
+        // Simulate a network delay
+        await new Promise(resolve => setTimeout(resolve, 750));
+
+        // Check for specific questions to make the mock more interactive
+        if (userQuestion.toLowerCase().includes("overloaded")) {
+             return "This is a mock response. Based on the context from the 'planningView', the **Data Dragoons** team appears to be overloaded by 2.5 SDE-Years.";
+        }
+        if (userQuestion.toLowerCase().includes("how many teams")) {
+             return "This is a mock response. The provided context from 'organogramView' shows there are **8 teams** in this system.";
+        }
+
+        return `This is a mock AI response. I received your question: "${userQuestion}". I am analyzing the provided context, which is ${contextJson.length} characters long.`;
+    }
+    // --- [END NEW] ---
     
     // 1. Build the analysis prompt
     const systemPrompt = `You are a helpful software planning assistant. Analyze the following JSON data, which represents the user's current view, to answer their question.

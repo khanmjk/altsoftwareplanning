@@ -8,6 +8,7 @@
     <link href="https://unpkg.com/tabulator-tables@5.5.2/dist/css/tabulator_simple.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/components/enhancedTableWidget.css">
+    <link rel="stylesheet" href="css/components/aiChatPanel.css">
 
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
@@ -40,6 +41,7 @@
     <script src="js/impactView.js"></script>      
     <script src="js/dashboard.js"></script>
     <script src="js/aiService.js"></script>
+    <script src="js/aiChatAssistant.js"></script>
 
     <script src="js/main.js"></script>
 
@@ -69,6 +71,7 @@
             </div>
             <div id="globalNavButtons">
                 <button id="returnHomeButton" onclick="returnToHome()" style="display: none;">Home</button>
+                <button id="aiChatButton" class="btn-secondary" style="display: none; color: #ffc107;">AI Chat</button>
                 <button id="aiSettingsButton" class="btn-secondary" style="color: #ffc107;">AI Assistant</button>                
             </div>      
         </div>
@@ -370,5 +373,6 @@
             <div class="spinner"></div>
             <p>AI is generating your system... This may take a moment.</p>
         </div>           
+        <div id="aiChatPanelContainer"></div>
     </body>
 </html>

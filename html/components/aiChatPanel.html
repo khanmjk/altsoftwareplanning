@@ -1,0 +1,16 @@
+<div id="aiChatPanel" style="position: fixed; bottom: 20px; right: 20px; width: 350px; height: 500px; background-color: #fff; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1040; display: none; flex-direction: column;">
+    
+    <div class="modal-header" style="cursor: move; border-top-left-radius: 8px; border-top-right-radius: 8px;">
+        <h3 id="aiChatTitle" style="margin: 0; font-size: 1.2em;">AI Assistant</h3>
+        <span class="close-button" onclick="closeAiChatPanel()">&times;</span>
+    </div>
+    
+    <div id="aiChatLog" style="flex-grow: 1; padding: 10px; overflow-y: auto; background-color: #f8f9fa; border-bottom: 1px solid #eee;">
+        <div class="chat-message ai-message">Hello! How can I help you analyze the current system?</div>
+    </div>
+    
+    <div id="aiChatInputContainer" style="padding: 10px; border-top: 1px solid #ccc;">
+        <textarea id="aiChatInput" style="width: 100%; height: 60px; border: 1px solid #ccc; border-radius: 4px; resize: none; box-sizing: border-box; padding: 5px;" placeholder="Ask about the current view..."></textarea>
+        <button id="aiChatSendButton" class="btn-primary" style="width: 100%; margin-top: 5px;">Send</button>
+    </div>
+</div>

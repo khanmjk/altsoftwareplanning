@@ -1,0 +1,28 @@
+/* css/components/aiChatPanel.css */
+#aiChatLog .chat-message {
+    padding: 8px 12px;
+    border-radius: 18px;
+    margin-bottom: 8px;
+    max-width: 85%;
+    line-height: 1.4;
+    font-size: 0.9em;
+}
+
+#aiChatLog .user-message {
+    background-color: #007bff;
+    color: white;
+    margin-left: auto;
+    border-bottom-right-radius: 4px;
+}
+
+#aiChatLog .ai-message {
+    background-color: #e9ecef;
+    color: #212529;
+    margin-right: auto;
+    border-bottom-left-radius: 4px;
+}
+
+#aiChatLog .chat-message.loading {
+    font-style: italic;
+    color: #6c757d;
+}
