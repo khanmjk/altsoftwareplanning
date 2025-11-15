@@ -36,6 +36,14 @@ function initializeAiChatPanel() {
              console.error("AI Chat: Input text area not found.");
         }
 
+        // [NEW] Find the header and make the panel draggable
+        const aiChatHeader = aiChatPanel ? aiChatPanel.querySelector('.modal-header') : null;
+        if (aiChatPanel && aiChatHeader) {
+            makeElementDraggable(aiChatPanel, aiChatHeader);
+            console.log("AI Chat Panel is now draggable.");
+        }
+        // [END NEW]
+
         if(aiChatPanel) {
             console.log("AI Chat Assistant module initialized.");
         } else {
@@ -217,4 +225,52 @@ function scrapeCurrentViewContext() {
         }
         return value;
     }, 2); // 2-space indentation
+}
+
+/**
+ * [NEW] Makes an HTML element draggable by its header.
+ * @param {HTMLElement} panel The panel element to be moved.
+ * @param {HTMLElement} header The header element that triggers the drag.
+ */
+function makeElementDraggable(panel, header) {
+    let isDragging = false;
+    let offsetX = 0;
+    let offsetY = 0;
+    header.addEventListener('mousedown', (e) => {
+        // Only drag if the click is on the header itself, not the close button
+        if (e.target.classList.contains('close-button')) {
+            return;
+        }
+        isDragging = true;
+        const rect = panel.getBoundingClientRect();
+        panel.style.top = rect.top + 'px';
+        panel.style.left = rect.left + 'px';
+        panel.style.bottom = 'auto';
+        panel.style.right = 'auto';
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+        e.preventDefault();
+    });
+
+    function onMouseMove(e) {
+        if (!isDragging) return;
+        let newLeft = e.clientX - offsetX;
+        let newTop = e.clientY - offsetY;
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        if (newLeft < 0) newLeft = 0;
+        if (newTop < 0) newTop = 0;
+        if (newLeft + panel.offsetWidth > viewportWidth) newLeft = viewportWidth - panel.offsetWidth;
+        if (newTop + panel.offsetHeight > viewportHeight) newTop = viewportHeight - panel.offsetHeight;
+        panel.style.left = newLeft + 'px';
+        panel.style.top = newTop + 'px';
+    }
+
+    function onMouseUp() {
+        isDragging = false;
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+    }
 }

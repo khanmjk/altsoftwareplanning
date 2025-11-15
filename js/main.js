@@ -91,7 +91,7 @@ const VIEW_TO_BUTTON_MAP = {
 // Fallback HTML snippets for components when fetch is unavailable (e.g., file:// protocol)
 const HTML_COMPONENT_FALLBACKS = {
     'html/components/aiChatPanel.html': `
-<div id="aiChatPanel" style="position: fixed; bottom: 20px; right: 20px; width: 350px; height: 500px; background-color: #fff; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1040; display: none; flex-direction: column;">
+<div id="aiChatPanel" style="position: fixed; bottom: 20px; right: 20px; width: 350px; height: 500px; background-color: #fff; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1040; display: none; flex-direction: column; resize: both; overflow: auto;">
     <div class="modal-header" style="cursor: move; border-top-left-radius: 8px; border-top-right-radius: 8px;">
         <h3 id="aiChatTitle" style="margin: 0; font-size: 1.2em;">AI Assistant</h3>
         <span class="close-button" onclick="closeAiChatPanel()">&times;</span>
