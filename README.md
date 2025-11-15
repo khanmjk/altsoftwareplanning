@@ -85,19 +85,16 @@ Upon launching the application, you'll see the main menu on the top bar.
 * **Disclaimer:** This is a client-side application. Your API key is stored exclusively in your browser's local storage and is never sent to any server other than the selected LLM provider. Using this app comes with risks. The author is not liable for any issues that arise from using your own private (non-free-tier) API key.
 * Click **"Save Settings"**.
 
-#### Image Generation Requirements
+#### Image Generation Status (Imagen)
 
-The Imagen-powered diagram feature requires a couple of extra steps:
+The diagram/image feature is currently *mocked*. Google’s Imagen 3 models run on the Vertex AI API and **require OAuth2 access tokens**, which we cannot obtain safely from a client-side app.
 
-1. **Run the app from a local dev server** (e.g., VS Code Live Server, `npm run dev`, `npx http-server`). Calls to `file:///…` origins are blocked by modern browsers.
-2. **Allow-list your dev origin in Google AI Studio / Google Cloud Console** for the API key you are using. Under *Application restrictions → Website restrictions* add the localhost origins you plan to use, for example:
-   * `http://localhost`
-   * `http://127.0.0.1`
-   * `http://localhost:*/*`
-   * `http://127.0.0.1:*/*`
-3. **Understand the limitation:** Because keys are stored in the browser, production hosting (e.g., GitHub Pages) cannot safely call Imagen. A backend proxy that stores the key securely is required for public deployments (see backlog item “Add backend proxy for AI image generation”).
+Until we build the backend proxy (see backlog item “Add backend proxy for AI image generation”), the app will:
 
-With those steps completed you can use the image suggestions in the AI Chat panel to request block diagrams, org charts, or mind maps.
+* Always return the placeholder image when you click a “Generate … diagram” suggestion in the AI Chat panel.
+* Log the real request/response flow so you can see what would be sent to Imagen.
+
+If you want to enable real image generation locally, you will need to run a backend service that injects an OAuth2 token and calls the Vertex AI `imagen-3.0-generate-002` endpoint on behalf of the browser.
 
 ### AI Assistant
 

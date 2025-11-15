@@ -2,7 +2,7 @@
 // [NEW] Set to true to bypass API calls and return mock data for UI development
 const AI_ANALYSIS_MOCK_MODE = false;
 // [NEW] Set to true to bypass image API calls
-const AI_IMAGE_MOCK_MODE = false;
+const AI_IMAGE_MOCK_MODE = true; // Imagen currently requires a backend proxy (OAuth2), so mock mode stays enabled
 /**
  * [NEW] A private helper to wrap fetch calls with exponential backoff.
  * This is a best-practice coding pattern for handling transient server
