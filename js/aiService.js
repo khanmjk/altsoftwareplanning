@@ -1,6 +1,6 @@
 // js/aiService.js
 // [NEW] Set to true to bypass API calls and return mock data for UI development
-const AI_ANALYSIS_MOCK_MODE = true;
+const AI_ANALYSIS_MOCK_MODE = false;
 /**
  * [NEW] A private helper to wrap fetch calls with exponential backoff.
  * This is a best-practice coding pattern for handling transient server

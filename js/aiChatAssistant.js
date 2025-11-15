@@ -81,6 +81,13 @@ async function handleAiChatSubmit() {
     
     const userQuestion = aiChatInput.value.trim();
     if (userQuestion.length === 0) return;
+
+    console.log('[AI CHAT] Submitting question.', {
+        question: userQuestion,
+        currentViewId,
+        hasSystemLoaded: !!currentSystemData,
+        aiEnabled: globalSettings?.ai?.isEnabled
+    });
     
     // Disable input
     aiChatInput.value = '';
@@ -95,6 +102,7 @@ async function handleAiChatSubmit() {
     
     // 3. Scrape context from the current view
     const contextJson = scrapeCurrentViewContext();
+    console.log(`[AI CHAT] Context JSON length: ${contextJson.length}`, contextJson);
     
     // 4. Call the (mocked) AI service
     try {
@@ -104,6 +112,7 @@ async function handleAiChatSubmit() {
             globalSettings.ai.apiKey, // from main.js
             globalSettings.ai.provider // from main.js
         );
+        console.log('[AI CHAT] Received AI response.');
         
         // 5. Update the loading message with the real response
         if (loadingMessageEl) {
@@ -159,8 +168,11 @@ function scrapeCurrentViewContext() {
         timestamp: new Date().toISOString()
     };
 
+    console.log(`[AI CHAT] Scraping context for view: ${currentViewId || 'none'}`);
+
     if (!currentSystemData) {
         contextData.data = "No system is currently loaded.";
+        console.warn('[AI CHAT] No system data available while scraping context.');
         return JSON.stringify(contextData);
     }
 
@@ -209,12 +221,14 @@ function scrapeCurrentViewContext() {
 
             default:
                 contextData.data = `Context scraping for view '${currentViewId}' is not fully implemented. System name: ${currentSystemData.systemName}`;
+                console.warn('[AI CHAT] Missing specialized context handler for view:', currentViewId);
         }
     } catch (e) {
         console.error("Error during context scraping:", e);
         contextData.data = "An error occurred while gathering context.";
     }
 
+    console.debug('[AI CHAT] Context payload prepared:', contextData);
     // Stringify with a replacer to handle potential circular references, though unlikely here
     return JSON.stringify(contextData, (key, value) => {
         // Simple circularity check (not needed for our simple data, but good practice)
