@@ -141,14 +141,13 @@ bar graph per quarter to see team load/demand impact
 [Done] - [AI] Add some stats and metrics to show what was input into the LLM, what the LLM produced: tokens, characters, system summary details (not exhaustive)
 [Done] - [AI] Add some spinning animation when the Create with AI workflow is triggered and the app is waiting for the LLM system generation to complete
 [Done] - [AI] Update the app's readme documentation to cover all the new AI features
+[Done] - [AI Feature] Create a top-level menu for "AI-Assistant" - a page that allows the user to interact through a chat interface on interrogating the selected system
+[Done] - [AI Feature] Implement AI-powered analysis (`getAnalysisFromPrompt`) to answer questions about the system (backend logic stubbed in aiService.js)
 
 ------------
 IN PROGRESS
 ------------
 - [AI] Think about refactoring the codebase for AI files - like an AI folder to keep all ai-related files, especially if we're going down the agent route (like a planning agent, resource planning agent, etc.)
-- [AI] Explore generating architecture diagramming options, apart from the app's 3d node graphs
-- [AI Feature] Create a top-level menu for "AI-Assistant" - a page that allows the user to interact through a chat interface on interrogating the selected system
-- [AI Feature] Implement AI-powered analysis (`getAnalysisFromPrompt`) to answer questions about the system (backend logic stubbed in aiService.js)
 - [AI Feature] Create an AI agent that can perform actions on the system with access to the code
 
 ------
@@ -168,6 +167,7 @@ Implement the logic within EnhancedTableWidget to take these definitions and cor
 This will include dynamically populating select lists from column data if specified.
 Utilities
 - Now that we've got export to excel, csv and json working, we need a utlity to generate these files from other places: planning table, overall system data dump, etc.
+- [AI] Explore generating architecture diagramming options, apart from the app's 3d node graphs
 
 UX
 -- [UX] Fix "Create with AI" button layout, animation, and styling on home screen.
