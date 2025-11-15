@@ -113,6 +113,10 @@ function initializeAiChatPanel() {
         }
         // [END NEW]
 
+        if (typeof initializeChatResizer === 'function') {
+            initializeChatResizer();
+        }
+
         if(aiChatPanel) {
             console.log("AI Chat Assistant module initialized.");
             renderSuggestedQuestions();
@@ -127,10 +131,15 @@ function initializeAiChatPanel() {
  * This function is called by the button in main.js.
  */
 function openAiChatPanel() {
-    if (aiChatPanel) {
-        aiChatPanel.style.display = 'flex';
-        if(aiChatInput) aiChatInput.focus();
+    if (!aiChatPanel) return;
+    const panel = document.getElementById('aiChatPanelContainer');
+    const handle = document.getElementById('chatResizeHandle');
+    if (panel) panel.style.width = '400px';
+    if (handle) handle.style.display = 'block';
+    if (typeof renderSuggestedQuestions === 'function') {
+        renderSuggestedQuestions();
     }
+    if(aiChatInput) aiChatInput.focus();
 }
 
 /**
@@ -138,9 +147,10 @@ function openAiChatPanel() {
  * This function is called by the 'x' button and by switchView in main.js.
  */
 function closeAiChatPanel() {
-    if (aiChatPanel) {
-        aiChatPanel.style.display = 'none';
-    }
+    const panel = document.getElementById('aiChatPanelContainer');
+    const handle = document.getElementById('chatResizeHandle');
+    if (panel) panel.style.width = '0';
+    if (handle) handle.style.display = 'none';
 }
 
 /**
@@ -274,8 +284,6 @@ async function handleAiImageSubmit(userQuestion) {
 
     console.log('[AI CHAT] Submitting IMAGE request.', { question, currentViewId });
     
-    const suggestionsContainer = document.getElementById('aiChatSuggestions');
-    if (suggestionsContainer) suggestionsContainer.style.display = 'none';
     aiChatInput.value = '';
     aiChatInput.disabled = true;
     aiChatSendButton.disabled = true;
@@ -623,6 +631,45 @@ function makeElementDraggable(panel, header) {
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
     }
+}
+
+let isChatResizing = false;
+
+function initializeChatResizer() {
+    const handle = document.getElementById('chatResizeHandle');
+    if (!handle) {
+        console.error("Chat resize handle not found");
+        return;
+    }
+    handle.addEventListener('mousedown', onChatResizeMouseDown);
+    console.log("Chat resize handle initialized.");
+}
+
+function onChatResizeMouseDown(e) {
+    e.preventDefault();
+    isChatResizing = true;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    document.addEventListener('mousemove', onChatResizeMouseMove);
+    document.addEventListener('mouseup', onChatResizeMouseUp);
+}
+
+function onChatResizeMouseMove(e) {
+    if (!isChatResizing) return;
+    const panel = document.getElementById('aiChatPanelContainer');
+    if (!panel) return;
+    let newWidth = window.innerWidth - e.clientX;
+    if (newWidth < 300) newWidth = 300;
+    if (newWidth > window.innerWidth / 2) newWidth = window.innerWidth / 2;
+    panel.style.width = newWidth + 'px';
+}
+
+function onChatResizeMouseUp() {
+    isChatResizing = false;
+    document.body.style.cursor = 'default';
+    document.body.style.userSelect = 'auto';
+    document.removeEventListener('mousemove', onChatResizeMouseMove);
+    document.removeEventListener('mouseup', onChatResizeMouseUp);
 }
 
 /**
