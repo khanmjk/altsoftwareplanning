@@ -537,13 +537,19 @@ async function getAnalysisFromPrompt(userQuestion, contextJson, apiKey, provider
     }
     // --- [END NEW] ---
     
-// 1. Build the analysis prompt
-    const systemPrompt = `You are a helpful software planning assistant. Your primary goal is to answer questions based *only* on the JSON data provided in the "CONTEXT DATA" section.
-    
-    When answering:
-    1.  **Prioritize the CONTEXT DATA.** Base all your answers about the user's system (initiatives, teams, engineers, services) exclusively on this data.
-    2.  **Use General Knowledge as a Fallback.** If the user asks a general knowledge question (e.g., "What is AWS?", "Define 'SDE-Year'"), and the answer is *not* in the CONTEXT DATA, you may use your own knowledge to provide a brief, helpful definition.
-    3.  **Be Clear.** When using your own knowledge, state that the information is from your general knowledge (e.g., "AWS CloudFront is a content delivery network..."). When using the context, be specific (e.g., "Based on the data, the 'Avengers' team...").
+    // 1. Build the analysis prompt
+    const systemPrompt = `You are an expert Software Planning assistant. Your goals are to:
+    1.  **Prioritize the CONTEXT DATA:** Base all your answers about the user's system (initiatives, teams, engineers, services) exclusively on the JSON data provided in the "CONTEXT DATA" section.
+    2.  **Use General Knowledge as a Fallback:** If the user asks a general knowledge question (e.g., "What is AWS?", "Define 'SDE-Year'"), and the answer is *not* in the CONTEXT DATA, you may use your own knowledge to provide a brief, helpful definition.
+    3.  **Be Clear:** When using your own knowledge, state it (e.g., "AWS CloudFront is a content delivery network..."). When using the context, be specific (e.g., "Based on the data, the 'Avengers' team...").
+    4.  **Perform Expert Analysis (If Asked):** If the user's question implies an optimization or recommendation (e.g., "how can we fit more initiatives?", "optimize this plan", "recommend a new order"), and the view is 'planningView', you MUST perform a planning analysis.
+        Your goal is to recommend a new priority order for the *non-protected* initiatives (\`isProtected: false\`) to maximize the value (based on \`roi\`) that fits "Above The Line".
+        To do this, you must:
+        a. Identify the total capacity from \`calculatedCapacityMetrics\` based on the \`planningScenario\` and \`constraintsEnabled\` settings.
+        b. Respect all \`isProtected: true\` initiatives as the fixed, top-priority items that consume capacity first.
+        c. Analyze the \`roi\` (value) and \`assignments\` (SDE-Year costs) of the remaining, non-protected initiatives.
+        d. Recommend a new *priority order* (as a list of initiative titles) that fits the maximum possible value into the remaining capacity.
+        e. Explain your reasoning clearly.
     
     CONTEXT DATA:
     ${contextJson}
@@ -573,6 +579,11 @@ async function getAnalysisFromPrompt(userQuestion, contextJson, apiKey, provider
         console.error(`Error during AI analysis with ${provider}:`, error);
         return `An error occurred while communicating with the AI. Check the console.\nError: ${error.message}`;
     }
+}
+
+// Expose public functions to global scope for other modules
+if (typeof window !== 'undefined') {
+    window.getAnalysisFromPrompt = getAnalysisFromPrompt;
 }
 
 /**

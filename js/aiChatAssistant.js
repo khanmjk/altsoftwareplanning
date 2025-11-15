@@ -104,9 +104,13 @@ async function handleAiChatSubmit() {
     const contextJson = scrapeCurrentViewContext();
     console.log(`[AI CHAT] Context JSON length: ${contextJson.length}`, contextJson);
     
-    // 4. Call the (mocked) AI service
+    // 4. Call the AI service
     try {
-        const aiResponse = await getAnalysisFromPrompt(
+        const analysisFn = await waitForAnalysisFunction();
+        if (!analysisFn) {
+            throw new Error('AI analysis service is unavailable.');
+        }
+        const aiResponse = await analysisFn(
             userQuestion, 
             contextJson, 
             globalSettings.ai.apiKey, // from main.js
@@ -371,4 +375,20 @@ function makeElementDraggable(panel, header) {
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
     }
+}
+
+/**
+ * Helper: Waits for the AI analysis function to be available before using it.
+ */
+async function waitForAnalysisFunction(maxAttempts = 5, delayMs = 200) {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        if (typeof getAnalysisFromPrompt === 'function') {
+            return getAnalysisFromPrompt;
+        }
+        if (typeof window !== 'undefined' && typeof window.getAnalysisFromPrompt === 'function') {
+            return window.getAnalysisFromPrompt;
+        }
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+    return null;
 }
