@@ -17,6 +17,13 @@ const SUGGESTED_QUESTIONS = {
         { text: "Suggest SDE-Year reductions for 2-3 BTL initiatives.", isImageRequest: false },
         { text: "Analyze the risks in this plan." }
     ],
+    'roadmapView': [
+        { text: "Summarize all initiatives currently in 'Backlog' status." },
+        { text: "Which 'Defined' initiatives have the highest SDE-Year estimates?" },
+        { text: "Show me all initiatives related to the 'Revenue Growth' theme." },
+        { text: "Are there any 'Backlog' items with no teams assigned yet?" },
+        { text: "Who is the owner of the 'Expand to EU Market' initiative?" }
+    ],
     'organogramView': [
         { text: "Rate my overall team composition and find risks." },
         { text: "Generate a stylized org chart of the managers.", isImageRequest: true },
