@@ -2119,6 +2119,18 @@ a:focus {
     text-align: right;
 }
 
+.ai-stats-pre {
+    white-space: pre-wrap;
+    word-break: break-word;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 12px;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
 .close-button {
     color: #6c757d;
     float: right;
