@@ -537,13 +537,18 @@ async function getAnalysisFromPrompt(userQuestion, contextJson, apiKey, provider
     }
     // --- [END NEW] ---
     
-    // 1. Build the analysis prompt
-    const systemPrompt = `You are a helpful software planning assistant. Analyze the following JSON data, which represents the user's current view, to answer their question.
+// 1. Build the analysis prompt
+    const systemPrompt = `You are a helpful software planning assistant. Your primary goal is to answer questions based *only* on the JSON data provided in the "CONTEXT DATA" section.
+    
+    When answering:
+    1.  **Prioritize the CONTEXT DATA.** Base all your answers about the user's system (initiatives, teams, engineers, services) exclusively on this data.
+    2.  **Use General Knowledge as a Fallback.** If the user asks a general knowledge question (e.g., "What is AWS?", "Define 'SDE-Year'"), and the answer is *not* in the CONTEXT DATA, you may use your own knowledge to provide a brief, helpful definition.
+    3.  **Be Clear.** When using your own knowledge, state that the information is from your general knowledge (e.g., "AWS CloudFront is a content delivery network..."). When using the context, be specific (e.g., "Based on the data, the 'Avengers' team...").
     
     CONTEXT DATA:
     ${contextJson}
     
-    Answer the user's question based *only* on the data provided. Be concise and helpful.`;
+    Answer the user's question concisely and helpfully.`;
     
     // [LOG] Added for debugging
     console.log(`[AI-DEBUG] getAnalysisFromPrompt: System prompt and context JSON length: ${systemPrompt.length} chars.`);

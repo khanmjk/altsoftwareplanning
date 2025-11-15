@@ -176,11 +176,26 @@ function scrapeCurrentViewContext() {
         return JSON.stringify(contextData);
     }
 
+    // [NEW] Add high-level context to ALL payloads
+    contextData.systemName = currentSystemData.systemName;
+    contextData.systemDescription = currentSystemData.systemDescription;
+    // [END NEW]
+
     try {
         switch (currentViewId) {
             case 'planningView':
                 contextData.data = {
                     planningYear: currentPlanningYear,
+                    // [NEW] Send the metrics that power this view
+                    calculatedCapacityMetrics: currentSystemData.calculatedCapacityMetrics,
+                    planningScenario: planningCapacityScenario, // from yearPlanning.js
+                    constraintsEnabled: applyCapacityConstraintsToggle, // from yearPlanning.js
+                    
+                    // [NEW] Send team/sdm info to help AI resolve IDs
+                    teams: currentSystemData.teams.map(t => ({ teamId: t.teamId, teamIdentity: t.teamIdentity, sdmId: t.sdmId })),
+                    sdms: currentSystemData.sdms.map(s => ({ sdmId: s.sdmId, sdmName: s.sdmName })),
+
+                    // Send the initiatives for this year
                     initiatives: (currentSystemData.yearlyInitiatives || []).filter(init => init.attributes.planningYear == currentPlanningYear)
                 };
                 break;
@@ -196,31 +211,100 @@ function scrapeCurrentViewContext() {
                 contextData.data = {
                     seniorManagers: currentSystemData.seniorManagers,
                     sdms: currentSystemData.sdms,
-                    teams: currentSystemData.teams.map(t => ({ teamId: t.teamId, teamName: t.teamName, teamIdentity: t.teamIdentity })),
-                    engineerRosterSummary: {
-                        totalEngineers: currentSystemData.allKnownEngineers.length,
-                        totalHumans: currentSystemData.allKnownEngineers.filter(e => !e.attributes.isAISWE).length,
-                        totalAI: currentSystemData.allKnownEngineers.filter(e => e.attributes.isAISWE).length
-                    }
+                    teams: currentSystemData.teams.map(t => ({ 
+                        teamId: t.teamId, 
+                        teamName: t.teamName, 
+                        teamIdentity: t.teamIdentity,
+                        engineerNames: t.engineers // [NEW] List of engineer names on this team
+                    })),
+
+                    // [REPLACED] Send the full engineer roster so AI can answer skill/level questions
+                    allKnownEngineers: currentSystemData.allKnownEngineers 
                 };
                 break;
 
             case 'dashboardView':
+                const currentWidget = dashboardItems[currentDashboardIndex]; // from dashboard.js
                 contextData.data = {
-                    currentWidget: dashboardItems[currentDashboardIndex].title,
-                    dashboardYearFilter: dashboardPlanningYear
+                    currentWidgetTitle: currentWidget.title,
+                    dashboardYearFilter: dashboardPlanningYear // from dashboard.js
                 };
+
+                // [NEW] Dynamically add the data for the *specific widget* being viewed
+                try {
+                    switch (currentWidget.id) {
+                        case 'strategicGoalsWidget':
+                            if (typeof prepareGoalData === 'function') {
+                                contextData.data.widgetData = prepareGoalData();
+                            }
+                            break;
+                        case 'accomplishmentsWidget':
+                            if (typeof prepareAccomplishmentsData === 'function') {
+                                contextData.data.widgetData = prepareAccomplishmentsData();
+                            }
+                            break;
+                        case 'investmentDistributionWidget':
+                            if (typeof processInvestmentData === 'function') {
+                                contextData.data.widgetData = processInvestmentData(dashboardPlanningYear);
+                            }
+                            break;
+                        case 'investmentTrendWidget':
+                            // This one processes all years, so no filter needed
+                            if (typeof generateInvestmentTrendChart === 'function') {
+                                // This is complex as data is processed *inside* the chart func.
+                                // We'll skip sending data for this one for now.
+                                contextData.data.widgetNote = "Context scraping for this specific widget is not yet fully supported.";
+                            }
+                            break;
+                        case 'teamDemandWidget':
+                            if (typeof processTeamDemandData === 'function') {
+                                // Note: This depends on filters set in 'roadmapTableFiltersDemand'
+                                contextData.data.widgetData = processTeamDemandData();
+                            }
+                            break;
+                        case 'roadmapTimelineWidget':
+                        case 'threeYearPlanWidget':
+                            contextData.data.widgetNote = "Context for roadmap widgets is best viewed from the 'Roadmap & Backlog' page.";
+                            break;
+                        case 'initiativeImpactWidget':
+                             contextData.data.widgetNote = "This is a complex visual graph. Ask me questions, and I will try to answer from the raw data.";
+                             contextData.data.widgetData = {
+                                initiatives: currentSystemData.yearlyInitiatives.length,
+                                teams: currentSystemData.teams.length,
+                                services: currentSystemData.services.length
+                             };
+                            break;
+                    }
+                } catch (e) {
+                    console.error("Error scraping dashboard widget context:", e);
+                    contextData.data.widgetError = "Could not scrape context for this widget.";
+                }
                 break;
 
             case 'visualizationCarousel':
                 contextData.data = {
-                    services: currentSystemData.services.map(s => s.serviceName),
-                    teams: currentSystemData.teams.map(t => t.teamIdentity)
+                    // Send richer data so AI can answer "what does this service do?"
+                    services: currentSystemData.services.map(s => ({
+                        serviceName: s.serviceName,
+                        serviceDescription: s.serviceDescription,
+                        owningTeamId: s.owningTeamId,
+                        serviceDependencies: s.serviceDependencies,
+                        platformDependencies: s.platformDependencies
+                    })),
+                    // Send richer data so AI can answer "who is on this team?"
+                    teams: currentSystemData.teams.map(t => ({
+                        teamId: t.teamId,
+                        teamName: t.teamName,
+                        teamIdentity: t.teamIdentity,
+                        sdmId: t.sdmId,
+                        pmtId: t.pmtId
+                    }))
                 };
                 break;
 
             default:
-                contextData.data = `Context scraping for view '${currentViewId}' is not fully implemented. System name: ${currentSystemData.systemName}`;
+                // The systemName and systemDescription are already added at the top
+                contextData.data = `No specific context is scraped for the current view ('${currentViewId}').`;
                 console.warn('[AI CHAT] Missing specialized context handler for view:', currentViewId);
         }
     } catch (e) {
