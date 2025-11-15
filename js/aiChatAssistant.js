@@ -8,6 +8,50 @@ let aiChatSendButton = null;
 
 // [NEW] Initialize markdown-it. It's already loaded in index.html.
 const md = window.markdownit();
+// [MODIFIED] Store all suggested questions, now with image request flags.
+const SUGGESTED_QUESTIONS = {
+    'planningView': [
+        { text: "Which teams are overloaded in this plan?" },
+        { text: "How can I optimize this plan to fit more initiatives?", isImageRequest: false },
+        { text: "Generate a flowchart for the top 'Committed' initiative.", isImageRequest: true },
+        { text: "Suggest SDE-Year reductions for 2-3 BTL initiatives.", isImageRequest: false },
+        { text: "Analyze the risks in this plan." }
+    ],
+    'organogramView': [
+        { text: "Rate my overall team composition and find risks." },
+        { text: "Generate a stylized org chart of the managers.", isImageRequest: true },
+        { text: "Who are all the AI Software Engineers?", isImageRequest: false },
+        { text: "Find potential skill gaps in the engineer roster." },
+        { text: "Which teams have the highest number of junior engineers?" }
+    ],
+    'visualizationCarousel': [
+        { text: "Generate a block diagram of this architecture.", isImageRequest: true },
+        { text: "Rate the architectural design. Are there bottlenecks?", isImageRequest: false },
+        { text: "What services does the 'User Management Service' depend on?" },
+        { text: "Which team owns the 'Content Delivery Service'?" },
+        { text: "Show a table of all services and their owning teams." }
+    ],
+    'dashboardView': [
+        { text: "Summarize the key takeaways from the 'Strategic Goals' widget." },
+        { text: "Generate a mind map of our 'Strategic Goals'.", isImageRequest: true },
+        { text: "What risks do you see in the 'Team Demand' widget data?" },
+        { text: "Analyze the 'Investment Distribution' for this year." },
+        { text: "What's the biggest accomplishment shown?" }
+    ],
+    'capacityConfigView': [
+        { text: "Find anomalies in my capacity configuration." },
+        { text: "Which team has the highest 'avgOverheadHoursPerWeekPerSDE'?" },
+        { text: "Walk me through the capacity calculation for the 'Avengers' team." },
+        { text: "What is the total 'AI Productivity Gain' across the org?" },
+        { text: "Compare the 'Standard Leave' days for all teams." }
+    ],
+    'default': [
+        { text: "What is this system about?" },
+        { text: "How many teams are there?" },
+        { text: "Summarize the main strategic goals." },
+        { text: "List all services in the system." }
+    ]
+};
  
 /**
  * Initializes the AI Chat Panel elements and attaches event listeners.
@@ -49,6 +93,7 @@ function initializeAiChatPanel() {
 
         if(aiChatPanel) {
             console.log("AI Chat Assistant module initialized.");
+            renderSuggestedQuestions();
         } else {
             console.error("AI Chat: Panel not found. HTML component might have failed to load.");
         }
@@ -191,6 +236,64 @@ async function handleAiChatSubmit() {
         aiChatInput.disabled = false;
         aiChatSendButton.disabled = false;
         if(aiChatInput) aiChatInput.focus();
+        const suggestionsContainer = document.getElementById('aiChatSuggestions');
+        if (suggestionsContainer) suggestionsContainer.style.display = 'flex';
+    }
+}
+
+/**
+ * [NEW] Handles sending an image generation request.
+ */
+async function handleAiImageSubmit(userQuestion) {
+    if (!aiChatInput || !aiChatSendButton || !aiChatLog) return;
+    
+    const question = userQuestion || aiChatInput.value.trim();
+    if (question.length === 0) return;
+
+    console.log('[AI CHAT] Submitting IMAGE request.', { question, currentViewId });
+    
+    const suggestionsContainer = document.getElementById('aiChatSuggestions');
+    if (suggestionsContainer) suggestionsContainer.style.display = 'none';
+    aiChatInput.value = '';
+    aiChatInput.disabled = true;
+    aiChatSendButton.disabled = true;
+    
+    addChatMessage(question, 'user');
+    const loadingMessageEl = addChatMessage('AI is generating an image...', 'ai', true);
+    const contextJson = scrapeCurrentViewContext();
+    
+    try {
+        const response = await generateImageFromPrompt(
+            question, 
+            contextJson, 
+            globalSettings.ai.apiKey,
+            globalSettings.ai.provider
+        );
+
+        if (loadingMessageEl && response && response.isImage) {
+            loadingMessageEl.innerHTML = `
+                <p>Here is the generated diagram:</p>
+                <img src="${response.imageUrl}" alt="${response.altText}" class="chat-generated-image" />
+            `;
+            loadingMessageEl.classList.remove('loading');
+        } else {
+            throw new Error('Mock response was not a valid image object.');
+        }
+
+    } catch (error) {
+        console.error("Error during AI image submit:", error);
+        if (loadingMessageEl) {
+            loadingMessageEl.innerHTML = '';
+            loadingMessageEl.textContent = `Error: ${error.message}`;
+            loadingMessageEl.style.color = 'red';
+            loadingMessageEl.classList.remove('loading');
+        }
+    } finally {
+        aiChatInput.disabled = false;
+        aiChatSendButton.disabled = false;
+        if(aiChatInput) aiChatInput.focus();
+        const suggestionsContainerFinal = document.getElementById('aiChatSuggestions');
+        if (suggestionsContainerFinal) suggestionsContainerFinal.style.display = 'flex';
     }
 }
 
@@ -222,6 +325,58 @@ function addChatMessage(text, sender, isLoading = false) {
     aiChatLog.scrollTop = aiChatLog.scrollHeight;
     
     return messageDiv;
+}
+
+/**
+ * [MODIFIED] Renders the suggested question pills based on the current view.
+ */
+function renderSuggestedQuestions() {
+    let suggestionsContainer = document.getElementById('aiChatSuggestions');
+    if (!suggestionsContainer) {
+        const chatPanel = document.getElementById('aiChatPanel');
+        const inputContainer = document.getElementById('aiChatInputContainer');
+        if (chatPanel && inputContainer) {
+            suggestionsContainer = document.createElement('div');
+            suggestionsContainer.id = 'aiChatSuggestions';
+            suggestionsContainer.className = 'ai-chat-suggestions';
+            chatPanel.insertBefore(suggestionsContainer, inputContainer);
+        }
+    }
+    if (!suggestionsContainer) return;
+
+    suggestionsContainer.style.display = 'flex';
+
+    const questions = SUGGESTED_QUESTIONS[currentViewId] || SUGGESTED_QUESTIONS['default'];
+    suggestionsContainer.innerHTML = '';
+
+    questions.forEach(question => {
+        if (question.isImageRequest) {
+            if (!globalSettings || !globalSettings.ai || !globalSettings.ai.isEnabled || !globalSettings.ai.apiKey) {
+                return;
+            }
+        }
+
+        const pill = document.createElement('div');
+        pill.className = 'suggestion-pill';
+
+        if (question.isImageRequest) {
+            pill.innerHTML = `<i class="fas fa-image"></i> ${question.text}`;
+        } else {
+            pill.textContent = question.text;
+        }
+
+        pill.onclick = () => {
+            if (aiChatInput) {
+                aiChatInput.value = question.text;
+            }
+            if (question.isImageRequest) {
+                handleAiImageSubmit(question.text);
+            } else {
+                handleAiChatSubmit();
+            }
+        };
+        suggestionsContainer.appendChild(pill);
+    });
 }
 
 /**

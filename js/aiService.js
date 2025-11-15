@@ -1,6 +1,8 @@
 // js/aiService.js
 // [NEW] Set to true to bypass API calls and return mock data for UI development
 const AI_ANALYSIS_MOCK_MODE = false;
+// [NEW] Set to true to bypass image API calls
+const AI_IMAGE_MOCK_MODE = true;
 /**
  * [NEW] A private helper to wrap fetch calls with exponential backoff.
  * This is a best-practice coding pattern for handling transient server
@@ -587,7 +589,7 @@ async function getAnalysisFromPrompt(userQuestion, contextJson, apiKey, provider
 
 // Expose public functions to global scope for other modules
 if (typeof window !== 'undefined') {
-    window.getAnalysisFromPrompt = getAnalysisFromPrompt;
+window.getAnalysisFromPrompt = getAnalysisFromPrompt;
 }
 
 /**
@@ -651,6 +653,91 @@ async function _getAnalysisWithGemini(systemPrompt, userQuestion, apiKey) {
     return textResponse;
 }
 
+/**
+ * [NEW] [PRIVATE] Calls the Google Imagen API to generate an image.
+ * This is the REAL implementation.
+ * @returns {Promise<object>} An object { isImage: true, imageUrl: string, altText: string }
+ */
+async function _generateImageWithImagen(userPrompt, contextJson, apiKey) {
+    console.log("[AI-DEBUG] _generateImageWithImagen: Preparing to call Imagen 3...");
+
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:generateImages?key=${apiKey}`;
+
+    const requestBody = {
+        "prompt": { "text": `CONTEXT: ${contextJson}\n\nPROMPT: ${userPrompt}` },
+        "config": { "number_of_images": 1 }
+    };
+    
+    const fetchOptions = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
+    };
+
+    const response = await _fetchWithRetry(API_URL, fetchOptions);
+    const responseData = await response.json();
+
+    if (!responseData.images || !responseData.images[0].url) {
+        console.error("[AI-DEBUG] Invalid response structure from Imagen:", responseData);
+        throw new Error("Received an invalid response from the Imagen AI.");
+    }
+    
+    const imageUrl = responseData.images[0].url;
+
+    return {
+        isImage: true,
+        imageUrl: imageUrl,
+        altText: userPrompt
+    };
+}
+
 // TODO: Implement private analysis helpers for other providers
 // async function _getAnalysisWithOpenAI(systemPrompt, userQuestion, apiKey) { ... }
 // async function _getAnalysisWithAnthropic(systemPrompt, userQuestion, apiKey) { ... }
+
+/**
+ * [NEW] Public "Router" Function: Generates an image from a prompt.
+ * This is a MOCK for Phase 1. It does not call a real API.
+ * It will return a placeholder diagram.
+ *
+ * @param {string} userPrompt The user's image request (e.g., "Draw a block diagram...").
+ * @param {string} contextJson The JSON string of the current view's data.
+ * @param {string} apiKey The user's API key (unused in mock).
+ * @param {string} provider The selected provider (unused in mock).
+ * @returns {Promise<object>} A promise that resolves to an object: { isImage: true, url: string, altText: string }
+ */
+async function generateImageFromPrompt(userPrompt, contextJson, apiKey, provider) {
+    console.log(`[AI-DEBUG] generateImageFromPrompt: Routing for provider '${provider}'...`);
+
+    if (!apiKey) {
+        console.error("[AI-DEBUG] Image generation failed: API key is missing.");
+        throw new Error("AI API key is not set. Please add your Gemini API key in the AI Assistant settings.");
+    }
+    
+    if (AI_IMAGE_MOCK_MODE) {
+        console.warn(`[AI-DEBUG] MOCK IMAGE GENERATION. Prompt: "${userPrompt}". Context: ${contextJson.length} chars.`);
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        return {
+            isImage: true,
+            imageUrl: "http://googleusercontent.com/image_generation_content/0",
+            altText: "A placeholder block diagram of the StreamView system architecture."
+        };
+    }
+
+    try {
+        switch (provider) {
+            case 'google-gemini':
+                return await _generateImageWithImagen(userPrompt, contextJson, apiKey);
+            default:
+                console.error(`Unknown AI provider for images: ${provider}`);
+                return `Image generation for "${provider}" is not yet supported.`;
+        }
+    } catch (error) {
+        console.error(`Error during AI image generation with ${provider}:`, error);
+        return `An error occurred while communicating with the Image AI. Check the console.\nError: ${error.message}`;
+    }
+}
+
+if (typeof window !== 'undefined') {
+    window.generateImageFromPrompt = generateImageFromPrompt;
+}

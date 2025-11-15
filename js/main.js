@@ -482,6 +482,10 @@ function switchView(targetViewId, newMode = null) {
         }
         // --- End modal closing logic ---       
 
+        if (typeof renderSuggestedQuestions === 'function') {
+            renderSuggestedQuestions();
+        }
+
         // Show/Hide AI Chat Button
         const aiChatButton = document.getElementById('aiChatButton');
         if (aiChatButton) {
