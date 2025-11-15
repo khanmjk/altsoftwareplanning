@@ -100,6 +100,42 @@
 .chat-copy-button .fa-check {
     color: #28a745; /* Green checkmark */
 }
+
+/* --- [NEW] Styles for Suggestion Pills with Icons --- */
+.suggestion-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background-color: #f1f3f5;
+    color: #212529;
+    font-size: 0.85rem;
+    border: 1px solid #dee2e6;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.suggestion-pill:hover {
+    background-color: #e2e6ea;
+    border-color: #c1c9d0;
+}
+
+.suggestion-pill .fa-image {
+    color: #007bff;
+}
+
+/* --- [NEW] Styles for Generated Images in Chat --- */
+.ai-message .chat-generated-image {
+    max-width: 100%;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+    margin-top: 5px;
+}
+
+.ai-message p:first-child {
+    margin-top: 0;
+}
 # --- [NEW] Styles for Markdown Content ---
 
 .ai-message {
@@ -200,4 +236,13 @@
 
 .chat-copy-button .fa-check {
     color: #28a745; /* Green checkmark */
+}
+.ai-chat-suggestions {
+    padding: 8px 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    border-top: 1px solid #f1f1f1;
+    border-bottom: 1px solid #ccc;
+    background: #fff;
 }

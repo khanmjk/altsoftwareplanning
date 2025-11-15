@@ -8,6 +8,72 @@ let aiChatSendButton = null;
 
 // [NEW] Initialize markdown-it. It's already loaded in index.html.
 const md = window.markdownit();
+let cachedImageGenerationFn = null;
+// [MODIFIED] Store all suggested questions, now with image request flags.
+const SUGGESTED_QUESTIONS = {
+    'planningView': [
+        { text: "Which teams are overloaded in this plan?" },
+        { text: "How can I optimize this plan to fit more initiatives?", isImageRequest: false },
+        { text: "Generate a flowchart for the top 'Committed' initiative.", isImageRequest: true },
+        { text: "Suggest SDE-Year reductions for 2-3 BTL initiatives.", isImageRequest: false },
+        { text: "Analyze the risks in this plan." }
+    ],
+    'roadmapView': [
+        { text: "Summarize all initiatives currently in 'Backlog' status." },
+        { text: "Which 'Defined' initiatives have the highest SDE-Year estimates?" },
+        { text: "Show me all initiatives related to the 'Revenue Growth' theme." },
+        { text: "Are there any 'Backlog' items with no teams assigned yet?" },
+        { text: "Who is the owner of the 'Expand to EU Market' initiative?" }
+    ],
+    'organogramView': [
+        { text: "Rate my overall team composition and find risks." },
+        { text: "Generate a stylized org chart of the managers.", isImageRequest: true },
+        { text: "Who are all the AI Software Engineers?", isImageRequest: false },
+        { text: "Find potential skill gaps in the engineer roster." },
+        { text: "Which teams have the highest number of junior engineers?" }
+    ],
+    'visualizationCarousel': [
+        { text: "Generate a block diagram of this architecture.", isImageRequest: true },
+        { text: "Rate the architectural design. Are there bottlenecks?", isImageRequest: false },
+        { text: "What services does the 'User Management Service' depend on?" },
+        { text: "Which team owns the 'Content Delivery Service'?" },
+        { text: "Show a table of all services and their owning teams." }
+    ],
+    'dashboardView': [
+        { text: "Summarize the key takeaways from the 'Strategic Goals' widget." },
+        { text: "Generate a mind map of our 'Strategic Goals'.", isImageRequest: true },
+        { text: "What risks do you see in the 'Team Demand' widget data?" },
+        { text: "Analyze the 'Investment Distribution' for this year." },
+        { text: "What's the biggest accomplishment shown?" }
+    ],
+    'capacityConfigView': [
+        { text: "Find anomalies in my capacity configuration." },
+        { text: "Which team has the highest 'avgOverheadHoursPerWeekPerSDE'?" },
+        { text: "Walk me through the capacity calculation for the 'Avengers' team." },
+        { text: "What is the total 'AI Productivity Gain' across the org?" },
+        { text: "Compare the 'Standard Leave' days for all teams." }
+    ],
+    'systemEditForm': [
+        { text: "How do I add a new Team?" },
+        { text: "What's the difference between 'Engineers' and 'Away-Team Members'?" },
+        { text: "Find any services that don't have an owning team." },
+        { text: "Find any engineers in the roster who are not assigned to a team." },
+        { text: "Explain the 'Platform Dependencies' field for a service." }
+    ],
+    'sdmForecastingView': [
+        { text: "Explain the 'Effective Engineers' calculation." },
+        { text: "How does 'Annual Attrition Rate' affect this forecast?" },
+        { text: "What's the difference between 'Total Ramped Up Engineers' and 'Total Headcount'?" },
+        { text: "Analyze the hiring rate needed to close the gap by the target week." },
+        { text: "How do the 'Capacity Constraints' (like overhead) affect this forecast?" }
+    ],
+    'default': [
+        { text: "What is this system about?" },
+        { text: "How many teams are there?" },
+        { text: "Summarize the main strategic goals." },
+        { text: "List all services in the system." }
+    ]
+};
  
 /**
  * Initializes the AI Chat Panel elements and attaches event listeners.
@@ -49,6 +115,7 @@ function initializeAiChatPanel() {
 
         if(aiChatPanel) {
             console.log("AI Chat Assistant module initialized.");
+            renderSuggestedQuestions();
         } else {
             console.error("AI Chat: Panel not found. HTML component might have failed to load.");
         }
@@ -191,6 +258,71 @@ async function handleAiChatSubmit() {
         aiChatInput.disabled = false;
         aiChatSendButton.disabled = false;
         if(aiChatInput) aiChatInput.focus();
+        const suggestionsContainer = document.getElementById('aiChatSuggestions');
+        if (suggestionsContainer) suggestionsContainer.style.display = 'flex';
+    }
+}
+
+/**
+ * [NEW] Handles sending an image generation request.
+ */
+async function handleAiImageSubmit(userQuestion) {
+    if (!aiChatInput || !aiChatSendButton || !aiChatLog) return;
+    
+    const question = userQuestion || aiChatInput.value.trim();
+    if (question.length === 0) return;
+
+    console.log('[AI CHAT] Submitting IMAGE request.', { question, currentViewId });
+    
+    const suggestionsContainer = document.getElementById('aiChatSuggestions');
+    if (suggestionsContainer) suggestionsContainer.style.display = 'none';
+    aiChatInput.value = '';
+    aiChatInput.disabled = true;
+    aiChatSendButton.disabled = true;
+    
+    addChatMessage(question, 'user');
+    const loadingMessageEl = addChatMessage('AI is generating an image...', 'ai', true);
+    const contextJson = scrapeCurrentViewContext();
+    
+    try {
+        const imageFn = resolveImageGenerationFunction();
+        if (!imageFn) {
+            throw new Error('AI image generation service is unavailable. Please ensure AI is enabled and an API key is saved.');
+        }
+        const response = await imageFn(
+            question, 
+            contextJson, 
+            globalSettings.ai.apiKey,
+            globalSettings.ai.provider
+        );
+
+        if (loadingMessageEl && response && response.isImage) {
+            loadingMessageEl.innerHTML = `
+                <p>Here is the generated diagram:</p>
+                <img src="${response.imageUrl}" 
+                     alt="${response.altText}" 
+                     class="chat-generated-image" 
+                     title="Right-click to copy or save this image" />
+            `;
+            loadingMessageEl.classList.remove('loading');
+        } else {
+            throw new Error('Mock response was not a valid image object.');
+        }
+
+    } catch (error) {
+        console.error("Error during AI image submit:", error);
+        if (loadingMessageEl) {
+            loadingMessageEl.innerHTML = '';
+            loadingMessageEl.textContent = `Error: ${error.message}`;
+            loadingMessageEl.style.color = 'red';
+            loadingMessageEl.classList.remove('loading');
+        }
+    } finally {
+        aiChatInput.disabled = false;
+        aiChatSendButton.disabled = false;
+        if(aiChatInput) aiChatInput.focus();
+        const suggestionsContainerFinal = document.getElementById('aiChatSuggestions');
+        if (suggestionsContainerFinal) suggestionsContainerFinal.style.display = 'flex';
     }
 }
 
@@ -222,6 +354,59 @@ function addChatMessage(text, sender, isLoading = false) {
     aiChatLog.scrollTop = aiChatLog.scrollHeight;
     
     return messageDiv;
+}
+
+/**
+ * [MODIFIED] Renders the suggested question pills based on the current view.
+ */
+function renderSuggestedQuestions() {
+    let suggestionsContainer = document.getElementById('aiChatSuggestions');
+    if (!suggestionsContainer) {
+        const chatPanel = document.getElementById('aiChatPanel');
+        const inputContainer = document.getElementById('aiChatInputContainer');
+        if (chatPanel && inputContainer) {
+            suggestionsContainer = document.createElement('div');
+            suggestionsContainer.id = 'aiChatSuggestions';
+            suggestionsContainer.className = 'ai-chat-suggestions';
+            chatPanel.insertBefore(suggestionsContainer, inputContainer);
+        }
+    }
+    if (!suggestionsContainer) return;
+
+    suggestionsContainer.style.display = 'flex';
+
+    const questions = SUGGESTED_QUESTIONS[currentViewId] || SUGGESTED_QUESTIONS['default'];
+    suggestionsContainer.innerHTML = '';
+
+    questions.forEach(question => {
+        if (question.isImageRequest) {
+            if (!globalSettings || !globalSettings.ai || !globalSettings.ai.isEnabled || !globalSettings.ai.apiKey) {
+                return;
+            }
+        }
+
+        const pill = document.createElement('div');
+        pill.className = 'suggestion-pill';
+
+        if (question.isImageRequest) {
+            pill.innerHTML = `<i class="fas fa-image"></i> ${question.text}`;
+        } else {
+            pill.textContent = question.text;
+        }
+
+        pill.onclick = () => {
+            console.log('[AI CHAT] Suggested question clicked:', question.text, { isImageRequest: !!question.isImageRequest });
+            if (aiChatInput) {
+                aiChatInput.value = question.text;
+            }
+            if (question.isImageRequest) {
+                handleAiImageSubmit(question.text);
+            } else {
+                handleAiChatSubmit();
+            }
+        };
+        suggestionsContainer.appendChild(pill);
+    });
 }
 
 /**
@@ -452,6 +637,19 @@ async function waitForAnalysisFunction(maxAttempts = 5, delayMs = 200) {
             return window.getAnalysisFromPrompt;
         }
         await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+    return null;
+}
+
+function resolveImageGenerationFunction() {
+    if (cachedImageGenerationFn) return cachedImageGenerationFn;
+    if (typeof generateImageFromPrompt === 'function') {
+        cachedImageGenerationFn = generateImageFromPrompt;
+        return cachedImageGenerationFn;
+    }
+    if (typeof window !== 'undefined' && typeof window.generateImageFromPrompt === 'function') {
+        cachedImageGenerationFn = window.generateImageFromPrompt;
+        return cachedImageGenerationFn;
     }
     return null;
 }

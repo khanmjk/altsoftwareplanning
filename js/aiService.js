@@ -1,6 +1,8 @@
 // js/aiService.js
 // [NEW] Set to true to bypass API calls and return mock data for UI development
 const AI_ANALYSIS_MOCK_MODE = false;
+// [NEW] Set to true to bypass image API calls
+const AI_IMAGE_MOCK_MODE = true; // Imagen currently requires a backend proxy (OAuth2), so mock mode stays enabled
 /**
  * [NEW] A private helper to wrap fetch calls with exponential backoff.
  * This is a best-practice coding pattern for handling transient server
@@ -587,7 +589,7 @@ async function getAnalysisFromPrompt(userQuestion, contextJson, apiKey, provider
 
 // Expose public functions to global scope for other modules
 if (typeof window !== 'undefined') {
-    window.getAnalysisFromPrompt = getAnalysisFromPrompt;
+window.getAnalysisFromPrompt = getAnalysisFromPrompt;
 }
 
 /**
@@ -651,6 +653,178 @@ async function _getAnalysisWithGemini(systemPrompt, userQuestion, apiKey) {
     return textResponse;
 }
 
+/**
+ * [NEW] Builds the system prompt for image generation.
+ * This instructs the AI on how to interpret the context data for drawing.
+ * @returns {string} The detailed system prompt for image generation.
+ */
+function _getArchitecturePrompt() {
+    return "You are a visual architect. Your task is to generate a clear, professional, block-and-arrow architecture diagram based on the user's prompt and the provided CONTEXT DATA.\n\n" +
+        "**RULES:**\n" +
+        "1.  **Grounding:** You MUST base your diagram *only* on the services, teams, and dependencies in the CONTEXT DATA. Do not invent services or relationships.\n" +
+        "2.  **Clarity:** The diagram must be simple, clean, and easy to read. Use logical groupings.\n" +
+        "3.  **How to Draw:**\n" +
+        "    * Use the `services` list to draw the main blocks.\n" +
+        "    * Use the `serviceDependencies` to draw arrows *between* the blocks.\n" +
+        "    * Use the `owningTeamId` to visually group or color-code services that belong to the same team.\n" +
+        "    * Label all blocks and arrows clearly.\n" +
+        "4.  **Format:** Generate a single, high-quality PNG image.";
+}
+
+function _getOrgChartPrompt() {
+    return "You are an organizational design assistant. Your task is to generate a clean, hierarchical organization chart based on the user's prompt and the provided CONTEXT DATA.\n\n" +
+        "**RULES:**\n" +
+        "1.  **Grounding:** You MUST base your diagram *only* on the personnel in the CONTEXT DATA. Do not invent people or teams.\n" +
+        "2.  **Clarity:** The diagram must be a simple, top-down hierarchy.\n" +
+        "3.  **How to Draw:**\n" +
+        "    * Use the `seniorManagers` as the top-level nodes.\n" +
+        "    * Use the `sdms` to draw the next level, linking them to their `seniorManagerId`.\n" +
+        "    * Use the `teams` to draw the next level, linking them to their `sdmId`.\n" +
+        "    * If the user asks for engineers, you can include `allKnownEngineers` linked to their `currentTeamId`.\n" +
+        "    * Label all blocks clearly with their names.\n" +
+        "4.  **Format:** Generate a single, high-quality PNG image.";
+}
+
+function _getMindMapPrompt() {
+    return "You are a strategic planning assistant. Your task is to generate a conceptual diagram (like a mind map or flowchart) based on the user's prompt and the provided CONTEXT DATA.\n\n" +
+        "**RULES:**\n" +
+        "1.  **Grounding:** You MUST base your diagram *only* on the items in the CONTEXT DATA (like `goals` or `initiatives`).\n" +
+        "2.  **Clarity:** The diagram must be logical and easy to follow.\n" +
+        "3.  **How to Draw:**\n" +
+        "    * Identify the central topic from the USER PROMPT (e.g., a specific goal or 'all goals').\n" +
+        "    * Use the CONTEXT DATA to create child nodes. For example, if the topic is a goal, the child nodes should be the `initiatives` linked to it.\n" +
+        "    * If the user asks for a flowchart, use the `workPackages` or `deliveryPhases` to show a simple sequence.\n" +
+        "    * Label all nodes clearly.\n" +
+        "4.  **Format:** Generate a single, high-quality PNG image.";
+}
+
+/**
+ * [MODIFIED] [PRIVATE] Calls the Google Imagen API via the Vertex AI endpoint.
+ * This is the REAL implementation.
+ * @returns {Promise<object>} An object { isImage: true, imageUrl: string, altText: string }
+ */
+async function _generateImageWithImagen(userPrompt, contextJson, apiKey) {
+    console.log("[AI-DEBUG] _generateImageWithImagen: Preparing to call REAL Imagen 3 via Vertex AI...");
+
+    // !!! IMPORTANT: REPLACE WITH YOUR PROJECT ID FROM GOOGLE CLOUD CONSOLE !!!
+    const GCP_PROJECT_ID = "gen-lang-client-0801101504"; // e.g., "gen-lang-client-0..."
+    const GCP_REGION = "us-central1"; // Imagen is often in us-central1
+    
+    if (GCP_PROJECT_ID === "YOUR-PROJECT-ID-HERE") {
+        throw new Error("Missing GCP_PROJECT_ID in js/aiService.js, _generateImageWithImagen");
+    }
+
+    // [THE FIX] This is the correct Vertex AI endpoint for Imagen
+    const API_URL = `https://` + GCP_REGION + `-aiplatform.googleapis.com/v1/projects/` + GCP_PROJECT_ID + `/locations/` + GCP_REGION + `/publishers/google/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+
+    // 1. Build the new combined prompt (router)
+    let imageSystemPrompt;
+    const promptLowerCase = userPrompt.toLowerCase();
+    if (promptLowerCase.includes('architecture') || promptLowerCase.includes('block diagram')) {
+        imageSystemPrompt = _getArchitecturePrompt();
+        console.log("[AI-DEBUG] Image Router: Selected Architecture Prompt (Vertex)");
+    } else if (promptLowerCase.includes('org chart') || promptLowerCase.includes('managers')) {
+        imageSystemPrompt = _getOrgChartPrompt();
+        console.log("[AI-DEBUG] Image Router: Selected Org Chart Prompt (Vertex)");
+    } else if (promptLowerCase.includes('mind map') || promptLowerCase.includes('flowchart')) {
+        imageSystemPrompt = _getMindMapPrompt();
+        console.log("[AI-DEBUG] Image Router: Selected Mind Map Prompt (Vertex)");
+    } else {
+        imageSystemPrompt = _getArchitecturePrompt();
+        console.warn("[AI-DEBUG] Image Router: Defaulted to Architecture Prompt (Vertex)");
+    }
+    const combinedPrompt = `${imageSystemPrompt}\n\nCONTEXT DATA:\n${contextJson}\n\nUSER PROMPT:\n${userPrompt}`;
+
+    // [THE FIX] This is the correct request body format for the Vertex AI API
+    const requestBody = {
+      "instances": [
+        { "prompt": combinedPrompt }
+      ],
+      "parameters": {
+        "number_of_images": 1
+      }
+    };
+    
+    const fetchOptions = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+            // NOTE: This endpoint uses API Key in the URL, not a Bearer token
+        },
+        body: JSON.stringify(requestBody)
+    };
+
+    // Use the retry mechanism
+    const response = await _fetchWithRetry(API_URL, fetchOptions);
+    const responseData = await response.json();
+
+    // 2. Process the response
+    // The Vertex AI response has a different structure
+    if (!responseData.predictions || !responseData.predictions[0] || !responseData.predictions[0].bytesBase64Encoded) {
+        console.error("[AI-DEBUG] Invalid response structure from Vertex AI (Imagen):", responseData);
+        throw new Error("Received an invalid or empty response from the Imagen AI.");
+    }
+    
+    // 3. Convert Base64 to a Data URL
+    const base64ImageData = responseData.predictions[0].bytesBase64Encoded;
+    const imageUrl = `data:image/png;base64,${base64ImageData}`;
+
+    console.log(`[AI-DEBUG] _generateImageWithImagen: Successfully received and formatted image as data URL.`);
+
+    return {
+        isImage: true,
+        imageUrl: imageUrl,
+        altText: userPrompt
+    };
+}
+
 // TODO: Implement private analysis helpers for other providers
 // async function _getAnalysisWithOpenAI(systemPrompt, userQuestion, apiKey) { ... }
 // async function _getAnalysisWithAnthropic(systemPrompt, userQuestion, apiKey) { ... }
+
+/**
+ * [NEW] Public "Router" Function: Generates an image from a prompt.
+ * This is a MOCK for Phase 1. It does not call a real API.
+ * It will return a placeholder diagram.
+ *
+ * @param {string} userPrompt The user's image request (e.g., "Draw a block diagram...").
+ * @param {string} contextJson The JSON string of the current view's data.
+ * @param {string} apiKey The user's API key (unused in mock).
+ * @param {string} provider The selected provider (unused in mock).
+ * @returns {Promise<object>} A promise that resolves to an object: { isImage: true, url: string, altText: string }
+ */
+async function generateImageFromPrompt(userPrompt, contextJson, apiKey, provider) {
+    console.log(`[AI-DEBUG] generateImageFromPrompt: Routing for provider '${provider}'...`);
+
+    if (!apiKey) {
+        console.error("[AI-DEBUG] Image generation failed: API key is missing.");
+        throw new Error("AI API key is not set. Please add your Gemini API key in the AI Assistant settings.");
+    }
+    
+    if (AI_IMAGE_MOCK_MODE) {
+        console.warn(`[AI-DEBUG] MOCK IMAGE GENERATION. Prompt: "${userPrompt}". Context: ${contextJson.length} chars.`);
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        return {
+            isImage: true,
+            imageUrl: "http://googleusercontent.com/image_generation_content/0",
+            altText: "A placeholder block diagram of the StreamView system architecture."
+        };
+    }
+
+    try {
+        switch (provider) {
+            case 'google-gemini':
+                return await _generateImageWithImagen(userPrompt, contextJson, apiKey);
+            default:
+                console.error(`Unknown AI provider for images: ${provider}`);
+                throw new Error(`Image generation for "${provider}" is not yet supported.`);
+        }
+    } catch (error) {
+        console.error(`Error during AI image generation with ${provider}:`, error);
+        throw new Error(`Image generation failed: ${error.message}`);
+    }
+}
+
+if (typeof window !== 'undefined') {
+    window.generateImageFromPrompt = generateImageFromPrompt;
+}

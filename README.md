@@ -85,6 +85,17 @@ Upon launching the application, you'll see the main menu on the top bar.
 * **Disclaimer:** This is a client-side application. Your API key is stored exclusively in your browser's local storage and is never sent to any server other than the selected LLM provider. Using this app comes with risks. The author is not liable for any issues that arise from using your own private (non-free-tier) API key.
 * Click **"Save Settings"**.
 
+#### Image Generation Status (Imagen)
+
+The diagram/image feature is currently *mocked*. Google’s Imagen 3 models run on the Vertex AI API and **require OAuth2 access tokens**, which we cannot obtain safely from a client-side app.
+
+Until we build the backend proxy (see backlog item “Add backend proxy for AI image generation”), the app will:
+
+* Always return the placeholder image when you click a “Generate … diagram” suggestion in the AI Chat panel.
+* Log the real request/response flow so you can see what would be sent to Imagen.
+
+If you want to enable real image generation locally, you will need to run a backend service that injects an OAuth2 token and calls the Vertex AI `imagen-3.0-generate-002` endpoint on behalf of the browser.
+
 ### AI Assistant
 
 * **AI System Generation:** From the home screen, use the "Create with AI" button to generate a complete, realistic system and 3-year plan from a single text prompt.
@@ -92,6 +103,7 @@ Upon launching the application, you'll see the main menu on the top bar.
 * **Loading Animation:** A spinner provides visual feedback while the AI is processing your request.
 * **Generation Statistics:** After a system is created, a panel displays metrics about the LLM interaction, including token and character counts for the input and output.
 * **Context-Aware Chat:** Once a system is loaded, an "AI Chat" button appears. This opens a chat panel that allows you to ask questions about the *currently loaded system*. The AI's context is updated as you navigate, allowing you to ask specific questions about what you're seeing.
+* **Image Suggestions:** Certain suggested questions (e.g., “Generate a block diagram…”) will attempt to create diagrams via Imagen. Make sure the requirements above are satisfied; otherwise the chat will explain why image generation failed.
 
 #### Example Chat Questions
 
