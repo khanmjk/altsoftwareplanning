@@ -98,43 +98,14 @@ If you want to enable real image generation locally, you will need to run a back
 
 ### AI Assistant
 
-* **AI System Generation:** From the home screen, use the "Create with AI" button to generate a complete, realistic system and 3-year plan from a single text prompt.
-* **Settings Management:** A globally accessible "AI Assistant" button in the top bar allows you to enable/disable AI mode and securely save your API key in local storage. The modal provides explicit instructions and disclaimers for using a free API key.
-* **Loading Animation:** A spinner provides visual feedback while the AI is processing your request.
-* **Generation Statistics:** After a system is created, a panel displays metrics about the LLM interaction, including token and character counts for the input and output.
-* **Context-Aware Chat:** Once a system is loaded, an "AI Chat" button appears. This opens a chat panel that allows you to ask questions about the *currently loaded system*. The AI's context is updated as you navigate, allowing you to ask specific questions about what you're seeing.
-* **Image Suggestions:** Certain suggested questions (e.g., “Generate a block diagram…”) will attempt to create diagrams via Imagen. Make sure the requirements above are satisfied; otherwise the chat will explain why image generation failed.
+The AI Assistant is a powerful, integrated feature.
 
-#### Example Chat Questions
+* **AI System Generation:** From the home screen, use the "Create with AI" button to generate a complete system from a text prompt.
+* **Settings:** Use the global "AI Assistant" button to enable the assistant and add your API key.
+* **Context-Aware Chat & Analysis:** Once a system is loaded, use the "AI Chat" button to open the chat panel. You can ask complex, analytical questions about the data in your current view (e.g., "Which teams are overloaded?").
+* **Action Agent:** The AI can now perform actions. Type `/` in the chat to see a list of commands you can ask the AI to run, such as `/addInitiative` or `/moveEngineerToTeam`.
 
-Here are some examples of the types of expert-level questions you can ask the assistant, based on the view you are on:
-
-* **On "System Overview" (Visualizations):**
-    * "What is this system about?"
-    * "Which team owns the 'Content Delivery Service'?"
-    * "What services does the 'Recommendation Engine' depend on?"
-    * "Show me all upstream and downstream dependencies for the 'Payment Service'."
-
-* **On "Inspect Org Design" (Org Chart & Engineer List):**
-    * "Who is 'Emily Clark' and what are her skills?"
-    * "Give me a list of all AI Software Engineers and their agent types."
-    * "How many L5+ (Level 5 or higher) engineers are in the 'Core Platform' org?"
-    * "Who does 'Alice Johnson' report to?"
-
-* **On "Year Plan":**
-    * "Which teams are overloaded based on the current ATL/BTL line?"
-    * "What's the total Net SDE-Year capacity for the 'Avengers' team?"
-    * "Summarize all initiatives assigned to the 'Avengers' and their total SDE load."
-
-* **On "Capacity Tuning":**
-    * "Walk me through the capacity calculation for the 'Spartans' team."
-    * "What is the org-wide 'Net Project Capacity' in the 'EffectiveBIS' scenario?"
-    * "Which team has the highest 'aiProductivityGainPercent' configured and what is it?"
-
-* **On "Dashboard" (viewing a widget):**
-    * (Viewing 'Strategic Goals') "Which goals are 'At Risk' and why?"
-    * (Viewing 'Investment Distribution') "What's our biggest investment theme this year and how many SDE-Years are assigned to it?"
-    * (Viewing 'Team Demand') "Which team has the highest 'Backlog' demand in Q3?"
+For a full list of AI features, see **Section 4: Key Features**.
 
 ### Loading a Saved System
 
@@ -299,10 +270,20 @@ Understanding these core entities is key to using the tool effectively. Most ent
 
 ### AI Assistant
 
+The AI Assistant has been refactored into a powerful, stateful **Action Agent** with a clean "Controller" (`ai/aiAgentController.js`) and "Toolset" (`ai/aiAgentToolset.js`) architecture.
+
 * **AI System Generation:** From the home screen, use the "Create with AI" button to generate a complete, realistic system and 3-year plan from a single text prompt.
-* **Settings Management:** A globally accessible "AI Assistant" button in the top bar allows you to enable/disable AI mode and securely save your API key in local storage. The modal provides explicit instructions and disclaimers for using a free API key.
-* **Loading Animation:** A spinner provides visual feedback while the AI is processing your request.
-* **Generation Statistics:** After a system is created, a panel displays metrics about the LLM interaction, including token and character counts for the input and output.
+* **Settings Management:** A globally accessible "AI Assistant" button in the top bar allows you to enable/disable AI mode and securely save your API key in local storage.
+* **Stateful, Multi-Turn Conversation:** The agent now maintains a full chat session history (`chatSessionHistory`). You can ask follow-up questions, and the AI will remember the context of your previous messages, just like a real conversation. The session resets when you load a new system.
+* **Action Agent & Tool Use:** The AI can now perform actions and "drive the app." You can ask it to make changes to the system data (e.g., "Add a new initiative," "Move this engineer," "Delete this service"). The AI will formulate a JSON-based "plan" which the `aiAgentController` executes using the `aiAgentToolset`.
+* **`/` Command Discoverability:** To see what actions the agent can perform, simply type `/` in the chat input. A pop-up menu will appear showing all available commands (like `/addInitiative`, `/moveEngineerToTeam`).
+* **True Context-Awareness:** The AI's context is now synchronized with *exactly* what you see on the UI. When you ask a question, the agent scrapes the *calculated data* from your current view (e.g., the `teamLoadSummary` and `planningTable` data from the "Year Plan" view, or the filtered data from the "Dashboard" view) and sends it with your question. This ensures its analysis is always based on the toggles and filters you have selected.
+* **Expert Analysis:** The AI is prompted to be an expert engineering partner. You can ask it to:
+    * **Analyze Team Composition:** "Find hiring risks" or "Analyze the ratio of junior to senior engineers."
+    * **Optimize Plans:** "Suggest SDE-Year reductions for 2-3 BTL initiatives" or "How can I optimize this plan to fit more work?"
+    * **Find Bottlenecks:** "Inspect the capacity constraints and find anomalies" or "Which teams are overloaded in this plan?"
+* **Token Usage Tracking:** The chat panel now displays a running total of the "Session Tokens" used, so you are aware of your API usage.
+* **Image Suggestions:** Certain suggested questions (e.g., “Generate a block diagram…”) will attempt to create diagrams via Imagen. (Note: This is still mocked, as noted in "Getting Started").
 
 ### System Navigation
 
@@ -380,87 +361,29 @@ Accessible by clicking **"System Overview"**. Provides multiple views of your ar
 
 ### Yearly Planning
 
-* Click **"Year Plan"** to commit initiatives, assign detailed engineering estimates, and track progress against calculated team capacities using the Above The Line / Below The Line (ATL/BTL) system.
-
-### SDM Resource Forecasting Model
-
-* Click **"Resource Forecasting"** to access a tool for modeling team headcount and effective SDE availability over 52 weeks, factoring in hiring, attrition, and capacity constraints.
-
-### Tool Documentation (Home Page)
-
-* The application's home page (when no system is loaded) features a collapsible section displaying this `README.md` file directly.
-
----
-
-## 5. Basic Workflow Example
-
-1.  **Load, Create, or Generate a System:**
-    * (Option A) Click **"Load System"** to load a sample like `ShopSphere`.
-    * (Option B) Click **"New System"** to start from scratch.
-    * (Option C) Enable the AI Assistant, then click **"Create with AI"** and provide a prompt.
-2.  **Define Core Data (Edit System / Org View):**
-    * Set System Name and Description.
-    * Add/Define **Project Managers**, **Goals**, and **Defined Themes**.
-    * Add/Define your **Teams**, assigning SDMs and PMTs.
-    * Add **Engineers** (Human or AI) to the global roster (`allKnownEngineers`) and assign them to teams. Add any **Away-Team Members**.
-    * Add/Define **Services**, assign owning teams, and define **APIs** and dependencies.
-    * Click **"Save All Changes"** in the Edit System view.
-3.  **Explore Visualizations (System Overview):** Use the carousel, view Org Chart, and Engineer List.
-4.  **Manage Roadmap & Backlog:**
-    * Navigate to "Roadmap & Backlog".
-    * Add new initiatives, define their strategic attributes (goals, themes, ROI, owner, PM notes, etc.), and set their initial status (e.g., "Backlog", "Defined").
-    * Edit existing initiatives as they evolve, either inline or via the modal.
-5.  **Tune Capacity Constraints:**
-    * Navigate to "Capacity Tuning".
-    * Set global working days, holidays, org events, and default leave days.
-    * For each team, configure leave uptake %, variable leave impact, team activities, recurring overhead, and **AI productivity gain %**.
-    * Review the summary, narrative, and waterfall chart.
-    * **Save All Capacity Configuration**.
-6.  **Analyze Dashboard Views:**
-    * Navigate to the **"Dashboard"**.
-    * Use the carousel to switch between the Strategic Goals, Accomplishments, Investment, and Roadmap widgets.
-    * Use the filters to analyze data for specific years, organizations, or teams.
-7.  **Manage Yearly Plan:**
-    * Navigate to "Year Plan".
-    * Select a planning year from the dynamic dropdown.
-    * Assign detailed SDE Year estimates per team.
-    * Mark critical initiatives as "Protected". Drag and drop to prioritize.
-    * Use "Capacity Scenarios" and the "Apply Constraints & AI Gains (Net)?" toggle to analyze.
-    * Review the "Enhanced Team Load Summary" table to see detailed capacity and loading.
-    * **Save Current Plan Order & Estimates**.
-8.  **Forecast Resources (Optional):** Navigate to "Resource Forecasting" for team-specific hiring and availability modeling.
-
----
-
-## 6. Tips & Best Practices
-
-* **Save Regularly:** Use the "Save" buttons frequently to persist your changes.
-* **Iterative Definition:** Start with high-level entities and gradually add detail.
-* **Use the Dashboard:** Regularly check the Strategic Goals and Accomplishments dashboards to track progress and celebrate wins.
-* **Roadmap vs. Year Plan:** Use the "Roadmap & Backlog" view for broader strategic planning and the "Year Plan" view for detailed engineering capacity allocation.
-
----
-
-## 7. Known Limitations (MVP)
-
-* **Single User, Local Storage:** Data is saved in your browser's local storage. No multi-user collaboration.
-* **Limited Import/Export:** General import/export for initiatives/plans to CSV/Excel is a future enhancement (though tables built with `EnhancedTableWidget` like Engineer List and Roadmap Table support export).
-* **No True Skill Matching:** While skills are tracked for engineers, there's no automated matching to initiative requirements for resource suggestions.
-* **UI for Advanced Planning Entities:** While the data model supports Goals, Themes, Project Managers, Work Packages, and Plan Archiving, dedicated UI views for managing all aspects of these are still under development or planned.
-
----
-
-## 8. Future Enhancements (Backlog Highlights)
-
-This tool is an evolving MVP. Key future enhancements include:
-
-* **Detailed Planning Module:** UI for managing Goals (linking initiatives), Work Packages (phases, status, team assignments, dependencies), and task breakdowns.
-* **Enhanced Yearly Planning UI:** Full UI support for editing all new initiative fields (ROI, due dates, personnel, etc.) directly in the planning table or a detail panel. UI for managing `archivedYearlyPlans`.
-* **AI-Powered Enhancements:**
-    * **[Done]** AI-assisted system modeling and data generation.
-    * Conversational AI assistant for data querying and insights.
-    * Analysis of team composition and hiring risks.
-    * AI-assisted plan optimization.
-* **Data Access Layer Refactoring:** Complete the abstraction of data operations for easier future backend integration.
-* **EnhancedTableWidget Rollout:** Apply the widget to more tables (e.g., Planning Table, Team Load Summary) for consistent filtering/export.
-* **Collaboration & Cloud Sync:** For multi-user access and data persistence beyond local storage.
+* Click **"Year Plan"** to commit initiatives, assign detailed engineering estimates, and track progress against calculated team capacities using the Above The Line / Below The...
+* [AI] - Ability to export the year plan, showing ATL/BTL logic, etc. to Excel - the excel model must be generated using LLM so that formulaes in the code are applied to the excel generation
+* Now that we have a goals dashboard view, we need to think about introducing an interface to manage the lifecycle of goals
+* Utilities
+    * Now that we've got export to excel, csv and json working, we need a utlity to generate these files from other places: planning table, overall system data dump, etc.
+    * [AI] Explore generating architecture diagramming options, apart from the app's 3d node graphs
+* UX
+    * Ability to export the system to JSON, CSV and Excel, from top level menu "Export System" [leveraging Tabular library's export functionality]
+* Year Planning
+    * View planning by teams - for individual manager team planning.
+    * Add versioning when saving plans (up to 5 previous versions) - need to update data model structure
+    * Add ability to export the plan to CSV or Excel
+* Team Editing
+    * We support away team only from an incoming perspective (i.e. help provided to the team), but we could also consider concept of outgoing away team (I.e. the team lends engineers to other teams)
+* AI enhancements
+    * Use AI to generate a delivery plan - classic ganntt chart using the year plan as input, work out a plan per team for the year
+    * Use AI to set-up recurring tasks to collect status updates for initiatives (detailed work package tracking feature)
+    * USe AI to generate graphs / views the webapp pages don't currently render - like a pie chart showing disribution of initiatives by themes
+    * Use AI to create a new system from a visual software architecture diagram
+    * Use AI to optimise detail planning
+* TODO: Work with other LLM providers
+* TODO: Add backend proxy for AI image generation (securely store user-provided API keys and enable browser clients hosted on GitHub Pages to call Imagen without exposing secrets)
+* Bugs / Missing features
+    * [UX] Add ability remove an engineer from Engineer List table to account for attrition (the engineer must be removed from the main engineer list and all associate objects where engineer is associated with a team)
+* [UX] Include a Delete Resource section in the Organization view, make the Add and Delete resource sections collapsible.
+* [Feature] - In Service Dependency Visualization, use different colours for upstream and downstream dependent nodes
