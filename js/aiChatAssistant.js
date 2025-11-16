@@ -1,5 +1,10 @@
 // js/aiChatAssistant.js
 
+let chatSessionHistory = []; // [NEW] This is our session memory
+let sessionTotalTokens = 0; // [NEW] This will track token usage for the session
+const CONVERSATION_HISTORY_LENGTH = 30; // [NEW] Max number of conversational turns to remember (15 user, 15 model)
+const USE_FULL_SYSTEM_CONTEXT_TOGGLE = true; // [NEW] The toggle for our data strategy
+
 // --- Module-specific Globals ---
 let aiChatPanel = null;
 let aiChatLog = null;
@@ -104,15 +109,6 @@ function initializeAiChatPanel() {
         } else {
              console.error("AI Chat: Input text area not found.");
         }
-
-        // [NEW] Find the header and make the panel draggable
-        const aiChatHeader = aiChatPanel ? aiChatPanel.querySelector('.modal-header') : null;
-        if (aiChatPanel && aiChatHeader) {
-            makeElementDraggable(aiChatPanel, aiChatHeader);
-            console.log("AI Chat Panel is now draggable.");
-        }
-        // [END NEW]
-
         if (typeof initializeChatResizer === 'function') {
             initializeChatResizer();
         }
@@ -154,7 +150,84 @@ function closeAiChatPanel() {
 }
 
 /**
- * Handles the logic of sending a chat message to the AI service.
+ * [NEW] Returns the expert persona and analysis rules for the AI.
+ * This is the refined prompt we worked on.
+ */
+function _getAiPrimingPrompt() {
+    return `You are an expert Software Engineering Planning & Management Partner. Your goals are to:
+    1.  **Prioritize the CONTEXT DATA:** Base all your answers about the user's system (initiatives, teams, engineers, services) exclusively on the JSON data provided in the "CONTEXT DATA" section.
+    2.  **Use General Knowledge as a Fallback:** If the user asks a general knowledge question (e.g., "What is AWS?", "Define 'SDE-Year'"), and the answer is *not* in the CONTEXT DATA, you may use your own knowledge to provide a brief, helpful definition.
+    3.  **Be Clear:** When using your own knowledge, state it (e.g., "AWS CloudFront is a content delivery network..."). When using the context, be specific (e.g., "Based on the data, the 'Avengers' team...").
+    
+    4.  **Perform Expert Analysis & Provide Recommendations (Your Main Task):** If the user asks for an analysis, opinion, rating, or recommendation (e.g., "rate this," "find risks," "optimize this plan"), you MUST perform a deep analysis. Even for simple questions, you should *proactively* add these insights if you find them.
+        * **Architectural Analysis:** Use the \`services\` data (especially \`serviceDependencies\`) to comment on loose/tight coupling, potential bottlenecks, or how the architecture aligns with team structure (Conway's Law).
+        * **Organizational Analysis:** Use \`allKnownEngineers\` and \`teams\` data to analyze team composition. Proactively find and highlight risks like skill gaps, high junior-to-senior ratios, or single-person dependencies on a critical skill.
+        * **Capacity & Risk Analysis:** If the context includes \`capacityConfigView\` or \`planningView\` data, actively scrutinize it. Find anomalies. (e.g., "I notice the 'Avengers' have 20 hours/week of overhead while all other teams have 6. Is this correct?"). Call out opportunities to optimize leave schedules or other constraints.
+        * **Planning & Optimization Suggestions:** This is your most advanced task. When asked to analyze or optimize the \`planningView\`, do not just re-order initiatives.
+            a.  First, respect all \`isProtected: true\` initiatives.
+            b.  Then, to fit more work, you are empowered to **suggest specific reductions to SDE-Year estimates** for non-protected items.
+            c.  You must justify *why* (e.g., "The initiative 'Improve UI' is 2.5 SDE-Years, which seems high for a UI-only task. Reducing it to 1.5 might fit it Above The Line.").
+            d.  Recommend a new priority order based on \`roi\` and your new estimates.`;
+}
+
+/**
+ * [NEW] Clears the chat UI and primes the AI's memory with the
+ * persona and (optionally) the full system context.
+ * This is called by loadSavedSystem() in main.js.
+ */
+function startNewAiChatSession() {
+    console.log("[AI CHAT] Starting new chat session. Clearing history and UI.");
+
+    // 1. Clear the UI
+    if (aiChatLog) {
+        aiChatLog.innerHTML = '<div class="chat-message ai-message">Hello! I have loaded the context for <strong>' + (currentSystemData?.systemName || 'the system') + '</strong>. How can I help you analyze it?</div>';
+    }
+    const usageDisplay = document.getElementById('aiChatUsageDisplay');
+    if (usageDisplay) {
+        usageDisplay.textContent = 'Session Tokens: 0';
+    }
+
+    // 2. Clear the session memory and token count
+    chatSessionHistory = [];
+    sessionTotalTokens = 0;
+    
+    if (!currentSystemData) {
+        console.warn("[AI CHAT] No system data loaded. AI assistant will have no context.");
+        return;
+    }
+
+    // 3. Get the refined persona prompt
+    let primingPrompt = _getAiPrimingPrompt();
+
+    // 4. Add the correct context based on our toggle
+    if (USE_FULL_SYSTEM_CONTEXT_TOGGLE) {
+        // STRATEGY 1: Pin the *entire* system data.
+        const fullContextJson = JSON.stringify(currentSystemData, null, 2);
+        primingPrompt += `
+
+HERE IS THE FULL SYSTEM DATA ("CONTEXT DATA"):
+${fullContextJson}
+
+Confirm you have received these instructions and the full system data, and are ready to answer questions.`;
+        
+        console.log(`[AI CHAT] New session primed with FULL system context (${fullContextJson.length} chars).`);
+
+    } else {
+        // STRATEGY 2: Minimal priming prompt. Context will be added to each user message.
+        primingPrompt += `
+
+You will be given the CONTEXT DATA with each user question. Confirm you have received these instructions.`;
+        console.log(`[AI CHAT] New session primed with MINIMAL context. Context will be scraped per-question.`);
+    }
+    
+    // 5. Add this priming data to the history. This becomes our "pinned" context.
+    chatSessionHistory.push({ role: 'user', parts: [{ text: primingPrompt }] });
+    chatSessionHistory.push({ role: 'model', parts: [{ text: `Understood. I have loaded the context for ${currentSystemData.systemName}. I am ready to analyze.` }] });
+}
+
+/**
+ * [MODIFIED] Handles the logic of sending a chat message to the AI service.
+ * Now uses stateful chatSessionHistory and the USE_FULL_SYSTEM_CONTEXT_TOGGLE.
  */
 async function handleAiChatSubmit() {
     if (!aiChatInput || !aiChatSendButton || !aiChatLog) return;
@@ -162,12 +235,7 @@ async function handleAiChatSubmit() {
     const userQuestion = aiChatInput.value.trim();
     if (userQuestion.length === 0) return;
 
-    console.log('[AI CHAT] Submitting question.', {
-        question: userQuestion,
-        currentViewId,
-        hasSystemLoaded: !!currentSystemData,
-        aiEnabled: globalSettings?.ai?.isEnabled
-    });
+    console.log('[AI CHAT] Submitting question.', { question: userQuestion, view: currentViewId });
     
     // Disable input
     aiChatInput.value = '';
@@ -180,88 +248,119 @@ async function handleAiChatSubmit() {
     // 2. Add loading indicator
     const loadingMessageEl = addChatMessage('AI is thinking...', 'ai', true);
     
-    // 3. Scrape context from the current view
-    const contextJson = scrapeCurrentViewContext();
-    console.log(`[AI CHAT] Context JSON length: ${contextJson.length}`, contextJson);
+    // 3. [NEW] Prepare the user's turn based on the toggle
+    let userTurnContent = "";
+    if (USE_FULL_SYSTEM_CONTEXT_TOGGLE) {
+        // STRATEGY 1: Just send the question. The context is already in the pinned prompt.
+        userTurnContent = userQuestion;
+    } else {
+        // STRATEGY 2: Scrape context and append it to the question.
+        const contextJson = scrapeCurrentViewContext();
+        console.log(`[AI CHAT] Scraping MINIMAL context (${contextJson.length} chars) from view: ${currentViewId}`);
+        userTurnContent = `
+USER QUESTION:
+"${userQuestion}"
+
+CONTEXT DATA (for this question only):
+${contextJson}
+        `;
+    }
     
-    // 4. Call the AI service
+    // 4. [NEW] Add this combined turn to our session history
+    chatSessionHistory.push({ role: 'user', parts: [{ text: userTurnContent }] });
+
+    // 5. [NEW] Create the "sliding window" of history to send
+    let historyToSend = [];
+    if (chatSessionHistory.length <= CONVERSATION_HISTORY_LENGTH) {
+        // If history is short, send all of it
+        historyToSend = chatSessionHistory;
+    } else {
+        // If history is long, send Pinned Prompt + Last N turns
+        historyToSend = [
+            chatSessionHistory[0], // Pinned Persona/Data Prompt
+            chatSessionHistory[1], // Pinned Persona/Data Response
+            ...chatSessionHistory.slice(-CONVERSATION_HISTORY_LENGTH) // Last 30 items
+        ];
+        console.log(`[AI CHAT] History is long (${chatSessionHistory.length} turns). Sending Pinned + Last ${CONVERSATION_HISTORY_LENGTH} turns.`);
+    }
+    
+    // 6. Call the AI service
     try {
         const analysisFn = await waitForAnalysisFunction();
-        if (!analysisFn) {
-            throw new Error('AI analysis service is unavailable.');
-        }
+        if (!analysisFn) throw new Error('AI analysis service is unavailable.');
+
+        // [MODIFIED] Pass the historyToSend, and expect an object back
         const aiResponse = await analysisFn(
-            userQuestion, 
-            contextJson, 
-            globalSettings.ai.apiKey, // from main.js
-            globalSettings.ai.provider // from main.js
+            historyToSend,
+            globalSettings.ai.apiKey,
+            globalSettings.ai.provider
         );
-        console.log('[AI CHAT] Received AI response.');
         
-        // 5. [FIXED] Update the loading message with the real response
+        // 7. [NEW] Add the AI's response to our session memory
+        chatSessionHistory.push({ role: 'model', parts: [{ text: aiResponse.textResponse }] });
+        
+        // 8. [NEW] Update token count
+        if (aiResponse.usage && aiResponse.usage.totalTokenCount) {
+            sessionTotalTokens += aiResponse.usage.totalTokenCount;
+            const usageDisplay = document.getElementById('aiChatUsageDisplay');
+            if (usageDisplay) {
+                usageDisplay.textContent = `Session Tokens: ${sessionTotalTokens.toLocaleString()}`;
+            }
+        }
+
+        console.log(`[AI CHAT] Received response. History now has ${chatSessionHistory.length} turns. Session Tokens: ${sessionTotalTokens}`);
+        
+        // 9. [MODIFIED] Update the loading message with the real response TEXT
         if (loadingMessageEl) {
-            // --- NEW STRUCTURE ---
-            // 1. Clear the "thinking..." text
-            loadingMessageEl.innerHTML = '';
+            loadingMessageEl.innerHTML = ''; // Clear "thinking..."
             loadingMessageEl.classList.remove('loading');
 
-            // 2. Create a specific container for the content
             const contentDiv = document.createElement('div');
             contentDiv.className = 'chat-content-container';
-            contentDiv.innerHTML = md.render(aiResponse); // Render markdown
+            contentDiv.innerHTML = md.render(aiResponse.textResponse); // Render markdown
             
-            // 3. Create the copy button
             const copyButton = document.createElement('button');
             copyButton.className = 'chat-copy-button';
             copyButton.innerHTML = '<i class="fas fa-copy"></i>';
             copyButton.title = 'Copy response';
             
-            // 4. [THE FIX] Implement rich HTML copy
             copyButton.onclick = (e) => {
                 e.stopPropagation();
                 try {
                     const htmlToCopy = contentDiv.innerHTML;
-                    const textToCopy = aiResponse; // The raw markdown as plain text fallback
-
+                    const textToCopy = aiResponse.textResponse; // The raw markdown
                     const htmlBlob = new Blob([htmlToCopy], { type: 'text/html' });
                     const textBlob = new Blob([textToCopy], { type: 'text/plain' });
-
-                    const data = [new ClipboardItem({
-                        'text/html': htmlBlob,
-                        'text/plain': textBlob
-                    })];
-
+                    const data = [new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': textBlob })];
                     navigator.clipboard.write(data).then(() => {
                         copyButton.innerHTML = '<i class="fas fa-check"></i>';
-                        setTimeout(() => {
-                            copyButton.innerHTML = '<i class="fas fa-copy"></i>';
-                        }, 2000);
+                        setTimeout(() => { copyButton.innerHTML = '<i class="fas fa-copy"></i>'; }, 2000);
                     }).catch(err => {
-                        console.error('Failed to copy rich text: ', err);
-                        // Fallback to plain text copy if rich copy fails
-                        navigator.clipboard.writeText(textToCopy);
+                        console.error('Failed to copy rich text, falling back to plain text.', err);
+                        navigator.clipboard.writeText(textToCopy); // Fallback
                     });
-
                 } catch (err) {
-                    console.error('Error creating ClipboardItem. Falling back to plain text.', err);
-                    // Fallback for older browsers or errors
-                    navigator.clipboard.writeText(aiResponse);
+                    console.error('Error creating ClipboardItem, falling back to plain text.', err);
+                    navigator.clipboard.writeText(aiResponse.textResponse); // Fallback
                 }
             };
             
-            // 5. Append new elements
             loadingMessageEl.appendChild(contentDiv);
             loadingMessageEl.appendChild(copyButton);
-            // --- END NEW STRUCTURE ---
         }
 
     } catch (error) {
         console.error("Error during AI chat submit:", error);
         if (loadingMessageEl) {
-            loadingMessageEl.innerHTML = ''; // Clear "thinking..." text
+            loadingMessageEl.innerHTML = '';
             loadingMessageEl.textContent = `Error: ${error.message}`;
             loadingMessageEl.style.color = 'red';
             loadingMessageEl.classList.remove('loading');
+        }
+        // [NEW] Remove the failed user turn from history so they can try again
+        if (chatSessionHistory.length > 0 && chatSessionHistory[chatSessionHistory.length - 1].role === 'user') {
+            chatSessionHistory.pop();
+            console.log("[AI CHAT] Removed failed user turn from history.");
         }
     } finally {
         // Re-enable input
@@ -583,54 +682,6 @@ function scrapeCurrentViewContext() {
         }
         return value;
     }, 2); // 2-space indentation
-}
-
-/**
- * [NEW] Makes an HTML element draggable by its header.
- * @param {HTMLElement} panel The panel element to be moved.
- * @param {HTMLElement} header The header element that triggers the drag.
- */
-function makeElementDraggable(panel, header) {
-    let isDragging = false;
-    let offsetX = 0;
-    let offsetY = 0;
-    header.addEventListener('mousedown', (e) => {
-        // Only drag if the click is on the header itself, not the close button
-        if (e.target.classList.contains('close-button')) {
-            return;
-        }
-        isDragging = true;
-        const rect = panel.getBoundingClientRect();
-        panel.style.top = rect.top + 'px';
-        panel.style.left = rect.left + 'px';
-        panel.style.bottom = 'auto';
-        panel.style.right = 'auto';
-        offsetX = e.clientX - rect.left;
-        offsetY = e.clientY - rect.top;
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
-        e.preventDefault();
-    });
-
-    function onMouseMove(e) {
-        if (!isDragging) return;
-        let newLeft = e.clientX - offsetX;
-        let newTop = e.clientY - offsetY;
-        const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
-        if (newLeft < 0) newLeft = 0;
-        if (newTop < 0) newTop = 0;
-        if (newLeft + panel.offsetWidth > viewportWidth) newLeft = viewportWidth - panel.offsetWidth;
-        if (newTop + panel.offsetHeight > viewportHeight) newTop = viewportHeight - panel.offsetHeight;
-        panel.style.left = newLeft + 'px';
-        panel.style.top = newTop + 'px';
-    }
-
-    function onMouseUp() {
-        isDragging = false;
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onMouseUp);
-    }
 }
 
 let isChatResizing = false;

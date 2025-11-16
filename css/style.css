@@ -9,11 +9,7 @@ body {
     color: #212529; /* Default dark text color */
     line-height: 1.6;
     font-size: 16px; /* Base font size */
-}
-
-/* Add padding to the body to account for fixed top bar */
-body {
-    padding-top: 70px; /* Height of the top bar + a little extra */
+    overflow: hidden; /* Keep the layout pinned to the viewport */
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -2221,8 +2217,11 @@ a:focus {
 #appContainer {
     display: flex;
     flex-direction: row;
-    padding-top: 60px;
-    height: 100vh;
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    bottom: 0;
     box-sizing: border-box;
 }
 
@@ -2247,7 +2246,7 @@ a:focus {
 
 #aiChatPanelContainer {
     width: 0;
-    height: calc(100vh - 60px);
+    height: 100%;
     flex-shrink: 0;
     overflow: hidden;
     background-color: #f8f9fa;
