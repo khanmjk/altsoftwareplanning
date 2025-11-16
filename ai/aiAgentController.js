@@ -1,0 +1,533 @@
+const aiAgentController = (() => {
+    let chatSessionHistory = [];
+    let sessionTotalTokens = 0;
+    const CONVERSATION_HISTORY_LENGTH = 30;
+    const USE_FULL_SYSTEM_CONTEXT_TOGGLE = true;
+    const md = window.markdownit();
+
+    const SUGGESTED_QUESTIONS = {
+        planningView: [
+            { text: "Which teams are overloaded in this plan?" },
+            { text: "How can I optimize this plan to fit more initiatives?", isImageRequest: false },
+            { text: "Generate a flowchart for the top 'Committed' initiative.", isImageRequest: true },
+            { text: "Suggest SDE-Year reductions for 2-3 BTL initiatives.", isImageRequest: false },
+            { text: "Analyze the risks in this plan." }
+        ],
+        roadmapView: [
+            { text: "Summarize all initiatives currently in 'Backlog' status." },
+            { text: "Which 'Defined' initiatives have the highest SDE-Year estimates?" },
+            { text: "Show me all initiatives related to the 'Revenue Growth' theme." },
+            { text: "Are there any 'Backlog' items with no teams assigned yet?" },
+            { text: "Who is the owner of the 'Expand to EU Market' initiative?" }
+        ],
+        organogramView: [
+            { text: "Rate my overall team composition and find risks." },
+            { text: "Generate a stylized org chart of the managers.", isImageRequest: true },
+            { text: "Who are all the AI Software Engineers?", isImageRequest: false },
+            { text: "Find potential skill gaps in the engineer roster." },
+            { text: "Which teams have the highest number of junior engineers?" }
+        ],
+        visualizationCarousel: [
+            { text: "Generate a block diagram of this architecture.", isImageRequest: true },
+            { text: "Rate the architectural design. Are there bottlenecks?", isImageRequest: false },
+            { text: "What services does the 'User Management Service' depend on?" },
+            { text: "Which team owns the 'Content Delivery Service'?" },
+            { text: "Show a table of all services and their owning teams." }
+        ],
+        dashboardView: [
+            { text: "Summarize the key takeaways from the 'Strategic Goals' widget." },
+            { text: "Generate a mind map of our 'Strategic Goals'.", isImageRequest: true },
+            { text: "What risks do you see in the 'Team Demand' widget data?" },
+            { text: "Analyze the 'Investment Distribution' for this year." },
+            { text: "What's the biggest accomplishment shown?" }
+        ],
+        capacityConfigView: [
+            { text: "Find anomalies in my capacity configuration." },
+            { text: "Which team has the highest 'avgOverheadHoursPerWeekPerSDE'?" },
+            { text: "Walk me through the capacity calculation for the 'Avengers' team." },
+            { text: "What is the total 'AI Productivity Gain' across the org?" },
+            { text: "Compare the 'Standard Leave' days for all teams." }
+        ],
+        systemEditForm: [
+            { text: "How do I add a new Team?" },
+            { text: "What's the difference between 'Engineers' and 'Away-Team Members'?" },
+            { text: "Find any services that don't have an owning team." },
+            { text: "Find any engineers in the roster who are not assigned to a team." },
+            { text: "Explain the 'Platform Dependencies' field for a service." }
+        ],
+        sdmForecastingView: [
+            { text: "Explain the 'Effective Engineers' calculation." },
+            { text: "How does 'Annual Attrition Rate' affect this forecast?" },
+            { text: "What's the difference between 'Total Ramped Up Engineers' and 'Total Headcount'?" },
+            { text: "Analyze the hiring rate needed to close the gap by the target week." },
+            { text: "How do the 'Capacity Constraints' (like overhead) affect this forecast?" }
+        ],
+        default: [
+            { text: "What is this system about?" },
+            { text: "How many teams are there?" },
+            { text: "Summarize the main strategic goals." },
+            { text: "List all services in the system." }
+        ]
+    };
+
+    let isAgentThinking = false;
+    let cachedImageGenerationFn = null;
+
+    function _getAiPrimingPrompt() {
+        const toolsetDescription = (window.aiAgentToolset && typeof window.aiAgentToolset.getAgentToolsetDescription === 'function')
+            ? window.aiAgentToolset.getAgentToolsetDescription()
+            : 'Toolset description is unavailable. You may still answer questions but cannot execute actions.';
+
+        return `You are an expert Software Engineering Planning & Management Partner. Your goals are to:
+    1.  **Prioritize the CONTEXT DATA:** Base all your answers about the user's system (initiatives, teams, engineers, services) exclusively on the JSON data provided in the "CONTEXT DATA" section.
+    2.  **Use General Knowledge as a Fallback:** If the user asks a general knowledge question (e.g., "What is AWS?", "Define 'SDE-Year'"), and the answer is *not* in the CONTEXT DATA, you may use your own knowledge to provide a brief, helpful definition.
+    3.  **Be Clear:** When using your own knowledge, state it (e.g., "AWS CloudFront is a content delivery network..."). When using the context, be specific (e.g., "Based on the data, the 'Avengers' team...").
+    4.  **Perform Expert Analysis & Provide Recommendations (Your Main Task):** If the user asks for an analysis, opinion, rating, or recommendation (e.g., "rate this," "find risks," "optimize this plan"), you MUST perform a deep analysis. Even for simple questions, you should *proactively* add these insights if you find them.
+        * **Architectural Analysis:** Use the \`services\` data (especially \`serviceDependencies\`) to comment on loose/tight coupling, potential bottlenecks, or how the architecture aligns with team structure (Conway's Law).
+        * **Organizational Analysis:** Use \`allKnownEngineers\` and \`teams\` data to analyze team composition. Proactively find and highlight risks like skill gaps, high junior-to-senior ratios, or single-person dependencies on a critical skill.
+        * **Capacity & Risk Analysis:** If the context includes \`capacityConfigView\` or \`planningView\` data, actively scrutinize it. Find anomalies. (e.g., "I notice the 'Avengers' have 20 hours/week of overhead while all other teams have 6. Is this correct?"). Call out opportunities to optimize leave schedules or other constraints.
+        * **Planning & Optimization Suggestions:** When asked to analyze or optimize the \`planningView\`, do not just re-order initiatives.
+            a.  First, respect all \`isProtected: true\` initiatives.
+            b.  Then, to fit more work, you are empowered to **suggest specific reductions to SDE-Year estimates** for non-protected items.
+            c.  You must justify *why* (e.g., "The initiative 'Improve UI' is 2.5 SDE-Years, which seems high for a UI-only task. Reducing it to 1.5 might fit it Above The Line.").
+            d.  Recommend a new priority order based on \`roi\` and your new estimates.
+
+ACTION AGENT RULES:
+- When you need the app to take actions, respond with an <execute_plan>...</execute_plan> block.
+- Inside the tag, provide valid JSON: { "steps": [ { "command": "toolName", "payload": { ... } } ] }.
+- Use ONLY the commands listed below. Do not invent new tools.
+- If no actions are required, respond normally without the execute_plan tag.
+- If the user's message begins with a slash command (e.g., "/addInitiative ..."), interpret that as a strong hint to prioritize the matching tool in your plan.
+
+AVAILABLE COMMANDS:
+${toolsetDescription}`;
+    }
+
+    function startSession() {
+        console.log("[AI CHAT] Starting agent session. Clearing history and UI.");
+        const chatLog = document.getElementById('aiChatLog');
+        if (chatLog) {
+            chatLog.innerHTML = '<div class="chat-message ai-message">Hello! I have loaded the full context for <strong>' + (currentSystemData?.systemName || 'the system') + '</strong>. How can I help you analyze it?<br><br>You can now ask me to perform actions. Type <b>/</b> to see a list of available commands.</div>';
+        }
+        if (window.aiChatAssistant && typeof window.aiChatAssistant.setTokenCount === 'function') {
+            window.aiChatAssistant.setTokenCount(0);
+        }
+        if (window.aiChatAssistant && typeof window.aiChatAssistant.clearChatInput === 'function') {
+            window.aiChatAssistant.clearChatInput();
+        }
+
+        chatSessionHistory = [];
+        sessionTotalTokens = 0;
+        isAgentThinking = false;
+
+        if (!currentSystemData) {
+            console.warn("[AI CHAT] No system data loaded. AI assistant will have no context.");
+            return;
+        }
+
+        let primingPrompt = _getAiPrimingPrompt();
+        if (USE_FULL_SYSTEM_CONTEXT_TOGGLE) {
+            const fullContextJson = JSON.stringify(currentSystemData, null, 2);
+            primingPrompt += `\n\nHERE IS THE FULL SYSTEM DATA ("CONTEXT DATA"):\n${fullContextJson}\n\nConfirm you have received these instructions and the full system data, and are ready to answer questions.`;
+        } else {
+            primingPrompt += `\n\nYou will be given the CONTEXT DATA with each user question. Confirm you have received these instructions.`;
+        }
+
+        chatSessionHistory.push({ role: 'user', parts: [{ text: primingPrompt }] });
+        chatSessionHistory.push({ role: 'model', parts: [{ text: `Understood. I have loaded the context for ${currentSystemData.systemName}. I am ready to analyze.` }] });
+
+        renderSuggestionsForCurrentView();
+    }
+
+    function renderSuggestionsForCurrentView() {
+        const suggestions = SUGGESTED_QUESTIONS[currentViewId] || SUGGESTED_QUESTIONS.default;
+        if (window.aiChatAssistant && typeof window.aiChatAssistant.setSuggestionPills === 'function') {
+            window.aiChatAssistant.setSuggestionPills(suggestions);
+        }
+    }
+
+    async function handleUserChatSubmit() {
+        if (isAgentThinking) return;
+        const view = window.aiChatAssistant;
+        if (!view || typeof view.getChatInputValue !== 'function') return;
+
+        const userQuestion = view.getChatInputValue();
+        if (!userQuestion) return;
+
+        isAgentThinking = true;
+        view.toggleChatInput(true);
+        const isImageRequest = typeof view.isImageRequestPending === 'function' ? view.isImageRequestPending() : false;
+        view.postUserMessageToView(userQuestion);
+        view.clearChatInput();
+
+        if (isImageRequest) {
+            await _handleImageRequest(userQuestion);
+            return;
+        }
+
+        await _executeChatTurn(userQuestion);
+    }
+
+    function getAvailableTools() {
+        if (window.aiAgentToolset && typeof window.aiAgentToolset.getToolsSummaryList === 'function') {
+            return window.aiAgentToolset.getToolsSummaryList();
+        }
+        return [];
+    }
+
+    async function _executeChatTurn(userQuestion) {
+        const view = window.aiChatAssistant;
+        const loadingMessageEl = view && typeof view.showAgentLoadingIndicator === 'function'
+            ? view.showAgentLoadingIndicator()
+            : null;
+
+        let userTurnContent = userQuestion;
+        if (!USE_FULL_SYSTEM_CONTEXT_TOGGLE) {
+            const contextJson = scrapeCurrentViewContext();
+            console.log(`[AI CHAT] Scraping MINIMAL context (${contextJson.length} chars) from view: ${currentViewId}`);
+            userTurnContent = `\nUSER QUESTION:\n"${userQuestion}"\n\nCONTEXT DATA (for this question only):\n${contextJson}\n`;
+        }
+
+        chatSessionHistory.push({ role: 'user', parts: [{ text: userTurnContent }] });
+
+        let historyToSend = [];
+        if (chatSessionHistory.length <= CONVERSATION_HISTORY_LENGTH) {
+            historyToSend = chatSessionHistory;
+        } else {
+            historyToSend = [
+                chatSessionHistory[0],
+                chatSessionHistory[1],
+                ...chatSessionHistory.slice(-CONVERSATION_HISTORY_LENGTH)
+            ];
+            console.log(`[AI CHAT] History is long (${chatSessionHistory.length} turns). Sending Pinned + Last ${CONVERSATION_HISTORY_LENGTH} turns.`);
+        }
+
+        try {
+            const analysisFn = await _waitForAnalysisFunction();
+            if (!analysisFn) throw new Error('AI analysis service is unavailable.');
+
+            const aiResponse = await analysisFn(
+                historyToSend,
+                globalSettings.ai.apiKey,
+                globalSettings.ai.provider
+            );
+
+            if (!aiResponse || typeof aiResponse.textResponse !== 'string') {
+                throw new Error('Received an invalid response from the AI.');
+            }
+
+            chatSessionHistory.push({ role: 'model', parts: [{ text: aiResponse.textResponse }] });
+
+            if (aiResponse.usage && aiResponse.usage.totalTokenCount) {
+                sessionTotalTokens += aiResponse.usage.totalTokenCount;
+                if (view && typeof view.setTokenCount === 'function') {
+                    view.setTokenCount(sessionTotalTokens);
+                }
+            }
+
+            const planMatch = aiResponse.textResponse.match(/<execute_plan>([\s\S]*?)<\/execute_plan>/i);
+            if (!planMatch) {
+                const rendered = md.render(aiResponse.textResponse);
+                if (view && typeof view.hideAgentLoadingIndicator === 'function') {
+                    view.hideAgentLoadingIndicator(loadingMessageEl, rendered);
+                }
+                return;
+            }
+
+            let plan;
+            try {
+                plan = JSON.parse(planMatch[1]);
+            } catch (error) {
+                const errorHtml = `<span style="color:red;">Failed to parse agent plan JSON: ${error.message}</span>`;
+                if (view && typeof view.hideAgentLoadingIndicator === 'function') {
+                    view.hideAgentLoadingIndicator(loadingMessageEl, errorHtml);
+                }
+                return;
+            }
+
+            const steps = Array.isArray(plan.steps) ? plan.steps : [];
+            await _executeAgentPlan(steps, loadingMessageEl);
+        } catch (error) {
+            console.error("Error during AI chat submit:", error);
+            if (loadingMessageEl && typeof loadingMessageEl.remove === 'function') {
+                loadingMessageEl.remove();
+            }
+            if (view && typeof view.postAgentMessageToView === 'function') {
+                view.postAgentMessageToView(`Error: ${error.message}`, true);
+            }
+        } finally {
+            isAgentThinking = false;
+            if (view && typeof view.toggleChatInput === 'function') {
+                view.toggleChatInput(false);
+            }
+            renderSuggestionsForCurrentView();
+        }
+    }
+
+    async function _handleImageRequest(userQuestion) {
+        const view = window.aiChatAssistant;
+        const loadingMessageEl = view && typeof view.showAgentLoadingIndicator === 'function'
+            ? view.showAgentLoadingIndicator()
+            : null;
+        try {
+            const contextJson = scrapeCurrentViewContext();
+            const imageFn = _resolveImageGenerationFunction();
+            if (!imageFn) {
+                throw new Error('AI image generation service is unavailable. Please ensure AI is enabled and an API key is saved.');
+            }
+            const response = await imageFn(
+                userQuestion,
+                contextJson,
+                globalSettings.ai.apiKey,
+                globalSettings.ai.provider
+            );
+
+            if (!response || !response.isImage) {
+                throw new Error('Image generation response was invalid.');
+            }
+
+            const html = `\n                <p>Here is the generated diagram:</p>\n                <img src="${response.imageUrl}"\n                     alt="${response.altText || 'Generated diagram'}"\n                     class="chat-generated-image"\n                     title="Right-click to copy or save this image" />\n            `;
+            if (view && typeof view.hideAgentLoadingIndicator === 'function') {
+                view.hideAgentLoadingIndicator(loadingMessageEl, html);
+            }
+        } catch (error) {
+            console.error("Error during AI image submit:", error);
+            if (view && typeof view.hideAgentLoadingIndicator === 'function') {
+                view.hideAgentLoadingIndicator(loadingMessageEl, `<span style="color:red;">Error: ${error.message}</span>`);
+            }
+        } finally {
+            isAgentThinking = false;
+            if (view && typeof view.toggleChatInput === 'function') {
+                view.toggleChatInput(false);
+            }
+            renderSuggestionsForCurrentView();
+        }
+    }
+
+    async function _executeAgentPlan(steps, loadingMessageEl) {
+        const view = window.aiChatAssistant;
+        if (!Array.isArray(steps) || steps.length === 0) {
+            if (view && typeof view.hideAgentLoadingIndicator === 'function') {
+                view.hideAgentLoadingIndicator(loadingMessageEl, md.render('No executable steps were provided.'));
+            }
+            return;
+        }
+
+        if (!window.aiAgentToolset || typeof window.aiAgentToolset.executeTool !== 'function') {
+            if (view && typeof view.hideAgentLoadingIndicator === 'function') {
+                view.hideAgentLoadingIndicator(loadingMessageEl, '<span style="color:red;">Agent toolset is unavailable.</span>');
+            }
+            return;
+        }
+
+        if (view && typeof view.hideAgentLoadingIndicator === 'function') {
+            view.hideAgentLoadingIndicator(loadingMessageEl, '<p>Starting agent plan...</p>');
+        }
+
+        const stepResults = [];
+        for (let i = 0; i < steps.length; i++) {
+            const step = steps[i];
+            try {
+                const resolvedPayload = _resolvePayloadPlaceholders(step.payload || {}, stepResults);
+                if (view && typeof view.postAgentMessageToView === 'function') {
+                    view.postAgentMessageToView(`Step ${i + 1}: Executing <b>${step.command}</b>...`);
+                }
+                const result = await window.aiAgentToolset.executeTool(step.command, resolvedPayload);
+                stepResults[i] = result;
+                if (view && typeof view.postAgentMessageToView === 'function') {
+                    view.postAgentMessageToView(`Step ${i + 1} complete.`);
+                }
+            } catch (error) {
+                if (view && typeof view.postAgentMessageToView === 'function') {
+                    view.postAgentMessageToView(`Error on step ${i + 1} (${step.command}): ${error.message}`, true);
+                }
+                break;
+            }
+        }
+
+        if (typeof saveSystemChanges === 'function') {
+            try { saveSystemChanges(); } catch (error) { console.error('saveSystemChanges failed:', error); }
+        }
+        if (typeof refreshCurrentView === 'function') {
+            try { refreshCurrentView(); } catch (error) { console.error('refreshCurrentView failed:', error); }
+        }
+
+        if (view && typeof view.postAgentMessageToView === 'function') {
+            view.postAgentMessageToView('<b>Agent plan finished.</b> UI has been refreshed.');
+        }
+    }
+
+    function _resolvePayloadPlaceholders(payload, stepResults) {
+        if (Array.isArray(payload)) {
+            return payload.map(value => _resolvePayloadPlaceholders(value, stepResults));
+        }
+        if (payload && typeof payload === 'object') {
+            const resolved = {};
+            Object.keys(payload).forEach(key => {
+                resolved[key] = _resolvePayloadPlaceholders(payload[key], stepResults);
+            });
+            return resolved;
+        }
+        if (typeof payload === 'string') {
+            const exactMatch = payload.match(/^{{step_(\d+)_result(?:\.([^}]+))?}}$/);
+            if (exactMatch) {
+                return _getStepResultValue(stepResults, exactMatch[1], exactMatch[2]);
+            }
+            return payload.replace(/{{step_(\d+)_result(?:\.([^}]+))?}}/g, (match, indexStr, path) => {
+                const value = _getStepResultValue(stepResults, indexStr, path);
+                if (value === undefined || value === null) return '';
+                if (typeof value === 'object') return JSON.stringify(value);
+                return String(value);
+            });
+        }
+        return payload;
+    }
+
+    function _getStepResultValue(stepResults, indexStr, path) {
+        const index = parseInt(indexStr, 10);
+        const base = stepResults[index];
+        if (base === undefined) return undefined;
+        if (!path) return base;
+        return path.split('.').reduce((acc, key) => (acc && acc[key] !== undefined ? acc[key] : undefined), base);
+    }
+
+    async function _waitForAnalysisFunction(maxAttempts = 5, delayMs = 200) {
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+            if (typeof getAnalysisFromPrompt === 'function') {
+                return getAnalysisFromPrompt;
+            }
+            if (typeof window !== 'undefined' && typeof window.getAnalysisFromPrompt === 'function') {
+                return window.getAnalysisFromPrompt;
+            }
+            await new Promise(resolve => setTimeout(resolve, delayMs));
+        }
+        return null;
+    }
+
+    function _resolveImageGenerationFunction() {
+        if (cachedImageGenerationFn) return cachedImageGenerationFn;
+        if (typeof generateImageFromPrompt === 'function') {
+            cachedImageGenerationFn = generateImageFromPrompt;
+            return cachedImageGenerationFn;
+        }
+        if (typeof window !== 'undefined' && typeof window.generateImageFromPrompt === 'function') {
+            cachedImageGenerationFn = window.generateImageFromPrompt;
+            return cachedImageGenerationFn;
+        }
+        return null;
+    }
+
+    function scrapeCurrentViewContext() {
+        let contextData = {
+            view: currentViewId,
+            timestamp: new Date().toISOString()
+        };
+
+        console.log(`[AI CHAT] Scraping context for view: ${currentViewId || 'none'}`);
+
+        if (!currentSystemData) {
+            contextData.data = "No system is currently loaded.";
+            console.warn('[AI CHAT] No system data available while scraping context.');
+            return JSON.stringify(contextData);
+        }
+
+        contextData.systemName = currentSystemData.systemName;
+        contextData.systemDescription = currentSystemData.systemDescription;
+
+        try {
+            switch (currentViewId) {
+                case 'planningView':
+                    contextData.data = {
+                        planningYear: currentPlanningYear,
+                        calculatedCapacityMetrics: currentSystemData.calculatedCapacityMetrics,
+                        planningScenario: planningCapacityScenario,
+                        constraintsEnabled: applyCapacityConstraintsToggle,
+                        teams: currentSystemData.teams.map(t => ({ teamId: t.teamId, teamIdentity: t.teamIdentity, sdmId: t.sdmId })),
+                        sdms: currentSystemData.sdms.map(s => ({ sdmId: s.sdmId, sdmName: s.sdmName })),
+                        initiatives: (currentSystemData.yearlyInitiatives || []).filter(init => init.attributes.planningYear == currentPlanningYear)
+                    };
+                    break;
+                case 'capacityConfigView':
+                    contextData.data = {
+                        metrics: currentSystemData.calculatedCapacityMetrics,
+                        config: currentSystemData.capacityConfiguration
+                    };
+                    break;
+                case 'organogramView':
+                    contextData.data = {
+                        seniorManagers: currentSystemData.seniorManagers,
+                        sdms: currentSystemData.sdms,
+                        teams: currentSystemData.teams.map(t => ({
+                            teamId: t.teamId,
+                            teamName: t.teamName,
+                            teamIdentity: t.teamIdentity,
+                            engineerNames: t.engineers
+                        })),
+                        allKnownEngineers: currentSystemData.allKnownEngineers
+                    };
+                    break;
+                case 'dashboardView':
+                    const currentWidget = dashboardItems[currentDashboardIndex];
+                    contextData.data = {
+                        currentWidgetTitle: currentWidget.title,
+                        dashboardYearFilter: dashboardPlanningYear
+                    };
+                    try {
+                        switch (currentWidget.id) {
+                            case 'strategicGoalsWidget':
+                                if (typeof prepareGoalData === 'function') {
+                                    contextData.data.widgetData = prepareGoalData();
+                                }
+                                break;
+                            case 'accomplishmentsWidget':
+                                if (typeof prepareAccomplishmentsData === 'function') {
+                                    contextData.data.widgetData = prepareAccomplishmentsData();
+                                }
+                                break;
+                            case 'investmentDistributionWidget':
+                                if (typeof processInvestmentData === 'function') {
+                                    contextData.data.widgetData = processInvestmentData(dashboardPlanningYear);
+                                }
+                                break;
+                        }
+                    } catch (error) {
+                        console.warn('Dashboard widget context error:', error);
+                    }
+                    break;
+                case 'visualizationCarousel':
+                    contextData.data = {
+                        services: currentSystemData.services,
+                        dependencies: currentSystemData.serviceDependencies,
+                        platformDependencies: currentSystemData.platformDependencies
+                    };
+                    break;
+                case 'roadmapView':
+                    contextData.data = {
+                        initiatives: currentSystemData.yearlyInitiatives,
+                        goals: currentSystemData.goals,
+                        themes: currentSystemData.definedThemes
+                    };
+                    break;
+                default:
+                    contextData.data = currentSystemData;
+                    break;
+            }
+        } catch (error) {
+            console.error('Error while scraping context:', error);
+            contextData.data = { error: error.message };
+        }
+
+        return JSON.stringify(contextData, null, 2);
+    }
+
+    return {
+        startSession,
+        handleUserChatSubmit,
+        renderSuggestionsForCurrentView,
+        getAvailableTools
+    };
+})();
+
+if (typeof window !== 'undefined') {
+    window.aiAgentController = aiAgentController;
+}

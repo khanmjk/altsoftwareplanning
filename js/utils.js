@@ -422,6 +422,114 @@ function addInitiative(initiativeData) {
 }
 
 /**
+ * Adds a new engineer to the global roster (`currentSystemData.allKnownEngineers`).
+ * Optionally assigns the engineer to a team by calling moveEngineerToTeam.
+ * @param {object} engineerData
+ * @param {string} engineerData.name
+ * @param {number} engineerData.level
+ * @param {object} engineerData.attributes
+ * @param {boolean} [engineerData.attributes.isAISWE]
+ * @param {string|null} [engineerData.attributes.aiAgentType]
+ * @param {Array<string>} [engineerData.attributes.skills]
+ * @param {number} [engineerData.attributes.yearsOfExperience]
+ * @param {string|null} [engineerData.currentTeamId]
+ * @returns {object} The newly added engineer object.
+ */
+function addEngineerToRoster(engineerData = {}) {
+    if (!currentSystemData) {
+        throw new Error("addEngineerToRoster: currentSystemData is not loaded.");
+    }
+    const { name, level, attributes = {}, currentTeamId = null } = engineerData;
+    if (!name || !name.trim()) {
+        throw new Error("addEngineerToRoster: Engineer name is required.");
+    }
+    const numericLevel = Number(level);
+    if (!Number.isFinite(numericLevel) || numericLevel < 1) {
+        throw new Error("addEngineerToRoster: Engineer level must be a positive number.");
+    }
+    if (!Array.isArray(currentSystemData.allKnownEngineers)) {
+        currentSystemData.allKnownEngineers = [];
+    }
+    const normalizedName = name.trim();
+    if (currentSystemData.allKnownEngineers.some(e => e.name.toLowerCase() === normalizedName.toLowerCase())) {
+        throw new Error(`Engineer \"${normalizedName}\" already exists in the roster.`);
+    }
+
+    const sanitizedAttributes = {
+        isAISWE: !!attributes.isAISWE,
+        aiAgentType: attributes.isAISWE ? (attributes.aiAgentType || "General AI") : null,
+        skills: Array.isArray(attributes.skills) ? attributes.skills.map(skill => skill.trim()).filter(Boolean) : [],
+        yearsOfExperience: Number.isFinite(attributes.yearsOfExperience) ? attributes.yearsOfExperience : 0
+    };
+
+    const newEngineer = {
+        name: normalizedName,
+        level: numericLevel,
+        currentTeamId: null,
+        attributes: sanitizedAttributes
+    };
+
+    currentSystemData.allKnownEngineers.push(newEngineer);
+    console.log("addEngineerToRoster: Added engineer to roster.", newEngineer);
+
+    if (currentTeamId) {
+        moveEngineerToTeam(normalizedName, currentTeamId);
+    }
+
+    return newEngineer;
+}
+
+/**
+ * Moves an engineer to a new team (or unassigns them if newTeamId is null).
+ * Updates both the engineer record and the teams' engineer arrays.
+ * @param {string} engineerName
+ * @param {string|null} newTeamId
+ * @returns {object} The updated engineer object.
+ */
+function moveEngineerToTeam(engineerName, newTeamId) {
+    if (!currentSystemData) {
+        throw new Error("moveEngineerToTeam: currentSystemData is not loaded.");
+    }
+    if (!engineerName || !engineerName.trim()) {
+        throw new Error("moveEngineerToTeam: Engineer name is required.");
+    }
+    const engineer = (currentSystemData.allKnownEngineers || []).find(e => e.name === engineerName);
+    if (!engineer) {
+        throw new Error(`moveEngineerToTeam: Engineer \"${engineerName}\" not found in roster.`);
+    }
+    const normalizedNewTeamId = newTeamId || null;
+    const oldTeamId = engineer.currentTeamId || null;
+    if (oldTeamId === normalizedNewTeamId) {
+        return engineer;
+    }
+
+    if (oldTeamId) {
+        const oldTeam = (currentSystemData.teams || []).find(team => team.teamId === oldTeamId);
+        if (oldTeam && Array.isArray(oldTeam.engineers)) {
+            oldTeam.engineers = oldTeam.engineers.filter(name => name !== engineerName);
+        }
+    }
+
+    engineer.currentTeamId = normalizedNewTeamId;
+
+    if (normalizedNewTeamId) {
+        const newTeam = (currentSystemData.teams || []).find(team => team.teamId === normalizedNewTeamId);
+        if (!newTeam) {
+            throw new Error(`moveEngineerToTeam: Team with ID \"${normalizedNewTeamId}\" not found.`);
+        }
+        if (!Array.isArray(newTeam.engineers)) {
+            newTeam.engineers = [];
+        }
+        if (!newTeam.engineers.includes(engineerName)) {
+            newTeam.engineers.push(engineerName);
+        }
+    }
+
+    console.log(`moveEngineerToTeam: Moved ${engineerName} to ${normalizedNewTeamId || 'Unassigned'}.`);
+    return engineer;
+}
+
+/**
  * Updates an existing initiative in currentSystemData.yearlyInitiatives.
  * @param {string} initiativeId - The ID of the initiative to update.
  * @param {object} updates - An object containing the fields to update.

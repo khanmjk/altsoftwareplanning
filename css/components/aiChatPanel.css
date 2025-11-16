@@ -136,6 +136,55 @@
 .ai-message p:first-child {
     margin-top: 0;
 }
+
+.ai-chat-error {
+    color: #c62828;
+    font-weight: 600;
+}
+
+#aiChatCommandPopup {
+    position: absolute;
+    bottom: 70px;
+    left: 10px;
+    right: 10px;
+    background: #ffffff;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 5;
+    padding: 6px 0;
+}
+
+.ai-command-option {
+    padding: 8px 12px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+}
+
+.ai-command-option:hover {
+    background-color: #f1f3f5;
+}
+
+.ai-command-option.active {
+    background-color: #e7f1ff;
+}
+
+#aiChatCommandPopup.keyboard-nav .ai-command-option:hover {
+    background-color: inherit;
+}
+
+.ai-command-option .command-name {
+    font-weight: 600;
+    color: #212529;
+}
+
+.ai-command-option .command-desc {
+    font-size: 0.85em;
+    color: #495057;
+}
 # --- [NEW] Styles for Markdown Content ---
 
 .ai-message {
