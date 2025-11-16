@@ -1331,6 +1331,57 @@ function updateAllToggleButtonsText(showPlatforms) {
     if (toggleButtonDependency) toggleButtonDependency.textContent = newText;
 }
 
+function rerenderCurrentVisualizationForPlatformToggle() {
+    if (!currentSystemData) {
+        console.warn("Platform toggle: currentSystemData is not available.");
+        return;
+    }
+
+    let activeViewId = null;
+    const carousel = document.getElementById('visualizationCarousel');
+    if (carousel) {
+        const activeItem = carousel.querySelector('.carousel-item.active') ||
+            Array.from(carousel.querySelectorAll('.carousel-item')).find(item => item.style.display !== 'none');
+        if (activeItem) {
+            activeViewId = activeItem.id;
+        }
+    }
+
+    if (!activeViewId && typeof visualizationItems !== 'undefined' && typeof currentVisualizationIndex !== 'undefined') {
+        activeViewId = visualizationItems[currentVisualizationIndex]?.id || null;
+    }
+
+    switch (activeViewId) {
+        case 'visualization':
+            if (typeof generateVisualization === 'function') {
+                generateVisualization(currentSystemData);
+            }
+            break;
+        case 'serviceRelationshipsVisualization':
+            if (typeof updateServiceVisualization === 'function') {
+                updateServiceVisualization();
+            }
+            break;
+        case 'dependencyVisualization':
+            if (typeof updateDependencyVisualization === 'function') {
+                updateDependencyVisualization();
+            }
+            break;
+        default:
+            // If view can't be detected, refresh all relevant visualizations
+            if (typeof generateVisualization === 'function') {
+                generateVisualization(currentSystemData);
+            }
+            if (typeof updateServiceVisualization === 'function') {
+                updateServiceVisualization();
+            }
+            if (typeof updateDependencyVisualization === 'function') {
+                updateDependencyVisualization();
+            }
+            break;
+    }
+}
+
 // This function should be called once the DOM is ready, e.g., from main.js
 function setupPlatformToggleButtons() {
     const toggleButtonSystem = document.getElementById('togglePlatformComponentsSystem');
@@ -1340,7 +1391,7 @@ function setupPlatformToggleButtons() {
     if (toggleButtonSystem) {
         toggleButtonSystem.addEventListener('click', () => {
             showPlatformComponents = !showPlatformComponents;
-            generateVisualization(currentSystemData); // Assumes currentSystemData is globally accessible
+            rerenderCurrentVisualizationForPlatformToggle();
             updateAllToggleButtonsText(showPlatformComponents);
         });
     }
@@ -1348,7 +1399,7 @@ function setupPlatformToggleButtons() {
     if (toggleButtonService) {
         toggleButtonService.addEventListener('click', () => {
             showPlatformComponents = !showPlatformComponents;
-            updateServiceVisualization(); // This function should internally use currentSystemData
+            rerenderCurrentVisualizationForPlatformToggle();
             updateAllToggleButtonsText(showPlatformComponents);
         });
     }
@@ -1356,7 +1407,7 @@ function setupPlatformToggleButtons() {
     if (toggleButtonDependency) {
         toggleButtonDependency.addEventListener('click', () => {
             showPlatformComponents = !showPlatformComponents;
-            updateDependencyVisualization(); // This function should internally use currentSystemData
+            rerenderCurrentVisualizationForPlatformToggle();
             updateAllToggleButtonsText(showPlatformComponents);
         });
     }
@@ -1366,4 +1417,3 @@ function setupPlatformToggleButtons() {
 if (typeof window !== 'undefined') {
     window.setupPlatformToggleButtons = setupPlatformToggleButtons;
 }
-
