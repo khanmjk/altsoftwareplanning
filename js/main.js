@@ -32,7 +32,8 @@ function syncGlobalSettingsToWindow() {
 }
 syncGlobalSettingsToWindow();
 
-function updateAiDependentUI() {
+function updateAiDependentUI(options = {}) {
+    const { skipPlanningRender = false } = options;
     const aiEnabled = !!(globalSettings?.ai?.isEnabled);
     const createWithAiButton = document.getElementById('createWithAiButton');
     if (createWithAiButton) {
@@ -48,7 +49,25 @@ function updateAiDependentUI() {
         aiChatButton.style.display = (aiEnabled && currentViewId) ? 'inline-block' : 'none';
     }
 
-    if (currentViewId === 'planningView' && typeof renderPlanningView === 'function') {
+    const chatContainer = document.getElementById('aiChatPanelContainer');
+    const chatHandle = document.getElementById('chatResizeHandle');
+    if (chatContainer) {
+        if (aiEnabled) {
+            chatContainer.style.display = 'block';
+            if (!(window.aiChatAssistant && typeof window.aiChatAssistant.isAiChatPanelOpen === 'function' && window.aiChatAssistant.isAiChatPanelOpen())) {
+                chatContainer.style.width = chatContainer.style.width || '0';
+                if (chatHandle) chatHandle.style.display = 'none';
+            }
+        } else {
+            if (window.aiChatAssistant && typeof window.aiChatAssistant.closeAiChatPanel === 'function') {
+                window.aiChatAssistant.closeAiChatPanel();
+            }
+            chatContainer.style.display = 'none';
+            if (chatHandle) chatHandle.style.display = 'none';
+        }
+    }
+
+    if (!skipPlanningRender && currentViewId === 'planningView' && typeof renderPlanningView === 'function') {
         renderPlanningView();
     }
 }
@@ -482,6 +501,7 @@ window.onload = async function() {
 function switchView(targetViewId, newMode = null) {
     console.log(`Switching view to: ${targetViewId || 'Home'}, Mode: ${newMode || 'Auto'}`);
     currentViewId = targetViewId;
+    updateAiDependentUI({ skipPlanningRender: true });
 
     const allViewIds = [
         'systemEditForm', 'visualizationCarousel', 'serviceDependenciesTable',
@@ -512,16 +532,6 @@ function switchView(targetViewId, newMode = null) {
             aiAgentController.renderSuggestionsForCurrentView();
         }
 
-        // Show/Hide AI Chat Button
-        const aiChatButton = document.getElementById('aiChatButton');
-        if (aiChatButton) {
-            aiChatButton.style.display = (globalSettings.ai.isEnabled && targetViewId) ? 'inline-block' : 'none';
-        }
-        // Close chat panel on view switch
-        if (typeof closeAiChatPanel === 'function') {
-            closeAiChatPanel();
-        }
-   
         allViewIds.forEach(id => {
             const element = document.getElementById(id);
             if (element) {
@@ -1612,8 +1622,13 @@ function initializeEventListeners() {
 
     // AI Chat Button
     document.getElementById('aiChatButton')?.addEventListener('click', () => {
-        if (typeof openAiChatPanel === 'function') {
-            openAiChatPanel();
+        if (!window.aiChatAssistant) return;
+        if (typeof window.aiChatAssistant.isAiChatPanelOpen === 'function' && window.aiChatAssistant.isAiChatPanelOpen()) {
+            if (typeof window.aiChatAssistant.closeAiChatPanel === 'function') {
+                window.aiChatAssistant.closeAiChatPanel();
+            }
+        } else if (typeof window.aiChatAssistant.openAiChatPanel === 'function') {
+            window.aiChatAssistant.openAiChatPanel();
         }
     });
     // Initialize the chat panel's internal listeners
