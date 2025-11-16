@@ -11,6 +11,7 @@ let commandPopupKeyboardNav = false;
 let chatInputResizeObserver = null;
 let chatInputFallbackEvents = [];
 let chatInputFallbackTarget = null;
+let chatPanelIsOpen = false;
 
 function cleanupChatInputHeightWatchers() {
     if (chatInputResizeObserver) {
@@ -105,8 +106,12 @@ function openAiChatPanel() {
     if (!aiChatPanel) return;
     const panel = document.getElementById('aiChatPanelContainer');
     const handle = document.getElementById('chatResizeHandle');
-    if (panel) panel.style.width = '400px';
+    if (panel) {
+        panel.style.display = 'block';
+        panel.style.width = '400px';
+    }
     if (handle) handle.style.display = 'block';
+    chatPanelIsOpen = true;
     if (window.aiAgentController && typeof window.aiAgentController.renderSuggestionsForCurrentView === 'function') {
         window.aiAgentController.renderSuggestionsForCurrentView();
     }
@@ -118,6 +123,11 @@ function closeAiChatPanel() {
     const handle = document.getElementById('chatResizeHandle');
     if (panel) panel.style.width = '0';
     if (handle) handle.style.display = 'none';
+    chatPanelIsOpen = false;
+}
+
+function isAiChatPanelOpen() {
+    return chatPanelIsOpen;
 }
 
 function postAgentMessageToView(htmlContent, isError = false) {
@@ -447,6 +457,7 @@ if (typeof window !== 'undefined') {
         initializeAiChatPanel,
         openAiChatPanel,
         closeAiChatPanel,
+        isAiChatPanelOpen,
         postAgentMessageToView,
         postUserMessageToView,
         showAgentLoadingIndicator,

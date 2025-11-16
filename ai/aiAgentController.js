@@ -17,8 +17,7 @@ const aiAgentController = (() => {
             { text: "Summarize all initiatives currently in 'Backlog' status." },
             { text: "Which 'Defined' initiatives have the highest SDE-Year estimates?" },
             { text: "Show me all initiatives related to the 'Revenue Growth' theme." },
-            { text: "Are there any 'Backlog' items with no teams assigned yet?" },
-            { text: "Who is the owner of the 'Expand to EU Market' initiative?" }
+            { text: "Are there any 'Backlog' items with no teams assigned yet?" }
         ],
         organogramView: [
             { text: "Rate my overall team composition and find risks." },
@@ -30,8 +29,6 @@ const aiAgentController = (() => {
         visualizationCarousel: [
             { text: "Generate a block diagram of this architecture.", isImageRequest: true },
             { text: "Rate the architectural design. Are there bottlenecks?", isImageRequest: false },
-            { text: "What services does the 'User Management Service' depend on?" },
-            { text: "Which team owns the 'Content Delivery Service'?" },
             { text: "Show a table of all services and their owning teams." }
         ],
         dashboardView: [
@@ -44,7 +41,6 @@ const aiAgentController = (() => {
         capacityConfigView: [
             { text: "Find anomalies in my capacity configuration." },
             { text: "Which team has the highest 'avgOverheadHoursPerWeekPerSDE'?" },
-            { text: "Walk me through the capacity calculation for the 'Avengers' team." },
             { text: "What is the total 'AI Productivity Gain' across the org?" },
             { text: "Compare the 'Standard Leave' days for all teams." }
         ],
