@@ -1,4 +1,8 @@
 /* css/components/aiChatPanel.css */
+:root {
+    --ai-chat-input-height: 80px;
+}
+
 #aiChatLog .chat-message {
     padding: 8px 12px;
     border-radius: 18px;
@@ -142,9 +146,29 @@
     font-weight: 600;
 }
 
+#aiChatInput {
+    width: 100%;
+    min-height: 70px;
+    max-height: 280px;
+    resize: vertical;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 6px 8px;
+    line-height: 1.4;
+    font-size: 0.95em;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#aiChatInput:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+    outline: none;
+}
+
 #aiChatCommandPopup {
     position: absolute;
-    bottom: 70px;
+    bottom: calc(var(--ai-chat-input-height, 80px) + 20px);
     left: 10px;
     right: 10px;
     background: #ffffff;
