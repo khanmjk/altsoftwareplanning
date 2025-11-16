@@ -517,127 +517,82 @@ async function _generateSystemWithGemini(systemPrompt, userPrompt, apiKey, spinn
  * @param {string} provider The selected provider.
  * @returns {Promise<string|null>} A promise that resolves to the AI's text answer or null on failure.
  */
-async function getAnalysisFromPrompt(userQuestion, contextJson, apiKey, provider) {
-    // [LOG] Added for debugging
-    console.log(`[AI-DEBUG] getAnalysisFromPrompt: Routing for provider '${provider}' with question: "${userQuestion}"`);
+/**
+ * [MODIFIED] Public "Router" Function: Gets analysis from a full chat history.
+ *
+ * @param {Array<object>} chatHistory The full conversation history (e.g., [{role: 'user', ...}, {role: 'model', ...}]).
+ * @param {string} apiKey The user's API key.
+ * @param {string} provider The selected provider.
+ * @returns {Promise<object>} A promise that resolves to { textResponse: string, usage: object }
+ */
+async function getAnalysisFromPrompt(chatHistory, apiKey, provider) {
+    console.log(`[AI-DEBUG] getAnalysisFromPrompt: Routing for provider '${provider}'. History has ${chatHistory.length} turns.`);
 
-    // --- [NEW] Mock Mode Implementation ---
+    // --- Mock Mode ---
     if (AI_ANALYSIS_MOCK_MODE) {
         console.warn("[AI-DEBUG] MOCK MODE ENABLED. Returning fake data without API call.");
-        // Simulate a network delay
         await new Promise(resolve => setTimeout(resolve, 750));
-
-        // Check for specific questions to make the mock more interactive
-        if (userQuestion.toLowerCase().includes("overloaded")) {
-             return "This is a mock response. Based on the context from the 'planningView', the **Data Dragoons** team appears to be overloaded by 2.5 SDE-Years.";
-        }
-        if (userQuestion.toLowerCase().includes("how many teams")) {
-             return "This is a mock response. The provided context from 'organogramView' shows there are **8 teams** in this system.";
-        }
-
-        return `This is a mock AI response. I received your question: "${userQuestion}". I am analyzing the provided context, which is ${contextJson.length} characters long.`;
+        const mockResponse = `This is a mock AI response. I received a history of ${chatHistory.length} turns.`;
+        return { 
+            textResponse: mockResponse, 
+            usage: { totalTokenCount: 100 } // Mock usage
+        };
     }
-    // --- [END NEW] ---
+    // --- End Mock Mode ---
     
- // 1. Build the analysis prompt
-    const systemPrompt = `You are an expert Software Engineering Planning & Management Partner. Your goals are to:
-    1.  **Prioritize the CONTEXT DATA:** Base all your answers about the user's system (initiatives, teams, engineers, services) exclusively on the JSON data provided in the "CONTEXT DATA" section.
-    2.  **Use General Knowledge as a Fallback:** If the user asks a general knowledge question (e.g., "What is AWS?", "Define 'SDE-Year'"), and the answer is *not* in the CONTEXT DATA, you may use your own knowledge to provide a brief, helpful definition.
-    3.  **Be Clear:** When using your own knowledge, state it (e.g., "AWS CloudFront is a content delivery network..."). When using the context, be specific (e.g., "Based on the data, the 'Avengers' team...").
+    // 1. [REMOVED] System prompt is no longer built here. It's in the chatHistory.
     
-    4.  **Perform Expert Analysis & Provide Recommendations (Your Main Task):** If the user asks for an analysis, opinion, rating, or recommendation (e.g., "rate this," "find risks," "optimize this plan"), you MUST perform a deep analysis. Even for simple questions, you should *proactively* add these insights if you find them.
-        * **Architectural Analysis:** Use the \`services\` data (especially \`serviceDependencies\`) to comment on loose/tight coupling, potential bottlenecks, or how the architecture aligns with team structure (Conway's Law).
-        * **Organizational Analysis:** Use \`allKnownEngineers\` and \`teams\` data to analyze team composition. Proactively find and highlight risks like skill gaps, high junior-to-senior ratios, or single-person dependencies on a critical skill.
-        * **Capacity & Risk Analysis:** If the context includes \`capacityConfigView\` or \`planningView\` data, actively scrutinize it. Find anomalies. (e.g., "I notice the 'Avengers' have 20 hours/week of overhead while all other teams have 6. Is this correct?"). Call out opportunities to optimize leave schedules or other constraints.
-        * **Planning & Optimization Suggestions:** This is your most advanced task. When asked to analyze or optimize the \`planningView\`, do not just re-order initiatives.
-            a.  First, respect all \`isProtected: true\` initiatives.
-            b.  Then, to fit more work, you are empowered to **suggest specific reductions to SDE-Year estimates** for non-protected items.
-            c.  You must justify *why* (e.g., "The initiative 'Improve UI' is 2.5 SDE-Years, which seems high for a UI-only task. Reducing it to 1.5 might fit it Above The Line.").
-            d.  Recommend a new priority order based on \`roi\` and your new estimates.
-    
-    CONTEXT DATA:
-    ${contextJson}
-    
-    Answer the user's question concisely and helpfully.
-    `;
-
-    
-    // [LOG] Added for debugging
-    console.log(`[AI-DEBUG] getAnalysisFromPrompt: System prompt and context JSON length: ${systemPrompt.length} chars.`);
-
     // 2. Route to the correct provider
     try {
         switch (provider) {
             case 'google-gemini':
-                return await _getAnalysisWithGemini(systemPrompt, userQuestion, apiKey);
+                return await _getAnalysisWithGemini(chatHistory, apiKey); // Pass history
             case 'openai-gpt4o':
-                // return await _getAnalysisWithOpenAI(systemPrompt, userQuestion, apiKey);
-                return "OpenAI analysis is not yet implemented."; // TODO
+                return { textResponse: "OpenAI analysis is not yet implemented.", usage: { totalTokenCount: 0 } };
             case 'anthropic-claude35':
-                // return await _getAnalysisWithAnthropic(systemPrompt, userQuestion, apiKey);
-                return "Anthropic analysis is not yet implemented."; // TODO
-            // ... other cases
+                return { textResponse: "Anthropic analysis is not yet implemented.", usage: { totalTokenCount: 0 } };
             default:
                 console.error(`Unknown AI provider: ${provider}`);
-                return `Analysis for "${provider}" is not yet supported.`;
+                throw new Error(`Analysis for "${provider}" is not yet supported.`);
         }
     } catch (error) {
         console.error(`Error during AI analysis with ${provider}:`, error);
-        return `An error occurred while communicating with the AI. Check the console.\nError: ${error.message}`;
+        // Re-throw the error so handleAiChatSubmit can catch it
+        throw new Error(`An error occurred while communicating with the AI: ${error.message}`);
     }
 }
 
 // Expose public functions to global scope for other modules
 if (typeof window !== 'undefined') {
-window.getAnalysisFromPrompt = getAnalysisFromPrompt;
+    window.getAnalysisFromPrompt = getAnalysisFromPrompt;
 }
 
 /**
- * [PRIVATE] Calls the Google Gemini API to get analysis.
- * [MODIFIED] Uses _fetchWithRetry to handle transient errors.
- * @returns {Promise<string|null>} Text answer or null.
+ * [MODIFIED] Calls the Google Gemini API to get analysis.
+ * @param {Array<object>} chatHistory The full conversation history.
+ * @returns {Promise<object>} A promise that resolves to { textResponse: string, usage: object }
  */
-async function _getAnalysisWithGemini(systemPrompt, userQuestion, apiKey) {
-    // [LOG] Added for debugging
-    console.log("[AI-DEBUG] _getAnalysisWithGemini: Preparing to call Gemini for analysis...");
+async function _getAnalysisWithGemini(chatHistory, apiKey) {
+    console.log("[AI-DEBUG] _getAnalysisWithGemini: Preparing to call Gemini with full chat history.");
     
-    // TODO: [SECURITY] This is a client-side call using a user-provided API key.
-    // This architecture is unsafe for production. Before merging to a public site,
-    // this function MUST be refactored to call a secure server-side proxy
-    // that manages the API key and makes the actual request to the Google API.
-
-    //const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`;
-    // [MODIFIED] Switched from gemini-2.5-pro to gemini-2.5-flash
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;    
 
+    // [MODIFIED] The request body is now just the history
     const requestBody = {
-        "contents": [
-            {
-                "parts": [
-                    { "text": systemPrompt },
-                    { "text": "USER_QUESTION: " + userQuestion }
-                ]
-            }
-        ]
-        // Using default generation config for chat
+        "contents": chatHistory
+        // We could also use "system_instruction" for the priming prompt, 
+        // but including it in "contents" is simpler and supported by all models.
     };
 
-    // MODIFIED: Create the options object for fetch
     const fetchOptions = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody)
     };
 
-    // [LOG] Added for debugging
-    console.log(`[AI-DEBUG] _getAnalysisWithGemini: Calling _fetchWithRetry for ${API_URL.split('?')[0]}`);
+    console.log(`[AI-DEBUG] _getAnalysisWithGemini: Calling _fetchWithRetry with ${chatHistory.length} history items.`);
 
-    // MODIFIED: Call _fetchWithRetry instead of fetch. No spinner needed here.
     const response = await _fetchWithRetry(API_URL, fetchOptions);
-
-    // [LOG] Added for debugging
-    console.log("[AI-DEBUG] _getAnalysisWithGemini: Fetch successful. Parsing response data...");
-
     const responseData = await response.json();
 
     if (!responseData.candidates || !responseData.candidates[0].content.parts[0].text) {
@@ -645,12 +600,14 @@ async function _getAnalysisWithGemini(systemPrompt, userQuestion, apiKey) {
         throw new Error("Received an invalid response from the AI.");
     }
 
+    // [MODIFIED] Extract text AND usage metadata
     const textResponse = responseData.candidates[0].content.parts[0].text;
+    const usage = responseData.usageMetadata || { totalTokenCount: 0 }; // Ensure usage object exists
     
-    // [LOG] Added for debugging
-    console.log(`[AI-DEBUG] _getAnalysisWithGemini: Received analysis text: "${textResponse}"`);
+    console.log(`[AI-DEBUG] _getAnalysisWithGemini: Received analysis text. Tokens: ${usage.totalTokenCount}`);
 
-    return textResponse;
+    // [MODIFIED] Return the object
+    return { textResponse, usage };
 }
 
 /**
