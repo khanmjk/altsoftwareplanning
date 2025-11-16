@@ -143,6 +143,15 @@ bar graph per quarter to see team load/demand impact
 [Done] - [AI] Update the app's readme documentation to cover all the new AI features
 [Done] - [AI Feature] Create a top-level menu for "AI-Assistant" - a page that allows the user to interact through a chat interface on interrogating the selected system
 [Done] - [AI Feature] Implement AI-powered analysis (`getAnalysisFromPrompt`) to answer questions about the system (backend logic stubbed in aiService.js)
+[Done] - AI enhancements
+-- Ask questions about the system architecture [Done]
+-- Find out about the people / teams [Done]
+-- Understand the current status of the backlog [Done]
+-- Inspect the year plan: which teams are underfunded? Which initiatives are ATL? [Done]
+-- Ask it to help identify bottlenecks: Inspect capacity contraints, find optimizations in the planning, suggest ideas to improve delivery plan [Done]
+-- Analyse the make-up of teams, flag risks like a team is funded mostly with junior engineers, doesn't have a senior engineer, etc. Flag hiring concerns. [Done]
+-- In the org view, it would be nice to show a table describing what the team is responsible for [Can do this with AI]
+- [Done] Use AI conversational chatbot to set up a new system, edit, or interact with the data associated with existing systems
 
 ------------
 IN PROGRESS
@@ -153,7 +162,6 @@ IN PROGRESS
 ------
 TO DO
 ------
-- In the org view, it would be nice to show a table describing what the team is responsible for
 - For the system dependency table view, refactor to use the new tabulator table style for consistency with other table views in the app
 - [AI] - Ability to export the year plan, showing ATL/BTL logic, etc. to Excel - the excel model must be generated using LLM so that formulaes in the code are applied to the excel generation
 - Now that we have a goals dashboard view, we need to think about introducing an interface to manage the lifecycle of goals
@@ -184,22 +192,17 @@ Team Editing
 -- We support away team only from an incoming perspective (i.e. help provided to the team), but we could also consider concept of outgoing away team (I.e. the team lends engineers to other teams)
 
 AI enhancements
--- Ask questions about the system architecture
--- Find out about the people / teams
--- Understand the current status 
-of the backlog
--- Inspect the year plan: which teams are underfunded? Which initiatives are ATL?
--- Ask it to help identify bottlenecks: Inspect capacity contraints, find optimizations in the planning, suggest ideas to improve delivery plan
--- Analyse the make-up of teams, flag risks like a team is funded mostly with junior engineers, doesn't have a senior engineer, etc. Flag hiring concerns.
 -- Use AI to update and change the system: Like move engineers to new managers, Add new initiatives to backlog
 -- Use AI to generate a delivery plan - classic ganntt chart using the year plan as input, work out a plan per team for the year
 -- Use AI to set-up recurring tasks to collect status updates for initiatives (detailed work package tracking feature)
 -- USe AI to generate graphs / views the webapp pages don't currently render - like a pie chart showing disribution of initiatives by themes
 - Use AI to create a new system from a visual software architecture diagram
-- Use AI conversational chatbot to set up a new system, edit, or interact with the data associated with existing systems
 - Use AI to optimise the yearly planning
 - Use AI to optimise detail planning
 - Use AI to provide insights into the software system and overall engineering organisation
+TODO: Work with other LLM providers
+TODO: Add backend proxy for AI image generation (securely store user-provided API keys and enable browser clients hosted on GitHub Pages to call Imagen without exposing secrets)
+
 
 Bugs / Missing features
 - [UX] Add ability remove an engineer from Engineer List table to account for attrition (the engineer must be removed from the main engineer list and all associate objects where engineer is associated with a team)
@@ -236,6 +239,7 @@ Impact: Simplifies the logic in view-specific files (like orgView.js, yearPlanni
 Description: We've started with the EnhancedTableWidget.
 Identify other UI patterns that are repeated (e.g., dual-list selectors, collapsible sections, input forms) and consider creating simple, reusable component-like functions or classes for them in utils.js or a components directory.
 Impact: Further reduces code duplication, ensures UI consistency, and speeds up development of new views.
+
 ==== Post MVP ===
 UX enhancements
 -- [Partially Done - needs rewrite port to modern framework like react] modernise the UX to a style of popular apps, maybe copy the AWS console UX styles?
@@ -245,46 +249,3 @@ UX enhancements
 -- Add ability to import a backlog from an excel file
 -- Launch the app :-)
 
-==== Last notes from Gemini chat to continue next session ==== 11 Nov 2025 =====
-This was a fantastic session! I agree, our partnership was very productive. We systematically debugged a complex feature and made it significantly more powerful.
-
-Here's a recap of what we accomplished and the clear next steps for our next session.
-
-✅ Recap of What We Accomplished
-We successfully debugged and hardened the entire "Create with AI" feature pipeline. We started with a "model overloaded" error and ended with a fully robust, validated, and high-quality data generation system.
-
-Solved Transient Errors: We first diagnosed the "model overloaded" error as a 5xx-class API issue. We implemented a best-practice _fetchWithRetry helper function in aiService.js to handle this with exponential backoff, which your logs confirmed worked perfectly.
-
-Solved JSON Truncation: We then hit a "SyntaxError: Unterminated string in JSON" error. After some great debugging, you correctly identified that the maxOutputTokens was set too low. Increasing it to 65000 in _generateSystemWithGemini solved the truncation issue.
-
-Mastered the Prompt: This was our biggest win. We iteratively built a powerful and highly-detailed "master prompt" in _getSystemGenerationPrompt. We added specific rules to force the AI to generate:
-
-A rich, front-loaded 3-year plan with realistic initiative statuses (e.g., "Backlog," "In Progress," "Completed").
-
-Dense interconnections (service dependencies, API dependencies) to power your planning features.
-
-Realistic capacity constraints (overheads, AI gain, leave).
-
-workPackages linked to initiatives, using the STANDARD_WORK_PACKAGE_PHASES.
-
-Hardened Validation: Finally, we updated validateGeneratedSystem in utils.js to be a strict "gatekeeper" that perfectly matches our new, demanding prompt. It now validates personnel links, work package consistency, capacity data, and more, ensuring we only save high-quality, consistent data.
-
-The "Create with AI" feature is now truly complete and generates the realistic, complex data models we were aiming for.
-
-🚀 Next Actions for Our Next Session
-Our next step is to build the second major AI feature, which is already outlined in your backlog as "IN PROGRESS": the Context-Aware AI Chat Assistant.
-
-The backend logic for this is already in place in aiService.js (getAnalysisFromPrompt and _getAnalysisWithGemini).
-
-Here is the plan based on your backlog:
-
-Build the Chat UI: We will need to design and build the global frontend chat window or panel that can be opened from any view inside a loaded system.
-
-Implement Context "Scraping": We'll write the client-side JavaScript that dynamically grabs the relevant data from the current view (like the yearlyInitiatives array from the Year Plan or calculatedCapacityMetrics from the Capacity Tuning screen) when a user asks a question.
-
-Connect UI to AI Service: We will wire up the chat UI to send the user's question and the scraped context JSON to the getAnalysisFromPrompt function, displaying the AI's answer in the chat window.
-
-This will bring your vision for an interactive assistant to life, allowing you to ask questions like "Which teams are most at risk?" or "Analyze this team's senior engineers".
-
-TODO: Work with other LLM providers
-TODO: Add backend proxy for AI image generation (securely store user-provided API keys and enable browser clients hosted on GitHub Pages to call Imagen without exposing secrets)
