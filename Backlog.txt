@@ -240,6 +240,43 @@ Description: We've started with the EnhancedTableWidget.
 Identify other UI patterns that are repeated (e.g., dual-list selectors, collapsible sections, input forms) and consider creating simple, reusable component-like functions or classes for them in utils.js or a components directory.
 Impact: Further reduces code duplication, ensures UI consistency, and speeds up development of new views.
 
+==== MAJOR REFACTOR TASKS ===
+Here’s a phased path:
+
+* Formalize a State Layer
+Create state/store.js that owns currentSystemData, globalSettings, etc.
+Provide getters/setters + simple event hooks (subscribe('aiSettings', cb)), so views just react to state changes.
+When you migrate, this store becomes your Redux/Zustand/MobX slice or Rails service object.
+Separate Pure Logic from UI
+
+* Extract “calculation” modules (planning/calculations.js, capacity/calculations.js).
+Keep DOM rendering functions separate (planning/view.js), consuming those pure modules.
+This lets you drop the same logic into React components later without rewriting algorithms.
+Modularize Domains
+
+* Move CRUD helpers into domain files (data/teams.js, data/initiatives.js).
+Eventually these become API services (Rails controllers or Next.js API routes), but even in vanilla they reduce cross-file dependencies.
+Component-Style Builders
+
+* Replace large innerHTML strings with small factory functions (createScenarioControls({ state, onSave, onOptimize })).
+These can render DOM nodes now, and later map directly to React components with the same props.
+Agent Layer Abstraction
+
+* Treat each specialist agent as a node-compatible service: accept explicit dependencies (state snapshot, context provider) instead of hitting globals.
+Build a small “agent runtime” that logs actions and returns structured results. Later you can expose it via an API route or background job.
+Routing & View Registry
+
+* Instead of switchView calling random global functions, create a view registry (views/index.js) that registers show, hide, getContext.
+This mirrors React Router / Next.js pages and makes it easier to port each view incrementally.
+Asset / Style organization
+
+* Begin grouping styles alongside modules (e.g., planning/planning.css) to mirror component-scoped styles. When you move to CSS modules or Tailwind, the grouping persists.
+Testing Harness
+
+* Add minimal Jest (or similar) tests for the pure logic modules. That suite will move with you to Node/React, ensuring behavior parity during the migration.
+
+By adopting this structure now, the eventual stack shift is just re-implementing the view layer and wiring the same modules into a new runtime. Each step is incremental and keeps the current app stable while paving the way for React/Next.js or Rails.
+
 ==== Post MVP ===
 UX enhancements
 -- [Partially Done - needs rewrite port to modern framework like react] modernise the UX to a style of popular apps, maybe copy the AWS console UX styles?
