@@ -107,7 +107,7 @@ ${toolsetDescription}`;
         console.log("[AI CHAT] Starting agent session. Clearing history and UI.");
         const chatLog = document.getElementById('aiChatLog');
         if (chatLog) {
-            chatLog.innerHTML = '<div class="chat-message ai-message">Hello! I have loaded the full context for <strong>' + (currentSystemData?.systemName || 'the system') + '</strong>. How can I help you analyze it?<br><br>You can now ask me to perform actions. Type <b>/</b> to see a list of available commands.</div>';
+            chatLog.innerHTML = '<div class="chat-message ai-message">Hello! I have loaded the full context for <strong>' + (currentSystemData?.systemName || 'the system') + '</strong>. How can I help you analyze it?<br><br>You can now ask me to perform actions using simple English OR Type <b>/</b> to see a list of available commands.</div>';
         }
         if (window.aiChatAssistant && typeof window.aiChatAssistant.setTokenCount === 'function') {
             window.aiChatAssistant.setTokenCount(0);
@@ -246,6 +246,7 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
             }
 
             const steps = Array.isArray(plan.steps) ? plan.steps : [];
+            console.debug('[AI Agent Controller] Parsed agent plan from chat:', steps);
             await _executeAgentPlan(steps, loadingMessageEl);
         } catch (error) {
             console.error("Error during AI chat submit:", error);
@@ -324,7 +325,10 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
             view.hideAgentLoadingIndicator(loadingMessageEl, '<p>Starting agent plan...</p>');
         }
 
+        console.debug('[AI Agent Controller] Executing agent plan with steps:', steps);
+
         const stepResults = [];
+        const stepSummaries = [];
         for (let i = 0; i < steps.length; i++) {
             const step = steps[i];
             try {
@@ -334,6 +338,8 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
                 }
                 const result = await window.aiAgentToolset.executeTool(step.command, resolvedPayload);
                 stepResults[i] = result;
+                 console.debug('[AI Agent Controller] Step completed:', { step: step.command, payload: resolvedPayload, result });
+                stepSummaries.push(_describeAgentStep(step.command, resolvedPayload, result, i));
                 if (view && typeof view.postAgentMessageToView === 'function') {
                     view.postAgentMessageToView(`Step ${i + 1} complete.`);
                 }
@@ -353,7 +359,13 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
         }
 
         if (view && typeof view.postAgentMessageToView === 'function') {
-            view.postAgentMessageToView('<b>Agent plan finished.</b> UI has been refreshed.');
+            let summaryHtml = '<b>Agent plan finished.</b> UI has been refreshed.';
+            if (stepSummaries.length > 0) {
+                summaryHtml += '<br><br><strong>Actions performed:</strong><ul>' +
+                    stepSummaries.map(text => `<li>${text}</li>`).join('') +
+                    '</ul>';
+            }
+            view.postAgentMessageToView(summaryHtml);
         }
     }
 
@@ -389,6 +401,172 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
         if (base === undefined) return undefined;
         if (!path) return base;
         return path.split('.').reduce((acc, key) => (acc && acc[key] !== undefined ? acc[key] : undefined), base);
+    }
+
+    function _describeAgentStep(command, payload, result, index) {
+        switch (command) {
+            case 'addInitiative': {
+                const title = payload?.title || result?.title || 'initiative';
+                const planningYear = payload?.attributes?.planningYear || (result?.attributes?.planningYear);
+                return `Created initiative <strong>${title}</strong>${planningYear ? ` for ${planningYear}` : ''}.`;
+            }
+            case 'updateInitiative': {
+                const initiativeId = payload?.initiativeId || result?.initiativeId || '(unknown)';
+                const summary = _summarizeInitiativeUpdates(payload?.updates || {}, result);
+                return `Updated initiative <code>${initiativeId}</code>${summary ? ` (${summary})` : '.'}`;
+            }
+            case 'deleteInitiative': {
+                const initiativeId = payload?.initiativeId || result?.initiativeId || '(unknown)';
+                return `Deleted initiative <code>${initiativeId}</code>.`;
+            }
+            case 'moveEngineerToTeam': {
+                const engineer = payload?.engineerName || result?.name || 'engineer';
+                const team = payload?.newTeamId || result?.currentTeamId || 'unassigned';
+                return `Moved ${engineer} to team <code>${team}</code>.`;
+            }
+            case 'addEngineerToRoster': {
+                const engineerName = payload?.name || result?.name || 'engineer';
+                return `Added engineer <strong>${engineerName}</strong> to roster.`;
+            }
+            case 'addNewTeam': {
+                const teamId = result?.teamId || '(new team)';
+                const teamName = result?.teamName || result?.teamIdentity || '';
+                return `Created team <strong>${teamName || teamId}</strong>.`;
+            }
+            case 'addNewService': {
+                const serviceName = payload?.serviceData?.serviceName || result?.serviceName || 'service';
+                return `Created service <strong>${serviceName}</strong>.`;
+            }
+            default:
+                return `Executed <code>${command}</code> (step ${index + 1}).`;
+        }
+    }
+
+    function _summarizeInitiativeUpdates(updates, result) {
+        if (!updates || typeof updates !== 'object') return '';
+        const messages = [];
+        if (updates.status) {
+            messages.push(`status → ${updates.status}`);
+        }
+        if (updates.attributes && typeof updates.attributes === 'object') {
+            const attrKeys = Object.keys(updates.attributes);
+            if (attrKeys.length > 0) {
+                messages.push(`attributes (${attrKeys.join(', ')})`);
+            }
+        }
+        if (Array.isArray(updates.assignments)) {
+            const assignmentSummary = updates.assignments
+                .map(a => {
+                    const team = a.teamId || 'team';
+                    const sde = typeof a.sdeYears === 'number' ? a.sdeYears.toFixed(2) : a.sdeYears;
+                    return `${team}: ${sde}`;
+                })
+                .join(', ');
+            if (assignmentSummary) {
+                messages.push(`assignments → ${assignmentSummary}`);
+            }
+        }
+        const otherKeys = Object.keys(updates).filter(key => !['status', 'attributes', 'assignments'].includes(key));
+        if (otherKeys.length > 0) {
+            messages.push(`fields: ${otherKeys.join(', ')}`);
+        }
+        return messages.join('; ');
+    }
+
+    /**
+     * [NEW] Main entry point for prebuilt agent buttons.
+     * This acts as a router to the correct specialist agent.
+     * @param {string} agentName - The name of the agent to run.
+     * @param {object} payload - The data from the UI (e.g., { engineerName: '...' }).
+     */
+    async function runPrebuiltAgent(agentName, payload) {
+        console.log(`[AI Agent Controller] Received request to run prebuilt agent: ${agentName}`, payload);
+        const view = window.aiChatAssistant;
+        if (!view) {
+             console.error("AI Chat Assistant view is not available.");
+             return;
+        }
+
+        // 1. Open the chat panel
+        view.openAiChatPanel();
+
+        // 2. Route to the specialist
+        try {
+            switch (agentName) {
+                case 'optimizePlan':
+                    if (window.aiPlanOptimizationAgent && typeof window.aiPlanOptimizationAgent.runOptimization === 'function') {
+                        const contextJson = scrapeCurrentViewContext();
+                        const pinnedHistory = [];
+                        if (chatSessionHistory[0]) pinnedHistory.push(chatSessionHistory[0]);
+                        if (chatSessionHistory[1]) pinnedHistory.push(chatSessionHistory[1]);
+                        // Pass the function to post messages
+                        window.aiPlanOptimizationAgent.runOptimization({
+                            postMessageFn: view.postAgentMessageToView
+                        }, {
+                            contextJson,
+                            primingHistory: pinnedHistory
+                        });
+                    } else {
+                        throw new Error("The Plan Optimization Agent (aiPlanOptimizationAgent.js) is not loaded or does not have a 'runOptimization' function.");
+                    }
+                    break;
+                
+                case 'initiateDeleteEngineer':
+                    // Placeholder for when we implement this
+                    if (window.aiOrgChangeAgent && typeof window.aiOrgChangeAgent.initiateDeleteEngineer === 'function') {
+                         window.aiOrgChangeAgent.initiateDeleteEngineer(payload.engineerName);
+                    } else {
+                        throw new Error("The Org Change Agent (aiOrgChangeAgent.js) is not loaded or is missing 'initiateDeleteEngineer'.");
+                    }
+                    break;
+
+                default:
+                    throw new Error(`Unknown or unavailable prebuilt agent: "${agentName}"`);
+            }
+        } catch (error) {
+            console.error(`Error running specialist agent '${agentName}':`, error);
+            view.postAgentMessageToView(`Error: ${error.message}`, true);
+        }
+    }
+
+    /**
+     * [NEW] Handles the user's "Apply" or "Discard" response
+     * from a specialist agent's proposal.
+     * @param {boolean} didConfirm - True if "Apply" was clicked, false if "Discard".
+     */
+    function confirmPrebuiltAgent(didConfirm) {
+        console.log(`[AI Agent Controller] Received agent confirmation: ${didConfirm}`);
+        const view = window.aiChatAssistant;
+        if (!view) return;
+
+        let actionHandled = false;
+        let outcomeText = didConfirm ? 'Changes applied.' : 'Changes discarded.';
+
+        // Check which agent has pending changes
+        if (window.aiPlanOptimizationAgent && typeof window.aiPlanOptimizationAgent.hasPendingChanges === 'function' && window.aiPlanOptimizationAgent.hasPendingChanges()) {
+            if (didConfirm) {
+                const applied = window.aiPlanOptimizationAgent.applyPendingChanges();
+                actionHandled = applied;
+                if (!applied) {
+                    outcomeText = 'Failed to apply changes.';
+                }
+            } else {
+                window.aiPlanOptimizationAgent.discardPendingChanges();
+                actionHandled = true;
+            }
+        } 
+        // else if (window.aiOrgChangeAgent && window.aiOrgChangeAgent.hasPendingChanges()) {
+        //     // Logic for other agents will go here
+        // } 
+        else {
+            console.warn("Agent confirmation received, but no agent had pending changes.");
+            view.postAgentMessageToView("Could not find the pending changes to apply. Please try running the agent again.", true);
+            outcomeText = 'No pending changes found.';
+        }
+
+        if (actionHandled || outcomeText) {
+            _markAgentConfirmationHandled(outcomeText);
+        }
     }
 
     async function _waitForAnalysisFunction(maxAttempts = 5, delayMs = 200) {
@@ -520,11 +698,37 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
         return JSON.stringify(contextData, null, 2);
     }
 
+    function _markAgentConfirmationHandled(statusText) {
+        const containerId = (window.aiPlanOptimizationAgent && typeof window.aiPlanOptimizationAgent.getLastConfirmationContainerId === 'function')
+            ? window.aiPlanOptimizationAgent.getLastConfirmationContainerId()
+            : null;
+        if (!containerId) return;
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        container.querySelectorAll('button').forEach(btn => {
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+            btn.style.cursor = 'not-allowed';
+        });
+        const statusEl = container.querySelector('.agent-confirmation-status');
+        if (statusEl) {
+            statusEl.textContent = statusText || 'Handled.';
+        } else if (statusText) {
+            const div = document.createElement('div');
+            div.className = 'agent-confirmation-status';
+            div.textContent = statusText;
+            container.appendChild(div);
+        }
+    }
+
     return {
         startSession,
         handleUserChatSubmit,
         renderSuggestionsForCurrentView,
-        getAvailableTools
+        getAvailableTools,
+        runPrebuiltAgent,        // [NEW]
+        confirmPrebuiltAgent,     // [NEW]
+        _waitForAnalysisFunction  // [NEW] Expose helper for specialist agents
     };
 })();
 

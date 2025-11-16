@@ -25,6 +25,33 @@ const defaultSettings = {
     // autoSave: false
 };
 let globalSettings = JSON.parse(JSON.stringify(defaultSettings)); // Our live settings object
+function syncGlobalSettingsToWindow() {
+    if (typeof window !== 'undefined') {
+        window.globalSettings = globalSettings;
+    }
+}
+syncGlobalSettingsToWindow();
+
+function updateAiDependentUI() {
+    const aiEnabled = !!(globalSettings?.ai?.isEnabled);
+    const createWithAiButton = document.getElementById('createWithAiButton');
+    if (createWithAiButton) {
+        if (currentMode === Modes.NAVIGATION && aiEnabled) {
+            createWithAiButton.style.display = 'inline-block';
+        } else {
+            createWithAiButton.style.display = 'none';
+        }
+    }
+
+    const aiChatButton = document.getElementById('aiChatButton');
+    if (aiChatButton) {
+        aiChatButton.style.display = (aiEnabled && currentViewId) ? 'inline-block' : 'none';
+    }
+
+    if (currentViewId === 'planningView' && typeof renderPlanningView === 'function') {
+        renderPlanningView();
+    }
+}
 // --- End Global App Settings ---
 
 // --- Carousel State ---
@@ -195,6 +222,7 @@ function loadGlobalSettings() {
             const loadedSettings = JSON.parse(settingsString);
             // Merge loaded settings with defaults to ensure all keys exist
             globalSettings = { ...defaultSettings, ...loadedSettings };
+            syncGlobalSettingsToWindow();
             // Deep merge for nested objects like 'ai'
             if (loadedSettings.ai) {
                 globalSettings.ai = { ...defaultSettings.ai, ...loadedSettings.ai };
@@ -207,18 +235,17 @@ function loadGlobalSettings() {
         } catch (e) {
             console.error("Error parsing global settings from localStorage:", e);
             globalSettings = JSON.parse(JSON.stringify(defaultSettings)); // Reset to defaults
+            syncGlobalSettingsToWindow();
         }
     } else {
         // No settings saved yet, use defaults
         globalSettings = JSON.parse(JSON.stringify(defaultSettings));
+        syncGlobalSettingsToWindow();
         console.log("No global settings found, using defaults.");
     }
     
     // Update the UI based on loaded settings
-    const createWithAiButton = document.getElementById('createWithAiButton');
-    if (createWithAiButton && currentMode === Modes.NAVIGATION) {
-         createWithAiButton.style.display = globalSettings.ai.isEnabled ? 'inline-block' : 'none';
-    }
+    updateAiDependentUI();
 }
 
 /**
@@ -251,11 +278,7 @@ function saveGlobalSettings() {
         localStorage.setItem(APP_SETTINGS_KEY, JSON.stringify(globalSettings));
         console.log("Saved global settings to localStorage.");
         
-        // Update the UI based on new settings
-        const createWithAiButton = document.getElementById('createWithAiButton');
-        if (createWithAiButton && currentMode === Modes.NAVIGATION) { // Only update if on home screen
-            createWithAiButton.style.display = globalSettings.ai.isEnabled ? 'inline-block' : 'none';
-        }
+        updateAiDependentUI();
         
         closeAiSettingsModal();
         alert("Settings saved.");
@@ -1607,11 +1630,15 @@ function initializeEventListeners() {
     // --- MODIFIED LISTENERS FOR THE NEW MODAL ---
     document.getElementById('saveAiSettingsButton')?.addEventListener('click', saveGlobalSettings); // <-- Changed function
     document.querySelector('#aiSettingsModal .close-button')?.addEventListener('click', closeAiSettingsModal);
-    document.getElementById('aiModeEnabled')?.addEventListener('change', () => {
+    document.getElementById('aiModeEnabled')?.addEventListener('change', (event) => {
+        const isChecked = event.target.checked;
         const configInputs = document.getElementById('aiConfigInputs');
         if (configInputs) {
-            configInputs.style.display = document.getElementById('aiModeEnabled').checked ? 'block' : 'none';
+            configInputs.style.display = isChecked ? 'block' : 'none';
         }
+        globalSettings.ai.isEnabled = isChecked;
+        syncGlobalSettingsToWindow();
+        updateAiDependentUI();
     });
     // --- END MODIFIED LISTENERS ---
     

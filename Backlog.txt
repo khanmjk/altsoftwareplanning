@@ -157,7 +157,6 @@ bar graph per quarter to see team load/demand impact
 [Done] - For the system dependency table view, refactor to use the new tabulator table style for consistency with other table views in the app
 [Done] - Use AI to provide insights into the software system and overall engineering organisation
 [Done] -- Use AI to update and change the system: Like move engineers to new managers, Add new initiatives to backlog
-[Done] - Use AI to optimise the yearly planning
 [Done] - [Bug] - When filtering in the Service Dependency Visualization, the list is stuck on the first service, even though the selected service from the list is acted on, and the graph displays correctly - but the top service list doesn't show the selected service
 
 ------------
@@ -165,6 +164,7 @@ IN PROGRESS
 ------------
 - [AI] Think about refactoring the codebase for AI files - like an AI folder to keep all ai-related files, especially if we're going down the agent route (like a planning agent, resource planning agent, etc.)
 - [AI Feature] Create an AI agent that can perform actions on the system with access to the code
+- [AI] Implement "Plan Optimization Agent" (Analyze/Propose/Confirm workflow)
 
 ------
 TO DO
@@ -201,7 +201,6 @@ AI enhancements
 -- Use AI to set-up recurring tasks to collect status updates for initiatives (detailed work package tracking feature)
 -- USe AI to generate graphs / views the webapp pages don't currently render - like a pie chart showing disribution of initiatives by themes
 -- Use AI to create a new system from a visual software architecture diagram
--- Use AI to optimise detail planning
 
 TODO: Work with other LLM providers
 TODO: Add backend proxy for AI image generation (securely store user-provided API keys and enable browser clients hosted on GitHub Pages to call Imagen without exposing secrets)
@@ -249,4 +248,3 @@ UX enhancements
 -- Update data model to support organisations: An organisation has 1..many systems, etc.
 -- Add ability to import a backlog from an excel file
 -- Launch the app :-)
-

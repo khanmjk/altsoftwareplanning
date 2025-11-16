@@ -777,6 +777,7 @@ function renderPlanningView() {
         const baseButtonStyle = 'padding: 5px 10px; margin-left: 10px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; font-size: 0.9em;';
         const activeButtonStyle = baseButtonStyle + ' background-color: #007bff; color: white; border-color: #0056b3; font-weight: bold;';
         const inactiveButtonStyle = baseButtonStyle + ' background-color: #e9ecef; color: #495057;';
+        const isAiEnabled = !!(window.globalSettings && window.globalSettings.ai && window.globalSettings.ai.isEnabled);
 
         const effectiveButtonTitle = `Use Effective BIS. Gross: ${calculatedMetrics.totals.EffectiveBIS.grossYrs.toFixed(2)}, Net: ${calculatedMetrics.totals.EffectiveBIS.netYrs.toFixed(2)}`;
         const teamBisButtonTitle = `Use Team BIS. Gross: ${calculatedMetrics.totals.TeamBIS.grossYrs.toFixed(2)}, Net: ${calculatedMetrics.totals.TeamBIS.netYrs.toFixed(2)}`;
@@ -799,12 +800,31 @@ function renderPlanningView() {
                     title="Save the current plan for year ${currentPlanningYear}. This updates initiative statuses based on ATL/BTL.">
                 Save Plan for ${currentPlanningYear}
             </button>
+            ${isAiEnabled ? `
+            <button type="button" id="optimizePlanButton"
+                    style="${baseButtonStyle} background-color: #17a2b8; color: white; border-color: #17a2b8; margin-left: 10px;"
+                    title="Use AI to analyze this plan and suggest optimizations">
+                🤖 Optimize This Plan
+            </button>` : ''}
         `;
         setTimeout(() => {
             const savePlanButton = document.getElementById('savePlanButton');
             if (savePlanButton) {
                 savePlanButton.addEventListener('click', handleSavePlan);
             }
+
+            // [NEW] ADD THIS LISTENER
+            const optimizePlanButton = document.getElementById('optimizePlanButton');
+            if (optimizePlanButton && isAiEnabled) {
+                optimizePlanButton.addEventListener('click', () => {
+                    if (window.aiAgentController && typeof window.aiAgentController.runPrebuiltAgent === 'function') {
+                        window.aiAgentController.runPrebuiltAgent('optimizePlan');
+                    } else {
+                        alert("AI Controller is not available.");
+                    }
+                });
+            }
+            // [END NEW]
         }, 0);
     }
 
@@ -816,7 +836,11 @@ function renderPlanningView() {
 
     console.log("Finished rendering planning view.");
 }
-window.renderPlanningView = renderPlanningView;
+if (typeof window !== 'undefined') {
+    window.renderPlanningView = renderPlanningView;
+    window.calculatePlanningTableData = calculatePlanningTableData;
+    window.calculateTeamLoadSummaryData = calculateTeamLoadSummaryData;
+}
 
 
 
