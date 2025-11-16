@@ -8,6 +8,49 @@ let aiChatCommandPopup = null;
 let commandPopupOptions = [];
 let commandPopupIndex = -1;
 let commandPopupKeyboardNav = false;
+let chatInputResizeObserver = null;
+let chatInputFallbackEvents = [];
+let chatInputFallbackTarget = null;
+
+function cleanupChatInputHeightWatchers() {
+    if (chatInputResizeObserver) {
+        chatInputResizeObserver.disconnect();
+        chatInputResizeObserver = null;
+    }
+    if (chatInputFallbackTarget && chatInputFallbackEvents.length > 0) {
+        chatInputFallbackEvents.forEach(({ event, handler }) => {
+            chatInputFallbackTarget.removeEventListener(event, handler);
+        });
+    }
+    chatInputFallbackEvents = [];
+    chatInputFallbackTarget = null;
+}
+
+function monitorChatInputHeight() {
+    if (!aiChatInput) return;
+    cleanupChatInputHeightWatchers();
+
+    const updateHeightVar = () => {
+        const heightValue = aiChatInput ? (aiChatInput.offsetHeight || 0) : 0;
+        if (typeof document !== 'undefined' && document.documentElement) {
+            document.documentElement.style.setProperty('--ai-chat-input-height', `${heightValue}px`);
+        }
+    };
+
+    if (typeof ResizeObserver === 'function') {
+        chatInputResizeObserver = new ResizeObserver(() => updateHeightVar());
+        chatInputResizeObserver.observe(aiChatInput);
+    } else {
+        chatInputFallbackTarget = aiChatInput;
+        ['input', 'mouseup', 'keyup'].forEach(eventName => {
+            const handler = () => updateHeightVar();
+            chatInputFallbackTarget.addEventListener(eventName, handler);
+            chatInputFallbackEvents.push({ event: eventName, handler });
+        });
+    }
+
+    updateHeightVar();
+}
 
 function initializeAiChatPanel() {
     aiChatPanel = document.getElementById('aiChatPanel');
@@ -48,6 +91,8 @@ function initializeAiChatPanel() {
             }
         });
     }
+
+    monitorChatInputHeight();
 
     if (typeof initializeChatResizer === 'function') {
         initializeChatResizer();

@@ -101,8 +101,9 @@ const HTML_COMPONENT_FALLBACKS = {
     </div>
     <div id="aiChatSuggestions" style="padding: 8px 10px; display: flex; flex-wrap: wrap; gap: 6px; border-top: 1px solid #f1f1f1; border-bottom: 1px solid #ccc; background: #fff;"></div>
     <div id="aiChatUsageDisplay" style="font-size: 0.8em; color: #6c757d; text-align: right; padding: 0 10px 5px 10px;">Session Tokens: 0</div>
-    <div id="aiChatInputContainer" style="padding: 10px; border-top: 1px solid #ccc;">
-        <textarea id="aiChatInput" style="width: 100%; height: 60px; border: 1px solid #ccc; border-radius: 4px; resize: none; box-sizing: border-box; padding: 5px;" placeholder="Ask about the current view..."></textarea>
+    <div id="aiChatInputContainer" style="padding: 10px; border-top: 1px solid #ccc; position: relative;">
+        <div id="aiChatCommandPopup" style="display: none;"></div>
+        <textarea id="aiChatInput" style="width: 100%; min-height: 70px; max-height: 280px; border: 1px solid #ccc; border-radius: 4px; resize: vertical; box-sizing: border-box; padding: 6px 8px; line-height: 1.4; font-size: 0.95em;" placeholder="Ask about the current view..."></textarea>
         <button id="aiChatSendButton" class="btn-primary" style="width: 100%; margin-top: 5px;">Send</button>
     </div>
 </div>`
