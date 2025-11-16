@@ -76,7 +76,7 @@ Upon launching the application, you'll see the main menu on the top bar.
 
 ### AI Assistant Settings
 
-* Click the **"AI Assistant"** button, which is always visible in the top bar.
+* Click the **"AI Settings"** button, which is always visible in the top bar.
 * Check the **"Enable AI Assistant Mode"** box.
 * Select your desired AI provider (currently limited to "google-gemini" for the MVP).
 * **Use a FREE API Key:** You must obtain a free-tier API key from **[Google AI Studio](https://aistudio.google.com/app/apikey)**.
@@ -91,7 +91,7 @@ The diagram/image feature is currently *mocked*. Google’s Imagen 3 models run 
 
 Until we build the backend proxy (see backlog item “Add backend proxy for AI image generation”), the app will:
 
-* Always return the placeholder image when you click a “Generate … diagram” suggestion in the AI Chat panel.
+* Always return the placeholder image when you click a “Generate … diagram” suggestion in the AI Assistant panel.
 * Log the real request/response flow so you can see what would be sent to Imagen.
 
 If you want to enable real image generation locally, you will need to run a backend service that injects an OAuth2 token and calls the Vertex AI `imagen-3.0-generate-002` endpoint on behalf of the browser.
@@ -101,8 +101,8 @@ If you want to enable real image generation locally, you will need to run a back
 The AI Assistant is a powerful, integrated feature.
 
 * **AI System Generation:** From the home screen, use the "Create with AI" button to generate a complete system from a text prompt.
-* **Settings:** Use the global "AI Assistant" button to enable the assistant and add your API key.
-* **Context-Aware Chat & Analysis:** Once a system is loaded, use the "AI Chat" button to open the chat panel. You can ask complex, analytical questions about the data in your current view (e.g., "Which teams are overloaded?").
+* **Settings:** Use the global "AI Settings" button to enable the assistant and add your API key.
+* **Context-Aware Chat & Analysis:** Once a system is loaded, use the "AI Assistant" button to open the chat panel. You can ask complex, analytical questions about the data in your current view (e.g., "Which teams are overloaded?").
 * **Action Agent:** The AI can now perform actions. Type `/` in the chat to see a list of commands you can ask the AI to run, such as `/addInitiative` or `/moveEngineerToTeam`.
 
 For a full list of AI features, see **Section 4: Key Features**.
@@ -273,7 +273,7 @@ Understanding these core entities is key to using the tool effectively. Most ent
 The AI Assistant has been refactored into a powerful, stateful **Action Agent** with a clean "Controller" (`ai/aiAgentController.js`) and "Toolset" (`ai/aiAgentToolset.js`) architecture.
 
 * **AI System Generation:** From the home screen, use the "Create with AI" button to generate a complete, realistic system and 3-year plan from a single text prompt.
-* **Settings Management:** A globally accessible "AI Assistant" button in the top bar allows you to enable/disable AI mode and securely save your API key in local storage.
+* **Settings Management:** A globally accessible "AI Settings" button in the top bar allows you to enable/disable AI mode and securely save your API key in local storage.
 * **Stateful, Multi-Turn Conversation:** The agent now maintains a full chat session history (`chatSessionHistory`). You can ask follow-up questions, and the AI will remember the context of your previous messages, just like a real conversation. The session resets when you load a new system.
 * **Action Agent & Tool Use:** The AI can now perform actions and "drive the app." You can ask it to make changes to the system data (e.g., "Add a new initiative," "Move this engineer," "Delete this service"). The AI will formulate a JSON-based "plan" which the `aiAgentController` executes using the `aiAgentToolset`.
 * **`/` Command Discoverability:** To see what actions the agent can perform, simply type `/` in the chat input. A pop-up menu will appear showing all available commands (like `/addInitiative`, `/moveEngineerToTeam`).
