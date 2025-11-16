@@ -1,4 +1,9 @@
 let showPlatformComponents = true;
+let serviceDependenciesTableWidget = null;
+let currentServiceDependenciesTableData = [];
+if (typeof window !== 'undefined') {
+    window.currentServiceDependenciesTableData = currentServiceDependenciesTableData;
+}
 
 /**
  * REVISED (v2) - Generates the main system visualization (Services, APIs, Platforms).
@@ -1284,51 +1289,121 @@ function addDependencyLegend(svg) {
         .attr('fill', '#333');
 }
 
-function generateServiceDependenciesTable() {
-    const tbody = document.querySelector('#serviceDependenciesTable tbody');
-    tbody.innerHTML = ''; // Clear existing content
+function prepareServiceDependenciesTableData() {
+    if (!currentSystemData || !Array.isArray(currentSystemData.services)) {
+        return [];
+    }
 
-    currentSystemData.services.forEach(service => {
-        const row = document.createElement('tr');
+    const services = currentSystemData.services || [];
+    const teams = currentSystemData.teams || [];
 
-        // Service Name
-        const nameCell = document.createElement('td');
-        nameCell.textContent = service.serviceName;
-        row.appendChild(nameCell);
-
-        // Description
-        const descCell = document.createElement('td');
-        descCell.textContent = service.serviceDescription;
-        row.appendChild(descCell);
-
-        // Owning Team
-        const team = currentSystemData.teams.find(t => t.teamId === service.owningTeamId);
-        const teamCell = document.createElement('td');
-        teamCell.textContent = team ? (team.teamIdentity || team.teamName) : 'Unassigned';
-        row.appendChild(teamCell);
-
-        // Upstream Dependencies (Services Depended On)
-        const upstreamServices = service.serviceDependencies;
-        const upstreamCell = document.createElement('td');
-        upstreamCell.textContent = upstreamServices.length > 0 ? upstreamServices.join(', ') : 'None';
-        row.appendChild(upstreamCell);
-
-        // Platform Dependencies
+    return services.map(service => {
+        const team = teams.find(t => t.teamId === service.owningTeamId);
+        const upstreamServices = service.serviceDependencies || [];
         const platformDependencies = service.platformDependencies || [];
-        const platformCell = document.createElement('td');
-        platformCell.textContent = platformDependencies.length > 0 ? platformDependencies.join(', ') : 'None';
-        row.appendChild(platformCell);
-
-        // Downstream Dependencies (Services That Depend On This Service)
-        const downstreamServices = currentSystemData.services
-            .filter(s => s.serviceDependencies.includes(service.serviceName))
+        const downstreamServices = services
+            .filter(s => (s.serviceDependencies || []).includes(service.serviceName))
             .map(s => s.serviceName);
-        const downstreamCell = document.createElement('td');
-        downstreamCell.textContent = downstreamServices.length > 0 ? downstreamServices.join(', ') : 'None';
-        row.appendChild(downstreamCell);
 
-        tbody.appendChild(row);
+        return {
+            id: service.serviceName,
+            serviceName: service.serviceName,
+            description: service.serviceDescription || '',
+            owningTeam: team ? (team.teamIdentity || team.teamName || team.teamId) : 'Unassigned',
+            upstreamDependencies: upstreamServices,
+            platformDependencies: platformDependencies,
+            downstreamDependencies: downstreamServices,
+            upstreamDependenciesText: upstreamServices.length > 0 ? upstreamServices.join(', ') : 'None',
+            platformDependenciesText: platformDependencies.length > 0 ? platformDependencies.join(', ') : 'None',
+            downstreamDependenciesText: downstreamServices.length > 0 ? downstreamServices.join(', ') : 'None'
+        };
     });
+}
+
+function generateServiceDependenciesTable() {
+    const tableContainer = document.getElementById('serviceDependenciesTableHost');
+    if (!tableContainer) {
+        console.error("Service Dependencies table container not found.");
+        return;
+    }
+
+    const tableData = prepareServiceDependenciesTableData();
+    currentServiceDependenciesTableData = tableData;
+    if (typeof window !== 'undefined') {
+        window.currentServiceDependenciesTableData = currentServiceDependenciesTableData;
+    }
+
+    const wrapTextFormatter = (cell, defaultText = 'None') => {
+        const value = cell.getValue();
+        const display = (value && value !== '') ? value : defaultText;
+        const el = cell.getElement();
+        el.style.whiteSpace = 'normal';
+        el.style.lineHeight = '1.3';
+        return display;
+    };
+
+    const columns = [
+        { title: 'Service Name', field: 'serviceName', headerFilter: 'input', width: 180, formatter: wrapTextFormatter },
+        { title: 'Description', field: 'description', headerFilter: 'input', width: 220, formatter: wrapTextFormatter },
+        { title: 'Owning Team', field: 'owningTeam', headerFilter: 'input', width: 160, formatter: wrapTextFormatter },
+        {
+            title: 'Upstream Dependencies',
+            field: 'upstreamDependenciesText',
+            formatter: wrapTextFormatter,
+            headerFilter: 'input',
+            width: 220
+        },
+        {
+            title: 'Platform Dependencies',
+            field: 'platformDependenciesText',
+            formatter: wrapTextFormatter,
+            headerFilter: 'input',
+            width: 220
+        },
+        {
+            title: 'Downstream Dependencies',
+            field: 'downstreamDependenciesText',
+            formatter: wrapTextFormatter,
+            headerFilter: 'input',
+            width: 220
+        }
+    ];
+
+    const tabulatorOptions = {
+        data: tableData,
+        columns,
+        layout: 'fitDataStretch',
+        responsiveLayout: false,
+        placeholder: 'No services available.',
+        pagination: 'local',
+        paginationSize: 20,
+        paginationSizeSelector: [10, 20, 50, 100],
+        movableColumns: true,
+        initialSort: [{ column: 'serviceName', dir: 'asc' }]
+    };
+
+    if (typeof EnhancedTableWidget === 'function') {
+        if (serviceDependenciesTableWidget && typeof serviceDependenciesTableWidget.destroy === 'function') {
+            serviceDependenciesTableWidget.destroy();
+        }
+        serviceDependenciesTableWidget = new EnhancedTableWidget(tableContainer, {
+            ...tabulatorOptions,
+            uniqueIdField: 'id',
+            exportCsvFileName: 'service_dependencies.csv',
+            exportJsonFileName: 'service_dependencies.json',
+            exportXlsxFileName: 'service_dependencies.xlsx',
+            exportSheetName: 'Service Dependencies'
+        });
+    } else {
+        console.warn("EnhancedTableWidget not available. Falling back to Tabulator for service dependencies.");
+        if (serviceDependenciesTableWidget && typeof serviceDependenciesTableWidget.destroy === 'function') {
+            serviceDependenciesTableWidget.destroy();
+        }
+        serviceDependenciesTableWidget = new Tabulator(tableContainer, {
+            ...tabulatorOptions,
+            height: '500px'
+        });
+    }
 }
 
 function updateAllToggleButtonsText(showPlatforms) {

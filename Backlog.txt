@@ -143,6 +143,7 @@ bar graph per quarter to see team load/demand impact
 [Done] - [AI] Update the app's readme documentation to cover all the new AI features
 [Done] - [AI Feature] Create a top-level menu for "AI-Assistant" - a page that allows the user to interact through a chat interface on interrogating the selected system
 [Done] - [AI Feature] Implement AI-powered analysis (`getAnalysisFromPrompt`) to answer questions about the system (backend logic stubbed in aiService.js)
+[Done] - [UX] Fix "Create with AI" button layout, animation, and styling on home screen.
 [Done] - AI enhancements
 -- Ask questions about the system architecture [Done]
 -- Find out about the people / teams [Done]
@@ -152,6 +153,12 @@ bar graph per quarter to see team load/demand impact
 -- Analyse the make-up of teams, flag risks like a team is funded mostly with junior engineers, doesn't have a senior engineer, etc. Flag hiring concerns. [Done]
 -- In the org view, it would be nice to show a table describing what the team is responsible for [Can do this with AI]
 - [Done] Use AI conversational chatbot to set up a new system, edit, or interact with the data associated with existing systems
+- [Done] -- Now that we can add resources to the system, we need to also support removing resources (when people leave) [Jules failed at this task][Use AI instead]
+[Done] - For the system dependency table view, refactor to use the new tabulator table style for consistency with other table views in the app
+[Done] - Use AI to provide insights into the software system and overall engineering organisation
+[Done] -- Use AI to update and change the system: Like move engineers to new managers, Add new initiatives to backlog
+[Done] - Use AI to optimise the yearly planning
+[Done] - [Bug] - When filtering in the Service Dependency Visualization, the list is stuck on the first service, even though the selected service from the list is acted on, and the graph displays correctly - but the top service list doesn't show the selected service
 
 ------------
 IN PROGRESS
@@ -162,7 +169,7 @@ IN PROGRESS
 ------
 TO DO
 ------
-- For the system dependency table view, refactor to use the new tabulator table style for consistency with other table views in the app
+
 - [AI] - Ability to export the year plan, showing ATL/BTL logic, etc. to Excel - the excel model must be generated using LLM so that formulaes in the code are applied to the excel generation
 - Now that we have a goals dashboard view, we need to think about introducing an interface to manage the lifecycle of goals
 - Working on creating a reusable modern table widget leveraging tabular library
@@ -178,8 +185,6 @@ Utilities
 - [AI] Explore generating architecture diagramming options, apart from the app's 3d node graphs
 
 UX
--- [UX] Fix "Create with AI" button layout, animation, and styling on home screen.
--- Now that we can add resources to the system, we need to also support removing resources (when people leave) [Jules failed at this task]
 -- Ability to export the system to JSON, CSV and Excel, from top level menu "Export System" [leveraging Tabular library's export functionality]
 
 Year Planning
@@ -192,24 +197,20 @@ Team Editing
 -- We support away team only from an incoming perspective (i.e. help provided to the team), but we could also consider concept of outgoing away team (I.e. the team lends engineers to other teams)
 
 AI enhancements
--- Use AI to update and change the system: Like move engineers to new managers, Add new initiatives to backlog
 -- Use AI to generate a delivery plan - classic ganntt chart using the year plan as input, work out a plan per team for the year
 -- Use AI to set-up recurring tasks to collect status updates for initiatives (detailed work package tracking feature)
 -- USe AI to generate graphs / views the webapp pages don't currently render - like a pie chart showing disribution of initiatives by themes
-- Use AI to create a new system from a visual software architecture diagram
-- Use AI to optimise the yearly planning
-- Use AI to optimise detail planning
-- Use AI to provide insights into the software system and overall engineering organisation
+-- Use AI to create a new system from a visual software architecture diagram
+-- Use AI to optimise detail planning
+
 TODO: Work with other LLM providers
 TODO: Add backend proxy for AI image generation (securely store user-provided API keys and enable browser clients hosted on GitHub Pages to call Imagen without exposing secrets)
 
 
 Bugs / Missing features
 - [UX] Add ability remove an engineer from Engineer List table to account for attrition (the engineer must be removed from the main engineer list and all associate objects where engineer is associated with a team)
-- [UX] Include 
-a Delete Resource section in the Organization view, make the Add and Delete resource sections collapsible.
+- [UX] Include a Delete Resource section in the Organization view, make the Add and Delete resource sections collapsible.
 Remember to regenerate the team breakdown table to reflect changes.
-- [Bug] - When filtering in the Service Dependency Visualization, the list is stuck on the first service, even though the selected service from the list is acted on, and the graph displays correctly - but the top service list doesn't show the selected service
 - [Feature] - In Service Dependency Visualization, use different colours for upstream and downstream dependent nodes
 
 

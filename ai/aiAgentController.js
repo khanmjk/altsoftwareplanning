@@ -493,13 +493,14 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
                         console.warn('Dashboard widget context error:', error);
                     }
                     break;
-                case 'visualizationCarousel':
-                    contextData.data = {
-                        services: currentSystemData.services,
-                        dependencies: currentSystemData.serviceDependencies,
-                        platformDependencies: currentSystemData.platformDependencies
-                    };
-                    break;
+            case 'visualizationCarousel':
+                contextData.data = {
+                    services: currentSystemData.services,
+                    dependencies: currentSystemData.serviceDependencies,
+                    platformDependencies: currentSystemData.platformDependencies,
+                    serviceDependenciesTable: typeof window !== 'undefined' ? (window.currentServiceDependenciesTableData || []) : []
+                };
+                break;
                 case 'roadmapView':
                     contextData.data = {
                         initiatives: currentSystemData.yearlyInitiatives,
