@@ -60,6 +60,54 @@ const aiAgentTools = [
         ]
     },
     {
+        command: "addSeniorManager",
+        description: "Adds a new Senior Manager to the organization.",
+        parameters: [
+            { name: "name", type: "string", description: "The full name of the new Senior Manager.", required: true }
+        ]
+    },
+    {
+        command: "addSdm",
+        description: "Adds a new SDM (Software Development Manager) to the organization.",
+        parameters: [
+            { name: "name", type: "string", description: "The full name of the new SDM.", required: true },
+            { name: "seniorManagerId", type: "string", description: "Optional. The ID of the Senior Manager this SDM reports to.", required: false }
+        ]
+    },
+    {
+        command: "updateSdm",
+        description: "Updates the properties of an existing SDM. Used to change their reporting line.",
+        parameters: [
+            { name: "sdmId", type: "string", description: "The ID of the SDM to update.", required: true },
+            { name: "updates", type: "object", description: "An object of fields to update, e.g., { seniorManagerId: '...' }.", required: true }
+        ]
+    },
+    {
+        command: "reassignTeamToSdm",
+        description: "Moves an existing team to report to a different SDM.",
+        parameters: [
+            { name: "teamIdentifier", type: "string", description: "Team ID, name, or placeholder (e.g., {{teamId_RoutingRangers}}).", required: true },
+            { name: "sdmIdentifier", type: "string", description: "SDM ID, name, or placeholder (e.g., {{sdmId_PaulBright}}).", required: true }
+        ]
+    },
+    {
+        command: "reassignSdmWithTeams",
+        description: "Moves an SDM (and all of their teams) under a different SDM’s organization or a new Senior Manager.",
+        parameters: [
+            { name: "sdmIdentifier", type: "string", description: "SDM ID, name, or placeholder (e.g., {{sdmId_AlexChen}}).", required: true },
+            { name: "destinationIdentifier", type: "string", description: "Target SDM or Senior Manager identifier.", required: true },
+            { name: "destinationType", type: "string", description: "Optional. Explicitly set to 'sdm' or 'seniorManager'.", required: false }
+        ]
+    },
+    {
+        command: "deleteSeniorManager",
+        description: "Deletes a Senior Manager and optionally reassigns their SDMs to another Sr. Manager.",
+        parameters: [
+            { name: "seniorManagerId", type: "string", description: "The ID of the Senior Manager to delete.", required: true },
+            { name: "reassignToSeniorManagerId", type: "string", description: "Optional. The ID of another Senior Manager to reassign SDMs to.", required: false }
+        ]
+    },
+    {
         command: "addNewService",
         description: "Creates a new service entry in the system.",
         parameters: [
@@ -140,6 +188,40 @@ async function executeTool(command, payload = {}) {
             if (!payload.engineerName) throw new Error('moveEngineerToTeam: engineerName is required.');
             const updatedEngineer = moveEngineerToTeam(payload.engineerName, payload.newTeamId || null);
             return updatedEngineer;
+        }
+        case 'addSeniorManager': {
+            if (!payload.name) throw new Error('addSeniorManager: name is required.');
+            return addSeniorManager(payload.name);
+        }
+        case 'addSdm': {
+            if (!payload.name) throw new Error('addSdm: name is required.');
+            return addSdm(payload.name, payload.seniorManagerId || null);
+        }
+        case 'updateSdm': {
+            if (!payload.sdmId) throw new Error('updateSdm: sdmId is required.');
+            if (!payload.updates || typeof payload.updates !== 'object') {
+                throw new Error('updateSdm: updates object is required.');
+            }
+            return updateSdm(payload.sdmId, payload.updates);
+        }
+        case 'reassignTeamToSdm': {
+            const teamIdentifier = payload.teamIdentifier || payload.teamId;
+            const sdmIdentifier = payload.sdmIdentifier || payload.newSdmId;
+            if (!teamIdentifier) throw new Error('reassignTeamToSdm: teamIdentifier is required.');
+            if (!sdmIdentifier) throw new Error('reassignTeamToSdm: sdmIdentifier is required.');
+            return reassignTeamToSdm(teamIdentifier, sdmIdentifier);
+        }
+        case 'reassignSdmWithTeams': {
+            const sdmIdentifier = payload.sdmIdentifier || payload.sdmId;
+            const destinationIdentifier = payload.destinationIdentifier || payload.destinationId || payload.targetIdentifier;
+            const destinationType = payload.destinationType || payload.targetType || null;
+            if (!sdmIdentifier) throw new Error('reassignSdmWithTeams: sdmIdentifier is required.');
+            if (!destinationIdentifier) throw new Error('reassignSdmWithTeams: destinationIdentifier is required.');
+            return reassignSdmWithTeams(sdmIdentifier, destinationIdentifier, { destinationType });
+        }
+        case 'deleteSeniorManager': {
+            if (!payload.seniorManagerId) throw new Error('deleteSeniorManager: seniorManagerId is required.');
+            return deleteSeniorManager(payload.seniorManagerId, payload.reassignToSeniorManagerId || null);
         }
         case 'addNewService': {
             const overrides = payload.serviceData || {};
