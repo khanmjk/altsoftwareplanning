@@ -84,6 +84,7 @@ Upon launching the application, you'll see the main menu on the top bar.
 * Paste your API key into the text field.
 * **Disclaimer:** This is a client-side application. Your API key is stored exclusively in your browser's local storage and is never sent to any server other than the selected LLM provider. Using this app comes with risks. The author is not liable for any issues that arise from using your own private (non-free-tier) API key.
 * Click **"Save Settings"**.
+* Toggling **"Enable AI Assistant Mode"** now immediately shows/hides every AI-only control (Create with AI, AI Assistant chat, and the Year Plan “Optimize This Plan” button) without requiring a page refresh.
 
 #### Image Generation Status (Imagen)
 
@@ -278,6 +279,8 @@ The AI Assistant has been refactored into a powerful, stateful **Action Agent** 
 * **Action Agent & Tool Use:** The AI can now perform actions and "drive the app." You can ask it to make changes to the system data (e.g., "Add a new initiative," "Move this engineer," "Delete this service"). The AI will formulate a JSON-based "plan" which the `aiAgentController` executes using the `aiAgentToolset`.
 * **`/` Command Discoverability:** To see what actions the agent can perform, simply type `/` in the chat input. A pop-up menu will appear showing all available commands (like `/addInitiative`, `/moveEngineerToTeam`).
 * **True Context-Awareness:** The AI's context is now synchronized with *exactly* what you see on the UI. When you ask a question, the agent scrapes the *calculated data* from your current view (e.g., the `teamLoadSummary` and `planningTable` data from the "Year Plan" view, or the filtered data from the "Dashboard" view) and sends it with your question. This ensures its analysis is always based on the toggles and filters you have selected.
+* **Plan Optimization Agent:** Launchable from the Year Plan view, this specialist runs an Analyze → Propose → Confirm workflow. It streams progress updates into the chat, posts a before/after capacity narrative, and waits for you to Apply or Discard the suggested changes.
+* **Action Summaries:** Every autonomous agent plan now closes with a concise list of the changes it made (e.g., which initiatives were updated and how), making it easy to audit the run without digging through logs.
 * **Expert Analysis:** The AI is prompted to be an expert engineering partner. You can ask it to:
     * **Analyze Team Composition:** "Find hiring risks" or "Analyze the ratio of junior to senior engineers."
     * **Optimize Plans:** "Suggest SDE-Year reductions for 2-3 BTL initiatives" or "How can I optimize this plan to fit more work?"
@@ -361,7 +364,8 @@ Accessible by clicking **"System Overview"**. Provides multiple views of your ar
 
 ### Yearly Planning
 
-* Click **"Year Plan"** to commit initiatives, assign detailed engineering estimates, and track progress against calculated team capacities using the Above The Line / Below The...
+* Click **"Year Plan"** to commit initiatives, assign detailed engineering estimates, and track progress against calculated team capacities using the Above The Line / Below The Line logic.
+* When AI mode is enabled, use the **🤖 Optimize This Plan** button to run the new Plan Optimization Agent. It analyzes the current plan, proposes scoped SDE year reductions, streams progress updates, and provides an Apply/Discard confirmation directly in the chat.
 * [AI] - Ability to export the year plan, showing ATL/BTL logic, etc. to Excel - the excel model must be generated using LLM so that formulaes in the code are applied to the excel generation
 * Now that we have a goals dashboard view, we need to think about introducing an interface to manage the lifecycle of goals
 * Utilities
