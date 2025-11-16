@@ -473,7 +473,14 @@ function addEngineerToRoster(engineerData = {}) {
     console.log("addEngineerToRoster: Added engineer to roster.", newEngineer);
 
     if (currentTeamId) {
-        moveEngineerToTeam(normalizedName, currentTeamId);
+        let resolvedTeamId = currentTeamId;
+        if (typeof resolvedTeamId === 'string') {
+            const teamIdFromLookup = _resolveTeamIdentifier(resolvedTeamId);
+            if (teamIdFromLookup) {
+                resolvedTeamId = teamIdFromLookup;
+            }
+        }
+        moveEngineerToTeam(normalizedName, resolvedTeamId);
     }
 
     return newEngineer;
@@ -497,7 +504,13 @@ function moveEngineerToTeam(engineerName, newTeamId) {
     if (!engineer) {
         throw new Error(`moveEngineerToTeam: Engineer \"${engineerName}\" not found in roster.`);
     }
-    const normalizedNewTeamId = newTeamId || null;
+    let normalizedNewTeamId = newTeamId || null;
+    if (normalizedNewTeamId) {
+        const resolvedTeamId = _resolveTeamIdentifier(normalizedNewTeamId);
+        if (resolvedTeamId) {
+            normalizedNewTeamId = resolvedTeamId;
+        }
+    }
     const oldTeamId = engineer.currentTeamId || null;
     if (oldTeamId === normalizedNewTeamId) {
         return engineer;
@@ -527,6 +540,366 @@ function moveEngineerToTeam(engineerName, newTeamId) {
 
     console.log(`moveEngineerToTeam: Moved ${engineerName} to ${normalizedNewTeamId || 'Unassigned'}.`);
     return engineer;
+}
+
+/**
+ * Adds a new senior manager to the organization.
+ * @param {string} name - Full name of the senior manager.
+ * @returns {object} Newly created senior manager object.
+ */
+function _generateIncrementalId(collection = [], idField, prefix) {
+    const regex = new RegExp(`^${prefix}(\\d+)$`);
+    let maxNumeric = 0;
+    collection.forEach(item => {
+        const value = item && item[idField];
+        if (typeof value === 'string') {
+            const match = value.match(regex);
+            if (match) {
+                const num = parseInt(match[1], 10);
+                if (!Number.isNaN(num)) {
+                    maxNumeric = Math.max(maxNumeric, num);
+                }
+            }
+        }
+    });
+    return `${prefix}${maxNumeric + 1}`;
+}
+
+function addSeniorManager(name) {
+    if (!currentSystemData) {
+        throw new Error("addSeniorManager: currentSystemData is not loaded.");
+    }
+    if (!name || !name.trim()) {
+        throw new Error("addSeniorManager: Senior Manager name is required.");
+    }
+    const normalizedName = name.trim();
+    if (!Array.isArray(currentSystemData.seniorManagers)) {
+        currentSystemData.seniorManagers = [];
+    }
+    if (currentSystemData.seniorManagers.some(s => (s.seniorManagerName || '').toLowerCase() === normalizedName.toLowerCase())) {
+        throw new Error(`Senior Manager "${normalizedName}" already exists.`);
+    }
+
+    const newSrMgr = {
+        seniorManagerId: _generateIncrementalId(currentSystemData.seniorManagers, 'seniorManagerId', 'srMgr'),
+        seniorManagerName: normalizedName,
+        attributes: {}
+    };
+
+    currentSystemData.seniorManagers.push(newSrMgr);
+    console.log("addSeniorManager: Added new Senior Manager to roster.", newSrMgr);
+    return newSrMgr;
+}
+
+function _normalizeNameForLookup(value) {
+    return (value || '').replace(/[^a-z0-9]/gi, '').toLowerCase();
+}
+
+function _resolveSeniorManagerIdentifier(identifier) {
+    if (!identifier) return null;
+    const managers = currentSystemData?.seniorManagers || [];
+    if (managers.length === 0) return null;
+
+    const directMatch = managers.find(sm => (sm.seniorManagerId || '').toLowerCase() === String(identifier).toLowerCase());
+    if (directMatch) return directMatch.seniorManagerId;
+
+    const placeholderMatch = typeof identifier === 'string' ? identifier.match(/^{{seniorManagerId_(.+)}}$/) : null;
+    if (placeholderMatch) {
+        identifier = placeholderMatch[1];
+    }
+
+    const sanitizedInput = _normalizeNameForLookup(identifier.replace(/^srMgr[-_]?/i, ''));
+    if (!sanitizedInput) return null;
+
+    const nameMatch = managers.find(sm => _normalizeNameForLookup(sm.seniorManagerName) === sanitizedInput);
+    return nameMatch ? nameMatch.seniorManagerId : null;
+}
+
+function _resolveSdmIdentifier(identifier) {
+    if (!identifier) return null;
+    const sdms = currentSystemData?.sdms || [];
+    if (sdms.length === 0) return null;
+
+    const identifierStr = String(identifier).trim();
+    const directMatch = sdms.find(sdm => (sdm.sdmId || '').toLowerCase() === identifierStr.toLowerCase());
+    if (directMatch) return directMatch.sdmId;
+
+    let lookupValue = identifierStr;
+    const placeholderMatch = typeof identifierStr === 'string' ? identifierStr.match(/^{{sdmId_(.+)}}$/) : null;
+    if (placeholderMatch) {
+        lookupValue = placeholderMatch[1];
+    }
+
+    const sanitizedInput = _normalizeNameForLookup(lookupValue);
+    if (!sanitizedInput) return null;
+
+    const matches = sdms.filter(sdm => {
+        const normalizedName = _normalizeNameForLookup(sdm.sdmName);
+        if (!normalizedName) return false;
+        return normalizedName === sanitizedInput ||
+            normalizedName.startsWith(sanitizedInput) ||
+            sanitizedInput.startsWith(normalizedName);
+    });
+
+    if (matches.length === 1) {
+        return matches[0].sdmId;
+    }
+    if (matches.length > 1) {
+        console.warn(`_resolveSdmIdentifier: Ambiguous identifier "${identifierStr}". Matching IDs: ${matches.map(m => m.sdmId).join(', ')}`);
+    }
+    return null;
+}
+
+function _resolveTeamIdentifier(identifier) {
+    if (!identifier) return null;
+    const teams = currentSystemData?.teams || [];
+    if (teams.length === 0) return null;
+
+    const identifierStr = String(identifier).trim();
+    const directMatch = teams.find(team => (team.teamId || '').toLowerCase() === identifierStr.toLowerCase());
+    if (directMatch) return directMatch.teamId;
+
+    let lookupValue = identifierStr;
+    const placeholderMatch = typeof identifierStr === 'string' ? identifierStr.match(/^{{teamId_(.+)}}$/) : null;
+    if (placeholderMatch) {
+        lookupValue = placeholderMatch[1];
+    }
+
+    const sanitizedInput = _normalizeNameForLookup(lookupValue);
+    if (!sanitizedInput) return null;
+
+    const matches = teams.filter(team => {
+        const normalizedIdentity = _normalizeNameForLookup(team.teamIdentity);
+        const normalizedName = _normalizeNameForLookup(team.teamName);
+        const candidates = [normalizedIdentity, normalizedName].filter(Boolean);
+        return candidates.some(candidate =>
+            candidate === sanitizedInput ||
+            candidate.startsWith(sanitizedInput) ||
+            sanitizedInput.startsWith(candidate)
+        );
+    });
+
+    if (matches.length === 1) {
+        return matches[0].teamId;
+    }
+    if (matches.length > 1) {
+        console.warn(`_resolveTeamIdentifier: Ambiguous identifier "${identifierStr}". Matching team IDs: ${matches.map(m => m.teamId).join(', ')}`);
+    }
+    return null;
+}
+
+function addSdm(name, seniorManagerId = null) {
+    if (!currentSystemData) {
+        throw new Error("addSdm: currentSystemData is not loaded.");
+    }
+    if (!name || !name.trim()) {
+        throw new Error("addSdm: SDM name is required.");
+    }
+    const normalizedName = name.trim();
+    if (!Array.isArray(currentSystemData.sdms)) {
+        currentSystemData.sdms = [];
+    }
+    if (currentSystemData.sdms.some(s => (s.sdmName || '').toLowerCase() === normalizedName.toLowerCase())) {
+        throw new Error(`SDM "${normalizedName}" already exists.`);
+    }
+    if (seniorManagerId && !(currentSystemData.seniorManagers || []).some(s => s.seniorManagerId === seniorManagerId)) {
+        const resolvedId = _resolveSeniorManagerIdentifier(seniorManagerId);
+        if (resolvedId) {
+            seniorManagerId = resolvedId;
+        }
+    }
+    if (seniorManagerId && !(currentSystemData.seniorManagers || []).some(s => s.seniorManagerId === seniorManagerId)) {
+        throw new Error(`addSdm: Cannot assign to non-existent seniorManagerId "${seniorManagerId}".`);
+    }
+
+    const newSdm = {
+        sdmId: _generateIncrementalId(currentSystemData.sdms, 'sdmId', 'sdm'),
+        sdmName: normalizedName,
+        seniorManagerId: seniorManagerId || null,
+        attributes: {}
+    };
+
+    currentSystemData.sdms.push(newSdm);
+    console.log("addSdm: Added new SDM to roster.", newSdm);
+    return newSdm;
+}
+
+function updateSdm(sdmId, updates = {}) {
+    if (!currentSystemData || !Array.isArray(currentSystemData.sdms)) {
+        throw new Error("updateSdm: SDM data is not loaded.");
+    }
+    if (!sdmId) {
+        throw new Error("updateSdm: sdmId is required.");
+    }
+    if (!updates || typeof updates !== 'object') {
+        throw new Error("updateSdm: A valid 'updates' object is required.");
+    }
+
+    const sdmIndex = currentSystemData.sdms.findIndex(s => s.sdmId === sdmId);
+    if (sdmIndex === -1) {
+        throw new Error(`updateSdm: SDM with ID "${sdmId}" not found.`);
+    }
+
+    if (updates.seniorManagerId && !(currentSystemData.seniorManagers || []).some(s => s.seniorManagerId === updates.seniorManagerId)) {
+        const resolvedId = _resolveSeniorManagerIdentifier(updates.seniorManagerId);
+        if (resolvedId) {
+            updates.seniorManagerId = resolvedId;
+        }
+    }
+    if (updates.seniorManagerId && !(currentSystemData.seniorManagers || []).some(s => s.seniorManagerId === updates.seniorManagerId)) {
+        throw new Error(`updateSdm: Cannot assign to non-existent seniorManagerId "${updates.seniorManagerId}".`);
+    }
+
+    const sdm = currentSystemData.sdms[sdmIndex];
+    Object.assign(sdm, updates);
+    console.log(`updateSdm: Updated SDM ${sdmId}.`, sdm);
+    return sdm;
+}
+
+function reassignTeamToSdm(teamIdentifier, newSdmIdentifier) {
+    if (!currentSystemData || !Array.isArray(currentSystemData.teams)) {
+        throw new Error("reassignTeamToSdm: Team data is not loaded.");
+    }
+    if (!teamIdentifier) {
+        throw new Error("reassignTeamToSdm: teamIdentifier is required.");
+    }
+    if (!newSdmIdentifier) {
+        throw new Error("reassignTeamToSdm: newSdmIdentifier is required.");
+    }
+
+    const resolvedTeamId = _resolveTeamIdentifier(teamIdentifier);
+    if (!resolvedTeamId) {
+        throw new Error(`reassignTeamToSdm: Could not resolve team identifier "${teamIdentifier}".`);
+    }
+    const team = currentSystemData.teams.find(t => t.teamId === resolvedTeamId);
+    if (!team) {
+        throw new Error(`reassignTeamToSdm: Team with ID "${resolvedTeamId}" not found.`);
+    }
+
+    const resolvedSdmId = _resolveSdmIdentifier(newSdmIdentifier);
+    if (!resolvedSdmId) {
+        throw new Error(`reassignTeamToSdm: Could not resolve SDM identifier "${newSdmIdentifier}".`);
+    }
+
+    const previousSdmId = team.sdmId || null;
+    team.sdmId = resolvedSdmId;
+    console.log(`reassignTeamToSdm: Team ${team.teamIdentity || team.teamName || team.teamId} reassigned from ${previousSdmId || 'unassigned'} to ${resolvedSdmId}.`);
+    return { teamId: team.teamId, previousSdmId, newSdmId: resolvedSdmId, team };
+}
+
+function reassignSdmWithTeams(sdmIdentifier, destinationIdentifier, options = {}) {
+    if (!currentSystemData || !Array.isArray(currentSystemData.sdms)) {
+        throw new Error("reassignSdmWithTeams: SDM data is not loaded.");
+    }
+    if (!sdmIdentifier) {
+        throw new Error("reassignSdmWithTeams: sdmIdentifier is required.");
+    }
+    if (!destinationIdentifier) {
+        throw new Error("reassignSdmWithTeams: destinationIdentifier is required.");
+    }
+
+    const resolvedSdmId = _resolveSdmIdentifier(sdmIdentifier);
+    if (!resolvedSdmId) {
+        throw new Error(`reassignSdmWithTeams: Could not resolve SDM identifier "${sdmIdentifier}".`);
+    }
+    const sourceSdm = (currentSystemData.sdms || []).find(sdm => sdm.sdmId === resolvedSdmId);
+    if (!sourceSdm) {
+        throw new Error(`reassignSdmWithTeams: SDM with ID "${resolvedSdmId}" not found.`);
+    }
+
+    let destinationType = (options.destinationType || '').toLowerCase() || null;
+    let destinationSeniorManagerId = null;
+    let destinationSdmId = null;
+
+    const resolveDestinationAsSeniorManager = () => {
+        const resolved = _resolveSeniorManagerIdentifier(destinationIdentifier);
+        if (resolved) {
+            destinationSeniorManagerId = resolved;
+            destinationType = 'seniorManager';
+            return true;
+        }
+        return false;
+    };
+
+    const resolveDestinationAsSdm = () => {
+        const resolved = _resolveSdmIdentifier(destinationIdentifier);
+        if (resolved) {
+            destinationSdmId = resolved;
+            const destSdm = (currentSystemData.sdms || []).find(sdm => sdm.sdmId === resolved);
+            destinationSeniorManagerId = destSdm ? (destSdm.seniorManagerId || null) : null;
+            destinationType = 'sdm';
+            return true;
+        }
+        return false;
+    };
+
+    if (destinationType === 'seniorManager') {
+        if (!resolveDestinationAsSeniorManager()) {
+            throw new Error(`reassignSdmWithTeams: Destination senior manager "${destinationIdentifier}" not found.`);
+        }
+    } else if (destinationType === 'sdm') {
+        if (!resolveDestinationAsSdm()) {
+            throw new Error(`reassignSdmWithTeams: Destination SDM "${destinationIdentifier}" not found.`);
+        }
+    } else {
+        if (!resolveDestinationAsSeniorManager()) {
+            if (!resolveDestinationAsSdm()) {
+                throw new Error(`reassignSdmWithTeams: Could not resolve destination identifier "${destinationIdentifier}" to an SDM or Senior Manager.`);
+            }
+        }
+    }
+
+    const affectedTeams = (currentSystemData.teams || []).filter(team => team.sdmId === resolvedSdmId);
+    const previousSeniorManagerId = sourceSdm.seniorManagerId || null;
+    sourceSdm.seniorManagerId = destinationSeniorManagerId || null;
+
+    console.log(`reassignSdmWithTeams: SDM ${sourceSdm.sdmName} (${resolvedSdmId}) moved under ${destinationType === 'sdm' ? `SDM ${destinationSdmId}'s` : 'Senior Manager'} org. Teams moved with SDM: ${affectedTeams.length}.`);
+    return {
+        sdmId: resolvedSdmId,
+        destinationType,
+        destinationSeniorManagerId: sourceSdm.seniorManagerId,
+        destinationSdmId,
+        previousSeniorManagerId,
+        movedTeamIds: affectedTeams.map(team => team.teamId),
+        movedTeamNames: affectedTeams.map(team => team.teamIdentity || team.teamName || team.teamId)
+    };
+}
+
+/**
+ * Removes a senior manager from the roster and optionally reassigns their SDMs.
+ * @param {string} seniorManagerId The ID of the senior manager to delete.
+ * @param {string|null} reassignToSeniorManagerId Optional ID of another senior manager to reassign affected SDMs to. If omitted, SDMs become unassigned (null).
+ * @returns {object} Information about the deletion.
+ */
+function deleteSeniorManager(seniorManagerId, reassignToSeniorManagerId = null) {
+    if (!currentSystemData) {
+        throw new Error("deleteSeniorManager: currentSystemData is not loaded.");
+    }
+    if (!seniorManagerId) {
+        throw new Error("deleteSeniorManager: seniorManagerId is required.");
+    }
+    const srManagers = currentSystemData.seniorManagers || [];
+    const index = srManagers.findIndex(sm => sm.seniorManagerId === seniorManagerId);
+    if (index === -1) {
+        throw new Error(`deleteSeniorManager: Senior manager with ID "${seniorManagerId}" not found.`);
+    }
+
+    if (reassignToSeniorManagerId) {
+        if (!srManagers.some(sm => sm.seniorManagerId === reassignToSeniorManagerId)) {
+            throw new Error(`deleteSeniorManager: Cannot reassign to non-existent seniorManagerId "${reassignToSeniorManagerId}".`);
+        }
+    }
+
+    const deletedSrMgr = srManagers.splice(index, 1)[0];
+
+    (currentSystemData.sdms || []).forEach(sdm => {
+        if (sdm.seniorManagerId === seniorManagerId) {
+            sdm.seniorManagerId = reassignToSeniorManagerId || null;
+        }
+    });
+
+    console.log(`deleteSeniorManager: Removed senior manager ${seniorManagerId}.`, deletedSrMgr);
+    return { deleted: true, seniorManager: deletedSrMgr };
 }
 
 /**

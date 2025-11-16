@@ -1511,6 +1511,11 @@ function refreshCurrentView() {
         case 'visualizationCarousel':
             if (typeof showVisualization === 'function') showVisualization(currentVisualizationIndex || 0);
             break;
+        case 'systemEditForm':
+            if (typeof showSystemEditForm === 'function') {
+                showSystemEditForm(currentSystemData);
+            }
+            break;
         default:
             console.log(`[REFRESH] No specific refresh handler for view: ${currentViewId}`);
             break;
