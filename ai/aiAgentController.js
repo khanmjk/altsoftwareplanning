@@ -391,6 +391,102 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
         return path.split('.').reduce((acc, key) => (acc && acc[key] !== undefined ? acc[key] : undefined), base);
     }
 
+    /**
+     * [NEW] Main entry point for prebuilt agent buttons.
+     * This acts as a router to the correct specialist agent.
+     * @param {string} agentName - The name of the agent to run.
+     * @param {object} payload - The data from the UI (e.g., { engineerName: '...' }).
+     */
+    async function runPrebuiltAgent(agentName, payload) {
+        console.log(`[AI Agent Controller] Received request to run prebuilt agent: ${agentName}`, payload);
+        const view = window.aiChatAssistant;
+        if (!view) {
+             console.error("AI Chat Assistant view is not available.");
+             return;
+        }
+
+        // 1. Open the chat panel
+        view.openAiChatPanel();
+
+        // 2. Route to the specialist
+        try {
+            switch (agentName) {
+                case 'optimizePlan':
+                    if (window.aiPlanOptimizationAgent && typeof window.aiPlanOptimizationAgent.runOptimization === 'function') {
+                        const contextJson = scrapeCurrentViewContext();
+                        const pinnedHistory = [];
+                        if (chatSessionHistory[0]) pinnedHistory.push(chatSessionHistory[0]);
+                        if (chatSessionHistory[1]) pinnedHistory.push(chatSessionHistory[1]);
+                        // Pass the function to post messages
+                        window.aiPlanOptimizationAgent.runOptimization({
+                            postMessageFn: view.postAgentMessageToView
+                        }, {
+                            contextJson,
+                            primingHistory: pinnedHistory
+                        });
+                    } else {
+                        throw new Error("The Plan Optimization Agent (aiPlanOptimizationAgent.js) is not loaded or does not have a 'runOptimization' function.");
+                    }
+                    break;
+                
+                case 'initiateDeleteEngineer':
+                    // Placeholder for when we implement this
+                    if (window.aiOrgChangeAgent && typeof window.aiOrgChangeAgent.initiateDeleteEngineer === 'function') {
+                         window.aiOrgChangeAgent.initiateDeleteEngineer(payload.engineerName);
+                    } else {
+                        throw new Error("The Org Change Agent (aiOrgChangeAgent.js) is not loaded or is missing 'initiateDeleteEngineer'.");
+                    }
+                    break;
+
+                default:
+                    throw new Error(`Unknown or unavailable prebuilt agent: "${agentName}"`);
+            }
+        } catch (error) {
+            console.error(`Error running specialist agent '${agentName}':`, error);
+            view.postAgentMessageToView(`Error: ${error.message}`, true);
+        }
+    }
+
+    /**
+     * [NEW] Handles the user's "Apply" or "Discard" response
+     * from a specialist agent's proposal.
+     * @param {boolean} didConfirm - True if "Apply" was clicked, false if "Discard".
+     */
+    function confirmPrebuiltAgent(didConfirm) {
+        console.log(`[AI Agent Controller] Received agent confirmation: ${didConfirm}`);
+        const view = window.aiChatAssistant;
+        if (!view) return;
+
+        let actionHandled = false;
+        let outcomeText = didConfirm ? 'Changes applied.' : 'Changes discarded.';
+
+        // Check which agent has pending changes
+        if (window.aiPlanOptimizationAgent && typeof window.aiPlanOptimizationAgent.hasPendingChanges === 'function' && window.aiPlanOptimizationAgent.hasPendingChanges()) {
+            if (didConfirm) {
+                const applied = window.aiPlanOptimizationAgent.applyPendingChanges();
+                actionHandled = applied;
+                if (!applied) {
+                    outcomeText = 'Failed to apply changes.';
+                }
+            } else {
+                window.aiPlanOptimizationAgent.discardPendingChanges();
+                actionHandled = true;
+            }
+        } 
+        // else if (window.aiOrgChangeAgent && window.aiOrgChangeAgent.hasPendingChanges()) {
+        //     // Logic for other agents will go here
+        // } 
+        else {
+            console.warn("Agent confirmation received, but no agent had pending changes.");
+            view.postAgentMessageToView("Could not find the pending changes to apply. Please try running the agent again.", true);
+            outcomeText = 'No pending changes found.';
+        }
+
+        if (actionHandled || outcomeText) {
+            _markAgentConfirmationHandled(outcomeText);
+        }
+    }
+
     async function _waitForAnalysisFunction(maxAttempts = 5, delayMs = 200) {
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
             if (typeof getAnalysisFromPrompt === 'function') {
@@ -520,11 +616,37 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
         return JSON.stringify(contextData, null, 2);
     }
 
+    function _markAgentConfirmationHandled(statusText) {
+        const containerId = (window.aiPlanOptimizationAgent && typeof window.aiPlanOptimizationAgent.getLastConfirmationContainerId === 'function')
+            ? window.aiPlanOptimizationAgent.getLastConfirmationContainerId()
+            : null;
+        if (!containerId) return;
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        container.querySelectorAll('button').forEach(btn => {
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+            btn.style.cursor = 'not-allowed';
+        });
+        const statusEl = container.querySelector('.agent-confirmation-status');
+        if (statusEl) {
+            statusEl.textContent = statusText || 'Handled.';
+        } else if (statusText) {
+            const div = document.createElement('div');
+            div.className = 'agent-confirmation-status';
+            div.textContent = statusText;
+            container.appendChild(div);
+        }
+    }
+
     return {
         startSession,
         handleUserChatSubmit,
         renderSuggestionsForCurrentView,
-        getAvailableTools
+        getAvailableTools,
+        runPrebuiltAgent,        // [NEW]
+        confirmPrebuiltAgent,     // [NEW]
+        _waitForAnalysisFunction  // [NEW] Expose helper for specialist agents
     };
 })();
 
