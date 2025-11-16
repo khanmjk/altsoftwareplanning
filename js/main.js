@@ -484,8 +484,8 @@ function switchView(targetViewId, newMode = null) {
         }
         // --- End modal closing logic ---       
 
-        if (typeof renderSuggestedQuestions === 'function') {
-            renderSuggestedQuestions();
+        if (typeof aiAgentController !== 'undefined' && typeof aiAgentController.renderSuggestionsForCurrentView === 'function') {
+            aiAgentController.renderSuggestionsForCurrentView();
         }
 
         // Show/Hide AI Chat Button
@@ -1081,12 +1081,12 @@ function loadSavedSystem(systemName) {
 
     buildGlobalPlatformDependencies();
 
-    // --- [NEW] Start a new AI chat session ---
+    // --- Start a new AI chat session ---
     // This clears the old chat UI and primes the AI with the new system's persona/data.
-    if (typeof startNewAiChatSession === 'function') {
-        startNewAiChatSession();
+    if (typeof aiAgentController !== 'undefined' && typeof aiAgentController.startSession === 'function') {
+        aiAgentController.startSession();
     } else {
-        console.error("main.js: startNewAiChatSession() function not found.");
+        console.error("main.js: aiAgentController.startSession() function not found.");
     }
     // --- END NEW ---
 
@@ -1479,6 +1479,32 @@ function showOrganogramView() {
     // if (typeof generateTeamTable === 'function') {
     //     generateTeamTable(currentSystemData);
     // }
+}
+
+function refreshCurrentView() {
+    switch (currentViewId) {
+        case 'planningView':
+            if (typeof generatePlanningTable === 'function') generatePlanningTable();
+            break;
+        case 'organogramView':
+            if (typeof initializeOrgChartView === 'function') initializeOrgChartView();
+            break;
+        case 'roadmapView':
+            if (typeof initializeRoadmapView === 'function') initializeRoadmapView();
+            break;
+        case 'dashboardView':
+            if (typeof initializeDashboard === 'function') initializeDashboard();
+            break;
+        case 'capacityConfigView':
+            if (typeof updateCapacityCalculationsAndDisplay === 'function') updateCapacityCalculationsAndDisplay();
+            break;
+        case 'visualizationCarousel':
+            if (typeof showVisualization === 'function') showVisualization(currentVisualizationIndex || 0);
+            break;
+        default:
+            console.log(`[REFRESH] No specific refresh handler for view: ${currentViewId}`);
+            break;
+    }
 }
 
 /**

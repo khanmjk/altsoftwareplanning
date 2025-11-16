@@ -1118,31 +1118,17 @@ function defineEngineerTableColumns() {
             cellEdited: (cell) => {
                 const engineerName = cell.getRow().getData().name;
                 const newAssignedTeamId = cell.getValue() === "" ? null : cell.getValue();
-                const engineerGlobal = (currentSystemData.allKnownEngineers || []).find(e => e.name === engineerName);
-                if (engineerGlobal) {
-                    const oldTeamId = engineerGlobal.currentTeamId;
-                    if (oldTeamId === newAssignedTeamId) return;
-
-                    engineerGlobal.currentTeamId = newAssignedTeamId;
-                    if (oldTeamId) {
-                        const oldTeam = (currentSystemData.teams || []).find(t => t.teamId === oldTeamId);
-                        if (oldTeam && Array.isArray(oldTeam.engineers)) {
-                            oldTeam.engineers = oldTeam.engineers.filter(name => name !== engineerName);
-                        }
-                    }
-                    if (newAssignedTeamId) {
-                        const newTeam = (currentSystemData.teams || []).find(t => t.teamId === newAssignedTeamId);
-                        if (newTeam) {
-                            if (!Array.isArray(newTeam.engineers)) newTeam.engineers = [];
-                            if (!newTeam.engineers.includes(engineerName)) {
-                                newTeam.engineers.push(engineerName);
-                            }
-                        }
-                    }
-                    console.log(`Moved engineer ${engineerName} from team ${oldTeamId || 'Unassigned'} to ${newAssignedTeamId || 'Unassigned'}.`);
+                try {
+                    moveEngineerToTeam(engineerName, newAssignedTeamId);
+                    console.log(`Moved engineer ${engineerName} to ${newAssignedTeamId || 'Unassigned'}.`);
                     if (typeof saveSystemChanges === 'function') saveSystemChanges();
-                    // Refresh the table to reflect potential changes in Team Identity display and available options in other rows.
                     if (typeof generateEngineerTable === 'function') generateEngineerTable();
+                } catch (error) {
+                    console.error(error);
+                    alert(error.message);
+                    if (typeof cell.restoreOldValue === 'function') {
+                        cell.restoreOldValue();
+                    }
                 }
             },
             accessorDownload: (v,d) => { const t = (currentSystemData.teams || []).find(team => team.teamId === d.teamId); return t ? (t.teamIdentity || t.teamName || d.teamId) : "Unallocated"; }
@@ -1377,35 +1363,32 @@ function handleAddNewResource() {
 
     if (resourceType === 'engineer') {
         const name = document.getElementById('newEngineerName').value.trim();
-        const level = parseInt(document.getElementById('newEngineerLevel').value);
-        const yearsOfExperience = parseInt(document.getElementById('newEngineerYearsOfExperience').value) || 0;
+        const level = parseInt(document.getElementById('newEngineerLevel').value, 10);
+        const yearsOfExperience = parseInt(document.getElementById('newEngineerYearsOfExperience').value, 10) || 0;
         const skillsString = document.getElementById('newEngineerSkills').value.trim();
-        const skills = skillsString ? skillsString.split(',').map(s => s.trim()).filter(s => s) : [];
+        const skills = skillsString ? skillsString.split(',').map(s => s.trim()).filter(Boolean) : [];
         const isAISWE = document.getElementById('newEngineerIsAISWE').checked;
         const aiAgentType = isAISWE ? document.getElementById('newEngineerAIAgentType').value.trim() : null;
 
-        if (name && !isNaN(level) && level >= 1 && level <= 7) {
-            if (!(currentSystemData.allKnownEngineers || []).some(e => e.name.toLowerCase() === name.toLowerCase())) {
-                if (!currentSystemData.allKnownEngineers) currentSystemData.allKnownEngineers = [];
-                const newEngineer = {
+        if (!name || isNaN(level) || level < 1 || level > 7) {
+            alert("Invalid engineer name or level. Please ensure name is provided and level is between 1 and 7.");
+        } else {
+            try {
+                const newEngineer = addEngineerToRoster({
                     name,
                     level,
-                    currentTeamId: null, // Initially unassigned
                     attributes: {
                         isAISWE,
-                        aiAgentType: isAISWE ? (aiAgentType || "General AI") : null,
+                        aiAgentType,
                         skills,
                         yearsOfExperience
                     }
-                };
-                currentSystemData.allKnownEngineers.push(newEngineer);
+                });
                 newResourceDataForLog = newEngineer;
                 success = true;
-            } else {
-                alert(`Engineer with name "${name}" already exists in the global roster.`);
+            } catch (error) {
+                alert(error.message);
             }
-        } else {
-            alert("Invalid engineer name or level. Please ensure name is provided and level is between 1 and 7.");
         }
     } else if (resourceType === 'sdm') {
         const name = document.getElementById('newSdmName').value.trim();

@@ -447,7 +447,7 @@ function addNewEditService() {
 /** Add New Service **/
 
 /** REVISED Add New Service - Simplified Refresh Call **/
-function addNewService() {
+function addNewService(overrides = {}) {
     // Create a new service object with default values
     const newService = {
         serviceName: 'New Service ' + ((currentSystemData.services?.length || 0) + 1),
@@ -455,7 +455,8 @@ function addNewService() {
         owningTeamId: null,
         apis: [],
         serviceDependencies: [],
-        platformDependencies: []
+        platformDependencies: [],
+        ...overrides
     };
 
     // Add to the system data
@@ -487,13 +488,15 @@ function addNewService() {
      }
     console.log("UI refresh attempt complete after adding service.");
     // ------------------------------------------------------
+    return newService;
 }
 
 /** Delete Service **/
 
 function deleteService(serviceIndex, containerId) {
     // Remove the service from the system data
-    currentSystemData.services.splice(serviceIndex, 1);
+    const deletedServices = currentSystemData.services.splice(serviceIndex, 1);
+    const deletedService = deletedServices.length ? deletedServices[0] : null;
 
     // **Update the Team Breakdown and Service Dependencies Tables**
     generateTeamTable(currentSystemData);
@@ -501,6 +504,7 @@ function deleteService(serviceIndex, containerId) {
     
     // Refresh the service editing display
     displayServicesForEditing(currentSystemData.services, containerId,serviceIndex);
+    return deletedService;
 }
 
 /** Add New API **/
@@ -1374,7 +1378,7 @@ function saveTeamChanges(index) {
 }
 
 /** Updated Add New Team **/
-function addNewTeam() {
+function addNewTeam(overrides = {}) {
     // Generate a unique teamId (simple approach for now)
     const newTeamId = 'team-' + Date.now();
 
@@ -1388,7 +1392,8 @@ function addNewTeam() {
         buildersInSeats: 0, // Default BIS (no engineers yet)
         engineers: [], // Start with an empty array for engineers
         sdmId: null, // No default SDM assigned
-        pmtId: null  // No default PMT assigned
+        pmtId: null,  // No default PMT assigned
+        ...overrides
         // Removed sdmName, pmtName as they are derived via IDs
     };
 
@@ -1404,19 +1409,22 @@ function addNewTeam() {
     // Refresh the team editing display and expand the new team
     // Pass -1 if displayTeamsForEditing doesn't handle expansion correctly, or pass newTeamIndex
     displayTeamsForEditing(currentSystemData.teams, newTeamIndex);
+
+    return newTeam;
 }
 
 /** Delete Team **/
 
 // In js/editSystem.js
 
-function deleteTeam(teamIndex) {
+function deleteTeam(teamIndex, options = {}) {
+    const { skipConfirm = false, silent = false } = options;
     const teamToDelete = currentSystemData.teams[teamIndex];
     if (!teamToDelete) {
         console.error("Team to delete not found at index:", teamIndex);
-        return;
+        return false;
     }
-    const confirmDelete = confirm(`Are you sure you want to delete the team "${teamToDelete.teamName || teamToDelete.teamIdentity}"? This action cannot be undone.`);
+    const confirmDelete = skipConfirm ? true : confirm(`Are you sure you want to delete the team "${teamToDelete.teamName || teamToDelete.teamIdentity}"? This action cannot be undone.`);
 
     if (confirmDelete) {
         const deletedTeamId = teamToDelete.teamId;
@@ -1449,7 +1457,9 @@ function deleteTeam(teamIndex) {
         // Save changes to local storage
         saveSystemChanges(); // This function should ideally save the entire currentSystemData
 
-        alert(`Team "${teamToDelete.teamName || teamToDelete.teamIdentity}" has been deleted.`);
+        if (!silent) {
+            alert(`Team "${teamToDelete.teamName || teamToDelete.teamIdentity}" has been deleted.`);
+        }
 
         // Refresh the teams editing interface: Re-render all team sections
         // Pass -1 or a valid index if you want a specific team to be expanded.
@@ -1468,7 +1478,9 @@ function deleteTeam(teamIndex) {
             generateTeamConstraintsForms(); // In capacityTuning.js
             updateCapacityCalculationsAndDisplay(); // In capacityTuning.js
         }
+        return true;
     }
+    return false;
 }
 
 // Add a generic handler for team input changes (if not already present)
@@ -1670,4 +1682,3 @@ function saveAllChanges() {
 }
 
 window.showSystemEditForm = showSystemEditForm;
-

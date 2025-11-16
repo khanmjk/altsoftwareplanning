@@ -557,7 +557,7 @@ async function getAnalysisFromPrompt(chatHistory, apiKey, provider) {
         }
     } catch (error) {
         console.error(`Error during AI analysis with ${provider}:`, error);
-        // Re-throw the error so handleAiChatSubmit can catch it
+        // Re-throw the error so the AI chat controller can catch it
         throw new Error(`An error occurred while communicating with the AI: ${error.message}`);
     }
 }
