@@ -1204,10 +1204,21 @@ function generateDependencyForceVisualization(selectedServiceName) {
 
 //Create a function to update the visualization when a new service is selected.
 function updateDependencyVisualization() {
-    const selectedServiceName = document.getElementById('dependencyServiceSelection').value;
-    // Ensure the service selection is populated with the latest data
+    const selectionEl = document.getElementById('dependencyServiceSelection');
+    if (!selectionEl) {
+        console.warn("Dependency service selection element not found.");
+        return;
+    }
+
+    const selectedServiceName = selectionEl.value;
+
     populateDependencyServiceSelection();
-    generateDependencyForceVisualization(selectedServiceName); //forced dependency works best
+
+    if (Array.from(selectionEl.options).some(opt => opt.value === selectedServiceName)) {
+        selectionEl.value = selectedServiceName;
+    }
+
+    generateDependencyForceVisualization(selectionEl.value);
 }
 
 //Create a function to add the legend to the SVG.
