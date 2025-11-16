@@ -181,12 +181,12 @@ ${toolsetDescription}`;
             ? view.showAgentLoadingIndicator()
             : null;
 
-        let userTurnContent = userQuestion;
-        if (!USE_FULL_SYSTEM_CONTEXT_TOGGLE) {
-            const contextJson = scrapeCurrentViewContext();
-            console.log(`[AI CHAT] Scraping MINIMAL context (${contextJson.length} chars) from view: ${currentViewId}`);
-            userTurnContent = `\nUSER QUESTION:\n"${userQuestion}"\n\nCONTEXT DATA (for this question only):\n${contextJson}\n`;
-        }
+        const contextJson = scrapeCurrentViewContext();
+        console.log(`[AI CHAT] Scraping DYNAMIC context (${contextJson.length} chars) from view: ${currentViewId}`);
+        const userTurnContent = `
+USER QUESTION: "${userQuestion}"
+
+CONTEXT DATA (for this question only, from your current UI view): ${contextJson} `;
 
         chatSessionHistory.push({ role: 'user', parts: [{ text: userTurnContent }] });
 
@@ -436,17 +436,16 @@ ${toolsetDescription}`;
 
         try {
             switch (currentViewId) {
-                case 'planningView':
-                    contextData.data = {
-                        planningYear: currentPlanningYear,
-                        calculatedCapacityMetrics: currentSystemData.calculatedCapacityMetrics,
-                        planningScenario: planningCapacityScenario,
-                        constraintsEnabled: applyCapacityConstraintsToggle,
-                        teams: currentSystemData.teams.map(t => ({ teamId: t.teamId, teamIdentity: t.teamIdentity, sdmId: t.sdmId })),
-                        sdms: currentSystemData.sdms.map(s => ({ sdmId: s.sdmId, sdmName: s.sdmName })),
-                        initiatives: (currentSystemData.yearlyInitiatives || []).filter(init => init.attributes.planningYear == currentPlanningYear)
-                    };
-                    break;
+            case 'planningView':
+                contextData.data = {
+                    viewTitle: "Year Plan",
+                    planningYear: currentPlanningYear,
+                    scenario: planningCapacityScenario,
+                    constraintsEnabled: applyCapacityConstraintsToggle,
+                    teamLoadSummary: currentYearPlanSummaryData,
+                    planningTable: currentYearPlanTableData
+                };
+                break;
                 case 'capacityConfigView':
                     contextData.data = {
                         metrics: currentSystemData.calculatedCapacityMetrics,
@@ -494,13 +493,14 @@ ${toolsetDescription}`;
                         console.warn('Dashboard widget context error:', error);
                     }
                     break;
-                case 'visualizationCarousel':
-                    contextData.data = {
-                        services: currentSystemData.services,
-                        dependencies: currentSystemData.serviceDependencies,
-                        platformDependencies: currentSystemData.platformDependencies
-                    };
-                    break;
+            case 'visualizationCarousel':
+                contextData.data = {
+                    services: currentSystemData.services,
+                    dependencies: currentSystemData.serviceDependencies,
+                    platformDependencies: currentSystemData.platformDependencies,
+                    serviceDependenciesTable: typeof window !== 'undefined' ? (window.currentServiceDependenciesTableData || []) : []
+                };
+                break;
                 case 'roadmapView':
                     contextData.data = {
                         initiatives: currentSystemData.yearlyInitiatives,

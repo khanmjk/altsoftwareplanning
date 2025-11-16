@@ -628,11 +628,16 @@ function switchView(targetViewId, newMode = null) {
         if (targetViewId === 'visualizationCarousel' && typeof showVisualization === 'function') {
             showVisualization(0);
         }
-        if (targetViewId === 'planningView' && typeof adjustPlanningTableHeight === 'function') {
-             const planningTableContainer = document.getElementById('planningTableContainer');
-             if (planningTableContainer && planningTableContainer.offsetParent !== null) {
-                 adjustPlanningTableHeight();
-             }
+        if (targetViewId === 'planningView') {
+            if (typeof renderPlanningView === 'function') {
+                renderPlanningView();
+            }
+            if (typeof adjustPlanningTableHeight === 'function') {
+                 const planningTableContainer = document.getElementById('planningTableContainer');
+                 if (planningTableContainer && planningTableContainer.offsetParent !== null) {
+                     adjustPlanningTableHeight();
+                 }
+            }
         }
         if (targetViewId === 'roadmapView' && typeof initializeRoadmapView === 'function') {
             initializeRoadmapView();
@@ -658,10 +663,15 @@ function switchView(targetViewId, newMode = null) {
         if (targetViewId === 'visualizationCarousel' && typeof showVisualization === 'function') {
             showVisualization(0);
         }
-        if (targetViewId === 'planningView' && typeof adjustPlanningTableHeight === 'function') {
-            const planningTableContainer = document.getElementById('planningTableContainer');
-            if (planningTableContainer && planningTableContainer.offsetParent !== null) {
-                 adjustPlanningTableHeight();
+        if (targetViewId === 'planningView') {
+            if (typeof renderPlanningView === 'function') {
+                renderPlanningView();
+            }
+            if (typeof adjustPlanningTableHeight === 'function') {
+                const planningTableContainer = document.getElementById('planningTableContainer');
+                if (planningTableContainer && planningTableContainer.offsetParent !== null) {
+                     adjustPlanningTableHeight();
+                }
             }
         }
         if (targetViewId === 'roadmapView' && typeof initializeRoadmapView === 'function') {
@@ -1484,7 +1494,7 @@ function showOrganogramView() {
 function refreshCurrentView() {
     switch (currentViewId) {
         case 'planningView':
-            if (typeof generatePlanningTable === 'function') generatePlanningTable();
+            if (typeof renderPlanningView === 'function') renderPlanningView();
             break;
         case 'organogramView':
             if (typeof initializeOrgChartView === 'function') initializeOrgChartView();
@@ -1517,8 +1527,10 @@ function showPlanningView() {
         return;
     }
     switchView('planningView', 'planning');
-    if (typeof generatePlanningTable === 'function') {
-        generatePlanningTable();
+    if (typeof renderPlanningView === 'function') {
+        renderPlanningView();
+    } else {
+        console.error("renderPlanningView function not found. Did yearPlanning.js load correctly?");
     }
 }
 

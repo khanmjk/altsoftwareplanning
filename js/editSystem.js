@@ -1471,7 +1471,9 @@ function deleteTeam(teamIndex, options = {}) {
         generateTeamVisualization(currentSystemData); // In visualizations.js
         // If planning view or capacity view depend on team list, they might need refresh too if visible.
         if (document.getElementById('planningView').style.display !== 'none') {
-            generatePlanningTable(); // In yearPlanning.js
+            if (typeof renderPlanningView === 'function') {
+                renderPlanningView();
+            }
         }
         if (document.getElementById('capacityConfigView').style.display !== 'none') {
             // This might need more granular updates or a full re-render of capacity view sections
