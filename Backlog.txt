@@ -160,6 +160,9 @@ bar graph per quarter to see team load/demand impact
 [Done] - [Bug] - When filtering in the Service Dependency Visualization, the list is stuck on the first service, even though the selected service from the list is acted on, and the graph displays correctly - but the top service list doesn't show the selected service
 [Done] - [AI] Implement "Plan Optimization Agent" (Analyze/Propose/Confirm workflow)
 [Done] - [AI] Add macro/bulk tools (bulkUpdateTeamCapacity, bulkUpdateInitiatives, bulkAdjustInitiativeEstimates, bulkReassignTeams) with scope callouts in agent plans
+[Done] --- Build richer agents to perform complex operations from the chat like 
+[Done] --- Reduce all teams capacity by 20% and show the updated ATL/BTL plan
+[Done] --- Move all initiatives under the Goal XYZ to BTL to free up capacity
 
 ------------
 IN PROGRESS
@@ -204,9 +207,6 @@ AI enhancements
 -- Use AI to create a new system from a visual software architecture diagram
 
 -- Enable self-generating code contributions to the app itself
--- Build richer agents to perform complex operations from the chat like 
--- Reduce all teams capacity by 20% and show the updated ATL/BTL plan
--- Move all initiatives under the Goal XYZ to BTL to free up capacity
 -- Create a new system from the chat panel - an AI-wizard
 -- Export the plan to Excel or Project
 -- Create a detailed quarterly release plan for team XYZ
