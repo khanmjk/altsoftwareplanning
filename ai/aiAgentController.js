@@ -87,6 +87,7 @@ const aiAgentController = (() => {
             b.  Then, to fit more work, you are empowered to **suggest specific reductions to SDE-Year estimates** for non-protected items.
             c.  You must justify *why* (e.g., "The initiative 'Improve UI' is 2.5 SDE-Years, which seems high for a UI-only task. Reducing it to 1.5 might fit it Above The Line.").
             d.  Recommend a new priority order based on \`roi\` and your new estimates.
+    5.  **Macro/Bulk actions need scope callouts:** When proposing bulk tools (capacity, initiative moves, scope trims, reassignments), state how many items will be touched in your plan (e.g., "Reducing capacity for 15 teams") before execution.
 
 ACTION AGENT RULES:
 - When you need the app to take actions, respond with an <execute_plan>...</execute_plan> block.
@@ -103,7 +104,7 @@ ${toolsetDescription}`;
         console.log("[AI CHAT] Starting agent session. Clearing history and UI.");
         const chatLog = document.getElementById('aiChatLog');
         if (chatLog) {
-            chatLog.innerHTML = '<div class="chat-message ai-message">Hello! I have loaded the full context for <strong>' + (currentSystemData?.systemName || 'the system') + '</strong>. How can I help you analyze it?<br><br>You can now ask me to perform actions using simple English OR Type <b>/</b> to see a list of available commands.</div>';
+            chatLog.innerHTML = '<div class="chat-message ai-message">Hello! I have loaded the full context for <strong>' + (currentSystemData?.systemName || 'the system') + '</strong>. How can I help you analyze it?<br><br>You can now ask me to perform actions (including bulk actions!) using simple English OR Type <b>/</b> to see a list of available commands.</div>';
         }
         if (window.aiChatAssistant && typeof window.aiChatAssistant.setTokenCount === 'function') {
             window.aiChatAssistant.setTokenCount(0);
@@ -432,6 +433,32 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
             case 'addNewService': {
                 const serviceName = payload?.serviceData?.serviceName || result?.serviceName || 'service';
                 return `Created service <strong>${serviceName}</strong>.`;
+            }
+            case 'bulkUpdateTeamCapacity': {
+                const count = result?.updatedCount ?? 0;
+                const scope = result?.scopeDescription || `${count} teams`;
+                const fields = Array.isArray(result?.appliedFields) && result.appliedFields.length > 0 ? result.appliedFields.join(', ') : null;
+                return `Bulk-updated capacity for ${scope}${fields ? ` (fields: ${fields})` : ''}.`;
+            }
+            case 'bulkUpdateInitiatives': {
+                const count = result?.updatedCount ?? 0;
+                const status = payload?.updates?.status;
+                const isProtected = payload?.updates?.isProtected;
+                const changes = [];
+                if (status) changes.push(`status → ${status}`);
+                if (typeof isProtected === 'boolean') changes.push(`isProtected → ${isProtected}`);
+                return `Updated ${count} initiatives${changes.length ? ` (${changes.join('; ')})` : ''}.`;
+            }
+            case 'bulkAdjustInitiativeEstimates': {
+                const factor = payload?.adjustmentFactor;
+                const count = result?.updatedCount ?? 0;
+                return `Scaled SDE estimates by ${factor} for ${count} initiatives.`;
+            }
+            case 'bulkReassignTeams': {
+                const moved = result?.movedTeamIds?.length ?? 0;
+                const source = payload?.sourceSdmId || payload?.fromSdmId;
+                const target = payload?.targetSdmId || payload?.toSdmId;
+                return `Moved ${moved} teams from <code>${source}</code> to <code>${target}</code>.`;
             }
             default:
                 return `Executed <code>${command}</code> (step ${index + 1}).`;

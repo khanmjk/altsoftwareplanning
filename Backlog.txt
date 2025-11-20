@@ -159,6 +159,7 @@ bar graph per quarter to see team load/demand impact
 [Done] -- Use AI to update and change the system: Like move engineers to new managers, Add new initiatives to backlog
 [Done] - [Bug] - When filtering in the Service Dependency Visualization, the list is stuck on the first service, even though the selected service from the list is acted on, and the graph displays correctly - but the top service list doesn't show the selected service
 [Done] - [AI] Implement "Plan Optimization Agent" (Analyze/Propose/Confirm workflow)
+[Done] - [AI] Add macro/bulk tools (bulkUpdateTeamCapacity, bulkUpdateInitiatives, bulkAdjustInitiativeEstimates, bulkReassignTeams) with scope callouts in agent plans
 
 ------------
 IN PROGRESS
