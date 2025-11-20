@@ -120,6 +120,41 @@ const aiAgentTools = [
         parameters: [
             { name: "serviceName", type: "string", description: "Name of the service to delete.", required: true }
         ]
+    },
+    {
+        command: "bulkUpdateTeamCapacity",
+        description: "Bulk-updates capacity settings for multiple teams (overhead, AI gain, buffers).",
+        parameters: [
+            { name: "updates", type: "object", description: "Fields to merge into teamCapacityAdjustments.", required: false },
+            { name: "capacityReductionPercent", type: "number", description: "Percent reduction converted into added overhead hours/week.", required: false },
+            { name: "aiProductivityGainPercent", type: "number", description: "Set a new AI productivity gain percent for the targeted teams.", required: false },
+            { name: "avgOverheadHoursPerWeekPerSDE", type: "number", description: "Override avgOverheadHoursPerWeekPerSDE for targeted teams.", required: false },
+            { name: "filter", type: "object", description: "Optional filter { teamIds: [], orgIdentifier: 'sdmId|seniorManagerId|All' }.", required: false }
+        ]
+    },
+    {
+        command: "bulkUpdateInitiatives",
+        description: "Bulk-updates initiative fields (e.g., status/isProtected) that match criteria.",
+        parameters: [
+            { name: "updates", type: "object", description: "Fields to apply to each matching initiative (e.g., { status: 'Backlog' }).", required: true },
+            { name: "criteria", type: "object", description: "Filter initiatives by { goalId, themeId, roiValue, confidenceLevel, status, isProtected }.", required: false }
+        ]
+    },
+    {
+        command: "bulkAdjustInitiativeEstimates",
+        description: "Scales SDE-year estimates for assignments on matching initiatives by a factor.",
+        parameters: [
+            { name: "adjustmentFactor", type: "number", description: "Multiplier (0.9 reduces scope by 10%, 1.1 adds 10%).", required: true },
+            { name: "criteria", type: "object", description: "Filter initiatives by { goalId, themeId, roiValue, confidenceLevel, status, isProtected }.", required: false }
+        ]
+    },
+    {
+        command: "bulkReassignTeams",
+        description: "Moves all teams from one SDM to another SDM.",
+        parameters: [
+            { name: "sourceSdmId", type: "string", description: "SDM currently owning the teams.", required: true },
+            { name: "targetSdmId", type: "string", description: "SDM who will receive the teams.", required: true }
+        ]
     }
 ];
 
@@ -237,6 +272,30 @@ async function executeTool(command, payload = {}) {
             if (!deletedService) throw new Error('Failed to delete service.');
             return { deleted: true, serviceName: payload.serviceName, service: deletedService };
         }
+        case 'bulkUpdateTeamCapacity': {
+            const result = bulkUpdateTeamCapacity(payload || {});
+            if (!result) throw new Error('bulkUpdateTeamCapacity: No changes were applied.');
+            return result;
+        }
+        case 'bulkUpdateInitiatives': {
+            if (!payload || !payload.updates) throw new Error('bulkUpdateInitiatives: updates object is required.');
+            const result = bulkUpdateInitiatives(payload.updates, payload.criteria || {});
+            return result;
+        }
+        case 'bulkAdjustInitiativeEstimates': {
+            const factor = payload?.adjustmentFactor;
+            if (factor === undefined || factor === null || isNaN(factor)) {
+                throw new Error('bulkAdjustInitiativeEstimates: adjustmentFactor (number) is required.');
+            }
+            return bulkAdjustInitiativeEstimates(Number(factor), payload.criteria || {});
+        }
+        case 'bulkReassignTeams': {
+            const sourceSdmId = payload?.sourceSdmId || payload?.fromSdmId;
+            const targetSdmId = payload?.targetSdmId || payload?.toSdmId;
+            if (!sourceSdmId) throw new Error('bulkReassignTeams: sourceSdmId is required.');
+            if (!targetSdmId) throw new Error('bulkReassignTeams: targetSdmId is required.');
+            return bulkReassignTeams(sourceSdmId, targetSdmId);
+        }
         default:
             throw new Error(`Unknown tool command: ${command}`);
     }
@@ -247,6 +306,204 @@ function _smartRefreshInitiative(initiative) {
     if (currentEditingInitiativeId && initiative.initiativeId === currentEditingInitiativeId && typeof populateRoadmapInitiativeForm_modal === 'function') {
         populateRoadmapInitiativeForm_modal(initiative);
     }
+}
+
+/**
+ * --- Bulk/Macro Tool Implementations ---
+ */
+function _ensureTeamCapacityAdjustments(team) {
+    if (!team.teamCapacityAdjustments || typeof team.teamCapacityAdjustments !== 'object') {
+        team.teamCapacityAdjustments = { leaveUptakeEstimates: [], variableLeaveImpact: {}, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 0, aiProductivityGainPercent: 0, attributes: {} };
+    }
+    const adj = team.teamCapacityAdjustments;
+    if (!Array.isArray(adj.leaveUptakeEstimates)) adj.leaveUptakeEstimates = [];
+    if (!adj.variableLeaveImpact || typeof adj.variableLeaveImpact !== 'object') adj.variableLeaveImpact = {};
+    if (!Array.isArray(adj.teamActivities)) adj.teamActivities = [];
+    if (adj.avgOverheadHoursPerWeekPerSDE === undefined || adj.avgOverheadHoursPerWeekPerSDE === null) adj.avgOverheadHoursPerWeekPerSDE = 0;
+    if (adj.aiProductivityGainPercent === undefined || adj.aiProductivityGainPercent === null) adj.aiProductivityGainPercent = 0;
+    if (!adj.attributes || typeof adj.attributes !== 'object') adj.attributes = {};
+    return adj;
+}
+
+function _teamMatchesFilter(team, filter = {}) {
+    if (!filter || Object.keys(filter).length === 0) return true;
+
+    if (Array.isArray(filter.teamIds) && filter.teamIds.length > 0) {
+        return filter.teamIds.includes(team.teamId);
+    }
+
+    if (filter.orgIdentifier) {
+        const ident = String(filter.orgIdentifier).trim();
+        if (!ident || ident.toLowerCase() === 'all') return true;
+        if ((team.sdmId || '').toLowerCase() === ident.toLowerCase()) return true;
+
+        const resolvedSdmId = (typeof _resolveSdmIdentifier === 'function') ? _resolveSdmIdentifier(ident) : null;
+        if (resolvedSdmId && team.sdmId && team.sdmId.toLowerCase() === resolvedSdmId.toLowerCase()) return true;
+
+        if (currentSystemData?.sdms && typeof _resolveSeniorManagerIdentifier === 'function') {
+            const teamSdm = (currentSystemData.sdms || []).find(s => s.sdmId === team.sdmId);
+            const resolvedSrMgrId = _resolveSeniorManagerIdentifier(ident);
+            if (resolvedSrMgrId && teamSdm?.seniorManagerId === resolvedSrMgrId) return true;
+        }
+        return false;
+    }
+
+    return true;
+}
+
+function bulkUpdateTeamCapacity(options = {}) {
+    if (!currentSystemData || !Array.isArray(currentSystemData.teams)) {
+        throw new Error('bulkUpdateTeamCapacity: currentSystemData.teams is unavailable.');
+    }
+    const { updates = {}, capacityReductionPercent = null, aiProductivityGainPercent = null, avgOverheadHoursPerWeekPerSDE = null, filter = {} } = options;
+    const targets = (currentSystemData.teams || []).filter(team => _teamMatchesFilter(team, filter));
+    const updatedTeams = [];
+    const appliedFields = [];
+
+    targets.forEach(team => {
+        const adj = _ensureTeamCapacityAdjustments(team);
+        const changeLog = {};
+
+        if (aiProductivityGainPercent !== null && aiProductivityGainPercent !== undefined) {
+            adj.aiProductivityGainPercent = aiProductivityGainPercent;
+            changeLog.aiProductivityGainPercent = aiProductivityGainPercent;
+            if (!appliedFields.includes('aiProductivityGainPercent')) appliedFields.push('aiProductivityGainPercent');
+        }
+        if (avgOverheadHoursPerWeekPerSDE !== null && avgOverheadHoursPerWeekPerSDE !== undefined) {
+            adj.avgOverheadHoursPerWeekPerSDE = avgOverheadHoursPerWeekPerSDE;
+            changeLog.avgOverheadHoursPerWeekPerSDE = avgOverheadHoursPerWeekPerSDE;
+            if (!appliedFields.includes('avgOverheadHoursPerWeekPerSDE')) appliedFields.push('avgOverheadHoursPerWeekPerSDE');
+        }
+        if (capacityReductionPercent !== null && capacityReductionPercent !== undefined && !isNaN(capacityReductionPercent)) {
+            const percent = Number(capacityReductionPercent);
+            const assumedHoursPerWeek = 40;
+            const addedOverhead = Math.max(0, (percent / 100) * assumedHoursPerWeek);
+            adj.avgOverheadHoursPerWeekPerSDE = (adj.avgOverheadHoursPerWeekPerSDE || 0) + addedOverhead;
+            adj.strategicBufferPercent = percent;
+            changeLog.capacityReductionPercent = percent;
+            changeLog.addedOverheadHoursPerWeekPerSDE = addedOverhead;
+            if (!appliedFields.includes('capacityReductionPercent')) appliedFields.push('capacityReductionPercent');
+        }
+        if (updates && typeof updates === 'object') {
+            Object.keys(updates).forEach(key => {
+                adj[key] = updates[key];
+                changeLog[key] = updates[key];
+                if (!appliedFields.includes(key)) appliedFields.push(key);
+            });
+        }
+
+        updatedTeams.push({
+            teamId: team.teamId,
+            teamName: team.teamIdentity || team.teamName || team.teamId,
+            changes: changeLog
+        });
+    });
+
+    return {
+        updatedCount: updatedTeams.length,
+        updatedTeams,
+        appliedFields,
+        scopeDescription: `${updatedTeams.length} ${updatedTeams.length === 1 ? 'team' : 'teams'}`,
+        filterApplied: filter
+    };
+}
+
+function _initiativeMatchesCriteria(initiative, criteria = {}) {
+    if (!criteria || Object.keys(criteria).length === 0) return true;
+    const matchesGoal = criteria.goalId
+        ? (initiative.primaryGoalId === criteria.goalId ||
+            (Array.isArray(currentSystemData?.goals) && currentSystemData.goals.some(g => g.goalId === criteria.goalId && (g.initiativeIds || []).includes(initiative.initiativeId))))
+        : true;
+    if (!matchesGoal) return false;
+
+    const matchesTheme = criteria.themeId ? Array.isArray(initiative.themes) && initiative.themes.includes(criteria.themeId) : true;
+    if (!matchesTheme) return false;
+
+    const matchesRoiValue = criteria.roiValue ? String(initiative.roi?.estimatedValue || '').toLowerCase() === String(criteria.roiValue).toLowerCase() : true;
+    if (!matchesRoiValue) return false;
+
+    const matchesConfidence = criteria.confidenceLevel ? String(initiative.roi?.confidenceLevel || '').toLowerCase() === String(criteria.confidenceLevel).toLowerCase() : true;
+    if (!matchesConfidence) return false;
+
+    const matchesStatus = criteria.status ? String(initiative.status || '').toLowerCase() === String(criteria.status).toLowerCase() : true;
+    if (!matchesStatus) return false;
+
+    const matchesProtection = typeof criteria.isProtected === 'boolean' ? initiative.isProtected === criteria.isProtected : true;
+    if (!matchesProtection) return false;
+
+    return true;
+}
+
+function bulkUpdateInitiatives(updates, criteria = {}) {
+    if (!currentSystemData || !Array.isArray(currentSystemData.yearlyInitiatives)) {
+        throw new Error('bulkUpdateInitiatives: currentSystemData.yearlyInitiatives is unavailable.');
+    }
+    if (!updates || typeof updates !== 'object') {
+        throw new Error('bulkUpdateInitiatives: updates object is required.');
+    }
+
+    const targetInits = currentSystemData.yearlyInitiatives.filter(init => _initiativeMatchesCriteria(init, criteria));
+    targetInits.forEach(init => {
+        Object.assign(init, updates);
+    });
+
+    return {
+        updatedCount: targetInits.length,
+        appliedUpdates: updates,
+        criteria
+    };
+}
+
+function bulkAdjustInitiativeEstimates(adjustmentFactor, criteria = {}) {
+    if (!currentSystemData || !Array.isArray(currentSystemData.yearlyInitiatives)) {
+        throw new Error('bulkAdjustInitiativeEstimates: currentSystemData.yearlyInitiatives is unavailable.');
+    }
+    const factor = Number(adjustmentFactor);
+    if (!isFinite(factor)) {
+        throw new Error('bulkAdjustInitiativeEstimates: adjustmentFactor must be a finite number.');
+    }
+
+    const targetInits = currentSystemData.yearlyInitiatives.filter(init => _initiativeMatchesCriteria(init, criteria));
+    const updates = [];
+
+    targetInits.forEach(init => {
+        const before = (init.assignments || []).map(a => ({ ...a }));
+        init.assignments = (init.assignments || []).map(a => {
+            const currentValue = Number(a.sdeYears) || 0;
+            const newValue = Number((currentValue * factor).toFixed(2));
+            return { ...a, sdeYears: newValue };
+        });
+        updates.push({ initiativeId: init.initiativeId, before, after: init.assignments });
+    });
+
+    return {
+        updatedCount: updates.length,
+        adjustmentFactor: factor,
+        updates,
+        criteria
+    };
+}
+
+function bulkReassignTeams(sourceSdmId, targetSdmId) {
+    if (!currentSystemData || !Array.isArray(currentSystemData.teams)) {
+        throw new Error('bulkReassignTeams: currentSystemData.teams is unavailable.');
+    }
+    const resolveSdm = (id) => (typeof _resolveSdmIdentifier === 'function') ? _resolveSdmIdentifier(id) : id;
+    const resolvedSource = resolveSdm(sourceSdmId);
+    const resolvedTarget = resolveSdm(targetSdmId);
+    if (!resolvedSource) throw new Error(`bulkReassignTeams: Could not resolve source SDM "${sourceSdmId}".`);
+    if (!resolvedTarget) throw new Error(`bulkReassignTeams: Could not resolve target SDM "${targetSdmId}".`);
+    if (resolvedSource === resolvedTarget) throw new Error('bulkReassignTeams: Source and target SDM IDs are the same.');
+
+    const movedTeams = (currentSystemData.teams || []).filter(team => team.sdmId === resolvedSource);
+    movedTeams.forEach(team => { team.sdmId = resolvedTarget; });
+
+    return {
+        movedTeamIds: movedTeams.map(t => t.teamId),
+        movedTeamNames: movedTeams.map(t => t.teamIdentity || t.teamName || t.teamId),
+        sourceSdmId: resolvedSource,
+        targetSdmId: resolvedTarget
+    };
 }
 
 const aiAgentToolset = {

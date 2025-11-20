@@ -159,6 +159,7 @@ bar graph per quarter to see team load/demand impact
 [Done] -- Use AI to update and change the system: Like move engineers to new managers, Add new initiatives to backlog
 [Done] - [Bug] - When filtering in the Service Dependency Visualization, the list is stuck on the first service, even though the selected service from the list is acted on, and the graph displays correctly - but the top service list doesn't show the selected service
 [Done] - [AI] Implement "Plan Optimization Agent" (Analyze/Propose/Confirm workflow)
+[Done] - [AI] Add macro/bulk tools (bulkUpdateTeamCapacity, bulkUpdateInitiatives, bulkAdjustInitiativeEstimates, bulkReassignTeams) with scope callouts in agent plans
 
 ------------
 IN PROGRESS
@@ -201,6 +202,20 @@ AI enhancements
 -- Use AI to set-up recurring tasks to collect status updates for initiatives (detailed work package tracking feature)
 -- USe AI to generate graphs / views the webapp pages don't currently render - like a pie chart showing disribution of initiatives by themes
 -- Use AI to create a new system from a visual software architecture diagram
+
+-- Enable self-generating code contributions to the app itself
+-- Build richer agents to perform complex operations from the chat like 
+-- Reduce all teams capacity by 20% and show the updated ATL/BTL plan
+-- Move all initiatives under the Goal XYZ to BTL to free up capacity
+-- Create a new system from the chat panel - an AI-wizard
+-- Export the plan to Excel or Project
+-- Create a detailed quarterly release plan for team XYZ
+-- Merge these two teams into one team, reporting to a new SDM, move these services to the new team, keep remaining services in unallocated team, etc.
+-- Build an appstore feature for users to share and publish their generated systems
+-- Build an internal app API for the app to make agent creation more accessible
+-- Refactor the codebase to cleanly separate out concerns - and make future porting easier
+-- Start building out detailed planning features
+-- Explore a backend-as-a-service to make simpler API key integrations possible for folks who are not software engineers
 
 TODO: Work with other LLM providers
 TODO: Add backend proxy for AI image generation (securely store user-provided API keys and enable browser clients hosted on GitHub Pages to call Imagen without exposing secrets)

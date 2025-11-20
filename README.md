@@ -288,6 +288,36 @@ The AI Assistant has been refactored into a powerful, stateful **Action Agent** 
 * **Token Usage Tracking:** The chat panel now displays a running total of the "Session Tokens" used, so you are aware of your API usage.
 * **Image Suggestions:** Certain suggested questions (e.g., “Generate a block diagram…”) will attempt to create diagrams via Imagen. (Note: This is still mocked, as noted in "Getting Started").
 
+### Bulk AI Agent Scenarios (Macro Operations)
+
+Empower the agent to perform complex, multi-entity updates that are tedious to do manually. Each plan highlights the scope before execution (e.g., “This will affect 12 teams...”).
+
+**1) Capacity & Resourcing Manager**  
+- User intent: “Reduce all teams’ capacity by 20% to account for burnout.” / “Set everyone’s AI productivity gain to 15%.”  
+- Tool: `bulkUpdateTeamCapacity` (supports `capacityReductionPercent`, `aiProductivityGainPercent`, `avgOverheadHoursPerWeekPerSDE`, plus filters by teamIds or orgIdentifier).
+
+**2) Strategic Portfolio Manager**  
+- User intent: “Move all ‘Low ROI’ initiatives to the Backlog.” / “Approve all initiatives under the ‘Cloud Migration’ goal.”  
+- Tool: `bulkUpdateInitiatives` (criteria: goalId, themeId, roiValue, confidenceLevel, status, isProtected).
+
+**3) Scope Trimmer (“Haircut” Tool)**  
+- User intent: “Reduce the scope of all committed initiatives by 10% to fit the plan.”  
+- Tool: `bulkAdjustInitiativeEstimates` (adjustmentFactor scales SDE-year assignments; same criteria options as above).
+
+**4) Org Restructurer (Advanced)**  
+- User intent: “Move all teams from John Doe to Jane Smith.”  
+- Tool: `bulkReassignTeams` (moves all teams from one SDM to another).
+
+**Safety checks**  
+- Bulk operations can be destructive; the agent surfaces an impact summary before running (e.g., “Reducing capacity for 15 teams”).  
+- Plans are shown to the user before execution; review the description to confirm scope.
+
+**Example scenarios**  
+- *Scenario A: “Austerity” Plan* — “Increase overhead to 10 hours/week for everyone and move all ‘Low’ confidence initiatives to the backlog.”  
+  - Plan: `bulkUpdateTeamCapacity({ avgOverheadHoursPerWeekPerSDE: 10 })` + `bulkUpdateInitiatives({ status: 'Backlog' }, { confidenceLevel: 'Low' })`
+- *Scenario B: “AI Boost”* — “Assume 20% productivity gain for all teams.”  
+  - Plan: `bulkUpdateTeamCapacity({ aiProductivityGainPercent: 20 })`
+
 ### System Navigation
 
 Once a system is loaded, a persistent navigation bar appears at the top, giving you one-click access to all major views for that system. The currently active view is highlighted for context. Click **"Home"** to return to the system selection screen.
