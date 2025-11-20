@@ -202,6 +202,20 @@ AI enhancements
 -- USe AI to generate graphs / views the webapp pages don't currently render - like a pie chart showing disribution of initiatives by themes
 -- Use AI to create a new system from a visual software architecture diagram
 
+-- Enable self-generating code contributions to the app itself
+-- Build richer agents to perform complex operations from the chat like 
+-- Reduce all teams capacity by 20% and show the updated ATL/BTL plan
+-- Move all initiatives under the Goal XYZ to BTL to free up capacity
+-- Create a new system from the chat panel - an AI-wizard
+-- Export the plan to Excel or Project
+-- Create a detailed quarterly release plan for team XYZ
+-- Merge these two teams into one team, reporting to a new SDM, move these services to the new team, keep remaining services in unallocated team, etc.
+-- Build an appstore feature for users to share and publish their generated systems
+-- Build an internal app API for the app to make agent creation more accessible
+-- Refactor the codebase to cleanly separate out concerns - and make future porting easier
+-- Start building out detailed planning features
+-- Explore a backend-as-a-service to make simpler API key integrations possible for folks who are not software engineers
+
 TODO: Work with other LLM providers
 TODO: Add backend proxy for AI image generation (securely store user-provided API keys and enable browser clients hosted on GitHub Pages to call Imagen without exposing secrets)
 
