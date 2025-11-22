@@ -333,6 +333,34 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
                 if (view && typeof view.postAgentMessageToView === 'function') {
                     view.postAgentMessageToView(`Step ${i + 1}: Executing <b>${step.command}</b>...`);
                 }
+                if (step.command === 'generateDiagram') {
+                    if (view && typeof view.postAgentMessageToView === 'function') {
+                        view.postAgentMessageToView(`Generating diagram: "${resolvedPayload.description || ''}"...`);
+                    }
+                    const contextJson = typeof scrapeCurrentViewContext === 'function' ? scrapeCurrentViewContext() : '{}';
+                    console.debug("[AI-DIAGRAM] Context JSON length:", (contextJson || '').length);
+                    try {
+                        const result = await window.generateDiagramFromPrompt(
+                            resolvedPayload.description || '',
+                            contextJson,
+                            globalSettings.ai.apiKey,
+                            globalSettings.ai.provider
+                        );
+                        console.debug("[AI-DIAGRAM] Diagram generation result:", result);
+                        if (view && typeof view.postDiagramWidget === 'function') {
+                            view.postDiagramWidget(result.title, result.code);
+                        }
+                        stepResults[i] = result;
+                        stepSummaries.push(`Generated diagram: ${resolvedPayload.description || ''}`);
+                        if (view && typeof view.postAgentMessageToView === 'function') {
+                            view.postAgentMessageToView(`Step ${i + 1} complete.`);
+                        }
+                    } catch (err) {
+                        console.error("[AI-DIAGRAM] Error during diagram generation:", err);
+                        throw err;
+                    }
+                    continue;
+                }
                 const result = await window.aiAgentToolset.executeTool(step.command, resolvedPayload);
                 stepResults[i] = result;
                  console.debug('[AI Agent Controller] Step completed:', { step: step.command, payload: resolvedPayload, result });

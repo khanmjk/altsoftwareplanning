@@ -383,5 +383,21 @@
         <div class="spinner"></div>
         <p>AI is generating your system... This may take a moment.</p>
     </div>           
+
+    <div id="diagramModal" class="modal">
+        <div class="modal-content-wrapper" style="width: 95%; height: 95%; max-width: none;">
+            <div class="modal-header">
+                <h3 id="diagramModalTitle">Generated Diagram</h3>
+                <span class="close-button" onclick="closeDiagramModal()">&times;</span>
+            </div>
+            <div class="modal-body" style="overflow: hidden; background-color: #fff; display: flex; flex-direction: column; padding: 0;">
+                <div id="diagramModalContent" class="mermaid" style="flex-grow: 1; overflow: auto; display: flex; justify-content: center; align-items: center;">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeDiagramModal()">Close</button>
+            </div>
+        </div>
+    </div>
     </body>
 </html>
