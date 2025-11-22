@@ -183,3 +183,230 @@ function generateMermaidSyntax(systemData) {
 if (typeof window !== 'undefined') {
     window.generateMermaidSyntax = generateMermaidSyntax;
 }
+
+function generateMermaidApiSyntax(systemData, options = {}) {
+    const includePlatforms = (typeof showPlatformComponents === 'undefined') ? true : !!showPlatformComponents;
+    const selectedService = options.selectedService || 'all';
+    const data = systemData || {};
+    const services = Array.isArray(data.services) ? [...data.services] : [];
+    const teams = Array.isArray(data.teams) ? [...data.teams] : [];
+
+    const lines = ['graph LR'];
+    const classDefLines = [
+        'classDef serviceNode fill:#e2e8f0,stroke:#2d3748,stroke-width:1px;',
+        'classDef apiNode fill:#f0fff4,stroke:#276749,stroke-width:1px;',
+        'classDef platformNode fill:#fff7ed,stroke:#b7791f,stroke-width:1px,stroke-dasharray: 3 2;'
+    ];
+
+    const idRegistry = new Map();
+    const apiMapByName = new Map();
+    const apiMapByKey = new Map();
+    const serviceMap = new Map();
+    const teamById = new Map();
+
+    teams.forEach(team => teamById.set(team.teamId, team));
+    services.forEach(service => serviceMap.set(service.serviceName, service));
+
+    services.forEach(service => {
+        (service.apis || []).forEach(api => {
+            const key = `${service.serviceName}::${api.apiName}`;
+            const id = createStableId(`${service.serviceName}_${api.apiName}`, 'api');
+            const apiInfo = { id, api, service };
+            apiMapByKey.set(key, apiInfo);
+            if (!apiMapByName.has(api.apiName)) {
+                apiMapByName.set(api.apiName, apiInfo);
+            }
+        });
+    });
+
+    const includedServices = new Set();
+    const includedApis = new Set();
+    if (selectedService !== 'all' && serviceMap.has(selectedService)) {
+        const queue = [];
+        const svc = serviceMap.get(selectedService);
+        includedServices.add(svc.serviceName);
+        (svc.apis || []).forEach(api => {
+            const apiInfo = apiMapByKey.get(`${svc.serviceName}::${api.apiName}`);
+            if (apiInfo) {
+                queue.push(apiInfo);
+                includedApis.add(apiInfo.id);
+            }
+        });
+        while (queue.length) {
+            const current = queue.shift();
+            const deps = Array.isArray(current.api.dependentApis) ? current.api.dependentApis : [];
+            deps.forEach(depName => {
+                const targetApi = apiMapByName.get(depName);
+                if (targetApi && !includedApis.has(targetApi.id)) {
+                    includedApis.add(targetApi.id);
+                    queue.push(targetApi);
+                    includedServices.add(targetApi.service.serviceName);
+                }
+            });
+        }
+        // Add services referenced via serviceDependencies for context
+        (svc.serviceDependencies || []).forEach(depServiceName => includedServices.add(depServiceName));
+    } else {
+        services.forEach(s => includedServices.add(s.serviceName));
+        apiMapByKey.forEach(apiInfo => includedApis.add(apiInfo.id));
+    }
+
+    const platformNodes = new Map();
+    const edges = [];
+    const serviceNodes = [];
+    const apiNodes = [];
+
+    services
+        .filter(service => includedServices.has(service.serviceName))
+        .sort((a, b) => getServiceLabel(a).localeCompare(getServiceLabel(b)))
+        .forEach(service => {
+            const svcId = createStableId(service.serviceName, 'svc');
+            serviceNodes.push({ id: svcId, label: getServiceLabel(service), teamId: service.owningTeamId });
+
+            (service.apis || []).forEach(api => {
+                const apiInfo = apiMapByKey.get(`${service.serviceName}::${api.apiName}`);
+                if (!apiInfo) return;
+                if (selectedService !== 'all' && !includedApis.has(apiInfo.id)) return;
+                apiNodes.push({
+                    id: apiInfo.id,
+                    label: api.apiName,
+                    serviceId: svcId,
+                    teamId: service.owningTeamId
+                });
+            });
+
+            if (includePlatforms && (service.platformDependencies || []).length) {
+                service.platformDependencies.forEach(platformName => {
+                    const normalized = normalizeKey(platformName);
+                    if (!normalized) return;
+                    if (!platformNodes.has(normalized)) {
+                        const platId = createStableId(platformName, 'plat');
+                        platformNodes.set(normalized, { id: platId, label: platformName });
+                    }
+                    const platInfo = platformNodes.get(normalized);
+                    edges.push(`${svcId} -.-> ${platInfo.id}`);
+                });
+            }
+
+            if (selectedService === 'all') {
+                (service.serviceDependencies || []).forEach(depSvcName => {
+                    const depSvc = serviceMap.get(depSvcName);
+                    if (!depSvc) return;
+                    const depSvcId = createStableId(depSvc.serviceName, 'svc');
+                    edges.push(`${svcId} -.-> ${depSvcId}`);
+                });
+            } else if (service.serviceName === selectedService) {
+                (service.serviceDependencies || []).forEach(depSvcName => {
+                    const depSvc = serviceMap.get(depSvcName);
+                    if (!depSvc) return;
+                    const depSvcId = createStableId(depSvc.serviceName, 'svc');
+                    edges.push(`${svcId} -.-> ${depSvcId}`);
+                });
+            }
+        });
+
+    apiMapByKey.forEach(apiInfo => {
+        if (selectedService !== 'all' && !includedApis.has(apiInfo.id)) return;
+        const sourceId = apiInfo.id;
+        const deps = Array.isArray(apiInfo.api.dependentApis) ? apiInfo.api.dependentApis : [];
+        deps.forEach(depName => {
+            const target = apiMapByName.get(depName);
+            if (!target) return;
+            if (selectedService !== 'all' && !includedApis.has(target.id)) return;
+            edges.push(`${sourceId} --> ${target.id}`);
+        });
+    });
+
+    // Group by team, nest services, then APIs
+    const servicesByTeam = new Map();
+    serviceNodes.forEach(svc => {
+        const teamId = svc.teamId || 'unassigned';
+        if (!servicesByTeam.has(teamId)) servicesByTeam.set(teamId, []);
+        servicesByTeam.get(teamId).push(svc);
+    });
+
+    const apiByServiceId = new Map();
+    apiNodes.forEach(apiNode => {
+        if (!apiByServiceId.has(apiNode.serviceId)) apiByServiceId.set(apiNode.serviceId, []);
+        apiByServiceId.get(apiNode.serviceId).push(apiNode);
+    });
+
+    servicesByTeam.forEach((svcList, teamId) => {
+        const teamLabel = getTeamLabel(teamById.get(teamId) || { teamName: 'Unassigned', teamIdentity: '' });
+        const teamClusterId = createStableId(`team_${teamId}`, 'team');
+        lines.push(`subgraph cluster_${teamClusterId}["${escapeLabel(teamLabel)}"]`);
+        svcList.forEach(svc => {
+            lines.push(`  subgraph ${svc.id}["${escapeLabel(svc.label)}"]`);
+            const apis = apiByServiceId.get(svc.id) || [];
+            apis.forEach(apiNode => {
+                lines.push(`    ${apiNode.id}["${escapeLabel(apiNode.label)}"]`);
+            });
+            lines.push('  end');
+        });
+        lines.push('end');
+    });
+
+    if (includePlatforms && platformNodes.size > 0) {
+        Array.from(platformNodes.values())
+            .sort((a, b) => a.label.localeCompare(b.label))
+            .forEach(node => {
+                lines.push(`${node.id}[("${escapeLabel(node.label)}")]`);
+            });
+    }
+
+    classDefLines.forEach(line => lines.push(line));
+    if (serviceNodes.length > 0) {
+        lines.push(`class ${serviceNodes.map(s => s.id).join(',')} serviceNode;`);
+    }
+    if (apiNodes.length > 0) {
+        lines.push(`class ${apiNodes.map(a => a.id).join(',')} apiNode;`);
+    }
+    if (includePlatforms && platformNodes.size > 0) {
+        const platformIds = Array.from(platformNodes.values()).map(node => node.id);
+        lines.push(`class ${platformIds.join(',')} platformNode;`);
+    }
+    edges.forEach(edge => lines.push(edge));
+    return lines.join('\n');
+
+    function getServiceLabel(service) {
+        return (service && (service.serviceName || service.serviceId || service.name)) ? (service.serviceName || service.serviceId || service.name) : 'Service';
+    }
+
+    function getTeamLabel(team) {
+        if (!team) return 'Team';
+        const formal = (team.teamName || '').trim();
+        const friendly = (team.teamIdentity || '').trim();
+        const hasBoth = formal && friendly;
+        const sameLabel = hasBoth && formal.toLowerCase() === friendly.toLowerCase();
+        if (hasBoth && !sameLabel) {
+            return `${formal} (${friendly})`;
+        }
+        return formal || friendly || team.teamId || 'Team';
+    }
+
+    function escapeLabel(label) {
+        return (label || '').toString().replace(/"/g, '\\"');
+    }
+
+    function normalizeKey(value) {
+        if (value === null || value === undefined) return null;
+        return value.toString().trim().toLowerCase();
+    }
+
+    function createStableId(rawValue, prefix) {
+        const rawString = (rawValue === undefined || rawValue === null) ? '' : rawValue.toString();
+        const sanitizedBase = rawString.replace(/[^a-zA-Z0-9_]/g, '_').replace(/^_+/, '') || prefix;
+        const baseId = /^[a-zA-Z]/.test(sanitizedBase) ? sanitizedBase : `${prefix}_${sanitizedBase}`;
+        let candidate = baseId;
+        let counter = 1;
+        while (idRegistry.has(candidate) && idRegistry.get(candidate) !== rawString) {
+            candidate = `${baseId}_${counter++}`;
+        }
+        idRegistry.set(candidate, rawString);
+        return candidate;
+    }
+}
+
+if (typeof window !== 'undefined') {
+    window.generateMermaidApiSyntax = generateMermaidApiSyntax;
+}

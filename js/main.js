@@ -86,7 +86,8 @@ const visualizationItems = [
     { id: 'teamVisualization', title: 'Team Relationships Visualization' },
     { id: 'serviceRelationshipsVisualization', title: 'Service Relationships Visualization' },
     { id: 'dependencyVisualization', title: 'Service Dependency Visualization' },
-    { id: 'mermaidVisualization', title: 'System Architecture (Mermaid)' }
+    { id: 'mermaidVisualization', title: 'System Architecture (Mermaid)' },
+    { id: 'mermaidApiVisualization', title: 'Service API Interactions (Mermaid)' }
 ];
 // ----------------------
 
@@ -812,6 +813,10 @@ function switchView(targetViewId, newMode = null) {
                 case 'mermaidVisualization':
                     if (typeof renderMermaidDiagram === 'function') renderMermaidDiagram();
                     break;
+                case 'mermaidApiVisualization':
+                    if (typeof populateApiServiceSelection === 'function') populateApiServiceSelection();
+                    if (typeof renderMermaidApiDiagram === 'function') renderMermaidApiDiagram();
+                    break;
             }
         }
         console.log(`Showing visualization: ${visualizationItems[index].title}`);
@@ -1153,6 +1158,9 @@ function loadSavedSystem(systemName) {
         populateServiceSelection();
         populateDependencyServiceSelection();
         generateServiceDependenciesTable();
+        if (typeof populateApiServiceSelection === 'function') {
+            populateApiServiceSelection();
+        }
         console.log("[V7 LOAD] Finished loading and preparing display for system:", currentSystemData.systemName);
     } catch (error) {
         console.error("[V7 LOAD] Error regenerating parts of system overview content during load:", error);

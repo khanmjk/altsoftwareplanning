@@ -6,6 +6,7 @@ if (typeof window !== 'undefined') {
 }
 let visualizationResizeObserver = null;
 let resizeDebounceHandle = null;
+let apiServiceSelectionInitialized = false;
 
 async function renderMermaidDiagram() {
     const graphContainer = document.getElementById('mermaidGraph');
@@ -57,6 +58,79 @@ async function renderMermaidDiagram() {
     }
 }
 
+function populateApiServiceSelection() {
+    const select = document.getElementById('apiServiceSelection');
+    if (!select || !currentSystemData || !Array.isArray(currentSystemData.services)) return;
+    if (apiServiceSelectionInitialized) return;
+    select.innerHTML = '';
+    const allOption = document.createElement('option');
+    allOption.value = 'all';
+    allOption.textContent = 'All Services';
+    select.appendChild(allOption);
+
+    currentSystemData.services
+        .slice()
+        .sort((a, b) => (a.serviceName || '').localeCompare(b.serviceName || ''))
+        .forEach(service => {
+            const opt = document.createElement('option');
+            opt.value = service.serviceName;
+            opt.textContent = service.serviceName;
+            select.appendChild(opt);
+        });
+    select.addEventListener('change', () => {
+        if (typeof renderMermaidApiDiagram === 'function') renderMermaidApiDiagram();
+    });
+    apiServiceSelectionInitialized = true;
+}
+
+async function renderMermaidApiDiagram() {
+    const graphContainer = document.getElementById('mermaidApiGraph');
+    const select = document.getElementById('apiServiceSelection');
+    if (!graphContainer || !select) {
+        console.error("renderMermaidApiDiagram: required elements not found.");
+        return;
+    }
+    if (!currentSystemData) {
+        graphContainer.innerHTML = '<p style="color: #666;">Load a system to see API interactions.</p>';
+        return;
+    }
+    if (typeof mermaid === 'undefined' || typeof mermaid.render !== 'function') {
+        graphContainer.innerHTML = '<p style="color: red;">Mermaid is not loaded.</p>';
+        return;
+    }
+    if (typeof generateMermaidApiSyntax !== 'function') {
+        graphContainer.innerHTML = '<p style="color: red;">API mermaid generator missing.</p>';
+        return;
+    }
+
+    let definition = '';
+    try {
+        const selectedService = select.value || 'all';
+        definition = generateMermaidApiSyntax(currentSystemData, { selectedService });
+        const renderId = 'mermaid-api-interactions';
+        if (typeof mermaid.parse === 'function') {
+            mermaid.parse(definition);
+        }
+        graphContainer.innerHTML = '';
+        const result = await mermaid.render(renderId, definition, graphContainer);
+        graphContainer.innerHTML = result.svg;
+        const svg = graphContainer.querySelector('svg');
+        if (svg) {
+            svg.style.width = '100%';
+            svg.style.height = 'auto';
+        }
+    } catch (error) {
+        console.error("Failed to render Mermaid API diagram:", error);
+        if (error && error.hash && error.hash.line) {
+            console.error("Mermaid parse error at line", error.hash.line, "col", error.hash.loc?.last_column, ":", error.hash.text);
+        }
+        if (definition) {
+            console.error("Mermaid API definition:\n", definition);
+        }
+        graphContainer.innerHTML = '<p style="color: red;">Unable to render API interactions diagram. Check console for details.</p>';
+    }
+}
+
 function getActiveVisualizationId() {
     const carousel = document.getElementById('visualizationCarousel');
     if (carousel) {
@@ -103,6 +177,9 @@ function setupVisualizationResizeObserver() {
                 break;
             case 'mermaidVisualization':
                 if (typeof renderMermaidDiagram === 'function') renderMermaidDiagram();
+                break;
+            case 'mermaidApiVisualization':
+                if (typeof renderMermaidApiDiagram === 'function') renderMermaidApiDiagram();
                 break;
             default:
                 break;
