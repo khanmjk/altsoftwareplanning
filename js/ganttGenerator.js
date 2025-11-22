@@ -38,29 +38,31 @@ function generateGanttSyntax(initiatives, groupBy = 'Initiative', viewYear = new
     }
 
     function resolveGroupKey(init, mode) {
+        const baseLabel = init.title || init.initiativeId || 'Initiative';
         switch (mode) {
             case 'All Initiatives': {
-                return 'All Initiatives';
+                return `All: ${baseLabel}`;
             }
             case 'Team': {
-                if (selectedTeamId && selectedTeamId !== 'all') {
-                    return getTeamNameById(selectedTeamId);
-                }
-                const teamId = (init.assignments || [])[0]?.teamId;
-                return teamId ? getTeamNameById(teamId) : 'Unassigned Team';
+                const teamName = (selectedTeamId && selectedTeamId !== 'all')
+                    ? getTeamNameById(selectedTeamId)
+                    : getTeamNameById((init.assignments || [])[0]?.teamId);
+                return `${teamName || 'Unassigned Team'}: ${baseLabel}`;
             }
             case 'Theme': {
-                const themeId = (init.themes || [])[0];
-                return themeId ? getThemeNameById(themeId) : 'Unassigned Theme';
+                const themeName = getThemeNameById((init.themes || [])[0]) || 'Unassigned Theme';
+                return `${themeName}: ${baseLabel}`;
             }
             case 'Manager': {
-                return init.owner?.name || 'Unassigned Manager';
+                const mgrName = init.owner?.name || 'Unassigned Manager';
+                return `${mgrName}: ${baseLabel}`;
             }
             case 'Goal': {
-                return getGoalNameById(init.primaryGoalId) || 'Unassigned Goal';
+                const goalName = getGoalNameById(init.primaryGoalId) || 'Unassigned Goal';
+                return `${goalName}: ${baseLabel}`;
             }
             default:
-                return init.title || 'Initiative';
+                return baseLabel;
         }
     }
 

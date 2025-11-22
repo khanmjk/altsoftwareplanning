@@ -48,6 +48,8 @@ function renderGanttControls() {
     yearSelect.value = currentGanttYear;
     yearSelect.onchange = () => {
         currentGanttYear = parseInt(yearSelect.value, 10);
+        console.log('[GANTT] Year changed', currentGanttYear);
+        renderGanttTable();
         renderGanttChart();
     };
 
@@ -63,6 +65,7 @@ function renderGanttControls() {
     groupSelect.value = currentGanttGroupBy;
     groupSelect.onchange = () => {
         currentGanttGroupBy = groupSelect.value;
+        console.log('[GANTT] View By changed', currentGanttGroupBy);
         renderDynamicGroupFilter();
         renderGanttChart();
         renderGanttTable();
@@ -125,6 +128,16 @@ function getGanttFilteredInitiatives() {
         if (selectedSm !== 'all' || selectedManager !== 'all') {
             const teamSet = new Set(teams);
             initiatives = initiatives.filter(init => (init.assignments || []).some(a => teamSet.has(a.teamId)));
+        }
+    } else if (currentGanttGroupBy === 'Goal') {
+        const selectedGoal = document.getElementById('ganttGoalFilter')?.value || 'all';
+        if (selectedGoal !== 'all') {
+            initiatives = initiatives.filter(init => init.primaryGoalId === selectedGoal);
+        }
+    } else if (currentGanttGroupBy === 'Theme') {
+        const selectedTheme = document.getElementById('ganttThemeFilter')?.value || 'all';
+        if (selectedTheme !== 'all') {
+            initiatives = initiatives.filter(init => (init.themes || []).includes(selectedTheme));
         }
     }
     return initiatives;
@@ -459,5 +472,49 @@ function renderDynamicGroupFilter() {
         rebuildManagers();
         wrap.appendChild(createLabeledControl('Senior Manager:', seniorSelect));
         wrap.appendChild(createLabeledControl('Manager:', managerSelect));
+    } else if (currentGanttGroupBy === 'Goal') {
+        const select = document.createElement('select');
+        select.id = 'ganttGoalFilter';
+        select.innerHTML = '<option value="all">All Goals</option>';
+        (currentSystemData.goals || [])
+            .slice()
+            .sort((a, b) => (a.name || a.goalId).localeCompare(b.name || b.goalId))
+            .forEach(goal => {
+                const opt = document.createElement('option');
+                opt.value = goal.goalId;
+                opt.textContent = goal.name || goal.goalId;
+                select.appendChild(opt);
+            });
+        select.onchange = () => {
+            renderGanttTable();
+            renderGanttChart();
+        };
+        wrap.appendChild(createLabeledControl('Goal:', select));
+    } else if (currentGanttGroupBy === 'Theme') {
+        const select = document.createElement('select');
+        select.id = 'ganttThemeFilter';
+        select.innerHTML = '<option value="all">All Themes</option>';
+        (currentSystemData.definedThemes || [])
+            .slice()
+            .sort((a, b) => (a.name || a.themeId).localeCompare(b.name || b.themeId))
+            .forEach(theme => {
+                const opt = document.createElement('option');
+                opt.value = theme.themeId;
+                opt.textContent = theme.name || theme.themeId;
+                select.appendChild(opt);
+            });
+        select.onchange = () => {
+            renderGanttTable();
+            renderGanttChart();
+        };
+        wrap.appendChild(createLabeledControl('Theme:', select));
+    } else {
+        // No extra filter for All Initiatives or other modes
+        const placeholder = document.createElement('div');
+        placeholder.textContent = '';
+        wrap.appendChild(placeholder);
     }
+    // Ensure table/chart refresh after rebuild
+    renderGanttTable();
+    renderGanttChart();
 }
