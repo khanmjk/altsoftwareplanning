@@ -5,11 +5,21 @@ function initializeGanttPlanningView() {
     const container = document.getElementById('ganttPlanningView');
     if (!container) return;
     container.innerHTML = `
-        <div id="ganttPlanningControls" class="widget-filter-bar"></div>
-        <div id="ganttSplitPane" style="display: grid; grid-template-columns: 38% 62%; gap: 16px; align-items: stretch; min-height: 720px;">
-            <div id="ganttPlanningTableContainer" style="border: 1px solid #e0e0e0; border-radius: 6px; background: #fff; padding: 8px; min-height: 680px; overflow: auto;"></div>
-            <div id="ganttChartWrapper" style="border: 1px solid #e0e0e0; border-radius: 6px; background: #fff; padding: 8px; min-height: 680px; overflow: auto;">
-                <div id="ganttChartContainer" class="mermaid" style="min-height: 660px; width: 100%;"></div>
+        <style>
+            .gantt-filter-bar { position: sticky; top: 0; z-index: 5; background: #f8f9fa; padding: 10px; border-radius: 6px; border: 1px solid #e0e0e0; }
+            .gantt-filter-bar .filter-bar { align-items: center; }
+            .gantt-context-chip { display: inline-block; margin-left: 10px; padding: 4px 8px; border-radius: 12px; background: #eef2f7; font-size: 12px; color: #444; }
+            .gantt-split { display: grid; grid-template-columns: 36% 64%; gap: 16px; align-items: stretch; min-height: 760px; }
+            .gantt-panel { border: 1px solid #e0e0e0; border-radius: 6px; background: #fff; padding: 8px; }
+            .gantt-table-wrapper { max-height: 700px; overflow: auto; }
+            .gantt-chart-box { min-height: 700px; overflow: auto; }
+        </style>
+        <div id="ganttPlanningControls" class="gantt-filter-bar"></div>
+        <div id="ganttContextMeta" style="margin: 8px 0;"></div>
+        <div id="ganttSplitPane" class="gantt-split">
+            <div id="ganttPlanningTableContainer" class="gantt-panel"></div>
+            <div id="ganttChartWrapper" class="gantt-panel">
+                <div id="ganttChartContainer" class="mermaid gantt-chart-box"></div>
             </div>
         </div>
     `;
@@ -90,6 +100,7 @@ function renderGanttControls() {
 
     // Build org/team filters using existing helper
     renderDynamicGroupFilter();
+    renderContextMeta();
 }
 
 function createLabeledControl(labelText, controlEl) {
@@ -143,6 +154,45 @@ function getGanttFilteredInitiatives() {
     return initiatives;
 }
 
+function renderContextMeta() {
+    const meta = document.getElementById('ganttContextMeta');
+    if (!meta) return;
+    const year = document.getElementById('ganttYearFilter')?.value || currentGanttYear;
+    const viewBy = currentGanttGroupBy;
+    const team = document.getElementById('ganttGroupValue')?.value || 'all';
+    const manager = document.getElementById('ganttManagerFilter')?.value || 'all';
+    const sm = document.getElementById('ganttSeniorManagerFilter')?.value || 'all';
+    const goal = document.getElementById('ganttGoalFilter')?.value || 'all';
+    const theme = document.getElementById('ganttThemeFilter')?.value || 'all';
+
+    const chips = [];
+    chips.push(`<span class="gantt-context-chip">Year: ${year}</span>`);
+    chips.push(`<span class="gantt-context-chip">View: ${viewBy}</span>`);
+    if (viewBy === 'Team' && team !== 'all') {
+        const teamObj = (currentSystemData.teams || []).find(t => t.teamId === team);
+        chips.push(`<span class="gantt-context-chip">Team: ${teamObj ? (teamObj.teamIdentity || teamObj.teamName) : team}</span>`);
+    }
+    if (viewBy === 'Manager') {
+        if (sm !== 'all') {
+            const smObj = (currentSystemData.seniorManagers || []).find(s => s.seniorManagerId === sm);
+            chips.push(`<span class="gantt-context-chip">Sr. Manager: ${smObj ? smObj.seniorManagerName : sm}</span>`);
+        }
+        if (manager !== 'all') {
+            const mgrObj = (currentSystemData.sdms || []).find(m => m.sdmId === manager);
+            chips.push(`<span class="gantt-context-chip">Manager: ${mgrObj ? mgrObj.sdmName : manager}</span>`);
+        }
+    }
+    if (viewBy === 'Goal' && goal !== 'all') {
+        const goalObj = (currentSystemData.goals || []).find(g => g.goalId === goal);
+        chips.push(`<span class="gantt-context-chip">Goal: ${goalObj ? (goalObj.name || goal) : goal}</span>`);
+    }
+    if (viewBy === 'Theme' && theme !== 'all') {
+        const themeObj = (currentSystemData.definedThemes || []).find(t => t.themeId === theme);
+        chips.push(`<span class="gantt-context-chip">Theme: ${themeObj ? (themeObj.name || theme) : theme}</span>`);
+    }
+    meta.innerHTML = chips.join('');
+}
+
 function renderGanttTable() {
     const container = document.getElementById('ganttPlanningTableContainer');
     if (!container) return;
@@ -157,7 +207,7 @@ function renderGanttTable() {
     });
     container.innerHTML = `
         <style>
-            .gantt-table-wrapper { resize: vertical; overflow: auto; }
+            .gantt-table-wrapper { max-height: 700px; overflow: auto; }
             .gantt-table { font-size: 12px; width:100%; border-collapse: collapse; }
             .gantt-table tbody tr:hover { background-color: #f7f7f7; }
             .gantt-table input, .gantt-table select { font-size: 12px; }
@@ -517,4 +567,5 @@ function renderDynamicGroupFilter() {
     // Ensure table/chart refresh after rebuild
     renderGanttTable();
     renderGanttChart();
+    renderContextMeta();
 }
