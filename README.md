@@ -38,6 +38,7 @@
         * [Investment Trend Over Time](#investment-trend-over-time)
         * [Roadmap by Quarter & 3-Year Plan](#roadmap-by-quarter--3-year-plan)
     * [System Overview & Visualizations](#system-overview--visualizations)
+    * [Diagramming (Mermaid)](#diagramming-mermaid)
     * [Editing System Data](#editing-system-data)
     * [Organizational Views](#organizational-views)
     * [Tune Capacity Constraints](#tune-capacity-constraints)
@@ -86,16 +87,9 @@ Upon launching the application, you'll see the main menu on the top bar.
 * Click **"Save Settings"**.
 * Toggling **"Enable AI Assistant Mode"** now immediately shows/hides every AI-only control (Create with AI, AI Assistant chat, and the Year Plan “Optimize This Plan” button) without requiring a page refresh.
 
-#### Image Generation Status (Imagen)
+#### Diagram Generation (Mermaid)
 
-The diagram/image feature is currently *mocked*. Google’s Imagen 3 models run on the Vertex AI API and **require OAuth2 access tokens**, which we cannot obtain safely from a client-side app.
-
-Until we build the backend proxy (see backlog item “Add backend proxy for AI image generation”), the app will:
-
-* Always return the placeholder image when you click a “Generate … diagram” suggestion in the AI Assistant panel.
-* Log the real request/response flow so you can see what would be sent to Imagen.
-
-If you want to enable real image generation locally, you will need to run a backend service that injects an OAuth2 token and calls the Vertex AI `imagen-3.0-generate-002` endpoint on behalf of the browser.
+The AI Assistant can generate Mermaid diagrams directly (no external image service required). When you ask for a diagram in natural language, the agent produces Mermaid syntax and renders it in a modal.
 
 ### AI Assistant
 
@@ -372,6 +366,23 @@ Accessible by clicking **"System Overview"**. Provides multiple views of your ar
 * **Team Relationships Visualization:** Shows how teams are interconnected based on service dependencies.
 * **Service Relationships Visualization:** Visualizes a specific service and its direct dependencies.
 * **Service Dependency Visualization & Table:** A force-directed graph and a table detailing upstream and downstream dependencies for a selected service.
+
+### Diagramming (Mermaid)
+
+Mermaid-based diagrams are available across the app and via the AI Assistant:
+
+* **System Architecture (Mermaid):** Teams as subgraphs with services (showing team name + identity), service dependencies, and optional platform nodes.
+* **Service API Interactions (Mermaid):** Team → Service → API nesting with API-to-API arrows and optional platform context.
+* **AI-generated diagrams (modal):** Ask in chat (no slash needed). The agent plans a `generateDiagram` step, builds Mermaid from the current context, and posts a “View Diagram” button to open a full-screen modal.
+
+Example prompts you can paste into the AI chat:
+
+* “Generate a block diagram of this architecture.”
+* “Visualize the team structure.”
+* “Draw an API call map for the payment flow.”
+* “Show a sequence diagram of checkout.”
+
+All diagrams render locally via Mermaid; no external image service is required.
 
 ### Editing System Data
 

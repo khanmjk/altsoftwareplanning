@@ -280,13 +280,20 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
                 globalSettings.ai.provider
             );
 
-            if (!response || !response.isImage) {
-                throw new Error('Image generation response was invalid.');
-            }
-
-            const html = `\n                <p>Here is the generated diagram:</p>\n                <img src="${response.imageUrl}"\n                     alt="${response.altText || 'Generated diagram'}"\n                     class="chat-generated-image"\n                     title="Right-click to copy or save this image" />\n            `;
-            if (view && typeof view.hideAgentLoadingIndicator === 'function') {
-                view.hideAgentLoadingIndicator(loadingMessageEl, html);
+            if (response && response.isImage && response.imageUrl) {
+                const html = `\n                <p>Here is the generated diagram:</p>\n                <img src="${response.imageUrl}"\n                     alt="${response.altText || 'Generated diagram'}"\n                     class="chat-generated-image"\n                     title="Right-click to copy or save this image" />\n            `;
+                if (view && typeof view.hideAgentLoadingIndicator === 'function') {
+                    view.hideAgentLoadingIndicator(loadingMessageEl, html);
+                }
+            } else if (response && response.code) {
+                if (view && typeof view.hideAgentLoadingIndicator === 'function') {
+                    view.hideAgentLoadingIndicator(loadingMessageEl, '<p>Diagram generated. Click "View Diagram" to open.</p>');
+                }
+                if (view && typeof view.postDiagramWidget === 'function') {
+                    view.postDiagramWidget(response.title, response.code);
+                }
+            } else {
+                throw new Error('Diagram generation response was invalid.');
             }
         } catch (error) {
             console.error("Error during AI image submit:", error);
@@ -332,6 +339,34 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
                 const resolvedPayload = _resolvePayloadPlaceholders(step.payload || {}, stepResults);
                 if (view && typeof view.postAgentMessageToView === 'function') {
                     view.postAgentMessageToView(`Step ${i + 1}: Executing <b>${step.command}</b>...`);
+                }
+                if (step.command === 'generateDiagram') {
+                    if (view && typeof view.postAgentMessageToView === 'function') {
+                        view.postAgentMessageToView(`Generating diagram: "${resolvedPayload.description || ''}"...`);
+                    }
+                    const contextJson = typeof scrapeCurrentViewContext === 'function' ? scrapeCurrentViewContext() : '{}';
+                    console.debug("[AI-DIAGRAM] Context JSON length:", (contextJson || '').length);
+                    try {
+                        const result = await window.generateDiagramFromPrompt(
+                            resolvedPayload.description || '',
+                            contextJson,
+                            globalSettings.ai.apiKey,
+                            globalSettings.ai.provider
+                        );
+                        console.debug("[AI-DIAGRAM] Diagram generation result:", result);
+                        if (view && typeof view.postDiagramWidget === 'function') {
+                            view.postDiagramWidget(result.title, result.code);
+                        }
+                        stepResults[i] = result;
+                        stepSummaries.push(`Generated diagram: ${resolvedPayload.description || ''}`);
+                        if (view && typeof view.postAgentMessageToView === 'function') {
+                            view.postAgentMessageToView(`Step ${i + 1} complete.`);
+                        }
+                    } catch (err) {
+                        console.error("[AI-DIAGRAM] Error during diagram generation:", err);
+                        throw err;
+                    }
+                    continue;
                 }
                 const result = await window.aiAgentToolset.executeTool(step.command, resolvedPayload);
                 stepResults[i] = result;

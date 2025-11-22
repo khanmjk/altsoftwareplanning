@@ -452,6 +452,51 @@ function onChatResizeMouseUp() {
     document.removeEventListener('mouseup', onChatResizeMouseUp);
 }
 
+function openDiagramModal(code, title = 'Generated Diagram') {
+    const modal = document.getElementById('diagramModal');
+    const titleEl = document.getElementById('diagramModalTitle');
+    const contentEl = document.getElementById('diagramModalContent');
+    if (!modal || !contentEl) {
+        console.error("Diagram modal elements not found.");
+        return;
+    }
+    if (titleEl) titleEl.textContent = title || 'Generated Diagram';
+    contentEl.textContent = code || '';
+    contentEl.removeAttribute('data-processed');
+    modal.style.display = 'block';
+    if (typeof mermaid !== 'undefined' && typeof mermaid.init === 'function') {
+        try {
+            mermaid.init(undefined, contentEl);
+        } catch (err) {
+            console.error("Mermaid init failed for diagram modal:", err);
+        }
+    }
+}
+
+function closeDiagramModal() {
+    const modal = document.getElementById('diagramModal');
+    const contentEl = document.getElementById('diagramModalContent');
+    if (modal) modal.style.display = 'none';
+    if (contentEl) contentEl.innerHTML = '';
+}
+
+function postDiagramWidget(title, code) {
+    if (!aiChatLog) return;
+    const message = document.createElement('div');
+    message.classList.add('chat-message', 'ai-message');
+    const summary = document.createElement('div');
+    summary.innerHTML = `<strong>Diagram Generated:</strong> ${title || 'Untitled'}`;
+    const button = document.createElement('button');
+    button.className = 'btn-primary';
+    button.style.marginTop = '8px';
+    button.textContent = 'View Diagram';
+    button.onclick = () => openDiagramModal(code, title);
+    message.appendChild(summary);
+    message.appendChild(button);
+    aiChatLog.appendChild(message);
+    aiChatLog.scrollTop = aiChatLog.scrollHeight;
+}
+
 if (typeof window !== 'undefined') {
     window.aiChatAssistant = {
         initializeAiChatPanel,
@@ -467,6 +512,9 @@ if (typeof window !== 'undefined') {
         toggleChatInput,
         getChatInputValue,
         clearChatInput,
-        isImageRequestPending
+        isImageRequestPending,
+        openDiagramModal,
+        closeDiagramModal,
+        postDiagramWidget
     };
 }

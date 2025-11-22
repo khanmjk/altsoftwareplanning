@@ -2,7 +2,18 @@
 // [NEW] Set to true to bypass API calls and return mock data for UI development
 const AI_ANALYSIS_MOCK_MODE = false;
 // [NEW] Set to true to bypass image API calls
-const AI_IMAGE_MOCK_MODE = true; // Imagen currently requires a backend proxy (OAuth2), so mock mode stays enabled
+const AI_IMAGE_MOCK_MODE = false; // Legacy mock disabled; diagrams now render via Mermaid
+const MERMAID_SYSTEM_PROMPT = `
+You are a technical documentation expert. Your task is to generate a valid Mermaid.js diagram based on the user's request and the provided System Context.
+
+RULES:
+1. Return ONLY the raw Mermaid syntax. Do not include markdown fences (\`\`\`) or explanations.
+2. Use 'graph TD' or 'graph LR' for architecture/relationship diagrams.
+3. Use 'sequenceDiagram' if the user asks for a flow or interaction.
+4. Use 'mindmap' if the user asks for a breakdown of goals or themes.
+5. Use valid IDs (no spaces/special chars without quotes).
+6. Base relationships strictly on the provided JSON context.
+`;
 /**
  * [NEW] A private helper to wrap fetch calls with exponential backoff.
  * This is a best-practice coding pattern for handling transient server
@@ -149,6 +160,27 @@ async function generateSystemFromPrompt(userPrompt, apiKey, provider, spinnerP =
         // Changed this alert to show the specific error message
         alert(`An error occurred while communicating with the AI. Check the console.\nError: ${error.message}`);
         return { data: null, stats: null };
+    }
+}
+
+async function generateDiagramFromPrompt(userPrompt, contextJson, apiKey, provider) {
+    console.debug("[AI-DIAGRAM] generateDiagramFromPrompt invoked", {
+        provider,
+        prompt: userPrompt,
+        contextLength: (contextJson || '').length
+    });
+    const prompt = `${MERMAID_SYSTEM_PROMPT}\nCONTEXT:\n${contextJson}\nREQUEST:\n${userPrompt}`;
+    try {
+        const rawText = await _generateTextWithGemini(prompt, userPrompt, apiKey);
+        console.debug("[AI-DIAGRAM] Raw diagram response text:", rawText);
+        const cleaned = (rawText || '')
+            .replace(/```mermaid/gi, '')
+            .replace(/```/g, '')
+            .trim();
+        return { code: cleaned, title: userPrompt };
+    } catch (error) {
+        console.error("[AI-DIAGRAM] Diagram generation failed:", error);
+        throw error;
     }
 }
 
@@ -501,6 +533,38 @@ async function _generateSystemWithGemini(systemPrompt, userPrompt, apiKey, spinn
     }
 }
 
+async function _generateTextWithGemini(systemPrompt, userPrompt, apiKey) {
+    console.log("[AI-DEBUG] _generateTextWithGemini: Preparing text generation call...");
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    const requestBody = {
+        "contents": [
+            {
+                "parts": [
+                    { "text": systemPrompt },
+                    { "text": "USER_PROMPT: " + userPrompt }
+                ]
+            }
+        ],
+        "generationConfig": {
+            "temperature": 0.3,
+            "topK": 1,
+            "topP": 1,
+            "maxOutputTokens": 4000
+        }
+    };
+    const fetchOptions = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
+    };
+    console.log("[AI-DEBUG] _generateTextWithGemini: Calling _fetchWithRetry", { url: API_URL.split('?')[0] });
+    const response = await _fetchWithRetry(API_URL, fetchOptions);
+    const responseData = await response.json();
+    const text = responseData?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    console.log("[AI-DEBUG] _generateTextWithGemini: Received text length", text.length);
+    return text;
+}
+
 // TODO: Implement private helpers for other providers
 // async function _generateSystemWithOpenAI(systemPrompt, userPrompt, apiKey) { ... }
 // async function _generateSystemWithAnthropic(systemPrompt, userPrompt, apiKey) { ... }
@@ -757,31 +821,23 @@ async function generateImageFromPrompt(userPrompt, contextJson, apiKey, provider
         console.error("[AI-DEBUG] Image generation failed: API key is missing.");
         throw new Error("AI API key is not set. Please add your Gemini API key in the AI Assistant settings.");
     }
-    
-    if (AI_IMAGE_MOCK_MODE) {
-        console.warn(`[AI-DEBUG] MOCK IMAGE GENERATION. Prompt: "${userPrompt}". Context: ${contextJson.length} chars.`);
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        return {
-            isImage: true,
-            imageUrl: "http://googleusercontent.com/image_generation_content/0",
-            altText: "A placeholder block diagram of the StreamView system architecture."
-        };
-    }
 
-    try {
-        switch (provider) {
-            case 'google-gemini':
-                return await _generateImageWithImagen(userPrompt, contextJson, apiKey);
-            default:
-                console.error(`Unknown AI provider for images: ${provider}`);
-                throw new Error(`Image generation for "${provider}" is not yet supported.`);
-        }
-    } catch (error) {
-        console.error(`Error during AI image generation with ${provider}:`, error);
-        throw new Error(`Image generation failed: ${error.message}`);
-    }
+    // Reuse Mermaid text generation for diagramming instead of mocked images
+    const diagramResult = await generateDiagramFromPrompt(userPrompt, contextJson, apiKey, provider);
+    return {
+        isImage: false,
+        ...diagramResult
+    };
 }
 
 if (typeof window !== 'undefined') {
     window.generateImageFromPrompt = generateImageFromPrompt;
+}
+
+if (typeof window !== 'undefined') {
+    window.generateDiagramFromPrompt = generateDiagramFromPrompt;
+}
+// Export debug helpers if needed
+if (typeof window !== 'undefined') {
+    window._generateTextWithGemini = _generateTextWithGemini;
 }
