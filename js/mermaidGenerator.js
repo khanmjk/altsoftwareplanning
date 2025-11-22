@@ -9,6 +9,7 @@ function generateMermaidSyntax(systemData) {
 
     const teams = Array.isArray(data.teams) ? [...data.teams] : [];
     const services = Array.isArray(data.services) ? [...data.services] : [];
+    const teamById = new Map(teams.map(team => [team.teamId, team]));
 
     teams.sort((a, b) => getTeamName(a).localeCompare(getTeamName(b)));
     services.sort((a, b) => getServiceLabel(a).localeCompare(getServiceLabel(b)));
@@ -21,7 +22,7 @@ function generateMermaidSyntax(systemData) {
     const edges = [];
 
     services.forEach(service => {
-        const label = getServiceLabel(service);
+        const label = getServiceDisplayLabel(service);
         const nodeId = createStableId(label, 'svc');
         registerServiceLookup(serviceLookup, service, nodeId, label);
     });
@@ -126,6 +127,15 @@ function generateMermaidSyntax(systemData) {
         return (service && (service.serviceName || service.serviceId || service.name)) ? (service.serviceName || service.serviceId || service.name) : 'Service';
     }
 
+    function getServiceDisplayLabel(service) {
+        const base = getServiceLabel(service);
+        const teamLabel = teamById.has(service?.owningTeamId) ? getTeamName(teamById.get(service.owningTeamId)) : '';
+        if (teamLabel) {
+            return `${base}<br/>${teamLabel}`;
+        }
+        return base;
+    }
+
     function escapeLabel(label) {
         return (label || '').toString().replace(/"/g, '\\"');
     }
@@ -190,6 +200,7 @@ function generateMermaidApiSyntax(systemData, options = {}) {
     const data = systemData || {};
     const services = Array.isArray(data.services) ? [...data.services] : [];
     const teams = Array.isArray(data.teams) ? [...data.teams] : [];
+    const teamById = new Map(teams.map(team => [team.teamId, team]));
 
     const lines = ['graph LR'];
     const classDefLines = [
@@ -202,9 +213,6 @@ function generateMermaidApiSyntax(systemData, options = {}) {
     const apiMapByName = new Map();
     const apiMapByKey = new Map();
     const serviceMap = new Map();
-    const teamById = new Map();
-
-    teams.forEach(team => teamById.set(team.teamId, team));
     services.forEach(service => serviceMap.set(service.serviceName, service));
 
     services.forEach(service => {
@@ -261,7 +269,7 @@ function generateMermaidApiSyntax(systemData, options = {}) {
         .sort((a, b) => getServiceLabel(a).localeCompare(getServiceLabel(b)))
         .forEach(service => {
             const svcId = createStableId(service.serviceName, 'svc');
-            serviceNodes.push({ id: svcId, label: getServiceLabel(service), teamId: service.owningTeamId });
+            serviceNodes.push({ id: svcId, label: getServiceDisplayLabel(service), teamId: service.owningTeamId });
 
             (service.apis || []).forEach(api => {
                 const apiInfo = apiMapByKey.get(`${service.serviceName}::${api.apiName}`);
@@ -370,6 +378,15 @@ function generateMermaidApiSyntax(systemData, options = {}) {
 
     function getServiceLabel(service) {
         return (service && (service.serviceName || service.serviceId || service.name)) ? (service.serviceName || service.serviceId || service.name) : 'Service';
+    }
+
+    function getServiceDisplayLabel(service) {
+        const base = getServiceLabel(service);
+        const teamLabel = teamById.has(service?.owningTeamId) ? getTeamLabel(teamById.get(service.owningTeamId)) : '';
+        if (teamLabel) {
+            return `${base}<br/>${teamLabel}`;
+        }
+        return base;
     }
 
     function getTeamLabel(team) {

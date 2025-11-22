@@ -6,7 +6,6 @@ if (typeof window !== 'undefined') {
 }
 let visualizationResizeObserver = null;
 let resizeDebounceHandle = null;
-let apiServiceSelectionInitialized = false;
 
 async function renderMermaidDiagram() {
     const graphContainer = document.getElementById('mermaidGraph');
@@ -61,7 +60,6 @@ async function renderMermaidDiagram() {
 function populateApiServiceSelection() {
     const select = document.getElementById('apiServiceSelection');
     if (!select || !currentSystemData || !Array.isArray(currentSystemData.services)) return;
-    if (apiServiceSelectionInitialized) return;
     select.innerHTML = '';
     const allOption = document.createElement('option');
     allOption.value = 'all';
@@ -77,10 +75,10 @@ function populateApiServiceSelection() {
             opt.textContent = service.serviceName;
             select.appendChild(opt);
         });
-    select.addEventListener('change', () => {
+
+    select.onchange = () => {
         if (typeof renderMermaidApiDiagram === 'function') renderMermaidApiDiagram();
-    });
-    apiServiceSelectionInitialized = true;
+    };
 }
 
 async function renderMermaidApiDiagram() {
