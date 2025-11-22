@@ -280,13 +280,20 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
                 globalSettings.ai.provider
             );
 
-            if (!response || !response.isImage) {
-                throw new Error('Image generation response was invalid.');
-            }
-
-            const html = `\n                <p>Here is the generated diagram:</p>\n                <img src="${response.imageUrl}"\n                     alt="${response.altText || 'Generated diagram'}"\n                     class="chat-generated-image"\n                     title="Right-click to copy or save this image" />\n            `;
-            if (view && typeof view.hideAgentLoadingIndicator === 'function') {
-                view.hideAgentLoadingIndicator(loadingMessageEl, html);
+            if (response && response.isImage && response.imageUrl) {
+                const html = `\n                <p>Here is the generated diagram:</p>\n                <img src="${response.imageUrl}"\n                     alt="${response.altText || 'Generated diagram'}"\n                     class="chat-generated-image"\n                     title="Right-click to copy or save this image" />\n            `;
+                if (view && typeof view.hideAgentLoadingIndicator === 'function') {
+                    view.hideAgentLoadingIndicator(loadingMessageEl, html);
+                }
+            } else if (response && response.code) {
+                if (view && typeof view.hideAgentLoadingIndicator === 'function') {
+                    view.hideAgentLoadingIndicator(loadingMessageEl, '<p>Diagram generated. Click "View Diagram" to open.</p>');
+                }
+                if (view && typeof view.postDiagramWidget === 'function') {
+                    view.postDiagramWidget(response.title, response.code);
+                }
+            } else {
+                throw new Error('Diagram generation response was invalid.');
             }
         } catch (error) {
             console.error("Error during AI image submit:", error);

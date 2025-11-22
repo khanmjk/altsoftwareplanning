@@ -164,7 +164,7 @@ bar graph per quarter to see team load/demand impact
 [Done] --- Reduce all teams capacity by 20% and show the updated ATL/BTL plan
 [Done] --- Move all initiatives under the Goal XYZ to BTL to free up capacity
 [Done] - [Architect] Include mermaid diagram drawing capability
-
+[Done] - [AI] Add support for AI diagramming using mermaid functionality
 ------------
 IN PROGRESS
 ------------

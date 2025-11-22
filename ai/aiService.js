@@ -2,7 +2,7 @@
 // [NEW] Set to true to bypass API calls and return mock data for UI development
 const AI_ANALYSIS_MOCK_MODE = false;
 // [NEW] Set to true to bypass image API calls
-const AI_IMAGE_MOCK_MODE = true; // Imagen currently requires a backend proxy (OAuth2), so mock mode stays enabled
+const AI_IMAGE_MOCK_MODE = false; // Legacy mock disabled; diagrams now render via Mermaid
 const MERMAID_SYSTEM_PROMPT = `
 You are a technical documentation expert. Your task is to generate a valid Mermaid.js diagram based on the user's request and the provided System Context.
 
@@ -821,29 +821,13 @@ async function generateImageFromPrompt(userPrompt, contextJson, apiKey, provider
         console.error("[AI-DEBUG] Image generation failed: API key is missing.");
         throw new Error("AI API key is not set. Please add your Gemini API key in the AI Assistant settings.");
     }
-    
-    if (AI_IMAGE_MOCK_MODE) {
-        console.warn(`[AI-DEBUG] MOCK IMAGE GENERATION. Prompt: "${userPrompt}". Context: ${contextJson.length} chars.`);
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        return {
-            isImage: true,
-            imageUrl: "http://googleusercontent.com/image_generation_content/0",
-            altText: "A placeholder block diagram of the StreamView system architecture."
-        };
-    }
 
-    try {
-        switch (provider) {
-            case 'google-gemini':
-                return await _generateImageWithImagen(userPrompt, contextJson, apiKey);
-            default:
-                console.error(`Unknown AI provider for images: ${provider}`);
-                throw new Error(`Image generation for "${provider}" is not yet supported.`);
-        }
-    } catch (error) {
-        console.error(`Error during AI image generation with ${provider}:`, error);
-        throw new Error(`Image generation failed: ${error.message}`);
-    }
+    // Reuse Mermaid text generation for diagramming instead of mocked images
+    const diagramResult = await generateDiagramFromPrompt(userPrompt, contextJson, apiKey, provider);
+    return {
+        isImage: false,
+        ...diagramResult
+    };
 }
 
 if (typeof window !== 'undefined') {
