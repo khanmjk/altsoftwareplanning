@@ -166,11 +166,12 @@ bar graph per quarter to see team load/demand impact
 [Done] - [Architect] Include mermaid diagram drawing capability
 [Done] - [AI] Add support for AI diagramming using mermaid functionality
 [Done] - [AI] Think about refactoring the codebase for AI files - like an AI folder to keep all ai-related files, especially if we're going down the agent route (like a planning agent, resource planning agent, etc.)
+[Done]- [AI] Explore generating architecture diagramming options, apart from the app's 3d node graphs
 
 ------------
 IN PROGRESS
 ------------
-
+-- Start building out detailed planning features
 - [AI Feature] Create an AI agent that can perform actions on the system with access to the code
 
 
@@ -190,7 +191,7 @@ Implement the logic within EnhancedTableWidget to take these definitions and cor
 This will include dynamically populating select lists from column data if specified.
 Utilities
 - Now that we've got export to excel, csv and json working, we need a utlity to generate these files from other places: planning table, overall system data dump, etc.
-- [AI] Explore generating architecture diagramming options, apart from the app's 3d node graphs
+
 
 UX
 -- Ability to export the system to JSON, CSV and Excel, from top level menu "Export System" [leveraging Tabular library's export functionality]
@@ -205,7 +206,7 @@ Team Editing
 -- We support away team only from an incoming perspective (i.e. help provided to the team), but we could also consider concept of outgoing away team (I.e. the team lends engineers to other teams)
 
 AI enhancements
--- Use AI to generate a delivery plan - classic ganntt chart using the year plan as input, work out a plan per team for the year
+-- Use AI to generate a delivery plan - classic ganntt chart using the year plan as input, work out a plan per team for the year [build on the diagram agent introduced for system architecture]
 -- Use AI to set-up recurring tasks to collect status updates for initiatives (detailed work package tracking feature)
 -- USe AI to generate graphs / views the webapp pages don't currently render - like a pie chart showing disribution of initiatives by themes
 -- Use AI to create a new system from a visual software architecture diagram
@@ -218,7 +219,6 @@ AI enhancements
 -- Build an appstore feature for users to share and publish their generated systems
 -- Build an internal app API for the app to make agent creation more accessible
 -- Refactor the codebase to cleanly separate out concerns - and make future porting easier
--- Start building out detailed planning features
 -- Explore a backend-as-a-service to make simpler API key integrations possible for folks who are not software engineers
 
 TODO: Work with other LLM providers

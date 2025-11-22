@@ -139,7 +139,8 @@ const VIEW_TO_BUTTON_MAP = {
     'roadmapView': 'manageRoadmapButton',
     'dashboardView': 'dashboardViewButton',
     'capacityConfigView': 'tuneCapacityButton',
-    'sdmForecastingView': 'sdmForecastButton'
+    'sdmForecastingView': 'sdmForecastButton',
+    'ganttPlanningView': 'detailedPlanningButton'
 };
 
 // Fallback HTML snippets for components when fetch is unavailable (e.g., file:// protocol)
@@ -515,7 +516,7 @@ function switchView(targetViewId, newMode = null) {
         'systemEditForm', 'visualizationCarousel', 'serviceDependenciesTable',
         'organogramView', 'engineerTableView', 'planningView',
         'capacityConfigView', 'sdmForecastingView', 'toolDocumentationSection',
-        'roadmapView', 'dashboardView' // Now includes dashboard
+        'roadmapView', 'dashboardView', 'ganttPlanningView' // Now includes dashboard + detailed planning
     ];
     const documentationSection = document.getElementById('toolDocumentationSection');
 
@@ -991,6 +992,9 @@ function loadSavedSystem(systemName) {
     if (!currentSystemData.archivedYearlyPlans) currentSystemData.archivedYearlyPlans = [];
     if (!currentSystemData.workPackages) currentSystemData.workPackages = [];
     if (!currentSystemData.attributes) currentSystemData.attributes = {};
+    if (typeof ensureWorkPackagesForInitiatives === 'function') {
+        ensureWorkPackagesForInitiatives(currentSystemData);
+    }
 
     // allKnownEngineers (critical for engineer data)
     // This block now primarily ensures attributes on existing engineers if allKnownEngineers was loaded.
@@ -1518,6 +1522,19 @@ function showRoadmapView() {
 }
 window.showRoadmapView = showRoadmapView;
 
+function showGanttPlanningView() {
+    console.log("Switching to Detailed Planning (Gantt) View...");
+    if (!currentSystemData) {
+        alert("Please load a system first to manage detailed planning.");
+        return;
+    }
+    switchView('ganttPlanningView', Modes.PLANNING);
+    if (typeof initializeGanttPlanningView === 'function') {
+        initializeGanttPlanningView();
+    }
+}
+window.showGanttPlanningView = showGanttPlanningView;
+
 /**
  * Shows the Organization Chart view.
  * MODIFIED: Now calls the new initializeOrgChartView to handle layout switching.
@@ -1636,6 +1653,7 @@ function initializeEventListeners() {
     document.getElementById('viewOrgChartButton')?.addEventListener('click', showOrganogramView);
     document.getElementById('manageYearPlanButton')?.addEventListener('click', showPlanningView);
     document.getElementById('manageRoadmapButton')?.addEventListener('click', showRoadmapView);
+    document.getElementById('detailedPlanningButton')?.addEventListener('click', showGanttPlanningView);
     document.getElementById('dashboardViewButton')?.addEventListener('click', showDashboardView);
     document.getElementById('tuneCapacityButton')?.addEventListener('click', showCapacityConfigView);
     document.getElementById('sdmForecastButton')?.addEventListener('click', showSdmForecastingView);

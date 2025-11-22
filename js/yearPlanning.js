@@ -717,6 +717,14 @@ window.toggleCapacityConstraints = toggleCapacityConstraints;
  */
 function renderPlanningView() {
     console.log(`renderPlanningView: Rendering main planning view for year: ${currentPlanningYear}...`);
+    if (typeof ensureWorkPackagesForInitiatives === 'function') {
+        ensureWorkPackagesForInitiatives(currentSystemData, currentPlanningYear);
+        if (typeof syncInitiativeTotals === 'function') {
+            (currentSystemData.yearlyInitiatives || [])
+                .filter(init => `${init.attributes?.planningYear || ''}` === `${currentPlanningYear}`)
+                .forEach(init => syncInitiativeTotals(init.initiativeId, currentSystemData));
+        }
+    }
     const planningViewDiv = document.getElementById('planningView');
     const capacitySummaryDiv = document.getElementById('planningCapacitySummary');
     const scenarioControlDiv = document.getElementById('planningScenarioControl');
@@ -909,6 +917,16 @@ function handleSavePlan() {
     });
 
     try {
+        if (typeof ensureWorkPackagesForInitiatives === 'function') {
+            ensureWorkPackagesForInitiatives(currentSystemData, currentPlanningYear);
+            (currentSystemData.yearlyInitiatives || [])
+                .filter(init => init.attributes?.planningYear == currentPlanningYear)
+                .forEach(init => {
+                    if (typeof syncInitiativeTotals === 'function') {
+                        syncInitiativeTotals(init.initiativeId, currentSystemData);
+                    }
+                });
+        }
         saveSystemChanges();
         alert(`Plan for ${currentPlanningYear} saved successfully. Initiative statuses have been updated.`);
         // Optionally, refresh the table to show any visual changes reflecting status updates
