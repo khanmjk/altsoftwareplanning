@@ -165,10 +165,12 @@ bar graph per quarter to see team load/demand impact
 [Done] --- Move all initiatives under the Goal XYZ to BTL to free up capacity
 [Done] - [Architect] Include mermaid diagram drawing capability
 [Done] - [AI] Add support for AI diagramming using mermaid functionality
+[Done] - [AI] Think about refactoring the codebase for AI files - like an AI folder to keep all ai-related files, especially if we're going down the agent route (like a planning agent, resource planning agent, etc.)
+
 ------------
 IN PROGRESS
 ------------
-- [AI] Think about refactoring the codebase for AI files - like an AI folder to keep all ai-related files, especially if we're going down the agent route (like a planning agent, resource planning agent, etc.)
+
 - [AI Feature] Create an AI agent that can perform actions on the system with access to the code
 
 
