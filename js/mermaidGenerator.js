@@ -111,7 +111,15 @@ function generateMermaidSyntax(systemData) {
     return lines.join('\n');
 
     function getTeamName(team) {
-        return (team && (team.teamName || team.teamIdentity || team.teamId)) ? (team.teamName || team.teamIdentity || team.teamId) : 'Team';
+        if (!team) return 'Team';
+        const formal = (team.teamName || '').trim();
+        const friendly = (team.teamIdentity || '').trim();
+        const hasBoth = formal && friendly;
+        const sameLabel = hasBoth && formal.toLowerCase() === friendly.toLowerCase();
+        if (hasBoth && !sameLabel) {
+            return `${formal} (${friendly})`;
+        }
+        return formal || friendly || team.teamId || 'Team';
     }
 
     function getServiceLabel(service) {

@@ -4,6 +4,8 @@ let currentServiceDependenciesTableData = [];
 if (typeof window !== 'undefined') {
     window.currentServiceDependenciesTableData = currentServiceDependenciesTableData;
 }
+let visualizationResizeObserver = null;
+let resizeDebounceHandle = null;
 
 async function renderMermaidDiagram() {
     const graphContainer = document.getElementById('mermaidGraph');
@@ -37,6 +39,11 @@ async function renderMermaidDiagram() {
         graphContainer.innerHTML = '';
         const result = await mermaid.render(renderId, definition, graphContainer);
         graphContainer.innerHTML = result.svg;
+        const svg = graphContainer.querySelector('svg');
+        if (svg) {
+            svg.style.width = '100%';
+            svg.style.height = 'auto';
+        }
         graphContainer.style.display = 'block';
     } catch (error) {
         console.error("Failed to render Mermaid diagram:", error);
@@ -48,6 +55,65 @@ async function renderMermaidDiagram() {
         }
         graphContainer.innerHTML = '<p style="color: red;">Unable to render Mermaid diagram. Check console for details.</p>';
     }
+}
+
+function getActiveVisualizationId() {
+    const carousel = document.getElementById('visualizationCarousel');
+    if (carousel) {
+        const activeItem = carousel.querySelector('.carousel-item.active') ||
+            Array.from(carousel.querySelectorAll('.carousel-item')).find(item => item.style.display !== 'none');
+        if (activeItem) {
+            return activeItem.id;
+        }
+    }
+    if (typeof visualizationItems !== 'undefined' && typeof currentVisualizationIndex !== 'undefined') {
+        return visualizationItems[currentVisualizationIndex]?.id || null;
+    }
+    return null;
+}
+
+function debounceResize(callback, delay = 200) {
+    return () => {
+        if (resizeDebounceHandle) clearTimeout(resizeDebounceHandle);
+        resizeDebounceHandle = setTimeout(callback, delay);
+    };
+}
+
+function setupVisualizationResizeObserver() {
+    if (visualizationResizeObserver) return;
+    const carousel = document.getElementById('visualizationCarousel');
+    if (!carousel || typeof ResizeObserver === 'undefined') {
+        return;
+    }
+    const debounced = debounceResize(() => {
+        if (!currentSystemData) return;
+        const activeId = getActiveVisualizationId();
+        switch (activeId) {
+            case 'visualization':
+                if (typeof generateVisualization === 'function') generateVisualization(currentSystemData);
+                break;
+            case 'teamVisualization':
+                if (typeof generateTeamVisualization === 'function') generateTeamVisualization(currentSystemData);
+                break;
+            case 'serviceRelationshipsVisualization':
+                if (typeof updateServiceVisualization === 'function') updateServiceVisualization();
+                break;
+            case 'dependencyVisualization':
+                if (typeof updateDependencyVisualization === 'function') updateDependencyVisualization();
+                break;
+            case 'mermaidVisualization':
+                if (typeof renderMermaidDiagram === 'function') renderMermaidDiagram();
+                break;
+            default:
+                break;
+        }
+    }, 200);
+    visualizationResizeObserver = new ResizeObserver(debounced);
+    visualizationResizeObserver.observe(carousel);
+}
+
+if (typeof window !== 'undefined') {
+    window.setupVisualizationResizeObserver = setupVisualizationResizeObserver;
 }
 
 /**

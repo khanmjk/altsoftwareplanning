@@ -755,6 +755,9 @@ function switchView(targetViewId, newMode = null) {
         console.error("Carousel container #visualizationCarousel not found.");
         return;
     }
+    if (typeof window.setupVisualizationResizeObserver === 'function') {
+        window.setupVisualizationResizeObserver();
+    }
     const items = carouselContainer.querySelectorAll('.carousel-item');
     const titleElement = document.getElementById('visualizationTitle');
     const serviceDepsTableDiv = document.getElementById('serviceDependenciesTable');
