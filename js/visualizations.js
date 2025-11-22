@@ -5,6 +5,51 @@ if (typeof window !== 'undefined') {
     window.currentServiceDependenciesTableData = currentServiceDependenciesTableData;
 }
 
+async function renderMermaidDiagram() {
+    const graphContainer = document.getElementById('mermaidGraph');
+    if (!graphContainer) {
+        console.error("renderMermaidDiagram: #mermaidGraph not found.");
+        return;
+    }
+    if (!currentSystemData) {
+        console.warn("renderMermaidDiagram: No system data available.");
+        graphContainer.innerHTML = '<p style="color: #666;">Load a system to see the architecture diagram.</p>';
+        return;
+    }
+    if (typeof mermaid === 'undefined' || typeof mermaid.render !== 'function') {
+        console.error("renderMermaidDiagram: Mermaid library is unavailable.");
+        graphContainer.innerHTML = '<p style="color: red;">Mermaid is not loaded. Please check your connection.</p>';
+        return;
+    }
+    if (typeof generateMermaidSyntax !== 'function') {
+        console.error("renderMermaidDiagram: generateMermaidSyntax is not defined.");
+        graphContainer.innerHTML = '<p style="color: red;">Mermaid generator missing. Check script loading order.</p>';
+        return;
+    }
+
+    let definition = '';
+    try {
+        definition = generateMermaidSyntax(currentSystemData);
+        const renderId = 'mermaid-system-architecture';
+        if (typeof mermaid.parse === 'function') {
+            mermaid.parse(definition);
+        }
+        graphContainer.innerHTML = '';
+        const result = await mermaid.render(renderId, definition, graphContainer);
+        graphContainer.innerHTML = result.svg;
+        graphContainer.style.display = 'block';
+    } catch (error) {
+        console.error("Failed to render Mermaid diagram:", error);
+        if (error && error.hash && error.hash.line) {
+            console.error("Mermaid parse error at line", error.hash.line, "col", error.hash.loc?.last_column, ":", error.hash.text);
+        }
+        if (definition) {
+            console.error("Mermaid definition used for rendering:\n", definition);
+        }
+        graphContainer.innerHTML = '<p style="color: red;">Unable to render Mermaid diagram. Check console for details.</p>';
+    }
+}
+
 /**
  * REVISED (v2) - Generates the main system visualization (Services, APIs, Platforms).
  * - Fixes static graph issue by stopping drag event propagation to prevent zoom interference.
@@ -1451,6 +1496,11 @@ function rerenderCurrentVisualizationForPlatformToggle() {
         case 'dependencyVisualization':
             if (typeof updateDependencyVisualization === 'function') {
                 updateDependencyVisualization();
+            }
+            break;
+        case 'mermaidVisualization':
+            if (typeof renderMermaidDiagram === 'function') {
+                renderMermaidDiagram();
             }
             break;
         default:

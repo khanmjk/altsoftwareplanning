@@ -32,6 +32,12 @@ function syncGlobalSettingsToWindow() {
 }
 syncGlobalSettingsToWindow();
 
+if (typeof mermaid !== 'undefined' && typeof mermaid.initialize === 'function') {
+    mermaid.initialize({ startOnLoad: false, theme: 'default' });
+} else {
+    console.warn("Mermaid library not available during initialization.");
+}
+
 function updateAiDependentUI(options = {}) {
     const { skipPlanningRender = false } = options;
     const aiEnabled = !!(globalSettings?.ai?.isEnabled);
@@ -79,7 +85,8 @@ const visualizationItems = [
     { id: 'visualization', title: 'System Visualization' },
     { id: 'teamVisualization', title: 'Team Relationships Visualization' },
     { id: 'serviceRelationshipsVisualization', title: 'Service Relationships Visualization' },
-    { id: 'dependencyVisualization', title: 'Service Dependency Visualization' }
+    { id: 'dependencyVisualization', title: 'Service Dependency Visualization' },
+    { id: 'mermaidVisualization', title: 'System Architecture (Mermaid)' }
 ];
 // ----------------------
 
@@ -798,6 +805,9 @@ function switchView(targetViewId, newMode = null) {
                     if (typeof generateServiceDependenciesTable === 'function' && serviceDepsTableDiv.style.display === 'block') {
                         generateServiceDependenciesTable();
                     }
+                    break;
+                case 'mermaidVisualization':
+                    if (typeof renderMermaidDiagram === 'function') renderMermaidDiagram();
                     break;
             }
         }
