@@ -158,3 +158,42 @@ if (typeof window !== 'undefined') {
     window.syncInitiativeTotals = syncInitiativeTotals;
     window.getInitiativeDateSpanFromWorkPackages = getInitiativeDateSpanFromWorkPackages;
 }
+
+/**
+ * Pushes initiative-level assignment and dates down into work packages for consistency.
+ */
+function syncWorkPackagesFromInitiative(initiative, systemData) {
+    if (!initiative || !systemData) return;
+    ensureWorkPackagesForInitiatives(systemData);
+    const workingDaysPerYear = systemData.capacityConfiguration?.workingDaysPerYear || 261;
+    const wps = (systemData.workPackages || []).filter(wp => wp.initiativeId === initiative.initiativeId);
+    wps.forEach(wp => {
+        wp.impactedTeamAssignments = wp.impactedTeamAssignments || [];
+        // Map existing assignments for quick lookup
+        const byTeam = new Map((wp.impactedTeamAssignments || []).map(a => [a.teamId, a]));
+        (initiative.assignments || []).forEach(assign => {
+            const target = byTeam.get(assign.teamId);
+            const sdeDays = (assign.sdeYears || 0) * workingDaysPerYear;
+            if (target) {
+                target.sdeDays = sdeDays;
+                target.startDate = target.startDate || initiative.attributes?.startDate;
+                target.endDate = target.endDate || initiative.targetDueDate;
+            } else {
+                wp.impactedTeamAssignments.push({
+                    teamId: assign.teamId,
+                    sdeDays,
+                    startDate: initiative.attributes?.startDate,
+                    endDate: initiative.targetDueDate
+                });
+            }
+        });
+        // Update WP level dates as rollup from assignments
+        const span = getInitiativeDateSpanFromWorkPackages([wp], initiative);
+        wp.startDate = span.startDate;
+        wp.endDate = span.endDate;
+    });
+}
+
+if (typeof window !== 'undefined') {
+    window.syncWorkPackagesFromInitiative = syncWorkPackagesFromInitiative;
+}

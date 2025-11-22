@@ -922,6 +922,9 @@ function handleSavePlan() {
             (currentSystemData.yearlyInitiatives || [])
                 .filter(init => init.attributes?.planningYear == currentPlanningYear)
                 .forEach(init => {
+                    if (typeof syncWorkPackagesFromInitiative === 'function') {
+                        syncWorkPackagesFromInitiative(init, currentSystemData);
+                    }
                     if (typeof syncInitiativeTotals === 'function') {
                         syncInitiativeTotals(init.initiativeId, currentSystemData);
                     }
