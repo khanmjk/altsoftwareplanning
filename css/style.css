@@ -679,6 +679,24 @@ svg { width: 100%; height: 600px; border: 1px solid #ccc; }
     }
     /* --- End Carousel Styles --- */
 
+    /* Mermaid diagram container tweaks */
+    #mermaidVisualization {
+        min-height: 760px;
+    }
+    #mermaidGraph {
+        min-height: 720px;
+        resize: vertical;
+        overflow: auto;
+    }
+    #mermaidGraph svg {
+        max-width: 100%;
+        height: auto;
+    }
+    #mermaidApiGraph svg {
+        max-width: 100%;
+        height: auto;
+    }
+
 
     /* Adjust SVG size for service visualization */
     #serviceSvg {

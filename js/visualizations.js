@@ -4,6 +4,192 @@ let currentServiceDependenciesTableData = [];
 if (typeof window !== 'undefined') {
     window.currentServiceDependenciesTableData = currentServiceDependenciesTableData;
 }
+let visualizationResizeObserver = null;
+let resizeDebounceHandle = null;
+
+async function renderMermaidDiagram() {
+    const graphContainer = document.getElementById('mermaidGraph');
+    if (!graphContainer) {
+        console.error("renderMermaidDiagram: #mermaidGraph not found.");
+        return;
+    }
+    if (!currentSystemData) {
+        console.warn("renderMermaidDiagram: No system data available.");
+        graphContainer.innerHTML = '<p style="color: #666;">Load a system to see the architecture diagram.</p>';
+        return;
+    }
+    if (typeof mermaid === 'undefined' || typeof mermaid.render !== 'function') {
+        console.error("renderMermaidDiagram: Mermaid library is unavailable.");
+        graphContainer.innerHTML = '<p style="color: red;">Mermaid is not loaded. Please check your connection.</p>';
+        return;
+    }
+    if (typeof generateMermaidSyntax !== 'function') {
+        console.error("renderMermaidDiagram: generateMermaidSyntax is not defined.");
+        graphContainer.innerHTML = '<p style="color: red;">Mermaid generator missing. Check script loading order.</p>';
+        return;
+    }
+
+    let definition = '';
+    try {
+        definition = generateMermaidSyntax(currentSystemData);
+        const renderId = 'mermaid-system-architecture';
+        if (typeof mermaid.parse === 'function') {
+            mermaid.parse(definition);
+        }
+        graphContainer.innerHTML = '';
+        const result = await mermaid.render(renderId, definition, graphContainer);
+        graphContainer.innerHTML = result.svg;
+        const svg = graphContainer.querySelector('svg');
+        if (svg) {
+            svg.style.width = '100%';
+            svg.style.height = 'auto';
+        }
+        graphContainer.style.display = 'block';
+    } catch (error) {
+        console.error("Failed to render Mermaid diagram:", error);
+        if (error && error.hash && error.hash.line) {
+            console.error("Mermaid parse error at line", error.hash.line, "col", error.hash.loc?.last_column, ":", error.hash.text);
+        }
+        if (definition) {
+            console.error("Mermaid definition used for rendering:\n", definition);
+        }
+        graphContainer.innerHTML = '<p style="color: red;">Unable to render Mermaid diagram. Check console for details.</p>';
+    }
+}
+
+function populateApiServiceSelection() {
+    const select = document.getElementById('apiServiceSelection');
+    if (!select || !currentSystemData || !Array.isArray(currentSystemData.services)) return;
+    select.innerHTML = '';
+    const allOption = document.createElement('option');
+    allOption.value = 'all';
+    allOption.textContent = 'All Services';
+    select.appendChild(allOption);
+
+    currentSystemData.services
+        .slice()
+        .sort((a, b) => (a.serviceName || '').localeCompare(b.serviceName || ''))
+        .forEach(service => {
+            const opt = document.createElement('option');
+            opt.value = service.serviceName;
+            opt.textContent = service.serviceName;
+            select.appendChild(opt);
+        });
+
+    select.onchange = () => {
+        if (typeof renderMermaidApiDiagram === 'function') renderMermaidApiDiagram();
+    };
+}
+
+async function renderMermaidApiDiagram() {
+    const graphContainer = document.getElementById('mermaidApiGraph');
+    const select = document.getElementById('apiServiceSelection');
+    if (!graphContainer || !select) {
+        console.error("renderMermaidApiDiagram: required elements not found.");
+        return;
+    }
+    if (!currentSystemData) {
+        graphContainer.innerHTML = '<p style="color: #666;">Load a system to see API interactions.</p>';
+        return;
+    }
+    if (typeof mermaid === 'undefined' || typeof mermaid.render !== 'function') {
+        graphContainer.innerHTML = '<p style="color: red;">Mermaid is not loaded.</p>';
+        return;
+    }
+    if (typeof generateMermaidApiSyntax !== 'function') {
+        graphContainer.innerHTML = '<p style="color: red;">API mermaid generator missing.</p>';
+        return;
+    }
+
+    let definition = '';
+    try {
+        const selectedService = select.value || 'all';
+        definition = generateMermaidApiSyntax(currentSystemData, { selectedService });
+        const renderId = 'mermaid-api-interactions';
+        if (typeof mermaid.parse === 'function') {
+            mermaid.parse(definition);
+        }
+        graphContainer.innerHTML = '';
+        const result = await mermaid.render(renderId, definition, graphContainer);
+        graphContainer.innerHTML = result.svg;
+        const svg = graphContainer.querySelector('svg');
+        if (svg) {
+            svg.style.width = '100%';
+            svg.style.height = 'auto';
+        }
+    } catch (error) {
+        console.error("Failed to render Mermaid API diagram:", error);
+        if (error && error.hash && error.hash.line) {
+            console.error("Mermaid parse error at line", error.hash.line, "col", error.hash.loc?.last_column, ":", error.hash.text);
+        }
+        if (definition) {
+            console.error("Mermaid API definition:\n", definition);
+        }
+        graphContainer.innerHTML = '<p style="color: red;">Unable to render API interactions diagram. Check console for details.</p>';
+    }
+}
+
+function getActiveVisualizationId() {
+    const carousel = document.getElementById('visualizationCarousel');
+    if (carousel) {
+        const activeItem = carousel.querySelector('.carousel-item.active') ||
+            Array.from(carousel.querySelectorAll('.carousel-item')).find(item => item.style.display !== 'none');
+        if (activeItem) {
+            return activeItem.id;
+        }
+    }
+    if (typeof visualizationItems !== 'undefined' && typeof currentVisualizationIndex !== 'undefined') {
+        return visualizationItems[currentVisualizationIndex]?.id || null;
+    }
+    return null;
+}
+
+function debounceResize(callback, delay = 200) {
+    return () => {
+        if (resizeDebounceHandle) clearTimeout(resizeDebounceHandle);
+        resizeDebounceHandle = setTimeout(callback, delay);
+    };
+}
+
+function setupVisualizationResizeObserver() {
+    if (visualizationResizeObserver) return;
+    const carousel = document.getElementById('visualizationCarousel');
+    if (!carousel || typeof ResizeObserver === 'undefined') {
+        return;
+    }
+    const debounced = debounceResize(() => {
+        if (!currentSystemData) return;
+        const activeId = getActiveVisualizationId();
+        switch (activeId) {
+            case 'visualization':
+                if (typeof generateVisualization === 'function') generateVisualization(currentSystemData);
+                break;
+            case 'teamVisualization':
+                if (typeof generateTeamVisualization === 'function') generateTeamVisualization(currentSystemData);
+                break;
+            case 'serviceRelationshipsVisualization':
+                if (typeof updateServiceVisualization === 'function') updateServiceVisualization();
+                break;
+            case 'dependencyVisualization':
+                if (typeof updateDependencyVisualization === 'function') updateDependencyVisualization();
+                break;
+            case 'mermaidVisualization':
+                if (typeof renderMermaidDiagram === 'function') renderMermaidDiagram();
+                break;
+            case 'mermaidApiVisualization':
+                if (typeof renderMermaidApiDiagram === 'function') renderMermaidApiDiagram();
+                break;
+            default:
+                break;
+        }
+    }, 200);
+    visualizationResizeObserver = new ResizeObserver(debounced);
+    visualizationResizeObserver.observe(carousel);
+}
+
+if (typeof window !== 'undefined') {
+    window.setupVisualizationResizeObserver = setupVisualizationResizeObserver;
+}
 
 /**
  * REVISED (v2) - Generates the main system visualization (Services, APIs, Platforms).
@@ -1451,6 +1637,11 @@ function rerenderCurrentVisualizationForPlatformToggle() {
         case 'dependencyVisualization':
             if (typeof updateDependencyVisualization === 'function') {
                 updateDependencyVisualization();
+            }
+            break;
+        case 'mermaidVisualization':
+            if (typeof renderMermaidDiagram === 'function') {
+                renderMermaidDiagram();
             }
             break;
         default:

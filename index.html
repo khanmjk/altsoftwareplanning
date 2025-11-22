@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="css/components/aiChatPanel.css">
 
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/12.3.2/markdown-it.min.js"></script>
     <script src="https://unpkg.com/markdown-it-anchor@8.6.7/dist/markdownItAnchor.umd.js"></script>
@@ -29,6 +30,7 @@
     <script src="js/components/enhancedTableWidget.js"></script>
     <script src="js/documentation.js"></script>
     <script src="js/sdmForecasting.js"></script>
+    <script src="js/mermaidGenerator.js"></script>
     <script src="js/visualizations.js"></script>
     <script src="js/editSystem.js"></script>
     <script src="js/orgView.js"></script>
@@ -110,7 +112,7 @@
                 <div id="docResizeHandle" style="height: 10px; background-color: #e0e0e0; cursor: ns-resize; border-top: 1px solid #ccc; display: none;"></div>
             </div>
 
-            <div id="visualizationCarousel" style="position: relative; max-width: 800px; margin: 20px auto; border: 1px solid #ddd; padding: 10px; display:none;"> <div style="text-align: center; margin-bottom: 10px;">
+            <div id="visualizationCarousel" style="position: relative; width: 95%; max-width: 1400px; margin: 20px auto; border: 1px solid #ddd; padding: 10px; display:none; resize: both; overflow: auto; min-height: 760px;"> <div style="text-align: center; margin-bottom: 10px;">
                     <button onclick="navigateVisualizations(-1)">&lt; Previous</button>
                     <span id="visualizationTitle" style="margin: 0 15px; font-weight: bold; font-size: 1.1em;">System Visualization</span> <button onclick="navigateVisualizations(1)">Next &gt;</button>
                 </div>
@@ -139,6 +141,15 @@
                     <button id="togglePlatformComponentsDependency" class="button" style="margin-bottom: 10px;">Hide Platforms</button>
                     <svg id="dependencySvg" style="width: 100%; height: 600px; border: 1px solid #ccc;"></svg>
                     <div id="dependencyLegend" class="legend"></div>
+                </div>
+
+                <div id="mermaidVisualization" class="carousel-item" style="display: none;">
+                    <div id="mermaidGraph"></div>
+                </div>
+
+                <div id="mermaidApiVisualization" class="carousel-item" style="display: none;">
+                    <select id="apiServiceSelection" style="margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto;"></select>
+                    <div id="mermaidApiGraph"></div>
                 </div>
 
             </div>
