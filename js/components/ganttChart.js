@@ -66,11 +66,33 @@
 
     function buildMermaidFromTasks(tasks = [], options = {}) {
         const lines = [];
+        
+        // Configuration block to improve readability/spacing
+        lines.push(`%%{init: { 
+            "theme": "base", 
+            "themeVariables": { "primaryColor": "#ffcc00", "secondaryColor": "#007bff" },
+            "gantt": { 
+                "barHeight": 40,
+                "barGap": 8,
+                "fontSize": 14,
+                "sectionFontSize": 16,
+                "numberSectionStyles": 8,
+                "axisFormat": "%Y-%m-%d",
+                "topPadding": 50,
+                "gridLineStartPadding": 50
+            } 
+        } }%%`);
+
         lines.push('gantt');
         lines.push('dateFormat YYYY-MM-DD');
         lines.push('axisFormat %Y-%m-%d');
+        
         const title = options.title || 'Detailed Plan';
         lines.push(`title ${title}`);
+
+        // Today marker
+        const today = new Date().toISOString().split('T')[0];
+        lines.push(`todayMarker stroke-width:2px,stroke:#f00,opacity:0.7`);
 
         const groupMap = new Map();
         tasks.forEach(task => {
@@ -83,12 +105,13 @@
             lines.push(`section ${escapeLabel(group)}`);
             tasks.forEach(task => {
                 const statusToken = mapStatusToToken(task.status);
-                const fullLabel = escapeLabel(task.label || task.title || task.id);
-                const label = truncate(fullLabel, 48);
+                const safeLabel = escapeLabel(task.label || task.title);
+                
                 const start = task.start;
                 const end = task.end;
+                
                 if (isValidDate(start) && isValidDate(end)) {
-                    lines.push(`${label} :${statusToken}, ${task.id}, ${start}, ${end}`);
+                    lines.push(`${safeLabel} :${statusToken}, ${task.id}, ${start}, ${end}`);
                 }
             });
         });
@@ -103,7 +126,7 @@
         return 'active';
     }
     function escapeLabel(text) {
-        return (text || '').replace(/:/g, '\\:').replace(/,/g, ' / ');
+        return (text || '').replace(/:/g, ' -').replace(/,/g, ' / ');
     }
     function truncate(text, maxLen) {
         const t = text || '';

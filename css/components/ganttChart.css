@@ -79,6 +79,8 @@
 .gantt-chart-box {
     min-height: 900px;
     overflow: auto;
+    background-color: #fff;
+    padding: 20px;
 }
 
 .gantt-table {
@@ -97,7 +99,7 @@
 }
 
 .gantt-chart-box svg {
-    width: 100%;
+    min-width: 100%;
     height: auto;
 }
 
@@ -184,4 +186,8 @@
 
 .mermaid .task tspan {
     pointer-events: none;
+}
+
+.mermaid .tick text {
+    font-size: 14px !important;
 }

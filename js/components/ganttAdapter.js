@@ -88,35 +88,47 @@
     }
 
     function buildWorkPackageLabel({ init, wp, viewBy, teamMap, goalMap, themeMap, selectedTeam }) {
-        const base = wp.title || 'Work Package';
+        const baseTitle = wp.title || 'Work Package';
+        
+        // Build assignment breakdown string
+        let breakdownStr = '';
+        const assignments = wp.impactedTeamAssignments || [];
+        if (assignments.length > 0) {
+            const parts = assignments.map(a => {
+                const t = teamMap.get(a.teamId);
+                const identity = t ? (t.teamIdentity || t.teamName || a.teamId) : a.teamId;
+                const val = (a.sdeDays / 261).toFixed(1);
+                if (val === "0.0") return null;
+                return `${identity}:${val}y`;
+            }).filter(Boolean);
+            if (parts.length > 0) {
+                breakdownStr = ` (${parts.join(', ')})`;
+            }
+        }
+
+        let finalLabel = '';
+
         switch (viewBy) {
             case 'Team': {
-                if (selectedTeam && selectedTeam !== 'all') {
-                    const t = teamMap.get(selectedTeam);
-                    const name = t ? (t.teamIdentity || t.teamName || t.teamId) : selectedTeam;
-                    return `${base} [${name}]`;
+                finalLabel = `${baseTitle}${breakdownStr}`;
+                break;
+            }
+            case 'Manager':
+            case 'Goal': 
+            case 'Theme':
+            case 'All Initiatives':
+            default: {
+                const initTitle = init.title || 'Initiative';
+                if (initTitle === baseTitle) {
+                    finalLabel = `${initTitle}${breakdownStr}`;
+                } else {
+                    finalLabel = `${initTitle} > ${baseTitle}${breakdownStr}`;
                 }
-                const names = (wp.impactedTeamAssignments || [])
-                    .map(a => teamMap.get(a.teamId))
-                    .filter(Boolean)
-                    .map(t => t.teamIdentity || t.teamName || t.teamId);
-                return names.length ? `${base} [${names.join(' / ')}]` : base;
+                break;
             }
-            case 'Manager': {
-                const mgrName = init.owner?.name || 'Unassigned Manager';
-                return `${base} [${mgrName}]`;
-            }
-            case 'Goal': {
-                const goalName = goalMap.get(init.primaryGoalId)?.name || 'Unassigned Goal';
-                return `${base} [${goalName}]`;
-            }
-            case 'Theme': {
-                const themeName = themeMap.get((init.themes || [])[0])?.name || 'Unassigned Theme';
-                return `${base} [${themeName}]`;
-            }
-            default:
-                return `${base} (${init.title || init.initiativeId || 'Initiative'})`;
         }
+
+        return finalLabel;
     }
 
     if (typeof window !== 'undefined') {
