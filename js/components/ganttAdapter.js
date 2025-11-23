@@ -28,6 +28,7 @@
             wpList.forEach(wp => {
                 let span = computeWorkPackageSpan(wp, init, selectedTeam, defaultStart, defaultEnd);
                 if (!span) {
+                    if (selectedTeam && selectedTeam !== 'all') return; // filtered team not involved; skip ghost bar
                     span = { startDate: defaultStart, endDate: defaultEnd };
                 }
                 const label = buildWorkPackageLabel({
@@ -39,15 +40,16 @@
                     themeMap,
                     selectedTeam
                 });
+                const taskId = sanitizeId(wp.workPackageId || `${init.initiativeId}-${(wp.title || 'wp')}`);
                 tasks.push({
-                    id: wp.workPackageId || `${init.initiativeId}-${(wp.title || 'wp').replace(/\s+/g, '-').toLowerCase()}`,
+                    id: taskId,
                     title: wp.title || 'Work Package',
                     group: groupLabel,
                     label,
                     start: span.startDate,
                     end: span.endDate,
                     status: wp.status || init.status || 'active',
-                    dependencies: (wp.dependencies || []).join(',')
+                    dependencies: (wp.dependencies || []).map(sanitizeId).join(',')
                 });
             });
         });
@@ -128,6 +130,15 @@
         }
 
         return finalLabel + breakdownStr;
+    }
+
+    function sanitizeId(id) {
+        return (id || '')
+            .toString()
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9_-]+/g, '-')
+            .replace(/^-+|-+$/g, '');
     }
 
     function truncateText(text, maxLength) {

@@ -491,11 +491,19 @@ function renderGanttTable() {
                 assign.startDate = e.target.value;
                 if (!wp.startDate || e.target.value < wp.startDate) {
                     wp.startDate = e.target.value;
+                } else {
+                    // Shrink if this was the earliest date and no other assignment starts earlier
+                    const earliest = getEarliestAssignmentStart(wp);
+                    wp.startDate = earliest || wp.startDate;
                 }
             } else if (field === 'endDate') {
                 assign.endDate = e.target.value;
                 if (!wp.endDate || e.target.value > wp.endDate) {
                     wp.endDate = e.target.value;
+                } else {
+                    // Shrink if this was the latest date and no other assignment ends later
+                    const latest = getLatestAssignmentEnd(wp);
+                    wp.endDate = latest || wp.endDate;
                 }
             } else if (field === 'sdeYears') {
                 const sdeYears = parseFloat(e.target.value) || 0;
@@ -516,6 +524,13 @@ function renderGanttTable() {
             if (!wp) return;
             const deps = new Set(wp.dependencies || []);
             if (e.target.checked) {
+                const allWps = currentSystemData.workPackages || [];
+                if (wouldCreateDependencyCycle(wpId, depId, allWps)) {
+                    e.target.checked = false;
+                    console.warn(`[GANTT] Prevented circular dependency: ${wpId} -> ${depId}`);
+                    alert('Circular dependency not allowed (would create a cycle).');
+                    return;
+                }
                 deps.add(depId);
             } else {
                 deps.delete(depId);
@@ -605,6 +620,26 @@ function getWorkingDaysPerYear() {
 function getTeamName(teamId) {
     const team = (currentSystemData.teams || []).find(t => t.teamId === teamId);
     return team ? (team.teamIdentity || team.teamName || teamId) : teamId;
+}
+
+function getEarliestAssignmentStart(wp) {
+    let earliest = wp.startDate || null;
+    (wp.impactedTeamAssignments || []).forEach(assign => {
+        if (assign.startDate && (!earliest || assign.startDate < earliest)) {
+            earliest = assign.startDate;
+        }
+    });
+    return earliest;
+}
+
+function getLatestAssignmentEnd(wp) {
+    let latest = wp.endDate || null;
+    (wp.impactedTeamAssignments || []).forEach(assign => {
+        if (assign.endDate && (!latest || assign.endDate > latest)) {
+            latest = assign.endDate;
+        }
+    });
+    return latest;
 }
 
 function renderPredecessorSelector(allWorkPackages, wp) {
@@ -870,6 +905,30 @@ function syncInitiativeDependenciesFromWorkPackages(initiativeId) {
         });
     });
     initiative.dependencies = Array.from(deps);
+}
+
+function wouldCreateDependencyCycle(fromWpId, toWpId, workPackages) {
+    if (!fromWpId || !toWpId) return false;
+    const graph = new Map();
+    (workPackages || []).forEach(wp => {
+        graph.set(wp.workPackageId, new Set(wp.dependencies || []));
+    });
+    if (!graph.has(fromWpId)) graph.set(fromWpId, new Set());
+    graph.get(fromWpId).add(toWpId);
+
+    const visited = new Set();
+    const stack = [toWpId];
+    while (stack.length) {
+        const current = stack.pop();
+        if (current === fromWpId) return true;
+        if (visited.has(current)) continue;
+        visited.add(current);
+        const neighbors = graph.get(current);
+        if (neighbors) {
+            neighbors.forEach(n => stack.push(n));
+        }
+    }
+    return false;
 }
 
 async function renderGanttChart() {
