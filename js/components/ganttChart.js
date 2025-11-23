@@ -2,6 +2,37 @@
  * GanttChart component: lightweight wrapper around Mermaid gantt rendering with a simple API.
  */
 (function() {
+    const MERMAID_GANTT_CONFIG = {
+        theme: "base",
+        themeVariables: {
+            primaryColor: "#cfe2f3",
+            secondaryColor: "#e1f5fe",
+            tertiaryColor: "#fff",
+            taskBkgColor: "#4a90e2",
+            taskTextColor: "#ffffff",
+            activeTaskBkgColor: "#4a90e2",
+            activeTaskTextColor: "#ffffff",
+            doneBkgColor: "#a0c4ff",
+            doneTextColor: "#333333",
+            critBkgColor: "#ff6b6b",
+            critTextColor: "#ffffff",
+            sectionBkgColor: "#ffffff",
+            sectionBkgColor2: "#fcfcfc",
+            altSectionBkgColor: "#ffffff"
+        },
+        gantt: {
+            barHeight: 40,
+            barGap: 8,
+            fontSize: 16,
+            sectionFontSize: 16,
+            numberSectionStyles: 4,
+            axisFormat: "%Y-%m-%d",
+            topPadding: 60,
+            leftPadding: 200,
+            gridLineStartPadding: 50
+        }
+    };
+
     class GanttChart {
         constructor({ container, mermaidInstance, onRenderError } = {}) {
             this.container = container;
@@ -75,35 +106,7 @@
         const lines = [];
         
         // Configuration block to improve readability/spacing with a blue/gray palette
-        lines.push(`%%{init: { 
-            "theme": "base", 
-            "themeVariables": { 
-                "primaryColor": "#cfe2f3", 
-                "secondaryColor": "#e1f5fe",
-                "tertiaryColor": "#fff",
-                "taskBkgColor": "#4a90e2", 
-                "taskTextColor": "#ffffff",
-                "activeTaskBkgColor": "#4a90e2", 
-                "activeTaskTextColor": "#ffffff",
-                "doneBkgColor": "#a0c4ff",
-                "doneTextColor": "#333333",
-            "critBkgColor": "#ff6b6b",
-            "critTextColor": "#ffffff",
-            "sectionBkgColor": "#ffffff",
-            "sectionBkgColor2": "#f9f9f9",
-            "altSectionBkgColor": "#ffffff"
-        },
-        "gantt": { 
-                "barHeight": 40,
-                "barGap": 8,
-                "fontSize": 16,
-                "sectionFontSize": 16,
-                "numberSectionStyles": 4,
-                "axisFormat": "%Y-%m-%d",
-                "topPadding": 60,
-                "leftPadding": 200
-        } 
-    } }%%`);
+        lines.push(`%%{init: ${JSON.stringify(MERMAID_GANTT_CONFIG)} }%%`);
 
         lines.push('gantt');
         lines.push('dateFormat YYYY-MM-DD');
