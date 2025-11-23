@@ -48,6 +48,13 @@
     overflow: auto;
 }
 
+.gantt-table thead th {
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 2;
+}
+
 .gantt-chart-box {
     min-height: 700px;
     overflow: auto;
@@ -79,4 +86,9 @@
 
 .mermaid .task text {
     font-size: 11px;
+    pointer-events: none;
+}
+
+.mermaid .task tspan {
+    pointer-events: none;
 }

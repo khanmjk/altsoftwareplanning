@@ -62,7 +62,7 @@
                 tasks.forEach(task => {
                     const statusToken = mapStatusToToken(task.status);
                     const fullLabel = escapeLabel(task.label || task.title || task.id);
-                    const label = truncate(fullLabel, 64);
+                    const label = truncate(fullLabel, 48);
                     const start = task.start;
                     const end = task.end;
                     if (isValidDate(start) && isValidDate(end)) {
@@ -97,13 +97,13 @@
                 svg.style.width = '100%';
                 svg.style.height = 'auto';
             }
+            // Add tooltips by matching data-id in order of tasks
             const labels = this.container.querySelectorAll('.task text');
             labels.forEach((textEl, idx) => {
                 const task = this.tasks[idx];
                 if (task) {
                     const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
                     title.textContent = task.label || task.title || '';
-                    // remove existing titles
                     const existing = textEl.querySelector('title');
                     if (existing) existing.remove();
                     textEl.appendChild(title);
