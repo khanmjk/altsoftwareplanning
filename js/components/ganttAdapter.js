@@ -84,7 +84,7 @@
 
     function buildInitiativeGroupLabel(init) {
         const base = init.title || init.initiativeId || 'Initiative';
-        return init.initiativeId ? `${base} (${init.initiativeId})` : base;
+        return truncateText(init.initiativeId ? `${base} (${init.initiativeId})` : base, 65);
     }
 
     function buildWorkPackageLabel({ init, wp, viewBy, teamMap, goalMap, themeMap, selectedTeam }) {
@@ -126,6 +126,12 @@
         }
 
         return finalLabel + breakdownStr;
+    }
+
+    function truncateText(text, maxLength) {
+        if (!text) return '';
+        if (text.length <= maxLength) return text;
+        return text.substring(0, maxLength) + '...';
     }
 
     if (typeof window !== 'undefined') {

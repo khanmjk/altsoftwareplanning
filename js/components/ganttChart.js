@@ -28,7 +28,7 @@
             numberSectionStyles: 4,
             axisFormat: "%Y-%m-%d",
             topPadding: 60,
-            leftPadding: 200,
+            leftPadding: 450,    // increased to give more room for titles
             gridLineStartPadding: 50
         }
     };
