@@ -155,6 +155,7 @@ ${toolsetDescription}`;
 
         const userQuestion = view.getChatInputValue();
         if (!userQuestion) return;
+        console.debug('[AI CHAT] User input:', userQuestion);
 
         isAgentThinking = true;
         view.toggleChatInput(true);
@@ -240,9 +241,10 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
             try {
                 plan = JSON.parse(planMatch[1]);
             } catch (error) {
-                const errorHtml = `<span style="color:red;">Failed to parse agent plan JSON: ${error.message}</span>`;
+                console.warn('[AI Agent Controller] Failed to parse agent plan; rendering as text instead.', error);
+                const rendered = md.render(aiResponse.textResponse);
                 if (view && typeof view.hideAgentLoadingIndicator === 'function') {
-                    view.hideAgentLoadingIndicator(loadingMessageEl, errorHtml);
+                    view.hideAgentLoadingIndicator(loadingMessageEl, rendered);
                 }
                 return;
             }
