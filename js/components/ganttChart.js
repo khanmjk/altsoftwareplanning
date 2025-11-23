@@ -97,16 +97,18 @@
                 svg.style.width = '100%';
                 svg.style.height = 'auto';
             }
-            // Add tooltips by matching data-id in order of tasks
-            const labels = this.container.querySelectorAll('.task text');
-            labels.forEach((textEl, idx) => {
-                const task = this.tasks[idx];
+            // Add tooltips by matching data-id on task groups
+            const taskGroups = this.container.querySelectorAll('.task');
+            taskGroups.forEach(groupEl => {
+                const taskId = groupEl.id?.replace('task-', '') || null;
+                const task = this.tasks.find(t => t.id === taskId);
                 if (task) {
-                    const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+                    let title = groupEl.querySelector('title');
+                    if (!title) {
+                        title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+                        groupEl.appendChild(title);
+                    }
                     title.textContent = task.label || task.title || '';
-                    const existing = textEl.querySelector('title');
-                    if (existing) existing.remove();
-                    textEl.appendChild(title);
                 }
             });
         }
