@@ -461,7 +461,9 @@ function openDiagramModal(code, title = 'Generated Diagram') {
         return;
     }
     if (titleEl) titleEl.textContent = title || 'Generated Diagram';
-    contentEl.textContent = code || '';
+    // Basic sanitization to reduce Mermaid parse errors (colons often break mindmap/gantt)
+    const sanitized = (code || '').replace(/:/g, ' -');
+    contentEl.textContent = sanitized;
     contentEl.removeAttribute('data-processed');
     modal.style.display = 'block';
     if (typeof mermaid !== 'undefined' && typeof mermaid.init === 'function') {
@@ -469,6 +471,9 @@ function openDiagramModal(code, title = 'Generated Diagram') {
             mermaid.init(undefined, contentEl);
         } catch (err) {
             console.error("Mermaid init failed for diagram modal:", err);
+            // Fallback: show the raw code so the user is not left hanging
+            contentEl.innerHTML = `<pre style="white-space:pre-wrap; padding:10px; background:#f8f9fa; border:1px solid #eee;">${sanitized}</pre>
+<div style="color:#c00; margin-top:6px;">Mermaid could not render this diagram. Try simplifying the request or removing special characters.</div>`;
         }
     }
 }
