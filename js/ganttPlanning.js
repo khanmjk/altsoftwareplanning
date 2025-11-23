@@ -489,8 +489,14 @@ function renderGanttTable() {
             if (!assign) return;
             if (field === 'startDate') {
                 assign.startDate = e.target.value;
+                if (!wp.startDate || e.target.value < wp.startDate) {
+                    wp.startDate = e.target.value;
+                }
             } else if (field === 'endDate') {
                 assign.endDate = e.target.value;
+                if (!wp.endDate || e.target.value > wp.endDate) {
+                    wp.endDate = e.target.value;
+                }
             } else if (field === 'sdeYears') {
                 const sdeYears = parseFloat(e.target.value) || 0;
                 assign.sdeDays = sdeYears * getWorkingDaysPerYear();

@@ -26,8 +26,10 @@
             if (!wpList.length) return;
             const groupLabel = buildInitiativeGroupLabel(init);
             wpList.forEach(wp => {
-                const span = computeWorkPackageSpan(wp, init, selectedTeam, defaultStart, defaultEnd);
-                if (!span) return;
+                let span = computeWorkPackageSpan(wp, init, selectedTeam, defaultStart, defaultEnd);
+                if (!span) {
+                    span = { startDate: defaultStart, endDate: defaultEnd };
+                }
                 const label = buildWorkPackageLabel({
                     init,
                     wp,
