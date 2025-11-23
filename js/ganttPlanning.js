@@ -1,5 +1,6 @@
 let currentGanttYear = new Date().getFullYear();
 let currentGanttGroupBy = 'All Initiatives';
+let ganttTableWidthPct = 36;
 const ganttExpandedInitiatives = new Set();
 const ganttExpandedWorkPackages = new Set();
 let ganttWorkPackagesInitialized = false;
@@ -16,11 +17,14 @@ function initializeGanttPlanningView() {
         <div id="ganttPlanningControls" class="gantt-filter-bar"></div>
         <div id="ganttSplitPane" class="gantt-split">
             <div id="ganttPlanningTableContainer" class="gantt-panel"></div>
+            <div id="ganttSplitResizer" class="gantt-resizer" title="Drag to resize panels"></div>
             <div id="ganttChartWrapper" class="gantt-panel">
                 <div id="ganttChartContainer" class="mermaid gantt-chart-box"></div>
             </div>
         </div>
     `;
+    setupGanttResizer();
+    applyGanttSplitWidth();
     renderGanttControls();
     renderGanttTable();
     renderGanttChart();
@@ -518,6 +522,60 @@ function getWorkingDaysPerYear() {
 function getTeamName(teamId) {
     const team = (currentSystemData.teams || []).find(t => t.teamId === teamId);
     return team ? (team.teamIdentity || team.teamName || teamId) : teamId;
+}
+
+function applyGanttSplitWidth() {
+    const split = document.getElementById('ganttSplitPane');
+    if (!split) return;
+    const clamped = Math.min(80, Math.max(20, ganttTableWidthPct));
+    ganttTableWidthPct = clamped;
+    split.style.gridTemplateColumns = `${clamped}% 10px ${100 - clamped}%`;
+}
+
+function setupGanttResizer() {
+    const resizer = document.getElementById('ganttSplitResizer');
+    const split = document.getElementById('ganttSplitPane');
+    if (!resizer || !split) return;
+    if (resizer.dataset.bound) {
+        applyGanttSplitWidth();
+        return;
+    }
+    resizer.dataset.bound = 'true';
+    let isDragging = false;
+    let startX = 0;
+    let startPct = ganttTableWidthPct;
+
+    const stopDrag = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        document.body.style.userSelect = '';
+        document.removeEventListener('mousemove', onDrag);
+        document.removeEventListener('mouseup', stopDrag);
+        document.removeEventListener('mouseleave', stopDrag);
+    };
+
+    const onDrag = (e) => {
+        if (!isDragging) return;
+        const rect = split.getBoundingClientRect();
+        const delta = e.clientX - startX;
+        const startPx = (startPct / 100) * rect.width;
+        const newPx = startPx + delta;
+        if (rect.width <= 0) return;
+        ganttTableWidthPct = (newPx / rect.width) * 100;
+        applyGanttSplitWidth();
+    };
+
+    resizer.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        startX = e.clientX;
+        startPct = ganttTableWidthPct;
+        document.body.style.userSelect = 'none';
+        document.addEventListener('mousemove', onDrag);
+        document.addEventListener('mouseup', stopDrag);
+        document.addEventListener('mouseleave', stopDrag);
+    });
+
+    window.addEventListener('resize', applyGanttSplitWidth);
 }
 
 function getTeamsByManager(managerId) {
