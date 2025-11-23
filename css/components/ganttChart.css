@@ -127,6 +127,16 @@
     font-size: 13px;
 }
 
+.gantt-expander {
+    min-width: 24px;
+    padding: 2px 6px;
+}
+
+.gantt-predecessor-input {
+    width: 110px;
+    font-size: 12px;
+}
+
 .mermaid .task rect {
     height: 28px;
 }

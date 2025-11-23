@@ -44,7 +44,8 @@
                     label,
                     start: span.startDate,
                     end: span.endDate,
-                    status: wp.status || init.status || 'active'
+                    status: wp.status || init.status || 'active',
+                    dependencies: (wp.dependencies || []).join(',')
                 });
             });
         });

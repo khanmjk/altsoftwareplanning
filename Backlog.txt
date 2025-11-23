@@ -199,7 +199,7 @@ UX
 
 Year Planning
 -- View planning by teams - for individual manager team planning.
-Allow managers to tune their teams estimates which will update the data model, year plan page uses latest changes)
+-- Allow managers to tune their teams estimates which will update the data model, year plan page uses latest changes)
 -- Add versioning when saving plans (up to 5 previous versions) - need to update data model structure
 -- Add ability to export the plan to CSV or Excel
 

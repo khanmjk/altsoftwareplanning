@@ -169,6 +169,7 @@ function renderGanttTable() {
                     <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Start</th>
                     <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Target</th>
                     <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">SDEs</th>
+                    <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Predecessors</th>
                     <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Actions</th>
                 </tr>
             </thead>
@@ -179,7 +180,7 @@ function renderGanttTable() {
     const tbody = document.getElementById('ganttTableBody');
     if (data.length === 0) {
         const emptyRow = document.createElement('tr');
-        emptyRow.innerHTML = `<td colspan="${showManagerTeams ? '6' : '5'}" style="padding:10px; text-align:center; color:#777;">No initiatives match the filters.</td>`;
+        emptyRow.innerHTML = `<td colspan="${showManagerTeams ? '7' : '6'}" style="padding:10px; text-align:center; color:#777;">No initiatives match the filters.</td>`;
         tbody.appendChild(emptyRow);
         return;
     }
@@ -199,7 +200,7 @@ function renderGanttTable() {
         tr.className = 'gantt-init-row';
         tr.innerHTML = `
             <td style="padding:6px; border-bottom:1px solid #f0f0f0; display:flex; align-items:center; gap:8px;">
-                <button class="gantt-expander" data-action="toggle-initiative" data-id="${init.initiativeId}" aria-label="Toggle work packages" style="min-width:24px;">${isExpanded ? '-' : '+'}</button>
+                <button class="gantt-expander" data-action="toggle-initiative" data-id="${init.initiativeId}" aria-label="Toggle work packages">${isExpanded ? '-' : '+'}</button>
                 <div>
                     <div style="font-weight:600;">${init.title || '(Untitled)'}</div>
                     <div style="font-family: monospace; color:#666; font-size:12px;">${init.initiativeId || ''}</div>
@@ -209,6 +210,7 @@ function renderGanttTable() {
             <td style="padding:6px; border-bottom:1px solid #f0f0f0;"><input type="date" value="${init.displayStart || ''}" data-kind="initiative" data-field="startDate" data-id="${init.initiativeId}"></td>
             <td style="padding:6px; border-bottom:1px solid #f0f0f0;"><input type="date" value="${init.displayEnd || ''}" data-kind="initiative" data-field="targetDueDate" data-id="${init.initiativeId}"></td>
             <td style="padding:6px; border-bottom:1px solid #f0f0f0;"><input type="number" step="0.01" value="${computeSdeEstimate(init)}" data-kind="initiative" data-field="sdeEstimate" data-id="${init.initiativeId}" style="width:80px;"></td>
+            <td style="padding:6px; border-bottom:1px solid #f0f0f0;"></td>
             <td style="padding:6px; border-bottom:1px solid #f0f0f0;">
                 <button class="gantt-add-wp btn-primary" data-action="add-wp" data-id="${init.initiativeId}">Add WP</button>
             </td>
@@ -220,17 +222,18 @@ function renderGanttTable() {
             if (!wpList.length) {
                 const emptyWp = document.createElement('tr');
                 emptyWp.className = 'gantt-wp-row';
-                emptyWp.innerHTML = `<td colspan="${showManagerTeams ? '6' : '5'}" style="padding:6px 12px; color:#777;">No work packages yet. Click "Add WP" to create one.</td>`;
+                emptyWp.innerHTML = `<td colspan="${showManagerTeams ? '7' : '6'}" style="padding:6px 12px; color:#777;">No work packages yet. Click "Add WP" to create one.</td>`;
                 tbody.appendChild(emptyWp);
             } else {
                 wpList.forEach(wp => {
                     const wpExpanded = ganttExpandedWorkPackages.has(wp.workPackageId);
                     const wpRow = document.createElement('tr');
                     wpRow.className = 'gantt-wp-row';
+                    const depsValue = (wp.dependencies || []).join(', ');
                     wpRow.innerHTML = `
                         <td style="padding:6px 6px 6px 32px; border-bottom:1px solid #f7f7f7;">
                             <div style="display:flex; align-items:center; gap:8px;">
-                                <button class="gantt-expander" data-action="toggle-wp" data-wp-id="${wp.workPackageId}" aria-label="Toggle team assignments" style="min-width:20px;">${wpExpanded ? '-' : '+'}</button>
+                                <button class="gantt-expander" data-action="toggle-wp" data-wp-id="${wp.workPackageId}" aria-label="Toggle team assignments">${wpExpanded ? '-' : '+'}</button>
                                 <input type="text" value="${wp.title || ''}" data-kind="work-package" data-field="title" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" style="width:70%;">
                             </div>
                         </td>
@@ -238,6 +241,9 @@ function renderGanttTable() {
                         <td style="padding:6px; border-bottom:1px solid #f7f7f7;"><input type="date" value="${wp.startDate || ''}" data-kind="work-package" data-field="startDate" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}"></td>
                         <td style="padding:6px; border-bottom:1px solid #f7f7f7;"><input type="date" value="${wp.endDate || ''}" data-kind="work-package" data-field="endDate" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}"></td>
                         <td style="padding:6px; border-bottom:1px solid #f7f7f7; color:#333;">${computeWorkPackageSdeYears(wp, workingDaysPerYear, selectedTeam)}</td>
+                        <td style="padding:6px; border-bottom:1px solid #f7f7f7;">
+                            <input type="text" value="${depsValue}" data-kind="work-package" data-field="dependencies" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" placeholder="WP IDs..." class="gantt-predecessor-input">
+                        </td>
                         <td style="padding:6px; border-bottom:1px solid #f7f7f7;">
                             <button data-action="delete-wp" data-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" class="btn-danger">Delete</button>
                         </td>
@@ -270,7 +276,8 @@ function renderGanttTable() {
                                     <td style="padding:4px; border-bottom:1px solid #fafafa;">
                                         <input type="number" step="0.01" value="${sdeYears}" data-kind="wp-assign" data-field="sdeYears" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" data-team-id="${assign.teamId || ''}" style="width:80px;">
                                     </td>
-                                    <td style="padding:4px; border-bottom:1px solid #fafafa; color:#aaa;">Team estimate</td>
+                                    <td style="padding:4px; border-bottom:1px solid #fafafa;"></td>
+                                    <td style="padding:4px; border-bottom:1px solid #fafafa;"></td>
                                 `;
                             } else {
                                 assignRow.innerHTML = `
@@ -284,7 +291,8 @@ function renderGanttTable() {
                                     <td style="padding:4px; border-bottom:1px solid #fafafa;">
                                         <input type="number" step="0.01" value="${sdeYears}" data-kind="wp-assign" data-field="sdeYears" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" data-team-id="${assign.teamId || ''}" style="width:80px;">
                                     </td>
-                                    <td style="padding:4px; border-bottom:1px solid #fafafa; color:#aaa;">Team estimate</td>
+                                    <td style="padding:4px; border-bottom:1px solid #fafafa;"></td>
+                                    <td style="padding:4px; border-bottom:1px solid #fafafa;"></td>
                                 `;
                             }
                             tbody.appendChild(assignRow);
@@ -296,7 +304,7 @@ function renderGanttTable() {
                                 toggleRow.innerHTML = `
                                     <td style="padding:4px 6px 4px 48px; border-bottom:1px solid #fafafa; color:#777; font-size:12px;">Other teams (${otherAssignments.length})</td>
                                     <td style="padding:4px; border-bottom:1px solid #fafafa;"></td>
-                                    <td colspan="3" style="padding:4px; border-bottom:1px solid #fafafa;">
+                                    <td colspan="4" style="padding:4px; border-bottom:1px solid #fafafa;">
                                         <button data-action="toggle-other-teams" data-wp-id="${wp.workPackageId}" style="padding:2px 6px;">${showOtherTeams ? 'Hide' : 'Show'} other teams</button>
                                     </td>
                                     <td style="padding:4px; border-bottom:1px solid #fafafa;"></td>
@@ -304,7 +312,7 @@ function renderGanttTable() {
                             } else {
                                 toggleRow.innerHTML = `
                                     <td style="padding:4px 6px 4px 48px; border-bottom:1px solid #fafafa; color:#777; font-size:12px;">Other teams (${otherAssignments.length})</td>
-                                    <td colspan="3" style="padding:4px; border-bottom:1px solid #fafafa;">
+                                    <td colspan="4" style="padding:4px; border-bottom:1px solid #fafafa;">
                                         <button data-action="toggle-other-teams" data-wp-id="${wp.workPackageId}" style="padding:2px 6px;">${showOtherTeams ? 'Hide' : 'Show'} other teams</button>
                                     </td>
                                     <td style="padding:4px; border-bottom:1px solid #fafafa;"></td>
@@ -442,6 +450,8 @@ function renderGanttTable() {
                 updates.startDate = value;
             } else if (field === 'endDate') {
                 updates.endDate = value;
+            } else if (field === 'dependencies') {
+                updates.dependencies = value.split(',').map(s => s.trim()).filter(Boolean);
             }
             const wp = typeof updateWorkPackage === 'function'
                 ? updateWorkPackage(wpId, updates)
