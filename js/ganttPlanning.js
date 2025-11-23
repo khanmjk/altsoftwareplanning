@@ -198,6 +198,7 @@ function renderGanttTable() {
 
     data.forEach(init => {
         const isExpanded = ganttExpandedInitiatives.has(init.initiativeId);
+        const hasWorkPackages = hasWorkPackagesForInitiative(init.initiativeId);
         const tr = document.createElement('tr');
         tr.className = 'gantt-init-row';
         tr.innerHTML = `
@@ -209,9 +210,9 @@ function renderGanttTable() {
                 </div>
             </td>
             ${showManagerTeams ? `<td style="padding:6px; border-bottom:1px solid #f0f0f0;">${getTeamsForInitiative(init).join(', ')}</td>` : ''}
-            <td style="padding:6px; border-bottom:1px solid #f0f0f0;"><input type="date" value="${init.displayStart || ''}" data-kind="initiative" data-field="startDate" data-id="${init.initiativeId}"></td>
-            <td style="padding:6px; border-bottom:1px solid #f0f0f0;"><input type="date" value="${init.displayEnd || ''}" data-kind="initiative" data-field="targetDueDate" data-id="${init.initiativeId}"></td>
-            <td style="padding:6px; border-bottom:1px solid #f0f0f0;"><input type="number" step="0.01" value="${computeSdeEstimate(init)}" data-kind="initiative" data-field="sdeEstimate" data-id="${init.initiativeId}" style="width:80px;"></td>
+            <td style="padding:6px; border-bottom:1px solid #f0f0f0;"><input type="date" value="${init.displayStart || ''}" data-kind="initiative" data-field="startDate" data-id="${init.initiativeId}" ${hasWorkPackages ? 'disabled title="Edit dates at Work Package level when WPs exist."' : ''}></td>
+            <td style="padding:6px; border-bottom:1px solid #f0f0f0;"><input type="date" value="${init.displayEnd || ''}" data-kind="initiative" data-field="targetDueDate" data-id="${init.initiativeId}" ${hasWorkPackages ? 'disabled title="Edit dates at Work Package level when WPs exist."' : ''}></td>
+            <td style="padding:6px; border-bottom:1px solid #f0f0f0;"><input type="number" step="0.01" value="${computeSdeEstimate(init)}" data-kind="initiative" data-field="sdeEstimate" data-id="${init.initiativeId}" style="width:80px;" ${hasWorkPackages ? 'disabled title="Edit SDEs at Work Package level when WPs exist."' : ''}></td>
             <td style="padding:6px; border-bottom:1px solid #f0f0f0;">${renderInitiativePredecessorSelector(allInitiatives, init)}</td>
             <td style="padding:6px; border-bottom:1px solid #f0f0f0;">
                 <button class="gantt-add-wp btn-primary" data-action="add-wp" data-id="${init.initiativeId}">Add WP</button>
@@ -404,13 +405,24 @@ function renderGanttTable() {
             const init = (currentSystemData.yearlyInitiatives || []).find(i => i.initiativeId === id);
             if (!init) return;
             const value = e.target.value;
+            const hasWpsForInit = hasWorkPackagesForInitiative(id);
             const selectedTeamLocal = (currentGanttGroupBy === 'Team') ? (document.getElementById('ganttGroupValue')?.value || 'all') : null;
             const workingDaysPerYearLocal = currentSystemData?.capacityConfiguration?.workingDaysPerYear || 261;
             if (field === 'startDate') {
+                if (hasWpsForInit) {
+                    alert('Initiative dates cannot be edited when work packages exist. Edit at the work package level.');
+                    renderGanttTable();
+                    return;
+                }
                 init.attributes = init.attributes || {};
                 init.attributes.startDate = value;
                 setWorkPackageDatesForTeam(init.initiativeId, { startDate: value }, selectedTeamLocal);
             } else if (field === 'targetDueDate') {
+                if (hasWpsForInit) {
+                    alert('Initiative dates cannot be edited when work packages exist. Edit at the work package level.');
+                    renderGanttTable();
+                    return;
+                }
                 init.targetDueDate = value;
                 setWorkPackageDatesForTeam(init.initiativeId, { endDate: value }, selectedTeamLocal);
             } else if (field === 'sdeEstimate') {
@@ -622,6 +634,10 @@ function getTeamName(teamId) {
     return team ? (team.teamIdentity || team.teamName || teamId) : teamId;
 }
 
+function hasWorkPackagesForInitiative(initiativeId) {
+    return (currentSystemData.workPackages || []).some(wp => wp.initiativeId === initiativeId);
+}
+
 function getEarliestAssignmentStart(wp) {
     let earliest = wp.startDate || null;
     (wp.impactedTeamAssignments || []).forEach(assign => {
@@ -642,10 +658,24 @@ function getLatestAssignmentEnd(wp) {
     return latest;
 }
 
+function truncateLabel(text, maxLen) {
+    const t = text || '';
+    if (t.length <= maxLen) return t;
+    return t.slice(0, maxLen - 3).trim() + '...';
+}
+
 function renderPredecessorSelector(allWorkPackages, wp) {
     const options = (allWorkPackages || []).filter(other => other.workPackageId !== wp.workPackageId);
+    const wpMap = new Map((allWorkPackages || []).map(w => [w.workPackageId, w]));
     const selected = new Set(wp.dependencies || []);
-    const label = selected.size ? `${selected.size} selected` : 'Select...';
+    const selectedLabels = Array.from(selected).map(id => {
+        const found = wpMap.get(id);
+        if (found) {
+            return `${found.workPackageId}${found.title ? ` — ${found.title}` : ''}`;
+        }
+        return id;
+    });
+    const label = selectedLabels.length ? truncateLabel(selectedLabels.join(', '), 45) : 'Select...';
     const menuId = `wp-deps-${wp.workPackageId}`;
     const items = options.length
         ? options.map(other => {
@@ -670,8 +700,16 @@ function renderPredecessorSelector(allWorkPackages, wp) {
 
 function renderInitiativePredecessorSelector(allInitiatives, init) {
     const options = (allInitiatives || []).filter(other => other.initiativeId !== init.initiativeId);
+    const initMap = new Map((allInitiatives || []).map(i => [i.initiativeId, i]));
     const selected = new Set(init.dependencies || []);
-    const label = selected.size ? `${selected.size} selected` : 'Select...';
+    const selectedLabels = Array.from(selected).map(id => {
+        const found = initMap.get(id);
+        if (found) {
+            return `${found.initiativeId}${found.title ? ` — ${found.title}` : ''}`;
+        }
+        return id;
+    });
+    const label = selectedLabels.length ? truncateLabel(selectedLabels.join(', '), 45) : 'Select...';
     const menuId = `init-deps-${init.initiativeId}`;
     const items = options.length
         ? options.map(other => {
