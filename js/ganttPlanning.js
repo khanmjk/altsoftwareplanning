@@ -1,9 +1,16 @@
 let currentGanttYear = new Date().getFullYear();
 let currentGanttGroupBy = 'All Initiatives';
+const ganttExpandedInitiatives = new Set();
+const ganttExpandedWorkPackages = new Set();
+let ganttWorkPackagesInitialized = false;
+const ganttOtherTeamsExpanded = new Set();
 
 function initializeGanttPlanningView() {
     const container = document.getElementById('ganttPlanningView');
     if (!container) return;
+    if (typeof ensureWorkPackagesForInitiatives === 'function') {
+        ensureWorkPackagesForInitiatives(currentSystemData, currentGanttYear);
+    }
     ganttChartInstance = null;
     container.innerHTML = `
         <div id="ganttPlanningControls" class="gantt-filter-bar"></div>
@@ -87,6 +94,14 @@ function renderGanttControls() {
     dynamicFilterWrap.id = 'ganttDynamicFilter';
     dynamicFilterWrap.className = 'filter-item';
     filtersWrapper.appendChild(dynamicFilterWrap);
+    const refreshBtn = document.createElement('button');
+    refreshBtn.textContent = 'Refresh';
+    refreshBtn.className = 'btn-secondary';
+    refreshBtn.onclick = () => {
+        renderGanttTable();
+        renderGanttChart();
+    };
+    filtersWrapper.appendChild(refreshBtn);
     controls.appendChild(filtersWrapper);
 
     // Build org/team filters using existing helper
@@ -147,27 +162,34 @@ function getGanttFilteredInitiatives() {
 function renderGanttTable() {
     const container = document.getElementById('ganttPlanningTableContainer');
     if (!container) return;
+    if (typeof ensureWorkPackagesForInitiatives === 'function') {
+        ensureWorkPackagesForInitiatives(currentSystemData, currentGanttYear);
+    }
     const selectedTeam = (currentGanttGroupBy === 'Team') ? (document.getElementById('ganttGroupValue')?.value || 'all') : null;
+    const showManagerTeams = currentGanttGroupBy === 'Manager' && (document.getElementById('ganttManagerFilter')?.value || 'all') !== 'all';
+    const initiativeMap = new Map();
     const data = getGanttFilteredInitiatives().map(init => {
         const dates = getComputedInitiativeDates(init, selectedTeam);
-        return {
+        const item = {
             ...init,
             displayStart: dates.startDate,
             displayEnd: dates.endDate
         };
+        initiativeMap.set(init.initiativeId, item);
+        return item;
     });
     container.innerHTML = `
         <div class="gantt-table-wrapper">
-        <table class="gantt-table">
+        <table class="gantt-table gantt-hierarchy">
             <thead>
                 <tr>
-                    <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">ID</th>
-                    <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Title</th>
-                    ${currentGanttGroupBy === 'Manager' && (document.getElementById('ganttManagerFilter')?.value || 'all') !== 'all' ? '<th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Teams</th>' : ''}
+                    <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Initiative / Work Package</th>
+                    ${showManagerTeams ? '<th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Teams</th>' : ''}
                     <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Start</th>
                     <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Target</th>
                     <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">SDEs</th>
                     <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Status</th>
+                    <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Actions</th>
                 </tr>
             </thead>
             <tbody id="ganttTableBody"></tbody>
@@ -175,64 +197,234 @@ function renderGanttTable() {
         </div>
     `;
     const tbody = document.getElementById('ganttTableBody');
+    if (data.length === 0) {
+        const emptyRow = document.createElement('tr');
+        emptyRow.innerHTML = `<td colspan="${showManagerTeams ? '7' : '6'}" style="padding:10px; text-align:center; color:#777;">No initiatives match the filters.</td>`;
+        tbody.appendChild(emptyRow);
+        return;
+    }
+
+    const workingDaysPerYear = currentSystemData?.capacityConfiguration?.workingDaysPerYear || 261;
+    // Seed default expansion only once for existing work packages
+    if (!ganttWorkPackagesInitialized) {
+        (currentSystemData.workPackages || []).forEach(wp => {
+            ganttExpandedWorkPackages.add(wp.workPackageId);
+        });
+        ganttWorkPackagesInitialized = true;
+    }
+
     data.forEach(init => {
+        const isExpanded = ganttExpandedInitiatives.has(init.initiativeId);
         const tr = document.createElement('tr');
+        tr.className = 'gantt-init-row';
         tr.innerHTML = `
-            <td style="padding:6px; border-bottom:1px solid #f0f0f0; font-family: monospace;">${init.initiativeId || ''}</td>
-            <td style="padding:6px; border-bottom:1px solid #f0f0f0;">${init.title || '(Untitled)'}</td>
-            ${currentGanttGroupBy === 'Manager' && (document.getElementById('ganttManagerFilter')?.value || 'all') !== 'all' ? `<td style="padding:6px; border-bottom:1px solid #f0f0f0;">${getTeamsForInitiative(init).join(', ')}</td>` : ''}
-            <td style="padding:6px; border-bottom:1px solid #f0f0f0;"><input type="date" value="${init.displayStart || ''}" data-field="startDate" data-id="${init.initiativeId}"></td>
-            <td style="padding:6px; border-bottom:1px solid #f0f0f0;"><input type="date" value="${init.displayEnd || ''}" data-field="targetDueDate" data-id="${init.initiativeId}"></td>
-            <td style="padding:6px; border-bottom:1px solid #f0f0f0;"><input type="number" step="0.01" value="${computeSdeEstimate(init)}" data-field="sdeEstimate" data-id="${init.initiativeId}" style="width:80px;"></td>
+            <td style="padding:6px; border-bottom:1px solid #f0f0f0; display:flex; align-items:center; gap:8px;">
+                <button class="gantt-expander" data-action="toggle-initiative" data-id="${init.initiativeId}" aria-label="Toggle work packages" style="min-width:24px;">${isExpanded ? '-' : '+'}</button>
+                <div>
+                    <div style="font-weight:600;">${init.title || '(Untitled)'}</div>
+                    <div style="font-family: monospace; color:#666; font-size:12px;">${init.initiativeId || ''}</div>
+                </div>
+            </td>
+            ${showManagerTeams ? `<td style="padding:6px; border-bottom:1px solid #f0f0f0;">${getTeamsForInitiative(init).join(', ')}</td>` : ''}
+            <td style="padding:6px; border-bottom:1px solid #f0f0f0;"><input type="date" value="${init.displayStart || ''}" data-kind="initiative" data-field="startDate" data-id="${init.initiativeId}"></td>
+            <td style="padding:6px; border-bottom:1px solid #f0f0f0;"><input type="date" value="${init.displayEnd || ''}" data-kind="initiative" data-field="targetDueDate" data-id="${init.initiativeId}"></td>
+            <td style="padding:6px; border-bottom:1px solid #f0f0f0;"><input type="number" step="0.01" value="${computeSdeEstimate(init)}" data-kind="initiative" data-field="sdeEstimate" data-id="${init.initiativeId}" style="width:80px;"></td>
             <td style="padding:6px; border-bottom:1px solid #f0f0f0;">
-                <select data-field="status" data-id="${init.initiativeId}">
+                <select data-kind="initiative" data-field="status" data-id="${init.initiativeId}">
                     ${['Backlog','Defined','Committed','In Progress','Done','Blocked'].map(s => `<option value="${s}" ${init.status === s ? 'selected' : ''}>${s}</option>`).join('')}
                 </select>
             </td>
+            <td style="padding:6px; border-bottom:1px solid #f0f0f0;">
+                <button class="gantt-add-wp" data-action="add-wp" data-id="${init.initiativeId}" style="padding:4px 8px;">Add WP</button>
+            </td>
         `;
         tbody.appendChild(tr);
+
+        if (isExpanded) {
+            const wpList = getWorkPackagesForInitiative(init.initiativeId);
+            if (!wpList.length) {
+                const emptyWp = document.createElement('tr');
+                emptyWp.className = 'gantt-wp-row';
+                emptyWp.innerHTML = `<td colspan="${showManagerTeams ? '7' : '6'}" style="padding:6px 12px; color:#777;">No work packages yet. Click "Add WP" to create one.</td>`;
+                tbody.appendChild(emptyWp);
+            } else {
+                wpList.forEach(wp => {
+                    const wpExpanded = ganttExpandedWorkPackages.has(wp.workPackageId);
+                    const wpRow = document.createElement('tr');
+                    wpRow.className = 'gantt-wp-row';
+                    wpRow.innerHTML = `
+                        <td style="padding:6px 6px 6px 32px; border-bottom:1px solid #f7f7f7;">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <button class="gantt-expander" data-action="toggle-wp" data-wp-id="${wp.workPackageId}" aria-label="Toggle team assignments" style="min-width:20px;">${wpExpanded ? '-' : '+'}</button>
+                                <input type="text" value="${wp.title || ''}" data-kind="work-package" data-field="title" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" style="width:70%;">
+                            </div>
+                        </td>
+                        ${showManagerTeams ? `<td style="padding:6px; border-bottom:1px solid #f7f7f7; color:#555;">${formatWorkPackageTeams(wp, selectedTeam)}</td>` : ''}
+                        <td style="padding:6px; border-bottom:1px solid #f7f7f7;"><input type="date" value="${wp.startDate || ''}" data-kind="work-package" data-field="startDate" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}"></td>
+                        <td style="padding:6px; border-bottom:1px solid #f7f7f7;"><input type="date" value="${wp.endDate || ''}" data-kind="work-package" data-field="endDate" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}"></td>
+                        <td style="padding:6px; border-bottom:1px solid #f7f7f7; color:#333;">${computeWorkPackageSdeYears(wp, workingDaysPerYear, selectedTeam)}</td>
+                        <td style="padding:6px; border-bottom:1px solid #f7f7f7;">
+                            <select data-kind="work-package" data-field="status" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}">
+                                ${['Planned','In Progress','Completed','Blocked'].map(s => `<option value="${s}" ${wp.status === s ? 'selected' : ''}>${s}</option>`).join('')}
+                            </select>
+                        </td>
+                        <td style="padding:6px; border-bottom:1px solid #f7f7f7;">
+                            <button data-action="delete-wp" data-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" style="padding:4px 8px; color:#b00020;">Delete</button>
+                        </td>
+                    `;
+                    tbody.appendChild(wpRow);
+
+                    // Team-level assignment rows for this work package
+                    if (wpExpanded) {
+                        const teamFilterActive = currentGanttGroupBy === 'Team' && selectedTeam && selectedTeam !== 'all';
+                        const assigns = wp.impactedTeamAssignments || [];
+                        const selectedAssignments = teamFilterActive ? assigns.filter(a => a.teamId === selectedTeam) : assigns;
+                        const otherAssignments = teamFilterActive ? assigns.filter(a => a.teamId !== selectedTeam) : [];
+                        const showOtherTeams = !teamFilterActive || ganttOtherTeamsExpanded.has(wp.workPackageId);
+                        const visibleAssignments = showOtherTeams ? assigns : selectedAssignments;
+
+                        visibleAssignments.forEach(assign => {
+                            const assignRow = document.createElement('tr');
+                            assignRow.className = 'gantt-wp-assign-row';
+                            const sdeYears = ((assign.sdeDays || 0) / workingDaysPerYear).toFixed(2);
+                            assignRow.innerHTML = `
+                                <td style="padding:4px 6px 4px 48px; border-bottom:1px solid #fafafa; color:#555; font-size:13px;">Team: ${getTeamName(assign.teamId) || '(Unassigned)'}</td>
+                                ${showManagerTeams ? `<td style="padding:4px; border-bottom:1px solid #fafafa;"></td>` : ''}
+                                <td style="padding:4px; border-bottom:1px solid #fafafa;">
+                                    <input type="date" value="${assign.startDate || wp.startDate || ''}" data-kind="wp-assign" data-field="startDate" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" data-team-id="${assign.teamId || ''}">
+                                </td>
+                                <td style="padding:4px; border-bottom:1px solid #fafafa;">
+                                    <input type="date" value="${assign.endDate || wp.endDate || ''}" data-kind="wp-assign" data-field="endDate" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" data-team-id="${assign.teamId || ''}">
+                                </td>
+                                <td style="padding:4px; border-bottom:1px solid #fafafa;">
+                                    <input type="number" step="0.01" value="${sdeYears}" data-kind="wp-assign" data-field="sdeYears" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" data-team-id="${assign.teamId || ''}" style="width:80px;">
+                                </td>
+                                <td style="padding:4px; border-bottom:1px solid #fafafa; color:#aaa;">Team estimate</td>
+                                <td style="padding:4px; border-bottom:1px solid #fafafa;"></td>
+                            `;
+                            tbody.appendChild(assignRow);
+                        });
+
+                        if (teamFilterActive && otherAssignments.length) {
+                            const toggleRow = document.createElement('tr');
+                            toggleRow.innerHTML = `
+                                <td style="padding:4px 6px 4px 48px; border-bottom:1px solid #fafafa; color:#777; font-size:12px;">Other teams (${otherAssignments.length})</td>
+                                ${showManagerTeams ? `<td style="padding:4px; border-bottom:1px solid #fafafa;"></td>` : ''}
+                                <td colspan="${showManagerTeams ? '4' : '3'}" style="padding:4px; border-bottom:1px solid #fafafa;">
+                                    <button data-action="toggle-other-teams" data-wp-id="${wp.workPackageId}" style="padding:2px 6px;">${showOtherTeams ? 'Hide' : 'Show'} other teams</button>
+                                </td>
+                                <td style="padding:4px; border-bottom:1px solid #fafafa;"></td>
+                            `;
+                            tbody.appendChild(toggleRow);
+                        }
+                    }
+                });
+            }
+        }
     });
 
-    tbody.querySelectorAll('input, select').forEach(input => {
-        input.addEventListener('change', (e) => {
-            const field = e.target.dataset.field;
+    tbody.addEventListener('click', (e) => {
+        const target = e.target;
+        const action = target.dataset.action;
+        if (action === 'toggle-initiative') {
+            const id = target.dataset.id;
+            if (ganttExpandedInitiatives.has(id)) {
+                ganttExpandedInitiatives.delete(id);
+            } else {
+                ganttExpandedInitiatives.add(id);
+            }
+            renderGanttTable();
+        } else if (action === 'add-wp') {
+            const id = target.dataset.id;
+            const init = initiativeMap.get(id);
+            const defaults = { startDate: init?.displayStart, endDate: init?.displayEnd };
+            const wp = typeof addWorkPackage === 'function' ? addWorkPackage(id, defaults) : null;
+            if (wp) {
+                ganttExpandedInitiatives.add(id);
+                ganttExpandedWorkPackages.add(wp.workPackageId);
+                if (typeof syncInitiativeTotals === 'function') {
+                    syncInitiativeTotals(id, currentSystemData);
+                }
+                if (typeof saveSystemChanges === 'function') {
+                    saveSystemChanges();
+                }
+                renderGanttTable();
+                renderGanttChart();
+            }
+        } else if (action === 'delete-wp') {
+            const wpId = target.dataset.id;
+            const initId = target.dataset.initiativeId;
+            if (!window.confirm('Delete this work package?')) {
+                return;
+            }
+            const deleted = typeof deleteWorkPackage === 'function' ? deleteWorkPackage(wpId) : false;
+            ganttExpandedWorkPackages.delete(wpId);
+            if (deleted && typeof syncInitiativeTotals === 'function') {
+                syncInitiativeTotals(initId, currentSystemData);
+            }
+            if (typeof saveSystemChanges === 'function') {
+                saveSystemChanges();
+            }
+            renderGanttTable();
+            renderGanttChart();
+        } else if (action === 'toggle-wp') {
+            const wpId = target.dataset.wpId;
+            if (ganttExpandedWorkPackages.has(wpId)) {
+                ganttExpandedWorkPackages.delete(wpId);
+            } else {
+                ganttExpandedWorkPackages.add(wpId);
+            }
+            renderGanttTable();
+        } else if (action === 'toggle-other-teams') {
+            const wpId = target.dataset.wpId;
+            if (ganttOtherTeamsExpanded.has(wpId)) {
+                ganttOtherTeamsExpanded.delete(wpId);
+            } else {
+                ganttOtherTeamsExpanded.add(wpId);
+            }
+            renderGanttTable();
+        }
+    });
+
+    tbody.addEventListener('change', (e) => {
+        const field = e.target.dataset.field;
+        const kind = e.target.dataset.kind;
+        if (kind === 'initiative') {
             const id = e.target.dataset.id;
             const init = (currentSystemData.yearlyInitiatives || []).find(i => i.initiativeId === id);
             if (!init) return;
             const value = e.target.value;
-            const selectedTeam = (currentGanttGroupBy === 'Team') ? (document.getElementById('ganttGroupValue')?.value || 'all') : null;
-            const workingDaysPerYear = currentSystemData?.capacityConfiguration?.workingDaysPerYear || 261;
+            const selectedTeamLocal = (currentGanttGroupBy === 'Team') ? (document.getElementById('ganttGroupValue')?.value || 'all') : null;
+            const workingDaysPerYearLocal = currentSystemData?.capacityConfiguration?.workingDaysPerYear || 261;
             if (field === 'startDate') {
                 init.attributes = init.attributes || {};
                 init.attributes.startDate = value;
-                setWorkPackageDatesForTeam(init.initiativeId, { startDate: value }, selectedTeam);
+                setWorkPackageDatesForTeam(init.initiativeId, { startDate: value }, selectedTeamLocal);
             } else if (field === 'targetDueDate') {
                 init.targetDueDate = value;
-                setWorkPackageDatesForTeam(init.initiativeId, { endDate: value }, selectedTeam);
+                setWorkPackageDatesForTeam(init.initiativeId, { endDate: value }, selectedTeamLocal);
             } else if (field === 'sdeEstimate') {
                 const num = parseFloat(value) || 0;
                 const assignments = init.assignments || [];
                 if (assignments.length > 0) {
-                    if (currentGanttGroupBy === 'Team' && selectedTeam && selectedTeam !== 'all') {
+                    if (currentGanttGroupBy === 'Team' && selectedTeamLocal && selectedTeamLocal !== 'all') {
                         assignments.forEach(a => {
-                            if (a.teamId === selectedTeam) {
+                            if (a.teamId === selectedTeamLocal) {
                                 a.sdeYears = num;
                             }
                         });
-                        updateWorkPackageSde(init.initiativeId, selectedTeam, num, workingDaysPerYear);
+                        updateWorkPackageSde(init.initiativeId, selectedTeamLocal, num, workingDaysPerYearLocal);
                     } else {
                         const perTeam = num / assignments.length;
                         assignments.forEach(a => a.sdeYears = perTeam);
-                        // distribute to all teams
                         (init.assignments || []).forEach(a => {
-                            updateWorkPackageSde(init.initiativeId, a.teamId, perTeam, workingDaysPerYear);
+                            updateWorkPackageSde(init.initiativeId, a.teamId, perTeam, workingDaysPerYearLocal);
                         });
                     }
                 } else {
-                    init.assignments = [{ teamId: selectedTeam || null, sdeYears: num }];
-                    updateWorkPackageSde(init.initiativeId, selectedTeam || null, num, workingDaysPerYear);
+                    init.assignments = [{ teamId: selectedTeamLocal || null, sdeYears: num }];
+                    updateWorkPackageSde(init.initiativeId, selectedTeamLocal || null, num, workingDaysPerYearLocal);
                 }
-                console.log('[GANTT] SDE estimate changed', { initiativeId: id, newTotalSdeYears: num, assignments: init.assignments });
             } else if (field === 'status') {
                 init.status = value;
             }
@@ -246,7 +438,64 @@ function renderGanttTable() {
                 saveSystemChanges();
             }
             renderGanttChart();
-        });
+        } else if (kind === 'work-package') {
+            const wpId = e.target.dataset.wpId;
+            const initId = e.target.dataset.initiativeId;
+            const value = e.target.value;
+            const updates = {};
+            if (field === 'title') {
+                updates.title = value;
+            } else if (field === 'startDate') {
+                updates.startDate = value;
+            } else if (field === 'endDate') {
+                updates.endDate = value;
+            } else if (field === 'status') {
+                updates.status = value;
+            }
+            const wp = typeof updateWorkPackage === 'function'
+                ? updateWorkPackage(wpId, updates)
+                : (currentSystemData.workPackages || []).find(w => w.workPackageId === wpId);
+            if (!wp) return;
+            if (updates.startDate) {
+                (wp.impactedTeamAssignments || []).forEach(assign => assign.startDate = updates.startDate || assign.startDate);
+            }
+            if (updates.endDate) {
+                (wp.impactedTeamAssignments || []).forEach(assign => assign.endDate = updates.endDate || assign.endDate);
+            }
+            if (typeof syncInitiativeTotals === 'function') {
+                syncInitiativeTotals(initId, currentSystemData);
+            }
+            if (typeof saveSystemChanges === 'function') {
+                saveSystemChanges();
+            }
+            renderGanttTable();
+            renderGanttChart();
+        } else if (kind === 'wp-assign') {
+            const wpId = e.target.dataset.wpId;
+            const initId = e.target.dataset.initiativeId;
+            const teamId = e.target.dataset.teamId || null;
+            const field = e.target.dataset.field;
+            const wp = (currentSystemData.workPackages || []).find(w => w.workPackageId === wpId);
+            if (!wp) return;
+            const assign = (wp.impactedTeamAssignments || []).find(a => `${a.teamId || ''}` === `${teamId || ''}`);
+            if (!assign) return;
+            if (field === 'startDate') {
+                assign.startDate = e.target.value;
+            } else if (field === 'endDate') {
+                assign.endDate = e.target.value;
+            } else if (field === 'sdeYears') {
+                const sdeYears = parseFloat(e.target.value) || 0;
+                assign.sdeDays = sdeYears * getWorkingDaysPerYear();
+            }
+            if (typeof syncInitiativeTotals === 'function') {
+                syncInitiativeTotals(initId, currentSystemData);
+            }
+            if (typeof saveSystemChanges === 'function') {
+                saveSystemChanges();
+            }
+            renderGanttTable();
+            renderGanttChart();
+        }
     });
 }
 
@@ -269,6 +518,46 @@ function computeSdeEstimate(init) {
         }
     });
     return total.toFixed(2);
+}
+
+function getWorkPackagesForInitiative(initiativeId) {
+    if (!initiativeId) return [];
+    if (typeof ensureWorkPackagesForInitiatives === 'function') {
+        ensureWorkPackagesForInitiatives(currentSystemData, currentGanttYear);
+    }
+    return (currentSystemData.workPackages || []).filter(wp => wp.initiativeId === initiativeId);
+}
+
+function computeWorkPackageSdeYears(wp, workingDaysPerYear, selectedTeam = null) {
+    const wpy = workingDaysPerYear || currentSystemData?.capacityConfiguration?.workingDaysPerYear || 261;
+    const assignments = wp?.impactedTeamAssignments || [];
+    const filtered = (selectedTeam && selectedTeam !== 'all')
+        ? assignments.filter(a => a.teamId === selectedTeam)
+        : assignments;
+    const totalDays = filtered.reduce((sum, a) => sum + (a.sdeDays || 0), 0);
+    return (totalDays / wpy).toFixed(2);
+}
+
+function formatWorkPackageTeams(wp, selectedTeam = null) {
+    const teams = new Set();
+    (wp?.impactedTeamAssignments || []).forEach(assign => {
+        if (selectedTeam && selectedTeam !== 'all' && assign.teamId !== selectedTeam) return;
+        const team = (currentSystemData.teams || []).find(t => t.teamId === assign.teamId);
+        if (team) teams.add(team.teamIdentity || team.teamName || assign.teamId);
+    });
+    if (teams.size === 0 && selectedTeam && selectedTeam !== 'all') {
+        return '(Selected team not assigned)';
+    }
+    return teams.size ? Array.from(teams).join(', ') : '(Unassigned)';
+}
+
+function getWorkingDaysPerYear() {
+    return currentSystemData?.capacityConfiguration?.workingDaysPerYear || 261;
+}
+
+function getTeamName(teamId) {
+    const team = (currentSystemData.teams || []).find(t => t.teamId === teamId);
+    return team ? (team.teamIdentity || team.teamName || teamId) : teamId;
 }
 
 function getTeamsByManager(managerId) {
@@ -302,8 +591,10 @@ function getComputedInitiativeDates(init, selectedTeam = null) {
     let earliest = null;
     let latest = null;
     workPackages.forEach(wp => {
+        let hasMatchingAssignment = false;
         (wp.impactedTeamAssignments || []).forEach(assign => {
             if (selectedTeam && selectedTeam !== 'all' && assign.teamId !== selectedTeam) return;
+            hasMatchingAssignment = true;
             if (assign.startDate) {
                 if (!earliest || assign.startDate < earliest) earliest = assign.startDate;
             }
@@ -311,6 +602,10 @@ function getComputedInitiativeDates(init, selectedTeam = null) {
                 if (!latest || assign.endDate > latest) latest = assign.endDate;
             }
         });
+        if (!hasMatchingAssignment) {
+            if (wp.startDate && (!earliest || wp.startDate < earliest)) earliest = wp.startDate;
+            if (wp.endDate && (!latest || wp.endDate > latest)) latest = wp.endDate;
+        }
     });
     return {
         startDate: earliest || init.attributes?.startDate || defaultStart,
@@ -365,6 +660,9 @@ function updateWorkPackageSde(initiativeId, teamId, sdeYears, workingDaysPerYear
 async function renderGanttChart() {
     const container = document.getElementById('ganttChartContainer');
     if (!container) return;
+    if (typeof ensureWorkPackagesForInitiatives === 'function') {
+        ensureWorkPackagesForInitiatives(currentSystemData, currentGanttYear);
+    }
     const selectedTeam = (currentGanttGroupBy === 'Team') ? (document.getElementById('ganttGroupValue')?.value || 'all') : null;
     const initiatives = getGanttFilteredInitiatives();
     if (!initiatives || initiatives.length === 0) {

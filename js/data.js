@@ -26,16 +26,11 @@ const Modes = {
 
 /**
  * Ensures work packages exist for all initiatives. Generates defaults from initiative assignments when missing.
- * - Creates a single auto work package per initiative if none exist.
- * - Populates impactedTeamAssignments with teamId, sdeDays, startDate, endDate.
- * - Populates deliveryPhases from STANDARD_WORK_PACKAGE_PHASES with placeholder dates/status.
- * - Links workPackageIds on the initiative.
  */
 function ensureWorkPackagesForInitiatives(systemData, yearFilter = null) {
     if (!systemData) return;
     if (!systemData.workPackages) systemData.workPackages = [];
     let createdCount = 0;
-    console.log(`[WORKPACKAGES] ensureWorkPackagesForInitiatives invoked${yearFilter ? ' for year ' + yearFilter : ''}. Existing work packages: ${(systemData.workPackages || []).length}`);
     const workingDaysPerYear = systemData.capacityConfiguration?.workingDaysPerYear || 261;
     const defaultStartForYear = (year) => `${year}-01-15`;
     const defaultEndForYear = (year) => `${year}-11-01`;
@@ -43,9 +38,11 @@ function ensureWorkPackagesForInitiatives(systemData, yearFilter = null) {
     (systemData.yearlyInitiatives || []).forEach(init => {
         if (yearFilter && `${init.attributes?.planningYear || ''}` !== `${yearFilter}`) return;
         init.workPackageIds = init.workPackageIds || [];
+        
+        // Only create a default WP if absolutely no WPs exist for this initiative
         const existing = (systemData.workPackages || []).filter(wp => wp.initiativeId === init.initiativeId);
         if (existing.length > 0) {
-            // Backfill missing arrays on existing WPs
+            // Backfill missing arrays on existing WPs if needed
             existing.forEach(wp => {
                 wp.impactedTeamAssignments = wp.impactedTeamAssignments || [];
                 wp.deliveryPhases = wp.deliveryPhases || STANDARD_WORK_PACKAGE_PHASES.map(phaseName => ({
@@ -55,13 +52,26 @@ function ensureWorkPackagesForInitiatives(systemData, yearFilter = null) {
                     endDate: wp.endDate || null,
                     status: 'Planned'
                 }));
+                // Add missing team assignments if initiative assignments exist
+                const initAssignments = init.assignments || [];
+                initAssignments.forEach(assign => {
+                    if (!assign.teamId) return;
+                    const already = (wp.impactedTeamAssignments || []).some(a => a.teamId === assign.teamId);
+                    if (!already) {
+                        wp.impactedTeamAssignments.push({
+                            teamId: assign.teamId,
+                            sdeDays: (assign.sdeYears || 0) * workingDaysPerYear,
+                            startDate: wp.startDate || null,
+                            endDate: wp.endDate || null
+                        });
+                    }
+                });
             });
-            console.log(`[WORKPACKAGES] Initiative ${init.initiativeId} already has ${existing.length} work package(s); backfilled missing arrays.`);
             return;
         }
 
         const planningYear = init.attributes?.planningYear || new Date().getFullYear();
-        const wpId = `wp-${init.initiativeId || Math.random().toString(36).slice(2)}`;
+        const wpId = `wp-${init.initiativeId}-${Date.now()}`; // Simpler ID generation
         const wpStart = init.attributes?.startDate || defaultStartForYear(planningYear);
         const wpEnd = init.targetDueDate || defaultEndForYear(planningYear);
         const impactedTeamAssignments = (init.assignments || []).map(assign => ({
@@ -80,7 +90,7 @@ function ensureWorkPackagesForInitiatives(systemData, yearFilter = null) {
         const newWp = {
             workPackageId: wpId,
             initiativeId: init.initiativeId,
-            title: init.title || wpId,
+            title: "Phase 1: Implementation", // Better default title
             impactedTeamAssignments,
             deliveryPhases,
             startDate: wpStart,
@@ -92,13 +102,100 @@ function ensureWorkPackagesForInitiatives(systemData, yearFilter = null) {
             init.workPackageIds.push(wpId);
         }
         createdCount += 1;
-        console.log(`[WORKPACKAGES] Created work package ${wpId} for initiative ${init.initiativeId} with ${impactedTeamAssignments.length} team assignment(s).`);
     });
-    if (createdCount > 0) {
-        console.log(`[WORKPACKAGES] Created ${createdCount} work package(s) from initiatives${yearFilter ? ' for year ' + yearFilter : ''}.`);
-    } else {
-        console.log('[WORKPACKAGES] No new work packages created (existing data present).');
+}
+
+/**
+ * Adds a new Work Package to a specific initiative.
+ * @param {string} initiativeId 
+ * @param {object} wpData - Optional overrides { title, startDate, endDate, status }
+ */
+function addWorkPackage(initiativeId, wpData = {}) {
+    if (!currentSystemData) return null;
+    ensureWorkPackagesForInitiatives(currentSystemData); 
+
+    const initiative = currentSystemData.yearlyInitiatives.find(i => i.initiativeId === initiativeId);
+    if (!initiative) {
+        console.error("Initiative not found:", initiativeId);
+        return null;
     }
+
+    const newWpId = `wp-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const planningYear = initiative.attributes?.planningYear || new Date().getFullYear();
+    
+    // Default dates fallback to initiative dates
+    const defaultStart = initiative.attributes?.startDate || `${planningYear}-01-15`;
+    const defaultEnd = initiative.targetDueDate || `${planningYear}-11-01`;
+
+    const impactedTeamAssignments = (initiative.assignments || []).map(assign => ({
+        teamId: assign.teamId || null,
+        sdeDays: (assign.sdeYears || 0) * (currentSystemData?.capacityConfiguration?.workingDaysPerYear || 261),
+        startDate: wpData.startDate || defaultStart,
+        endDate: wpData.endDate || defaultEnd
+    }));
+
+    const newWp = {
+        workPackageId: newWpId,
+        initiativeId: initiativeId,
+        title: wpData.title || "New Work Package",
+        startDate: wpData.startDate || defaultStart,
+        endDate: wpData.endDate || defaultEnd,
+        status: wpData.status || "Planned",
+        impactedTeamAssignments,
+        deliveryPhases: STANDARD_WORK_PACKAGE_PHASES.map(phaseName => ({
+            id: `phase-${phaseName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+            name: phaseName,
+            startDate: null,
+            endDate: null,
+            status: 'Planned'
+        })),
+        ...wpData
+    };
+
+    currentSystemData.workPackages.push(newWp);
+    
+    if (!initiative.workPackageIds) initiative.workPackageIds = [];
+    initiative.workPackageIds.push(newWpId);
+
+    return newWp;
+}
+
+/**
+ * Updates an existing Work Package.
+ * @param {string} workPackageId 
+ * @param {object} updates 
+ */
+function updateWorkPackage(workPackageId, updates) {
+    if (!currentSystemData || !currentSystemData.workPackages) return null;
+    const wp = currentSystemData.workPackages.find(w => w.workPackageId === workPackageId);
+    if (!wp) return null;
+
+    Object.assign(wp, updates);
+    
+    // If dates changed, trigger sync logic if necessary (omitted for MVP)
+    return wp;
+}
+
+/**
+ * Deletes a Work Package.
+ * @param {string} workPackageId 
+ */
+function deleteWorkPackage(workPackageId) {
+    if (!currentSystemData || !currentSystemData.workPackages) return false;
+    
+    const index = currentSystemData.workPackages.findIndex(w => w.workPackageId === workPackageId);
+    if (index === -1) return false;
+
+    const wp = currentSystemData.workPackages[index];
+    currentSystemData.workPackages.splice(index, 1);
+
+    // Remove reference from initiative
+    const initiative = currentSystemData.yearlyInitiatives.find(i => i.initiativeId === wp.initiativeId);
+    if (initiative && initiative.workPackageIds) {
+        initiative.workPackageIds = initiative.workPackageIds.filter(id => id !== workPackageId);
+    }
+
+    return true;
 }
 
 /**
@@ -109,7 +206,9 @@ function syncInitiativeTotals(initiativeId, systemData) {
     if (!systemData || !initiativeId) return;
     const workingDaysPerYear = systemData.capacityConfiguration?.workingDaysPerYear || 261;
     const wpForInit = (systemData.workPackages || []).filter(wp => wp.initiativeId === initiativeId);
-    if (!wpForInit.length) return;
+    // If no WPs, don't zero out initiative data (allows top-down editing fallback)
+    if (!wpForInit.length) return; 
+    
     const teamTotals = {};
     wpForInit.forEach(wp => {
         (wp.impactedTeamAssignments || []).forEach(assign => {
@@ -119,12 +218,16 @@ function syncInitiativeTotals(initiativeId, systemData) {
     });
     const initiative = (systemData.yearlyInitiatives || []).find(i => i.initiativeId === initiativeId);
     if (!initiative) return;
-    initiative.assignments = Object.entries(teamTotals).map(([teamId, days]) => ({
-        teamId,
-        sdeYears: days / workingDaysPerYear
-    }));
-    console.log('[WORKPACKAGES] syncInitiativeTotals', initiativeId, 'assignments:', initiative.assignments);
-    // Update rollup dates: earliest start, latest end across assignments
+    
+    // Only overwrite if we actually found data
+    if (Object.keys(teamTotals).length > 0) {
+        initiative.assignments = Object.entries(teamTotals).map(([teamId, days]) => ({
+            teamId,
+            sdeYears: days / workingDaysPerYear
+        }));
+    }
+    
+    // Update rollup dates: earliest start, latest end across assignments/WPs
     const { startDate, endDate } = getInitiativeDateSpanFromWorkPackages(wpForInit, initiative);
     initiative.attributes = initiative.attributes || {};
     initiative.attributes.startDate = startDate;
@@ -138,14 +241,12 @@ function getInitiativeDateSpanFromWorkPackages(workPackages, initiative) {
     let earliest = null;
     let latest = null;
     workPackages.forEach(wp => {
-        (wp.impactedTeamAssignments || []).forEach(assign => {
-            if (assign.startDate) {
-                if (!earliest || assign.startDate < earliest) earliest = assign.startDate;
-            }
-            if (assign.endDate) {
-                if (!latest || assign.endDate > latest) latest = assign.endDate;
-            }
-        });
+        if (wp.startDate) {
+            if (!earliest || wp.startDate < earliest) earliest = wp.startDate;
+        }
+        if (wp.endDate) {
+            if (!latest || wp.endDate > latest) latest = wp.endDate;
+        }
     });
     return {
         startDate: earliest || defaultStart,
@@ -153,47 +254,33 @@ function getInitiativeDateSpanFromWorkPackages(workPackages, initiative) {
     };
 }
 
-if (typeof window !== 'undefined') {
-    window.ensureWorkPackagesForInitiatives = ensureWorkPackagesForInitiatives;
-    window.syncInitiativeTotals = syncInitiativeTotals;
-    window.getInitiativeDateSpanFromWorkPackages = getInitiativeDateSpanFromWorkPackages;
-}
-
 /**
  * Pushes initiative-level assignment and dates down into work packages for consistency.
+ * Used when top-down editing occurs.
  */
 function syncWorkPackagesFromInitiative(initiative, systemData) {
     if (!initiative || !systemData) return;
     ensureWorkPackagesForInitiatives(systemData);
     const workingDaysPerYear = systemData.capacityConfiguration?.workingDaysPerYear || 261;
     const wps = (systemData.workPackages || []).filter(wp => wp.initiativeId === initiative.initiativeId);
-    wps.forEach(wp => {
-        wp.impactedTeamAssignments = wp.impactedTeamAssignments || [];
-        // Map existing assignments for quick lookup
-        const byTeam = new Map((wp.impactedTeamAssignments || []).map(a => [a.teamId, a]));
-        (initiative.assignments || []).forEach(assign => {
-            const target = byTeam.get(assign.teamId);
-            const sdeDays = (assign.sdeYears || 0) * workingDaysPerYear;
-            if (target) {
-                target.sdeDays = sdeDays;
-                target.startDate = target.startDate || initiative.attributes?.startDate;
-                target.endDate = target.endDate || initiative.targetDueDate;
-            } else {
-                wp.impactedTeamAssignments.push({
-                    teamId: assign.teamId,
-                    sdeDays,
-                    startDate: initiative.attributes?.startDate,
-                    endDate: initiative.targetDueDate
-                });
-            }
-        });
-        // Update WP level dates as rollup from assignments
-        const span = getInitiativeDateSpanFromWorkPackages([wp], initiative);
-        wp.startDate = span.startDate;
-        wp.endDate = span.endDate;
-    });
+    
+    // If only 1 WP, we sync everything to it
+    if (wps.length === 1) {
+        const wp = wps[0];
+        wp.startDate = initiative.attributes?.startDate;
+        wp.endDate = initiative.targetDueDate;
+        // Sync total effort approx
+        // This is tricky bi-directional sync; mostly we assume WPs drive Initiative total 
+        // EXCEPT when the user manually edits the initiative total in the table.
+    }
 }
 
 if (typeof window !== 'undefined') {
+    window.ensureWorkPackagesForInitiatives = ensureWorkPackagesForInitiatives;
+    window.syncInitiativeTotals = syncInitiativeTotals;
+    window.getInitiativeDateSpanFromWorkPackages = getInitiativeDateSpanFromWorkPackages;
     window.syncWorkPackagesFromInitiative = syncWorkPackagesFromInitiative;
+    window.addWorkPackage = addWorkPackage;
+    window.updateWorkPackage = updateWorkPackage;
+    window.deleteWorkPackage = deleteWorkPackage;
 }
