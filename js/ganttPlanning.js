@@ -1035,3 +1035,154 @@ function renderDynamicGroupFilter() {
     renderGanttTable();
     renderGanttChart();
 }
+
+/* ==========================================================================
+   FRAPPE GANTT IMPLEMENTATION (Parallel Track)
+   ========================================================================== */
+
+let frappeGanttInstance = null;
+let currentFrappeViewMode = 'Month';
+
+function initializeFrappeGanttView() {
+    const container = document.getElementById('ganttPlanningView');
+    if (!container) return;
+
+    // Use separate IDs for the Frappe container elements to avoid conflict
+    container.innerHTML = `
+        <div id="frappeGanttControls" class="gantt-filter-bar"></div>
+        <div id="ganttSplitPane" class="gantt-split">
+            <div id="frappePlanningTableContainer" class="gantt-panel"></div>
+            <div id="ganttSplitResizer" class="gantt-resizer" title="Drag to resize"></div>
+            <div id="frappeChartWrapper" class="gantt-panel" style="overflow:hidden;">
+                <div id="frappeChartContainer" class="gantt-container"></div>
+            </div>
+        </div>
+    `;
+
+    setupGanttResizer(); 
+    applyGanttSplitWidth();
+
+    renderFrappeGanttControls();
+    
+    // Initialize Component
+    if (typeof FrappeGanttComponent !== 'undefined') {
+        frappeGanttInstance = new FrappeGanttComponent({ 
+            containerId: 'frappeChartContainer', 
+            onTaskUpdated: handleFrappeGanttUpdate 
+        });
+    }
+
+    renderFrappeGanttTable();
+    renderFrappeGanttChart();
+}
+
+function renderFrappeGanttControls() {
+    const controls = document.getElementById('frappeGanttControls');
+    if (!controls) return;
+    controls.innerHTML = '';
+
+    // Year Select
+    const yearSelect = document.createElement('select');
+    const years = Array.from(new Set((currentSystemData?.yearlyInitiatives || []).map(i => i.attributes?.planningYear).filter(y => y)));
+    if (!years.includes(currentGanttYear)) years.push(currentGanttYear);
+    years.sort().forEach(y => yearSelect.add(new Option(y, y)));
+    yearSelect.value = currentGanttYear;
+    yearSelect.onchange = () => {
+        currentGanttYear = parseInt(yearSelect.value, 10);
+        renderFrappeGanttTable();
+        renderFrappeGanttChart();
+    };
+
+    // View Mode Select
+    const modeSelect = document.createElement('select');
+    ['Day', 'Week', 'Month'].forEach(m => modeSelect.add(new Option(m, m)));
+    modeSelect.value = currentFrappeViewMode;
+    modeSelect.onchange = () => {
+        currentFrappeViewMode = modeSelect.value;
+        renderFrappeGanttChart();
+    };
+
+    // Refresh Button
+    const refreshBtn = document.createElement('button');
+    refreshBtn.textContent = "Refresh";
+    refreshBtn.className = "btn-primary";
+    refreshBtn.onclick = () => {
+        renderFrappeGanttTable();
+        renderFrappeGanttChart();
+    };
+
+    const div = document.createElement('div');
+    div.className = 'filter-item';
+    div.style.display = 'flex';
+    div.style.gap = '10px';
+    div.appendChild(document.createTextNode('Year: '));
+    div.appendChild(yearSelect);
+    div.appendChild(document.createTextNode(' Zoom: '));
+    div.appendChild(modeSelect);
+    div.appendChild(refreshBtn);
+    controls.appendChild(div);
+}
+
+function renderFrappeGanttTable() {
+    const container = document.getElementById('frappePlanningTableContainer');
+    if (!container) return;
+
+    const initiatives = getGanttFilteredInitiatives();
+
+    container.innerHTML = `
+        <div class="gantt-table-wrapper">
+            <table class="gantt-table">
+                <thead>
+                    <tr>
+                        <th>Initiative / Phase</th>
+                        <th width="100">Start</th>
+                        <th width="100">End</th>
+                    </tr>
+                </thead>
+                <tbody id="frappeGanttTableBody"></tbody>
+            </table>
+        </div>
+    `;
+    
+    const tbody = document.getElementById('frappeGanttTableBody');
+    initiatives.forEach(init => {
+        const tr = document.createElement('tr');
+        tr.style.background = '#f9f9f9';
+        tr.innerHTML = `<td style="font-weight:600;">${init.title}</td><td>${init.attributes?.startDate || '-'}</td><td>${init.targetDueDate || '-'}</td>`;
+        tbody.appendChild(tr);
+
+        const wps = getWorkPackagesForInitiative(init.initiativeId);
+        wps.forEach(wp => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td style="padding-left:20px;">${wp.title}</td>
+                <td><input type="date" value="${wp.startDate || ''}" onchange="updateWpDate('${wp.workPackageId}', 'startDate', this.value)"></td>
+                <td><input type="date" value="${wp.endDate || ''}" onchange="updateWpDate('${wp.workPackageId}', 'endDate', this.value)"></td>
+            `;
+            tbody.appendChild(row);
+        });
+    });
+}
+
+async function renderFrappeGanttChart() {
+    const initiatives = getGanttFilteredInitiatives();
+    if (window.frappeGanttAdapter && frappeGanttInstance) {
+        const tasks = window.frappeGanttAdapter.buildFrappeTasks({
+            initiatives,
+            workPackages: currentSystemData.workPackages || [],
+            year: currentGanttYear
+        });
+        frappeGanttInstance.render(tasks, currentFrappeViewMode);
+    }
+}
+
+function handleFrappeGanttUpdate(type, id, newStart, newEnd) {
+    if (type === 'workPackage') {
+        window.updateWpDate(id, 'startDate', newStart);
+        window.updateWpDate(id, 'endDate', newEnd);
+    }
+}
+
+if (typeof window !== 'undefined') {
+    window.initializeFrappeGanttView = initializeFrappeGanttView;
+}

@@ -1,0 +1,63 @@
+/* Ensure container allows scrolling and fills its panel */
+.gantt-container {
+    height: 100%;
+    overflow: auto;
+    background-color: #fff;
+}
+
+/* Base Text */
+.gantt .bar-label {
+    fill: #333;
+    font-weight: 500;
+    font-size: 12px;
+}
+
+/* Parent Initiatives (Dark Blue) */
+.gantt-initiative-bar .bar {
+    fill: #34495e !important;
+    opacity: 0.9;
+}
+.gantt-initiative-bar .bar-progress {
+    fill: #2c3e50 !important;
+}
+
+/* Child Work Packages (Primary Blue) */
+.gantt-wp-bar .bar {
+    fill: #007bff !important;
+}
+.gantt-wp-bar .bar-progress {
+    fill: #0056b3 !important;
+}
+
+/* Grid Lines & Headers */
+.gantt .grid-header {
+    fill: #f8f9fa;
+    stroke: #e0e0e0;
+}
+.gantt .grid-row {
+    fill: #ffffff;
+}
+.gantt .grid-row:nth-child(even) {
+    fill: #f9f9f9;
+}
+.gantt .tick text {
+    fill: #555;
+    font-size: 11px;
+}
+
+/* Dependency Arrows */
+.gantt .arrow {
+    stroke: #9ca3af;
+    stroke-width: 1.5;
+}
+
+.gantt-details-container {
+    font-family: sans-serif;
+    padding: 10px;
+    width: 200px;
+}
+
+.gantt-details-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+}

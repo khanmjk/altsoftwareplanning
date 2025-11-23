@@ -1,5 +1,8 @@
 /* global variables */
 
+// --- Feature Flags ---
+const USE_FRAPPE_GANTT = true; // Toggle to switch between Frappe and Mermaid implementations
+
 let currentSystemData = null;
 let newServiceData = {};
 let uniqueEngineers = []; // This might be fully replaced by usage of allKnownEngineers
@@ -1529,9 +1532,24 @@ function showGanttPlanningView() {
         return;
     }
     switchView('ganttPlanningView', Modes.PLANNING);
-    if (typeof initializeGanttPlanningView === 'function') {
-        initializeGanttPlanningView();
+    
+    // --- FEATURE FLAG SWITCH ---
+    // Check BOTH the flag AND if the code is actually loaded
+    if (USE_FRAPPE_GANTT && typeof initializeFrappeGanttView === 'function') {
+        console.log("Using Frappe Gantt engine.");
+        initializeFrappeGanttView();
+    } else {
+        if (USE_FRAPPE_GANTT && typeof initializeFrappeGanttView !== 'function') {
+            console.warn("Frappe Gantt flag is ON, but the code was not found. Falling back to Mermaid.");
+        } else {
+            console.log("Using Mermaid Gantt engine (Classic).");
+        }
+        // Fallback to the original Mermaid implementation
+        if (typeof initializeGanttPlanningView === 'function') {
+            initializeGanttPlanningView();
+        }
     }
+    // ----------------------------
 }
 window.showGanttPlanningView = showGanttPlanningView;
 
