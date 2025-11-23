@@ -1532,24 +1532,11 @@ function showGanttPlanningView() {
         return;
     }
     switchView('ganttPlanningView', Modes.PLANNING);
-    
-    // --- FEATURE FLAG SWITCH ---
-    // Check BOTH the flag AND if the code is actually loaded
-    if (USE_FRAPPE_GANTT && typeof initializeFrappeGanttView === 'function') {
-        console.log("Using Frappe Gantt engine.");
-        initializeFrappeGanttView();
+    if (typeof initializeGanttPlanningView === 'function') {
+        initializeGanttPlanningView();
     } else {
-        if (USE_FRAPPE_GANTT && typeof initializeFrappeGanttView !== 'function') {
-            console.warn("Frappe Gantt flag is ON, but the code was not found. Falling back to Mermaid.");
-        } else {
-            console.log("Using Mermaid Gantt engine (Classic).");
-        }
-        // Fallback to the original Mermaid implementation
-        if (typeof initializeGanttPlanningView === 'function') {
-            initializeGanttPlanningView();
-        }
+        console.error("Gantt View not loaded.");
     }
-    // ----------------------------
 }
 window.showGanttPlanningView = showGanttPlanningView;
 

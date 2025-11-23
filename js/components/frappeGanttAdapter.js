@@ -9,6 +9,10 @@
         const defaultStart = `${yearVal}-01-15`;
         const defaultEnd = `${yearVal}-11-01`;
 
+        // Map of teamId -> team for quick lookup when labeling bars
+        const teamMap = new Map((currentSystemData?.teams || []).map(t => [t.teamId, t]));
+        const workingDaysPerYear = currentSystemData?.capacityConfiguration?.workingDaysPerYear || 261;
+
         const wpByInit = new Map();
         workPackages.forEach(wp => {
             if (!wpByInit.has(wp.initiativeId)) wpByInit.set(wp.initiativeId, []);
@@ -43,9 +47,23 @@
 
                 const rawDeps = (wp.dependencies || []).map(d => `wp-${d}`);
 
+                // Build descriptive labels showing team + estimate (resource allocation view)
+                let barLabel = wp.title || 'Phase';
+                const assignments = wp.impactedTeamAssignments || [];
+                if (assignments.length > 0) {
+                    const parts = assignments.map(a => {
+                        const t = teamMap.get(a.teamId);
+                        const tName = t ? (t.teamIdentity || t.teamName || t.teamId) : 'Unknown';
+                        const sdeDays = Number(a.sdeDays) || 0;
+                        const sdeYears = (sdeDays / workingDaysPerYear).toFixed(1);
+                        return `${tName}: ${sdeYears}y`;
+                    });
+                    barLabel = parts.join(' / ');
+                }
+
                 rawTasks.push({
                     id: `wp-${wp.workPackageId}`,
-                    name: wp.title || 'Phase',
+                    name: barLabel,
                     start: start,
                     end: end,
                     progress: calculateProgress(wp.status),

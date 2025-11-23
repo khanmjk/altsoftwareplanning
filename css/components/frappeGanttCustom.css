@@ -1,35 +1,49 @@
 /* Ensure container allows scrolling and fills its panel */
 .gantt-container {
     height: 100%;
-    overflow: auto;
+    overflow: auto; 
     background-color: #fff;
 }
 
-/* Base Text */
+/* Bar Text - tuned for longer team labels */
 .gantt .bar-label {
     fill: #333;
-    font-weight: 500;
-    font-size: 12px;
+    font-weight: 600;
+    font-size: 11px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Parent Initiatives (Dark Blue) */
+/* Parent Initiatives (Dark Blue Header) */
 .gantt-initiative-bar .bar {
-    fill: #34495e !important;
+    fill: #2c3e50 !important;
     opacity: 0.9;
 }
 .gantt-initiative-bar .bar-progress {
-    fill: #2c3e50 !important;
+    fill: #1a252f !important;
+}
+/* Parent Labels - make them stand out */
+.gantt-initiative-bar .bar-label {
+    fill: #fff;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-/* Child Work Packages (Primary Blue) */
+/* Child Work Packages (Light blue with dark text) */
 .gantt-wp-bar .bar {
-    fill: #007bff !important;
+    fill: #e3f2fd !important;
+    stroke: #2196f3;
+    stroke-width: 1px;
 }
 .gantt-wp-bar .bar-progress {
-    fill: #0056b3 !important;
+    fill: #90caf9 !important;
+}
+.gantt-wp-bar .bar-label {
+    fill: #0d47a1 !important;
 }
 
-/* Grid Lines & Headers */
+/* Grid and Text */
 .gantt .grid-header {
     fill: #f8f9fa;
     stroke: #e0e0e0;
@@ -41,23 +55,6 @@
     fill: #f9f9f9;
 }
 .gantt .tick text {
-    fill: #555;
+    fill: #666;
     font-size: 11px;
-}
-
-/* Dependency Arrows */
-.gantt .arrow {
-    stroke: #9ca3af;
-    stroke-width: 1.5;
-}
-
-.gantt-details-container {
-    font-family: sans-serif;
-    padding: 10px;
-    width: 200px;
-}
-
-.gantt-details-title {
-    font-weight: bold;
-    margin-bottom: 5px;
 }
