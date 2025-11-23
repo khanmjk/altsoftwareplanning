@@ -4,9 +4,9 @@ let currentGanttGroupBy = 'All Initiatives';
 function initializeGanttPlanningView() {
     const container = document.getElementById('ganttPlanningView');
     if (!container) return;
+    ganttChartInstance = null;
     container.innerHTML = `
         <div id="ganttPlanningControls" class="gantt-filter-bar"></div>
-        <div id="ganttContextMeta" style="margin: 8px 0;"></div>
         <div id="ganttSplitPane" class="gantt-split">
             <div id="ganttPlanningTableContainer" class="gantt-panel"></div>
             <div id="ganttChartWrapper" class="gantt-panel">
@@ -91,7 +91,6 @@ function renderGanttControls() {
 
     // Build org/team filters using existing helper
     renderDynamicGroupFilter();
-    renderContextMeta();
 }
 
 function createLabeledControl(labelText, controlEl) {
@@ -143,45 +142,6 @@ function getGanttFilteredInitiatives() {
         }
     }
     return initiatives;
-}
-
-function renderContextMeta() {
-    const meta = document.getElementById('ganttContextMeta');
-    if (!meta) return;
-    const year = document.getElementById('ganttYearFilter')?.value || currentGanttYear;
-    const viewBy = currentGanttGroupBy;
-    const team = document.getElementById('ganttGroupValue')?.value || 'all';
-    const manager = document.getElementById('ganttManagerFilter')?.value || 'all';
-    const sm = document.getElementById('ganttSeniorManagerFilter')?.value || 'all';
-    const goal = document.getElementById('ganttGoalFilter')?.value || 'all';
-    const theme = document.getElementById('ganttThemeFilter')?.value || 'all';
-
-    const chips = [];
-    chips.push(`<span class="gantt-context-chip">Year: ${year}</span>`);
-    chips.push(`<span class="gantt-context-chip">View: ${viewBy}</span>`);
-    if (viewBy === 'Team' && team !== 'all') {
-        const teamObj = (currentSystemData.teams || []).find(t => t.teamId === team);
-        chips.push(`<span class="gantt-context-chip">Team: ${teamObj ? (teamObj.teamIdentity || teamObj.teamName) : team}</span>`);
-    }
-    if (viewBy === 'Manager') {
-        if (sm !== 'all') {
-            const smObj = (currentSystemData.seniorManagers || []).find(s => s.seniorManagerId === sm);
-            chips.push(`<span class="gantt-context-chip">Sr. Manager: ${smObj ? smObj.seniorManagerName : sm}</span>`);
-        }
-        if (manager !== 'all') {
-            const mgrObj = (currentSystemData.sdms || []).find(m => m.sdmId === manager);
-            chips.push(`<span class="gantt-context-chip">Manager: ${mgrObj ? mgrObj.sdmName : manager}</span>`);
-        }
-    }
-    if (viewBy === 'Goal' && goal !== 'all') {
-        const goalObj = (currentSystemData.goals || []).find(g => g.goalId === goal);
-        chips.push(`<span class="gantt-context-chip">Goal: ${goalObj ? (goalObj.name || goal) : goal}</span>`);
-    }
-    if (viewBy === 'Theme' && theme !== 'all') {
-        const themeObj = (currentSystemData.definedThemes || []).find(t => t.themeId === theme);
-        chips.push(`<span class="gantt-context-chip">Theme: ${themeObj ? (themeObj.name || theme) : theme}</span>`);
-    }
-    meta.innerHTML = chips.join('');
 }
 
 function renderGanttTable() {
@@ -406,40 +366,28 @@ async function renderGanttChart() {
     const container = document.getElementById('ganttChartContainer');
     if (!container) return;
     const selectedTeam = (currentGanttGroupBy === 'Team') ? (document.getElementById('ganttGroupValue')?.value || 'all') : null;
-    const data = getGanttFilteredInitiatives().map(init => {
-        const dates = getComputedInitiativeDates(init, selectedTeam);
-        return {
-            ...init,
-            attributes: { ...(init.attributes || {}), startDate: dates.startDate },
-            targetDueDate: dates.endDate
-        };
-    });
-    if (!data || data.length === 0) {
+    const initiatives = getGanttFilteredInitiatives();
+    if (!initiatives || initiatives.length === 0) {
         container.textContent = 'No initiatives to display.';
         return;
     }
-    const syntax = generateGanttSyntax(data, currentGanttGroupBy, currentGanttYear, { selectedTeamId: selectedTeam });
-    const renderId = `gantt-${Date.now()}`;
-    if (typeof mermaid !== 'undefined' && typeof mermaid.render === 'function') {
-        try {
-            const result = await mermaid.render(renderId, syntax);
-            container.innerHTML = result.svg;
-        } catch (err) {
-            console.error("Mermaid render failed for gantt:", err, syntax);
-            container.textContent = 'Unable to render Gantt chart. Check console for details.';
-        }
-    } else {
-        container.textContent = 'Mermaid is not available.';
+    const tasks = (window.ganttAdapter && typeof window.ganttAdapter.buildTasksFromInitiatives === 'function')
+        ? window.ganttAdapter.buildTasksFromInitiatives({
+            initiatives,
+            workPackages: currentSystemData.workPackages || [],
+            viewBy: currentGanttGroupBy,
+            filters: {},
+            year: currentGanttYear,
+            selectedTeam: selectedTeam
+        })
+        : [];
+    if (!ganttChartInstance) {
+        ganttChartInstance = new GanttChart({ container, mermaidInstance: mermaid, onRenderError: (err, syntax) => console.error('Gantt render error', err, syntax) });
     }
-    if (!document.getElementById('ganttChartStyle')) {
-        const style = document.createElement('style');
-        style.id = 'ganttChartStyle';
-        style.textContent = `
-            .mermaid .task text { font-size: 11px; }
-            .mermaid .task tspan { font-size: 11px; }
-        `;
-        document.head.appendChild(style);
-    }
+    const dynamicHeight = Math.max(500, tasks.length * 60);
+    container.style.minHeight = `${dynamicHeight}px`;
+    ganttChartInstance.setData(tasks, { title: `Detailed Plan - ${currentGanttYear}` });
+    await ganttChartInstance.render();
 }
 
 if (typeof window !== 'undefined') {

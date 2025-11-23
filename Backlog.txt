@@ -172,6 +172,7 @@ bar graph per quarter to see team load/demand impact
 IN PROGRESS
 ------------
 -- Start building out detailed planning features
+-- [AI] extend the diagram agents to support mermaid generation of gantt charts, organograms
 - [AI Feature] Create an AI agent that can perform actions on the system with access to the code
 
 

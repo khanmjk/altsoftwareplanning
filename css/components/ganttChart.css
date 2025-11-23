@@ -67,3 +67,16 @@
 .gantt-table select {
     font-size: 12px;
 }
+
+.gantt-chart-box svg {
+    width: 100%;
+    height: auto;
+}
+
+.mermaid .task rect {
+    height: 24px;
+}
+
+.mermaid .task text {
+    font-size: 11px;
+}
