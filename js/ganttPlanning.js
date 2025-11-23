@@ -186,6 +186,7 @@ function renderGanttTable() {
     }
 
     const workingDaysPerYear = currentSystemData?.capacityConfiguration?.workingDaysPerYear || 261;
+    const allWorkPackages = currentSystemData.workPackages || [];
     // Seed default expansion only once for existing work packages
     if (!ganttWorkPackagesInitialized) {
         (currentSystemData.workPackages || []).forEach(wp => {
@@ -242,7 +243,7 @@ function renderGanttTable() {
                         <td style="padding:6px; border-bottom:1px solid #f7f7f7;"><input type="date" value="${wp.endDate || ''}" data-kind="work-package" data-field="endDate" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}"></td>
                         <td style="padding:6px; border-bottom:1px solid #f7f7f7; color:#333;">${computeWorkPackageSdeYears(wp, workingDaysPerYear, selectedTeam)}</td>
                         <td style="padding:6px; border-bottom:1px solid #f7f7f7;">
-                            <input type="text" value="${depsValue}" data-kind="work-package" data-field="dependencies" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" placeholder="WP IDs..." class="gantt-predecessor-input">
+                            ${renderPredecessorSelector(allWorkPackages, wp)}
                         </td>
                         <td style="padding:6px; border-bottom:1px solid #f7f7f7;">
                             <button data-action="delete-wp" data-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" class="btn-danger">Delete</button>
@@ -386,6 +387,11 @@ function renderGanttTable() {
                 ganttOtherTeamsExpanded.add(wpId);
             }
             renderGanttTable();
+        } else if (action === 'toggle-dep-menu') {
+            const menuId = target.dataset.menuId;
+            const menu = document.getElementById(menuId);
+            if (!menu) return;
+            menu.classList.toggle('open');
         }
     });
 
@@ -496,6 +502,27 @@ function renderGanttTable() {
             }
             renderGanttTable();
             renderGanttChart();
+        } else if (kind === 'wp-dep') {
+            const wpId = e.target.dataset.wpId;
+            const depId = e.target.dataset.value;
+            const wp = (currentSystemData.workPackages || []).find(w => w.workPackageId === wpId);
+            if (!wp) return;
+            const deps = new Set(wp.dependencies || []);
+            if (e.target.checked) {
+                deps.add(depId);
+            } else {
+                deps.delete(depId);
+            }
+            if (typeof updateWorkPackage === 'function') {
+                updateWorkPackage(wpId, { dependencies: Array.from(deps) });
+            } else {
+                wp.dependencies = Array.from(deps);
+            }
+            if (typeof saveSystemChanges === 'function') {
+                saveSystemChanges();
+            }
+            renderGanttTable();
+            renderGanttChart();
         }
     });
 }
@@ -553,6 +580,32 @@ function getWorkingDaysPerYear() {
 function getTeamName(teamId) {
     const team = (currentSystemData.teams || []).find(t => t.teamId === teamId);
     return team ? (team.teamIdentity || team.teamName || teamId) : teamId;
+}
+
+function renderPredecessorSelector(allWorkPackages, wp) {
+    const options = (allWorkPackages || []).filter(other => other.workPackageId !== wp.workPackageId);
+    const selected = new Set(wp.dependencies || []);
+    const label = selected.size ? `${selected.size} selected` : 'Select...';
+    const menuId = `wp-deps-${wp.workPackageId}`;
+    const items = options.length
+        ? options.map(other => {
+            const checked = selected.has(other.workPackageId) ? 'checked' : '';
+            const initLabel = other.initiativeId ? ` [${other.initiativeId}]` : '';
+            const text = `${other.workPackageId}${initLabel} — ${other.title || 'Untitled'}`;
+            return `<label class="gantt-predecessor-option">
+                        <input type="checkbox" data-kind="wp-dep" data-wp-id="${wp.workPackageId}" data-value="${other.workPackageId}" ${checked}>
+                        <span>${text}</span>
+                    </label>`;
+        }).join('')
+        : '<div class="gantt-predecessor-empty">No other work packages</div>';
+    return `
+        <div class="gantt-predecessor-select" data-wp-id="${wp.workPackageId}">
+            <button type="button" class="btn-secondary gantt-predecessor-btn" data-action="toggle-dep-menu" data-menu-id="${menuId}" data-wp-id="${wp.workPackageId}">${label}</button>
+            <div class="gantt-predecessor-menu" id="${menuId}">
+                ${items}
+            </div>
+        </div>
+    `;
 }
 
 function renderStatusFilter() {

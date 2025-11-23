@@ -179,6 +179,7 @@ IN PROGRESS
 ------
 TO DO
 ------
+- [UX] Upgrade the menu navigation layout - it's growing with each new feature - need a new cleaner menu navigation model
 
 - [AI] - Ability to export the year plan, showing ATL/BTL logic, etc. to Excel - the excel model must be generated using LLM so that formulaes in the code are applied to the excel generation
 - Now that we have a goals dashboard view, we need to think about introducing an interface to manage the lifecycle of goals

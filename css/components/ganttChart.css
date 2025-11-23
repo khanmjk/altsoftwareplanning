@@ -132,9 +132,45 @@
     padding: 2px 6px;
 }
 
-.gantt-predecessor-input {
-    width: 110px;
+.gantt-predecessor-select {
+    position: relative;
+}
+
+.gantt-predecessor-btn {
+    width: 120px;
+    text-align: left;
+}
+
+.gantt-predecessor-menu {
+    position: absolute;
+    top: 110%;
+    left: 0;
+    min-width: 220px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    display: none;
+    z-index: 5;
+}
+
+.gantt-predecessor-menu.open,
+.gantt-predecessor-menu.opened {
+    display: block;
+}
+
+.gantt-predecessor-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 2px;
     font-size: 12px;
+}
+
+.gantt-predecessor-empty {
+    font-size: 12px;
+    color: #777;
 }
 
 .mermaid .task rect {
