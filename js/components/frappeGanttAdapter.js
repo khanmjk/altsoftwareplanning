@@ -1,6 +1,5 @@
 (function() {
     function buildFrappeTasks({ initiatives = [], workPackages = [], year }) {
-        // 1. Ensure data exists
         if (typeof ensureWorkPackagesForInitiatives === 'function' && typeof currentSystemData !== 'undefined') {
             ensureWorkPackagesForInitiatives(currentSystemData, year);
         }
@@ -18,10 +17,7 @@
 
         initiatives.forEach(init => {
             const wpList = wpByInit.get(init.initiativeId) || [];
-            // If you want to hide empty initiatives, uncomment the next line:
-            // if (wpList.length === 0) return;
-
-            // --- Parent Initiative ---
+            
             const initStart = init.attributes?.startDate || defaultStart;
             const initEnd = init.targetDueDate || defaultEnd;
             
@@ -31,22 +27,20 @@
                 start: initStart,
                 end: initEnd,
                 progress: 0,
-                dependencies: [], // Parents typically don't have deps in this view
+                dependencies: [],
                 custom_class: 'gantt-initiative-bar',
                 _originalId: init.initiativeId,
                 _type: 'initiative',
                 _isParent: true
             });
 
-            // --- Child Work Packages ---
             wpList.forEach(wp => {
                 let start = wp.startDate || initStart;
                 let end = wp.endDate || initEnd;
 
-                // Fix: Prevent start > end errors
+                // Fix: Prevent start > end errors which crash Frappe
                 if (new Date(start) > new Date(end)) end = start;
 
-                // Normalize IDs
                 const rawDeps = (wp.dependencies || []).map(d => `wp-${d}`);
 
                 rawTasks.push({
@@ -55,7 +49,7 @@
                     start: start,
                     end: end,
                     progress: calculateProgress(wp.status),
-                    dependencies: rawDeps, // Array for now, we join later
+                    dependencies: rawDeps, 
                     custom_class: 'gantt-wp-bar',
                     _originalId: wp.workPackageId,
                     _initiativeId: init.initiativeId,
@@ -64,18 +58,15 @@
             });
         });
 
-        // 3. CRITICAL FIX: Sanitize Dependencies
-        // Remove any dependency ID that is not in the current list of tasks.
-        // This prevents the "Uncaught Error" in Frappe Gantt.
+        // CRITICAL: Sanitize Dependencies
+        // Frappe Gantt crashes if a dependency ID refers to a task that doesn't exist (e.g. filtered out)
         const validIds = new Set(rawTasks.map(t => t.id));
         
         const safeTasks = rawTasks.map(task => {
-            // Only keep dependencies that exist in validIds
             const safeDeps = (task.dependencies || []).filter(depId => validIds.has(depId));
-            
             return {
                 ...task,
-                dependencies: safeDeps.join(',') // Frappe expects comma-string
+                dependencies: safeDeps.join(',') // Frappe expects comma-separated string
             };
         });
 

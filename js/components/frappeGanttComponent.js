@@ -17,7 +17,7 @@
             }
 
             if (typeof Gantt === 'undefined') {
-                this.element.innerHTML = '<div style="color:red;">Error: Frappe Gantt library not loaded. Check index.html.</div>';
+                this.element.innerHTML = '<div style="color:red; padding:10px;">Error: Frappe Gantt library not loaded. Please check index.html.</div>';
                 return;
             }
 
@@ -38,12 +38,12 @@
                     on_date_change: (task, start, end) => this._handleDateChange(task, start, end)
                 });
             } catch (e) {
-                console.error("Frappe Gantt Render Crash Prevented:", e);
+                console.error("Frappe Gantt Render Error:", e);
                 this.element.innerHTML = `
-                    <div style="padding:15px; background:#fff3cd; color:#856404; border:1px solid #ffeeba;">
-                        <strong>Display Error:</strong> The chart could not be drawn. <br>
-                        <small>${e.message}</small>
-                    </div>`;
+                    <div style="padding:15px; border:1px solid #f5c6cb; background:#f8d7da; color:#721c24;">
+                        <strong>Chart Error:</strong> ${e.message}
+                    </div>
+                `;
             }
         }
 
