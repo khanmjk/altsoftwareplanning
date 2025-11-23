@@ -932,7 +932,7 @@ function syncInitiativeDependenciesFromWorkPackages(initiativeId) {
     if (!initiativeId) return;
     const initiative = (currentSystemData.yearlyInitiatives || []).find(i => i.initiativeId === initiativeId);
     if (!initiative) return;
-    const deps = new Set(initiative.dependencies || []);
+    const deps = new Set();
     const wps = (currentSystemData.workPackages || []).filter(w => w.initiativeId === initiativeId);
     wps.forEach(wp => {
         (wp.dependencies || []).forEach(depWpId => {
