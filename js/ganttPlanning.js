@@ -186,6 +186,7 @@ function renderGanttTable() {
     }
 
     const workingDaysPerYear = currentSystemData?.capacityConfiguration?.workingDaysPerYear || 261;
+    const allInitiatives = currentSystemData?.yearlyInitiatives || [];
     const allWorkPackages = currentSystemData.workPackages || [];
     // Seed default expansion only once for existing work packages
     if (!ganttWorkPackagesInitialized) {
@@ -211,7 +212,7 @@ function renderGanttTable() {
             <td style="padding:6px; border-bottom:1px solid #f0f0f0;"><input type="date" value="${init.displayStart || ''}" data-kind="initiative" data-field="startDate" data-id="${init.initiativeId}"></td>
             <td style="padding:6px; border-bottom:1px solid #f0f0f0;"><input type="date" value="${init.displayEnd || ''}" data-kind="initiative" data-field="targetDueDate" data-id="${init.initiativeId}"></td>
             <td style="padding:6px; border-bottom:1px solid #f0f0f0;"><input type="number" step="0.01" value="${computeSdeEstimate(init)}" data-kind="initiative" data-field="sdeEstimate" data-id="${init.initiativeId}" style="width:80px;"></td>
-            <td style="padding:6px; border-bottom:1px solid #f0f0f0;"></td>
+            <td style="padding:6px; border-bottom:1px solid #f0f0f0;">${renderInitiativePredecessorSelector(allInitiatives, init)}</td>
             <td style="padding:6px; border-bottom:1px solid #f0f0f0;">
                 <button class="gantt-add-wp btn-primary" data-action="add-wp" data-id="${init.initiativeId}">Add WP</button>
             </td>
@@ -518,6 +519,24 @@ function renderGanttTable() {
             } else {
                 wp.dependencies = Array.from(deps);
             }
+            syncInitiativeDependenciesFromWorkPackages(wp.initiativeId);
+            if (typeof saveSystemChanges === 'function') {
+                saveSystemChanges();
+            }
+            renderGanttTable();
+            renderGanttChart();
+        } else if (kind === 'init-dep') {
+            const initId = e.target.dataset.initId;
+            const depId = e.target.dataset.value;
+            const initiative = (currentSystemData.yearlyInitiatives || []).find(i => i.initiativeId === initId);
+            if (!initiative) return;
+            const deps = new Set(initiative.dependencies || []);
+            if (e.target.checked) {
+                deps.add(depId);
+            } else {
+                deps.delete(depId);
+            }
+            initiative.dependencies = Array.from(deps);
             if (typeof saveSystemChanges === 'function') {
                 saveSystemChanges();
             }
@@ -601,6 +620,31 @@ function renderPredecessorSelector(allWorkPackages, wp) {
     return `
         <div class="gantt-predecessor-select" data-wp-id="${wp.workPackageId}">
             <button type="button" class="btn-secondary gantt-predecessor-btn" data-action="toggle-dep-menu" data-menu-id="${menuId}" data-wp-id="${wp.workPackageId}">${label}</button>
+            <div class="gantt-predecessor-menu" id="${menuId}">
+                ${items}
+            </div>
+        </div>
+    `;
+}
+
+function renderInitiativePredecessorSelector(allInitiatives, init) {
+    const options = (allInitiatives || []).filter(other => other.initiativeId !== init.initiativeId);
+    const selected = new Set(init.dependencies || []);
+    const label = selected.size ? `${selected.size} selected` : 'Select...';
+    const menuId = `init-deps-${init.initiativeId}`;
+    const items = options.length
+        ? options.map(other => {
+            const checked = selected.has(other.initiativeId) ? 'checked' : '';
+            const text = `${other.initiativeId} — ${other.title || 'Untitled'}`;
+            return `<label class="gantt-predecessor-option">
+                        <input type="checkbox" data-kind="init-dep" data-init-id="${init.initiativeId}" data-value="${other.initiativeId}" ${checked}>
+                        <span>${text}</span>
+                    </label>`;
+        }).join('')
+        : '<div class="gantt-predecessor-empty">No other initiatives</div>';
+    return `
+        <div class="gantt-predecessor-select" data-init-id="${init.initiativeId}">
+            <button type="button" class="btn-secondary gantt-predecessor-btn" data-action="toggle-dep-menu" data-menu-id="${menuId}" data-init-id="${init.initiativeId}">${label}</button>
             <div class="gantt-predecessor-menu" id="${menuId}">
                 ${items}
             </div>
@@ -803,6 +847,23 @@ function updateWorkPackageSde(initiativeId, teamId, sdeYears, workingDaysPerYear
             });
         }
     });
+}
+
+function syncInitiativeDependenciesFromWorkPackages(initiativeId) {
+    if (!initiativeId) return;
+    const initiative = (currentSystemData.yearlyInitiatives || []).find(i => i.initiativeId === initiativeId);
+    if (!initiative) return;
+    const deps = new Set(initiative.dependencies || []);
+    const wps = (currentSystemData.workPackages || []).filter(w => w.initiativeId === initiativeId);
+    wps.forEach(wp => {
+        (wp.dependencies || []).forEach(depWpId => {
+            const targetWp = (currentSystemData.workPackages || []).find(other => other.workPackageId === depWpId);
+            if (targetWp && targetWp.initiativeId && targetWp.initiativeId !== initiativeId) {
+                deps.add(targetWp.initiativeId);
+            }
+        });
+    });
+    initiative.dependencies = Array.from(deps);
 }
 
 async function renderGanttChart() {

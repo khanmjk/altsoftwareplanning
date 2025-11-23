@@ -38,6 +38,7 @@ function ensureWorkPackagesForInitiatives(systemData, yearFilter = null) {
     (systemData.yearlyInitiatives || []).forEach(init => {
         if (yearFilter && `${init.attributes?.planningYear || ''}` !== `${yearFilter}`) return;
         init.workPackageIds = init.workPackageIds || [];
+        init.dependencies = init.dependencies || [];
         
         // Only create a default WP if absolutely no WPs exist for this initiative
         const existing = (systemData.workPackages || []).filter(wp => wp.initiativeId === init.initiativeId);
