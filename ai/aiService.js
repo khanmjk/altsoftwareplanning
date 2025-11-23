@@ -11,8 +11,12 @@ RULES:
 2. Use 'graph TD' or 'graph LR' for architecture/relationship diagrams.
 3. Use 'sequenceDiagram' if the user asks for a flow or interaction.
 4. Use 'mindmap' if the user asks for a breakdown of goals or themes.
-5. Use valid IDs (no spaces/special chars without quotes).
-6. Base relationships strictly on the provided JSON context.
+5. Use 'gantt' if the user asks for a schedule, timeline, or project plan.
+   - Use 'dateFormat YYYY-MM-DD'.
+   - Group tasks into 'section' blocks (e.g., by Initiative or Team).
+   - Ensure dates are valid.
+6. Use valid IDs (no spaces/special chars without quotes).
+7. Base relationships strictly on the provided JSON context.
 `;
 /**
  * [NEW] A private helper to wrap fetch calls with exponential backoff.
@@ -177,6 +181,9 @@ async function generateDiagramFromPrompt(userPrompt, contextJson, apiKey, provid
             .replace(/```mermaid/gi, '')
             .replace(/```/g, '')
             .trim();
+        if (!cleaned) {
+            throw new Error("AI did not return any diagram content. Please try again or adjust your request.");
+        }
         return { code: cleaned, title: userPrompt };
     } catch (error) {
         console.error("[AI-DIAGRAM] Diagram generation failed:", error);
