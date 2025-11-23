@@ -94,7 +94,7 @@ function renderGanttControls() {
     filtersWrapper.appendChild(statusFilterWrap);
     const refreshBtn = document.createElement('button');
     refreshBtn.textContent = 'Refresh';
-    refreshBtn.className = 'btn-secondary';
+    refreshBtn.className = 'btn-primary';
     refreshBtn.onclick = () => {
         renderGanttTable();
         renderGanttChart();
@@ -210,7 +210,7 @@ function renderGanttTable() {
             <td style="padding:6px; border-bottom:1px solid #f0f0f0;"><input type="date" value="${init.displayEnd || ''}" data-kind="initiative" data-field="targetDueDate" data-id="${init.initiativeId}"></td>
             <td style="padding:6px; border-bottom:1px solid #f0f0f0;"><input type="number" step="0.01" value="${computeSdeEstimate(init)}" data-kind="initiative" data-field="sdeEstimate" data-id="${init.initiativeId}" style="width:80px;"></td>
             <td style="padding:6px; border-bottom:1px solid #f0f0f0;">
-                <button class="gantt-add-wp" data-action="add-wp" data-id="${init.initiativeId}" style="padding:4px 8px;">Add WP</button>
+                <button class="gantt-add-wp btn-primary" data-action="add-wp" data-id="${init.initiativeId}">Add WP</button>
             </td>
         `;
         tbody.appendChild(tr);
@@ -239,7 +239,7 @@ function renderGanttTable() {
                         <td style="padding:6px; border-bottom:1px solid #f7f7f7;"><input type="date" value="${wp.endDate || ''}" data-kind="work-package" data-field="endDate" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}"></td>
                         <td style="padding:6px; border-bottom:1px solid #f7f7f7; color:#333;">${computeWorkPackageSdeYears(wp, workingDaysPerYear, selectedTeam)}</td>
                         <td style="padding:6px; border-bottom:1px solid #f7f7f7;">
-                            <button data-action="delete-wp" data-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" style="padding:4px 8px; color:#b00020;">Delete</button>
+                            <button data-action="delete-wp" data-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" class="btn-danger">Delete</button>
                         </td>
                     `;
                     tbody.appendChild(wpRow);
