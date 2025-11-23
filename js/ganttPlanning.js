@@ -64,7 +64,7 @@ function renderGanttControls() {
     // View By selector
     const groupSelect = document.createElement('select');
     groupSelect.id = 'ganttGroupBy';
-    ['All Initiatives', 'Theme', 'Team', 'Goal', 'Manager'].forEach(val => {
+    ['All Initiatives', 'Team'].forEach(val => {
         const opt = document.createElement('option');
         opt.value = val;
         opt.textContent = `View by ${val}`;
@@ -78,15 +78,6 @@ function renderGanttControls() {
         renderGanttChart();
         renderGanttTable();
     };
-
-    // Org/Team filters reuse roadmap helpers
-    const orgTeamFilters = document.createElement('div');
-    orgTeamFilters.id = 'ganttOrgTeamFilters';
-    orgTeamFilters.className = 'widget-filter-bar';
-    orgTeamFilters.style.display = 'flex';
-    orgTeamFilters.style.flexWrap = 'wrap';
-    orgTeamFilters.style.gap = '10px';
-    controls.appendChild(orgTeamFilters);
 
     filtersWrapper.appendChild(createLabeledControl('Year:', yearSelect));
     filtersWrapper.appendChild(createLabeledControl('View By:', groupSelect));
@@ -129,31 +120,6 @@ function getGanttFilteredInitiatives() {
         const selectedTeam = document.getElementById('ganttGroupValue')?.value || 'all';
         if (selectedTeam !== 'all') {
             initiatives = initiatives.filter(init => (init.assignments || []).some(a => a.teamId === selectedTeam));
-        }
-    } else if (currentGanttGroupBy === 'Manager') {
-        const selectedSm = document.getElementById('ganttSeniorManagerFilter')?.value || 'all';
-        const selectedManager = document.getElementById('ganttManagerFilter')?.value || 'all';
-        const teams = (currentSystemData.teams || []).filter(team => {
-            if (selectedManager !== 'all') return team.sdmId === selectedManager;
-            if (selectedSm !== 'all') {
-                const sdm = (currentSystemData.sdms || []).find(m => m.sdmId === team.sdmId);
-                return sdm && sdm.seniorManagerId === selectedSm;
-            }
-            return true;
-        }).map(t => t.teamId);
-        if (selectedSm !== 'all' || selectedManager !== 'all') {
-            const teamSet = new Set(teams);
-            initiatives = initiatives.filter(init => (init.assignments || []).some(a => teamSet.has(a.teamId)));
-        }
-    } else if (currentGanttGroupBy === 'Goal') {
-        const selectedGoal = document.getElementById('ganttGoalFilter')?.value || 'all';
-        if (selectedGoal !== 'all') {
-            initiatives = initiatives.filter(init => init.primaryGoalId === selectedGoal);
-        }
-    } else if (currentGanttGroupBy === 'Theme') {
-        const selectedTheme = document.getElementById('ganttThemeFilter')?.value || 'all';
-        if (selectedTheme !== 'all') {
-            initiatives = initiatives.filter(init => (init.themes || []).includes(selectedTheme));
         }
     }
     return initiatives;
@@ -501,16 +467,10 @@ function renderGanttTable() {
 
 function computeSdeEstimate(init) {
     const selectedGroupValue = document.getElementById('ganttGroupValue')?.value || 'all';
-    const selectedManager = document.getElementById('ganttManagerFilter')?.value || 'all';
     let total = 0;
     (init.assignments || []).forEach(a => {
         if (currentGanttGroupBy === 'Team' && selectedGroupValue !== 'all') {
             if (a.teamId === selectedGroupValue) {
-                total += a.sdeYears || 0;
-            }
-        } else if (currentGanttGroupBy === 'Manager' && selectedManager !== 'all') {
-            const managerTeams = getTeamsByManager(selectedManager);
-            if (managerTeams.has(a.teamId)) {
                 total += a.sdeYears || 0;
             }
         } else {
@@ -569,11 +529,8 @@ function getTeamsByManager(managerId) {
 }
 
 function getTeamsForInitiative(init) {
-    const selectedManager = document.getElementById('ganttManagerFilter')?.value || 'all';
     const teamNames = [];
-    const managerTeams = selectedManager !== 'all' ? getTeamsByManager(selectedManager) : null;
     (init.assignments || []).forEach(a => {
-        if (managerTeams && !managerTeams.has(a.teamId)) return;
         const team = (currentSystemData.teams || []).find(t => t.teamId === a.teamId);
         if (team) {
             teamNames.push(team.teamIdentity || team.teamName || a.teamId);
@@ -713,82 +670,6 @@ function renderDynamicGroupFilter() {
             renderGanttChart();
         };
         wrap.appendChild(createLabeledControl('Team:', select));
-    } else if (currentGanttGroupBy === 'Manager') {
-        const seniorSelect = document.createElement('select');
-        seniorSelect.id = 'ganttSeniorManagerFilter';
-        seniorSelect.innerHTML = '<option value="all">All Senior Managers</option>';
-        (currentSystemData.seniorManagers || []).forEach(sm => {
-            const opt = document.createElement('option');
-            opt.value = sm.seniorManagerId;
-            opt.textContent = sm.seniorManagerName;
-            seniorSelect.appendChild(opt);
-        });
-
-        const managerSelect = document.createElement('select');
-        managerSelect.id = 'ganttManagerFilter';
-        managerSelect.innerHTML = '<option value="all">All Managers</option>';
-
-        const rebuildManagers = () => {
-            const selectedSm = seniorSelect.value || 'all';
-            const sdms = (currentSystemData.sdms || []).filter(sdm => selectedSm === 'all' ? true : sdm.seniorManagerId === selectedSm);
-            managerSelect.innerHTML = '<option value="all">All Managers</option>';
-            sdms.forEach(sdm => {
-                const opt = document.createElement('option');
-                opt.value = sdm.sdmId;
-                opt.textContent = sdm.sdmName;
-                managerSelect.appendChild(opt);
-            });
-        };
-
-        seniorSelect.onchange = () => {
-            rebuildManagers();
-            renderGanttTable();
-            renderGanttChart();
-        };
-        managerSelect.onchange = () => {
-            renderGanttTable();
-            renderGanttChart();
-        };
-
-        rebuildManagers();
-        wrap.appendChild(createLabeledControl('Senior Manager:', seniorSelect));
-        wrap.appendChild(createLabeledControl('Manager:', managerSelect));
-    } else if (currentGanttGroupBy === 'Goal') {
-        const select = document.createElement('select');
-        select.id = 'ganttGoalFilter';
-        select.innerHTML = '<option value="all">All Goals</option>';
-        (currentSystemData.goals || [])
-            .slice()
-            .sort((a, b) => (a.name || a.goalId).localeCompare(b.name || b.goalId))
-            .forEach(goal => {
-                const opt = document.createElement('option');
-                opt.value = goal.goalId;
-                opt.textContent = goal.name || goal.goalId;
-                select.appendChild(opt);
-            });
-        select.onchange = () => {
-            renderGanttTable();
-            renderGanttChart();
-        };
-        wrap.appendChild(createLabeledControl('Goal:', select));
-    } else if (currentGanttGroupBy === 'Theme') {
-        const select = document.createElement('select');
-        select.id = 'ganttThemeFilter';
-        select.innerHTML = '<option value="all">All Themes</option>';
-        (currentSystemData.definedThemes || [])
-            .slice()
-            .sort((a, b) => (a.name || a.themeId).localeCompare(b.name || b.themeId))
-            .forEach(theme => {
-                const opt = document.createElement('option');
-                opt.value = theme.themeId;
-                opt.textContent = theme.name || theme.themeId;
-                select.appendChild(opt);
-            });
-        select.onchange = () => {
-            renderGanttTable();
-            renderGanttChart();
-        };
-        wrap.appendChild(createLabeledControl('Theme:', select));
     } else {
         // No extra filter for All Initiatives or other modes
         const placeholder = document.createElement('div');
