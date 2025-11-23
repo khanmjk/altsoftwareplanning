@@ -78,9 +78,10 @@
 
 .gantt-chart-box {
     min-height: 900px;
-    overflow: auto;
+    overflow: auto; /* Allow both X and Y scroll */
     background-color: #fff;
-    padding: 20px;
+    padding: 20px; /* Add internal padding */
+    border: 1px solid #eee;
 }
 
 .gantt-table {
@@ -99,7 +100,9 @@
 }
 
 .gantt-chart-box svg {
-    min-width: 100%;
+    /* Allow SVG to be its natural size */
+    display: block;
+    min-width: 100%; 
     height: auto;
 }
 
@@ -190,4 +193,14 @@
 
 .mermaid .tick text {
     font-size: 14px !important;
+}
+
+.mermaid .taskText {
+    fill: #333 !important;
+    font-weight: 500 !important;
+}
+
+.mermaid .sectionTitle {
+    font-weight: bold !important;
+    fill: #212529 !important;
 }

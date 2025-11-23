@@ -29,15 +29,21 @@
             const syntax = buildMermaidFromTasks(this.tasks, this.options);
             const renderId = `gantt-${Date.now()}`;
             try {
+                this.container.innerHTML = '';
                 const result = await this.mermaid.render(renderId, syntax);
                 this.container.innerHTML = result.svg;
                 this._applyEnhancements();
             } catch (err) {
-                console.error("GanttChart render failed:", err, syntax);
+                console.error("GanttChart render failed:", err);
+                console.debug("Failed Syntax:\n", syntax);
                 if (typeof this.onRenderError === 'function') {
                     this.onRenderError(err, syntax);
                 }
-                this.container.textContent = 'Unable to render Gantt chart. Check console for details.';
+                this.container.innerHTML = `
+                    <div style="color: #721c24; background-color: #f8d7da; padding: 10px; border: 1px solid #f5c6cb; border-radius: 4px;">
+                        <strong>Error rendering Gantt chart.</strong><br>
+                        <small>${err.message}</small>
+                    </div>`;
             }
         }
 
@@ -46,6 +52,7 @@
             if (svg) {
                 svg.style.width = '100%';
                 svg.style.height = 'auto';
+                svg.style.maxWidth = 'none';
             }
             // Add tooltips by matching data-id on task groups
             const taskGroups = this.container.querySelectorAll('.task');
@@ -67,21 +74,36 @@
     function buildMermaidFromTasks(tasks = [], options = {}) {
         const lines = [];
         
-        // Configuration block to improve readability/spacing
+        // Configuration block to improve readability/spacing with a blue/gray palette
         lines.push(`%%{init: { 
             "theme": "base", 
-            "themeVariables": { "primaryColor": "#ffcc00", "secondaryColor": "#007bff" },
-            "gantt": { 
+            "themeVariables": { 
+                "primaryColor": "#cfe2f3", 
+                "secondaryColor": "#e1f5fe",
+                "tertiaryColor": "#fff",
+                "taskBkgColor": "#4a90e2", 
+                "taskTextColor": "#ffffff",
+                "activeTaskBkgColor": "#4a90e2", 
+                "activeTaskTextColor": "#ffffff",
+                "doneBkgColor": "#a0c4ff",
+                "doneTextColor": "#333333",
+            "critBkgColor": "#ff6b6b",
+            "critTextColor": "#ffffff",
+            "sectionBkgColor": "#ffffff",
+            "sectionBkgColor2": "#f9f9f9",
+            "altSectionBkgColor": "#ffffff"
+        },
+        "gantt": { 
                 "barHeight": 40,
                 "barGap": 8,
-                "fontSize": 14,
+                "fontSize": 16,
                 "sectionFontSize": 16,
-                "numberSectionStyles": 8,
+                "numberSectionStyles": 4,
                 "axisFormat": "%Y-%m-%d",
-                "topPadding": 50,
-                "gridLineStartPadding": 50
-            } 
-        } }%%`);
+                "topPadding": 60,
+                "leftPadding": 200
+        } 
+    } }%%`);
 
         lines.push('gantt');
         lines.push('dateFormat YYYY-MM-DD');

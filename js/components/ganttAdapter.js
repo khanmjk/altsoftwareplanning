@@ -88,47 +88,44 @@
     }
 
     function buildWorkPackageLabel({ init, wp, viewBy, teamMap, goalMap, themeMap, selectedTeam }) {
-        const baseTitle = wp.title || 'Work Package';
+        const baseTitle = wp.title || 'Phase';
         
-        // Build assignment breakdown string
         let breakdownStr = '';
         const assignments = wp.impactedTeamAssignments || [];
+        
         if (assignments.length > 0) {
             const parts = assignments.map(a => {
+                if (selectedTeam && selectedTeam !== 'all' && a.teamId !== selectedTeam) return null;
+                
                 const t = teamMap.get(a.teamId);
                 const identity = t ? (t.teamIdentity || t.teamName || a.teamId) : a.teamId;
-                const val = (a.sdeDays / 261).toFixed(1);
-                if (val === "0.0") return null;
-                return `${identity}:${val}y`;
-            }).filter(Boolean);
-            if (parts.length > 0) {
-                breakdownStr = ` (${parts.join(', ')})`;
-            }
-        }
-
-        let finalLabel = '';
-
-        switch (viewBy) {
-            case 'Team': {
-                finalLabel = `${baseTitle}${breakdownStr}`;
-                break;
-            }
-            case 'Manager':
-            case 'Goal': 
-            case 'Theme':
-            case 'All Initiatives':
-            default: {
-                const initTitle = init.title || 'Initiative';
-                if (initTitle === baseTitle) {
-                    finalLabel = `${initTitle}${breakdownStr}`;
+                
+                const days = a.sdeDays || 0;
+                const years = days / 261;
+                
+                let valStr = '';
+                if (years >= 0.1) {
+                    valStr = `${years.toFixed(1)}y`;
                 } else {
-                    finalLabel = `${initTitle} > ${baseTitle}${breakdownStr}`;
+                    valStr = `${days.toFixed(0)}d`;
                 }
-                break;
+                return `${identity} ${valStr}`;
+            }).filter(Boolean);
+            
+            if (parts.length > 0) {
+                breakdownStr = ` (${parts.join(' / ')})`;
             }
         }
 
-        return finalLabel;
+        let finalLabel = baseTitle;
+        
+        if (viewBy !== 'All Initiatives' && viewBy !== 'Team') {
+             finalLabel = `${init.title} - ${baseTitle}`;
+        } else if (baseTitle.toLowerCase() === 'work package') {
+             finalLabel = init.title; 
+        }
+
+        return finalLabel + breakdownStr;
     }
 
     if (typeof window !== 'undefined') {
