@@ -30,10 +30,10 @@
 
 .gantt-split {
     display: grid;
-    grid-template-columns: 36% 64%;
+    grid-template-columns: 32% 68%;
     gap: 16px;
     align-items: stretch;
-    min-height: 760px;
+    min-height: 900px;
 }
 
 .gantt-panel {
@@ -44,7 +44,7 @@
 }
 
 .gantt-table-wrapper {
-    max-height: 700px;
+    max-height: 900px;
     overflow: auto;
 }
 
@@ -56,7 +56,7 @@
 }
 
 .gantt-chart-box {
-    min-height: 700px;
+    min-height: 900px;
     overflow: auto;
 }
 
@@ -81,7 +81,7 @@
 }
 
 .mermaid .task rect {
-    height: 24px;
+    height: 28px;
 }
 
 .mermaid .task text {

@@ -26,7 +26,7 @@
                 this.container.textContent = 'Mermaid is not available.';
                 return;
             }
-            const syntax = this._buildMermaidSyntax();
+            const syntax = buildMermaidFromTasks(this.tasks, this.options);
             const renderId = `gantt-${Date.now()}`;
             try {
                 const result = await this.mermaid.render(renderId, syntax);
@@ -41,56 +41,6 @@
             }
         }
 
-        _buildMermaidSyntax() {
-            const lines = [];
-            lines.push('gantt');
-            lines.push('dateFormat YYYY-MM-DD');
-            lines.push('axisFormat %Y-%m-%d');
-            const title = this.options.title || 'Detailed Plan';
-            lines.push(`title ${title}`);
-
-            // Group tasks by group label
-            const groupMap = new Map();
-            this.tasks.forEach(task => {
-                const group = task.group || 'All';
-                if (!groupMap.has(group)) groupMap.set(group, []);
-                groupMap.get(group).push(task);
-            });
-
-            Array.from(groupMap.entries()).forEach(([group, tasks]) => {
-                lines.push(`section ${escapeLabel(group)}`);
-                tasks.forEach(task => {
-                    const statusToken = mapStatusToToken(task.status);
-                    const fullLabel = escapeLabel(task.label || task.title || task.id);
-                    const label = truncate(fullLabel, 48);
-                    const start = task.start;
-                    const end = task.end;
-                    if (isValidDate(start) && isValidDate(end)) {
-                        lines.push(`${label} :${statusToken}, ${task.id}, ${start}, ${end}`);
-                    }
-                });
-            });
-
-            return lines.join('\n');
-
-            function mapStatusToToken(status) {
-                const s = (status || '').toLowerCase();
-                if (s.includes('done') || s.includes('complete')) return 'done';
-                if (s.includes('risk') || s.includes('block')) return 'crit';
-                return 'active';
-            }
-            function escapeLabel(text) {
-                return (text || '').replace(/:/g, '\\:').replace(/,/g, ' / ');
-            }
-            function truncate(text, maxLen) {
-                const t = text || '';
-                if (t.length <= maxLen) return t;
-                return t.slice(0, maxLen - 3).trim() + '...';
-            }
-            function isValidDate(str) {
-                return /^\d{4}-\d{2}-\d{2}$/.test(str);
-            }
-        }
         _applyEnhancements() {
             const svg = this.container.querySelector('svg');
             if (svg) {
@@ -114,7 +64,58 @@
         }
     }
 
+    function buildMermaidFromTasks(tasks = [], options = {}) {
+        const lines = [];
+        lines.push('gantt');
+        lines.push('dateFormat YYYY-MM-DD');
+        lines.push('axisFormat %Y-%m-%d');
+        const title = options.title || 'Detailed Plan';
+        lines.push(`title ${title}`);
+
+        const groupMap = new Map();
+        tasks.forEach(task => {
+            const group = task.group || 'All';
+            if (!groupMap.has(group)) groupMap.set(group, []);
+            groupMap.get(group).push(task);
+        });
+
+        Array.from(groupMap.entries()).forEach(([group, tasks]) => {
+            lines.push(`section ${escapeLabel(group)}`);
+            tasks.forEach(task => {
+                const statusToken = mapStatusToToken(task.status);
+                const fullLabel = escapeLabel(task.label || task.title || task.id);
+                const label = truncate(fullLabel, 48);
+                const start = task.start;
+                const end = task.end;
+                if (isValidDate(start) && isValidDate(end)) {
+                    lines.push(`${label} :${statusToken}, ${task.id}, ${start}, ${end}`);
+                }
+            });
+        });
+
+        return lines.join('\n');
+    }
+
+    function mapStatusToToken(status) {
+        const s = (status || '').toLowerCase();
+        if (s.includes('done') || s.includes('complete')) return 'done';
+        if (s.includes('risk') || s.includes('block')) return 'crit';
+        return 'active';
+    }
+    function escapeLabel(text) {
+        return (text || '').replace(/:/g, '\\:').replace(/,/g, ' / ');
+    }
+    function truncate(text, maxLen) {
+        const t = text || '';
+        if (t.length <= maxLen) return t;
+        return t.slice(0, maxLen - 3).trim() + '...';
+    }
+    function isValidDate(str) {
+        return /^\d{4}-\d{2}-\d{2}$/.test(str);
+    }
+
     if (typeof window !== 'undefined') {
         window.GanttChart = GanttChart;
+        window.buildMermaidFromTasks = buildMermaidFromTasks;
     }
 })();
