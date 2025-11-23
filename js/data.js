@@ -44,6 +44,7 @@ function ensureWorkPackagesForInitiatives(systemData, yearFilter = null) {
         if (existing.length > 0) {
             // Backfill missing arrays on existing WPs if needed
             existing.forEach(wp => {
+                if (!wp.dependencies) wp.dependencies = [];
                 wp.impactedTeamAssignments = wp.impactedTeamAssignments || [];
                 wp.deliveryPhases = wp.deliveryPhases || STANDARD_WORK_PACKAGE_PHASES.map(phaseName => ({
                     id: `phase-${phaseName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
@@ -95,7 +96,8 @@ function ensureWorkPackagesForInitiatives(systemData, yearFilter = null) {
             deliveryPhases,
             startDate: wpStart,
             endDate: wpEnd,
-            status: init.status || 'Planned'
+            status: init.status || 'Planned',
+            dependencies: []
         };
         systemData.workPackages.push(newWp);
         if (!init.workPackageIds.includes(wpId)) {
@@ -149,6 +151,7 @@ function addWorkPackage(initiativeId, wpData = {}) {
             endDate: null,
             status: 'Planned'
         })),
+        dependencies: [],
         ...wpData
     };
 

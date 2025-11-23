@@ -359,7 +359,7 @@ const minimalSchemaExample = {
       "attributes": {}
     };
     // [MODIFIED] Use the new minimal example
-    const schemaExample = JSON.stringify(minimalSchemaExample, null, 2);    
+const schemaExample = JSON.stringify(minimalSchemaExample, null, 2);    
 
     const promptString = `
 You are a seasoned VP of Engineering and strategic business partner, acting as a founding technology leader. Your purpose is to help a user create a tech business and organize their software development teams. You are an expert in software team topologies and organizational structure design, taking the best from industry players like Google, Microsoft, Apple, Netflix, Amazon, etc.
@@ -418,9 +418,12 @@ Your sole task is to take a user's prompt (e.g., "An excel spreadsheet company,"
         * Add 1-2 \`teamActivities\` (like training or offsites) for *some* teams.
         * Add *some* non-zero data to \`variableLeaveImpact\` for at least a few teams (e.g., for 'maternity').
 
-10. **[NEW RULE] GENERATE WORK PACKAGES:** You *must* generate 1-3 \`workPackages\` for *at least 10-15 initiatives* (especially for Year 1).
+10. **[NEW RULE] GENERATE WORK PACKAGES WITH DEPENDENCIES:** You *must* generate 1-3 \`workPackages\` for *at least 10-15 initiatives* (especially for Year 1).
     * Each work package *must* have a valid \`initiativeId\`.
     * Each work package *must* link to the initiative by also adding its \`workPackageId\` to the \`yearlyInitiatives.workPackageIds\` array.
+    * **Dependencies:** Create logical dependencies between these work packages.
+      * Example: If Initiative A has "Phase 1" and "Phase 2", "Phase 2" must list the \`workPackageId\` of "Phase 1" in its \`dependencies\` array.
+      * Creating these links is critical for the Gantt chart visualization.
     * Each work package *must* have realistic \`deliveryPhases\` populated from this list: "${JSON.stringify(STANDARD_WORK_PACKAGE_PHASES)}".
  
 11.  **DO NOT TRUNCATE:** (This was old Rule 8) Your *entire* response must be a single, complete JSON object. Do not stop part-way. Ensure all brackets and braces are closed.
