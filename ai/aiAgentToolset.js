@@ -158,9 +158,9 @@ const aiAgentTools = [
     },
     {
         command: "generateDiagram",
-        description: "Generates a visual diagram (flowchart, sequence, architecture, org chart) based on the system data. Use this when the user asks to 'draw', 'visualize', 'show me a diagram', or 'map out' something.",
+        description: "Generates a visual diagram (flowchart, sequence, architecture, org chart, or Gantt/Timeline) based on the system data. Use this when the user asks to 'draw', 'visualize', 'show me a diagram', or 'map out' something.",
         parameters: [
-            { name: "description", type: "string", description: "A specific description of what to diagram (e.g., 'Sequence diagram of payment flow' or 'Org chart of the platform team').", required: true }
+            { name: "description", type: "string", description: "A specific description of what to diagram (e.g., 'Sequence diagram of payment flow' or 'Gantt chart for Q1 initiatives').", required: true }
         ]
     }
 ];

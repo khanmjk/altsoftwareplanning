@@ -13,6 +13,11 @@ const aiAgentController = (() => {
             { text: "Suggest SDE-Year reductions for 2-3 BTL initiatives.", isImageRequest: false },
             { text: "Analyze the risks in this plan." }
         ],
+        ganttPlanningView: [
+            { text: "Generate a Gantt chart for all the initiatives planned.", isImageRequest: true },
+            { text: "Which work packages have missing dependencies?" },
+            { text: "Identify critical path risks in the current schedule." }
+        ],
         roadmapView: [
             { text: "Summarize all initiatives currently in 'Backlog' status." },
             { text: "Which 'Defined' initiatives have the highest SDE-Year estimates?" },
@@ -150,6 +155,7 @@ ${toolsetDescription}`;
 
         const userQuestion = view.getChatInputValue();
         if (!userQuestion) return;
+        console.debug('[AI CHAT] User input:', userQuestion);
 
         isAgentThinking = true;
         view.toggleChatInput(true);
@@ -235,9 +241,10 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
             try {
                 plan = JSON.parse(planMatch[1]);
             } catch (error) {
-                const errorHtml = `<span style="color:red;">Failed to parse agent plan JSON: ${error.message}</span>`;
+                console.warn('[AI Agent Controller] Failed to parse agent plan; rendering as text instead.', error);
+                const rendered = md.render(aiResponse.textResponse);
                 if (view && typeof view.hideAgentLoadingIndicator === 'function') {
-                    view.hideAgentLoadingIndicator(loadingMessageEl, errorHtml);
+                    view.hideAgentLoadingIndicator(loadingMessageEl, rendered);
                 }
                 return;
             }
@@ -672,16 +679,33 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
 
         try {
             switch (currentViewId) {
-            case 'planningView':
-                contextData.data = {
-                    viewTitle: "Year Plan",
-                    planningYear: currentPlanningYear,
-                    scenario: planningCapacityScenario,
-                    constraintsEnabled: applyCapacityConstraintsToggle,
-                    teamLoadSummary: currentYearPlanSummaryData,
-                    planningTable: currentYearPlanTableData
-                };
-                break;
+                case 'planningView':
+                    contextData.data = {
+                        viewTitle: "Year Plan",
+                        planningYear: currentPlanningYear,
+                        scenario: planningCapacityScenario,
+                        constraintsEnabled: applyCapacityConstraintsToggle,
+                        teamLoadSummary: currentYearPlanSummaryData,
+                        planningTable: currentYearPlanTableData
+                    };
+                    break;
+                case 'ganttPlanningView':
+                    contextData.data = {
+                        viewTitle: "Detailed Planning (Gantt)",
+                        currentYear: currentGanttYear,
+                        groupBy: currentGanttGroupBy,
+                        workPackages: currentSystemData.workPackages || [],
+                        initiatives: (currentSystemData.yearlyInitiatives || []).filter(i =>
+                            (i.attributes?.planningYear || '').toString() === (currentGanttYear || '').toString()
+                        ).map(i => ({
+                            id: i.initiativeId,
+                            title: i.title,
+                            startDate: i.attributes?.startDate,
+                            endDate: i.targetDueDate,
+                            workPackageIds: i.workPackageIds
+                        }))
+                    };
+                    break;
                 case 'capacityConfigView':
                     contextData.data = {
                         metrics: currentSystemData.calculatedCapacityMetrics,

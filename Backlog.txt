@@ -165,16 +165,24 @@ bar graph per quarter to see team load/demand impact
 [Done] --- Move all initiatives under the Goal XYZ to BTL to free up capacity
 [Done] - [Architect] Include mermaid diagram drawing capability
 [Done] - [AI] Add support for AI diagramming using mermaid functionality
+[Done] - [AI] Think about refactoring the codebase for AI files - like an AI folder to keep all ai-related files, especially if we're going down the agent route (like a planning agent, resource planning agent, etc.)
+[Done]- [AI] Explore generating architecture diagramming options, apart from the app's 3d node graphs
+
 ------------
 IN PROGRESS
 ------------
-- [AI] Think about refactoring the codebase for AI files - like an AI folder to keep all ai-related files, especially if we're going down the agent route (like a planning agent, resource planning agent, etc.)
+-- Start building out detailed planning features
+-- [AI] extend the diagram agents to support mermaid generation of gantt charts, organograms
 - [AI Feature] Create an AI agent that can perform actions on the system with access to the code
 
 
 ------
 TO DO
 ------
+- [UX] Upgrade the menu navigation layout - it's growing with each new feature - need a new cleaner menu navigation model
+- [Architecture] Move from Mermaid to Interactive Canvas (e.g., Frappe Gantt)
+Description: Mermaid is read-only. To enable "Drag and Drop" planning on the chart itself, replace ganttChart.js with a library like frappe-gantt or dhtmlx-gantt.
+Value: Allows users to drag bars to reschedule, which is the expected behavior for detailed planning tools.
 
 - [AI] - Ability to export the year plan, showing ATL/BTL logic, etc. to Excel - the excel model must be generated using LLM so that formulaes in the code are applied to the excel generation
 - Now that we have a goals dashboard view, we need to think about introducing an interface to manage the lifecycle of goals
@@ -188,14 +196,14 @@ Implement the logic within EnhancedTableWidget to take these definitions and cor
 This will include dynamically populating select lists from column data if specified.
 Utilities
 - Now that we've got export to excel, csv and json working, we need a utlity to generate these files from other places: planning table, overall system data dump, etc.
-- [AI] Explore generating architecture diagramming options, apart from the app's 3d node graphs
+
 
 UX
 -- Ability to export the system to JSON, CSV and Excel, from top level menu "Export System" [leveraging Tabular library's export functionality]
 
 Year Planning
 -- View planning by teams - for individual manager team planning.
-Allow managers to tune their teams estimates which will update the data model, year plan page uses latest changes)
+-- Allow managers to tune their teams estimates which will update the data model, year plan page uses latest changes)
 -- Add versioning when saving plans (up to 5 previous versions) - need to update data model structure
 -- Add ability to export the plan to CSV or Excel
 
@@ -203,7 +211,7 @@ Team Editing
 -- We support away team only from an incoming perspective (i.e. help provided to the team), but we could also consider concept of outgoing away team (I.e. the team lends engineers to other teams)
 
 AI enhancements
--- Use AI to generate a delivery plan - classic ganntt chart using the year plan as input, work out a plan per team for the year
+-- Use AI to generate a delivery plan - classic ganntt chart using the year plan as input, work out a plan per team for the year [build on the diagram agent introduced for system architecture]
 -- Use AI to set-up recurring tasks to collect status updates for initiatives (detailed work package tracking feature)
 -- USe AI to generate graphs / views the webapp pages don't currently render - like a pie chart showing disribution of initiatives by themes
 -- Use AI to create a new system from a visual software architecture diagram
@@ -216,7 +224,6 @@ AI enhancements
 -- Build an appstore feature for users to share and publish their generated systems
 -- Build an internal app API for the app to make agent creation more accessible
 -- Refactor the codebase to cleanly separate out concerns - and make future porting easier
--- Start building out detailed planning features
 -- Explore a backend-as-a-service to make simpler API key integrations possible for folks who are not software engineers
 
 TODO: Work with other LLM providers

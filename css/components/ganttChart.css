@@ -1,0 +1,206 @@
+.gantt-filter-bar {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.gantt-filter-bar .filter-bar {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.gantt-context-chip {
+    display: inline-block;
+    margin-left: 10px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    background: #eef2f7;
+    font-size: 12px;
+    color: #444;
+}
+
+.gantt-split {
+    --gantt-table-width: 36%;
+    display: grid;
+    grid-template-columns: var(--gantt-table-width) 10px 1fr;
+    gap: 8px;
+    align-items: stretch;
+    min-height: 900px;
+}
+
+.gantt-resizer {
+    width: 10px;
+    cursor: col-resize;
+    background: linear-gradient(90deg, transparent 0%, #d9d9d9 50%, transparent 100%);
+    border-radius: 6px;
+    margin: 4px 0;
+    position: relative;
+}
+
+.gantt-resizer::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 4px;
+    width: 2px;
+    background: #b5b5b5;
+    opacity: 0.7;
+}
+
+.gantt-panel {
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    background: #fff;
+    padding: 8px;
+}
+
+.gantt-table-wrapper {
+    max-height: 900px;
+    overflow: auto;
+}
+
+.gantt-table thead th {
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 2;
+}
+
+.gantt-chart-box {
+    min-height: 900px;
+    overflow: auto; /* Allow both X and Y scroll */
+    background-color: #fff;
+    padding: 20px; /* Add internal padding */
+    border: 1px solid #eee;
+}
+
+.gantt-table {
+    font-size: 12px;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.gantt-table tbody tr:hover {
+    background-color: #f7f7f7;
+}
+
+.gantt-table input,
+.gantt-table select {
+    font-size: 12px;
+}
+
+.gantt-chart-box svg {
+    /* Allow SVG to be its natural size */
+    display: block;
+    min-width: 100%; 
+    height: auto;
+}
+
+.gantt-status-bar {
+    margin-top: 10px;
+}
+
+.gantt-filter-row {
+    margin-bottom: 8px;
+}
+
+.gantt-status-bar .filter-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.gantt-status-label {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.gantt-status-checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+}
+
+.gantt-expander {
+    min-width: 24px;
+    padding: 2px 6px;
+}
+
+.gantt-predecessor-select {
+    position: relative;
+}
+
+.gantt-predecessor-btn {
+    width: 120px;
+    text-align: left;
+}
+
+.gantt-predecessor-menu {
+    position: absolute;
+    top: 110%;
+    left: 0;
+    min-width: 220px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    display: none;
+    z-index: 5;
+}
+
+.gantt-predecessor-menu.open,
+.gantt-predecessor-menu.opened {
+    display: block;
+}
+
+.gantt-predecessor-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 2px;
+    font-size: 12px;
+}
+
+.gantt-predecessor-empty {
+    font-size: 12px;
+    color: #777;
+}
+
+.mermaid .task rect {
+    height: 28px;
+}
+
+.mermaid .task text {
+    font-size: 11px;
+    pointer-events: none;
+}
+
+.mermaid .task tspan {
+    pointer-events: none;
+}
+
+.mermaid .tick text {
+    font-size: 14px !important;
+}
+
+.mermaid .taskText {
+    fill: #333 !important;
+    font-weight: 500 !important;
+}
+
+.mermaid .sectionTitle {
+    font-weight: bold !important;
+    fill: #212529 !important;
+}

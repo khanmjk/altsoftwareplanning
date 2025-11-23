@@ -67,6 +67,23 @@ This tool provides a unified platform to:
 * **Forecast Team Growth:** Model SDE hiring, ramp-up, and attrition, factoring in detailed capacity constraints to predict resource availability.
 * **Accelerate Modeling with AI:** Use a powerful AI Assistant to generate entire, realistic sample systems and roadmaps from a single text prompt.
 
+---
+
+## Detailed Planning (WIP)
+We’ve introduced a new “Detailed Planning” page with a hierarchical table and Gantt chart for initiatives and work packages. It’s actively evolving and has known rough edges.
+
+What’s included:
+- Hierarchical table (Initiative → Work Package → Team assignments) with inline editing of dates, estimates, and predecessor links.
+- Gantt chart (Mermaid) with larger bars, wider left padding, and a blue/gray theme.
+- Work package dependencies (including cross-initiative) and initiative-level predecessor selection.
+- Filters for year/team and a resizable split between table and chart.
+
+Known issues:
+- Styling is still being consolidated; some inline/UI polish is pending.
+- Mermaid can fail to render on malformed data; dependencies aren’t visualized yet.
+- AI-generated diagrams may need manual cleanup if Mermaid parsing fails.
+- Performance on very large data sets isn’t optimized yet.
+
 The ultimate goal is to enable better-informed decision-making for software delivery, resource allocation, and strategic planning.
 
 ---
