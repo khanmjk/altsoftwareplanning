@@ -5,6 +5,8 @@ const ganttExpandedInitiatives = new Set();
 const ganttExpandedWorkPackages = new Set();
 let ganttWorkPackagesInitialized = false;
 const ganttOtherTeamsExpanded = new Set();
+const GANTT_STATUS_OPTIONS = ['Backlog','Defined','Committed','In Progress','Done','Blocked'];
+let ganttStatusFilter = new Set(GANTT_STATUS_OPTIONS);
 
 function initializeGanttPlanningView() {
     const container = document.getElementById('ganttPlanningView');
@@ -36,10 +38,7 @@ function renderGanttControls() {
     controls.innerHTML = '';
 
     const filtersWrapper = document.createElement('div');
-    filtersWrapper.className = 'filter-bar';
-    filtersWrapper.style.display = 'flex';
-    filtersWrapper.style.flexWrap = 'wrap';
-    filtersWrapper.style.gap = '10px';
+    filtersWrapper.className = 'widget-filter-bar gantt-filter-row';
 
     // Year selector
     const yearSelect = document.createElement('select');
@@ -89,6 +88,10 @@ function renderGanttControls() {
     dynamicFilterWrap.id = 'ganttDynamicFilter';
     dynamicFilterWrap.className = 'filter-item';
     filtersWrapper.appendChild(dynamicFilterWrap);
+    const statusFilterWrap = document.createElement('div');
+    statusFilterWrap.id = 'ganttStatusFilter';
+    statusFilterWrap.className = 'filter-item';
+    filtersWrapper.appendChild(statusFilterWrap);
     const refreshBtn = document.createElement('button');
     refreshBtn.textContent = 'Refresh';
     refreshBtn.className = 'btn-secondary';
@@ -99,8 +102,9 @@ function renderGanttControls() {
     filtersWrapper.appendChild(refreshBtn);
     controls.appendChild(filtersWrapper);
 
-    // Build org/team filters using existing helper
+    // Build filters
     renderDynamicGroupFilter();
+    renderStatusFilter();
 }
 
 function createLabeledControl(labelText, controlEl) {
@@ -125,6 +129,13 @@ function getGanttFilteredInitiatives() {
         if (selectedTeam !== 'all') {
             initiatives = initiatives.filter(init => (init.assignments || []).some(a => a.teamId === selectedTeam));
         }
+    }
+    const statusFilter = ganttStatusFilter || new Set(GANTT_STATUS_OPTIONS);
+    if (statusFilter.size > 0 && statusFilter.size < GANTT_STATUS_OPTIONS.length) {
+        initiatives = initiatives.filter(init => statusFilter.has(init.status || ''));
+    }
+    if (statusFilter.size === 0) {
+        initiatives = [];
     }
     return initiatives;
 }
@@ -158,7 +169,6 @@ function renderGanttTable() {
                     <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Start</th>
                     <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Target</th>
                     <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">SDEs</th>
-                    <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Status</th>
                     <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Actions</th>
                 </tr>
             </thead>
@@ -169,7 +179,7 @@ function renderGanttTable() {
     const tbody = document.getElementById('ganttTableBody');
     if (data.length === 0) {
         const emptyRow = document.createElement('tr');
-        emptyRow.innerHTML = `<td colspan="${showManagerTeams ? '7' : '6'}" style="padding:10px; text-align:center; color:#777;">No initiatives match the filters.</td>`;
+        emptyRow.innerHTML = `<td colspan="${showManagerTeams ? '6' : '5'}" style="padding:10px; text-align:center; color:#777;">No initiatives match the filters.</td>`;
         tbody.appendChild(emptyRow);
         return;
     }
@@ -200,11 +210,6 @@ function renderGanttTable() {
             <td style="padding:6px; border-bottom:1px solid #f0f0f0;"><input type="date" value="${init.displayEnd || ''}" data-kind="initiative" data-field="targetDueDate" data-id="${init.initiativeId}"></td>
             <td style="padding:6px; border-bottom:1px solid #f0f0f0;"><input type="number" step="0.01" value="${computeSdeEstimate(init)}" data-kind="initiative" data-field="sdeEstimate" data-id="${init.initiativeId}" style="width:80px;"></td>
             <td style="padding:6px; border-bottom:1px solid #f0f0f0;">
-                <select data-kind="initiative" data-field="status" data-id="${init.initiativeId}">
-                    ${['Backlog','Defined','Committed','In Progress','Done','Blocked'].map(s => `<option value="${s}" ${init.status === s ? 'selected' : ''}>${s}</option>`).join('')}
-                </select>
-            </td>
-            <td style="padding:6px; border-bottom:1px solid #f0f0f0;">
                 <button class="gantt-add-wp" data-action="add-wp" data-id="${init.initiativeId}" style="padding:4px 8px;">Add WP</button>
             </td>
         `;
@@ -215,7 +220,7 @@ function renderGanttTable() {
             if (!wpList.length) {
                 const emptyWp = document.createElement('tr');
                 emptyWp.className = 'gantt-wp-row';
-                emptyWp.innerHTML = `<td colspan="${showManagerTeams ? '7' : '6'}" style="padding:6px 12px; color:#777;">No work packages yet. Click "Add WP" to create one.</td>`;
+                emptyWp.innerHTML = `<td colspan="${showManagerTeams ? '6' : '5'}" style="padding:6px 12px; color:#777;">No work packages yet. Click "Add WP" to create one.</td>`;
                 tbody.appendChild(emptyWp);
             } else {
                 wpList.forEach(wp => {
@@ -233,11 +238,6 @@ function renderGanttTable() {
                         <td style="padding:6px; border-bottom:1px solid #f7f7f7;"><input type="date" value="${wp.startDate || ''}" data-kind="work-package" data-field="startDate" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}"></td>
                         <td style="padding:6px; border-bottom:1px solid #f7f7f7;"><input type="date" value="${wp.endDate || ''}" data-kind="work-package" data-field="endDate" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}"></td>
                         <td style="padding:6px; border-bottom:1px solid #f7f7f7; color:#333;">${computeWorkPackageSdeYears(wp, workingDaysPerYear, selectedTeam)}</td>
-                        <td style="padding:6px; border-bottom:1px solid #f7f7f7;">
-                            <select data-kind="work-package" data-field="status" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}">
-                                ${['Planned','In Progress','Completed','Blocked'].map(s => `<option value="${s}" ${wp.status === s ? 'selected' : ''}>${s}</option>`).join('')}
-                            </select>
-                        </td>
                         <td style="padding:6px; border-bottom:1px solid #f7f7f7;">
                             <button data-action="delete-wp" data-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" style="padding:4px 8px; color:#b00020;">Delete</button>
                         </td>
@@ -257,34 +257,59 @@ function renderGanttTable() {
                             const assignRow = document.createElement('tr');
                             assignRow.className = 'gantt-wp-assign-row';
                             const sdeYears = ((assign.sdeDays || 0) / workingDaysPerYear).toFixed(2);
-                            assignRow.innerHTML = `
-                                <td style="padding:4px 6px 4px 48px; border-bottom:1px solid #fafafa; color:#555; font-size:13px;">Team: ${getTeamName(assign.teamId) || '(Unassigned)'}</td>
-                                ${showManagerTeams ? `<td style="padding:4px; border-bottom:1px solid #fafafa;"></td>` : ''}
-                                <td style="padding:4px; border-bottom:1px solid #fafafa;">
-                                    <input type="date" value="${assign.startDate || wp.startDate || ''}" data-kind="wp-assign" data-field="startDate" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" data-team-id="${assign.teamId || ''}">
-                                </td>
-                                <td style="padding:4px; border-bottom:1px solid #fafafa;">
-                                    <input type="date" value="${assign.endDate || wp.endDate || ''}" data-kind="wp-assign" data-field="endDate" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" data-team-id="${assign.teamId || ''}">
-                                </td>
-                                <td style="padding:4px; border-bottom:1px solid #fafafa;">
-                                    <input type="number" step="0.01" value="${sdeYears}" data-kind="wp-assign" data-field="sdeYears" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" data-team-id="${assign.teamId || ''}" style="width:80px;">
-                                </td>
-                                <td style="padding:4px; border-bottom:1px solid #fafafa; color:#aaa;">Team estimate</td>
-                                <td style="padding:4px; border-bottom:1px solid #fafafa;"></td>
-                            `;
+                            if (showManagerTeams) {
+                                assignRow.innerHTML = `
+                                    <td style="padding:4px 6px 4px 48px; border-bottom:1px solid #fafafa; color:#555; font-size:13px;">Team: ${getTeamName(assign.teamId) || '(Unassigned)'}</td>
+                                    <td style="padding:4px; border-bottom:1px solid #fafafa;"></td>
+                                    <td style="padding:4px; border-bottom:1px solid #fafafa;">
+                                        <input type="date" value="${assign.startDate || wp.startDate || ''}" data-kind="wp-assign" data-field="startDate" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" data-team-id="${assign.teamId || ''}">
+                                    </td>
+                                    <td style="padding:4px; border-bottom:1px solid #fafafa;">
+                                        <input type="date" value="${assign.endDate || wp.endDate || ''}" data-kind="wp-assign" data-field="endDate" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" data-team-id="${assign.teamId || ''}">
+                                    </td>
+                                    <td style="padding:4px; border-bottom:1px solid #fafafa;">
+                                        <input type="number" step="0.01" value="${sdeYears}" data-kind="wp-assign" data-field="sdeYears" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" data-team-id="${assign.teamId || ''}" style="width:80px;">
+                                    </td>
+                                    <td style="padding:4px; border-bottom:1px solid #fafafa; color:#aaa;">Team estimate</td>
+                                `;
+                            } else {
+                                assignRow.innerHTML = `
+                                    <td style="padding:4px 6px 4px 48px; border-bottom:1px solid #fafafa; color:#555; font-size:13px;">Team: ${getTeamName(assign.teamId) || '(Unassigned)'}</td>
+                                    <td style="padding:4px; border-bottom:1px solid #fafafa;">
+                                        <input type="date" value="${assign.startDate || wp.startDate || ''}" data-kind="wp-assign" data-field="startDate" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" data-team-id="${assign.teamId || ''}">
+                                    </td>
+                                    <td style="padding:4px; border-bottom:1px solid #fafafa;">
+                                        <input type="date" value="${assign.endDate || wp.endDate || ''}" data-kind="wp-assign" data-field="endDate" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" data-team-id="${assign.teamId || ''}">
+                                    </td>
+                                    <td style="padding:4px; border-bottom:1px solid #fafafa;">
+                                        <input type="number" step="0.01" value="${sdeYears}" data-kind="wp-assign" data-field="sdeYears" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" data-team-id="${assign.teamId || ''}" style="width:80px;">
+                                    </td>
+                                    <td style="padding:4px; border-bottom:1px solid #fafafa; color:#aaa;">Team estimate</td>
+                                `;
+                            }
                             tbody.appendChild(assignRow);
                         });
 
                         if (teamFilterActive && otherAssignments.length) {
                             const toggleRow = document.createElement('tr');
-                            toggleRow.innerHTML = `
-                                <td style="padding:4px 6px 4px 48px; border-bottom:1px solid #fafafa; color:#777; font-size:12px;">Other teams (${otherAssignments.length})</td>
-                                ${showManagerTeams ? `<td style="padding:4px; border-bottom:1px solid #fafafa;"></td>` : ''}
-                                <td colspan="${showManagerTeams ? '4' : '3'}" style="padding:4px; border-bottom:1px solid #fafafa;">
-                                    <button data-action="toggle-other-teams" data-wp-id="${wp.workPackageId}" style="padding:2px 6px;">${showOtherTeams ? 'Hide' : 'Show'} other teams</button>
-                                </td>
-                                <td style="padding:4px; border-bottom:1px solid #fafafa;"></td>
-                            `;
+                            if (showManagerTeams) {
+                                toggleRow.innerHTML = `
+                                    <td style="padding:4px 6px 4px 48px; border-bottom:1px solid #fafafa; color:#777; font-size:12px;">Other teams (${otherAssignments.length})</td>
+                                    <td style="padding:4px; border-bottom:1px solid #fafafa;"></td>
+                                    <td colspan="3" style="padding:4px; border-bottom:1px solid #fafafa;">
+                                        <button data-action="toggle-other-teams" data-wp-id="${wp.workPackageId}" style="padding:2px 6px;">${showOtherTeams ? 'Hide' : 'Show'} other teams</button>
+                                    </td>
+                                    <td style="padding:4px; border-bottom:1px solid #fafafa;"></td>
+                                `;
+                            } else {
+                                toggleRow.innerHTML = `
+                                    <td style="padding:4px 6px 4px 48px; border-bottom:1px solid #fafafa; color:#777; font-size:12px;">Other teams (${otherAssignments.length})</td>
+                                    <td colspan="3" style="padding:4px; border-bottom:1px solid #fafafa;">
+                                        <button data-action="toggle-other-teams" data-wp-id="${wp.workPackageId}" style="padding:2px 6px;">${showOtherTeams ? 'Hide' : 'Show'} other teams</button>
+                                    </td>
+                                    <td style="padding:4px; border-bottom:1px solid #fafafa;"></td>
+                                `;
+                            }
                             tbody.appendChild(toggleRow);
                         }
                     }
@@ -395,8 +420,6 @@ function renderGanttTable() {
                     init.assignments = [{ teamId: selectedTeamLocal || null, sdeYears: num }];
                     updateWorkPackageSde(init.initiativeId, selectedTeamLocal || null, num, workingDaysPerYearLocal);
                 }
-            } else if (field === 'status') {
-                init.status = value;
             }
             if (typeof ensureWorkPackagesForInitiatives === 'function') {
                 ensureWorkPackagesForInitiatives(currentSystemData);
@@ -419,8 +442,6 @@ function renderGanttTable() {
                 updates.startDate = value;
             } else if (field === 'endDate') {
                 updates.endDate = value;
-            } else if (field === 'status') {
-                updates.status = value;
             }
             const wp = typeof updateWorkPackage === 'function'
                 ? updateWorkPackage(wpId, updates)
@@ -522,6 +543,55 @@ function getWorkingDaysPerYear() {
 function getTeamName(teamId) {
     const team = (currentSystemData.teams || []).find(t => t.teamId === teamId);
     return team ? (team.teamIdentity || team.teamName || teamId) : teamId;
+}
+
+function renderStatusFilter() {
+    const wrap = document.getElementById('ganttStatusFilter');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    const label = document.createElement('div');
+    label.textContent = 'Backlog Status:';
+    label.className = 'gantt-status-label';
+    wrap.appendChild(label);
+
+    const makeCheckbox = (id, text, value, checked) => {
+        const boxWrap = document.createElement('label');
+        boxWrap.className = 'gantt-status-checkbox';
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.id = id;
+        cb.value = value;
+        cb.checked = checked;
+        cb.addEventListener('change', () => {
+            if (value === '__all__') {
+                ganttStatusFilter = cb.checked ? new Set(GANTT_STATUS_OPTIONS) : new Set();
+            } else {
+                if (cb.checked) {
+                    ganttStatusFilter.add(value);
+                } else {
+                    ganttStatusFilter.delete(value);
+                }
+            }
+            // keep "All" in sync
+            const allBox = wrap.querySelector('input[value="__all__"]');
+            if (allBox) {
+                allBox.checked = ganttStatusFilter.size === GANTT_STATUS_OPTIONS.length;
+            }
+            renderGanttTable();
+            renderGanttChart();
+        });
+        const span = document.createElement('span');
+        span.textContent = text;
+        boxWrap.appendChild(cb);
+        boxWrap.appendChild(span);
+        return boxWrap;
+    };
+
+    const allChecked = ganttStatusFilter.size === GANTT_STATUS_OPTIONS.length;
+    wrap.appendChild(makeCheckbox('gantt-status-all', 'All', '__all__', allChecked));
+    GANTT_STATUS_OPTIONS.forEach(status => {
+        wrap.appendChild(makeCheckbox(`gantt-status-${status}`, status, status, ganttStatusFilter.has(status)));
+    });
 }
 
 function applyGanttSplitWidth() {
@@ -737,5 +807,4 @@ function renderDynamicGroupFilter() {
     // Ensure table/chart refresh after rebuild
     renderGanttTable();
     renderGanttChart();
-    renderContextMeta();
 }

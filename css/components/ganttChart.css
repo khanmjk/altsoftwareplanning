@@ -101,6 +101,32 @@
     height: auto;
 }
 
+.gantt-status-bar {
+    margin-top: 10px;
+}
+
+.gantt-filter-row {
+    margin-bottom: 8px;
+}
+
+.gantt-status-bar .filter-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.gantt-status-label {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.gantt-status-checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+}
+
 .mermaid .task rect {
     height: 28px;
 }
