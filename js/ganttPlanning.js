@@ -5,7 +5,7 @@ const ganttExpandedInitiatives = new Set();
 const ganttExpandedWorkPackages = new Set();
 let ganttWorkPackagesInitialized = false;
 const ganttOtherTeamsExpanded = new Set();
-const GANTT_STATUS_OPTIONS = ['Backlog','Defined','Committed','In Progress','Done','Blocked'];
+const GANTT_STATUS_OPTIONS = ['Backlog', 'Defined', 'Committed', 'In Progress', 'Done', 'Blocked'];
 let ganttStatusFilter = new Set(GANTT_STATUS_OPTIONS);
 
 function initializeGanttPlanningView() {
@@ -991,13 +991,28 @@ async function renderGanttChart() {
             selectedTeam: selectedTeam
         })
         : [];
+
+    // Use Factory to get the correct renderer
     if (!ganttChartInstance) {
-        ganttChartInstance = new GanttChart({ container, mermaidInstance: mermaid, onRenderError: (err, syntax) => console.error('Gantt render error', err, syntax) });
+        ganttChartInstance = GanttFactory.createRenderer(container);
+    } else {
+        // If renderer type changed, recreate instance
+        const currentType = FeatureFlags.getRenderer();
+        const isMermaid = ganttChartInstance instanceof MermaidGanttRenderer;
+        const isFrappe = ganttChartInstance instanceof FrappeGanttRenderer;
+
+        if ((currentType === 'mermaid' && !isMermaid) || (currentType === 'frappe' && !isFrappe)) {
+            ganttChartInstance = GanttFactory.createRenderer(container);
+        }
     }
+
     const dynamicHeight = Math.max(500, tasks.length * 60);
     container.style.minHeight = `${dynamicHeight}px`;
-    ganttChartInstance.setData(tasks, { title: `Detailed Plan - ${currentGanttYear}` });
-    await ganttChartInstance.render();
+
+    // Update container reference in case it changed (though id is same)
+    ganttChartInstance.container = container;
+
+    await ganttChartInstance.render(tasks, { title: `Detailed Plan - ${currentGanttYear}` });
 }
 
 if (typeof window !== 'undefined') {
