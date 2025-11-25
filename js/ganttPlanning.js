@@ -1278,11 +1278,9 @@ function handleGanttUpdate({ task, start, end }) {
         saveSystemChanges();
     }
 
-    // Refresh table to show new dates
+    // Refresh table and chart to show new dates/rollups
     renderGanttTable();
-    // No need to re-render chart as Frappe updates DOM, unless we need to sync derived state
-    // But re-rendering ensures consistency
-    // renderGanttChart(); 
+    renderGanttChart();
 }
 
 if (typeof window !== 'undefined') {
