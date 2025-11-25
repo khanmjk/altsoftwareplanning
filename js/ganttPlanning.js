@@ -37,6 +37,12 @@ function renderGanttControls() {
     if (!controls) return;
     controls.innerHTML = '';
 
+    const row = document.createElement('div');
+    row.style.display = 'flex';
+    row.style.justifyContent = 'space-between';
+    row.style.gap = '10px';
+    row.style.alignItems = 'center';
+
     const filtersWrapper = document.createElement('div');
     filtersWrapper.className = 'widget-filter-bar gantt-filter-row';
 
@@ -100,11 +106,26 @@ function renderGanttControls() {
         renderGanttChart();
     };
     filtersWrapper.appendChild(refreshBtn);
-    controls.appendChild(filtersWrapper);
+
+    const rendererWrap = document.createElement('div');
+    rendererWrap.style.display = 'flex';
+    rendererWrap.style.alignItems = 'center';
+    const rendererBtn = document.createElement('button');
+    rendererBtn.id = 'ganttRendererToggle';
+    rendererBtn.type = 'button';
+    rendererBtn.className = 'btn-secondary';
+    rendererBtn.title = 'Switch between Mermaid and Frappe Gantt renderers';
+    rendererBtn.textContent = getRendererButtonLabel();
+    rendererWrap.appendChild(rendererBtn);
+
+    row.appendChild(filtersWrapper);
+    row.appendChild(rendererWrap);
+    controls.appendChild(row);
 
     // Build filters
     renderDynamicGroupFilter();
     renderStatusFilter();
+    setupGanttRendererToggle();
 
     // View Mode Buttons
     const viewModeButtons = controls.querySelectorAll('.view-modes .btn-sm');
@@ -841,6 +862,40 @@ function setupGanttResizer() {
     });
 
     window.addEventListener('resize', applyGanttSplitWidth);
+}
+
+function getRendererButtonLabel() {
+    const current = (typeof FeatureFlags !== 'undefined' && typeof FeatureFlags.getRenderer === 'function')
+        ? FeatureFlags.getRenderer()
+        : 'mermaid';
+    const pretty = current === 'frappe' ? 'Frappe' : 'Mermaid';
+    return `Renderer: ${pretty}`;
+}
+
+function setupGanttRendererToggle() {
+    const btn = document.getElementById('ganttRendererToggle');
+    if (!btn || typeof FeatureFlags === 'undefined') return;
+
+    const updateLabel = () => {
+        btn.textContent = getRendererButtonLabel();
+    };
+
+    if (btn.dataset.bound === 'true') {
+        updateLabel();
+        return;
+    }
+
+    btn.dataset.bound = 'true';
+    btn.addEventListener('click', () => {
+        const current = FeatureFlags.getRenderer();
+        const next = current === 'mermaid' ? 'frappe' : 'mermaid';
+        FeatureFlags.setRenderer(next);
+        updateLabel();
+        ganttChartInstance = null; // Force re-create with new renderer
+        renderGanttChart();
+    });
+
+    updateLabel();
 }
 
 function getTeamsByManager(managerId) {
