@@ -105,6 +105,22 @@ function renderGanttControls() {
     // Build filters
     renderDynamicGroupFilter();
     renderStatusFilter();
+
+    // View Mode Buttons
+    const viewModeButtons = controls.querySelectorAll('.view-modes .btn-sm');
+    viewModeButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Update active state
+            viewModeButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Update chart view mode
+            const mode = btn.dataset.viewMode;
+            if (ganttChartInstance && typeof ganttChartInstance.changeViewMode === 'function') {
+                ganttChartInstance.changeViewMode(mode);
+            }
+        });
+    });
 }
 
 function createLabeledControl(labelText, controlEl) {
@@ -1016,7 +1032,7 @@ async function renderGanttChart() {
         }
     }
 
-    const dynamicHeight = Math.max(500, tasks.length * 60);
+    const dynamicHeight = Math.max(600, tasks.length * 65); // Increased per-task height for Frappe
     container.style.minHeight = `${dynamicHeight}px`;
 
     // Update container reference in case it changed (though id is same)

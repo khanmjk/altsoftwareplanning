@@ -334,6 +334,34 @@
                 style="display:none; margin-top: 20px; max-width: 90%; margin-left: auto; margin-right: auto;">
             </div>
             <div id="ganttPlanningView" style="display:none; margin-top: 20px;">
+                <div class="gantt-controls"
+                    style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                    <div class="view-modes">
+                        <span style="margin-right: 10px; font-weight: 500;">View:</span>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn-sm btn-outline-secondary"
+                                data-view-mode="Quarter Day">Quarter Day</button>
+                            <button type="button" class="btn-sm btn-outline-secondary" data-view-mode="Half Day">Half
+                                Day</button>
+                            <button type="button" class="btn-sm btn-outline-secondary" data-view-mode="Day">Day</button>
+                            <button type="button" class="btn-sm btn-outline-secondary"
+                                data-view-mode="Week">Week</button>
+                            <button type="button" class="btn-sm btn-outline-secondary active"
+                                data-view-mode="Month">Month</button>
+                        </div>
+                    </div>
+                    <div class="gantt-legend" style="display: flex; gap: 15px; font-size: 12px;">
+                        <div style="display: flex; align-items: center;"><span
+                                style="width: 12px; height: 12px; background-color: #6f42c1; display: inline-block; margin-right: 5px; border-radius: 2px;"></span>
+                            Initiative</div>
+                        <div style="display: flex; align-items: center;"><span
+                                style="width: 12px; height: 12px; background-color: #0366d6; display: inline-block; margin-right: 5px; border-radius: 2px;"></span>
+                            Work Package</div>
+                        <div style="display: flex; align-items: center;"><span
+                                style="width: 12px; height: 12px; background-color: #2ea44f; display: inline-block; margin-right: 5px; border-radius: 2px;"></span>
+                            Assignment</div>
+                    </div>
+                </div>
             </div>
 
 

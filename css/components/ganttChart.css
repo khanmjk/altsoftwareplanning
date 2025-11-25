@@ -77,11 +77,28 @@
 }
 
 .gantt-chart-box {
-    min-height: 900px;
-    overflow: auto; /* Allow both X and Y scroll */
+    min-height: 600px;
+    height: 900px;
+    overflow: auto;
     background-color: #fff;
-    padding: 20px; /* Add internal padding */
+    padding: 20px;
     border: 1px solid #eee;
+    resize: vertical;
+    /* Allow user to resize vertically */
+    position: relative;
+}
+
+/* Custom Resize Handle Indicator */
+.gantt-chart-box::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 12px;
+    height: 12px;
+    background: linear-gradient(135deg, transparent 50%, #ccc 50%);
+    pointer-events: none;
+    /* Let clicks pass through to the actual resize handle */
 }
 
 .gantt-table {
@@ -102,7 +119,7 @@
 .gantt-chart-box svg {
     /* Allow SVG to be its natural size */
     display: block;
-    min-width: 100%; 
+    min-width: 100%;
     height: auto;
 }
 
@@ -155,7 +172,7 @@
     border: 1px solid #ddd;
     border-radius: 4px;
     padding: 6px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     display: none;
     z-index: 5;
 }
@@ -205,41 +222,129 @@
     fill: #212529 !important;
 }
 
-/* Frappe Gantt Custom Overrides */
-.gantt-initiative .bar-progress {
+/* View Mode Buttons */
+.btn-group {
+    display: inline-flex;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid #ccc;
+}
+
+.btn-group .btn-sm {
+    padding: 4px 10px;
+    font-size: 12px;
+    border: none;
+    border-right: 1px solid #ccc;
+    background-color: #fff;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-group .btn-sm:last-child {
+    border-right: none;
+}
+
+.btn-group .btn-sm:hover {
+    background-color: #f0f0f0;
+}
+
+.btn-group .btn-sm.active {
+    background-color: #e9ecef;
+    font-weight: 600;
+    color: #333;
+    box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+}
+
+/* Frappe Gantt Custom Overrides & Hierarchy */
+
+/* We use the attribute selector or very specific paths to override Frappe's defaults */
+
+/* Initiative: Thicker, Purple, Bold */
+.gantt .bar-wrapper.gantt-initiative .bar-progress {
     fill: #6f42c1 !important;
 }
-.gantt-initiative .bar {
+
+.gantt .bar-wrapper.gantt-initiative .bar {
     fill: #6f42c1 !important;
-    opacity: 0.2;
+    opacity: 0.2 !important;
 }
 
-.gantt-work-package .bar-progress {
+.gantt .bar-wrapper.gantt-initiative .bar-label {
+    font-weight: 800 !important;
+    font-size: 14px !important;
+    fill: #333 !important;
+    /* Dark text for better contrast */
+}
+
+/* Work Package: Standard, Blue */
+.gantt .bar-wrapper.gantt-work-package .bar-progress {
     fill: #0366d6 !important;
 }
-.gantt-work-package .bar {
+
+.gantt .bar-wrapper.gantt-work-package .bar {
     fill: #0366d6 !important;
-    opacity: 0.2;
+    opacity: 0.2 !important;
 }
 
-.gantt-assignment .bar-progress {
-    fill: #2ea44f !important;
-}
-.gantt-assignment .bar {
-    fill: #2ea44f !important;
-    opacity: 0.2;
+.gantt .bar-wrapper.gantt-work-package .bar-label {
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    fill: #333 !important;
 }
 
-/* Status Colors */
-.status-done .bar-progress, .status-complete .bar-progress {
+/* Assignment: Thinner, Green, Italic */
+.gantt .bar-wrapper.gantt-assignment .bar-progress {
+    fill: #2ea44f !important;
+}
+
+.gantt .bar-wrapper.gantt-assignment .bar {
+    fill: #2ea44f !important;
+    opacity: 0.2 !important;
+}
+
+.gantt .bar-wrapper.gantt-assignment .bar-label {
+    font-weight: 500 !important;
+    font-size: 12px !important;
+    font-style: italic !important;
+    fill: #444 !important;
+}
+
+/* Status Colors Override - Ensure specificity */
+.gantt .bar-wrapper.status-done .bar-progress,
+.gantt .bar-wrapper.status-complete .bar-progress {
     fill: #a0c4ff !important;
 }
-.status-risk .bar-progress, .status-blocked .bar-progress {
+
+.gantt .bar-wrapper.status-risk .bar-progress,
+.gantt .bar-wrapper.status-blocked .bar-progress {
     fill: #ff6b6b !important;
 }
 
-/* Text Styling */
-.gantt .bar-label {
-    fill: #333 !important;
-    font-weight: 500;
+/* Today Marker Visibility */
+.gantt .today-highlight {
+    stroke: #cf222e !important;
+    stroke-width: 2px !important;
+    opacity: 0.8 !important;
+}
+
+/* Tooltip Styling */
+.gantt-container .popup-wrapper {
+    width: 280px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    border: 1px solid #ddd !important;
+    border-radius: 6px !important;
+}
+
+.gantt-container .popup-wrapper .title {
+    border-bottom: 1px solid #eee !important;
+    padding-bottom: 8px !important;
+    margin-bottom: 8px !important;
+    font-weight: 600 !important;
+    color: #333 !important;
+}
+
+.gantt-container .popup-wrapper .subtitle {
+    color: #666 !important;
+    font-size: 11px !important;
+    margin-bottom: 4px !important;
 }
