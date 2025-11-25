@@ -123,6 +123,7 @@ class FrappeGanttRenderer extends GanttRenderer {
             // Apply custom styles after render
             this._applyCustomStyles(tasks);
             this._resizeForTasks(wrapper, frappeTasks, options);
+            this._markLockedBars(wrapper, frappeTasks);
 
             // Attach double-click handling to support expand/collapse sync with table
             this._bindDoubleClick(wrapper, frappeTasks, options);
@@ -170,6 +171,36 @@ class FrappeGanttRenderer extends GanttRenderer {
         wrapper.style.minHeight = `${computedHeight}px`;
         wrapper.style.height = `${computedHeight}px`;
         wrapper.style.overflow = 'hidden';
+    }
+
+    _markLockedBars(wrapper, tasks) {
+        if (!wrapper || !tasks || !tasks.length) return;
+        const map = new Map(tasks.map(t => [t.id, t]));
+        const bars = wrapper.querySelectorAll('.bar-wrapper');
+        bars.forEach(bar => {
+            const id = bar.getAttribute('data-id');
+            const task = map.get(id);
+            if (!task) return;
+            let lockedReason = null;
+            if (task.type === 'initiative' && task.hasWorkPackages) {
+                lockedReason = 'Edit at work package level';
+            } else if (task.type === 'workPackage' && (task.assignmentCount || 0) > 1) {
+                lockedReason = 'Edit dates at task level (multiple tasks)';
+            }
+            if (lockedReason) {
+                bar.classList.add('locked-task');
+                const barEl = bar.querySelector('.bar');
+                if (barEl) {
+                    barEl.setAttribute('title', lockedReason);
+                    barEl.style.cursor = 'not-allowed';
+                }
+                const label = bar.querySelector('.bar-label');
+                if (label) {
+                    label.setAttribute('title', lockedReason);
+                    label.style.cursor = 'not-allowed';
+                }
+            }
+        });
     }
 
     _bindDoubleClick(wrapper, tasks, options = {}) {
@@ -257,6 +288,8 @@ class FrappeGanttRenderer extends GanttRenderer {
                 progress: task.progress || 0,
                 dependencies: task.dependencies || '',
                 custom_class: customClass,
+                hasWorkPackages: task.hasWorkPackages,
+                assignmentCount: task.assignmentCount,
                 // Pass metadata through
                 initiativeId: task.initiativeId,
                 workPackageId: task.workPackageId,

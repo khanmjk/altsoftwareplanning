@@ -127,6 +127,17 @@
     min-height: 100%;
 }
 
+.gantt .bar-wrapper.locked-task .bar,
+.gantt .bar-wrapper.locked-task .bar-progress {
+    cursor: not-allowed;
+    stroke: #d9534f;
+    stroke-width: 1.5px;
+}
+
+.gantt .bar-wrapper.locked-task .bar-label {
+    cursor: not-allowed;
+}
+
 
 .gantt-status-bar {
     margin-top: 10px;

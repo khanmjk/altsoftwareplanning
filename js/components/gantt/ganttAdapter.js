@@ -23,6 +23,8 @@
 
         initiatives.forEach(init => {
             const groupLabel = buildInitiativeGroupLabel(init);
+            const wpList = wpByInit.get(init.initiativeId) || [];
+            const hasWorkPackages = wpList.length > 0;
 
             // Level 1: Initiative Summary (Always Render)
             const initStart = init.attributes?.startDate || defaultStart;
@@ -37,13 +39,13 @@
                 status: init.status || 'active',
                 type: 'initiative',
                 dependencies: (init.dependencies || []).map(sanitizeId).join(','),
+                hasWorkPackages,
                 // Metadata for updates
                 initiativeId: init.initiativeId
             });
 
             // Level 2: Work Packages (if Initiative expanded)
             if (expandedInitiativeIds.has(init.initiativeId)) {
-                const wpList = wpByInit.get(init.initiativeId) || [];
                 wpList.forEach(wp => {
                     // Always render WP bar if initiative is expanded
                     let span = computeWorkPackageSpan(wp, init, selectedTeam, defaultStart, defaultEnd);
@@ -68,6 +70,7 @@
                     const indentedLabel = `\u00A0\u00A0${label}`; // 2 non-breaking spaces
 
                     const wpTaskId = sanitizeId(wp.workPackageId || `${init.initiativeId}-${(wp.title || 'wp')}`);
+                    const assignmentCount = (wp.impactedTeamAssignments || []).length;
                     tasks.push({
                         id: wpTaskId,
                         title: wp.title || 'Work Package',
@@ -78,6 +81,7 @@
                         status: wp.status || init.status || 'active',
                         type: 'workPackage',
                         dependencies: (wp.dependencies || []).map(sanitizeId).join(','),
+                        assignmentCount,
                         // Metadata for updates
                         initiativeId: init.initiativeId,
                         workPackageId: wp.workPackageId

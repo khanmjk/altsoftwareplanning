@@ -1215,7 +1215,7 @@ function handleGanttUpdate({ task, start, end }) {
 
         // Check if has WPs - if so, warn and revert (re-render)
         if (hasWorkPackagesForInitiative(initId)) {
-            alert('Initiative dates cannot be edited when work packages exist. Edit at the work package level.');
+            console.warn('Initiative dates locked: work packages exist.');
             renderGanttChart(); // Revert UI
             return;
         }
@@ -1232,11 +1232,18 @@ function handleGanttUpdate({ task, start, end }) {
         const wp = (currentSystemData.workPackages || []).find(w => w.workPackageId === wpId);
         if (!wp) return;
 
+        const assignments = wp.impactedTeamAssignments || [];
+        if (assignments.length > 1) {
+            console.warn('Work package dates locked: multiple tasks present.');
+            renderGanttChart();
+            return;
+        }
+
         wp.startDate = start;
         wp.endDate = end;
 
-        // Update assignments
-        (wp.impactedTeamAssignments || []).forEach(assign => {
+        // If only one assignment, align it to the WP change
+        (assignments || []).forEach(assign => {
             assign.startDate = start;
             assign.endDate = end;
         });
@@ -1256,6 +1263,10 @@ function handleGanttUpdate({ task, start, end }) {
         // Recalculate WP dates
         if (typeof recalculateWorkPackageDates === 'function') {
             recalculateWorkPackageDates(wp);
+        }
+        // Keep initiative rollup in sync
+        if (task.initiativeId && typeof syncInitiativeTotals === 'function') {
+            syncInitiativeTotals(task.initiativeId, currentSystemData);
         }
     }
 
