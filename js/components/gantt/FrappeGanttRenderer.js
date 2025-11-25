@@ -152,7 +152,7 @@ class FrappeGanttRenderer extends GanttRenderer {
 
         const opts = this.gantt ? this.gantt.options : {};
         const barHeight = opts.bar_height || 30;
-        const barPadding = 12; // Frappe internal gap between bars
+        const barPadding = opts.bar_padding || 16; // Extra gap to reduce overlap
         const headerHeight = opts.header_height || 50;
         const padding = opts.padding || 18;
 
@@ -279,10 +279,11 @@ class FrappeGanttRenderer extends GanttRenderer {
             // The adapter adds \u00A0 which might not render well in SVG. 
             // Let's strip leading whitespace/non-breaking spaces and apply our own prefix.
             const rawName = (task.label || task.title || '').replace(/^[\s\u00A0]+/, '');
+            const displayName = this._truncateLabel(rawName, 48);
 
             return {
                 id: task.id,
-                name: namePrefix + rawName,
+                name: namePrefix + displayName,
                 start: start,
                 end: end,
                 progress: task.progress || 0,
@@ -290,6 +291,7 @@ class FrappeGanttRenderer extends GanttRenderer {
                 custom_class: customClass,
                 hasWorkPackages: task.hasWorkPackages,
                 assignmentCount: task.assignmentCount,
+                originalLabel: rawName,
                 // Pass metadata through
                 initiativeId: task.initiativeId,
                 workPackageId: task.workPackageId,
@@ -370,11 +372,21 @@ class FrappeGanttRenderer extends GanttRenderer {
                 label.style.setProperty('font-weight', fontWeight, 'important');
                 label.style.setProperty('font-size', fontSize, 'important');
                 label.style.setProperty('fill', textColor, 'important');
+                const fullLabel = task.originalLabel || task.title || task.label || '';
+                if (fullLabel) {
+                    label.setAttribute('title', fullLabel);
+                }
 
                 // Move label slightly if needed, or ensure it's visible
                 // For now, just ensuring high contrast
             }
         });
+    }
+
+    _truncateLabel(text, maxLen) {
+        const t = (text || '').trim();
+        if (t.length <= maxLen) return t;
+        return t.slice(0, maxLen - 1).trim() + '…';
     }
 }
 
