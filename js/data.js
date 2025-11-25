@@ -15,14 +15,7 @@ const STANDARD_WORK_PACKAGE_PHASES = [
     "Completed & Monitored"
 ];
 
-const Modes = {
-    NAVIGATION: 'navigation',
-    Browse: 'Browse',
-    EDITING: 'editing',
-    CREATING: 'creating',
-    PLANNING: 'planning',
-    ROADMAP: 'roadmap'
-};
+
 
 /**
  * Ensures work packages exist for all initiatives. Generates defaults from initiative assignments when missing.
@@ -314,4 +307,5 @@ if (typeof window !== 'undefined') {
     window.updateWorkPackage = updateWorkPackage;
     window.recalculateWorkPackageDates = recalculateWorkPackageDates;
     window.deleteWorkPackage = deleteWorkPackage;
+
 }

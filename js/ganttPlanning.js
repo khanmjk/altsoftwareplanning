@@ -340,6 +340,7 @@ function renderGanttTable() {
                 ganttExpandedInitiatives.add(id);
             }
             renderGanttTable();
+            renderGanttChart();
         } else if (action === 'add-wp') {
             const id = target.dataset.id;
             const init = initiativeMap.get(id);
@@ -381,6 +382,7 @@ function renderGanttTable() {
                 ganttExpandedWorkPackages.add(wpId);
             }
             renderGanttTable();
+            renderGanttChart();
         } else if (action === 'toggle-other-teams') {
             const wpId = target.dataset.wpId;
             if (ganttOtherTeamsExpanded.has(wpId)) {
@@ -994,7 +996,9 @@ async function renderGanttChart() {
             viewBy: currentGanttGroupBy,
             filters: {},
             year: currentGanttYear,
-            selectedTeam: selectedTeam
+            selectedTeam: selectedTeam,
+            expandedInitiativeIds: ganttExpandedInitiatives,
+            expandedWorkPackageIds: ganttExpandedWorkPackages
         })
         : [];
 

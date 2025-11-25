@@ -1,3 +1,16 @@
+const Modes = {
+    NAVIGATION: 'navigation',
+    Browse: 'Browse',
+    EDITING: 'editing',
+    CREATING: 'creating',
+    PLANNING: 'planning',
+    ROADMAP: 'roadmap'
+};
+
+if (typeof window !== 'undefined') {
+    window.Modes = Modes;
+}
+
 // --- Helper for Input Warnings (Phase 7a) ---
 const updateInputWarning = (inputElement, message) => {
     let warningSpan = inputElement.nextElementSibling;
@@ -20,10 +33,10 @@ const updateInputWarning = (inputElement, message) => {
         // Insert the span immediately after the input element
         inputElement.parentNode.insertBefore(warningSpan, inputElement.nextSibling);
     }
-     // Update the input's own title to include the warning (if any)
-     // Ensure original title exists before appending
-     const originalTitle = inputElement.dataset.originalTitle || '';
-     inputElement.title = originalTitle + (message ? `\nWarning: ${message}` : '');
+    // Update the input's own title to include the warning (if any)
+    // Ensure original title exists before appending
+    const originalTitle = inputElement.dataset.originalTitle || '';
+    inputElement.title = originalTitle + (message ? `\nWarning: ${message}` : '');
 };
 // --- End Helper ---
 
@@ -101,7 +114,7 @@ function calculateTeamActivityImpacts(team) {
  */
 function calculateOverheadDaysPerSDE(team, workingDaysPerYear) {
     if (!team || !team.teamCapacityAdjustments || !workingDaysPerYear || workingDaysPerYear === 0) {
-         return 0;
+        return 0;
     }
     const hoursPerWeek = team.teamCapacityAdjustments.avgOverheadHoursPerWeekPerSDE || 0;
     if (hoursPerWeek === 0) return 0;
@@ -180,8 +193,8 @@ function createInputLabelPair(id, labelText, value, type = 'text', index, field,
         inputElement.type = type;
         if (type === 'number') {
             inputElement.min = 0;
-             // Add step=1 for integer headcount fields if needed
-             if (field === 'fundedHeadcount') inputElement.step = 1;
+            // Add step=1 for integer headcount fields if needed
+            if (field === 'fundedHeadcount') inputElement.step = 1;
         }
         inputElement.style.width = '90%';
         inputElement.id = id;
@@ -244,11 +257,11 @@ function createDualListContainer(contextIndex, leftLabel, rightLabel, currentOpt
             e.preventDefault();
             const newItemData = addNewCallback(addNewInput.value); // Pass current value from input
             if (newItemData && newItemData.value && newItemData.text) {
-                 const exists = Array.from(availableSelect.options).some(opt => opt.value === newItemData.value) || Array.from(currentSelect.options).some(opt => opt.value === newItemData.value);
-                 if (!exists) { availableSelect.appendChild(new Option(newItemData.text, newItemData.value)); }
-                 else if (!newItemData.preventAdd) { console.warn("Item already exists in lists:", newItemData.text); }
-                 addNewInput.value = '';
-             } else if (newItemData && newItemData.preventAdd) { addNewInput.value = ''; }
+                const exists = Array.from(availableSelect.options).some(opt => opt.value === newItemData.value) || Array.from(currentSelect.options).some(opt => opt.value === newItemData.value);
+                if (!exists) { availableSelect.appendChild(new Option(newItemData.text, newItemData.value)); }
+                else if (!newItemData.preventAdd) { console.warn("Item already exists in lists:", newItemData.text); }
+                addNewInput.value = '';
+            } else if (newItemData && newItemData.preventAdd) { addNewInput.value = ''; }
         };
         addNewContainer.appendChild(addNewInput); addNewContainer.appendChild(addNewBtn);
         rightDiv.appendChild(addNewContainer);
@@ -256,16 +269,16 @@ function createDualListContainer(contextIndex, leftLabel, rightLabel, currentOpt
 
     // Button Actions
     removeBtn.onclick = (e) => {
-         e.preventDefault();
+        e.preventDefault();
         Array.from(currentSelect.selectedOptions).forEach(option => { availableSelect.appendChild(option); moveCallback(option.value, 'remove', contextIndex); });
     };
     addBtn.onclick = (e) => {
-         e.preventDefault();
+        e.preventDefault();
         Array.from(availableSelect.selectedOptions).forEach(option => {
-             if (!multiSelectLeft) {
-                 while (currentSelect.options.length > 0) { let existingOption = currentSelect.options[0]; availableSelect.appendChild(existingOption); moveCallback(existingOption.value, 'remove', contextIndex); }
-             }
-             currentSelect.appendChild(option); moveCallback(option.value, 'add', contextIndex);
+            if (!multiSelectLeft) {
+                while (currentSelect.options.length > 0) { let existingOption = currentSelect.options[0]; availableSelect.appendChild(existingOption); moveCallback(existingOption.value, 'remove', contextIndex); }
+            }
+            currentSelect.appendChild(option); moveCallback(option.value, 'add', contextIndex);
         });
     };
 
@@ -380,7 +393,7 @@ function stopDocumentationResize() {
     document.removeEventListener('mouseup', stopDocumentationResize);
     document.body.style.userSelect = ''; // Re-enable text selection
     const contentDiv = document.getElementById('documentationContent');
-    if(contentDiv){
+    if (contentDiv) {
         console.log("Documentation resize ended. New max-height:", contentDiv.style.maxHeight);
     }
 }
@@ -1078,7 +1091,7 @@ function validateGeneratedSystem(systemData) {
         }
         return true; // Array exists and is populated
     };
-    
+
     const optionalArray = (key) => {
         if (!Array.isArray(systemData[key])) {
             errors.push(`Field "${key}" is missing or not an array.`);
@@ -1091,10 +1104,10 @@ function validateGeneratedSystem(systemData) {
     };
 
     requiredString('systemName');
-    
+
     const criticalArrays = [
-        'teams', 'allKnownEngineers', 'services', 
-        'yearlyInitiatives', 'goals', 'definedThemes', 
+        'teams', 'allKnownEngineers', 'services',
+        'yearlyInitiatives', 'goals', 'definedThemes',
         'sdms', 'pmts', 'projectManagers'
     ];
     let canProceed = true;
@@ -1103,7 +1116,7 @@ function validateGeneratedSystem(systemData) {
             canProceed = false;
         }
     }
-    
+
     if (!Array.isArray(systemData.workPackages)) {
         errors.push(`Required field "workPackages" is missing or not an array.`);
         canProceed = false;
@@ -1115,9 +1128,9 @@ function validateGeneratedSystem(systemData) {
         errors.push(`Required field "capacityConfiguration" is missing or not an object.`);
         canProceed = false;
     }
-    
+
     optionalArray('seniorManagers');
-    
+
     if (!canProceed) {
         console.error("[AI-VALIDATE] Basic structure validation FAILED. Critical arrays or objects are missing.");
         return { isValid: false, errors, warnings }; // Stop if basic structure is wrong
@@ -1133,7 +1146,7 @@ function validateGeneratedSystem(systemData) {
         if (!team.teamId) errors.push(`Team at index ${i} is missing "teamId".`);
         else if (teamIds.has(team.teamId)) errors.push(`Duplicate teamId found: ${team.teamId}`);
         else teamIds.add(team.teamId);
-        
+
         if (!team.teamName) errors.push(`Team ${team.teamId || `at index ${i}`} is missing "teamName".`);
         else if (teamNames.has(team.teamName.toLowerCase())) warnings.push(`Duplicate teamName found: ${team.teamName}`);
         else teamNames.add(team.teamName.toLowerCase());
@@ -1151,7 +1164,7 @@ function validateGeneratedSystem(systemData) {
     const themeIds = new Set(systemData.definedThemes.map(t => t.themeId).filter(Boolean));
     const pmIds = new Set(systemData.projectManagers.map(p => p.pmId).filter(Boolean));
     const workPackageIds = new Set(systemData.workPackages.map(wp => wp.workPackageId).filter(Boolean));
-    
+
     const engineerNameMap = new Map();
     const engineerNameCheck = new Set();
     systemData.allKnownEngineers.forEach((eng, i) => {
@@ -1175,7 +1188,7 @@ function validateGeneratedSystem(systemData) {
         if (team.pmtId && !pmtIds.has(team.pmtId)) {
             errors.push(`Team "${team.teamName}" uses a non-existent pmtId: ${team.pmtId}`);
         }
-        
+
         for (const engName of (team.engineers || [])) {
             if (!engineerNameMap.has(engName)) {
                 errors.push(`Team "${team.teamName}" lists an engineer "${engName}" who is not in 'allKnownEngineers'.`);
@@ -1186,7 +1199,7 @@ function validateGeneratedSystem(systemData) {
                 }
             }
         }
-        
+
         if (!team.teamCapacityAdjustments || typeof team.teamCapacityAdjustments !== 'object') {
             errors.push(`Team "${team.teamName}" is missing "teamCapacityAdjustments" object.`);
         } else {
@@ -1217,7 +1230,7 @@ function validateGeneratedSystem(systemData) {
         if (service.owningTeamId && !teamIds.has(service.owningTeamId)) {
             errors.push(`Service "${service.serviceName}" is owned by a non-existent teamId: ${service.owningTeamId}`);
         }
-        
+
         if (!service.serviceDependencies || service.serviceDependencies.length === 0) {
             warnings.push(`Service "${service.serviceName}" has no "serviceDependencies".`);
         }
@@ -1233,23 +1246,23 @@ function validateGeneratedSystem(systemData) {
     console.log(`[AI-VALIDATE] ... checking ${systemData.yearlyInitiatives.length} Initiatives (Goals, Themes, Personnel, Work Packages)...`);
     systemData.yearlyInitiatives.forEach(init => {
         if (!init.initiativeId) errors.push('An initiative is missing its "initiativeId".');
-        
+
         if (init.primaryGoalId && !goalIds.has(init.primaryGoalId)) {
             errors.push(`Initiative "${init.title}" uses a non-existent primaryGoalId: ${init.primaryGoalId}`);
         }
-        
+
         for (const themeId of (init.themes || [])) {
             if (!themeIds.has(themeId)) {
                 errors.push(`Initiative "${init.title}" uses a non-existent themeId: ${themeId}`);
             }
         }
-        
+
         for (const assignment of (init.assignments || [])) {
             if (!assignment.teamId || !teamIds.has(assignment.teamId)) {
                 errors.push(`Initiative "${init.title}" is assigned to a non-existent teamId: ${assignment.teamId || 'null'}`);
             }
         }
-        
+
         const checkPersonnel = (personnel, type) => {
             if (!personnel) {
                 warnings.push(`Initiative "${init.title}" is missing "${type}".`);
@@ -1261,23 +1274,23 @@ function validateGeneratedSystem(systemData) {
             }
             let idSet;
             let idField = 'id';
-            
-            switch(personnel.type) {
+
+            switch (personnel.type) {
                 case 'sdm': idSet = sdmIds; break;
                 case 'pmt': idSet = pmtIds; break;
                 case 'pm': idSet = pmIds; break;
-                case 'engineer': 
-                    idSet = engineerNameMap; 
+                case 'engineer':
+                    idSet = engineerNameMap;
                     idField = 'name'; // Engineer is checked by name
                     break;
                 case 'seniorManager':
-                     idSet = new Set(systemData.seniorManagers.map(sm => sm.seniorManagerId));
-                     break;
+                    idSet = new Set(systemData.seniorManagers.map(sm => sm.seniorManagerId));
+                    break;
                 default:
                     errors.push(`Initiative "${init.title}" has unknown personnel type "${personnel.type}" for "${type}".`);
                     return;
             }
-            
+
             const idToFind = (personnel.type === 'engineer') ? personnel.name : personnel.id; // Use name for engineer, id for others
             if (!idSet.has(idToFind)) {
                 errors.push(`Initiative "${init.title}" lists a non-existent ${type}: "${personnel.name}" (ID/Name: ${idToFind}).`);
@@ -1308,24 +1321,26 @@ function validateGeneratedSystem(systemData) {
         if (!wp.initiativeId || !systemData.yearlyInitiatives.some(i => i.initiativeId === wp.initiativeId)) {
             errors.push(`WorkPackage "${wp.workPackageId}" has an invalid or missing "initiativeId": ${wp.initiativeId}`);
         }
-        
+
         const parentInit = systemData.yearlyInitiatives.find(i => i.initiativeId === wp.initiativeId);
         if (parentInit && (!parentInit.workPackageIds || !parentInit.workPackageIds.includes(wp.workPackageId))) {
-             errors.push(`Data inconsistency: WorkPackage "${wp.workPackageId}" links to initiative "${parentInit.title}", but the initiative does not link back to it in its "workPackageIds" array.`);
+            errors.push(`Data inconsistency: WorkPackage "${wp.workPackageId}" links to initiative "${parentInit.title}", but the initiative does not link back to it in its "workPackageIds" array.`);
         }
     });
 
-    
+
     // --- 4. Final Result ---
     if (errors.length > 0) {
         console.error(`[AI-VALIDATE] Validation FAILED. Errors: ${errors.length}, Warnings: ${warnings.length}`);
     } else {
         console.log(`[AI-VALIDATE] Validation PASSED. Errors: 0, Warnings: ${warnings.length}`);
     }
-    
+
     return {
         isValid: errors.length === 0,
         errors,
         warnings
     };
 }
+
+

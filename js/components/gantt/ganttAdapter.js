@@ -2,8 +2,8 @@
  * Gantt Adapter: converts domain initiatives/workPackages into normalized tasks for the Gantt component.
  * Keeps Mermaid-agnostic transformation separate from rendering logic.
  */
-(function() {
-    function buildTasksFromInitiatives({ initiatives = [], workPackages = [], viewBy = 'All Initiatives', filters = {}, year, selectedTeam }) {
+(function () {
+    function buildTasksFromInitiatives({ initiatives = [], workPackages = [], viewBy = 'All Initiatives', filters = {}, year, selectedTeam, expandedInitiativeIds = new Set(), expandedWorkPackageIds = new Set() }) {
         if (typeof ensureWorkPackagesForInitiatives === 'function' && typeof currentSystemData !== 'undefined') {
             ensureWorkPackagesForInitiatives(currentSystemData, year);
         }
@@ -22,38 +22,100 @@
         });
 
         initiatives.forEach(init => {
-            const wpList = wpByInit.get(init.initiativeId) || [];
-            if (!wpList.length) return;
             const groupLabel = buildInitiativeGroupLabel(init);
-            wpList.forEach(wp => {
-                let span = computeWorkPackageSpan(wp, init, selectedTeam, defaultStart, defaultEnd);
-                if (!span) {
-                    if (selectedTeam && selectedTeam !== 'all') return; // filtered team not involved; skip ghost bar
-                    span = { startDate: defaultStart, endDate: defaultEnd };
-                }
-                const label = buildWorkPackageLabel({
-                    init,
-                    wp,
-                    viewBy,
-                    teamMap,
-                    goalMap,
-                    themeMap,
-                    selectedTeam
-                });
-                const taskId = sanitizeId(wp.workPackageId || `${init.initiativeId}-${(wp.title || 'wp')}`);
+
+            // Level 1: Initiative Summary (if collapsed)
+            if (!expandedInitiativeIds.has(init.initiativeId)) {
+                const initStart = init.attributes?.startDate || defaultStart;
+                const initEnd = init.targetDueDate || defaultEnd;
                 tasks.push({
-                    id: taskId,
-                    title: wp.title || 'Work Package',
+                    id: sanitizeId(init.initiativeId),
+                    title: init.title || 'Initiative Summary',
                     group: groupLabel,
-                    label,
-                    start: span.startDate,
-                    end: span.endDate,
-                    status: wp.status || init.status || 'active',
-                    dependencies: (wp.dependencies || []).map(sanitizeId).join(',')
+                    label: init.title || 'Initiative',
+                    start: initStart,
+                    end: initEnd,
+                    status: init.status || 'active',
+                    dependencies: (init.dependencies || []).map(sanitizeId).join(',')
                 });
+                return;
+            }
+
+            // Level 2: Work Packages (if Initiative expanded)
+            const wpList = wpByInit.get(init.initiativeId) || [];
+            if (!wpList.length) {
+                // If expanded but no WPs, maybe show a placeholder or just the init summary?
+                // Let's show init summary as fallback or nothing? 
+                // Existing logic showed nothing if no WPs. Let's stick to that or show empty state.
+                return;
+            }
+
+            wpList.forEach(wp => {
+                // Level 3: Team Assignments (if WP expanded)
+                if (expandedWorkPackageIds.has(wp.workPackageId)) {
+                    const assignments = wp.impactedTeamAssignments || [];
+                    const relevantAssignments = (!selectedTeam || selectedTeam === 'all')
+                        ? assignments
+                        : assignments.filter(assign => assign.teamId === selectedTeam);
+
+                    if (relevantAssignments.length === 0) {
+                        // Fallback to WP bar if no assignments match filter (or none exist)
+                        const span = computeWorkPackageSpan(wp, init, selectedTeam, defaultStart, defaultEnd);
+                        if (span) {
+                            tasks.push(createTaskForWorkPackage(wp, init, groupLabel, span, viewBy, teamMap, goalMap, themeMap, selectedTeam));
+                        }
+                    } else {
+                        relevantAssignments.forEach(assign => {
+                            const t = teamMap.get(assign.teamId);
+                            const teamName = t ? (t.teamIdentity || t.teamName || assign.teamId) : assign.teamId;
+                            tasks.push({
+                                id: sanitizeId(`${wp.workPackageId}-${assign.teamId}`),
+                                title: `${wp.title} (${teamName})`,
+                                group: groupLabel,
+                                label: `${teamName} - ${wp.title}`,
+                                start: assign.startDate || wp.startDate || defaultStart,
+                                end: assign.endDate || wp.endDate || defaultEnd,
+                                status: wp.status || 'active',
+                                dependencies: (wp.dependencies || []).map(sanitizeId).join(',') // Inherit WP deps for now? Or none?
+                            });
+                        });
+                    }
+                } else {
+                    // WP Collapsed: Show WP Bar
+                    const span = computeWorkPackageSpan(wp, init, selectedTeam, defaultStart, defaultEnd);
+                    if (!span) {
+                        if (selectedTeam && selectedTeam !== 'all') return;
+                        // span = { startDate: defaultStart, endDate: defaultEnd }; // Don't force ghost bars if not needed
+                        return;
+                    }
+                    tasks.push(createTaskForWorkPackage(wp, init, groupLabel, span, viewBy, teamMap, goalMap, themeMap, selectedTeam));
+                }
             });
         });
         return tasks;
+    }
+
+    function createTaskForWorkPackage(wp, init, groupLabel, span, viewBy, teamMap, goalMap, themeMap, selectedTeam) {
+        const label = buildWorkPackageLabel({
+            init,
+            wp,
+            viewBy,
+            teamMap,
+            goalMap,
+            themeMap,
+            selectedTeam
+        });
+        const taskId = sanitizeId(wp.workPackageId || `${init.initiativeId}-${(wp.title || 'wp')}`);
+        return {
+            id: taskId,
+            title: wp.title || 'Work Package',
+            group: groupLabel,
+            label,
+            start: span.startDate,
+            end: span.endDate,
+            status: wp.status || init.status || 'active',
+            dependencies: (wp.dependencies || []).map(sanitizeId).join(',')
+        };
     }
 
     function computeWorkPackageSpan(wp, init, selectedTeam, defaultStart, defaultEnd) {
@@ -93,20 +155,20 @@
 
     function buildWorkPackageLabel({ init, wp, viewBy, teamMap, goalMap, themeMap, selectedTeam }) {
         const baseTitle = wp.title || 'Phase';
-        
+
         let breakdownStr = '';
         const assignments = wp.impactedTeamAssignments || [];
-        
+
         if (assignments.length > 0) {
             const parts = assignments.map(a => {
                 if (selectedTeam && selectedTeam !== 'all' && a.teamId !== selectedTeam) return null;
-                
+
                 const t = teamMap.get(a.teamId);
                 const identity = t ? (t.teamIdentity || t.teamName || a.teamId) : a.teamId;
-                
+
                 const days = a.sdeDays || 0;
                 const years = days / 261;
-                
+
                 let valStr = '';
                 if (years >= 0.1) {
                     valStr = `${years.toFixed(1)}y`;
@@ -115,18 +177,18 @@
                 }
                 return `${identity} ${valStr}`;
             }).filter(Boolean);
-            
+
             if (parts.length > 0) {
                 breakdownStr = ` (${parts.join(' / ')})`;
             }
         }
 
         let finalLabel = baseTitle;
-        
+
         if (viewBy !== 'All Initiatives' && viewBy !== 'Team') {
-             finalLabel = `${init.title} - ${baseTitle}`;
+            finalLabel = `${init.title} - ${baseTitle}`;
         } else if (baseTitle.toLowerCase() === 'work package') {
-             finalLabel = init.title; 
+            finalLabel = init.title;
         }
 
         return finalLabel + breakdownStr;
