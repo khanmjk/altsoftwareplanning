@@ -1022,7 +1022,81 @@ async function renderGanttChart() {
     // Update container reference in case it changed (though id is same)
     ganttChartInstance.container = container;
 
-    await ganttChartInstance.render(tasks, { title: `Detailed Plan - ${currentGanttYear}` });
+    await ganttChartInstance.render(tasks, {
+        title: `Detailed Plan - ${currentGanttYear}`,
+        onUpdate: (update) => {
+            handleGanttUpdate(update);
+        }
+    });
+}
+
+function handleGanttUpdate({ task, start, end }) {
+    console.log('[GANTT] Update received:', task, start, end);
+
+    if (task.type === 'initiative') {
+        const initId = task.initiativeId;
+        const init = (currentSystemData.yearlyInitiatives || []).find(i => i.initiativeId === initId);
+        if (!init) return;
+
+        // Check if has WPs - if so, warn and revert (re-render)
+        if (hasWorkPackagesForInitiative(initId)) {
+            alert('Initiative dates cannot be edited when work packages exist. Edit at the work package level.');
+            renderGanttChart(); // Revert UI
+            return;
+        }
+
+        init.attributes = init.attributes || {};
+        init.attributes.startDate = start;
+        init.targetDueDate = end;
+
+        // Update WPs if any (though we blocked it above, good for completeness)
+        setWorkPackageDatesForTeam(initId, { startDate: start, endDate: end });
+
+    } else if (task.type === 'workPackage') {
+        const wpId = task.workPackageId;
+        const wp = (currentSystemData.workPackages || []).find(w => w.workPackageId === wpId);
+        if (!wp) return;
+
+        wp.startDate = start;
+        wp.endDate = end;
+
+        // Update assignments
+        (wp.impactedTeamAssignments || []).forEach(assign => {
+            assign.startDate = start;
+            assign.endDate = end;
+        });
+
+    } else if (task.type === 'assignment') {
+        const wpId = task.workPackageId;
+        const teamId = task.teamId;
+        const wp = (currentSystemData.workPackages || []).find(w => w.workPackageId === wpId);
+        if (!wp) return;
+
+        const assign = (wp.impactedTeamAssignments || []).find(a => a.teamId === teamId);
+        if (!assign) return;
+
+        assign.startDate = start;
+        assign.endDate = end;
+
+        // Recalculate WP dates
+        if (typeof recalculateWorkPackageDates === 'function') {
+            recalculateWorkPackageDates(wp);
+        }
+    }
+
+    // Sync totals and save
+    if (task.initiativeId && typeof syncInitiativeTotals === 'function') {
+        syncInitiativeTotals(task.initiativeId, currentSystemData);
+    }
+    if (typeof saveSystemChanges === 'function') {
+        saveSystemChanges();
+    }
+
+    // Refresh table to show new dates
+    renderGanttTable();
+    // No need to re-render chart as Frappe updates DOM, unless we need to sync derived state
+    // But re-rendering ensures consistency
+    // renderGanttChart(); 
 }
 
 if (typeof window !== 'undefined') {

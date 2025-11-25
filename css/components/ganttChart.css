@@ -204,3 +204,42 @@
     font-weight: bold !important;
     fill: #212529 !important;
 }
+
+/* Frappe Gantt Custom Overrides */
+.gantt-initiative .bar-progress {
+    fill: #6f42c1 !important;
+}
+.gantt-initiative .bar {
+    fill: #6f42c1 !important;
+    opacity: 0.2;
+}
+
+.gantt-work-package .bar-progress {
+    fill: #0366d6 !important;
+}
+.gantt-work-package .bar {
+    fill: #0366d6 !important;
+    opacity: 0.2;
+}
+
+.gantt-assignment .bar-progress {
+    fill: #2ea44f !important;
+}
+.gantt-assignment .bar {
+    fill: #2ea44f !important;
+    opacity: 0.2;
+}
+
+/* Status Colors */
+.status-done .bar-progress, .status-complete .bar-progress {
+    fill: #a0c4ff !important;
+}
+.status-risk .bar-progress, .status-blocked .bar-progress {
+    fill: #ff6b6b !important;
+}
+
+/* Text Styling */
+.gantt .bar-label {
+    fill: #333 !important;
+    font-weight: 500;
+}

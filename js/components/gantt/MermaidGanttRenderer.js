@@ -84,10 +84,10 @@ class MermaidGanttRenderer extends GanttRenderer {
         // Today marker
         lines.push(`todayMarker stroke-width:2px,stroke:#f00,opacity:0.7`);
 
-        // Define Classes for Hierarchy
-        lines.push('classDef initiative fill:#6f42c1,stroke:#5a32a3,color:#fff');
-        lines.push('classDef workPackage fill:#0366d6,stroke:#024ea2,color:#fff');
-        lines.push('classDef assignment fill:#2ea44f,stroke:#22863a,color:#fff');
+        // Define Classes for Hierarchy - TEMPORARILY DISABLED due to Mermaid syntax error
+        // lines.push('classDef initiative fill:#6f42c1,stroke:#5a32a3,color:#fff');
+        // lines.push('classDef workPackage fill:#0366d6,stroke:#024ea2,color:#fff');
+        // lines.push('classDef assignment fill:#2ea44f,stroke:#22863a,color:#fff');
 
         const groupMap = new Map();
         tasks.forEach(task => {
@@ -111,12 +111,12 @@ class MermaidGanttRenderer extends GanttRenderer {
             });
         });
 
-        // Apply Classes to Tasks
-        tasks.forEach(task => {
-            if (task.type) {
-                lines.push(`class ${task.id} ${task.type}`);
-            }
-        });
+        // Apply Classes to Tasks - TEMPORARILY DISABLED
+        // tasks.forEach(task => {
+        //     if (task.type) {
+        //         lines.push(`class ${task.id} ${task.type}`);
+        //     }
+        // });
 
         return lines.join('\n');
     }

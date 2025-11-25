@@ -35,8 +35,10 @@
                 start: initStart,
                 end: initEnd,
                 status: init.status || 'active',
-                type: 'initiative', // Added type
-                dependencies: (init.dependencies || []).map(sanitizeId).join(',')
+                type: 'initiative',
+                dependencies: (init.dependencies || []).map(sanitizeId).join(','),
+                // Metadata for updates
+                initiativeId: init.initiativeId
             });
 
             // Level 2: Work Packages (if Initiative expanded)
@@ -47,10 +49,6 @@
                     let span = computeWorkPackageSpan(wp, init, selectedTeam, defaultStart, defaultEnd);
                     if (!span) {
                         if (selectedTeam && selectedTeam !== 'all') {
-                            // If filtering by team and this WP has no relevant assignments, skip it?
-                            // Or show ghost? Let's skip for cleaner view if filtered.
-                            // But if we want hierarchy, maybe show it? 
-                            // Let's stick to: if no span (meaning no assignments for team), skip.
                             return;
                         }
                         span = { startDate: defaultStart, endDate: defaultEnd };
@@ -78,8 +76,11 @@
                         start: span.startDate,
                         end: span.endDate,
                         status: wp.status || init.status || 'active',
-                        type: 'workPackage', // Added type
-                        dependencies: (wp.dependencies || []).map(sanitizeId).join(',')
+                        type: 'workPackage',
+                        dependencies: (wp.dependencies || []).map(sanitizeId).join(','),
+                        // Metadata for updates
+                        initiativeId: init.initiativeId,
+                        workPackageId: wp.workPackageId
                     });
 
                     // Level 3: Team Assignments (if WP expanded)
@@ -103,8 +104,12 @@
                                 start: assign.startDate || wp.startDate || defaultStart,
                                 end: assign.endDate || wp.endDate || defaultEnd,
                                 status: wp.status || 'active',
-                                type: 'assignment', // Added type
-                                dependencies: (wp.dependencies || []).map(sanitizeId).join(',')
+                                type: 'assignment',
+                                dependencies: (wp.dependencies || []).map(sanitizeId).join(','),
+                                // Metadata for updates
+                                initiativeId: init.initiativeId,
+                                workPackageId: wp.workPackageId,
+                                teamId: assign.teamId
                             });
                         });
                     }
