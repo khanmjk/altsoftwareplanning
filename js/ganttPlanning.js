@@ -1,12 +1,20 @@
 let currentGanttYear = new Date().getFullYear();
 let currentGanttGroupBy = 'All Initiatives';
+const GANTT_TABLE_WIDTH_KEY = 'ganttTableWidthPct';
 let ganttTableWidthPct = 36;
+const storedGanttWidth = parseFloat(localStorage.getItem(GANTT_TABLE_WIDTH_KEY));
+if (isFinite(storedGanttWidth) && storedGanttWidth > 5 && storedGanttWidth < 95) {
+    ganttTableWidthPct = storedGanttWidth;
+}
 const ganttExpandedInitiatives = new Set();
 const ganttExpandedWorkPackages = new Set();
 let ganttWorkPackagesInitialized = false;
 const ganttOtherTeamsExpanded = new Set();
-const GANTT_STATUS_OPTIONS = ['Backlog','Defined','Committed','In Progress','Done','Blocked'];
+const GANTT_STATUS_OPTIONS = ['Backlog', 'Defined', 'Committed', 'In Progress', 'Done', 'Blocked'];
 let ganttStatusFilter = new Set(GANTT_STATUS_OPTIONS);
+let lastGanttFocusTaskId = null;
+let lastGanttFocusTaskType = null;
+let lastGanttFocusInitiativeId = null;
 
 function initializeGanttPlanningView() {
     const container = document.getElementById('ganttPlanningView');
@@ -36,6 +44,12 @@ function renderGanttControls() {
     const controls = document.getElementById('ganttPlanningControls');
     if (!controls) return;
     controls.innerHTML = '';
+
+    const row = document.createElement('div');
+    row.style.display = 'flex';
+    row.style.justifyContent = 'space-between';
+    row.style.gap = '10px';
+    row.style.alignItems = 'center';
 
     const filtersWrapper = document.createElement('div');
     filtersWrapper.className = 'widget-filter-bar gantt-filter-row';
@@ -100,11 +114,42 @@ function renderGanttControls() {
         renderGanttChart();
     };
     filtersWrapper.appendChild(refreshBtn);
-    controls.appendChild(filtersWrapper);
+
+    const rendererWrap = document.createElement('div');
+    rendererWrap.style.display = 'flex';
+    rendererWrap.style.alignItems = 'center';
+    const rendererBtn = document.createElement('button');
+    rendererBtn.id = 'ganttRendererToggle';
+    rendererBtn.type = 'button';
+    rendererBtn.className = 'btn-secondary';
+    rendererBtn.title = 'Switch between Mermaid and Frappe Gantt renderers';
+    rendererBtn.textContent = getRendererButtonLabel();
+    rendererWrap.appendChild(rendererBtn);
+
+    row.appendChild(filtersWrapper);
+    row.appendChild(rendererWrap);
+    controls.appendChild(row);
 
     // Build filters
     renderDynamicGroupFilter();
     renderStatusFilter();
+    setupGanttRendererToggle();
+
+    // View Mode Buttons
+    const viewModeButtons = controls.querySelectorAll('.view-modes .btn-sm');
+    viewModeButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Update active state
+            viewModeButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Update chart view mode
+            const mode = btn.dataset.viewMode;
+            if (ganttChartInstance && typeof ganttChartInstance.changeViewMode === 'function') {
+                ganttChartInstance.changeViewMode(mode);
+            }
+        });
+    });
 }
 
 function createLabeledControl(labelText, controlEl) {
@@ -188,11 +233,8 @@ function renderGanttTable() {
     const workingDaysPerYear = currentSystemData?.capacityConfiguration?.workingDaysPerYear || 261;
     const allInitiatives = currentSystemData?.yearlyInitiatives || [];
     const allWorkPackages = currentSystemData.workPackages || [];
-    // Seed default expansion only once for existing work packages
+    // Seed initialization flag without auto-expanding WPs (default collapsed)
     if (!ganttWorkPackagesInitialized) {
-        (currentSystemData.workPackages || []).forEach(wp => {
-            ganttExpandedWorkPackages.add(wp.workPackageId);
-        });
         ganttWorkPackagesInitialized = true;
     }
 
@@ -340,6 +382,7 @@ function renderGanttTable() {
                 ganttExpandedInitiatives.add(id);
             }
             renderGanttTable();
+            renderGanttChart();
         } else if (action === 'add-wp') {
             const id = target.dataset.id;
             const init = initiativeMap.get(id);
@@ -381,6 +424,7 @@ function renderGanttTable() {
                 ganttExpandedWorkPackages.add(wpId);
             }
             renderGanttTable();
+            renderGanttChart();
         } else if (action === 'toggle-other-teams') {
             const wpId = target.dataset.wpId;
             if (ganttOtherTeamsExpanded.has(wpId)) {
@@ -501,25 +545,16 @@ function renderGanttTable() {
             if (!assign) return;
             if (field === 'startDate') {
                 assign.startDate = e.target.value;
-                if (!wp.startDate || e.target.value < wp.startDate) {
-                    wp.startDate = e.target.value;
-                } else {
-                    // Shrink if this was the earliest date and no other assignment starts earlier
-                    const earliest = getEarliestAssignmentStart(wp);
-                    wp.startDate = earliest || wp.startDate;
-                }
             } else if (field === 'endDate') {
                 assign.endDate = e.target.value;
-                if (!wp.endDate || e.target.value > wp.endDate) {
-                    wp.endDate = e.target.value;
-                } else {
-                    // Shrink if this was the latest date and no other assignment ends later
-                    const latest = getLatestAssignmentEnd(wp);
-                    wp.endDate = latest || wp.endDate;
-                }
             } else if (field === 'sdeYears') {
                 const sdeYears = parseFloat(e.target.value) || 0;
                 assign.sdeDays = sdeYears * getWorkingDaysPerYear();
+            }
+
+            // Recalculate WP dates from assignments (Bottom-up)
+            if (typeof recalculateWorkPackageDates === 'function') {
+                recalculateWorkPackageDates(wp);
             }
             if (typeof syncInitiativeTotals === 'function') {
                 syncInitiativeTotals(initId, currentSystemData);
@@ -577,6 +612,8 @@ function renderGanttTable() {
             renderGanttChart();
         }
     });
+
+    scrollToGanttTableFocus();
 }
 
 function computeSdeEstimate(init) {
@@ -783,7 +820,7 @@ function renderStatusFilter() {
 function applyGanttSplitWidth() {
     const split = document.getElementById('ganttSplitPane');
     if (!split) return;
-    const clamped = Math.min(80, Math.max(20, ganttTableWidthPct));
+    const clamped = Math.min(85, Math.max(5, ganttTableWidthPct));
     ganttTableWidthPct = clamped;
     split.style.gridTemplateColumns = `${clamped}% 10px ${100 - clamped}%`;
 }
@@ -808,6 +845,11 @@ function setupGanttResizer() {
         document.removeEventListener('mousemove', onDrag);
         document.removeEventListener('mouseup', stopDrag);
         document.removeEventListener('mouseleave', stopDrag);
+        try {
+            localStorage.setItem(GANTT_TABLE_WIDTH_KEY, String(ganttTableWidthPct));
+        } catch (err) {
+            console.warn('[GANTT] Failed to persist split width', err);
+        }
     };
 
     const onDrag = (e) => {
@@ -832,6 +874,40 @@ function setupGanttResizer() {
     });
 
     window.addEventListener('resize', applyGanttSplitWidth);
+}
+
+function getRendererButtonLabel() {
+    const current = (typeof FeatureFlags !== 'undefined' && typeof FeatureFlags.getRenderer === 'function')
+        ? FeatureFlags.getRenderer()
+        : 'mermaid';
+    const pretty = current === 'frappe' ? 'Frappe' : 'Mermaid';
+    return `Renderer: ${pretty}`;
+}
+
+function setupGanttRendererToggle() {
+    const btn = document.getElementById('ganttRendererToggle');
+    if (!btn || typeof FeatureFlags === 'undefined') return;
+
+    const updateLabel = () => {
+        btn.textContent = getRendererButtonLabel();
+    };
+
+    if (btn.dataset.bound === 'true') {
+        updateLabel();
+        return;
+    }
+
+    btn.dataset.bound = 'true';
+    btn.addEventListener('click', () => {
+        const current = FeatureFlags.getRenderer();
+        const next = current === 'mermaid' ? 'frappe' : 'mermaid';
+        FeatureFlags.setRenderer(next);
+        updateLabel();
+        ganttChartInstance = null; // Force re-create with new renderer
+        renderGanttChart();
+    });
+
+    updateLabel();
 }
 
 function getTeamsByManager(managerId) {
@@ -894,9 +970,15 @@ function setWorkPackageDatesForTeam(initiativeId, { startDate, endDate }, select
             if (startDate) assign.startDate = startDate;
             if (endDate) assign.endDate = endDate;
         });
-        // also keep wp-level dates in sync if present
-        if (startDate) wp.startDate = startDate;
-        if (endDate) wp.endDate = endDate;
+
+        // Recalculate WP dates from assignments (Bottom-up)
+        if (typeof recalculateWorkPackageDates === 'function') {
+            recalculateWorkPackageDates(wp);
+        } else {
+            // Fallback if function not found (shouldn't happen if data.js loaded)
+            if (startDate) wp.startDate = startDate;
+            if (endDate) wp.endDate = endDate;
+        }
     });
     if (typeof syncInitiativeTotals === 'function') {
         syncInitiativeTotals(initiativeId, currentSystemData);
@@ -925,7 +1007,16 @@ function updateWorkPackageSde(initiativeId, teamId, sdeYears, workingDaysPerYear
                 endDate: wp.endDate
             });
         }
+
+        // Recalculate WP dates (in case new assignment added affects range)
+        if (typeof recalculateWorkPackageDates === 'function') {
+            recalculateWorkPackageDates(wp);
+        }
     });
+
+    if (typeof syncInitiativeTotals === 'function') {
+        syncInitiativeTotals(initiativeId, currentSystemData);
+    }
 }
 
 function syncInitiativeDependenciesFromWorkPackages(initiativeId) {
@@ -986,18 +1077,210 @@ async function renderGanttChart() {
             initiatives,
             workPackages: currentSystemData.workPackages || [],
             viewBy: currentGanttGroupBy,
-            filters: {},
+            filters: { status: ganttStatusFilter },
             year: currentGanttYear,
-            selectedTeam: selectedTeam
+            selectedTeam: selectedTeam,
+            expandedInitiativeIds: ganttExpandedInitiatives,
+            expandedWorkPackageIds: ganttExpandedWorkPackages
         })
         : [];
+
+    // Use Factory to get the correct renderer
     if (!ganttChartInstance) {
-        ganttChartInstance = new GanttChart({ container, mermaidInstance: mermaid, onRenderError: (err, syntax) => console.error('Gantt render error', err, syntax) });
+        ganttChartInstance = GanttFactory.createRenderer(container);
+    } else {
+        // If renderer type changed, recreate instance
+        const currentType = FeatureFlags.getRenderer();
+        const isMermaid = ganttChartInstance instanceof MermaidGanttRenderer;
+        const isFrappe = ganttChartInstance instanceof FrappeGanttRenderer;
+
+        if ((currentType === 'mermaid' && !isMermaid) || (currentType === 'frappe' && !isFrappe)) {
+            ganttChartInstance = GanttFactory.createRenderer(container);
+        }
     }
-    const dynamicHeight = Math.max(500, tasks.length * 60);
-    container.style.minHeight = `${dynamicHeight}px`;
-    ganttChartInstance.setData(tasks, { title: `Detailed Plan - ${currentGanttYear}` });
-    await ganttChartInstance.render();
+
+    // Remove dynamic height forcing to allow the container to be a resizeable scrollable window
+    // The CSS sets a default height and allows resizing.
+    // const dynamicHeight = Math.max(600, tasks.length * 65);
+    // container.style.minHeight = `${dynamicHeight}px`;
+    container.style.minHeight = '600px'; // Set a reasonable minimum base
+
+    // Update container reference in case it changed (though id is same)
+    ganttChartInstance.container = container;
+
+    await ganttChartInstance.render(tasks, {
+        title: `Detailed Plan - ${currentGanttYear}`,
+        year: currentGanttYear, // Pass year explicitly
+        metaInitiativeCount: initiatives.length,
+        onUpdate: (update) => {
+            handleGanttUpdate(update);
+        },
+        onItemDoubleClick: (task) => {
+            handleGanttToggleFromChart(task);
+        }
+    });
+
+    scrollToGanttFocusTask();
+}
+
+function handleGanttToggleFromChart(task) {
+    if (!task || !task.type) return;
+    if (task.type === 'initiative') {
+        const id = task.initiativeId;
+        if (!id) return;
+        // Show only this initiative, collapse others and all WPs
+        if (ganttExpandedInitiatives.has(id)) {
+            ganttExpandedInitiatives.clear();
+        } else {
+            ganttExpandedInitiatives.clear();
+            if (hasWorkPackagesForInitiative(id)) {
+                ganttExpandedInitiatives.add(id);
+            }
+        }
+        ganttExpandedWorkPackages.clear();
+    } else if (task.type === 'workPackage') {
+        const wpId = task.workPackageId;
+        if (!wpId) return;
+        // Ensure only this initiative and this WP are expanded
+        if (task.initiativeId) {
+            ganttExpandedInitiatives.clear();
+            ganttExpandedInitiatives.add(task.initiativeId);
+        }
+        if (ganttExpandedWorkPackages.has(wpId)) {
+            ganttExpandedWorkPackages.clear();
+        } else {
+            ganttExpandedWorkPackages.clear();
+            ganttExpandedWorkPackages.add(wpId);
+        }
+    } else if (task.type === 'assignment') {
+        // Toggle parent WP if present
+        const wpId = task.workPackageId;
+        if (wpId) {
+            if (task.initiativeId) {
+                ganttExpandedInitiatives.clear();
+                ganttExpandedInitiatives.add(task.initiativeId);
+            }
+            ganttExpandedWorkPackages.clear();
+            ganttExpandedWorkPackages.add(wpId);
+        }
+    }
+
+    lastGanttFocusTaskId = task.id || null;
+    lastGanttFocusTaskType = task.type || null;
+    lastGanttFocusInitiativeId = task.initiativeId || null;
+
+    // Re-render table and chart to reflect toggles
+    renderGanttTable();
+    renderGanttChart();
+}
+
+function scrollToGanttFocusTask() {
+    if (!lastGanttFocusTaskId) return;
+    const container = document.getElementById('ganttChartContainer');
+    if (!container) return;
+    const target = container.querySelector(`.bar-wrapper[data-id="${lastGanttFocusTaskId}"]`);
+    if (target) {
+        target.scrollIntoView({ block: 'center', behavior: 'instant' });
+    }
+}
+
+function scrollToGanttTableFocus() {
+    if (!lastGanttFocusTaskId) return;
+    const wrapper = document.querySelector('#ganttPlanningTableContainer .gantt-table-wrapper');
+    if (!wrapper) return;
+
+    let selector = '';
+    if (lastGanttFocusTaskType === 'initiative') {
+        selector = `.gantt-expander[data-action="toggle-initiative"][data-id="${lastGanttFocusTaskId}"]`;
+    } else if (lastGanttFocusTaskType === 'workPackage') {
+        selector = `.gantt-expander[data-action="toggle-wp"][data-wp-id="${lastGanttFocusTaskId}"]`;
+    } else if (lastGanttFocusTaskType === 'assignment' && lastGanttFocusInitiativeId) {
+        selector = `.gantt-expander[data-action="toggle-initiative"][data-id="${lastGanttFocusInitiativeId}"]`;
+    }
+
+    if (!selector) return;
+    const el = wrapper.querySelector(selector);
+    if (el) {
+        el.scrollIntoView({ block: 'center', behavior: 'instant' });
+    }
+}
+
+function handleGanttUpdate({ task, start, end }) {
+    console.log('[GANTT] Update received:', task, start, end);
+
+    if (task.type === 'initiative') {
+        const initId = task.initiativeId;
+        const init = (currentSystemData.yearlyInitiatives || []).find(i => i.initiativeId === initId);
+        if (!init) return;
+
+        // Check if has WPs - if so, warn and revert (re-render)
+        if (hasWorkPackagesForInitiative(initId)) {
+            console.warn('Initiative dates locked: work packages exist.');
+            renderGanttChart(); // Revert UI
+            return;
+        }
+
+        init.attributes = init.attributes || {};
+        init.attributes.startDate = start;
+        init.targetDueDate = end;
+
+        // Update WPs if any (though we blocked it above, good for completeness)
+        setWorkPackageDatesForTeam(initId, { startDate: start, endDate: end });
+
+    } else if (task.type === 'workPackage') {
+        const wpId = task.workPackageId;
+        const wp = (currentSystemData.workPackages || []).find(w => w.workPackageId === wpId);
+        if (!wp) return;
+
+        const assignments = wp.impactedTeamAssignments || [];
+        if (assignments.length > 1) {
+            console.warn('Work package dates locked: multiple tasks present.');
+            renderGanttChart();
+            return;
+        }
+
+        wp.startDate = start;
+        wp.endDate = end;
+
+        // If only one assignment, align it to the WP change
+        (assignments || []).forEach(assign => {
+            assign.startDate = start;
+            assign.endDate = end;
+        });
+
+    } else if (task.type === 'assignment') {
+        const wpId = task.workPackageId;
+        const teamId = task.teamId;
+        const wp = (currentSystemData.workPackages || []).find(w => w.workPackageId === wpId);
+        if (!wp) return;
+
+        const assign = (wp.impactedTeamAssignments || []).find(a => a.teamId === teamId);
+        if (!assign) return;
+
+        assign.startDate = start;
+        assign.endDate = end;
+
+        // Recalculate WP dates
+        if (typeof recalculateWorkPackageDates === 'function') {
+            recalculateWorkPackageDates(wp);
+        }
+        // Keep initiative rollup in sync
+        if (task.initiativeId && typeof syncInitiativeTotals === 'function') {
+            syncInitiativeTotals(task.initiativeId, currentSystemData);
+        }
+    }
+
+    // Sync totals and save
+    if (task.initiativeId && typeof syncInitiativeTotals === 'function') {
+        syncInitiativeTotals(task.initiativeId, currentSystemData);
+    }
+    if (typeof saveSystemChanges === 'function') {
+        saveSystemChanges();
+    }
+
+    // Refresh table and chart to show new dates/rollups
+    renderGanttTable();
+    renderGanttChart();
 }
 
 if (typeof window !== 'undefined') {

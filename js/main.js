@@ -1,5 +1,3 @@
-/* global variables */
-
 let currentSystemData = null;
 let newServiceData = {};
 let uniqueEngineers = []; // This might be fully replaced by usage of allKnownEngineers
@@ -12,6 +10,7 @@ let capacityChartInstance = null; // To hold the Chart.js instance
 let applyCapacityConstraintsToggle = false; // Default to OFF
 let lastAiGenerationStats = null; // Cache the latest AI stats for the modal
 let currentViewId = null; // Track the currently active view for AI context scraping
+if (typeof window !== 'undefined') window.currentViewId = currentViewId;
 
 // --- Global App Settings ---
 const defaultSettings = {
@@ -100,18 +99,18 @@ let totalHeadcountArray_SDM = [];
 let forecastChart_SDM = null;
 
 const weekToMonth_SDM = [
-    1,1,1,1,    // Jan (4 weeks) Weeks 1-4
-    2,2,2,2,    // Feb (4 weeks) Weeks 5-8
-    3,3,3,3,3,  // Mar (5 weeks) Weeks 9-13
-    4,4,4,4,    // Apr (4 weeks) Weeks 14-17
-    5,5,5,5,    // May (4 weeks) Weeks 18-21
-    6,6,6,6,6,  // Jun (5 weeks) Weeks 22-26
-    7,7,7,7,    // Jul (4 weeks) Weeks 27-30
-    8,8,8,8,    // Aug (4 weeks) Weeks 31-34
-    9,9,9,9,9,  // Sep (5 weeks) Weeks 35-39
-    10,10,10,10, // Oct (4 weeks) Weeks 40-43
-    11,11,11,11, // Nov (4 weeks) Weeks 44-47
-    12,12,12,12,12 // Dec (5 weeks) Weeks 48-52
+    1, 1, 1, 1,    // Jan (4 weeks) Weeks 1-4
+    2, 2, 2, 2,    // Feb (4 weeks) Weeks 5-8
+    3, 3, 3, 3, 3,  // Mar (5 weeks) Weeks 9-13
+    4, 4, 4, 4,    // Apr (4 weeks) Weeks 14-17
+    5, 5, 5, 5,    // May (4 weeks) Weeks 18-21
+    6, 6, 6, 6, 6,  // Jun (5 weeks) Weeks 22-26
+    7, 7, 7, 7,    // Jul (4 weeks) Weeks 27-30
+    8, 8, 8, 8,    // Aug (4 weeks) Weeks 31-34
+    9, 9, 9, 9, 9,  // Sep (5 weeks) Weeks 35-39
+    10, 10, 10, 10, // Oct (4 weeks) Weeks 40-43
+    11, 11, 11, 11, // Nov (4 weeks) Weeks 44-47
+    12, 12, 12, 12, 12 // Dec (5 weeks) Weeks 48-52
 ];
 // --- End SDM Forecasting Tool Globals ---
 
@@ -196,7 +195,7 @@ async function loadHtmlComponent(url, targetId) {
 }
 
 // --- Trigger Top Bar Animation ---
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const topBar = document.getElementById('topBar');
     console.debug("DOMContentLoaded event triggered for animation. Top bar element:", topBar);
     if (topBar) {
@@ -217,7 +216,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function openAiSettingsModal() {
     console.log("Opening AI Settings Modal...");
     // We don't need loadGlobalSettings() here, as it's loaded on startup
-    
+
     const modal = document.getElementById('aiSettingsModal');
     const checkbox = document.getElementById('aiModeEnabled');
     const configInputs = document.getElementById('aiConfigInputs');
@@ -228,7 +227,7 @@ function openAiSettingsModal() {
     if (configInputs) configInputs.style.display = globalSettings.ai.isEnabled ? 'block' : 'none';
     if (providerSelect) providerSelect.value = globalSettings.ai.provider;
     if (apiKeyInput) apiKeyInput.value = globalSettings.ai.apiKey || '';
-    
+
     if (modal) modal.style.display = 'block';
 }
 
@@ -271,7 +270,7 @@ function loadGlobalSettings() {
         syncGlobalSettingsToWindow();
         console.log("No global settings found, using defaults.");
     }
-    
+
     // Update the UI based on loaded settings
     updateAiDependentUI();
 }
@@ -281,7 +280,7 @@ function loadGlobalSettings() {
  */
 function saveGlobalSettings() {
     console.log("Saving global settings...");
-    
+
     // Read values from the AI modal
     const checkbox = document.getElementById('aiModeEnabled');
     const providerSelect = document.getElementById('aiProviderSelect');
@@ -298,16 +297,16 @@ function saveGlobalSettings() {
     } else {
         globalSettings.ai.isEnabled = isEnabled;
     }
-    
+
     globalSettings.ai.provider = provider;
     globalSettings.ai.apiKey = apiKey;
 
     try {
         localStorage.setItem(APP_SETTINGS_KEY, JSON.stringify(globalSettings));
         console.log("Saved global settings to localStorage.");
-        
+
         updateAiDependentUI();
-        
+
         closeAiSettingsModal();
         alert("Settings saved.");
 
@@ -345,7 +344,7 @@ ${systemPromptSummary}`.trim();
 function showAiStatsModal(stats) {
     const modal = document.getElementById('aiGenerationStatsModal');
     const content = document.getElementById('aiGenerationStatsContent');
-    
+
     if (!modal || !content) {
         console.warn("AI Stats modal elements not found.");
         return;
@@ -393,11 +392,11 @@ async function handleCreateWithAi() {
 
     const spinner = document.getElementById('aiLoadingSpinner');
     const spinnerP = spinner ? spinner.querySelector('p') : null;
-    
+
     if (spinner && spinnerP) {
         spinnerP.textContent = 'AI is generating your system... This may take a moment.';
         spinner.style.display = 'flex';
-    } 
+    }
 
     // Hide stats modal from any previous run
     closeAiStatsModal();
@@ -428,10 +427,10 @@ async function handleCreateWithAi() {
         // --- END OF VALIDATION STEP ---
 
         console.log("AI generation successful and validated:", newSystemData);
-        
+
         currentSystemData = newSystemData;
         const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
-        
+
         let finalSystemName = newSystemData.systemName;
         if (systems[finalSystemName]) {
             finalSystemName = `${finalSystemName} (AI ${Date.now().toString().slice(-5)})`;
@@ -440,12 +439,12 @@ async function handleCreateWithAi() {
 
         systems[finalSystemName] = newSystemData;
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
-        
+
         // Display stats in modal
         if (stats) {
             showAiStatsModal(stats);
         }
-        
+
         alert(`Successfully created and saved system: "${finalSystemName}"! Loading it now.`);
         loadSavedSystem(finalSystemName);
 
@@ -460,7 +459,7 @@ async function handleCreateWithAi() {
     }
 }
 
-window.onload = async function() {
+window.onload = async function () {
     console.log("!!! window.onload: Page HTML and synchronous scripts loaded. !!!");
     currentMode = Modes.NAVIGATION;
 
@@ -528,8 +527,8 @@ function switchView(targetViewId, newMode = null) {
         } else {
             console.warn("switchView: closeRoadmapModal function not found. Roadmap modal might not be hidden correctly.");
         }
-       // --- Call closeThemeManagementModal here ---
-        if (typeof closeThemeManagementModal === 'function') { 
+        // --- Call closeThemeManagementModal here ---
+        if (typeof closeThemeManagementModal === 'function') {
             console.log("switchView: Attempting to close theme management modal if open.");
             closeThemeManagementModal();
         } else {
@@ -575,7 +574,7 @@ function switchView(targetViewId, newMode = null) {
 
             // --- MODIFICATION ---
             if (createWithAiButton) createWithAiButton.style.display = 'none';
-            
+
             // (Future) Show the chat assistant if AI mode is on
             // const chatAssistant = document.getElementById('aiChatAssistant');
             // if (chatAssistant) chatAssistant.style.display = globalSettings.ai.isEnabled ? 'block' : 'none';
@@ -595,15 +594,15 @@ function switchView(targetViewId, newMode = null) {
                 pageTitleH1.innerText = `${currentSystemData.systemName || 'System'}${titleSuffix}`;
                 pageTitleH1.style.display = 'block';
             } else if (pageTitleH1) {
-                 pageTitleH1.style.display = 'none';
+                pageTitleH1.style.display = 'none';
             }
 
             if (systemDescP) {
-                 const isOverview = (targetViewId === 'visualizationCarousel');
-                 systemDescP.style.display = isOverview ? 'block' : 'none';
-                 if(systemDescP.style.display === 'block' && currentSystemData) {
+                const isOverview = (targetViewId === 'visualizationCarousel');
+                systemDescP.style.display = isOverview ? 'block' : 'none';
+                if (systemDescP.style.display === 'block' && currentSystemData) {
                     systemDescP.innerText = currentSystemData.systemDescription || '';
-                 }
+                }
             }
 
             if (mainMenu) mainMenu.style.display = 'none';
@@ -615,7 +614,7 @@ function switchView(targetViewId, newMode = null) {
             currentMode = Modes.NAVIGATION;
             currentSystemData = null;
             if (pageTitleH1) { pageTitleH1.innerText = "Software Management Tools"; pageTitleH1.style.display = 'block'; }
-            if (systemDescP) { systemDescP.innerText = "Load a previously saved system or create a new software system"; systemDescP.style.display = 'block';}
+            if (systemDescP) { systemDescP.innerText = "Load a previously saved system or create a new software system"; systemDescP.style.display = 'block'; }
             if (mainMenu) mainMenu.style.display = 'block';
             if (editMenu) editMenu.style.display = 'none';
             if (returnHomeBtn) returnHomeBtn.style.display = 'none';
@@ -637,9 +636,9 @@ function switchView(targetViewId, newMode = null) {
                 if (docContent) {
                     const currentHTML = docContent.innerHTML.trim().toLowerCase();
                     const needsLoading = currentHTML.includes("<em>loading documentation...") ||
-                                       currentHTML.includes("<em>attempting to load documentation...") ||
-                                       currentHTML.includes("<em>waiting for help components...") ||
-                                       currentHTML === "";
+                        currentHTML.includes("<em>attempting to load documentation...") ||
+                        currentHTML.includes("<em>waiting for help components...") ||
+                        currentHTML === "";
                     if (needsLoading && typeof loadAndDisplayDocumentation === 'function') {
                         console.log("switchView (home): Conditions met to call loadAndDisplayDocumentation.");
                         loadAndDisplayDocumentation();
@@ -676,10 +675,10 @@ function switchView(targetViewId, newMode = null) {
                 renderPlanningView();
             }
             if (typeof adjustPlanningTableHeight === 'function') {
-                 const planningTableContainer = document.getElementById('planningTableContainer');
-                 if (planningTableContainer && planningTableContainer.offsetParent !== null) {
-                     adjustPlanningTableHeight();
-                 }
+                const planningTableContainer = document.getElementById('planningTableContainer');
+                if (planningTableContainer && planningTableContainer.offsetParent !== null) {
+                    adjustPlanningTableHeight();
+                }
             }
         }
         if (targetViewId === 'roadmapView' && typeof initializeRoadmapView === 'function') {
@@ -713,7 +712,7 @@ function switchView(targetViewId, newMode = null) {
             if (typeof adjustPlanningTableHeight === 'function') {
                 const planningTableContainer = document.getElementById('planningTableContainer');
                 if (planningTableContainer && planningTableContainer.offsetParent !== null) {
-                     adjustPlanningTableHeight();
+                    adjustPlanningTableHeight();
                 }
             }
         }
@@ -751,7 +750,7 @@ function switchView(targetViewId, newMode = null) {
 /**
  * Shows the visualization item at the specified index and hides others.
  */
- function showVisualization(index) {
+function showVisualization(index) {
     const carouselContainer = document.getElementById('visualizationCarousel');
     if (!carouselContainer) {
         console.error("Carousel container #visualizationCarousel not found.");
@@ -934,9 +933,9 @@ function showSavedSystems() {
     let closeButton = document.createElement('button');
     closeButton.innerText = 'Cancel';
     closeButton.style.marginTop = '15px';
-    closeButton.onclick = function() {
+    closeButton.onclick = function () {
         if (systemListDiv.parentNode === document.body) {
-             document.body.removeChild(systemListDiv);
+            document.body.removeChild(systemListDiv);
         }
     };
     systemListDiv.appendChild(closeButton);
@@ -1039,11 +1038,11 @@ function loadSavedSystem(systemName) {
         if (!currentSystemData.capacityConfiguration.globalConstraints) currentSystemData.capacityConfiguration.globalConstraints = JSON.parse(JSON.stringify(defaultCapacityConfig.globalConstraints));
         if (currentSystemData.capacityConfiguration.globalConstraints.publicHolidays === undefined) currentSystemData.capacityConfiguration.globalConstraints.publicHolidays = 0;
         if (!currentSystemData.capacityConfiguration.globalConstraints.orgEvents) currentSystemData.capacityConfiguration.globalConstraints.orgEvents = [];
-        (currentSystemData.capacityConfiguration.globalConstraints.orgEvents || []).forEach(event => { if(!event.attributes) event.attributes = {}; });
+        (currentSystemData.capacityConfiguration.globalConstraints.orgEvents || []).forEach(event => { if (!event.attributes) event.attributes = {}; });
         if (!currentSystemData.capacityConfiguration.leaveTypes || currentSystemData.capacityConfiguration.leaveTypes.length === 0) {
             currentSystemData.capacityConfiguration.leaveTypes = JSON.parse(JSON.stringify(defaultCapacityConfig.leaveTypes));
         }
-        (currentSystemData.capacityConfiguration.leaveTypes || []).forEach(lt => { if(!lt.attributes) lt.attributes = {}; });
+        (currentSystemData.capacityConfiguration.leaveTypes || []).forEach(lt => { if (!lt.attributes) lt.attributes = {}; });
         if (!currentSystemData.capacityConfiguration.attributes) currentSystemData.capacityConfiguration.attributes = {};
     }
     if (currentSystemData.calculatedCapacityMetrics === undefined) currentSystemData.calculatedCapacityMetrics = null;
@@ -1214,7 +1213,7 @@ function createNewSystem() {
             assignments: [], // Initialize with empty assignments array
             impactedServiceIds: [], // Keeping this distinct for now
             roi: {
-                category: 'Enablement', 
+                category: 'Enablement',
                 valueType: 'Narrative',
                 estimatedValue: 'Foundational Setup',
                 currency: null, timeHorizonMonths: 1, confidenceLevel: 'High',
@@ -1224,14 +1223,14 @@ function createNewSystem() {
             },
             targetDueDate: null,
             actualCompletionDate: null,
-            status: 'Backlog', 
-            themes: [], 
-            primaryGoalId: null, 
-            projectManager: null, 
-            owner: null,          
-            technicalPOC: null,   
+            status: 'Backlog',
+            themes: [],
+            primaryGoalId: null,
+            projectManager: null,
+            owner: null,
+            technicalPOC: null,
             workPackageIds: [],
-            attributes: { 
+            attributes: {
                 pmCapacityNotes: "",
                 planningYear: new Date().getFullYear() // Add planningYear
             }
@@ -1239,24 +1238,24 @@ function createNewSystem() {
     ];
 
     const defaultSystemData = {
-        systemName: '', 
-        systemDescription: '', 
+        systemName: '',
+        systemDescription: '',
         seniorManagers: defaultSeniorManagersData,
         sdms: defaultSDMsData,
         pmts: defaultPMTsData,
-        projectManagers: defaultProjectManagersData, 
+        projectManagers: defaultProjectManagersData,
         teams: defaultTeamsData,
         services: defaultServicesData,
-        allKnownEngineers: defaultAllKnownEngineers, 
-        platformDependencies: [], 
+        allKnownEngineers: defaultAllKnownEngineers,
+        platformDependencies: [],
         capacityConfiguration: {
             workingDaysPerYear: 261,
             standardHoursPerDay: 8,
             globalConstraints: {
-                publicHolidays: 0, 
-                orgEvents: []      
+                publicHolidays: 0,
+                orgEvents: []
             },
-            leaveTypes: [ 
+            leaveTypes: [
                 { id: "annual", name: "Annual Leave", defaultEstimatedDays: 0, attributes: {} },
                 { id: "sick", name: "Sick Leave", defaultEstimatedDays: 0, attributes: {} },
                 { id: "study", name: "Study Leave", defaultEstimatedDays: 0, attributes: {} },
@@ -1264,19 +1263,19 @@ function createNewSystem() {
             ],
             attributes: {}
         },
-        yearlyInitiatives: defaultYearlyInitiatives, 
+        yearlyInitiatives: defaultYearlyInitiatives,
         goals: [],
         definedThemes: [],
         archivedYearlyPlans: [],
-        workPackages: [], 
-        calculatedCapacityMetrics: null, 
-        attributes: {} 
+        workPackages: [],
+        calculatedCapacityMetrics: null,
+        attributes: {}
     };
 
     currentSystemData = defaultSystemData;
     console.log("Initialized new currentSystemData:", JSON.parse(JSON.stringify(currentSystemData)));
 
-    enterEditMode(true); 
+    enterEditMode(true);
 }
 window.createNewSystem = createNewSystem;
 
@@ -1323,7 +1322,7 @@ function deleteSystem() {
         document.body.removeChild(existingListDiv);
     }
     const existingLoadListDiv = document.getElementById('systemLoadListDiv');
-     if (existingLoadListDiv && existingLoadListDiv.parentNode) { // Also remove load list if open
+    if (existingLoadListDiv && existingLoadListDiv.parentNode) { // Also remove load list if open
         document.body.removeChild(existingLoadListDiv);
     }
 
@@ -1344,9 +1343,9 @@ function deleteSystem() {
     let closeButton = document.createElement('button');
     closeButton.innerText = 'Cancel';
     closeButton.style.marginTop = '15px';
-    closeButton.onclick = function() {
-         if (systemListDiv.parentNode === document.body) {
-             document.body.removeChild(systemListDiv);
+    closeButton.onclick = function () {
+        if (systemListDiv.parentNode === document.body) {
+            document.body.removeChild(systemListDiv);
         }
     };
     systemListDiv.appendChild(closeButton);
@@ -1462,7 +1461,7 @@ function saveSystemChanges() {
             return false; // Indicate failure
         }
     }
-     // Ensure description is also up-to-date if possible (less critical than name)
+    // Ensure description is also up-to-date if possible (less critical than name)
     const systemDescriptionTextarea = document.getElementById('systemDescriptionInput');
     if (systemDescriptionTextarea && currentSystemData) {
         currentSystemData.systemDescription = systemDescriptionTextarea.value.trim();
@@ -1546,14 +1545,14 @@ function showOrganogramView() {
         return;
     }
     switchView('organogramView', 'browse');
-    
+
     // MODIFIED: Call the new initializer instead of old direct functions
     if (typeof initializeOrgChartView === 'function') {
-        initializeOrgChartView(); 
+        initializeOrgChartView();
     } else {
         console.error("initializeOrgChartView function not found. Cannot render org view.");
     }
-    
+
     // REMOVED: These are now called by initializeOrgChartView
     // if (typeof generateOrganogram === 'function') {
     //     generateOrganogram();
@@ -1639,16 +1638,16 @@ window.enterEditMode = enterEditMode;
  */
 function initializeEventListeners() {
     console.log("Initializing event listeners...");
-    
+
     // Main Menu Buttons
     document.querySelector('.menu button:nth-child(1)')?.addEventListener('click', showSavedSystems);
     document.querySelector('.menu button:nth-child(2)')?.addEventListener('click', createNewSystem);
-    document.getElementById('createWithAiButton')?.addEventListener('click', handleCreateWithAi);    
+    document.getElementById('createWithAiButton')?.addEventListener('click', handleCreateWithAi);
     document.getElementById('deleteSystemButton')?.addEventListener('click', deleteSystem);
     document.querySelector('.menu button:nth-child(4)')?.addEventListener('click', resetToDefaults);
 
     // Edit Menu Buttons
-    document.getElementById('systemOverviewButton')?.addEventListener('click', showSystemOverview); 
+    document.getElementById('systemOverviewButton')?.addEventListener('click', showSystemOverview);
     document.getElementById('editSystemButton')?.addEventListener('click', () => enterEditMode());
     document.getElementById('viewOrgChartButton')?.addEventListener('click', showOrganogramView);
     document.getElementById('manageYearPlanButton')?.addEventListener('click', showPlanningView);
@@ -1657,7 +1656,7 @@ function initializeEventListeners() {
     document.getElementById('dashboardViewButton')?.addEventListener('click', showDashboardView);
     document.getElementById('tuneCapacityButton')?.addEventListener('click', showCapacityConfigView);
     document.getElementById('sdmForecastButton')?.addEventListener('click', showSdmForecastingView);
-    document.getElementById('aiSettingsButton')?.addEventListener('click', openAiSettingsModal); 
+    document.getElementById('aiSettingsButton')?.addEventListener('click', openAiSettingsModal);
 
     // AI Chat Button
     document.getElementById('aiChatButton')?.addEventListener('click', () => {
@@ -1695,7 +1694,7 @@ function initializeEventListeners() {
         updateAiDependentUI();
     });
     // --- END MODIFIED LISTENERS ---
-    
+
 
     console.log("Event listeners initialized.");
 }

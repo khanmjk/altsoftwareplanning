@@ -1,93 +1,101 @@
 <!DOCTYPE html>
 <html>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://unpkg.com/tabulator-tables@5.5.2/dist/css/tabulator.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link href="https://unpkg.com/tabulator-tables@5.5.2/dist/css/tabulator_simple.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/components/enhancedTableWidget.css">
-    <link rel="stylesheet" href="css/components/aiChatPanel.css">
-    <link rel="stylesheet" href="css/components/ganttChart.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://unpkg.com/tabulator-tables@5.5.2/dist/css/tabulator.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<link href="https://unpkg.com/tabulator-tables@5.5.2/dist/css/tabulator_simple.min.css" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/components/enhancedTableWidget.css">
+<link rel="stylesheet" href="css/components/aiChatPanel.css">
+<link rel="stylesheet" href="css/components/ganttChart.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css">
 
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/12.3.2/markdown-it.min.js"></script>
-    <script src="https://unpkg.com/markdown-it-anchor@8.6.7/dist/markdownItAnchor.umd.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/3.4.4/luxon.min.js"></script>    
-    <script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.5.2/dist/js/tabulator.min.js"></script>
-    <script type="text/javascript" src="https://oss.sheetjs.com/sheetjs/xlsx.full.min.js"></script>
+<script src="js/data.js"></script>
+<script src="js/utils.js"></script>
 
-    <script src="js/data.js"></script>
-    <script src="js/utils.js"></script>
-    <script src="js/sampleData/sampleStreamingPlatform.js"></script>
-    <script src="js/sampleData/sampleContactCenterPlatform.js"></script>
-    <script src="js/sampleData/sampleShopSphere.js"></script>
-    <script src="js/sampleData/sampleInsightAI.js"></script>
-    <script src="js/sampleData/sampleFinSecure.js"></script>    
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/12.3.2/markdown-it.min.js"></script>
+<script src="https://unpkg.com/markdown-it-anchor@8.6.7/dist/markdownItAnchor.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/3.4.4/luxon.min.js"></script>
+<script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.5.2/dist/js/tabulator.min.js"></script>
+<script type="text/javascript" src="https://oss.sheetjs.com/sheetjs/xlsx.full.min.js"></script>
+<script src="js/sampleData/sampleStreamingPlatform.js"></script>
+<script src="js/sampleData/sampleContactCenterPlatform.js"></script>
+<script src="js/sampleData/sampleShopSphere.js"></script>
+<script src="js/sampleData/sampleInsightAI.js"></script>
+<script src="js/sampleData/sampleFinSecure.js"></script>
 
-    <script src="js/components/enhancedTableWidget.js"></script>
-    <script src="js/documentation.js"></script>
-    <script src="js/sdmForecasting.js"></script>
-    <script src="js/mermaidGenerator.js"></script>
-    <script src="js/visualizations.js"></script>
-    <script src="js/editSystem.js"></script>
-    <script src="js/orgView.js"></script>
-    <script src="js/yearPlanning.js"></script>
-    <script src="js/capacityTuning.js"></script>
-    <script src="js/roadmap.js"></script>
-    <script src="js/roadmapTableView.js"></script>
-    <script src="js/goalsView.js"></script>
-    <script src="js/accomplishmentsView.js"></script> 
-    <script src="js/impactView.js"></script>      
-    <script src="js/dashboard.js"></script>
-    <script src="js/components/ganttAdapter.js"></script>
-    <script src="js/components/ganttChart.js"></script>
-    <script src="js/ganttGenerator.js"></script>
-    <script src="js/ganttPlanning.js"></script>
-    <script src="ai/aiService.js"></script>
-    <script src="ai/aiChatAssistant.js"></script>
-    <script src="ai/aiAgentToolset.js"></script>
-    <script src="ai/aiPlanOptimizationAgent.js"></script>
-    <script src="ai/aiAgentController.js"></script>
+<script src="js/components/enhancedTableWidget.js"></script>
+<script src="js/documentation.js"></script>
+<script src="js/sdmForecasting.js"></script>
+<script src="js/mermaidGenerator.js"></script>
+<script src="js/visualizations.js"></script>
+<script src="js/editSystem.js"></script>
+<script src="js/orgView.js"></script>
+<script src="js/yearPlanning.js"></script>
+<script src="js/capacityTuning.js"></script>
+<script src="js/roadmap.js"></script>
+<script src="js/roadmapTableView.js"></script>
+<script src="js/goalsView.js"></script>
+<script src="js/accomplishmentsView.js"></script>
+<script src="js/impactView.js"></script>
+<script src="js/dashboard.js"></script>
 
-    <script src="js/main.js"></script>
+<script src="js/featureFlags.js"></script>
+<script src="js/components/gantt/GanttRenderer.js"></script>
+<script src="js/components/gantt/MermaidGanttRenderer.js"></script>
+<script src="js/components/gantt/FrappeGanttRenderer.js"></script>
+<script src="js/components/gantt/GanttFactory.js"></script>
+<script src="js/components/gantt/ganttAdapter.js"></script>
+<script src="js/components/gantt/ganttGenerator.js"></script>
+<script src="js/ganttPlanning.js"></script>
+<script src="ai/aiService.js"></script>
+<script src="ai/aiChatAssistant.js"></script>
+<script src="ai/aiAgentToolset.js"></script>
+<script src="ai/aiPlanOptimizationAgent.js"></script>
+<script src="ai/aiAgentController.js"></script>
 
-        <meta charset="UTF-8">
-    </head>
-    <body>
-        <div id="topBar">
-            <span id="appTitle">Software Management Tools</span>
-            <div id="mainActions">
-                <div class="menu"> 
-                    <button>Load System</button>
-                    <button>New System</button>
-                    <button id="deleteSystemButton" class="btn-danger">Delete System</button>
-                    <button>Reset Defaults</button>
-                    <button id="createWithAiButton" style="display: none;">Create with AI</button>                                                         
-                </div>
-                <div class="edit-menu" style="display: none;"> 
-                    <button id="systemOverviewButton">System Overview</button> 
-                    <button id="editSystemButton">Edit System</button>
-                    <button id="viewOrgChartButton">Inspect Org Design</button>
-                    <button id="manageYearPlanButton">Year Plan</button>
-                    <button id="manageRoadmapButton">Roadmap & Backlog</button> 
-                    <button id="detailedPlanningButton">Detailed Planning</button>
-                    <button id="dashboardViewButton">Dashboard</button>
-                    <button id="tuneCapacityButton">Capacity Tuning</button>
-                    <button id="sdmForecastButton">Resource Forecasting</button>                 
-                </div>
+<script src="js/main.js"></script>
+
+<meta charset="UTF-8">
+</head>
+
+<body>
+    <div id="topBar">
+        <span id="appTitle">Software Management Tools</span>
+        <div id="mainActions">
+            <div class="menu">
+                <button>Load System</button>
+                <button>New System</button>
+                <button id="deleteSystemButton" class="btn-danger">Delete System</button>
+                <button>Reset Defaults</button>
+                <button id="createWithAiButton" style="display: none;">Create with AI</button>
             </div>
-            <div id="globalNavButtons">
-                <button id="returnHomeButton" onclick="returnToHome()" style="display: none;">Home</button>
-                <button id="aiChatButton" class="btn-secondary" style="display: none; color: #ffc107;">AI Assistant</button>
-                <button id="aiSettingsButton" class="btn-secondary" style="color: #ffc107;">AI Settings</button>                
-            </div>      
+            <div class="edit-menu" style="display: none;">
+                <button id="systemOverviewButton">System Overview</button>
+                <button id="editSystemButton">Edit System</button>
+                <button id="viewOrgChartButton">Inspect Org Design</button>
+                <button id="manageYearPlanButton">Year Plan</button>
+                <button id="manageRoadmapButton">Roadmap & Backlog</button>
+                <button id="detailedPlanningButton">Detailed Planning</button>
+                <button id="dashboardViewButton">Dashboard</button>
+                <button id="tuneCapacityButton">Capacity Tuning</button>
+                <button id="sdmForecastButton">Resource Forecasting</button>
+            </div>
         </div>
+        <div id="globalNavButtons">
+            <button id="returnHomeButton" onclick="returnToHome()" style="display: none;">Home</button>
+            <button id="aiChatButton" class="btn-secondary" style="display: none; color: #ffc107;">AI Assistant</button>
+            <button id="aiSettingsButton" class="btn-secondary" style="color: #ffc107;">AI Settings</button>
+        </div>
+    </div>
 
-        <div id="appContainer">
+    <div id="appContainer">
         <div class="main-content-area">
             <h1 id="pageTitle">Software Management Tools</h1>
             <p id="systemDescription">Load a previously saved system or create a new software system</p>
@@ -107,24 +115,37 @@
                 </div>
             </div>
 
-            <div id="toolDocumentationSection" style="margin-top: 20px; border: 1px solid #ccc; display: none; max-width: 90%; margin-left: auto; margin-right: auto;">
-                <h3 id="documentationHeader" style="cursor: pointer; margin: 0; padding: 10px; background-color: #e9ecef; border-bottom: 1px solid #ccc;" title="Click to expand/collapse documentation">
-                    <span id="documentationToggleIndicator" class="toggle-indicator" style="font-weight:bold; margin-right:5px;">[+] </span>
+            <div id="toolDocumentationSection"
+                style="margin-top: 20px; border: 1px solid #ccc; display: none; max-width: 90%; margin-left: auto; margin-right: auto;">
+                <h3 id="documentationHeader"
+                    style="cursor: pointer; margin: 0; padding: 10px; background-color: #e9ecef; border-bottom: 1px solid #ccc;"
+                    title="Click to expand/collapse documentation">
+                    <span id="documentationToggleIndicator" class="toggle-indicator"
+                        style="font-weight:bold; margin-right:5px;">[+] </span>
                     Tool Documentation & Help
                 </h3>
-                <div id="documentationContent" style="display: none; padding: 15px; max-height: 450px; overflow-y: auto; background-color: #fdfdfd;">
-                    <p><em>Loading documentation... Please ensure you have an internet connection to fetch the latest help content.</em></p>
+                <div id="documentationContent"
+                    style="display: none; padding: 15px; max-height: 450px; overflow-y: auto; background-color: #fdfdfd;">
+                    <p><em>Loading documentation... Please ensure you have an internet connection to fetch the latest
+                            help content.</em></p>
                 </div>
-                <div id="docResizeHandle" style="height: 10px; background-color: #e0e0e0; cursor: ns-resize; border-top: 1px solid #ccc; display: none;"></div>
+                <div id="docResizeHandle"
+                    style="height: 10px; background-color: #e0e0e0; cursor: ns-resize; border-top: 1px solid #ccc; display: none;">
+                </div>
             </div>
 
-            <div id="visualizationCarousel" style="position: relative; width: 95%; max-width: 1400px; margin: 20px auto; border: 1px solid #ddd; padding: 10px; display:none; resize: both; overflow: auto; min-height: 760px;"> <div style="text-align: center; margin-bottom: 10px;">
+            <div id="visualizationCarousel"
+                style="position: relative; width: 95%; max-width: 1400px; margin: 20px auto; border: 1px solid #ddd; padding: 10px; display:none; resize: both; overflow: auto; min-height: 760px;">
+                <div style="text-align: center; margin-bottom: 10px;">
                     <button onclick="navigateVisualizations(-1)">&lt; Previous</button>
-                    <span id="visualizationTitle" style="margin: 0 15px; font-weight: bold; font-size: 1.1em;">System Visualization</span> <button onclick="navigateVisualizations(1)">Next &gt;</button>
+                    <span id="visualizationTitle" style="margin: 0 15px; font-weight: bold; font-size: 1.1em;">System
+                        Visualization</span> <button onclick="navigateVisualizations(1)">Next &gt;</button>
                 </div>
 
-                <div id="visualization" class="carousel-item" style="display: block;"> <button id="togglePlatformComponentsSystem" class="button" style="margin-bottom: 10px;">Hide Platforms</button>
-                <svg id="systemSvg" style="width: 100%; height: 600px; border: 1px solid #ccc;"></svg>
+                <div id="visualization" class="carousel-item" style="display: block;"> <button
+                        id="togglePlatformComponentsSystem" class="button" style="margin-bottom: 10px;">Hide
+                        Platforms</button>
+                    <svg id="systemSvg" style="width: 100%; height: 600px; border: 1px solid #ccc;"></svg>
                     <div id="legend" class="legend"></div>
                 </div>
 
@@ -134,17 +155,21 @@
                 </div>
 
                 <div id="serviceRelationshipsVisualization" class="carousel-item" style="display: none;">
-                    <select id="serviceSelection" onchange="updateServiceVisualization()" style="margin-bottom: 5px; display: block; margin-left: auto; margin-right: auto;">
-                        </select>
-                    <button id="togglePlatformComponentsService" class="button" style="margin-bottom: 10px;">Hide Platforms</button>
+                    <select id="serviceSelection" onchange="updateServiceVisualization()"
+                        style="margin-bottom: 5px; display: block; margin-left: auto; margin-right: auto;">
+                    </select>
+                    <button id="togglePlatformComponentsService" class="button" style="margin-bottom: 10px;">Hide
+                        Platforms</button>
                     <svg id="serviceSvg" style="width: 100%; height: 600px; border: 1px solid #ccc;"></svg>
                     <div id="serviceLegend" class="legend"></div>
                 </div>
 
                 <div id="dependencyVisualization" class="carousel-item" style="display: none;">
-                    <select id="dependencyServiceSelection" onchange="updateDependencyVisualization()" style="margin-bottom: 5px; display: block; margin-left: auto; margin-right: auto;">
-                        </select>
-                    <button id="togglePlatformComponentsDependency" class="button" style="margin-bottom: 10px;">Hide Platforms</button>
+                    <select id="dependencyServiceSelection" onchange="updateDependencyVisualization()"
+                        style="margin-bottom: 5px; display: block; margin-left: auto; margin-right: auto;">
+                    </select>
+                    <button id="togglePlatformComponentsDependency" class="button" style="margin-bottom: 10px;">Hide
+                        Platforms</button>
                     <svg id="dependencySvg" style="width: 100%; height: 600px; border: 1px solid #ccc;"></svg>
                     <div id="dependencyLegend" class="legend"></div>
                 </div>
@@ -154,7 +179,8 @@
                 </div>
 
                 <div id="mermaidApiVisualization" class="carousel-item" style="display: none;">
-                    <select id="apiServiceSelection" style="margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto;"></select>
+                    <select id="apiServiceSelection"
+                        style="margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto;"></select>
                     <div id="mermaidApiGraph"></div>
                 </div>
 
@@ -177,44 +203,53 @@
 
                 <h3>Services</h3>
                 <div id="editServicesManagement">
-                    </div>
+                </div>
                 <button type="button" onclick="addNewService()">Add New Service</button><br><br>
 
                 <h3>Teams</h3>
                 <div id="teamsManagement">
-                    </div>
+                </div>
                 <button id="addNewTeamButton" type="button" onclick="addNewTeam()">Add New Team</button><br><br>
 
                 <button type="button" class="btn-primary" onclick="saveAllChanges()">Save All Changes</button>
                 <button type="button" onclick="exitEditMode()">Cancel</button>
             </div>
 
-            <div id="toolDocumentationSection" style="margin-top: 20px; border: 1px solid #ccc; display: none; max-width: 90%; margin-left: auto; margin-right: auto;">
-                <h3 id="documentationHeader" style="cursor: pointer; margin: 0; padding: 10px; background-color: #e9ecef; border-bottom: 1px solid #ccc;" title="Click to expand/collapse documentation">
-                    <span id="documentationToggleIndicator" class="toggle-indicator" style="font-weight:bold; margin-right:5px;">[+] </span>
+            <div id="toolDocumentationSection"
+                style="margin-top: 20px; border: 1px solid #ccc; display: none; max-width: 90%; margin-left: auto; margin-right: auto;">
+                <h3 id="documentationHeader"
+                    style="cursor: pointer; margin: 0; padding: 10px; background-color: #e9ecef; border-bottom: 1px solid #ccc;"
+                    title="Click to expand/collapse documentation">
+                    <span id="documentationToggleIndicator" class="toggle-indicator"
+                        style="font-weight:bold; margin-right:5px;">[+] </span>
                     Tool Documentation & Help
                 </h3>
-                <div id="documentationContent" style="display: none; padding: 15px; max-height: 450px; overflow-y: auto; background-color: #fdfdfd;">
-                    <p><em>Loading documentation... Please ensure you have an internet connection to fetch the latest help content.</em></p>
+                <div id="documentationContent"
+                    style="display: none; padding: 15px; max-height: 450px; overflow-y: auto; background-color: #fdfdfd;">
+                    <p><em>Loading documentation... Please ensure you have an internet connection to fetch the latest
+                            help content.</em></p>
                 </div>
-                <div id="docResizeHandle" style="height: 10px; background-color: #e0e0e0; cursor: ns-resize; border-top: 1px solid #ccc; display: none;"></div>
+                <div id="docResizeHandle"
+                    style="height: 10px; background-color: #e0e0e0; cursor: ns-resize; border-top: 1px solid #ccc; display: none;">
+                </div>
             </div>
 
             <div id="organogramView" style="display:none; margin-top: 20px;">
                 <div id="organogramToolbar" style="margin-bottom: 10px;">
-                    </div>
+                </div>
                 <div id="organogramContent" style="border: 1px solid #ccc; padding: 15px;">
-                    </div>
+                </div>
 
                 <div id="teamBreakdown" style="margin-top: 30px;">
                     <h2>Team Breakdown</h2>
-                    <p id="levelKey" style="font-size: 0.9em; color: #555; margin-bottom: 10px;"></p> <table id="teamTable">
+                    <p id="levelKey" style="font-size: 0.9em; color: #555; margin-bottom: 10px;"></p>
+                    <table id="teamTable">
                         <thead>
-                            </thead>
+                        </thead>
                         <tbody>
-                            </tbody>
+                        </tbody>
                         <tfoot>
-                            </tfoot>
+                        </tfoot>
                     </table>
                 </div>
                 <div id="orgEngineerListView" style="display:none; margin-top: 20px;">
@@ -222,64 +257,114 @@
             </div>
 
             <div id="planningView" style="display:none; margin-top: 20px;">
-                <div id="planningCapacitySummary" style="margin-bottom: 15px; font-weight: bold; padding: 8px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">
-                    </div>
+                <div id="planningCapacitySummary"
+                    style="margin-bottom: 15px; font-weight: bold; padding: 8px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">
+                </div>
 
-                <div id="planningScenarioControl" style="margin-bottom: 15px; padding: 8px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">
-                    </div>
+                <div id="planningScenarioControl"
+                    style="margin-bottom: 15px; padding: 8px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">
+                </div>
 
-                <div id="teamLoadSummarySection" style="margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px;">
+                <div id="teamLoadSummarySection"
+                    style="margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px;">
                     <h4 onclick="toggleCollapsibleSection('teamLoadSummaryContent', 'teamLoadSummaryToggle')"
                         style="cursor: pointer; margin: 0; padding: 10px; background-color: #e9ecef; border-bottom: 1px solid #ccc;"
                         title="Click to expand/collapse team load summary">
-                        <span id="teamLoadSummaryToggle" class="toggle-indicator">(+) </span> Team Load Summary (for ATL Initiatives)
+                        <span id="teamLoadSummaryToggle" class="toggle-indicator">(+) </span> Team Load Summary (for ATL
+                        Initiatives)
                     </h4>
                     <div id="teamLoadSummaryContent" style="display: none; padding: 10px;">
-                        <p style="font-size: 0.9em; color: #555;">Shows team load based *only* on initiatives currently Above The Line (ATL) according to the selected scenario below.</p>
-                        <table id="teamLoadSummaryTable" style="margin: 0 auto; border-collapse: collapse; font-size: 0.9em;">
+                        <p style="font-size: 0.9em; color: #555;">Shows team load based *only* on initiatives currently
+                            Above The Line (ATL) according to the selected scenario below.</p>
+                        <table id="teamLoadSummaryTable"
+                            style="margin: 0 auto; border-collapse: collapse; font-size: 0.9em;">
                             <thead>
                                 <tr style="background-color: #f2f2f2;">
                                     <th style="border: 1px solid #ccc; padding: 5px;">Team Name</th>
-                                    <th style="border: 1px solid #ccc; padding: 5px;" title="Finance Approved Budget">Funded HC</th>
-                                    <th style="border: 1px solid #ccc; padding: 5px;" title="Actual Team Members">Team BIS</th>
-                                    <th style="border: 1px solid #ccc; padding: 5px;" title="Borrowed/Away Members">Away BIS</th>
-                                    <th style="border: 1px solid #ccc; padding: 5px;" title="Team BIS + Away BIS">Effective BIS</th>
-                                    <th style="border: 1px solid #ccc; padding: 5px;" title="SDEs assigned to this team from ATL initiatives only">Assigned ATL SDEs</th>
-                                    <th style="border: 1px solid #ccc; padding: 5px;" title="Team's capacity based on selected scenario button below">Scenario Capacity Limit</th>
-                                    <th style="border: 1px solid #ccc; padding: 5px;" title="Scenario Capacity Limit - Assigned ATL SDEs">Remaining Capacity (ATL)</th>
-                                    <th style="border: 1px solid #ccc; padding: 5px;" title="Load status for ATL work based on Scenario Capacity Limit">ATL Status</th>
+                                    <th style="border: 1px solid #ccc; padding: 5px;" title="Finance Approved Budget">
+                                        Funded HC</th>
+                                    <th style="border: 1px solid #ccc; padding: 5px;" title="Actual Team Members">Team
+                                        BIS</th>
+                                    <th style="border: 1px solid #ccc; padding: 5px;" title="Borrowed/Away Members">Away
+                                        BIS</th>
+                                    <th style="border: 1px solid #ccc; padding: 5px;" title="Team BIS + Away BIS">
+                                        Effective BIS</th>
+                                    <th style="border: 1px solid #ccc; padding: 5px;"
+                                        title="SDEs assigned to this team from ATL initiatives only">Assigned ATL SDEs
+                                    </th>
+                                    <th style="border: 1px solid #ccc; padding: 5px;"
+                                        title="Team's capacity based on selected scenario button below">Scenario
+                                        Capacity Limit</th>
+                                    <th style="border: 1px solid #ccc; padding: 5px;"
+                                        title="Scenario Capacity Limit - Assigned ATL SDEs">Remaining Capacity (ATL)
+                                    </th>
+                                    <th style="border: 1px solid #ccc; padding: 5px;"
+                                        title="Load status for ATL work based on Scenario Capacity Limit">ATL Status
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody id="teamLoadSummaryTableBody">
-                                </tbody>
+                            </tbody>
                             <tfoot id="teamLoadSummaryTableFoot" style="font-weight: bold;">
-                                </tfoot>
+                            </tfoot>
                         </table>
                     </div>
                 </div>
 
-                <div id="planningTableContainer">                
+                <div id="planningTableContainer">
                 </div>
             </div>
-            <div id="roadmapView" style="display:none; margin-top: 20px; max-width: 95%; margin-left: auto; margin-right: auto;">
+            <div id="roadmapView"
+                style="display:none; margin-top: 20px; max-width: 95%; margin-left: auto; margin-right: auto;">
                 <h2>Roadmap & Backlog Management</h2>
-                <div id="roadmapControlsContainer" style="margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">
-                    </div>
+                <div id="roadmapControlsContainer"
+                    style="margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">
+                </div>
                 <div id="roadmapTableContainer" style="margin-bottom: 20px;">
-                    </div>
-                
+                </div>
+
             </div>
             <div id="dashboardView" style="display:none; margin-top: 20px;">
             </div>
 
-            <div id="capacityConfigView" style="display:none; margin-top: 20px; max-width: 90%; margin-left: auto; margin-right: auto;">                
+            <div id="capacityConfigView"
+                style="display:none; margin-top: 20px; max-width: 90%; margin-left: auto; margin-right: auto;">
             </div>
-            <div id="sdmForecastingView" style="display:none; margin-top: 20px; max-width: 90%; margin-left: auto; margin-right: auto;">
+            <div id="sdmForecastingView"
+                style="display:none; margin-top: 20px; max-width: 90%; margin-left: auto; margin-right: auto;">
             </div>
             <div id="ganttPlanningView" style="display:none; margin-top: 20px;">
+                <div class="gantt-controls"
+                    style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                    <div class="view-modes">
+                        <span style="margin-right: 10px; font-weight: 500;">View:</span>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn-sm btn-outline-secondary"
+                                data-view-mode="Quarter Day">Quarter Day</button>
+                            <button type="button" class="btn-sm btn-outline-secondary" data-view-mode="Half Day">Half
+                                Day</button>
+                            <button type="button" class="btn-sm btn-outline-secondary" data-view-mode="Day">Day</button>
+                            <button type="button" class="btn-sm btn-outline-secondary"
+                                data-view-mode="Week">Week</button>
+                            <button type="button" class="btn-sm btn-outline-secondary active"
+                                data-view-mode="Month">Month</button>
+                        </div>
+                    </div>
+                    <div class="gantt-legend" style="display: flex; gap: 15px; font-size: 12px; align-items: center;">
+                        <div style="display: flex; align-items: center;"><span
+                                style="width: 12px; height: 12px; background-color: #6f42c1; display: inline-block; margin-right: 5px; border-radius: 2px;"></span>
+                            Initiative</div>
+                        <div style="display: flex; align-items: center;"><span
+                                style="width: 12px; height: 12px; background-color: #0366d6; display: inline-block; margin-right: 5px; border-radius: 2px;"></span>
+                            Work Package</div>
+                        <div style="display: flex; align-items: center;"><span
+                                style="width: 12px; height: 12px; background-color: #2ea44f; display: inline-block; margin-right: 5px; border-radius: 2px;"></span>
+                            Assignment</div>
+                    </div>
+                </div>
             </div>
 
-           
+
             <div id="themeManagementModal" class="modal" style="display:none;">
                 <div class="modal-content-wrapper">
                     <div class="modal-header">
@@ -288,7 +373,8 @@
                     </div>
                     <div class="modal-body">
                         <h4>Existing Themes</h4>
-                        <div id="existingThemesList" style="margin-bottom: 20px; max-height: 200px; overflow-y: auto; border: 1px solid #eee; padding:5px;">
+                        <div id="existingThemesList"
+                            style="margin-bottom: 20px; max-height: 200px; overflow-y: auto; border: 1px solid #eee; padding:5px;">
                             <p><em>No themes defined yet or loading...</em></p>
                         </div>
 
@@ -299,7 +385,8 @@
                                 <input type="text" id="newThemeName_modal" style="width: 95%;" required>
                             </div>
                             <div style="margin-bottom: 10px;">
-                                <label for="newThemeDescription_modal" style="display: block;">Description (Optional):</label>
+                                <label for="newThemeDescription_modal" style="display: block;">Description
+                                    (Optional):</label>
                                 <textarea id="newThemeDescription_modal" rows="2" style="width: 95%;"></textarea>
                             </div>
                             <button type="button" id="saveNewThemeButton_modal" class="btn-primary">Add Theme</button>
@@ -309,88 +396,111 @@
                         <button type="button" class="btn-secondary" onclick="closeThemeManagementModal()">Close</button>
                     </div>
                 </div>
-            </div>            
+            </div>
             <div id="roadmapInitiativeModal" class="modal" style="display:none;">
-                <div class="modal-content-wrapper"> <div class="modal-header">
-                    <h3 id="addEditRoadmapInitiativeTitle_modal">Add/Edit Initiative</h3>
-                    <span class="close-button" onclick="closeRoadmapModal()">&times;</span>
-                </div>
-                <div class="modal-body">
-                    <form id="roadmapInitiativeForm_modal">
-                        <p><em>Loading form...</em></p>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" id="saveRoadmapInitiativeButton_modal" class="btn-primary">Save Initiative</button>
-                    <button type="button" id="cancelRoadmapInitiativeEditButton_modal" class="btn-secondary" style="margin-left: 10px;" onclick="closeRoadmapModal()">Cancel</button>
+                <div class="modal-content-wrapper">
+                    <div class="modal-header">
+                        <h3 id="addEditRoadmapInitiativeTitle_modal">Add/Edit Initiative</h3>
+                        <span class="close-button" onclick="closeRoadmapModal()">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <form id="roadmapInitiativeForm_modal">
+                            <p><em>Loading form...</em></p>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" id="saveRoadmapInitiativeButton_modal" class="btn-primary">Save
+                            Initiative</button>
+                        <button type="button" id="cancelRoadmapInitiativeEditButton_modal" class="btn-secondary"
+                            style="margin-left: 10px;" onclick="closeRoadmapModal()">Cancel</button>
+                    </div>
                 </div>
             </div>
-        </div>    
-        <div id="aiSettingsModal" class="modal" style="display:none;">
-            <div class="modal-content-wrapper">
-                <div class="modal-header">
-                    <h3 id="aiSettingsModalTitle">AI Assistant Settings</h3>
-                    <span class="close-button" onclick="closeAiSettingsModal()">&times;</span>
-                </div>
-                <div class="modal-body">
-                    <form id="aiSettingsForm">
-                        <div style="margin-bottom: 15px;">
-                            <input type="checkbox" id="aiModeEnabled" name="aiModeEnabled" style="margin-right: 8px; vertical-align: middle;">
-                            <label for="aiModeEnabled" style="font-weight: bold; vertical-align: middle;">Enable AI Assistant Mode</label>
-                        </div>
-
-                        <div id="aiConfigInputs" style="display:none;">
-                            <hr style="margin-bottom: 15px;">
+            <div id="aiSettingsModal" class="modal" style="display:none;">
+                <div class="modal-content-wrapper">
+                    <div class="modal-header">
+                        <h3 id="aiSettingsModalTitle">AI Assistant Settings</h3>
+                        <span class="close-button" onclick="closeAiSettingsModal()">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <form id="aiSettingsForm">
                             <div style="margin-bottom: 15px;">
-                                <label for="aiProviderSelect" style="display: block; margin-bottom: 5px;">LLM Provider:</label>
-                                <select id="aiProviderSelect" name="aiProviderSelect">
-                                    <option value="google-gemini">Google (Gemini Pro)</option>
-                                    <option value="openai-gpt4o" disabled>OpenAI (GPT-4o)</option>
-                                    <option value="anthropic-claude35" disabled>Anthropic (Claude 3.5 Sonnet)</option>
-                                    <option value="mistral-large" disabled>Mistral (Large 2)</option>
-                                    <option value="cohere-command-r" disabled>Cohere (Command R)</option>
-                                </select>
+                                <input type="checkbox" id="aiModeEnabled" name="aiModeEnabled"
+                                    style="margin-right: 8px; vertical-align: middle;">
+                                <label for="aiModeEnabled" style="font-weight: bold; vertical-align: middle;">Enable AI
+                                    Assistant Mode</label>
                             </div>
-                            <div style="margin-bottom: 15px;">
-                                <label for="aiApiKeyInput" style="display: block; margin-bottom: 5px;">Your API Key:</label>
-                                <input type="password" id="aiApiKeyInput" name="aiApiKeyInput" style="width: 95%;" placeholder="Paste your API key here">
-                                <div class="api-key-disclaimer" style="font-size: 0.85em; color: #6c757d; margin-top: 8px; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; background-color: #f8f9fa;">
-                                    <p style="margin-top: 0; margin-bottom: 5px;">
-                                        You must use a <strong>FREE API key</strong>. You can get one from <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio</a>.
-                                    </p>
-                                    <p style="margin-bottom: 5px; color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; padding: 8px; border-radius: 4px;">
-                                        <strong>Note:</strong> Free-tier keys often have strict rate limits. If you see a <strong>"503: Model Overloaded"</strong> error, it means the service is busy. The app will retry, but you may need to wait and try again later.
-                                    </p>                                    
-                                    <p style="margin-bottom: 5px;">
-                                        <strong>Disclaimer:</strong> This is a client-side application. Your API key is stored exclusively in your browser's local storage and is never sent to any server other than the selected LLM provider. 
-                                    </p>
-                                    <p style="margin-bottom: 0;">
-                                        Using this app comes with risks. The author is not liable for any issues that arise from using your own private (non-free-tier) API key.
-                                    </p>
-                                    <p style="margin-top: 10px; margin-bottom: 0; font-style: italic; color: #c62828;">
-                                        <strong>Image Generation (Imagen):</strong> Currently mocked. Google’s Imagen API requires a backend proxy with OAuth2 credentials. Until that proxy exists, the app will return a placeholder diagram. See the README section “Image Generation Status (Imagen)” for details.
-                                    </p>
+
+                            <div id="aiConfigInputs" style="display:none;">
+                                <hr style="margin-bottom: 15px;">
+                                <div style="margin-bottom: 15px;">
+                                    <label for="aiProviderSelect" style="display: block; margin-bottom: 5px;">LLM
+                                        Provider:</label>
+                                    <select id="aiProviderSelect" name="aiProviderSelect">
+                                        <option value="google-gemini">Google (Gemini Pro)</option>
+                                        <option value="openai-gpt4o" disabled>OpenAI (GPT-4o)</option>
+                                        <option value="anthropic-claude35" disabled>Anthropic (Claude 3.5 Sonnet)
+                                        </option>
+                                        <option value="mistral-large" disabled>Mistral (Large 2)</option>
+                                        <option value="cohere-command-r" disabled>Cohere (Command R)</option>
+                                    </select>
+                                </div>
+                                <div style="margin-bottom: 15px;">
+                                    <label for="aiApiKeyInput" style="display: block; margin-bottom: 5px;">Your API
+                                        Key:</label>
+                                    <input type="password" id="aiApiKeyInput" name="aiApiKeyInput" style="width: 95%;"
+                                        placeholder="Paste your API key here">
+                                    <div class="api-key-disclaimer"
+                                        style="font-size: 0.85em; color: #6c757d; margin-top: 8px; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; background-color: #f8f9fa;">
+                                        <p style="margin-top: 0; margin-bottom: 5px;">
+                                            You must use a <strong>FREE API key</strong>. You can get one from <a
+                                                href="https://aistudio.google.com/app/apikey" target="_blank"
+                                                rel="noopener noreferrer">Google AI Studio</a>.
+                                        </p>
+                                        <p
+                                            style="margin-bottom: 5px; color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; padding: 8px; border-radius: 4px;">
+                                            <strong>Note:</strong> Free-tier keys often have strict rate limits. If you
+                                            see a <strong>"503: Model Overloaded"</strong> error, it means the service
+                                            is busy. The app will retry, but you may need to wait and try again later.
+                                        </p>
+                                        <p style="margin-bottom: 5px;">
+                                            <strong>Disclaimer:</strong> This is a client-side application. Your API key
+                                            is stored exclusively in your browser's local storage and is never sent to
+                                            any server other than the selected LLM provider.
+                                        </p>
+                                        <p style="margin-bottom: 0;">
+                                            Using this app comes with risks. The author is not liable for any issues
+                                            that arise from using your own private (non-free-tier) API key.
+                                        </p>
+                                        <p
+                                            style="margin-top: 10px; margin-bottom: 0; font-style: italic; color: #c62828;">
+                                            <strong>Image Generation (Imagen):</strong> Currently mocked. Google’s
+                                            Imagen API requires a backend proxy with OAuth2 credentials. Until that
+                                            proxy exists, the app will return a placeholder diagram. See the README
+                                            section “Image Generation Status (Imagen)” for details.
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" id="saveAiSettingsButton" class="btn-primary">Save Settings</button>
-                    <button type="button" class="btn-secondary" style="margin-left: 10px;" onclick="closeAiSettingsModal()">Cancel</button>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" id="saveAiSettingsButton" class="btn-primary">Save Settings</button>
+                        <button type="button" class="btn-secondary" style="margin-left: 10px;"
+                            onclick="closeAiSettingsModal()">Cancel</button>
+                    </div>
                 </div>
             </div>
-        </div>
         </div> <!-- end .main-content-area -->
 
         <div id="chatResizeHandle" style="display: none;"></div>
-        <div id="aiChatPanelContainer"></div> 
-        
+        <div id="aiChatPanelContainer"></div>
+
     </div> <!-- end #appContainer -->
     <div id="aiLoadingSpinner" class="spinner-overlay" style="display:none;">
         <div class="spinner"></div>
         <p>AI is generating your system... This may take a moment.</p>
-    </div>           
+    </div>
 
     <div id="diagramModal" class="modal">
         <div class="modal-content-wrapper" style="width: 95%; height: 95%; max-width: none;">
@@ -398,8 +508,10 @@
                 <h3 id="diagramModalTitle">Generated Diagram</h3>
                 <span class="close-button" onclick="closeDiagramModal()">&times;</span>
             </div>
-            <div class="modal-body" style="overflow: hidden; background-color: #fff; display: flex; flex-direction: column; padding: 0;">
-                <div id="diagramModalContent" class="mermaid" style="flex-grow: 1; overflow: auto; display: flex; justify-content: center; align-items: center;">
+            <div class="modal-body"
+                style="overflow: hidden; background-color: #fff; display: flex; flex-direction: column; padding: 0;">
+                <div id="diagramModalContent" class="mermaid"
+                    style="flex-grow: 1; overflow: auto; display: flex; justify-content: center; align-items: center;">
                 </div>
             </div>
             <div class="modal-footer">
@@ -407,5 +519,6 @@
             </div>
         </div>
     </div>
-    </body>
+</body>
+
 </html>

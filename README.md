@@ -78,6 +78,13 @@ What’s included:
 - Work package dependencies (including cross-initiative) and initiative-level predecessor selection.
 - Filters for year/team and a resizable split between table and chart.
 
+### Gantt renderer feature flag & Frappe WIP
+- A renderer toggle (Mermaid ↔ Frappe) is available in the Detailed Planning header; Mermaid remains the default.
+- Status/year filters are applied identically to the table and the chart so rows stay aligned.
+- Double-click to drill: initiative → shows WPs; double-click a WP → shows its tasks; expansions stay in sync between table and chart.
+- Edit locks: initiatives with WPs, and WPs with multiple tasks, are marked locked with “not allowed” cursors/tooltips; valid edits roll up dates to parents.
+- Label tweaks: long labels are truncated with tooltips; extra spacing reduces overlap. This is still a work in progress—visual glitches (e.g., occasional label overflow or timeline span beyond the year) may occur.
+
 Known issues:
 - Styling is still being consolidated; some inline/UI polish is pending.
 - Mermaid can fail to render on malformed data; dependencies aren’t visualized yet.

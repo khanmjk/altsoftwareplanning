@@ -34,7 +34,8 @@
     grid-template-columns: var(--gantt-table-width) 10px 1fr;
     gap: 8px;
     align-items: stretch;
-    min-height: 900px;
+    height: calc(100vh - 260px);
+    min-height: 520px;
 }
 
 .gantt-resizer {
@@ -44,6 +45,9 @@
     border-radius: 6px;
     margin: 4px 0;
     position: relative;
+    align-self: stretch;
+    height: 100%;
+    min-height: 100%;
 }
 
 .gantt-resizer::after {
@@ -62,11 +66,18 @@
     border-radius: 6px;
     background: #fff;
     padding: 8px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
 }
 
 .gantt-table-wrapper {
-    max-height: 900px;
+    flex: 1;
+    min-height: 0;
     overflow: auto;
+    border: 1px solid #eee;
+    border-radius: 4px;
 }
 
 .gantt-table thead th {
@@ -77,11 +88,15 @@
 }
 
 .gantt-chart-box {
-    min-height: 900px;
-    overflow: auto; /* Allow both X and Y scroll */
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+    overflow: auto;
     background-color: #fff;
-    padding: 20px; /* Add internal padding */
+    padding: 0;
     border: 1px solid #eee;
+    position: relative;
+    display: block;
 }
 
 .gantt-table {
@@ -100,11 +115,29 @@
 }
 
 .gantt-chart-box svg {
-    /* Allow SVG to be its natural size */
     display: block;
-    min-width: 100%; 
+    min-width: 100%;
     height: auto;
+    min-height: 0;
 }
+
+/* Ensure Frappe wrapper inside the chart fills height and scrolls */
+.gantt-chart-box > div {
+    height: 100%;
+    min-height: 100%;
+}
+
+.gantt .bar-wrapper.locked-task .bar,
+.gantt .bar-wrapper.locked-task .bar-progress {
+    cursor: not-allowed;
+    stroke: #d9534f;
+    stroke-width: 1.5px;
+}
+
+.gantt .bar-wrapper.locked-task .bar-label {
+    cursor: not-allowed;
+}
+
 
 .gantt-status-bar {
     margin-top: 10px;
@@ -155,7 +188,7 @@
     border: 1px solid #ddd;
     border-radius: 4px;
     padding: 6px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     display: none;
     z-index: 5;
 }
@@ -203,4 +236,131 @@
 .mermaid .sectionTitle {
     font-weight: bold !important;
     fill: #212529 !important;
+}
+
+/* View Mode Buttons */
+.btn-group {
+    display: inline-flex;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid #ccc;
+}
+
+.btn-group .btn-sm {
+    padding: 4px 10px;
+    font-size: 12px;
+    border: none;
+    border-right: 1px solid #ccc;
+    background-color: #fff;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-group .btn-sm:last-child {
+    border-right: none;
+}
+
+.btn-group .btn-sm:hover {
+    background-color: #f0f0f0;
+}
+
+.btn-group .btn-sm.active {
+    background-color: #e9ecef;
+    font-weight: 600;
+    color: #333;
+    box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+}
+
+/* Frappe Gantt Custom Overrides & Hierarchy */
+
+/* We use the attribute selector or very specific paths to override Frappe's defaults */
+
+/* Initiative: Thicker, Purple, Bold */
+.gantt .bar-wrapper.gantt-initiative .bar-progress {
+    fill: #6f42c1 !important;
+}
+
+.gantt .bar-wrapper.gantt-initiative .bar {
+    fill: #6f42c1 !important;
+    opacity: 0.2 !important;
+}
+
+.gantt .bar-wrapper.gantt-initiative .bar-label {
+    font-weight: 800 !important;
+    font-size: 14px !important;
+    fill: #333 !important;
+    /* Dark text for better contrast */
+}
+
+/* Work Package: Standard, Blue */
+.gantt .bar-wrapper.gantt-work-package .bar-progress {
+    fill: #0366d6 !important;
+}
+
+.gantt .bar-wrapper.gantt-work-package .bar {
+    fill: #0366d6 !important;
+    opacity: 0.2 !important;
+}
+
+.gantt .bar-wrapper.gantt-work-package .bar-label {
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    fill: #333 !important;
+}
+
+/* Assignment: Thinner, Green, Italic */
+.gantt .bar-wrapper.gantt-assignment .bar-progress {
+    fill: #2ea44f !important;
+}
+
+.gantt .bar-wrapper.gantt-assignment .bar {
+    fill: #2ea44f !important;
+    opacity: 0.2 !important;
+}
+
+.gantt .bar-wrapper.gantt-assignment .bar-label {
+    font-weight: 500 !important;
+    font-size: 12px !important;
+    font-style: italic !important;
+    fill: #444 !important;
+}
+
+/* Status Colors Override - Ensure specificity */
+.gantt .bar-wrapper.status-done .bar-progress,
+.gantt .bar-wrapper.status-complete .bar-progress {
+    fill: #a0c4ff !important;
+}
+
+.gantt .bar-wrapper.status-risk .bar-progress,
+.gantt .bar-wrapper.status-blocked .bar-progress {
+    fill: #ff6b6b !important;
+}
+
+/* Today Marker Visibility */
+.gantt .today-highlight {
+    stroke: #cf222e !important;
+    stroke-width: 2px !important;
+    opacity: 0.8 !important;
+}
+
+/* Tooltip Styling */
+.gantt-container .popup-wrapper {
+    width: 280px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    border: 1px solid #ddd !important;
+    border-radius: 6px !important;
+}
+
+.gantt-container .popup-wrapper .title {
+    border-bottom: 1px solid #eee !important;
+    padding-bottom: 8px !important;
+    margin-bottom: 8px !important;
+    font-weight: 600 !important;
+    color: #333 !important;
+}
+
+.gantt-container .popup-wrapper .subtitle {
+    color: #666 !important;
+    font-size: 11px !important;
+    margin-bottom: 4px !important;
 }
