@@ -279,7 +279,10 @@ class FrappeGanttRenderer extends GanttRenderer {
             // The adapter adds \u00A0 which might not render well in SVG. 
             // Let's strip leading whitespace/non-breaking spaces and apply our own prefix.
             const rawName = (task.label || task.title || '').replace(/^[\s\u00A0]+/, '');
-            const displayName = this._truncateLabel(rawName, 48);
+            let maxLen = 48;
+            if (task.type === 'workPackage') maxLen = 32;
+            if (task.type === 'assignment') maxLen = 24;
+            const displayName = this._truncateLabel(rawName, maxLen);
 
             return {
                 id: task.id,
@@ -375,6 +378,15 @@ class FrappeGanttRenderer extends GanttRenderer {
                 const fullLabel = task.originalLabel || task.title || task.label || '';
                 if (fullLabel) {
                     label.setAttribute('title', fullLabel);
+                }
+
+                // Center label within the bar to avoid overflow past the bar bounds
+                const barWidth = bar ? Number(bar.getAttribute('width')) : null;
+                const barX = bar ? Number(bar.getAttribute('x')) : null;
+                if (barWidth && barX !== null) {
+                    const centerX = barX + barWidth / 2;
+                    label.setAttribute('x', centerX);
+                    label.setAttribute('text-anchor', 'middle');
                 }
 
                 // Move label slightly if needed, or ensure it's visible
