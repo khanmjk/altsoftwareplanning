@@ -208,18 +208,18 @@ class FrappeGanttRenderer extends GanttRenderer {
                 }
             }
 
-            // Apply Styles
+            // Apply Styles with Priority
             if (bar) {
-                bar.style.fill = color;
-                bar.style.opacity = opacity;
+                bar.style.setProperty('fill', color, 'important');
+                bar.style.setProperty('opacity', opacity, 'important');
             }
             if (progress) {
-                progress.style.fill = color;
+                progress.style.setProperty('fill', color, 'important');
             }
             if (label) {
-                label.style.fontWeight = fontWeight;
-                label.style.fontSize = fontSize;
-                label.style.fill = textColor;
+                label.style.setProperty('font-weight', fontWeight, 'important');
+                label.style.setProperty('font-size', fontSize, 'important');
+                label.style.setProperty('fill', textColor, 'important');
 
                 // Move label slightly if needed, or ensure it's visible
                 // For now, just ensuring high contrast

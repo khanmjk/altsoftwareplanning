@@ -77,15 +77,18 @@
 }
 
 .gantt-chart-box {
-    min-height: 600px;
-    height: 900px;
-    overflow: auto;
+    min-height: 500px;
+    height: 800px;
+    /* Default height */
+    /* overflow: hidden;  Let the internal wrapper handle scrolling */
     background-color: #fff;
-    padding: 20px;
+    padding: 10px;
     border: 1px solid #eee;
     resize: vertical;
     /* Allow user to resize vertically */
     position: relative;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Custom Resize Handle Indicator */

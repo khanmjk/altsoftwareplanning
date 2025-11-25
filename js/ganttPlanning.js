@@ -1032,8 +1032,11 @@ async function renderGanttChart() {
         }
     }
 
-    const dynamicHeight = Math.max(600, tasks.length * 65); // Increased per-task height for Frappe
-    container.style.minHeight = `${dynamicHeight}px`;
+    // Remove dynamic height forcing to allow the container to be a resizeable scrollable window
+    // The CSS sets a default height and allows resizing.
+    // const dynamicHeight = Math.max(600, tasks.length * 65);
+    // container.style.minHeight = `${dynamicHeight}px`;
+    container.style.minHeight = '600px'; // Set a reasonable minimum base
 
     // Update container reference in case it changed (though id is same)
     ganttChartInstance.container = container;
