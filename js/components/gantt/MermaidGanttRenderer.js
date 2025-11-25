@@ -7,23 +7,23 @@ class MermaidGanttRenderer extends GanttRenderer {
         super(container);
         this.mermaid = mermaidInstance || (typeof mermaid !== 'undefined' ? mermaid : null);
         this.config = {
-            theme: "base",
-            themeVariables: {
-                primaryColor: "#cfe2f3",
-                secondaryColor: "#e1f5fe",
-                tertiaryColor: "#fff",
-                taskBkgColor: "#4a90e2",
-                taskTextColor: "#ffffff",
-                activeTaskBkgColor: "#4a90e2",
-                activeTaskTextColor: "#ffffff",
-                doneBkgColor: "#a0c4ff",
-                doneTextColor: "#333333",
-                critBkgColor: "#ff6b6b",
-                critTextColor: "#ffffff",
-                sectionBkgColor: "#ffffff",
-                sectionBkgColor2: "#fcfcfc",
-                altSectionBkgColor: "#ffffff"
-            },
+            theme: "default",
+            // themeVariables: {
+            //     primaryColor: "#cfe2f3",
+            //     secondaryColor: "#e1f5fe",
+            //     tertiaryColor: "#fff",
+            //     taskBkgColor: "#4a90e2",
+            //     taskTextColor: "#ffffff",
+            //     activeTaskBkgColor: "#4a90e2",
+            //     activeTaskTextColor: "#ffffff",
+            //     doneBkgColor: "#a0c4ff",
+            //     doneTextColor: "#333333",
+            //     critBkgColor: "#ff6b6b",
+            //     critTextColor: "#ffffff",
+            //     sectionBkgColor: "#ffffff",
+            //     sectionBkgColor2: "#fcfcfc",
+            //     altSectionBkgColor: "#ffffff"
+            // },
             gantt: {
                 barHeight: 40,
                 barGap: 8,
@@ -50,6 +50,7 @@ class MermaidGanttRenderer extends GanttRenderer {
         }
 
         const syntax = this._buildMermaidSyntax(tasks, options);
+        console.log("Mermaid Syntax:", syntax); // DEBUG LOG
         const renderId = `gantt-${Date.now()}`;
 
         try {
@@ -83,6 +84,11 @@ class MermaidGanttRenderer extends GanttRenderer {
         // Today marker
         lines.push(`todayMarker stroke-width:2px,stroke:#f00,opacity:0.7`);
 
+        // Define Classes for Hierarchy
+        lines.push('classDef initiative fill:#6f42c1,stroke:#5a32a3,color:#fff');
+        lines.push('classDef workPackage fill:#0366d6,stroke:#024ea2,color:#fff');
+        lines.push('classDef assignment fill:#2ea44f,stroke:#22863a,color:#fff');
+
         const groupMap = new Map();
         tasks.forEach(task => {
             const group = task.group || 'All';
@@ -103,6 +109,13 @@ class MermaidGanttRenderer extends GanttRenderer {
                     lines.push(`${safeLabel} :${statusToken}, ${task.id}, ${start}, ${end}`);
                 }
             });
+        });
+
+        // Apply Classes to Tasks
+        tasks.forEach(task => {
+            if (task.type) {
+                lines.push(`class ${task.id} ${task.type}`);
+            }
         });
 
         return lines.join('\n');

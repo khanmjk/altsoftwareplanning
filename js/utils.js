@@ -1,15 +1,4 @@
-const Modes = {
-    NAVIGATION: 'navigation',
-    Browse: 'Browse',
-    EDITING: 'editing',
-    CREATING: 'creating',
-    PLANNING: 'planning',
-    ROADMAP: 'roadmap'
-};
 
-if (typeof window !== 'undefined') {
-    window.Modes = Modes;
-}
 
 // --- Helper for Input Warnings (Phase 7a) ---
 const updateInputWarning = (inputElement, message) => {

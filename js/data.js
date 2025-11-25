@@ -15,6 +15,15 @@ const STANDARD_WORK_PACKAGE_PHASES = [
     "Completed & Monitored"
 ];
 
+const Modes = {
+    NAVIGATION: 'navigation',
+    Browse: 'Browse',
+    EDITING: 'editing',
+    CREATING: 'creating',
+    PLANNING: 'planning',
+    ROADMAP: 'roadmap'
+};
+
 
 
 /**
@@ -307,5 +316,7 @@ if (typeof window !== 'undefined') {
     window.updateWorkPackage = updateWorkPackage;
     window.recalculateWorkPackageDates = recalculateWorkPackageDates;
     window.deleteWorkPackage = deleteWorkPackage;
-
+    window.LOCAL_STORAGE_KEY = LOCAL_STORAGE_KEY;
+    window.APP_SETTINGS_KEY = APP_SETTINGS_KEY;
+    window.Modes = Modes;
 }

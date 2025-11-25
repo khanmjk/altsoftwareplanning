@@ -35,6 +35,7 @@
                 start: initStart,
                 end: initEnd,
                 status: init.status || 'active',
+                type: 'initiative', // Added type
                 dependencies: (init.dependencies || []).map(sanitizeId).join(',')
             });
 
@@ -77,6 +78,7 @@
                         start: span.startDate,
                         end: span.endDate,
                         status: wp.status || init.status || 'active',
+                        type: 'workPackage', // Added type
                         dependencies: (wp.dependencies || []).map(sanitizeId).join(',')
                     });
 
@@ -101,6 +103,7 @@
                                 start: assign.startDate || wp.startDate || defaultStart,
                                 end: assign.endDate || wp.endDate || defaultEnd,
                                 status: wp.status || 'active',
+                                type: 'assignment', // Added type
                                 dependencies: (wp.dependencies || []).map(sanitizeId).join(',')
                             });
                         });
