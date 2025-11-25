@@ -15,6 +15,17 @@
         const goalMap = new Map((currentSystemData?.goals || []).map(g => [g.goalId, g]));
         const themeMap = new Map((currentSystemData?.definedThemes || []).map(t => [t.themeId, t]));
 
+        // Apply explicit filters (status/year) to keep chart rows aligned with table
+        const statusFilter = filters?.status;
+        initiatives = (initiatives || []).filter(init => {
+            if (year && init.attributes?.planningYear && `${init.attributes.planningYear}` !== `${year}`) return false;
+            if (statusFilter && statusFilter.size > 0) {
+                const st = init.status || '';
+                if (!statusFilter.has(st)) return false;
+            }
+            return true;
+        });
+
         const wpByInit = new Map();
         workPackages.forEach(wp => {
             if (!wpByInit.has(wp.initiativeId)) wpByInit.set(wp.initiativeId, []);

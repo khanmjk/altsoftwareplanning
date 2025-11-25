@@ -1077,7 +1077,7 @@ async function renderGanttChart() {
             initiatives,
             workPackages: currentSystemData.workPackages || [],
             viewBy: currentGanttGroupBy,
-            filters: {},
+            filters: { status: ganttStatusFilter },
             year: currentGanttYear,
             selectedTeam: selectedTeam,
             expandedInitiativeIds: ganttExpandedInitiatives,
