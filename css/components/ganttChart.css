@@ -33,7 +33,7 @@
     display: grid;
     grid-template-columns: var(--gantt-table-width) 10px 1fr;
     gap: 8px;
-    align-items: start;
+    align-items: stretch;
     /* Decouple heights so they can scroll/resize independently */
     /* min-height: 900px; Remove forced min-height on container */
 }
@@ -45,6 +45,9 @@
     border-radius: 6px;
     margin: 4px 0;
     position: relative;
+    align-self: stretch;
+    height: 100%;
+    min-height: 100%;
 }
 
 .gantt-resizer::after {

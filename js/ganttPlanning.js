@@ -1,6 +1,11 @@
 let currentGanttYear = new Date().getFullYear();
 let currentGanttGroupBy = 'All Initiatives';
+const GANTT_TABLE_WIDTH_KEY = 'ganttTableWidthPct';
 let ganttTableWidthPct = 36;
+const storedGanttWidth = parseFloat(localStorage.getItem(GANTT_TABLE_WIDTH_KEY));
+if (isFinite(storedGanttWidth) && storedGanttWidth > 5 && storedGanttWidth < 95) {
+    ganttTableWidthPct = storedGanttWidth;
+}
 const ganttExpandedInitiatives = new Set();
 const ganttExpandedWorkPackages = new Set();
 let ganttWorkPackagesInitialized = false;
@@ -813,7 +818,7 @@ function renderStatusFilter() {
 function applyGanttSplitWidth() {
     const split = document.getElementById('ganttSplitPane');
     if (!split) return;
-    const clamped = Math.min(80, Math.max(20, ganttTableWidthPct));
+    const clamped = Math.min(85, Math.max(5, ganttTableWidthPct));
     ganttTableWidthPct = clamped;
     split.style.gridTemplateColumns = `${clamped}% 10px ${100 - clamped}%`;
 }
@@ -838,6 +843,11 @@ function setupGanttResizer() {
         document.removeEventListener('mousemove', onDrag);
         document.removeEventListener('mouseup', stopDrag);
         document.removeEventListener('mouseleave', stopDrag);
+        try {
+            localStorage.setItem(GANTT_TABLE_WIDTH_KEY, String(ganttTableWidthPct));
+        } catch (err) {
+            console.warn('[GANTT] Failed to persist split width', err);
+        }
     };
 
     const onDrag = (e) => {
