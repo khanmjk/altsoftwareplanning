@@ -12,6 +12,9 @@ let ganttWorkPackagesInitialized = false;
 const ganttOtherTeamsExpanded = new Set();
 const GANTT_STATUS_OPTIONS = ['Backlog', 'Defined', 'Committed', 'In Progress', 'Done', 'Blocked'];
 let ganttStatusFilter = new Set(GANTT_STATUS_OPTIONS);
+let lastGanttFocusTaskId = null;
+let lastGanttFocusTaskType = null;
+let lastGanttFocusInitiativeId = null;
 
 function initializeGanttPlanningView() {
     const container = document.getElementById('ganttPlanningView');
@@ -609,6 +612,8 @@ function renderGanttTable() {
             renderGanttChart();
         }
     });
+
+    scrollToGanttTableFocus();
 }
 
 function computeSdeEstimate(init) {
@@ -1114,6 +1119,8 @@ async function renderGanttChart() {
             handleGanttToggleFromChart(task);
         }
     });
+
+    scrollToGanttFocusTask();
 }
 
 function handleGanttToggleFromChart(task) {
@@ -1158,9 +1165,44 @@ function handleGanttToggleFromChart(task) {
         }
     }
 
+    lastGanttFocusTaskId = task.id || null;
+    lastGanttFocusTaskType = task.type || null;
+    lastGanttFocusInitiativeId = task.initiativeId || null;
+
     // Re-render table and chart to reflect toggles
     renderGanttTable();
     renderGanttChart();
+}
+
+function scrollToGanttFocusTask() {
+    if (!lastGanttFocusTaskId) return;
+    const container = document.getElementById('ganttChartContainer');
+    if (!container) return;
+    const target = container.querySelector(`.bar-wrapper[data-id="${lastGanttFocusTaskId}"]`);
+    if (target) {
+        target.scrollIntoView({ block: 'center', behavior: 'instant' });
+    }
+}
+
+function scrollToGanttTableFocus() {
+    if (!lastGanttFocusTaskId) return;
+    const wrapper = document.querySelector('#ganttPlanningTableContainer .gantt-table-wrapper');
+    if (!wrapper) return;
+
+    let selector = '';
+    if (lastGanttFocusTaskType === 'initiative') {
+        selector = `.gantt-expander[data-action="toggle-initiative"][data-id="${lastGanttFocusTaskId}"]`;
+    } else if (lastGanttFocusTaskType === 'workPackage') {
+        selector = `.gantt-expander[data-action="toggle-wp"][data-wp-id="${lastGanttFocusTaskId}"]`;
+    } else if (lastGanttFocusTaskType === 'assignment' && lastGanttFocusInitiativeId) {
+        selector = `.gantt-expander[data-action="toggle-initiative"][data-id="${lastGanttFocusInitiativeId}"]`;
+    }
+
+    if (!selector) return;
+    const el = wrapper.querySelector(selector);
+    if (el) {
+        el.scrollIntoView({ block: 'center', behavior: 'instant' });
+    }
 }
 
 function handleGanttUpdate({ task, start, end }) {
