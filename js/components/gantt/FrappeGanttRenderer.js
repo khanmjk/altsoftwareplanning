@@ -150,7 +150,81 @@ class FrappeGanttRenderer extends GanttRenderer {
     }
 
     _applyCustomStyles(tasks) {
-        // Additional manual DOM manipulation if needed
+        // Manually enforce styles on the SVG elements to bypass CSS specificity issues
+        const svg = this.container.querySelector('svg');
+        if (!svg) return;
+
+        // 1. Fix Container Sizing
+        svg.style.width = '100%';
+        svg.style.height = 'auto';
+        svg.style.maxWidth = 'none';
+
+        // 2. Iterate over task groups and apply styles
+        // Frappe Gantt uses data-id on the bar-wrapper
+        const groups = svg.querySelectorAll('.bar-wrapper');
+        groups.forEach(group => {
+            const id = group.getAttribute('data-id');
+            const task = tasks.find(t => t.id === id);
+            if (!task) return;
+
+            const bar = group.querySelector('.bar');
+            const progress = group.querySelector('.bar-progress');
+            const label = group.querySelector('.bar-label');
+
+            // Define Styles
+            let color = '#a3a3a3'; // Default Grey
+            let opacity = '0.3';
+            let fontWeight = '400';
+            let fontSize = '12px';
+            let textColor = '#333';
+
+            if (task.type === 'initiative') {
+                color = '#6f42c1'; // Purple
+                opacity = '0.25';
+                fontWeight = '700';
+                fontSize = '14px';
+                textColor = '#4a2c8a'; // Darker Purple for text
+            } else if (task.type === 'workPackage') {
+                color = '#0366d6'; // Blue
+                opacity = '0.25';
+                fontWeight = '600';
+                fontSize = '13px';
+                textColor = '#003d80'; // Darker Blue
+            } else if (task.type === 'assignment') {
+                color = '#2ea44f'; // Green
+                opacity = '0.25';
+                fontWeight = '500';
+                fontSize = '12px';
+                textColor = '#1a7f37'; // Darker Green
+            }
+
+            // Status Overrides
+            if (task.status) {
+                const s = task.status.toLowerCase();
+                if (s === 'done' || s === 'complete') {
+                    color = '#a0c4ff'; // Light Blue
+                } else if (s === 'blocked' || s === 'risk') {
+                    color = '#ff6b6b'; // Red
+                }
+            }
+
+            // Apply Styles
+            if (bar) {
+                bar.style.fill = color;
+                bar.style.opacity = opacity;
+            }
+            if (progress) {
+                progress.style.fill = color;
+            }
+            if (label) {
+                label.style.fontWeight = fontWeight;
+                label.style.fontSize = fontSize;
+                label.style.fill = textColor;
+
+                // Move label slightly if needed, or ensure it's visible
+                // For now, just ensuring high contrast
+            }
+        });
     }
 }
 
