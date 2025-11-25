@@ -28,9 +28,28 @@ class FrappeGanttRenderer extends GanttRenderer {
         wrapper.style.height = '100%'; // Ensure it fills container
         this.container.appendChild(wrapper);
 
-        const frappeTasks = this._transformTasks(tasks);
+        // Filter tasks to ensure they are within the selected year
+        const year = options.year || new Date().getFullYear();
+        const yearStart = `${year}-01-01`;
+        const yearEnd = `${year}-12-31`;
+
+        // Filter tasks that overlap with the selected year
+        const filteredTasks = tasks.filter(t => {
+            // Check if task overlaps with the year
+            // (Task Start <= Year End) AND (Task End >= Year Start)
+            const tStart = t.start.split('T')[0];
+            const tEnd = t.end.split('T')[0];
+            return tStart <= yearEnd && tEnd >= yearStart;
+        });
+
+        const frappeTasks = this._transformTasks(filteredTasks);
 
         try {
+            // Calculate date range based on options.year
+            const year = options.year || new Date().getFullYear();
+            const startDate = `${year}-01-01`;
+            const endDate = `${year}-12-31`;
+
             // Frappe Gantt expects a selector string or element
             this.gantt = new Gantt(`#${wrapperId}`, frappeTasks, {
                 header_height: 60, // Taller header
@@ -43,6 +62,9 @@ class FrappeGanttRenderer extends GanttRenderer {
                 padding: 25, // More padding (was 18)
                 view_mode: this.currentViewMode,
                 date_format: 'YYYY-MM-DD',
+                // Limit view to 12 months
+                start: startDate,
+                end: endDate,
                 custom_popup_html: (task) => {
                     // Rich Tooltip Implementation
                     const start = task._start.toISOString().split('T')[0];

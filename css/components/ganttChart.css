@@ -33,8 +33,9 @@
     display: grid;
     grid-template-columns: var(--gantt-table-width) 10px 1fr;
     gap: 8px;
-    align-items: stretch;
-    min-height: 900px;
+    align-items: start;
+    /* Decouple heights so they can scroll/resize independently */
+    /* min-height: 900px; Remove forced min-height on container */
 }
 
 .gantt-resizer {
@@ -65,8 +66,11 @@
 }
 
 .gantt-table-wrapper {
-    max-height: 900px;
+    max-height: 800px;
+    /* Fixed max height for table */
     overflow: auto;
+    border: 1px solid #eee;
+    border-radius: 4px;
 }
 
 .gantt-table thead th {
@@ -77,18 +81,19 @@
 }
 
 .gantt-chart-box {
-    min-height: 500px;
+    min-height: 400px;
     height: 800px;
     /* Default height */
-    /* overflow: hidden;  Let the internal wrapper handle scrolling */
+    overflow: auto;
+    /* Allow scrolling */
     background-color: #fff;
-    padding: 10px;
+    padding: 0;
     border: 1px solid #eee;
     resize: vertical;
     /* Allow user to resize vertically */
     position: relative;
-    display: flex;
-    flex-direction: column;
+    display: block;
+    /* Remove flex to avoid resize issues */
 }
 
 /* Custom Resize Handle Indicator */
