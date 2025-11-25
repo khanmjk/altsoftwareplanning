@@ -15,6 +15,13 @@ class FrappeGanttRenderer extends GanttRenderer {
         this.clear();
         this.tasks = tasks; // Store for view mode switching
 
+        // Ensure container stretches to available height for consistent scrolling
+        this.container.style.display = 'block';
+        this.container.style.height = '100%';
+        this.container.style.minHeight = '0';
+        // Let the inner wrapper own scrolling to avoid nested scrollbars fighting
+        this.container.style.overflow = 'hidden';
+
         if (!tasks || tasks.length === 0) {
             this.container.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">No initiatives to display.</div>';
             return;
@@ -24,25 +31,16 @@ class FrappeGanttRenderer extends GanttRenderer {
         const wrapperId = `frappe-gantt-${Date.now()}`;
         const wrapper = document.createElement('div');
         wrapper.id = wrapperId;
-        wrapper.style.overflow = 'auto'; // Allow scrolling
+        wrapper.style.overflowX = 'auto';
+        wrapper.style.overflowY = 'auto';
         wrapper.style.height = '100%'; // Ensure it fills container
+        wrapper.style.minHeight = '100%';
+        wrapper.style.width = '100%';
+        wrapper.style.position = 'relative';
         this.container.appendChild(wrapper);
 
-        // Filter tasks to ensure they are within the selected year
         const year = options.year || new Date().getFullYear();
-        const yearStart = `${year}-01-01`;
-        const yearEnd = `${year}-12-31`;
-
-        // Filter tasks that overlap with the selected year
-        const filteredTasks = tasks.filter(t => {
-            // Check if task overlaps with the year
-            // (Task Start <= Year End) AND (Task End >= Year Start)
-            const tStart = t.start.split('T')[0];
-            const tEnd = t.end.split('T')[0];
-            return tStart <= yearEnd && tEnd >= yearStart;
-        });
-
-        const frappeTasks = this._transformTasks(filteredTasks);
+        const frappeTasks = this._transformTasks(tasks || []);
 
         try {
             // Calculate date range based on options.year
@@ -108,6 +106,7 @@ class FrappeGanttRenderer extends GanttRenderer {
 
             // Apply custom styles after render
             this._applyCustomStyles(tasks);
+            this._resizeForTasks(wrapper, frappeTasks);
 
         } catch (err) {
             console.error("FrappeGanttRenderer render failed:", err);
@@ -126,8 +125,35 @@ class FrappeGanttRenderer extends GanttRenderer {
         }
     }
 
+    _resizeForTasks(wrapper, tasks) {
+        if (!wrapper) return;
+        const svg = wrapper.querySelector('svg');
+        if (!svg) return;
+
+        // Derive a height based on number of tasks to ensure full content is rendered and scrollable
+        const count = (tasks || []).length || 1;
+        const opts = this.gantt ? this.gantt.options : {};
+        const barHeight = opts.bar_height || 30;
+        const barPadding = 12; // Frappe internal gap between bars
+        const headerHeight = opts.header_height || 50;
+        const padding = opts.padding || 18;
+        const computedHeight = headerHeight + (padding * 2) + (count * (barHeight + barPadding));
+
+        svg.style.height = `${computedHeight}px`;
+        svg.setAttribute('height', `${computedHeight}`);
+        // Keep width fluid
+        svg.style.width = '100%';
+        svg.style.maxWidth = 'none';
+
+        // Ensure wrapper can scroll if SVG is taller than available space
+        wrapper.style.overflowY = 'auto';
+        wrapper.style.overflowX = 'auto';
+    }
+
     _transformTasks(tasks) {
         return tasks.map(task => {
+            const start = (task.start || '').replace(/\//g, '-');
+            const end = (task.end || '').replace(/\//g, '-');
             let customClass = 'gantt-task';
             let namePrefix = '';
 
@@ -156,8 +182,8 @@ class FrappeGanttRenderer extends GanttRenderer {
             return {
                 id: task.id,
                 name: namePrefix + rawName,
-                start: task.start,
-                end: task.end,
+                start: start,
+                end: end,
                 progress: task.progress || 0,
                 dependencies: task.dependencies || '',
                 custom_class: customClass,
@@ -178,7 +204,6 @@ class FrappeGanttRenderer extends GanttRenderer {
 
         // 1. Fix Container Sizing
         svg.style.width = '100%';
-        svg.style.height = 'auto';
         svg.style.maxWidth = 'none';
 
         // 2. Iterate over task groups and apply styles

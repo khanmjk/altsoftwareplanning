@@ -91,33 +91,12 @@
     flex: 1;
     min-height: 0;
     height: 100%;
-    overflow: auto;
+    overflow: hidden;
     background-color: #fff;
     padding: 0;
     border: 1px solid #eee;
     position: relative;
     display: block;
-}
-
-/* Custom Resize Handle Indicator */
-.gantt-chart-box::after {
-    content: '';
-    position: absolute;
-    bottom: 4px;
-    right: 4px;
-    width: 16px;
-    /* Larger handle */
-    height: 16px;
-    background: linear-gradient(135deg, transparent 50%, #999 50%);
-    /* Darker color */
-    pointer-events: none;
-    /* Let clicks pass through */
-    z-index: 10;
-}
-
-/* Ensure the box itself handles the resize cursor area */
-.gantt-chart-box::-webkit-resizer {
-    background-color: transparent;
 }
 
 .gantt-table {
@@ -139,8 +118,15 @@
     display: block;
     min-width: 100%;
     height: auto;
+    min-height: 0;
+}
+
+/* Ensure Frappe wrapper inside the chart fills height and scrolls */
+.gantt-chart-box > div {
+    height: 100%;
     min-height: 100%;
 }
+
 
 .gantt-status-bar {
     margin-top: 10px;
