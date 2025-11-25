@@ -1109,6 +1109,7 @@ async function renderGanttChart() {
     await ganttChartInstance.render(tasks, {
         title: `Detailed Plan - ${currentGanttYear}`,
         year: currentGanttYear, // Pass year explicitly
+        metaInitiativeCount: initiatives.length,
         onUpdate: (update) => {
             handleGanttUpdate(update);
         }

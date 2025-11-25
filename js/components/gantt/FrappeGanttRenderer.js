@@ -19,8 +19,8 @@ class FrappeGanttRenderer extends GanttRenderer {
         this.container.style.display = 'block';
         this.container.style.height = '100%';
         this.container.style.minHeight = '0';
-        // Let the inner wrapper own scrolling to avoid nested scrollbars fighting
-        this.container.style.overflow = 'hidden';
+        // Allow the container to scroll when content exceeds available height
+        this.container.style.overflow = 'auto';
 
         if (!tasks || tasks.length === 0) {
             this.container.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">No initiatives to display.</div>';
@@ -106,7 +106,7 @@ class FrappeGanttRenderer extends GanttRenderer {
 
             // Apply custom styles after render
             this._applyCustomStyles(tasks);
-            this._resizeForTasks(wrapper, frappeTasks);
+            this._resizeForTasks(wrapper, frappeTasks, options);
 
         } catch (err) {
             console.error("FrappeGanttRenderer render failed:", err);
@@ -125,27 +125,31 @@ class FrappeGanttRenderer extends GanttRenderer {
         }
     }
 
-    _resizeForTasks(wrapper, tasks) {
+    _resizeForTasks(wrapper, tasks, options = {}) {
         if (!wrapper) return;
         const svg = wrapper.querySelector('svg');
         if (!svg) return;
 
-        // Derive a height based on number of tasks to ensure full content is rendered and scrollable
-        const count = (tasks || []).length || 1;
         const opts = this.gantt ? this.gantt.options : {};
         const barHeight = opts.bar_height || 30;
         const barPadding = 12; // Frappe internal gap between bars
         const headerHeight = opts.header_height || 50;
         const padding = opts.padding || 18;
-        const computedHeight = headerHeight + (padding * 2) + (count * (barHeight + barPadding));
 
-        svg.style.height = `${computedHeight}px`;
-        svg.setAttribute('height', `${computedHeight}`);
-        // Keep width fluid
+        // Use actual rendered bars to determine needed height
+        const count = Math.max((tasks || []).length || 1, options.metaInitiativeCount || 0);
+        // Generous per-row height to avoid truncation; Frappe's internal layout adds extra gap.
+        const rowHeight = barHeight + (barPadding * 2);
+        const computedHeight = headerHeight + (padding * 2) + (count * rowHeight);
+
+        // Set SVG height so all tasks render, keep width fluid
         svg.style.width = '100%';
         svg.style.maxWidth = 'none';
+        svg.style.height = `${computedHeight}px`;
+        svg.setAttribute('height', `${computedHeight}`);
 
-        // Ensure wrapper can scroll if SVG is taller than available space
+        wrapper.style.minHeight = `${computedHeight}px`;
+        wrapper.style.height = `${computedHeight}px`;
         wrapper.style.overflowY = 'auto';
         wrapper.style.overflowX = 'auto';
     }
