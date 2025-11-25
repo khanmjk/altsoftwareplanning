@@ -31,8 +31,7 @@ class FrappeGanttRenderer extends GanttRenderer {
         const wrapperId = `frappe-gantt-${Date.now()}`;
         const wrapper = document.createElement('div');
         wrapper.id = wrapperId;
-        wrapper.style.overflowX = 'auto';
-        wrapper.style.overflowY = 'auto';
+        wrapper.style.overflow = 'hidden';
         wrapper.style.height = '100%'; // Ensure it fills container
         wrapper.style.minHeight = '100%';
         wrapper.style.width = '100%';
@@ -150,8 +149,7 @@ class FrappeGanttRenderer extends GanttRenderer {
 
         wrapper.style.minHeight = `${computedHeight}px`;
         wrapper.style.height = `${computedHeight}px`;
-        wrapper.style.overflowY = 'auto';
-        wrapper.style.overflowX = 'auto';
+        wrapper.style.overflow = 'hidden';
     }
 
     _transformTasks(tasks) {
