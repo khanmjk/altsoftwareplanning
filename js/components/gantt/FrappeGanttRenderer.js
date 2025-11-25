@@ -27,6 +27,10 @@ class FrappeGanttRenderer extends GanttRenderer {
             return;
         }
 
+        // Clamp tasks to the selected year window so the view stays to 12 months
+        const year = options.year || new Date().getFullYear();
+        const clampedTasks = this._clampTasksToYear(tasks, year);
+
         // Create a wrapper for the SVG because Frappe appends to the selector
         const wrapperId = `frappe-gantt-${Date.now()}`;
         const wrapper = document.createElement('div');
@@ -38,16 +42,17 @@ class FrappeGanttRenderer extends GanttRenderer {
         wrapper.style.position = 'relative';
         this.container.appendChild(wrapper);
 
-        const year = options.year || new Date().getFullYear();
-        const frappeTasks = this._transformTasks(tasks || []);
+        const frappeTasks = this._transformTasks(clampedTasks || []);
 
         try {
             // Calculate date range based on options.year
-            const year = options.year || new Date().getFullYear();
             const startDate = `${year}-01-01`;
             const endDate = `${year}-12-31`;
 
             // Frappe Gantt expects a selector string or element
+            const startDateObj = new Date(`${year}-01-01T00:00:00Z`);
+            const endDateObj = new Date(`${year}-12-31T00:00:00Z`);
+
             this.gantt = new Gantt(`#${wrapperId}`, frappeTasks, {
                 header_height: 60, // Taller header
                 column_width: 30,
@@ -60,8 +65,8 @@ class FrappeGanttRenderer extends GanttRenderer {
                 view_mode: this.currentViewMode,
                 date_format: 'YYYY-MM-DD',
                 // Limit view to 12 months
-                start: startDate,
-                end: endDate,
+                start: startDateObj,
+                end: endDateObj,
                 custom_popup_html: (task) => {
                     // Rich Tooltip Implementation
                     const start = task._start.toISOString().split('T')[0];
@@ -103,9 +108,24 @@ class FrappeGanttRenderer extends GanttRenderer {
                 }
             });
 
+            // Force the visible window to the selected year only (no spill-over into next year)
+            if (this.gantt) {
+                this.gantt.gantt_start = startDateObj;
+                this.gantt.gantt_end = endDateObj;
+                if (typeof this.gantt.setup_dates === 'function') {
+                    this.gantt.setup_dates();
+                }
+                if (typeof this.gantt.change_view_mode === 'function') {
+                    this.gantt.change_view_mode(this.currentViewMode);
+                }
+            }
+
             // Apply custom styles after render
             this._applyCustomStyles(tasks);
             this._resizeForTasks(wrapper, frappeTasks, options);
+
+            // Attach double-click handling to support expand/collapse sync with table
+            this._bindDoubleClick(wrapper, frappeTasks, options);
 
         } catch (err) {
             console.error("FrappeGanttRenderer render failed:", err);
@@ -150,6 +170,54 @@ class FrappeGanttRenderer extends GanttRenderer {
         wrapper.style.minHeight = `${computedHeight}px`;
         wrapper.style.height = `${computedHeight}px`;
         wrapper.style.overflow = 'hidden';
+    }
+
+    _bindDoubleClick(wrapper, tasks, options = {}) {
+        if (!wrapper || !tasks || !tasks.length) return;
+        const cb = options.onItemDoubleClick;
+        if (typeof cb !== 'function') return;
+
+        const taskMap = new Map(tasks.map(t => [t.id, t]));
+        const handler = (e) => {
+            const bar = e.target.closest('.bar-wrapper');
+            if (!bar) return;
+            const id = bar.getAttribute('data-id');
+            if (!id) return;
+            const task = taskMap.get(id);
+            if (task) cb(task);
+        };
+        wrapper.addEventListener('dblclick', handler);
+
+        // Return a cleanup if ever needed; for now rely on wrapper recreation per render
+        this._detachDbl = () => wrapper.removeEventListener('dblclick', handler);
+    }
+
+    _clampTasksToYear(tasks, year) {
+        const yearStart = `${year}-01-01`;
+        const yearEnd = `${year}-12-31`;
+
+        const toISO = (d) => {
+            if (!d) return null;
+            // Accept YYYY-MM-DD or YYYY/MM/DD, fallback to raw
+            const normalized = d.replace(/\//g, '-');
+            const m = /^\d{4}-\d{2}-\d{2}$/.test(normalized) ? normalized : null;
+            return m || null;
+        };
+
+        const clampDate = (dateStr) => {
+            const iso = toISO(dateStr);
+            if (!iso) return null;
+            if (iso < yearStart) return yearStart;
+            if (iso > yearEnd) return yearEnd;
+            return iso;
+        };
+
+        return (tasks || []).map(task => {
+            const start = clampDate(task.start) || yearStart;
+            const end = clampDate(task.end) || yearEnd;
+            const safeEnd = end < start ? start : end;
+            return { ...task, start, end: safeEnd };
+        });
     }
 
     _transformTasks(tasks) {

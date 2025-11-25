@@ -230,11 +230,8 @@ function renderGanttTable() {
     const workingDaysPerYear = currentSystemData?.capacityConfiguration?.workingDaysPerYear || 261;
     const allInitiatives = currentSystemData?.yearlyInitiatives || [];
     const allWorkPackages = currentSystemData.workPackages || [];
-    // Seed default expansion only once for existing work packages
+    // Seed initialization flag without auto-expanding WPs (default collapsed)
     if (!ganttWorkPackagesInitialized) {
-        (currentSystemData.workPackages || []).forEach(wp => {
-            ganttExpandedWorkPackages.add(wp.workPackageId);
-        });
         ganttWorkPackagesInitialized = true;
     }
 
@@ -1112,8 +1109,58 @@ async function renderGanttChart() {
         metaInitiativeCount: initiatives.length,
         onUpdate: (update) => {
             handleGanttUpdate(update);
+        },
+        onItemDoubleClick: (task) => {
+            handleGanttToggleFromChart(task);
         }
     });
+}
+
+function handleGanttToggleFromChart(task) {
+    if (!task || !task.type) return;
+    if (task.type === 'initiative') {
+        const id = task.initiativeId;
+        if (!id) return;
+        // Show only this initiative, collapse others and all WPs
+        if (ganttExpandedInitiatives.has(id)) {
+            ganttExpandedInitiatives.clear();
+        } else {
+            ganttExpandedInitiatives.clear();
+            if (hasWorkPackagesForInitiative(id)) {
+                ganttExpandedInitiatives.add(id);
+            }
+        }
+        ganttExpandedWorkPackages.clear();
+    } else if (task.type === 'workPackage') {
+        const wpId = task.workPackageId;
+        if (!wpId) return;
+        // Ensure only this initiative and this WP are expanded
+        if (task.initiativeId) {
+            ganttExpandedInitiatives.clear();
+            ganttExpandedInitiatives.add(task.initiativeId);
+        }
+        if (ganttExpandedWorkPackages.has(wpId)) {
+            ganttExpandedWorkPackages.clear();
+        } else {
+            ganttExpandedWorkPackages.clear();
+            ganttExpandedWorkPackages.add(wpId);
+        }
+    } else if (task.type === 'assignment') {
+        // Toggle parent WP if present
+        const wpId = task.workPackageId;
+        if (wpId) {
+            if (task.initiativeId) {
+                ganttExpandedInitiatives.clear();
+                ganttExpandedInitiatives.add(task.initiativeId);
+            }
+            ganttExpandedWorkPackages.clear();
+            ganttExpandedWorkPackages.add(wpId);
+        }
+    }
+
+    // Re-render table and chart to reflect toggles
+    renderGanttTable();
+    renderGanttChart();
 }
 
 function handleGanttUpdate({ task, start, end }) {
