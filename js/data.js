@@ -1,7 +1,7 @@
 // js/data.js
 
 /** Define a unique key for local storage **/
-const LOCAL_STORAGE_KEY = 'architectureVisualization_systems_v10'; 
+const LOCAL_STORAGE_KEY = 'architectureVisualization_systems_v10';
 const APP_SETTINGS_KEY = 'architectureVisualization_appSettings_v1';
 
 const STANDARD_WORK_PACKAGE_PHASES = [
@@ -39,7 +39,7 @@ function ensureWorkPackagesForInitiatives(systemData, yearFilter = null) {
         if (yearFilter && `${init.attributes?.planningYear || ''}` !== `${yearFilter}`) return;
         init.workPackageIds = init.workPackageIds || [];
         init.dependencies = init.dependencies || [];
-        
+
         // Only create a default WP if absolutely no WPs exist for this initiative
         const existing = (systemData.workPackages || []).filter(wp => wp.initiativeId === init.initiativeId);
         if (existing.length > 0) {
@@ -115,7 +115,7 @@ function ensureWorkPackagesForInitiatives(systemData, yearFilter = null) {
  */
 function addWorkPackage(initiativeId, wpData = {}) {
     if (!currentSystemData) return null;
-    ensureWorkPackagesForInitiatives(currentSystemData); 
+    ensureWorkPackagesForInitiatives(currentSystemData);
 
     const initiative = currentSystemData.yearlyInitiatives.find(i => i.initiativeId === initiativeId);
     if (!initiative) {
@@ -125,7 +125,7 @@ function addWorkPackage(initiativeId, wpData = {}) {
 
     const newWpId = `wp-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const planningYear = initiative.attributes?.planningYear || new Date().getFullYear();
-    
+
     // Default dates fallback to initiative dates
     const defaultStart = initiative.attributes?.startDate || `${planningYear}-01-15`;
     const defaultEnd = initiative.targetDueDate || `${planningYear}-11-01`;
@@ -157,11 +157,37 @@ function addWorkPackage(initiativeId, wpData = {}) {
     };
 
     currentSystemData.workPackages.push(newWp);
-    
+
     if (!initiative.workPackageIds) initiative.workPackageIds = [];
     initiative.workPackageIds.push(newWpId);
 
     return newWp;
+}
+
+/**
+ * Recalculates Work Package dates based on its assignments (Tasks).
+ * Enforces bottom-up rollup: WP Start = Min(Task Starts), WP End = Max(Task Ends).
+ * @param {object} workPackage 
+ */
+function recalculateWorkPackageDates(workPackage) {
+    if (!workPackage || !workPackage.impactedTeamAssignments || workPackage.impactedTeamAssignments.length === 0) {
+        return;
+    }
+
+    let earliest = null;
+    let latest = null;
+
+    workPackage.impactedTeamAssignments.forEach(assign => {
+        if (assign.startDate) {
+            if (!earliest || assign.startDate < earliest) earliest = assign.startDate;
+        }
+        if (assign.endDate) {
+            if (!latest || assign.endDate > latest) latest = assign.endDate;
+        }
+    });
+
+    if (earliest) workPackage.startDate = earliest;
+    if (latest) workPackage.endDate = latest;
 }
 
 /**
@@ -175,7 +201,7 @@ function updateWorkPackage(workPackageId, updates) {
     if (!wp) return null;
 
     Object.assign(wp, updates);
-    
+
     // If dates changed, trigger sync logic if necessary (omitted for MVP)
     return wp;
 }
@@ -186,7 +212,7 @@ function updateWorkPackage(workPackageId, updates) {
  */
 function deleteWorkPackage(workPackageId) {
     if (!currentSystemData || !currentSystemData.workPackages) return false;
-    
+
     const index = currentSystemData.workPackages.findIndex(w => w.workPackageId === workPackageId);
     if (index === -1) return false;
 
@@ -211,8 +237,8 @@ function syncInitiativeTotals(initiativeId, systemData) {
     const workingDaysPerYear = systemData.capacityConfiguration?.workingDaysPerYear || 261;
     const wpForInit = (systemData.workPackages || []).filter(wp => wp.initiativeId === initiativeId);
     // If no WPs, don't zero out initiative data (allows top-down editing fallback)
-    if (!wpForInit.length) return; 
-    
+    if (!wpForInit.length) return;
+
     const teamTotals = {};
     wpForInit.forEach(wp => {
         (wp.impactedTeamAssignments || []).forEach(assign => {
@@ -222,7 +248,7 @@ function syncInitiativeTotals(initiativeId, systemData) {
     });
     const initiative = (systemData.yearlyInitiatives || []).find(i => i.initiativeId === initiativeId);
     if (!initiative) return;
-    
+
     // Only overwrite if we actually found data
     if (Object.keys(teamTotals).length > 0) {
         initiative.assignments = Object.entries(teamTotals).map(([teamId, days]) => ({
@@ -230,7 +256,7 @@ function syncInitiativeTotals(initiativeId, systemData) {
             sdeYears: days / workingDaysPerYear
         }));
     }
-    
+
     // Update rollup dates: earliest start, latest end across assignments/WPs
     const { startDate, endDate } = getInitiativeDateSpanFromWorkPackages(wpForInit, initiative);
     initiative.attributes = initiative.attributes || {};
@@ -267,7 +293,7 @@ function syncWorkPackagesFromInitiative(initiative, systemData) {
     ensureWorkPackagesForInitiatives(systemData);
     const workingDaysPerYear = systemData.capacityConfiguration?.workingDaysPerYear || 261;
     const wps = (systemData.workPackages || []).filter(wp => wp.initiativeId === initiative.initiativeId);
-    
+
     // If only 1 WP, we sync everything to it
     if (wps.length === 1) {
         const wp = wps[0];
@@ -286,5 +312,6 @@ if (typeof window !== 'undefined') {
     window.syncWorkPackagesFromInitiative = syncWorkPackagesFromInitiative;
     window.addWorkPackage = addWorkPackage;
     window.updateWorkPackage = updateWorkPackage;
+    window.recalculateWorkPackageDates = recalculateWorkPackageDates;
     window.deleteWorkPackage = deleteWorkPackage;
 }

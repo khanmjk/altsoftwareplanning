@@ -501,25 +501,16 @@ function renderGanttTable() {
             if (!assign) return;
             if (field === 'startDate') {
                 assign.startDate = e.target.value;
-                if (!wp.startDate || e.target.value < wp.startDate) {
-                    wp.startDate = e.target.value;
-                } else {
-                    // Shrink if this was the earliest date and no other assignment starts earlier
-                    const earliest = getEarliestAssignmentStart(wp);
-                    wp.startDate = earliest || wp.startDate;
-                }
             } else if (field === 'endDate') {
                 assign.endDate = e.target.value;
-                if (!wp.endDate || e.target.value > wp.endDate) {
-                    wp.endDate = e.target.value;
-                } else {
-                    // Shrink if this was the latest date and no other assignment ends later
-                    const latest = getLatestAssignmentEnd(wp);
-                    wp.endDate = latest || wp.endDate;
-                }
             } else if (field === 'sdeYears') {
                 const sdeYears = parseFloat(e.target.value) || 0;
                 assign.sdeDays = sdeYears * getWorkingDaysPerYear();
+            }
+
+            // Recalculate WP dates from assignments (Bottom-up)
+            if (typeof recalculateWorkPackageDates === 'function') {
+                recalculateWorkPackageDates(wp);
             }
             if (typeof syncInitiativeTotals === 'function') {
                 syncInitiativeTotals(initId, currentSystemData);
@@ -894,9 +885,15 @@ function setWorkPackageDatesForTeam(initiativeId, { startDate, endDate }, select
             if (startDate) assign.startDate = startDate;
             if (endDate) assign.endDate = endDate;
         });
-        // also keep wp-level dates in sync if present
-        if (startDate) wp.startDate = startDate;
-        if (endDate) wp.endDate = endDate;
+
+        // Recalculate WP dates from assignments (Bottom-up)
+        if (typeof recalculateWorkPackageDates === 'function') {
+            recalculateWorkPackageDates(wp);
+        } else {
+            // Fallback if function not found (shouldn't happen if data.js loaded)
+            if (startDate) wp.startDate = startDate;
+            if (endDate) wp.endDate = endDate;
+        }
     });
     if (typeof syncInitiativeTotals === 'function') {
         syncInitiativeTotals(initiativeId, currentSystemData);
@@ -925,7 +922,16 @@ function updateWorkPackageSde(initiativeId, teamId, sdeYears, workingDaysPerYear
                 endDate: wp.endDate
             });
         }
+
+        // Recalculate WP dates (in case new assignment added affects range)
+        if (typeof recalculateWorkPackageDates === 'function') {
+            recalculateWorkPackageDates(wp);
+        }
     });
+
+    if (typeof syncInitiativeTotals === 'function') {
+        syncInitiativeTotals(initiativeId, currentSystemData);
+    }
 }
 
 function syncInitiativeDependenciesFromWorkPackages(initiativeId) {
