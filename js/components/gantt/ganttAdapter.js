@@ -38,13 +38,17 @@
             const hasWorkPackages = wpList.length > 0;
 
             // Level 1: Initiative Summary (Always Render)
-            const initStart = init.attributes?.startDate || defaultStart;
-            const initEnd = init.targetDueDate || defaultEnd;
+            const initDates = (typeof getComputedInitiativeDates === 'function')
+                ? getComputedInitiativeDates(init, selectedTeam)
+                : { startDate: init.attributes?.startDate || defaultStart, endDate: init.targetDueDate || defaultEnd };
+            const initStart = initDates.startDate || defaultStart;
+            const initEnd = initDates.endDate || defaultEnd;
+            const initiativeLabel = buildInitiativeLabel(init, initEnd);
             tasks.push({
                 id: sanitizeId(init.initiativeId),
                 title: init.title || 'Initiative Summary',
                 group: groupLabel,
-                label: init.title || 'Initiative',
+                label: initiativeLabel,
                 start: initStart,
                 end: initEnd,
                 status: init.status || 'active',
@@ -136,6 +140,21 @@
 
     // Removed createTaskForWorkPackage helper as logic is now inline for indentation control
 
+    function buildInitiativeLabel(init, endDate) {
+        const title = init.title || 'Initiative';
+        const rawSde = (typeof computeSdeEstimate === 'function')
+            ? parseFloat(computeSdeEstimate(init))
+            : null;
+        const hasSde = Number.isFinite(rawSde);
+        const sdeText = hasSde ? String(rawSde) : '';
+        const dateText = formatShortDate(endDate);
+
+        if (sdeText) {
+            return `${title} (${sdeText} SDE Yrs | ${dateText})`;
+        }
+        return `${title} (${dateText})`;
+    }
+
 
     function computeWorkPackageSpan(wp, init, selectedTeam, defaultStart, defaultEnd) {
         let earliest = null;
@@ -211,6 +230,31 @@
         }
 
         return finalLabel + breakdownStr;
+    }
+
+    function formatShortDate(dateStr) {
+        if (!dateStr || typeof dateStr !== 'string') return 'TBD';
+        const normalized = dateStr.replace(/\//g, '-');
+        const parts = normalized.split('-');
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+        if (parts.length === 3) {
+            const [year, month, day] = parts;
+            const mIdx = parseInt(month, 10) - 1;
+            const dVal = parseInt(day, 10);
+            if (year.length === 4 && mIdx >= 0 && mIdx < 12 && isFinite(dVal)) {
+                return `${String(dVal).padStart(2, '0')}-${months[mIdx]}`;
+            }
+        }
+
+        const parsed = new Date(dateStr);
+        if (!isNaN(parsed)) {
+            const dVal = parsed.getUTCDate();
+            const mIdx = parsed.getUTCMonth();
+            return `${String(dVal).padStart(2, '0')}-${months[mIdx]}`;
+        }
+
+        return 'TBD';
     }
 
     function sanitizeId(id) {

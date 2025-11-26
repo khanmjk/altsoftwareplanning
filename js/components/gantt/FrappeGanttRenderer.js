@@ -274,15 +274,10 @@ class FrappeGanttRenderer extends GanttRenderer {
             // Status based coloring
             if (task.status) customClass += ` status-${task.status.toLowerCase().replace(/\s+/g, '-')}`;
 
-            // Use the raw title if available to avoid double indentation from adapter, 
-            // or clean up the adapter's indentation if we want to control it here.
-            // The adapter adds \u00A0 which might not render well in SVG. 
-            // Let's strip leading whitespace/non-breaking spaces and apply our own prefix.
+            // Use the raw title if available to avoid double indentation from adapter.
             const rawName = (task.label || task.title || '').replace(/^[\s\u00A0]+/, '');
-            let maxLen = 48;
-            if (task.type === 'workPackage') maxLen = 32;
-            if (task.type === 'assignment') maxLen = 24;
-            const displayName = this._truncateLabel(rawName, maxLen);
+            // Keep full text; truncation is handled after measuring the rendered bar width.
+            const displayName = rawName;
 
             return {
                 id: task.id,
@@ -295,6 +290,8 @@ class FrappeGanttRenderer extends GanttRenderer {
                 hasWorkPackages: task.hasWorkPackages,
                 assignmentCount: task.assignmentCount,
                 originalLabel: rawName,
+                displayLabel: rawName,
+                namePrefix,
                 // Pass metadata through
                 initiativeId: task.initiativeId,
                 workPackageId: task.workPackageId,
@@ -375,9 +372,10 @@ class FrappeGanttRenderer extends GanttRenderer {
                 label.style.setProperty('font-weight', fontWeight, 'important');
                 label.style.setProperty('font-size', fontSize, 'important');
                 label.style.setProperty('fill', textColor, 'important');
-                const fullLabel = task.originalLabel || task.title || task.label || '';
+                // Prefer adapter-supplied label (includes SDE/date), fall back to title.
+                const fullLabel = task.displayLabel || task.originalLabel || task.label || task.title || '';
                 if (fullLabel) {
-                    label.setAttribute('title', fullLabel);
+                    label.setAttribute('title', `${(task.namePrefix || '').trim()} ${fullLabel}`.trim());
                 }
 
                 // Center label within the bar to avoid overflow past the bar bounds
@@ -389,8 +387,21 @@ class FrappeGanttRenderer extends GanttRenderer {
                     label.setAttribute('text-anchor', 'middle');
                 }
 
-                // Move label slightly if needed, or ensure it's visible
-                // For now, just ensuring high contrast
+                // Dynamic truncation based on available width; tolerate slight overflow (5 chars) before trimming.
+                const availablePx = bar ? Math.max(0, Number(bar.getAttribute('width')) - 12) : 0;
+                const fontPx = parseFloat(label.style.fontSize || window.getComputedStyle(label).fontSize || '12') || 12;
+                const avgCharPx = fontPx * 0.6; // rough average width per character
+                const maxChars = Math.max(4, Math.floor(availablePx / avgCharPx));
+                const tolerance = 5;
+                const baseText = (label.textContent || '').trim() || fullLabel;
+                let rendered = baseText;
+
+                if (baseText.length > maxChars + tolerance) {
+                    const targetChars = Math.max(4, maxChars - 1);
+                    rendered = baseText.slice(0, targetChars).trimEnd() + '…';
+                }
+
+                label.textContent = rendered;
             }
         });
     }
