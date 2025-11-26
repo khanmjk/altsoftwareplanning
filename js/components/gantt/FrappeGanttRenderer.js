@@ -58,10 +58,11 @@ class FrappeGanttRenderer extends GanttRenderer {
                 column_width: 30,
                 step: 24,
                 view_modes: ['Quarter Day', 'Half Day', 'Day', 'Week', 'Month'],
-                bar_height: 35, // Taller bars (was 25)
+                bar_height: 30, // Taller bars (was 25)
+                bar_padding: 24, // More padding (was 8)
                 bar_corner_radius: 4,
                 arrow_curve: 5,
-                padding: 25, // More padding (was 18)
+                padding: 24, // More padding (was 18)
                 view_mode: this.currentViewMode,
                 date_format: 'YYYY-MM-DD',
                 // Limit view to 12 months
@@ -152,9 +153,9 @@ class FrappeGanttRenderer extends GanttRenderer {
 
         const opts = this.gantt ? this.gantt.options : {};
         const barHeight = opts.bar_height || 30;
-        const barPadding = opts.bar_padding || 16; // Extra gap to reduce overlap
-        const headerHeight = opts.header_height || 50;
-        const padding = opts.padding || 18;
+        const barPadding = opts.bar_padding || 24; // Extra gap to reduce overlap
+        const headerHeight = opts.header_height || 60;
+        const padding = opts.padding || 24;
 
         // Use actual rendered bars to determine needed height
         const count = Math.max((tasks || []).length || 1, options.metaInitiativeCount || 0);

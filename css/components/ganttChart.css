@@ -81,6 +81,9 @@
 }
 
 .gantt-table thead th {
+    height: 57px;
+    padding: 12px 8px 10px 8px;
+    line-height: 16px;    
     position: sticky;
     top: 0;
     background: #fff;
