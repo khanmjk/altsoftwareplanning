@@ -43,6 +43,8 @@ class FrappeGanttRenderer extends GanttRenderer {
         this.container.appendChild(wrapper);
 
         const frappeTasks = this._transformTasks(clampedTasks || []);
+        this._taskLabelMap = this._buildTaskLabelMap(frappeTasks);
+        this._dependencyTextMap = this._buildDependencyTextMap(frappeTasks);
 
         try {
             // Calculate date range based on options.year
@@ -58,10 +60,11 @@ class FrappeGanttRenderer extends GanttRenderer {
                 column_width: 30,
                 step: 24,
                 view_modes: ['Quarter Day', 'Half Day', 'Day', 'Week', 'Month'],
-                bar_height: 35, // Taller bars (was 25)
+                bar_height: 30, // Taller bars (was 25)
+                bar_padding: 24, // More padding (was 8)
                 bar_corner_radius: 4,
                 arrow_curve: 5,
-                padding: 25, // More padding (was 18)
+                padding: 24, // More padding (was 18)
                 view_mode: this.currentViewMode,
                 date_format: 'YYYY-MM-DD',
                 // Limit view to 12 months
@@ -124,6 +127,8 @@ class FrappeGanttRenderer extends GanttRenderer {
             this._applyCustomStyles(tasks);
             this._resizeForTasks(wrapper, frappeTasks, options);
             this._markLockedBars(wrapper, frappeTasks);
+            this._applyFocusStyles(wrapper, frappeTasks, options.focus);
+            this._styleDependencies(wrapper);
 
             // Attach double-click handling to support expand/collapse sync with table
             this._bindDoubleClick(wrapper, frappeTasks, options);
@@ -152,9 +157,9 @@ class FrappeGanttRenderer extends GanttRenderer {
 
         const opts = this.gantt ? this.gantt.options : {};
         const barHeight = opts.bar_height || 30;
-        const barPadding = opts.bar_padding || 16; // Extra gap to reduce overlap
-        const headerHeight = opts.header_height || 50;
-        const padding = opts.padding || 18;
+        const barPadding = opts.bar_padding || 24; // Extra gap to reduce overlap
+        const headerHeight = opts.header_height || 60;
+        const padding = opts.padding || 24;
 
         // Use actual rendered bars to determine needed height
         const count = Math.max((tasks || []).length || 1, options.metaInitiativeCount || 0);
@@ -251,6 +256,15 @@ class FrappeGanttRenderer extends GanttRenderer {
         });
     }
 
+    _normalizeId(value) {
+        return (value || '')
+            .toString()
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9_-]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+    }
+
     _transformTasks(tasks) {
         return tasks.map(task => {
             const start = (task.start || '').replace(/\//g, '-');
@@ -274,15 +288,10 @@ class FrappeGanttRenderer extends GanttRenderer {
             // Status based coloring
             if (task.status) customClass += ` status-${task.status.toLowerCase().replace(/\s+/g, '-')}`;
 
-            // Use the raw title if available to avoid double indentation from adapter, 
-            // or clean up the adapter's indentation if we want to control it here.
-            // The adapter adds \u00A0 which might not render well in SVG. 
-            // Let's strip leading whitespace/non-breaking spaces and apply our own prefix.
+            // Use the raw title if available to avoid double indentation from adapter.
             const rawName = (task.label || task.title || '').replace(/^[\s\u00A0]+/, '');
-            let maxLen = 48;
-            if (task.type === 'workPackage') maxLen = 32;
-            if (task.type === 'assignment') maxLen = 24;
-            const displayName = this._truncateLabel(rawName, maxLen);
+            // Keep full text; truncation is handled after measuring the rendered bar width.
+            const displayName = rawName;
 
             return {
                 id: task.id,
@@ -295,6 +304,8 @@ class FrappeGanttRenderer extends GanttRenderer {
                 hasWorkPackages: task.hasWorkPackages,
                 assignmentCount: task.assignmentCount,
                 originalLabel: rawName,
+                displayLabel: rawName,
+                namePrefix,
                 // Pass metadata through
                 initiativeId: task.initiativeId,
                 workPackageId: task.workPackageId,
@@ -302,6 +313,77 @@ class FrappeGanttRenderer extends GanttRenderer {
                 type: task.type,
                 status: task.status
             };
+        });
+    }
+
+    _buildTaskLabelMap(tasks) {
+        const map = new Map();
+        (tasks || []).forEach(t => {
+            const normId = this._normalizeId(t.id);
+            if (!normId) return;
+            map.set(normId, this._friendlyTaskLabel(t));
+        });
+        return map;
+    }
+
+    _buildDependencyTextMap(tasks) {
+        const map = new Map();
+        const labelMap = this._taskLabelMap || new Map();
+        (tasks || []).forEach(toTask => {
+            const toId = this._normalizeId(toTask.id);
+            if (!toId || !toTask.dependencies) return;
+            const deps = toTask.dependencies.split(',').map(s => this._normalizeId(s)).filter(Boolean);
+            deps.forEach(fromId => {
+                const key = `${toId}|${fromId}`;
+                if (map.has(key)) return;
+                const toLabel = labelMap.get(toId) || toTask.name || toTask.title || toId;
+                const fromLabel = labelMap.get(fromId) || fromId;
+                const text = `${toLabel} depends on ${fromLabel}`;
+                map.set(key, text);
+            });
+        });
+        return map;
+    }
+
+    _friendlyTaskLabel(task) {
+        if (!task) return '';
+        const base = task.displayLabel || task.originalLabel || task.name || task.title || task.id;
+        if (task.type === 'assignment') {
+            return base || (task.teamId ? `Team ${task.teamId}` : 'Assignment');
+        }
+        if (task.type === 'workPackage') {
+            return base || 'Work Package';
+        }
+        if (task.type === 'initiative') {
+            return base || 'Initiative';
+        }
+        return base;
+    }
+
+    _applyFocusStyles(wrapper, tasks, focus = {}) {
+        if (!wrapper || !Array.isArray(tasks)) return;
+        const focusTaskId = this._normalizeId(focus?.taskId);
+        const focusInitiativeId = this._normalizeId(focus?.initiativeId);
+        const focusType = focus?.taskType || null;
+
+        const taskMap = new Map((tasks || []).map(t => [this._normalizeId(t.id), t]));
+        const bars = wrapper.querySelectorAll('.bar-wrapper');
+        bars.forEach(bar => {
+            bar.classList.remove('focus-initiative', 'focus-row');
+            const idNorm = this._normalizeId(bar.getAttribute('data-id'));
+            if (!idNorm) return;
+            const task = taskMap.get(idNorm);
+            const taskInit = this._normalizeId(task?.initiativeId);
+
+            if (focusInitiativeId && taskInit && taskInit === focusInitiativeId) {
+                bar.classList.add('focus-initiative');
+            }
+
+            const isExactFocus = focusTaskId && idNorm === focusTaskId;
+            const isInitFocus = focusType === 'initiative' && focusInitiativeId && idNorm === focusInitiativeId;
+            if (isExactFocus || isInitFocus) {
+                bar.classList.add('focus-row');
+            }
         });
     }
 
@@ -375,9 +457,10 @@ class FrappeGanttRenderer extends GanttRenderer {
                 label.style.setProperty('font-weight', fontWeight, 'important');
                 label.style.setProperty('font-size', fontSize, 'important');
                 label.style.setProperty('fill', textColor, 'important');
-                const fullLabel = task.originalLabel || task.title || task.label || '';
+                // Prefer adapter-supplied label (includes SDE/date), fall back to title.
+                const fullLabel = task.displayLabel || task.originalLabel || task.label || task.title || '';
                 if (fullLabel) {
-                    label.setAttribute('title', fullLabel);
+                    label.setAttribute('title', `${(task.namePrefix || '').trim()} ${fullLabel}`.trim());
                 }
 
                 // Center label within the bar to avoid overflow past the bar bounds
@@ -389,8 +472,21 @@ class FrappeGanttRenderer extends GanttRenderer {
                     label.setAttribute('text-anchor', 'middle');
                 }
 
-                // Move label slightly if needed, or ensure it's visible
-                // For now, just ensuring high contrast
+                // Dynamic truncation based on available width; tolerate slight overflow (5 chars) before trimming.
+                const availablePx = bar ? Math.max(0, Number(bar.getAttribute('width')) - 12) : 0;
+                const fontPx = parseFloat(label.style.fontSize || window.getComputedStyle(label).fontSize || '12') || 12;
+                const avgCharPx = fontPx * 0.6; // rough average width per character
+                const maxChars = Math.max(4, Math.floor(availablePx / avgCharPx));
+                const tolerance = 5;
+                const baseText = (label.textContent || '').trim() || fullLabel;
+                let rendered = baseText;
+
+                if (baseText.length > maxChars + tolerance) {
+                    const targetChars = Math.max(4, maxChars - 1);
+                    rendered = baseText.slice(0, targetChars).trimEnd() + '…';
+                }
+
+                label.textContent = rendered;
             }
         });
     }
@@ -399,6 +495,144 @@ class FrappeGanttRenderer extends GanttRenderer {
         const t = (text || '').trim();
         if (t.length <= maxLen) return t;
         return t.slice(0, maxLen - 1).trim() + '…';
+    }
+
+    _styleDependencies(wrapper) {
+        if (!wrapper) return;
+        const arrowHeadColor = '#6b7ea4';
+        const arrowRecords = (this.gantt && Array.isArray(this.gantt.arrows)) ? this.gantt.arrows : [];
+
+        // Style and annotate from the source of truth (gantt.arrows)
+        arrowRecords.forEach(rec => {
+            const el = rec?.element;
+            if (!el) return;
+            const path = el.tagName?.toLowerCase() === 'path' ? el : el.querySelector('path') || el;
+            const targetEl = path;
+
+            // Apply visual styling
+            targetEl.style.stroke = arrowHeadColor;
+            targetEl.style.strokeWidth = '1.2px';
+            targetEl.style.strokeDasharray = '5 4';
+            targetEl.style.opacity = '0.6';
+            targetEl.style.fill = 'none';
+            targetEl.style.cursor = 'help';
+
+            // Seed ids/labels from record
+            const fromId = rec.from_task?.id ? this._normalizeId(rec.from_task.id) : null;
+            const toId = rec.to_task?.id ? this._normalizeId(rec.to_task.id) : null;
+            if (fromId) targetEl.dataset.fromId = fromId;
+            if (toId) targetEl.dataset.toId = toId;
+            if (rec.from_task?.name) targetEl.dataset.fromLabel = rec.from_task.name;
+            if (rec.to_task?.name) targetEl.dataset.toLabel = rec.to_task.name;
+
+            // Also honor any data-from/data-to set by Frappe
+            const dataFrom = targetEl.dataset.from || targetEl.getAttribute('data-from');
+            const dataTo = targetEl.dataset.to || targetEl.getAttribute('data-to');
+            if (dataFrom) targetEl.dataset.fromId = this._normalizeId(dataFrom);
+            if (dataTo) targetEl.dataset.toId = this._normalizeId(dataTo);
+
+            // Attach human labels and description
+            this._populateArrowLabels(wrapper, targetEl);
+            const desc = this._formatDependencyText(wrapper, targetEl);
+            targetEl.setAttribute('title', desc);
+
+            const showBadge = (e) => this._showSoftBadge(wrapper, targetEl, e);
+            const hideBadge = () => this._hideSoftBadge(wrapper);
+            targetEl.addEventListener('mouseenter', showBadge);
+            targetEl.addEventListener('mouseleave', hideBadge);
+        });
+
+        // Style any arrow heads present
+        const heads = wrapper.querySelectorAll('.arrow-head');
+        heads.forEach(head => {
+            head.style.fill = arrowHeadColor;
+            head.style.opacity = '0.65';
+        });
+    }
+
+    _showSoftBadge(wrapper, arrowEl, evt) {
+        this._hideSoftBadge(wrapper);
+        const badge = document.createElement('div');
+        badge.className = 'soft-dep-badge';
+
+        const detailText = this._formatDependencyText(wrapper, arrowEl);
+        const badgeText = `Soft: ${detailText}`;
+        badge.textContent = badgeText;
+
+        const arrowBox = arrowEl.getBoundingClientRect();
+        const wrapperBox = wrapper.getBoundingClientRect();
+        const top = arrowBox.top - wrapperBox.top - 8; // slightly above arrow
+        const left = arrowBox.left - wrapperBox.left + (arrowBox.width / 2);
+        badge.style.top = `${top}px`;
+        badge.style.left = `${left}px`;
+
+        // Attach and keep reference for cleanup
+        wrapper.appendChild(badge);
+        this._softBadge = badge;
+    }
+
+    _populateArrowLabels(wrapper, arrowEl) {
+        if (!arrowEl) return;
+        const fromId = this._normalizeId(arrowEl.dataset.fromId || arrowEl.dataset.from || arrowEl.getAttribute('data-from'));
+        const toId = this._normalizeId(arrowEl.dataset.toId || arrowEl.dataset.to || arrowEl.getAttribute('data-to'));
+
+        const lookupLabel = (id) => this._lookupTaskLabel(wrapper, id);
+        const fromLabel = arrowEl.dataset.fromLabel || lookupLabel(fromId);
+        const toLabel = arrowEl.dataset.toLabel || lookupLabel(toId);
+
+        if (fromLabel) arrowEl.dataset.fromLabel = fromLabel;
+        if (toLabel) arrowEl.dataset.toLabel = toLabel;
+    }
+
+    _lookupTaskLabel(wrapper, normId) {
+        if (!normId) return null;
+        const id = this._normalizeId(normId);
+        if (!id) return null;
+        if (this._taskLabelMap && this._taskLabelMap.has(id)) {
+            return this._taskLabelMap.get(id);
+        }
+        // Fallback: query rendered bar label text
+        const match = Array.from(wrapper.querySelectorAll('.bar-wrapper[data-id]')).find(bw => this._normalizeId(bw.getAttribute('data-id')) === id);
+        if (match) {
+            const lbl = match.querySelector('.bar-label');
+            if (lbl && lbl.textContent) return lbl.textContent.trim();
+        }
+        return null;
+    }
+
+    _formatDependencyText(wrapper, arrowEl) {
+        const fallback = 'Soft dependency (informational)';
+        if (!arrowEl) return fallback;
+
+        const fromId = arrowEl.dataset.fromId || null;
+        const toId = arrowEl.dataset.toId || null;
+        const fromLabelDs = arrowEl.dataset.fromLabel || null;
+        const toLabelDs = arrowEl.dataset.toLabel || null;
+
+        const depKey = (toId && fromId) ? `${this._normalizeId(toId)}|${this._normalizeId(fromId)}` : null;
+        if (depKey && this._dependencyTextMap && this._dependencyTextMap.has(depKey)) {
+            const txt = this._dependencyTextMap.get(depKey);
+            return txt;
+        }
+
+        const fromLabel = fromLabelDs
+            || this._lookupTaskLabel(wrapper, fromId)
+            || null;
+        const toLabel = toLabelDs
+            || this._lookupTaskLabel(wrapper, toId)
+            || null;
+
+        if (fromLabel && toLabel) {
+            return `${toLabel} depends on ${fromLabel}`;
+        }
+        return fallback;
+    }
+
+    _hideSoftBadge(wrapper) {
+        if (this._softBadge && wrapper && wrapper.contains(this._softBadge)) {
+            wrapper.removeChild(this._softBadge);
+        }
+        this._softBadge = null;
     }
 }
 

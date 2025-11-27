@@ -25,13 +25,13 @@ class MermaidGanttRenderer extends GanttRenderer {
             //     altSectionBkgColor: "#ffffff"
             // },
             gantt: {
-                barHeight: 40,
-                barGap: 8,
-                fontSize: 16,
-                sectionFontSize: 16,
+                barHeight: 60,
+                barGap: 10,
+                fontSize: 18,
+                sectionFontSize: 18,
                 numberSectionStyles: 4,
                 axisFormat: "%Y-%m-%d",
-                topPadding: 60,
+                topPadding: 120,
                 leftPadding: 450,
                 gridLineStartPadding: 50
             }

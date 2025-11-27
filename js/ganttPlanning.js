@@ -16,6 +16,112 @@ let lastGanttFocusTaskId = null;
 let lastGanttFocusTaskType = null;
 let lastGanttFocusInitiativeId = null;
 
+function getGanttFocusContext() {
+    return {
+        taskId: lastGanttFocusTaskId ? normalizeGanttId(lastGanttFocusTaskId) : null,
+        taskType: lastGanttFocusTaskType || null,
+        initiativeId: lastGanttFocusInitiativeId ? normalizeGanttId(lastGanttFocusInitiativeId) : null
+    };
+}
+
+function normalizeGanttId(value) {
+    return (value || '')
+        .toString()
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9_-]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+}
+
+function buildAssignmentTaskId(wpId, teamId) {
+    if (!wpId || !teamId) return null;
+    return normalizeGanttId(`${wpId}-${teamId}`);
+}
+
+function setLastGanttFocus({ taskId, taskType, initiativeId }) {
+    if (!taskId) return;
+    lastGanttFocusTaskId = normalizeGanttId(taskId);
+    lastGanttFocusTaskType = taskType || null;
+    lastGanttFocusInitiativeId = initiativeId ? normalizeGanttId(initiativeId) : null;
+}
+
+function captureGanttFocusFromTarget(target) {
+    if (!target || !target.dataset) return;
+    const { action, kind } = target.dataset;
+
+    if (kind === 'wp-assign') {
+        const wpId = target.dataset.wpId;
+        const teamId = target.dataset.teamId;
+        const initiativeId = target.dataset.initiativeId;
+        const taskId = buildAssignmentTaskId(wpId, teamId);
+        if (taskId) {
+            setLastGanttFocus({ taskId, taskType: 'assignment', initiativeId });
+        }
+        return;
+    }
+
+    if (kind === 'wp-assign-dep') {
+        const wpId = target.dataset.wpId;
+        const assignId = target.dataset.assignId;
+        const initiativeId = target.dataset.initiativeId;
+        if (wpId && assignId) {
+            setLastGanttFocus({ taskId: assignId, taskType: 'assignment', initiativeId });
+        }
+        return;
+    }
+
+    if (kind === 'work-package' || action === 'toggle-wp' || action === 'toggle-other-teams') {
+        const wpId = target.dataset.wpId;
+        const initiativeId = target.dataset.initiativeId;
+        if (wpId) {
+            setLastGanttFocus({ taskId: wpId, taskType: 'workPackage', initiativeId });
+        }
+        return;
+    }
+
+    if (kind === 'initiative' || action === 'toggle-initiative' || action === 'add-wp' || action === 'delete-wp') {
+        const id = target.dataset.id || target.dataset.initiativeId;
+        if (id) {
+            setLastGanttFocus({ taskId: id, taskType: 'initiative', initiativeId: id });
+        }
+        return;
+    }
+
+    if (kind === 'wp-dep') {
+        const wpId = target.dataset.wpId;
+        const initiativeId = target.dataset.initiativeId;
+        if (wpId) {
+            setLastGanttFocus({ taskId: wpId, taskType: 'workPackage', initiativeId });
+        }
+        return;
+    }
+
+    if (kind === 'init-dep') {
+        const initId = target.dataset.initId;
+        if (initId) {
+            setLastGanttFocus({ taskId: initId, taskType: 'initiative', initiativeId: initId });
+        }
+        return;
+    }
+
+    if (action === 'toggle-dep-menu') {
+        const wpId = target.dataset.wpId;
+        const initId = target.dataset.initId;
+        const assignId = target.dataset.assignId;
+        if (assignId && wpId) {
+            setLastGanttFocus({ taskId: assignId, taskType: 'assignment', initiativeId: initId });
+            return;
+        }
+        if (wpId) {
+            setLastGanttFocus({ taskId: wpId, taskType: 'workPackage', initiativeId: initId });
+            return;
+        }
+        if (initId) {
+            setLastGanttFocus({ taskId: initId, taskType: 'initiative', initiativeId: initId });
+        }
+    }
+}
+
 function initializeGanttPlanningView() {
     const container = document.getElementById('ganttPlanningView');
     if (!container) return;
@@ -191,6 +297,7 @@ function renderGanttTable() {
     if (typeof ensureWorkPackagesForInitiatives === 'function') {
         ensureWorkPackagesForInitiatives(currentSystemData, currentGanttYear);
     }
+    const focus = getGanttFocusContext();
     const selectedTeam = (currentGanttGroupBy === 'Team') ? (document.getElementById('ganttGroupValue')?.value || 'all') : null;
     const showManagerTeams = currentGanttGroupBy === 'Manager' && (document.getElementById('ganttManagerFilter')?.value || 'all') !== 'all';
     const initiativeMap = new Map();
@@ -214,7 +321,7 @@ function renderGanttTable() {
                     <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Start</th>
                     <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Target</th>
                     <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">SDEs</th>
-                    <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Predecessors</th>
+                    <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Dependencies</th>
                     <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Actions</th>
                 </tr>
             </thead>
@@ -241,8 +348,15 @@ function renderGanttTable() {
     data.forEach(init => {
         const isExpanded = ganttExpandedInitiatives.has(init.initiativeId);
         const hasWorkPackages = hasWorkPackagesForInitiative(init.initiativeId);
+        const initIdNorm = normalizeGanttId(init.initiativeId);
+        const isFocusInitiative = focus.initiativeId && initIdNorm === focus.initiativeId;
+        const isFocusRow = focus.taskType === 'initiative' && focus.taskId && initIdNorm === focus.taskId;
         const tr = document.createElement('tr');
-        tr.className = 'gantt-init-row';
+        tr.className = [
+            'gantt-init-row',
+            isFocusInitiative ? 'gantt-focus-initiative' : '',
+            isFocusRow ? 'gantt-focus-row' : ''
+        ].filter(Boolean).join(' ');
         tr.innerHTML = `
             <td style="padding:6px; border-bottom:1px solid #f0f0f0; display:flex; align-items:center; gap:8px;">
                 <button class="gantt-expander" data-action="toggle-initiative" data-id="${init.initiativeId}" aria-label="Toggle work packages">${isExpanded ? '-' : '+'}</button>
@@ -272,8 +386,15 @@ function renderGanttTable() {
             } else {
                 wpList.forEach(wp => {
                     const wpExpanded = ganttExpandedWorkPackages.has(wp.workPackageId);
+                    const wpIdNorm = normalizeGanttId(wp.workPackageId);
+                    const isFocusWp = focus.taskType === 'workPackage' && focus.taskId && wpIdNorm === focus.taskId;
+                    const wpRowClasses = [
+                        'gantt-wp-row',
+                        isFocusWp ? 'gantt-focus-row' : '',
+                        isFocusInitiative ? 'gantt-focus-initiative' : ''
+                    ].filter(Boolean).join(' ');
                     const wpRow = document.createElement('tr');
-                    wpRow.className = 'gantt-wp-row';
+                    wpRow.className = wpRowClasses;
                     const depsValue = (wp.dependencies || []).join(', ');
                     wpRow.innerHTML = `
                         <td style="padding:6px 6px 6px 32px; border-bottom:1px solid #f7f7f7;">
@@ -306,7 +427,14 @@ function renderGanttTable() {
 
                         visibleAssignments.forEach(assign => {
                             const assignRow = document.createElement('tr');
-                            assignRow.className = 'gantt-wp-assign-row';
+                            const assignTaskId = buildAssignmentTaskId(wp.workPackageId, assign.teamId);
+                            const isFocusAssign = focus.taskType === 'assignment' && focus.taskId && assignTaskId && normalizeGanttId(assignTaskId) === focus.taskId;
+                            assignRow.className = [
+                                'gantt-wp-assign-row',
+                                isFocusAssign ? 'gantt-focus-row' : '',
+                                isFocusInitiative ? 'gantt-focus-initiative' : ''
+                            ].filter(Boolean).join(' ');
+                            const depsSelector = renderAssignmentPredecessorSelector(wp, assign);
                             const sdeYears = ((assign.sdeDays || 0) / workingDaysPerYear).toFixed(2);
                             if (showManagerTeams) {
                                 assignRow.innerHTML = `
@@ -321,7 +449,7 @@ function renderGanttTable() {
                                     <td style="padding:4px; border-bottom:1px solid #fafafa;">
                                         <input type="number" step="0.01" value="${sdeYears}" data-kind="wp-assign" data-field="sdeYears" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" data-team-id="${assign.teamId || ''}" style="width:80px;">
                                     </td>
-                                    <td style="padding:4px; border-bottom:1px solid #fafafa;"></td>
+                                    <td style="padding:4px; border-bottom:1px solid #fafafa;">${depsSelector}</td>
                                     <td style="padding:4px; border-bottom:1px solid #fafafa;"></td>
                                 `;
                             } else {
@@ -336,7 +464,7 @@ function renderGanttTable() {
                                     <td style="padding:4px; border-bottom:1px solid #fafafa;">
                                         <input type="number" step="0.01" value="${sdeYears}" data-kind="wp-assign" data-field="sdeYears" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" data-team-id="${assign.teamId || ''}" style="width:80px;">
                                     </td>
-                                    <td style="padding:4px; border-bottom:1px solid #fafafa;"></td>
+                                    <td style="padding:4px; border-bottom:1px solid #fafafa;">${depsSelector}</td>
                                     <td style="padding:4px; border-bottom:1px solid #fafafa;"></td>
                                 `;
                             }
@@ -373,6 +501,7 @@ function renderGanttTable() {
 
     tbody.addEventListener('click', (e) => {
         const target = e.target;
+        captureGanttFocusFromTarget(target);
         const action = target.dataset.action;
         if (action === 'toggle-initiative') {
             const id = target.dataset.id;
@@ -442,6 +571,7 @@ function renderGanttTable() {
     });
 
     tbody.addEventListener('change', (e) => {
+        captureGanttFocusFromTarget(e.target);
         const field = e.target.dataset.field;
         const kind = e.target.dataset.kind;
         if (kind === 'initiative') {
@@ -564,6 +694,38 @@ function renderGanttTable() {
             }
             renderGanttTable();
             renderGanttChart();
+        } else if (kind === 'wp-assign-dep') {
+            const wpId = e.target.dataset.wpId;
+            const initId = e.target.dataset.initiativeId;
+            const assignId = e.target.dataset.assignId;
+            const depId = e.target.dataset.value;
+            const wp = (currentSystemData.workPackages || []).find(w => w.workPackageId === wpId);
+            if (!wp || !assignId || !depId) return;
+            const assign = getAssignmentByTaskId(wp, assignId);
+            if (!assign) return;
+            const deps = new Set((Array.isArray(assign.dependencies) ? assign.dependencies : []).map(normalizeGanttId).filter(Boolean));
+            const depNorm = normalizeGanttId(depId);
+            if (e.target.checked) {
+                if (depNorm === normalizeGanttId(assignId)) {
+                    e.target.checked = false;
+                    alert('A task cannot depend on itself.');
+                    return;
+                }
+                if (wouldCreateAssignmentCycle(wp, assignId, depId)) {
+                    e.target.checked = false;
+                    alert('Circular dependency not allowed between tasks in this work package.');
+                    return;
+                }
+                deps.add(depNorm);
+            } else {
+                deps.delete(depNorm);
+            }
+            assign.dependencies = Array.from(deps);
+            if (typeof saveSystemChanges === 'function') {
+                saveSystemChanges();
+            }
+            renderGanttTable();
+            renderGanttChart();
         } else if (kind === 'wp-dep') {
             const wpId = e.target.dataset.wpId;
             const depId = e.target.dataset.value;
@@ -671,6 +833,16 @@ function getTeamName(teamId) {
     return team ? (team.teamIdentity || team.teamName || teamId) : teamId;
 }
 
+function getAssignmentByTaskId(wp, assignTaskId) {
+    if (!wp || !assignTaskId) return null;
+    const targetNorm = normalizeGanttId(assignTaskId);
+    return (wp.impactedTeamAssignments || []).find(assign => {
+        const id = buildAssignmentTaskId(wp.workPackageId, assign.teamId);
+        if (!id) return false;
+        return normalizeGanttId(id) === targetNorm;
+    }) || null;
+}
+
 function hasWorkPackagesForInitiative(initiativeId) {
     return (currentSystemData.workPackages || []).some(wp => wp.initiativeId === initiativeId);
 }
@@ -728,6 +900,52 @@ function renderPredecessorSelector(allWorkPackages, wp) {
     return `
         <div class="gantt-predecessor-select" data-wp-id="${wp.workPackageId}">
             <button type="button" class="btn-secondary gantt-predecessor-btn" data-action="toggle-dep-menu" data-menu-id="${menuId}" data-wp-id="${wp.workPackageId}">${label}</button>
+            <div class="gantt-predecessor-menu" id="${menuId}">
+                ${items}
+            </div>
+        </div>
+    `;
+}
+
+function renderAssignmentPredecessorSelector(wp, assign) {
+    if (!wp || !assign) return '';
+    const assignments = wp.impactedTeamAssignments || [];
+    const currentId = buildAssignmentTaskId(wp.workPackageId, assign.teamId);
+    if (!currentId) return '';
+    const assignmentMap = new Map();
+    assignments.forEach(a => {
+        const id = buildAssignmentTaskId(wp.workPackageId, a.teamId);
+        if (id) assignmentMap.set(id, a);
+    });
+    const options = assignments
+        .map(a => ({ id: buildAssignmentTaskId(wp.workPackageId, a.teamId), teamId: a.teamId }))
+        .filter(opt => opt.id && normalizeGanttId(opt.id) !== normalizeGanttId(currentId));
+
+    const selected = new Set((Array.isArray(assign.dependencies) ? assign.dependencies : []).map(normalizeGanttId).filter(Boolean));
+    const selectedLabels = Array.from(selected).map(id => {
+        const found = assignmentMap.get(id);
+        if (found) {
+            return getTeamName(found.teamId) || found.teamId || id;
+        }
+        return id;
+    });
+
+    const label = selectedLabels.length ? truncateLabel(selectedLabels.join(', '), 45) : 'Select...';
+    const menuId = `assign-deps-${currentId}`;
+    const items = options.length
+        ? options.map(opt => {
+            const checked = selected.has(normalizeGanttId(opt.id)) ? 'checked' : '';
+            const text = getTeamName(opt.teamId) || opt.teamId || opt.id;
+            return `<label class="gantt-predecessor-option">
+                        <input type="checkbox" data-kind="wp-assign-dep" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" data-assign-id="${currentId}" data-value="${opt.id}" ${checked}>
+                        <span>${text}</span>
+                    </label>`;
+        }).join('')
+        : '<div class="gantt-predecessor-empty">No other tasks in this work package</div>';
+
+    return `
+        <div class="gantt-predecessor-select" data-assign-id="${currentId}">
+            <button type="button" class="btn-secondary gantt-predecessor-btn" data-action="toggle-dep-menu" data-menu-id="${menuId}" data-wp-id="${wp.workPackageId}" data-assign-id="${currentId}" data-initiative-id="${wp.initiativeId}">${label}</button>
             <div class="gantt-predecessor-menu" id="${menuId}">
                 ${items}
             </div>
@@ -1060,12 +1278,46 @@ function wouldCreateDependencyCycle(fromWpId, toWpId, workPackages) {
     return false;
 }
 
+function wouldCreateAssignmentCycle(wp, fromAssignId, toAssignId) {
+    if (!wp || !fromAssignId || !toAssignId) return false;
+    const from = normalizeGanttId(fromAssignId);
+    const to = normalizeGanttId(toAssignId);
+    if (!from || !to) return false;
+
+    const graph = new Map();
+    (wp.impactedTeamAssignments || []).forEach(assign => {
+        const id = buildAssignmentTaskId(wp.workPackageId, assign.teamId);
+        const normId = normalizeGanttId(id);
+        if (!normId) return;
+        const deps = (Array.isArray(assign.dependencies) ? assign.dependencies : []).map(normalizeGanttId).filter(Boolean);
+        graph.set(normId, new Set(deps));
+    });
+
+    if (!graph.has(from)) graph.set(from, new Set());
+    graph.get(from).add(to);
+
+    const visited = new Set();
+    const stack = [to];
+    while (stack.length) {
+        const current = stack.pop();
+        if (current === from) return true;
+        if (visited.has(current)) continue;
+        visited.add(current);
+        const neighbors = graph.get(current);
+        if (neighbors) {
+            neighbors.forEach(n => stack.push(n));
+        }
+    }
+    return false;
+}
+
 async function renderGanttChart() {
     const container = document.getElementById('ganttChartContainer');
     if (!container) return;
     if (typeof ensureWorkPackagesForInitiatives === 'function') {
         ensureWorkPackagesForInitiatives(currentSystemData, currentGanttYear);
     }
+    const focus = getGanttFocusContext();
     const selectedTeam = (currentGanttGroupBy === 'Team') ? (document.getElementById('ganttGroupValue')?.value || 'all') : null;
     const initiatives = getGanttFilteredInitiatives();
     if (!initiatives || initiatives.length === 0) {
@@ -1112,6 +1364,7 @@ async function renderGanttChart() {
         title: `Detailed Plan - ${currentGanttYear}`,
         year: currentGanttYear, // Pass year explicitly
         metaInitiativeCount: initiatives.length,
+        focus,
         onUpdate: (update) => {
             handleGanttUpdate(update);
         },
@@ -1165,9 +1418,11 @@ function handleGanttToggleFromChart(task) {
         }
     }
 
-    lastGanttFocusTaskId = task.id || null;
-    lastGanttFocusTaskType = task.type || null;
-    lastGanttFocusInitiativeId = task.initiativeId || null;
+    setLastGanttFocus({
+        taskId: task.id || null,
+        taskType: task.type || null,
+        initiativeId: task.initiativeId || null
+    });
 
     // Re-render table and chart to reflect toggles
     renderGanttTable();
@@ -1176,9 +1431,12 @@ function handleGanttToggleFromChart(task) {
 
 function scrollToGanttFocusTask() {
     if (!lastGanttFocusTaskId) return;
+    const focusId = normalizeGanttId(lastGanttFocusTaskId);
+    if (!focusId) return;
     const container = document.getElementById('ganttChartContainer');
     if (!container) return;
-    const target = container.querySelector(`.bar-wrapper[data-id="${lastGanttFocusTaskId}"]`);
+    const target = Array.from(container.querySelectorAll('.bar-wrapper'))
+        .find(el => normalizeGanttId(el.getAttribute('data-id')) === focusId);
     if (target) {
         target.scrollIntoView({ block: 'center', behavior: 'instant' });
     }
@@ -1186,16 +1444,25 @@ function scrollToGanttFocusTask() {
 
 function scrollToGanttTableFocus() {
     if (!lastGanttFocusTaskId) return;
+    const focusId = normalizeGanttId(lastGanttFocusTaskId);
+    if (!focusId) return;
     const wrapper = document.querySelector('#ganttPlanningTableContainer .gantt-table-wrapper');
     if (!wrapper) return;
 
     let selector = '';
     if (lastGanttFocusTaskType === 'initiative') {
-        selector = `.gantt-expander[data-action="toggle-initiative"][data-id="${lastGanttFocusTaskId}"]`;
+        const candidates = wrapper.querySelectorAll('.gantt-expander[data-action="toggle-initiative"]');
+        const match = Array.from(candidates).find(el => normalizeGanttId(el.dataset.id) === focusId);
+        if (match) selector = `[data-action="toggle-initiative"][data-id="${match.dataset.id}"]`;
     } else if (lastGanttFocusTaskType === 'workPackage') {
-        selector = `.gantt-expander[data-action="toggle-wp"][data-wp-id="${lastGanttFocusTaskId}"]`;
+        const candidates = wrapper.querySelectorAll('.gantt-expander[data-action="toggle-wp"]');
+        const match = Array.from(candidates).find(el => normalizeGanttId(el.dataset.wpId) === focusId);
+        if (match) selector = `[data-action="toggle-wp"][data-wp-id="${match.dataset.wpId}"]`;
     } else if (lastGanttFocusTaskType === 'assignment' && lastGanttFocusInitiativeId) {
-        selector = `.gantt-expander[data-action="toggle-initiative"][data-id="${lastGanttFocusInitiativeId}"]`;
+        const initiativeCandidates = wrapper.querySelectorAll('.gantt-expander[data-action="toggle-initiative"]');
+        const targetInit = normalizeGanttId(lastGanttFocusInitiativeId);
+        const match = Array.from(initiativeCandidates).find(el => normalizeGanttId(el.dataset.id) === targetInit);
+        if (match) selector = `[data-action="toggle-initiative"][data-id="${match.dataset.id}"]`;
     }
 
     if (!selector) return;
@@ -1207,6 +1474,14 @@ function scrollToGanttTableFocus() {
 
 function handleGanttUpdate({ task, start, end }) {
     console.log('[GANTT] Update received:', task, start, end);
+
+    if (task) {
+        setLastGanttFocus({
+            taskId: task.id || task.workPackageId || task.initiativeId || null,
+            taskType: task.type || null,
+            initiativeId: task.initiativeId || null
+        });
+    }
 
     if (task.type === 'initiative') {
         const initId = task.initiativeId;

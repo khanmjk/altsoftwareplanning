@@ -81,6 +81,9 @@
 }
 
 .gantt-table thead th {
+    height: 57px;
+    padding: 12px 8px 10px 8px;
+    line-height: 16px;    
     position: sticky;
     top: 0;
     background: #fff;
@@ -107,6 +110,21 @@
 
 .gantt-table tbody tr:hover {
     background-color: #f7f7f7;
+}
+
+.gantt-table .gantt-focus-initiative {
+    background: linear-gradient(90deg, #eef3ff 0%, #f7faff 100%);
+    box-shadow: inset 3px 0 0 #5b8def;
+}
+
+.gantt-table .gantt-focus-row {
+    background: linear-gradient(90deg, #e8f1ff 0%, #f2f7ff 100%);
+    box-shadow: inset 3px 0 0 #2f6fed;
+}
+
+.gantt-table .gantt-focus-row input,
+.gantt-table .gantt-focus-row select {
+    background-color: #fff;
 }
 
 .gantt-table input,
@@ -136,6 +154,58 @@
 
 .gantt .bar-wrapper.locked-task .bar-label {
     cursor: not-allowed;
+}
+
+.gantt .bar-wrapper.focus-initiative .bar,
+.gantt .bar-wrapper.focus-initiative .bar-progress {
+    stroke: #7a9cff;
+    stroke-width: 2px;
+    opacity: 0.35;
+}
+
+.gantt .bar-wrapper.focus-initiative .bar-label {
+    fill: #234db9;
+    font-weight: 700;
+}
+
+.gantt .bar-wrapper.focus-row .bar,
+.gantt .bar-wrapper.focus-row .bar-progress {
+    stroke: #ff9800;
+    stroke-width: 2.5px;
+    opacity: 0.45;
+}
+
+.gantt .bar-wrapper.focus-row .bar-label {
+    fill: #c56200;
+    font-weight: 700;
+}
+
+.gantt .arrow {
+    stroke: #6b7ea4;
+    stroke-width: 1.2px;
+    stroke-dasharray: 5 4;
+    opacity: 0.6;
+    fill: none;
+}
+
+.gantt .arrow-head {
+    fill: #6b7ea4;
+    opacity: 0.65;
+}
+
+.soft-dep-badge {
+    position: absolute;
+    transform: translate(-50%, -100%);
+    background: #f5f7ff;
+    color: #2f3f68;
+    border: 1px solid #cfd7f2;
+    border-radius: 10px;
+    padding: 4px 8px;
+    font-size: 11px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 10;
 }
 
 

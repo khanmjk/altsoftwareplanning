@@ -11,6 +11,9 @@
         const yearVal = year || new Date().getFullYear();
         const defaultStart = `${yearVal}-01-15`;
         const defaultEnd = `${yearVal}-11-01`;
+        const workingDaysPerYear = (typeof getWorkingDaysPerYear === 'function')
+            ? getWorkingDaysPerYear()
+            : (currentSystemData?.capacityConfiguration?.workingDaysPerYear || 261);
         const teamMap = new Map((currentSystemData?.teams || []).map(t => [t.teamId, t]));
         const goalMap = new Map((currentSystemData?.goals || []).map(g => [g.goalId, g]));
         const themeMap = new Map((currentSystemData?.definedThemes || []).map(t => [t.themeId, t]));
@@ -38,13 +41,17 @@
             const hasWorkPackages = wpList.length > 0;
 
             // Level 1: Initiative Summary (Always Render)
-            const initStart = init.attributes?.startDate || defaultStart;
-            const initEnd = init.targetDueDate || defaultEnd;
+            const initDates = (typeof getComputedInitiativeDates === 'function')
+                ? getComputedInitiativeDates(init, selectedTeam)
+                : { startDate: init.attributes?.startDate || defaultStart, endDate: init.targetDueDate || defaultEnd };
+            const initStart = initDates.startDate || defaultStart;
+            const initEnd = initDates.endDate || defaultEnd;
+            const initiativeLabel = buildInitiativeLabel(init, initEnd);
             tasks.push({
                 id: sanitizeId(init.initiativeId),
                 title: init.title || 'Initiative Summary',
                 group: groupLabel,
-                label: init.title || 'Initiative',
+                label: initiativeLabel,
                 start: initStart,
                 end: initEnd,
                 status: init.status || 'active',
@@ -74,7 +81,10 @@
                         teamMap,
                         goalMap,
                         themeMap,
-                        selectedTeam
+                        selectedTeam,
+                        spanEnd: span.endDate,
+                        defaultEnd,
+                        workingDaysPerYear
                     });
 
                     // Indent WP Label
@@ -108,8 +118,9 @@
                         relevantAssignments.forEach(assign => {
                             const t = teamMap.get(assign.teamId);
                             const teamName = t ? (t.teamIdentity || t.teamName || assign.teamId) : assign.teamId;
+                            const assignLabelCore = buildAssignmentLabel(assign, wp, workingDaysPerYear);
                             // Double Indent Assignment Label
-                            const assignLabel = `\u00A0\u00A0\u00A0\u00A0${teamName}`; // 4 non-breaking spaces
+                            const assignLabel = `\u00A0\u00A0\u00A0\u00A0${assignLabelCore}`; // 4 non-breaking spaces
 
                             tasks.push({
                                 id: sanitizeId(`${wp.workPackageId}-${assign.teamId}`),
@@ -120,7 +131,12 @@
                                 end: assign.endDate || wp.endDate || defaultEnd,
                                 status: wp.status || 'active',
                                 type: 'assignment',
-                                dependencies: (wp.dependencies || []).map(sanitizeId).join(','),
+                                dependencies: (() => {
+                                    const assignmentDeps = Array.isArray(assign.dependencies) && assign.dependencies.length
+                                        ? assign.dependencies
+                                        : (wp.dependencies || []);
+                                    return (assignmentDeps || []).map(sanitizeId).join(',');
+                                })(),
                                 // Metadata for updates
                                 initiativeId: init.initiativeId,
                                 workPackageId: wp.workPackageId,
@@ -135,6 +151,21 @@
     }
 
     // Removed createTaskForWorkPackage helper as logic is now inline for indentation control
+
+    function buildInitiativeLabel(init, endDate) {
+        const title = init.title || 'Initiative';
+        const rawSde = (typeof computeSdeEstimate === 'function')
+            ? parseFloat(computeSdeEstimate(init))
+            : null;
+        const hasSde = Number.isFinite(rawSde);
+        const sdeText = hasSde ? String(rawSde) : '';
+        const dateText = formatShortDate(endDate);
+
+        if (sdeText) {
+            return `${title} (${sdeText} SDE Yrs | ${dateText})`;
+        }
+        return `${title} (${dateText})`;
+    }
 
 
     function computeWorkPackageSpan(wp, init, selectedTeam, defaultStart, defaultEnd) {
@@ -172,7 +203,7 @@
         return truncateText(init.initiativeId ? `${base} (${init.initiativeId})` : base, 65);
     }
 
-    function buildWorkPackageLabel({ init, wp, viewBy, teamMap, goalMap, themeMap, selectedTeam }) {
+    function buildWorkPackageLabel({ init, wp, viewBy, teamMap, goalMap, themeMap, selectedTeam, spanEnd, defaultEnd, workingDaysPerYear }) {
         const baseTitle = wp.title || 'Phase';
 
         let breakdownStr = '';
@@ -186,7 +217,7 @@
                 const identity = t ? (t.teamIdentity || t.teamName || a.teamId) : a.teamId;
 
                 const days = a.sdeDays || 0;
-                const years = days / 261;
+                const years = workingDaysPerYear ? (days / workingDaysPerYear) : 0;
 
                 let valStr = '';
                 if (years >= 0.1) {
@@ -202,6 +233,14 @@
             }
         }
 
+        // Roll up SDE for the visible WP slice
+        const totalSdeYears = computeWpSdeYears(wp, workingDaysPerYear, selectedTeam);
+        const infoBits = [];
+        if (Number.isFinite(totalSdeYears)) infoBits.push(`${formatSdeYears(totalSdeYears)} SDE Yrs`);
+        const endText = formatShortDate(spanEnd || wp.endDate || init.targetDueDate || defaultEnd);
+        if (endText) infoBits.push(endText);
+        const info = infoBits.length ? ` (${infoBits.join(' | ')})` : '';
+
         let finalLabel = baseTitle;
 
         if (viewBy !== 'All Initiatives' && viewBy !== 'Team') {
@@ -210,7 +249,71 @@
             finalLabel = init.title;
         }
 
-        return finalLabel + breakdownStr;
+        return finalLabel + info + breakdownStr;
+    }
+
+    function buildAssignmentLabel(assign, wp, workingDaysPerYear) {
+        const teamName = (() => {
+            const t = (currentSystemData?.teams || []).find(team => team.teamId === assign.teamId);
+            return t ? (t.teamIdentity || t.teamName || assign.teamId) : assign.teamId;
+        })();
+        const sdeYears = (assign.sdeYears !== undefined && assign.sdeYears !== null)
+            ? parseFloat(assign.sdeYears)
+            : ((assign.sdeDays || 0) / (workingDaysPerYear || 261));
+        const infoBits = [];
+        if (Number.isFinite(sdeYears)) infoBits.push(`${formatSdeYears(sdeYears)} SDE Yrs`);
+        const endText = formatShortDate(assign.endDate || wp.endDate || wp.targetDueDate);
+        if (endText) infoBits.push(endText);
+        if (infoBits.length === 0) return teamName;
+        return `${teamName} (${infoBits.join(' | ')})`;
+    }
+
+    function computeWpSdeYears(wp, workingDaysPerYear, selectedTeam = null) {
+        const assignments = wp?.impactedTeamAssignments || [];
+        const filtered = (selectedTeam && selectedTeam !== 'all')
+            ? assignments.filter(a => a.teamId === selectedTeam)
+            : assignments;
+        if (filtered.length === 0 && assignments.length > 0) return NaN;
+        const totalDays = filtered.reduce((sum, a) => {
+            if (a.sdeYears !== undefined && a.sdeYears !== null) {
+                const yrs = parseFloat(a.sdeYears);
+                return sum + (isFinite(yrs) ? yrs * (workingDaysPerYear || 261) : 0);
+            }
+            return sum + (a.sdeDays || 0);
+        }, 0);
+        const divisor = workingDaysPerYear || 261;
+        return divisor > 0 ? totalDays / divisor : NaN;
+    }
+
+    function formatShortDate(dateStr) {
+        if (!dateStr || typeof dateStr !== 'string') return 'TBD';
+        const normalized = dateStr.replace(/\//g, '-');
+        const parts = normalized.split('-');
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+        if (parts.length === 3) {
+            const [year, month, day] = parts;
+            const mIdx = parseInt(month, 10) - 1;
+            const dVal = parseInt(day, 10);
+            if (year.length === 4 && mIdx >= 0 && mIdx < 12 && isFinite(dVal)) {
+                return `${String(dVal).padStart(2, '0')}-${months[mIdx]}`;
+            }
+        }
+
+        const parsed = new Date(dateStr);
+        if (!isNaN(parsed)) {
+            const dVal = parsed.getUTCDate();
+            const mIdx = parsed.getUTCMonth();
+            return `${String(dVal).padStart(2, '0')}-${months[mIdx]}`;
+        }
+
+        return 'TBD';
+    }
+
+    function formatSdeYears(years) {
+        if (!Number.isFinite(years)) return '';
+        const rounded = Number(years.toFixed(2));
+        return rounded.toString();
     }
 
     function sanitizeId(id) {
