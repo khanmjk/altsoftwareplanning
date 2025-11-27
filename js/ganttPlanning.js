@@ -16,6 +16,89 @@ let lastGanttFocusTaskId = null;
 let lastGanttFocusTaskType = null;
 let lastGanttFocusInitiativeId = null;
 
+function normalizeGanttId(value) {
+    return (value || '')
+        .toString()
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9_-]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+}
+
+function buildAssignmentTaskId(wpId, teamId) {
+    if (!wpId || !teamId) return null;
+    return normalizeGanttId(`${wpId}-${teamId}`);
+}
+
+function setLastGanttFocus({ taskId, taskType, initiativeId }) {
+    if (!taskId) return;
+    lastGanttFocusTaskId = normalizeGanttId(taskId);
+    lastGanttFocusTaskType = taskType || null;
+    lastGanttFocusInitiativeId = initiativeId ? normalizeGanttId(initiativeId) : null;
+}
+
+function captureGanttFocusFromTarget(target) {
+    if (!target || !target.dataset) return;
+    const { action, kind } = target.dataset;
+
+    if (kind === 'wp-assign') {
+        const wpId = target.dataset.wpId;
+        const teamId = target.dataset.teamId;
+        const initiativeId = target.dataset.initiativeId;
+        const taskId = buildAssignmentTaskId(wpId, teamId);
+        if (taskId) {
+            setLastGanttFocus({ taskId, taskType: 'assignment', initiativeId });
+        }
+        return;
+    }
+
+    if (kind === 'work-package' || action === 'toggle-wp' || action === 'toggle-other-teams') {
+        const wpId = target.dataset.wpId;
+        const initiativeId = target.dataset.initiativeId;
+        if (wpId) {
+            setLastGanttFocus({ taskId: wpId, taskType: 'workPackage', initiativeId });
+        }
+        return;
+    }
+
+    if (kind === 'initiative' || action === 'toggle-initiative' || action === 'add-wp' || action === 'delete-wp') {
+        const id = target.dataset.id || target.dataset.initiativeId;
+        if (id) {
+            setLastGanttFocus({ taskId: id, taskType: 'initiative', initiativeId: id });
+        }
+        return;
+    }
+
+    if (kind === 'wp-dep') {
+        const wpId = target.dataset.wpId;
+        const initiativeId = target.dataset.initiativeId;
+        if (wpId) {
+            setLastGanttFocus({ taskId: wpId, taskType: 'workPackage', initiativeId });
+        }
+        return;
+    }
+
+    if (kind === 'init-dep') {
+        const initId = target.dataset.initId;
+        if (initId) {
+            setLastGanttFocus({ taskId: initId, taskType: 'initiative', initiativeId: initId });
+        }
+        return;
+    }
+
+    if (action === 'toggle-dep-menu') {
+        const wpId = target.dataset.wpId;
+        const initId = target.dataset.initId;
+        if (wpId) {
+            setLastGanttFocus({ taskId: wpId, taskType: 'workPackage', initiativeId: initId });
+            return;
+        }
+        if (initId) {
+            setLastGanttFocus({ taskId: initId, taskType: 'initiative', initiativeId: initId });
+        }
+    }
+}
+
 function initializeGanttPlanningView() {
     const container = document.getElementById('ganttPlanningView');
     if (!container) return;
@@ -373,6 +456,7 @@ function renderGanttTable() {
 
     tbody.addEventListener('click', (e) => {
         const target = e.target;
+        captureGanttFocusFromTarget(target);
         const action = target.dataset.action;
         if (action === 'toggle-initiative') {
             const id = target.dataset.id;
@@ -442,6 +526,7 @@ function renderGanttTable() {
     });
 
     tbody.addEventListener('change', (e) => {
+        captureGanttFocusFromTarget(e.target);
         const field = e.target.dataset.field;
         const kind = e.target.dataset.kind;
         if (kind === 'initiative') {
@@ -1165,9 +1250,11 @@ function handleGanttToggleFromChart(task) {
         }
     }
 
-    lastGanttFocusTaskId = task.id || null;
-    lastGanttFocusTaskType = task.type || null;
-    lastGanttFocusInitiativeId = task.initiativeId || null;
+    setLastGanttFocus({
+        taskId: task.id || null,
+        taskType: task.type || null,
+        initiativeId: task.initiativeId || null
+    });
 
     // Re-render table and chart to reflect toggles
     renderGanttTable();
@@ -1176,9 +1263,12 @@ function handleGanttToggleFromChart(task) {
 
 function scrollToGanttFocusTask() {
     if (!lastGanttFocusTaskId) return;
+    const focusId = normalizeGanttId(lastGanttFocusTaskId);
+    if (!focusId) return;
     const container = document.getElementById('ganttChartContainer');
     if (!container) return;
-    const target = container.querySelector(`.bar-wrapper[data-id="${lastGanttFocusTaskId}"]`);
+    const target = Array.from(container.querySelectorAll('.bar-wrapper'))
+        .find(el => normalizeGanttId(el.getAttribute('data-id')) === focusId);
     if (target) {
         target.scrollIntoView({ block: 'center', behavior: 'instant' });
     }
@@ -1186,16 +1276,25 @@ function scrollToGanttFocusTask() {
 
 function scrollToGanttTableFocus() {
     if (!lastGanttFocusTaskId) return;
+    const focusId = normalizeGanttId(lastGanttFocusTaskId);
+    if (!focusId) return;
     const wrapper = document.querySelector('#ganttPlanningTableContainer .gantt-table-wrapper');
     if (!wrapper) return;
 
     let selector = '';
     if (lastGanttFocusTaskType === 'initiative') {
-        selector = `.gantt-expander[data-action="toggle-initiative"][data-id="${lastGanttFocusTaskId}"]`;
+        const candidates = wrapper.querySelectorAll('.gantt-expander[data-action="toggle-initiative"]');
+        const match = Array.from(candidates).find(el => normalizeGanttId(el.dataset.id) === focusId);
+        if (match) selector = `[data-action="toggle-initiative"][data-id="${match.dataset.id}"]`;
     } else if (lastGanttFocusTaskType === 'workPackage') {
-        selector = `.gantt-expander[data-action="toggle-wp"][data-wp-id="${lastGanttFocusTaskId}"]`;
+        const candidates = wrapper.querySelectorAll('.gantt-expander[data-action="toggle-wp"]');
+        const match = Array.from(candidates).find(el => normalizeGanttId(el.dataset.wpId) === focusId);
+        if (match) selector = `[data-action="toggle-wp"][data-wp-id="${match.dataset.wpId}"]`;
     } else if (lastGanttFocusTaskType === 'assignment' && lastGanttFocusInitiativeId) {
-        selector = `.gantt-expander[data-action="toggle-initiative"][data-id="${lastGanttFocusInitiativeId}"]`;
+        const initiativeCandidates = wrapper.querySelectorAll('.gantt-expander[data-action="toggle-initiative"]');
+        const targetInit = normalizeGanttId(lastGanttFocusInitiativeId);
+        const match = Array.from(initiativeCandidates).find(el => normalizeGanttId(el.dataset.id) === targetInit);
+        if (match) selector = `[data-action="toggle-initiative"][data-id="${match.dataset.id}"]`;
     }
 
     if (!selector) return;
@@ -1207,6 +1306,14 @@ function scrollToGanttTableFocus() {
 
 function handleGanttUpdate({ task, start, end }) {
     console.log('[GANTT] Update received:', task, start, end);
+
+    if (task) {
+        setLastGanttFocus({
+            taskId: task.id || task.workPackageId || task.initiativeId || null,
+            taskType: task.type || null,
+            initiativeId: task.initiativeId || null
+        });
+    }
 
     if (task.type === 'initiative') {
         const initId = task.initiativeId;
