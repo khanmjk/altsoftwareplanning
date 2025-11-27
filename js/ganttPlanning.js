@@ -16,6 +16,14 @@ let lastGanttFocusTaskId = null;
 let lastGanttFocusTaskType = null;
 let lastGanttFocusInitiativeId = null;
 
+function getGanttFocusContext() {
+    return {
+        taskId: lastGanttFocusTaskId ? normalizeGanttId(lastGanttFocusTaskId) : null,
+        taskType: lastGanttFocusTaskType || null,
+        initiativeId: lastGanttFocusInitiativeId ? normalizeGanttId(lastGanttFocusInitiativeId) : null
+    };
+}
+
 function normalizeGanttId(value) {
     return (value || '')
         .toString()
@@ -274,6 +282,7 @@ function renderGanttTable() {
     if (typeof ensureWorkPackagesForInitiatives === 'function') {
         ensureWorkPackagesForInitiatives(currentSystemData, currentGanttYear);
     }
+    const focus = getGanttFocusContext();
     const selectedTeam = (currentGanttGroupBy === 'Team') ? (document.getElementById('ganttGroupValue')?.value || 'all') : null;
     const showManagerTeams = currentGanttGroupBy === 'Manager' && (document.getElementById('ganttManagerFilter')?.value || 'all') !== 'all';
     const initiativeMap = new Map();
@@ -324,8 +333,15 @@ function renderGanttTable() {
     data.forEach(init => {
         const isExpanded = ganttExpandedInitiatives.has(init.initiativeId);
         const hasWorkPackages = hasWorkPackagesForInitiative(init.initiativeId);
+        const initIdNorm = normalizeGanttId(init.initiativeId);
+        const isFocusInitiative = focus.initiativeId && initIdNorm === focus.initiativeId;
+        const isFocusRow = focus.taskType === 'initiative' && focus.taskId && initIdNorm === focus.taskId;
         const tr = document.createElement('tr');
-        tr.className = 'gantt-init-row';
+        tr.className = [
+            'gantt-init-row',
+            isFocusInitiative ? 'gantt-focus-initiative' : '',
+            isFocusRow ? 'gantt-focus-row' : ''
+        ].filter(Boolean).join(' ');
         tr.innerHTML = `
             <td style="padding:6px; border-bottom:1px solid #f0f0f0; display:flex; align-items:center; gap:8px;">
                 <button class="gantt-expander" data-action="toggle-initiative" data-id="${init.initiativeId}" aria-label="Toggle work packages">${isExpanded ? '-' : '+'}</button>
@@ -355,8 +371,15 @@ function renderGanttTable() {
             } else {
                 wpList.forEach(wp => {
                     const wpExpanded = ganttExpandedWorkPackages.has(wp.workPackageId);
+                    const wpIdNorm = normalizeGanttId(wp.workPackageId);
+                    const isFocusWp = focus.taskType === 'workPackage' && focus.taskId && wpIdNorm === focus.taskId;
+                    const wpRowClasses = [
+                        'gantt-wp-row',
+                        isFocusWp ? 'gantt-focus-row' : '',
+                        isFocusInitiative ? 'gantt-focus-initiative' : ''
+                    ].filter(Boolean).join(' ');
                     const wpRow = document.createElement('tr');
-                    wpRow.className = 'gantt-wp-row';
+                    wpRow.className = wpRowClasses;
                     const depsValue = (wp.dependencies || []).join(', ');
                     wpRow.innerHTML = `
                         <td style="padding:6px 6px 6px 32px; border-bottom:1px solid #f7f7f7;">
@@ -389,7 +412,13 @@ function renderGanttTable() {
 
                         visibleAssignments.forEach(assign => {
                             const assignRow = document.createElement('tr');
-                            assignRow.className = 'gantt-wp-assign-row';
+                            const assignTaskId = buildAssignmentTaskId(wp.workPackageId, assign.teamId);
+                            const isFocusAssign = focus.taskType === 'assignment' && focus.taskId && assignTaskId && normalizeGanttId(assignTaskId) === focus.taskId;
+                            assignRow.className = [
+                                'gantt-wp-assign-row',
+                                isFocusAssign ? 'gantt-focus-row' : '',
+                                isFocusInitiative ? 'gantt-focus-initiative' : ''
+                            ].filter(Boolean).join(' ');
                             const sdeYears = ((assign.sdeDays || 0) / workingDaysPerYear).toFixed(2);
                             if (showManagerTeams) {
                                 assignRow.innerHTML = `
@@ -1151,6 +1180,7 @@ async function renderGanttChart() {
     if (typeof ensureWorkPackagesForInitiatives === 'function') {
         ensureWorkPackagesForInitiatives(currentSystemData, currentGanttYear);
     }
+    const focus = getGanttFocusContext();
     const selectedTeam = (currentGanttGroupBy === 'Team') ? (document.getElementById('ganttGroupValue')?.value || 'all') : null;
     const initiatives = getGanttFilteredInitiatives();
     if (!initiatives || initiatives.length === 0) {
@@ -1197,6 +1227,7 @@ async function renderGanttChart() {
         title: `Detailed Plan - ${currentGanttYear}`,
         year: currentGanttYear, // Pass year explicitly
         metaInitiativeCount: initiatives.length,
+        focus,
         onUpdate: (update) => {
             handleGanttUpdate(update);
         },

@@ -125,6 +125,7 @@ class FrappeGanttRenderer extends GanttRenderer {
             this._applyCustomStyles(tasks);
             this._resizeForTasks(wrapper, frappeTasks, options);
             this._markLockedBars(wrapper, frappeTasks);
+            this._applyFocusStyles(wrapper, frappeTasks, options.focus);
 
             // Attach double-click handling to support expand/collapse sync with table
             this._bindDoubleClick(wrapper, frappeTasks, options);
@@ -252,6 +253,15 @@ class FrappeGanttRenderer extends GanttRenderer {
         });
     }
 
+    _normalizeId(value) {
+        return (value || '')
+            .toString()
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9_-]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+    }
+
     _transformTasks(tasks) {
         return tasks.map(task => {
             const start = (task.start || '').replace(/\//g, '-');
@@ -300,6 +310,33 @@ class FrappeGanttRenderer extends GanttRenderer {
                 type: task.type,
                 status: task.status
             };
+        });
+    }
+
+    _applyFocusStyles(wrapper, tasks, focus = {}) {
+        if (!wrapper || !Array.isArray(tasks)) return;
+        const focusTaskId = this._normalizeId(focus?.taskId);
+        const focusInitiativeId = this._normalizeId(focus?.initiativeId);
+        const focusType = focus?.taskType || null;
+
+        const taskMap = new Map((tasks || []).map(t => [this._normalizeId(t.id), t]));
+        const bars = wrapper.querySelectorAll('.bar-wrapper');
+        bars.forEach(bar => {
+            bar.classList.remove('focus-initiative', 'focus-row');
+            const idNorm = this._normalizeId(bar.getAttribute('data-id'));
+            if (!idNorm) return;
+            const task = taskMap.get(idNorm);
+            const taskInit = this._normalizeId(task?.initiativeId);
+
+            if (focusInitiativeId && taskInit && taskInit === focusInitiativeId) {
+                bar.classList.add('focus-initiative');
+            }
+
+            const isExactFocus = focusTaskId && idNorm === focusTaskId;
+            const isInitFocus = focusType === 'initiative' && focusInitiativeId && idNorm === focusInitiativeId;
+            if (isExactFocus || isInitFocus) {
+                bar.classList.add('focus-row');
+            }
         });
     }
 
