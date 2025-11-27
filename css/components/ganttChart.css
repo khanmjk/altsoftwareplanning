@@ -193,6 +193,21 @@
     opacity: 0.65;
 }
 
+.soft-dep-badge {
+    position: absolute;
+    transform: translate(-50%, -100%);
+    background: #f5f7ff;
+    color: #2f3f68;
+    border: 1px solid #cfd7f2;
+    border-radius: 10px;
+    padding: 4px 8px;
+    font-size: 11px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 10;
+}
+
 
 .gantt-status-bar {
     margin-top: 10px;

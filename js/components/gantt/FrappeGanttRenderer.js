@@ -43,6 +43,8 @@ class FrappeGanttRenderer extends GanttRenderer {
         this.container.appendChild(wrapper);
 
         const frappeTasks = this._transformTasks(clampedTasks || []);
+        this._taskLabelMap = this._buildTaskLabelMap(frappeTasks);
+        this._dependencyTextMap = this._buildDependencyTextMap(frappeTasks);
 
         try {
             // Calculate date range based on options.year
@@ -314,6 +316,50 @@ class FrappeGanttRenderer extends GanttRenderer {
         });
     }
 
+    _buildTaskLabelMap(tasks) {
+        const map = new Map();
+        (tasks || []).forEach(t => {
+            const normId = this._normalizeId(t.id);
+            if (!normId) return;
+            map.set(normId, this._friendlyTaskLabel(t));
+        });
+        return map;
+    }
+
+    _buildDependencyTextMap(tasks) {
+        const map = new Map();
+        const labelMap = this._taskLabelMap || new Map();
+        (tasks || []).forEach(toTask => {
+            const toId = this._normalizeId(toTask.id);
+            if (!toId || !toTask.dependencies) return;
+            const deps = toTask.dependencies.split(',').map(s => this._normalizeId(s)).filter(Boolean);
+            deps.forEach(fromId => {
+                const key = `${toId}|${fromId}`;
+                if (map.has(key)) return;
+                const toLabel = labelMap.get(toId) || toTask.name || toTask.title || toId;
+                const fromLabel = labelMap.get(fromId) || fromId;
+                const text = `${toLabel} depends on ${fromLabel}`;
+                map.set(key, text);
+            });
+        });
+        return map;
+    }
+
+    _friendlyTaskLabel(task) {
+        if (!task) return '';
+        const base = task.displayLabel || task.originalLabel || task.name || task.title || task.id;
+        if (task.type === 'assignment') {
+            return base || (task.teamId ? `Team ${task.teamId}` : 'Assignment');
+        }
+        if (task.type === 'workPackage') {
+            return base || 'Work Package';
+        }
+        if (task.type === 'initiative') {
+            return base || 'Initiative';
+        }
+        return base;
+    }
+
     _applyFocusStyles(wrapper, tasks, focus = {}) {
         if (!wrapper || !Array.isArray(tasks)) return;
         const focusTaskId = this._normalizeId(focus?.taskId);
@@ -453,22 +499,140 @@ class FrappeGanttRenderer extends GanttRenderer {
 
     _styleDependencies(wrapper) {
         if (!wrapper) return;
-        const arrows = wrapper.querySelectorAll('.arrow');
-        arrows.forEach(arrow => {
-            arrow.style.stroke = '#6b7ea4';
-            arrow.style.strokeWidth = '1.2px';
-            arrow.style.strokeDasharray = '5 4';
-            arrow.style.opacity = '0.6';
-            arrow.style.fill = 'none';
-            if (!arrow.getAttribute('title')) {
-                arrow.setAttribute('title', 'Soft dependency (informational)');
-            }
+        const arrowHeadColor = '#6b7ea4';
+        const arrowRecords = (this.gantt && Array.isArray(this.gantt.arrows)) ? this.gantt.arrows : [];
+
+        // Style and annotate from the source of truth (gantt.arrows)
+        arrowRecords.forEach(rec => {
+            const el = rec?.element;
+            if (!el) return;
+            const path = el.tagName?.toLowerCase() === 'path' ? el : el.querySelector('path') || el;
+            const targetEl = path;
+
+            // Apply visual styling
+            targetEl.style.stroke = arrowHeadColor;
+            targetEl.style.strokeWidth = '1.2px';
+            targetEl.style.strokeDasharray = '5 4';
+            targetEl.style.opacity = '0.6';
+            targetEl.style.fill = 'none';
+            targetEl.style.cursor = 'help';
+
+            // Seed ids/labels from record
+            const fromId = rec.from_task?.id ? this._normalizeId(rec.from_task.id) : null;
+            const toId = rec.to_task?.id ? this._normalizeId(rec.to_task.id) : null;
+            if (fromId) targetEl.dataset.fromId = fromId;
+            if (toId) targetEl.dataset.toId = toId;
+            if (rec.from_task?.name) targetEl.dataset.fromLabel = rec.from_task.name;
+            if (rec.to_task?.name) targetEl.dataset.toLabel = rec.to_task.name;
+
+            // Also honor any data-from/data-to set by Frappe
+            const dataFrom = targetEl.dataset.from || targetEl.getAttribute('data-from');
+            const dataTo = targetEl.dataset.to || targetEl.getAttribute('data-to');
+            if (dataFrom) targetEl.dataset.fromId = this._normalizeId(dataFrom);
+            if (dataTo) targetEl.dataset.toId = this._normalizeId(dataTo);
+
+            // Attach human labels and description
+            this._populateArrowLabels(wrapper, targetEl);
+            const desc = this._formatDependencyText(wrapper, targetEl);
+            targetEl.setAttribute('title', desc);
+
+            const showBadge = (e) => this._showSoftBadge(wrapper, targetEl, e);
+            const hideBadge = () => this._hideSoftBadge(wrapper);
+            targetEl.addEventListener('mouseenter', showBadge);
+            targetEl.addEventListener('mouseleave', hideBadge);
         });
+
+        // Style any arrow heads present
         const heads = wrapper.querySelectorAll('.arrow-head');
         heads.forEach(head => {
-            head.style.fill = '#6b7ea4';
+            head.style.fill = arrowHeadColor;
             head.style.opacity = '0.65';
         });
+    }
+
+    _showSoftBadge(wrapper, arrowEl, evt) {
+        this._hideSoftBadge(wrapper);
+        const badge = document.createElement('div');
+        badge.className = 'soft-dep-badge';
+
+        const detailText = this._formatDependencyText(wrapper, arrowEl);
+        const badgeText = `Soft: ${detailText}`;
+        badge.textContent = badgeText;
+
+        const arrowBox = arrowEl.getBoundingClientRect();
+        const wrapperBox = wrapper.getBoundingClientRect();
+        const top = arrowBox.top - wrapperBox.top - 8; // slightly above arrow
+        const left = arrowBox.left - wrapperBox.left + (arrowBox.width / 2);
+        badge.style.top = `${top}px`;
+        badge.style.left = `${left}px`;
+
+        // Attach and keep reference for cleanup
+        wrapper.appendChild(badge);
+        this._softBadge = badge;
+    }
+
+    _populateArrowLabels(wrapper, arrowEl) {
+        if (!arrowEl) return;
+        const fromId = this._normalizeId(arrowEl.dataset.fromId || arrowEl.dataset.from || arrowEl.getAttribute('data-from'));
+        const toId = this._normalizeId(arrowEl.dataset.toId || arrowEl.dataset.to || arrowEl.getAttribute('data-to'));
+
+        const lookupLabel = (id) => this._lookupTaskLabel(wrapper, id);
+        const fromLabel = arrowEl.dataset.fromLabel || lookupLabel(fromId);
+        const toLabel = arrowEl.dataset.toLabel || lookupLabel(toId);
+
+        if (fromLabel) arrowEl.dataset.fromLabel = fromLabel;
+        if (toLabel) arrowEl.dataset.toLabel = toLabel;
+    }
+
+    _lookupTaskLabel(wrapper, normId) {
+        if (!normId) return null;
+        const id = this._normalizeId(normId);
+        if (!id) return null;
+        if (this._taskLabelMap && this._taskLabelMap.has(id)) {
+            return this._taskLabelMap.get(id);
+        }
+        // Fallback: query rendered bar label text
+        const match = Array.from(wrapper.querySelectorAll('.bar-wrapper[data-id]')).find(bw => this._normalizeId(bw.getAttribute('data-id')) === id);
+        if (match) {
+            const lbl = match.querySelector('.bar-label');
+            if (lbl && lbl.textContent) return lbl.textContent.trim();
+        }
+        return null;
+    }
+
+    _formatDependencyText(wrapper, arrowEl) {
+        const fallback = 'Soft dependency (informational)';
+        if (!arrowEl) return fallback;
+
+        const fromId = arrowEl.dataset.fromId || null;
+        const toId = arrowEl.dataset.toId || null;
+        const fromLabelDs = arrowEl.dataset.fromLabel || null;
+        const toLabelDs = arrowEl.dataset.toLabel || null;
+
+        const depKey = (toId && fromId) ? `${this._normalizeId(toId)}|${this._normalizeId(fromId)}` : null;
+        if (depKey && this._dependencyTextMap && this._dependencyTextMap.has(depKey)) {
+            const txt = this._dependencyTextMap.get(depKey);
+            return txt;
+        }
+
+        const fromLabel = fromLabelDs
+            || this._lookupTaskLabel(wrapper, fromId)
+            || null;
+        const toLabel = toLabelDs
+            || this._lookupTaskLabel(wrapper, toId)
+            || null;
+
+        if (fromLabel && toLabel) {
+            return `${toLabel} depends on ${fromLabel}`;
+        }
+        return fallback;
+    }
+
+    _hideSoftBadge(wrapper) {
+        if (this._softBadge && wrapper && wrapper.contains(this._softBadge)) {
+            wrapper.removeChild(this._softBadge);
+        }
+        this._softBadge = null;
     }
 }
 
