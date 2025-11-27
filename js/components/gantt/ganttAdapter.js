@@ -131,7 +131,12 @@
                                 end: assign.endDate || wp.endDate || defaultEnd,
                                 status: wp.status || 'active',
                                 type: 'assignment',
-                                dependencies: (wp.dependencies || []).map(sanitizeId).join(','),
+                                dependencies: (() => {
+                                    const assignmentDeps = Array.isArray(assign.dependencies) && assign.dependencies.length
+                                        ? assign.dependencies
+                                        : (wp.dependencies || []);
+                                    return (assignmentDeps || []).map(sanitizeId).join(',');
+                                })(),
                                 // Metadata for updates
                                 initiativeId: init.initiativeId,
                                 workPackageId: wp.workPackageId,

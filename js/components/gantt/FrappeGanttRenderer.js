@@ -126,6 +126,7 @@ class FrappeGanttRenderer extends GanttRenderer {
             this._resizeForTasks(wrapper, frappeTasks, options);
             this._markLockedBars(wrapper, frappeTasks);
             this._applyFocusStyles(wrapper, frappeTasks, options.focus);
+            this._styleDependencies(wrapper);
 
             // Attach double-click handling to support expand/collapse sync with table
             this._bindDoubleClick(wrapper, frappeTasks, options);
@@ -448,6 +449,26 @@ class FrappeGanttRenderer extends GanttRenderer {
         const t = (text || '').trim();
         if (t.length <= maxLen) return t;
         return t.slice(0, maxLen - 1).trim() + '…';
+    }
+
+    _styleDependencies(wrapper) {
+        if (!wrapper) return;
+        const arrows = wrapper.querySelectorAll('.arrow');
+        arrows.forEach(arrow => {
+            arrow.style.stroke = '#6b7ea4';
+            arrow.style.strokeWidth = '1.2px';
+            arrow.style.strokeDasharray = '5 4';
+            arrow.style.opacity = '0.6';
+            arrow.style.fill = 'none';
+            if (!arrow.getAttribute('title')) {
+                arrow.setAttribute('title', 'Soft dependency (informational)');
+            }
+        });
+        const heads = wrapper.querySelectorAll('.arrow-head');
+        heads.forEach(head => {
+            head.style.fill = '#6b7ea4';
+            head.style.opacity = '0.65';
+        });
     }
 }
 
