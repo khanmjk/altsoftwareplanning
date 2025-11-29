@@ -31,7 +31,7 @@ body {
 }
 
 #main-content-area {
-    padding: 8px 20px 16px 20px;
+    padding: 0 20px 16px 20px;
     overflow-y: auto;
     flex-grow: 1;
     position: relative;
@@ -41,7 +41,7 @@ body {
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
-    gap: 12px;
+    gap: 10px;
 }
 
 /* Page Header (H1 + Desc) */
