@@ -90,6 +90,7 @@ const visualizationItems = [
     { id: 'teamVisualization', title: 'Team Relationships Visualization' },
     { id: 'serviceRelationshipsVisualization', title: 'Service Relationships Visualization' },
     { id: 'dependencyVisualization', title: 'Service Dependency Visualization' },
+    { id: 'serviceDependenciesTableSlide', title: 'Service Dependency Table' },
     { id: 'mermaidVisualization', title: 'System Architecture (Mermaid)' },
     { id: 'mermaidApiVisualization', title: 'Service API Interactions (Mermaid)' }
 ];
@@ -568,13 +569,21 @@ function showVisualization(index) {
     }
     const items = carouselContainer.querySelectorAll('.carousel-item');
     const titleElement = document.getElementById('visualizationTitle');
-    const serviceDepsTableDiv = document.getElementById('serviceDependenciesTable');
+
+    // Keep the user anchored at the top when switching between visualizations.
+    const mainContentArea = document.getElementById('main-content-area');
+    if (mainContentArea) {
+        mainContentArea.scrollTop = 0;
+    }
+    carouselContainer.scrollTop = 0;
+    if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
+        window.scrollTo({ top: 0, behavior: 'auto' });
+    }
 
     if (index < 0 || index >= items.length || items.length === 0) {
         console.error("Invalid visualization index or no items:", index);
         items.forEach(item => item.style.display = 'none');
         if (titleElement) titleElement.textContent = 'No Visualization';
-        if (serviceDepsTableDiv) serviceDepsTableDiv.style.display = 'none';
         return;
     }
 
@@ -583,8 +592,6 @@ function showVisualization(index) {
         item.classList.remove('active');
     });
 
-    if (serviceDepsTableDiv) serviceDepsTableDiv.style.display = 'none';
-
     const targetItemId = visualizationItems[index]?.id;
     const targetItem = targetItemId ? document.getElementById(targetItemId) : null;
 
@@ -592,10 +599,6 @@ function showVisualization(index) {
         targetItem.style.display = 'block';
         targetItem.classList.add('active');
         if (titleElement) titleElement.textContent = visualizationItems[index].title;
-
-        if (targetItemId === 'dependencyVisualization' && serviceDepsTableDiv) {
-            serviceDepsTableDiv.style.display = 'block';
-        }
 
         // Call regenerate functions only if the specific view is now active and data is loaded
         if (currentSystemData) {
@@ -613,8 +616,11 @@ function showVisualization(index) {
                 case 'dependencyVisualization':
                     if (typeof populateDependencyServiceSelection === 'function') populateDependencyServiceSelection();
                     if (typeof updateDependencyVisualization === 'function') updateDependencyVisualization();
-                    if (typeof generateServiceDependenciesTable === 'function' && serviceDepsTableDiv.style.display === 'block') {
-                        generateServiceDependenciesTable();
+                    break;
+                case 'serviceDependenciesTableSlide':
+                    if (typeof generateServiceDependenciesTable === 'function') {
+                        // Defer table render until after layout/visibility is applied to avoid zero-height issues.
+                        requestAnimationFrame(() => generateServiceDependenciesTable());
                     }
                     break;
                 case 'mermaidVisualization':

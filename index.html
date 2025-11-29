@@ -270,12 +270,19 @@
                     <button id="togglePlatformComponentsDependency" class="button" style="margin-bottom: 10px;">Hide
                         Platforms</button>
                     <svg id="dependencySvg" style="width: 100%; height: 600px; border: 1px solid #ccc;"></svg>
-                    <div id="dependencyLegend" class="legend"></div>
-                </div>
+                <div id="dependencyLegend" class="legend"></div>
+            </div>
 
-                <div id="mermaidVisualization" class="carousel-item" style="display: none;">
-                    <div id="mermaidGraph"></div>
+            <div id="serviceDependenciesTableSlide" class="carousel-item" style="display: none;">
+                <div id="serviceDependenciesTable" style="max-width: 100%; margin: 8px auto 0 auto;">
+                    <h2>Service Dependencies Table</h2>
+                    <div id="serviceDependenciesTableHost"></div>
                 </div>
+            </div>
+
+            <div id="mermaidVisualization" class="carousel-item" style="display: none;">
+                <div id="mermaidGraph"></div>
+            </div>
 
                 <div id="mermaidApiVisualization" class="carousel-item" style="display: none;">
                     <select id="apiServiceSelection"
@@ -283,10 +290,6 @@
                     <div id="mermaidApiGraph"></div>
                 </div>
 
-            </div>
-            <div id="serviceDependenciesTable" style="max-width: 90%; margin: 20px auto; display:none;">
-                <h2>Service Dependencies Table</h2>
-                <div id="serviceDependenciesTableHost"></div>
             </div>
 
 
