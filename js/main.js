@@ -1219,7 +1219,8 @@ function refreshCurrentView() {
             if (typeof renderPlanningView === 'function') renderPlanningView();
             break;
         case 'organogramView':
-            if (typeof initializeOrgChartView === 'function') initializeOrgChartView();
+            // Use switchView to ensure proper rendering via WorkspaceComponent
+            switchView('organogramView');
             break;
         case 'roadmapView':
             if (typeof initializeRoadmapView === 'function') initializeRoadmapView();

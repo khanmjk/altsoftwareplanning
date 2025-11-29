@@ -80,9 +80,9 @@ class NavigationManager {
         }
 
         if (viewId === 'organogramView' && window.workspaceComponent) {
-            window.workspaceComponent.render(viewId, () => {
+            window.workspaceComponent.render(viewId, (container) => {
                 if (typeof window.renderOrgChartView === 'function') {
-                    window.renderOrgChartView();
+                    window.renderOrgChartView(container);
                 } else {
                     console.error("renderOrgChartView function not found!");
                 }

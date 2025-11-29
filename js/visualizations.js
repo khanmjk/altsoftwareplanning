@@ -166,12 +166,27 @@ function debounceResize(callback, delay = 200) {
 }
 
 function setupVisualizationResizeObserver() {
-    if (visualizationResizeObserver) return;
-    const carousel = document.getElementById('visualizationCarousel');
-    if (!carousel || typeof ResizeObserver === 'undefined') {
+    // Only run if we are in the visualization view
+    // This prevents it from interfering with other views like Org Chart
+    const carouselContainer = document.getElementById('visualizationCarousel');
+    if (!carouselContainer || carouselContainer.offsetParent === null) {
+        // Container is not visible or doesn't exist
+        if (visualizationResizeObserver) {
+            visualizationResizeObserver.disconnect();
+            visualizationResizeObserver = null;
+        }
         return;
     }
-    const debounced = debounceResize(() => {
+
+    if (visualizationResizeObserver) {
+        visualizationResizeObserver.disconnect(); // Clear existing
+    }
+
+    const debouncedRender = debounceResize(() => {
+        // Double check visibility inside the callback
+        if (document.getElementById('visualizationCarousel')?.offsetParent === null) {
+            return;
+        }
         if (!currentSystemData) return;
         const activeId = getActiveVisualizationId();
         switch (activeId) {
@@ -197,8 +212,8 @@ function setupVisualizationResizeObserver() {
                 break;
         }
     }, 200);
-    visualizationResizeObserver = new ResizeObserver(debounced);
-    visualizationResizeObserver.observe(carousel);
+    visualizationResizeObserver = new ResizeObserver(debouncedRender);
+    visualizationResizeObserver.observe(carouselContainer);
 }
 
 if (typeof window !== 'undefined') {

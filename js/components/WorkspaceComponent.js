@@ -44,6 +44,8 @@ class WorkspaceComponent {
             viewContainer.style.padding = '20px';
             viewContainer.style.boxSizing = 'border-box';
             this.container.appendChild(viewContainer);
+            // Explicitly set display block for new container
+            viewContainer.style.display = 'block';
         } else {
             // Ensure it's visible
             viewContainer.style.display = 'block';

@@ -12,27 +12,33 @@ let currentOrgViewMode = 'd3'; // Default to the new D3 view
  * NEW: Renders the entire Organization Overview page into the Workspace.
  * Sets up layout switchers and calls the default renderer.
  */
-function renderOrgChartView() {
+function renderOrgChartView(container) {
     console.log("Rendering Organization Chart View...");
 
-    const container = document.getElementById('organogramView');
     if (!container) {
-        console.error("Org Chart container #organogramView not found.");
-        return;
+        console.error("Org Chart container not provided to renderOrgChartView.");
+        // Fallback for legacy calls (if any)
+        container = document.getElementById('organogramView');
+        if (!container) {
+            console.error("Fallback container #organogramView also not found.");
+            return;
+        }
     }
 
     // --- Dynamic DOM Creation for Workspace ---
-    if (!document.getElementById('organogramToolbar')) {
-        container.innerHTML = `
-            <div id="organogramToolbar" style="margin-bottom: 10px; padding: 10px; background-color: #f8f9fa; border-bottom: 1px solid #ddd;"></div>
-            <div id="organogramContent" style="overflow: auto; height: calc(100vh - 200px); position: relative;"></div>
-            <div id="teamBreakdown" style="display:none; margin-top: 30px;"></div>
-            <div id="orgEngineerListView" style="display:none; margin-top: 30px;"></div>
-        `;
-    }
+    // We need to ensure the structure exists INSIDE the provided container.
+    // We can't rely on IDs being unique if we have multiple views, but for now we'll assume one org view.
+    // Better to use classes or scoped selectors, but let's stick to IDs for now to minimize refactoring of internal functions.
 
-    const toolbar = document.getElementById('organogramToolbar');
-    const content = document.getElementById('organogramContent');
+    container.innerHTML = `
+        <div id="organogramToolbar" style="margin-bottom: 10px; padding: 10px; background-color: #f8f9fa; border-bottom: 1px solid #ddd;"></div>
+        <div id="organogramContent" style="overflow: auto; height: calc(100vh - 200px); width: 100%; position: relative;"></div>
+        <div id="teamBreakdown" style="display:none; margin-top: 30px;"></div>
+        <div id="orgEngineerListView" style="display:none; margin-top: 30px;"></div>
+    `;
+
+    const toolbar = container.querySelector('#organogramToolbar');
+    const content = container.querySelector('#organogramContent');
 
     if (!toolbar || !content) {
         console.error("Cannot initialize Org Chart view: toolbar or content div missing after creation.");
@@ -75,7 +81,7 @@ function renderOrgChartView() {
     });
 
     // --- 2. Render the correct view based on the current mode ---
-    updateOrgViewRenderer();
+    updateOrgViewRenderer(content);
 }
 // Make globally accessible
 window.renderOrgChartView = renderOrgChartView;
@@ -84,14 +90,15 @@ window.renderOrgChartView = renderOrgChartView;
  * NEW: Helper function to render the correct org chart based on the current mode.
  * MODIFIED: Now controls visibility of organogramContent AND teamBreakdown.
  */
-function updateOrgViewRenderer() {
+function updateOrgViewRenderer(chartContainer) {
     const btnD3 = document.getElementById('orgViewModeD3');
     const btnList = document.getElementById('orgViewModeList');
     const btnTable = document.getElementById('orgViewModeTable');
     const btnEngineerList = document.getElementById('orgViewModeEngineerList');
 
     // Get references to both content containers
-    const chartContainer = document.getElementById('organogramContent');
+    // If chartContainer is not passed, try to find it (fallback)
+    if (!chartContainer) chartContainer = document.getElementById('organogramContent');
     const tableContainer = document.getElementById('teamBreakdown');
     const engineerListContainer = document.getElementById('orgEngineerListView');
 
@@ -121,7 +128,7 @@ function updateOrgViewRenderer() {
 
         chartContainer.style.display = 'block'; // Show chart container
         if (typeof renderD3OrgChart === 'function') {
-            renderD3OrgChart(); // Call the D3 function
+            renderD3OrgChart(chartContainer); // Pass container explicitly
         } else {
             console.error("renderD3OrgChart function not found.");
         }
@@ -131,7 +138,7 @@ function updateOrgViewRenderer() {
 
         chartContainer.style.display = 'block'; // Show chart container
         if (typeof renderHtmlOrgList === 'function') {
-            renderHtmlOrgList(); // Call the renamed "list" function
+            renderHtmlOrgList(chartContainer); // Pass container explicitly
         } else {
             console.error("renderHtmlOrgList function not found.");
         }
@@ -239,10 +246,12 @@ function buildHierarchyData() {
  * RENAMED: Was previously generateOrganogram()
  * Generates the Organogram using HTML list structure.
  */
-function renderHtmlOrgList() {
+function renderHtmlOrgList(container) {
     console.log("Generating Organogram HTML List...");
     const hierarchicalData = buildHierarchyData();
-    const container = document.getElementById('organogramContent');
+
+    if (!container) container = document.getElementById('organogramContent');
+
     if (!hierarchicalData || !container) {
         console.error("No data or container for organogram HTML.");
         if (container) container.innerHTML = '<p style="color: red;">Could not generate organogram data.</p>';
@@ -312,10 +321,12 @@ function renderHtmlOrgList() {
  * NEW (v4): Generates the Organogram using a D3 Tree Layout (Top-Down).
  * MODIFIED: Uses <foreignObject> and adds correct xmlns attribute for HTML text wrapping.
  */
-function renderD3OrgChart() {
+function renderD3OrgChart(container) {
     console.log("Generating D3 Org Chart (Top-Down, Text Wrap v4)...");
     const hierarchicalData = buildHierarchyData();
-    const container = document.getElementById('organogramContent');
+
+    // Fallback if container not passed
+    if (!container) container = document.getElementById('organogramContent');
 
     if (!hierarchicalData || !container) {
         console.error("D3 Org Chart container or data not found.");
@@ -323,244 +334,300 @@ function renderD3OrgChart() {
         return;
     }
 
+    // DEBUG: Check container dimensions and visibility
+    const rect = container.getBoundingClientRect();
+    console.log(`D3 Org Chart Container Debug: ID=${container.id}, Width=${rect.width}, Height=${rect.height}, Display=${getComputedStyle(container).display}, Visibility=${getComputedStyle(container).visibility}`);
+
+
     container.innerHTML = ''; // Clear existing content
     container.style.fontFamily = ''; // Unset inline style
 
-    // Get container size for responsive chart
-    const width = container.clientWidth || 960;
-    const height = 1200; // Fixed height, chart will be scrollable
 
-    // Define node box sizes and spacing
-    const nodeWidth = 220;
-    const nodeHeight = 80;
-    const verticalSpacing = 100;   // Space BETWEEN nodes vertically
-    const horizontalSpacing = 20;   // Space BETWEEN nodes horizontally
 
-    // Create SVG
-    const svg = d3.select(container).append("svg")
-        .attr("width", "100%")
-        .attr("height", height)
-        .attr("viewBox", [0, 0, width, height])
-        .style("overflow", "auto"); // Enable overflow for zoom/pan
-
-    // Tooltip
-    const tooltip = d3.select("body").selectAll(".tooltip").data([null]).join("div")
-        .attr("class", "tooltip")
-        .style("opacity", 0);
-
-    // Main group for chart content (for zooming)
-    const g = svg.append("g");
-
-    // Create Tree Layout
-    const tree = d3.tree()
-        .nodeSize([nodeWidth + horizontalSpacing, nodeHeight + verticalSpacing]);
-
-    // Create Hierarchy
-    const root = d3.hierarchy(hierarchicalData);
-
-    // Assign `_children` for collapse/expand
-    root.descendants().forEach(d => {
-        d._children = d.children;
-        // Start with engineers collapsed (teams are parents of engineers)
-        if (d.data.type === 'team') {
-            d.children = null;
+    // Use ResizeObserver to ensure container has dimensions before rendering
+    // This handles the first-load race condition where clientWidth is 0
+    const renderChart = (force = false) => {
+        // Get container size for responsive chart
+        // If force is true, or if clientWidth is 0, use a default width
+        let width = container.clientWidth;
+        if (width === 0) {
+            if (force) {
+                console.warn("D3 Org Chart: Container width is 0, using default 960px.");
+                width = 960;
+            } else {
+                return; // Still waiting for layout
+            }
         }
-    });
+        const height = 1200; // Fixed height, chart will be scrollable
 
-    // Set initial position for the root node
-    root.x0 = width / 2; // Initial horizontal center
-    root.y0 = nodeHeight;  // Initial vertical position
+        if (width === 0) return; // Still waiting for layout
 
-    // This is the main function that draws/updates the chart
-    const update = (source) => {
-        const duration = 250;
+        console.log(`D3 Render: Calculated Width=${width}, Height=${height}`);
 
-        // Recalculate layout
-        const treeData = tree(root);
+        // Define node box sizes and spacing
+        const nodeWidth = 220;
+        const nodeHeight = 80;
+        const verticalSpacing = 100;   // Space BETWEEN nodes vertically
+        const horizontalSpacing = 20;   // Space BETWEEN nodes horizontally
 
-        // Get nodes and links
-        const nodes = treeData.descendants().reverse();
-        const links = treeData.links();
+        // Create SVG
+        const svg = d3.select(container).append("svg")
+            .attr("width", "100%")
+            .attr("height", height)
+            .attr("viewBox", [0, 0, width, height])
+            .style("overflow", "auto"); // Enable overflow for zoom/pan
 
-        // Normalize for fixed-depth (y position)
-        nodes.forEach(d => {
-            d.y = d.depth * (nodeHeight + verticalSpacing) + nodeHeight; // y = depth * spacing
+        // Tooltip
+        const tooltip = d3.select("body").selectAll(".tooltip").data([null]).join("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0);
+
+        // Main group for chart content (for zooming)
+        const g = svg.append("g");
+
+        // Create Tree Layout
+        const tree = d3.tree()
+            .nodeSize([nodeWidth + horizontalSpacing, nodeHeight + verticalSpacing]);
+
+        // Create Hierarchy
+        const root = d3.hierarchy(hierarchicalData);
+
+        // Assign `_children` for collapse/expand
+        root.descendants().forEach(d => {
+            d._children = d.children;
+            // Start with engineers collapsed (teams are parents of engineers)
+            if (d.data.type === 'team') {
+                d.children = null;
+            }
         });
 
-        // --- LINKS ---
-        function elbow(d) {
-            return `M ${d.source.x},${d.source.y + nodeHeight / 2}` +
-                ` V ${d.target.y - verticalSpacing / 2}` +
-                ` H ${d.target.x}` +
-                ` V ${d.target.y - nodeHeight / 2}`;
-        }
+        // Set initial position for the root node
+        root.x0 = width / 2; // Initial horizontal center
+        root.y0 = nodeHeight;  // Initial vertical position
 
-        const link = g.selectAll(".org-link")
-            .data(links, d => d.target.id);
+        // This is the main function that draws/updates the chart
+        const update = (source) => {
+            const duration = 250;
 
-        const linkEnter = link.enter().append("path")
-            .attr("class", "org-link")
-            .attr("d", d => {
-                const o = { x: source.x0 || source.x, y: source.y0 || source.y };
-                return `M ${o.x},${o.y + nodeHeight / 2}` +
-                    ` V ${o.y + nodeHeight / 2}` +
-                    ` H ${o.x}` +
-                    ` V ${o.y + nodeHeight / 2}`;
-            })
-            .attr("fill", "none")
-            .attr("stroke", "#ccc")
-            .attr("stroke-width", 1.5);
+            // Recalculate layout
+            const treeData = tree(root);
 
-        link.merge(linkEnter).transition().duration(duration)
-            .attr("d", elbow);
+            // Get nodes and links
+            const nodes = treeData.descendants().reverse();
+            const links = treeData.links();
 
-        link.exit().transition().duration(duration)
-            .attr("d", d => {
-                const o = { x: source.x, y: source.y };
-                return `M ${o.x},${o.y + nodeHeight / 2}` +
-                    ` V ${o.y + nodeHeight / 2}` +
-                    ` H ${o.x}` +
-                    ` V ${o.y + nodeHeight / 2}`;
-            })
-            .remove();
+            // Normalize for fixed-depth (y position)
+            nodes.forEach(d => {
+                d.y = d.depth * (nodeHeight + verticalSpacing) + nodeHeight; // y = depth * spacing
+            });
 
-        // --- NODES ---
-        const node = g.selectAll(".org-node")
-            .data(nodes, d => d.data.id || d.data.name + Math.random());
+            // --- LINKS ---
+            function elbow(d) {
+                return `M ${d.source.x},${d.source.y + nodeHeight / 2}` +
+                    ` V ${d.target.y - verticalSpacing / 2}` +
+                    ` H ${d.target.x}` +
+                    ` V ${d.target.y - nodeHeight / 2}`;
+            }
 
-        const nodeEnter = node.enter().append("g")
-            .attr("class", d => `org-node org-type-${d.data.type}`)
-            .attr("transform", d => `translate(${source.x0 || source.x},${source.y0 || source.y})`)
-            .style("opacity", 0)
-            .on("click", (event, d) => {
-                if (d.data.type === 'engineer') return;
-                if (d.children) {
-                    d._children = d.children;
-                    d.children = null;
-                } else {
-                    d.children = d._children;
-                    d._children = null;
+            const link = g.selectAll(".org-link")
+                .data(links, d => d.target.id);
+
+            const linkEnter = link.enter().append("path")
+                .attr("class", "org-link")
+                .attr("d", d => {
+                    const o = { x: source.x0 || source.x, y: source.y0 || source.y };
+                    return `M ${o.x},${o.y + nodeHeight / 2}` +
+                        ` V ${o.y + nodeHeight / 2}` +
+                        ` H ${o.x}` +
+                        ` V ${o.y + nodeHeight / 2}`;
+                })
+                .attr("fill", "none")
+                .attr("stroke", "#ccc")
+                .attr("stroke-width", 1.5);
+
+            link.merge(linkEnter).transition().duration(duration)
+                .attr("d", elbow);
+
+            link.exit().transition().duration(duration)
+                .attr("d", d => {
+                    const o = { x: source.x, y: source.y };
+                    return `M ${o.x},${o.y + nodeHeight / 2}` +
+                        ` V ${o.y + nodeHeight / 2}` +
+                        ` H ${o.x}` +
+                        ` V ${o.y + nodeHeight / 2}`;
+                })
+                .remove();
+
+            // --- NODES ---
+            const node = g.selectAll(".org-node")
+                .data(nodes, d => d.data.id || d.data.name + Math.random());
+
+            const nodeEnter = node.enter().append("g")
+                .attr("class", d => `org-node org-type-${d.data.type}`)
+                .attr("transform", d => `translate(${source.x0 || source.x},${source.y0 || source.y})`)
+                .style("opacity", 0)
+                .on("click", (event, d) => {
+                    if (d.data.type === 'engineer') return;
+                    if (d.children) {
+                        d._children = d.children;
+                        d.children = null;
+                    } else {
+                        d.children = d._children;
+                        d._children = null;
+                    }
+                    update(d);
+                })
+                .on("mouseover", (event, d) => {
+                    let info = '';
+                    switch (d.data.type) {
+                        case 'root': info = `<strong>System:</strong> ${d.data.name}`; break;
+                        case 'srMgr': info = `<strong>Sr. Manager:</strong> ${d.data.name}`; break;
+                        case 'sdm': info = `<strong>SDM:</strong> ${d.data.name}`; break;
+                        case 'team':
+                            info = `<strong>Team:</strong> ${d.data.name}<br><strong>Details:</strong> ${d.data.details}`;
+                            if (d.data.awayTeamCount > 0) info += `<br><strong style='color: #dc3545;'>Away:</strong> +${d.data.awayTeamCount} (${d.data.awaySourceSummary})`;
+                            break;
+                        case 'engineer': info = `<strong>Engineer:</strong> ${d.data.name}`; break;
+                        default: info = d.data.name;
+                    }
+                    tooltip.transition().duration(200).style("opacity", .9);
+                    tooltip.html(info)
+                        .style("left", (event.pageX + 15) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                })
+                .on("mouseout", () => {
+                    tooltip.transition().duration(500).style("opacity", 0);
+                });
+
+            // Add the rectangle for the node
+            nodeEnter.append("rect")
+                .attr("class", "org-node-rect")
+                .attr("width", nodeWidth)
+                .attr("height", nodeHeight)
+                .attr("x", -nodeWidth / 2)
+                .attr("y", -nodeHeight / 2)
+                .attr("rx", 4)
+                .attr("ry", 4)
+                .style("cursor", d => d.data.type !== 'engineer' ? "pointer" : "default");
+
+            // Add <foreignObject> for text wrapping
+            const fo = nodeEnter.append("foreignObject")
+                .attr("x", -nodeWidth / 2)
+                .attr("y", -nodeHeight / 2)
+                .attr("width", nodeWidth)
+                .attr("height", nodeHeight)
+                .style("pointer-events", "none");
+
+            // Add namespaced HTML div for content
+            const div = fo.append("xhtml:div")
+                .attr("xmlns", "http://www.w3.org/1999/xhtml")
+                .attr("class", "org-node-label-wrapper");
+
+            div.append("xhtml:div")
+                .attr("class", "org-node-label-name")
+                .html(d => d.data.name);
+
+            div.append("xhtml:div")
+                .attr("class", "org-node-label-details")
+                .html(d => {
+                    if (d.data.type === 'team') return d.data.details;
+                    if (d.data.type === 'engineer') return d.data.name.includes('[AI]') ? 'AI Software Engineer' : 'Software Engineer';
+                    return d.data.type.replace('srMgr', 'Senior Manager');
+                });
+
+            // Add expand/collapse indicator (SVG text)
+            nodeEnter.append("text")
+                .attr("class", "org-node-toggle")
+                .attr("text-anchor", "middle")
+                .attr("y", (nodeHeight / 2) + 16)
+                .text(d => {
+                    if (d.data.type === 'engineer') return '';
+                    return d._children ? '▼' : (d.children ? '▲' : '');
+                });
+
+            // Transition nodes to their new position.
+            node.merge(nodeEnter).transition().duration(duration)
+                .attr("transform", d => `translate(${d.x},${d.y})`)
+                .style("opacity", 1);
+
+            // Update toggle text on merge
+            node.merge(nodeEnter).select(".org-node-toggle")
+                .text(d => {
+                    if (d.data.type === 'engineer') return '';
+                    return d._children ? '▼' : (d.children ? '▲' : '');
+                });
+
+            // Transition exiting nodes to the parent's new position.
+            node.exit().transition().duration(duration)
+                .attr("transform", d => `translate(${source.x},${source.y})`)
+                .style("opacity", 0)
+                .remove();
+
+            // Stash the old positions for transition.
+            nodes.forEach(d => {
+                d.x0 = d.x;
+                d.y0 = d.y;
+            });
+
+        }; // End of update function
+
+        // Initial render
+        update(root);
+
+        // --- Initial Zoom & Pan ---
+        const bounds = g.node().getBBox();
+        const chartWidth = bounds.width;
+
+        const scale = Math.min(1, (width / (chartWidth + 100)) * 0.8);
+
+        const tx = (width / 2) - (root.x * scale);
+        const ty = 50; // 50px margin from top
+
+        const initialTransform = d3.zoomIdentity.translate(tx, ty).scale(scale);
+
+        const zoom = d3.zoom()
+            .scaleExtent([0.1, 2])
+            .on("zoom", (event) => {
+                g.attr("transform", event.transform);
+            });
+
+        svg.call(zoom)
+            .call(zoom.transform, initialTransform);
+
+        console.log("D3 Org Chart (Top-Down, Text Wrap) rendered.");
+    };
+
+    // Check if we can render immediately
+    if (container.clientWidth > 0) {
+        renderChart();
+    } else {
+        console.log("D3 Org Chart: Container has 0 width, waiting for resize...");
+
+        let rendered = false;
+        const observer = new ResizeObserver((entries) => {
+            for (let entry of entries) {
+                if (entry.contentRect.width > 0 && !rendered) {
+                    console.log("D3 Org Chart: Container resized, rendering...");
+                    rendered = true;
+                    renderChart();
+                    observer.disconnect();
+                    break;
                 }
-                update(d);
-            })
-            .on("mouseover", (event, d) => {
-                let info = '';
-                switch (d.data.type) {
-                    case 'root': info = `<strong>System:</strong> ${d.data.name}`; break;
-                    case 'srMgr': info = `<strong>Sr. Manager:</strong> ${d.data.name}`; break;
-                    case 'sdm': info = `<strong>SDM:</strong> ${d.data.name}`; break;
-                    case 'team':
-                        info = `<strong>Team:</strong> ${d.data.name}<br><strong>Details:</strong> ${d.data.details}`;
-                        if (d.data.awayTeamCount > 0) info += `<br><strong style='color: #dc3545;'>Away:</strong> +${d.data.awayTeamCount} (${d.data.awaySourceSummary})`;
-                        break;
-                    case 'engineer': info = `<strong>Engineer:</strong> ${d.data.name}`; break;
-                    default: info = d.data.name;
-                }
-                tooltip.transition().duration(200).style("opacity", .9);
-                tooltip.html(info)
-                    .style("left", (event.pageX + 15) + "px")
-                    .style("top", (event.pageY - 28) + "px");
-            })
-            .on("mouseout", () => {
-                tooltip.transition().duration(500).style("opacity", 0);
-            });
-
-        // Add the rectangle for the node
-        nodeEnter.append("rect")
-            .attr("class", "org-node-rect")
-            .attr("width", nodeWidth)
-            .attr("height", nodeHeight)
-            .attr("x", -nodeWidth / 2)
-            .attr("y", -nodeHeight / 2)
-            .attr("rx", 4)
-            .attr("ry", 4)
-            .style("cursor", d => d.data.type !== 'engineer' ? "pointer" : "default");
-
-        // Add <foreignObject> for text wrapping
-        const fo = nodeEnter.append("foreignObject")
-            .attr("x", -nodeWidth / 2)
-            .attr("y", -nodeHeight / 2)
-            .attr("width", nodeWidth)
-            .attr("height", nodeHeight)
-            .style("pointer-events", "none");
-
-        // Add namespaced HTML div for content
-        const div = fo.append("xhtml:div")
-            .attr("xmlns", "http://www.w3.org/1999/xhtml")
-            .attr("class", "org-node-label-wrapper");
-
-        div.append("xhtml:div")
-            .attr("class", "org-node-label-name")
-            .html(d => d.data.name);
-
-        div.append("xhtml:div")
-            .attr("class", "org-node-label-details")
-            .html(d => {
-                if (d.data.type === 'team') return d.data.details;
-                if (d.data.type === 'engineer') return d.data.name.includes('[AI]') ? 'AI Software Engineer' : 'Software Engineer';
-                return d.data.type.replace('srMgr', 'Senior Manager');
-            });
-
-        // Add expand/collapse indicator (SVG text)
-        nodeEnter.append("text")
-            .attr("class", "org-node-toggle")
-            .attr("text-anchor", "middle")
-            .attr("y", (nodeHeight / 2) + 16)
-            .text(d => {
-                if (d.data.type === 'engineer') return '';
-                return d._children ? '▼' : (d.children ? '▲' : '');
-            });
-
-        // Transition nodes to their new position.
-        node.merge(nodeEnter).transition().duration(duration)
-            .attr("transform", d => `translate(${d.x},${d.y})`)
-            .style("opacity", 1);
-
-        // Update toggle text on merge
-        node.merge(nodeEnter).select(".org-node-toggle")
-            .text(d => {
-                if (d.data.type === 'engineer') return '';
-                return d._children ? '▼' : (d.children ? '▲' : '');
-            });
-
-        // Transition exiting nodes to the parent's new position.
-        node.exit().transition().duration(duration)
-            .attr("transform", d => `translate(${source.x},${source.y})`)
-            .style("opacity", 0)
-            .remove();
-
-        // Stash the old positions for transition.
-        nodes.forEach(d => {
-            d.x0 = d.x;
-            d.y0 = d.y;
+            }
         });
+        observer.observe(container);
 
-    }; // End of update function
+        // Fallback: If resize doesn't fire within 500ms, force render (assuming layout settled)
+        setTimeout(() => {
+            if (!rendered) {
+                console.warn("D3 Org Chart: ResizeObserver timed out, forcing render...");
+                rendered = true;
+                observer.disconnect();
+                renderChart(true); // Force render with default width
+            }
+        }, 500);
+    }
 
-    // Initial render
-    update(root);
-
-    // --- Initial Zoom & Pan ---
-    const bounds = g.node().getBBox();
-    const chartWidth = bounds.width;
-
-    const scale = Math.min(1, (width / (chartWidth + 100)) * 0.8);
-
-    const tx = (width / 2) - (root.x * scale);
-    const ty = 50; // 50px margin from top
-
-    const initialTransform = d3.zoomIdentity.translate(tx, ty).scale(scale);
-
-    const zoom = d3.zoom()
-        .scaleExtent([0.1, 2])
-        .on("zoom", (event) => {
-            g.attr("transform", event.transform);
-        });
-
-    svg.call(zoom)
-        .call(zoom.transform, initialTransform);
-
-    console.log("D3 Org Chart (Top-Down, Text Wrap) rendered.");
 }
 
 
