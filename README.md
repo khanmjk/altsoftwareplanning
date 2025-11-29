@@ -97,11 +97,11 @@ The ultimate goal is to enable better-informed decision-making for software deli
 
 ## 2. Getting Started
 
-Upon launching the application, you'll see the main menu on the top bar.
+Upon launching the application, you'll see the **Sidebar** on the left.
 
 ### AI Assistant Settings
 
-* Click the **"AI Settings"** button, which is always visible in the top bar.
+* Click the **"Settings"** link in the sidebar (under **Configuration**).
 * Check the **"Enable AI Assistant Mode"** box.
 * Select your desired AI provider (currently limited to "google-gemini" for the MVP).
 * **Use a FREE API Key:** You must obtain a free-tier API key from **[Google AI Studio](https://aistudio.google.com/app/apikey)**.
@@ -337,100 +337,97 @@ Empower the agent to perform complex, multi-entity updates that are tedious to d
   - Plan: `bulkUpdateTeamCapacity({ aiProductivityGainPercent: 20 })`
 
 ### System Navigation
+Once a system is loaded, a **Sidebar** appears on the left, organizing all major views into logical domains.
 
-Once a system is loaded, a persistent navigation bar appears at the top, giving you one-click access to all major views for that system. The currently active view is highlighted for context. Click **"Home"** to return to the system selection screen.
+#### **System**
+*   **System Overview:** Visualizes your architecture (Services, APIs, Dependencies) and Team relationships.
+*   **Org Design:** View the organization chart and manage the engineer roster.
+*   **Edit System:** Modify system metadata, services, teams, and assignments.
 
-### Strategic Dashboard
+#### **Product**
+*   **Roadmap & Backlog:** The source of truth for all initiatives. Define, prioritize, and manage work before committing it to a yearly plan.
 
-Click **"Dashboard"** from the top navigation bar to access a set of high-level widgets for strategic analysis.
+#### **Planning**
+*   **Year Plan:** Commit initiatives to a yearly plan, assign engineering estimates, and track against capacity (ATL/BTL).
+*   **Detailed Planning:** A granular view with a hierarchical table and Gantt chart for initiatives and work packages.
+*   **Capacity Tuning:** Define leave, overhead, and AI productivity gains to calculate realistic Net Project Capacity.
+*   **Resource Forecast:** Model SDE hiring, attrition, and ramp-up to predict future resource availability.
+
+#### **Insights**
+*   **Dashboard:** High-level strategic widgets (Goals, Accomplishments, Investment Trends, 3-Year Plan).
+
+#### **Configuration**
+*   **Settings:** Manage application settings (e.g., AI configuration).
+
+#### **Help**
+*   **How to Guide:** Access this documentation.
+
+---
+
+### Strategic Dashboard (Insights)
+
+Click **"Dashboard"** from the sidebar to access high-level widgets for strategic analysis.
 
 #### Dashboard Carousel
-
-* Navigate through different dashboard widgets using "Previous" and "Next" buttons.
+*   Navigate through widgets using "Previous" and "Next".
 
 #### Strategic Goals Dashboard
-
-* **Purpose:** To track progress against high-level business objectives for a selected year.
-* **Features:** Displays a set of "Goal Cards," one for each strategic goal.
-    * **At-a-glance Metrics:** Each card shows the total SDE investment, number of linked initiatives, and a visual progress bar.
-    * **Contextual Status:** The overall status (`On Track`, `At Risk`, `Completed`) provides an immediate health check. Hover over the status for a tooltip explaining the reason.
-    * **Ownership & Teams:** Clearly lists the goal's owner, PM, and technical POC, as well as all teams contributing to the goal's initiatives.
-    * **Drill-Down:** Expand a card to see a detailed list of the specific initiatives supporting that goal, including a team-by-team SDE breakdown for each.
+*   **Purpose:** Track progress against high-level business objectives.
+*   **Features:** Goal Cards showing SDE investment, linked initiatives, and status (On Track, At Risk). Drill down to see contributing teams.
 
 #### Accomplishments View
-
-* **Purpose:** To celebrate and report on successfully completed work.
-* **Features:** Shows a list of all initiatives that have a status of "Completed."
-    * Each accomplishment card displays the initiative title, completion date, and description.
-    * It provides rich context by showing the strategic goal it supported, the themes it belonged to, the key owners, contributing teams, and the final team effort in SDE-Years.
+*   **Purpose:** Celebrate completed work.
+*   **Features:** Lists "Completed" initiatives with details on owners, teams, and final effort.
 
 #### Investment Distribution by Theme
-
-* A doughnut chart and summary table showing the percentage of total SDE-Year investment allocated to each strategic theme.
-* A global "Filter by Year" dropdown allows for analyzing a specific year or all years combined.
+*   Doughnut chart showing SDE-Year allocation per strategic theme.
 
 #### Investment Trend Over Time
-
-* A 100% stacked bar chart that visualizes how theme-based investment percentages evolve year-over-year, making it easy to spot strategic shifts.
+*   Stacked bar chart visualizing year-over-year investment shifts.
 
 #### Roadmap by Quarter & 3-Year Plan
+*   **Roadmap by Quarter:** Theme-based swimlanes for Q1-Q4.
+*   **3-Year Plan (3YP):** Strategic outlook (Current Year, Next Year, Future).
 
-* **Purpose:** To visualize the product roadmap from both tactical and strategic perspectives.
-* **Features:**
-    * **Roadmap by Quarter:** A theme-based swimlane view with columns for Q1, Q2, Q3, and Q4 of a selected year.
-    * **3-Year Plan (3YP):** A similar swimlane view with columns for the "Current Year," "Next Year," and "Future," providing a long-range strategic outlook.
-    * Both views are interactive and can be filtered by Organization, Team, and Theme.
+### System Overview & Visualizations (System)
 
-### System Overview & Visualizations
-
-Accessible by clicking **"System Overview"**. Provides multiple views of your architecture and organization.
-
-* **Carousel Navigation:** Use the "< Previous" and "Next >" buttons to cycle through different visualizations.
-* **System Visualization:** Displays services, their APIs, and platform dependencies.
-* **Team Relationships Visualization:** Shows how teams are interconnected based on service dependencies.
-* **Service Relationships Visualization:** Visualizes a specific service and its direct dependencies.
-* **Service Dependency Visualization & Table:** A force-directed graph and a table detailing upstream and downstream dependencies for a selected service.
+Accessible via **"System Overview"**.
+*   **System Visualization:** Services, APIs, Platform Dependencies.
+*   **Team Relationships:** Interconnections based on service dependencies.
+*   **Service Dependency Graph:** Force-directed graph of upstream/downstream dependencies.
 
 ### Diagramming (Mermaid)
 
-Mermaid-based diagrams are available across the app and via the AI Assistant:
+Mermaid-based diagrams are available across the app and via the AI Assistant.
+*   **System Architecture:** Teams, services, and dependencies.
+*   **Service API Interactions:** Detailed API-level flows.
+*   **AI-Generated:** Ask the AI to "Draw a block diagram" or "Visualize the checkout flow."
 
-* **System Architecture (Mermaid):** Teams as subgraphs with services (showing team name + identity), service dependencies, and optional platform nodes.
-* **Service API Interactions (Mermaid):** Team → Service → API nesting with API-to-API arrows and optional platform context.
-* **AI-generated diagrams (modal):** Ask in chat (no slash needed). The agent plans a `generateDiagram` step, builds Mermaid from the current context, and posts a “View Diagram” button to open a full-screen modal.
+### Editing System Data (System)
 
-Example prompts you can paste into the AI chat:
+*   Click **"Edit System"**.
+*   Modify Name, Description, Services, Teams, and Personnel.
+*   **Save All Changes** to persist updates.
 
-* “Generate a block diagram of this architecture.”
-* “Visualize the team structure.”
-* “Draw an API call map for the payment flow.”
-* “Show a sequence diagram of checkout.”
+### Organizational Views (System)
 
-All diagrams render locally via Mermaid; no external image service is required.
+*   Click **"Org Design"** to see the org chart (Block, List, Table layouts) and manage the engineer roster.
 
-### Editing System Data
+### Tune Capacity Constraints (Planning)
 
-* Click **"Edit System"** from the top navigation bar.
-* Modify: System Name, Description, Services, APIs, Teams, and manage assignments for Engineers, SDMs, and PMTs.
-* Click **"Save All Changes"** to persist all modifications.
+*   Click **"Capacity Tuning"**.
+*   Define global and team-specific constraints (holidays, leave, overhead) to calculate **Net Project SDE Years**.
 
-### Organizational Views
+### Roadmap & Backlog Management (Product)
 
-* Click **"Inspect Org Design"** to see an organization chart (in multiple layouts: Block, List, Table) and a detailed, editable list of all engineers in the system.
+*   Click **"Roadmap & Backlog"**.
+*   Manage the pipeline of initiatives. This is the staging area for work before it enters the Year Plan.
 
-### Tune Capacity Constraints
+### Yearly Planning (Planning)
 
-* Click **"Capacity Tuning"** from the top navigation bar.
-* This page allows defining factors that impact engineering capacity, such as leave, overhead, and AI-driven productivity gains, to calculate a realistic Net Project Capacity for each team.
-
-### Roadmap & Backlog Management
-
-* Click **"Roadmap & Backlog"** to manage the pipeline of all initiatives. This is the source of truth for creating and defining work before it is committed to a yearly plan.
-
-### Yearly Planning
-
-* Click **"Year Plan"** to commit initiatives, assign detailed engineering estimates, and track progress against calculated team capacities using the Above The Line / Below The Line logic.
-* When AI mode is enabled, use the **🤖 Optimize This Plan** button to run the new Plan Optimization Agent. It analyzes the current plan, proposes scoped SDE year reductions, streams progress updates, and provides an Apply/Discard confirmation directly in the chat.
+*   Click **"Year Plan"**.
+*   **Plan & Track:** Assign estimates and monitor capacity (ATL/BTL).
+*   **AI Optimization:** Use the **🤖 Optimize This Plan** button to have the AI analyze and propose scope adjustments.
 * [AI] - Ability to export the year plan, showing ATL/BTL logic, etc. to Excel - the excel model must be generated using LLM so that formulaes in the code are applied to the excel generation
 * Now that we have a goals dashboard view, we need to think about introducing an interface to manage the lifecycle of goals
 * Utilities
