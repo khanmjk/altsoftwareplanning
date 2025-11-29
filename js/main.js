@@ -979,7 +979,7 @@ function createNewSystem() {
     window.currentSystemData = currentSystemData;
     console.log("Initialized new currentSystemData:", JSON.parse(JSON.stringify(currentSystemData)));
 
-    enterEditMode(true);
+    switchView('systemEditForm');
 }
 window.createNewSystem = createNewSystem;
 
@@ -1205,78 +1205,13 @@ function saveSystemChanges() {
 }
 
 
-/** Shows the main system overview **/
-function showSystemOverview() {
-    console.log("Navigating back to system overview...");
-    if (!currentSystemData) {
-        console.warn("showSystemOverview called but no system is loaded. Returning home instead.");
-        if (typeof returnToHome === 'function') returnToHome();
-        return;
-    }
-    if (typeof buildGlobalPlatformDependencies === 'function') buildGlobalPlatformDependencies();
-    switchView('visualizationCarousel');
-    // Visualizations are now updated within showVisualization when it's called by switchView's transition.finished
-}
-window.showSystemOverview = showSystemOverview;
 
-// << NEW Function to show Roadmap View >>
-/**
- * Shows the Roadmap & Backlog Management View.
- */
-function showRoadmapView() {
-    console.log("Switching to Roadmap & Backlog View...");
-    if (!currentSystemData) {
-        alert("Please load a system first to manage its roadmap and backlog.");
-        return;
-    }
-    // Assuming Modes.PLANNING is suitable, or create a new Modes.ROADMAP
-    switchView('roadmapView', Modes.PLANNING);
 
-    // The actual generation of content (table, form) will be triggered
-    // by switchView's transition.finished callback, which will call initializeRoadmapView.
-}
-window.showRoadmapView = showRoadmapView;
 
-function showGanttPlanningView() {
-    console.log("Switching to Detailed Planning (Gantt) View...");
-    if (!currentSystemData) {
-        alert("Please load a system first to manage detailed planning.");
-        return;
-    }
-    switchView('ganttPlanningView', Modes.PLANNING);
-    if (typeof initializeGanttPlanningView === 'function') {
-        initializeGanttPlanningView();
-    }
-}
-window.showGanttPlanningView = showGanttPlanningView;
 
-/**
- * Shows the Organization Chart view.
- * MODIFIED: Now calls the new initializeOrgChartView to handle layout switching.
- */
-function showOrganogramView() {
-    console.log("Switching to Organogram View...");
-    if (!currentSystemData) {
-        alert("Please load a system first.");
-        return;
-    }
-    switchView('organogramView', 'browse');
 
-    // MODIFIED: Call the new initializer instead of old direct functions
-    if (typeof initializeOrgChartView === 'function') {
-        initializeOrgChartView();
-    } else {
-        console.error("initializeOrgChartView function not found. Cannot render org view.");
-    }
 
-    // REMOVED: These are now called by initializeOrgChartView
-    // if (typeof generateOrganogram === 'function') {
-    //     generateOrganogram();
-    // }
-    // if (typeof generateTeamTable === 'function') {
-    //     generateTeamTable(currentSystemData);
-    // }
-}
+
 
 function refreshCurrentView() {
     switch (currentViewId) {
@@ -1309,44 +1244,13 @@ function refreshCurrentView() {
     }
 }
 
-/**
- * Shows the Yearly Planning view.
- */
-function showPlanningView() {
-    console.log("Switching to Year Planning View...");
-    if (!currentSystemData) {
-        alert("Please load a system first.");
-        return;
-    }
-    switchView('planningView', 'planning');
-    if (typeof renderPlanningView === 'function') {
-        renderPlanningView();
-    } else {
-        console.error("renderPlanningView function not found. Did yearPlanning.js load correctly?");
-    }
-}
+
 
 // Ensure the functions are globally accessible for the old onclick attributes,
 // or for the new event listener setup.
-if (typeof showOrganogramView === 'function') window.showOrganogramView = showOrganogramView;
-if (typeof showEngineerTableView === 'function') window.showEngineerTableView = showEngineerTableView;
-if (typeof showPlanningView === 'function') window.showPlanningView = showPlanningView;
 
-// It's also best practice to move enterEditMode here from index.html
-function enterEditMode(creatingNewSystem = false) {
-    const mode = creatingNewSystem ? Modes.CREATING : Modes.EDITING;
-    console.log(`Entering mode: ${mode}`);
-    currentMode = mode;
 
-    if (!currentSystemData) {
-        alert("No system data to edit.");
-        returnToHome();
-        return;
-    }
-    // This function will call switchView internally
-    showSystemEditForm(currentSystemData);
-}
-window.enterEditMode = enterEditMode;
+
 
 /**
  * NEW: Initializes all event listeners for the top bar.
@@ -1363,12 +1267,15 @@ function initializeEventListeners() {
     document.querySelector('.menu button:nth-child(4)')?.addEventListener('click', resetToDefaults);
 
     // Edit Menu Buttons
-    document.getElementById('systemOverviewButton')?.addEventListener('click', showSystemOverview);
-    document.getElementById('editSystemButton')?.addEventListener('click', () => enterEditMode());
-    document.getElementById('viewOrgChartButton')?.addEventListener('click', showOrganogramView);
-    document.getElementById('manageYearPlanButton')?.addEventListener('click', showPlanningView);
-    document.getElementById('manageRoadmapButton')?.addEventListener('click', showRoadmapView);
-    document.getElementById('detailedPlanningButton')?.addEventListener('click', showGanttPlanningView);
+    document.getElementById('systemOverviewButton')?.addEventListener('click', () => switchView('visualizationCarousel'));
+    document.getElementById('editSystemButton')?.addEventListener('click', () => {
+        currentMode = Modes.EDITING;
+        switchView('systemEditForm');
+    });
+    document.getElementById('viewOrgChartButton')?.addEventListener('click', () => switchView('organogramView'));
+    document.getElementById('manageYearPlanButton')?.addEventListener('click', () => switchView('planningView'));
+    document.getElementById('manageRoadmapButton')?.addEventListener('click', () => switchView('roadmapView'));
+    document.getElementById('detailedPlanningButton')?.addEventListener('click', () => switchView('ganttPlanningView'));
     document.getElementById('dashboardViewButton')?.addEventListener('click', () => switchView('dashboardView'));
     document.getElementById('tuneCapacityButton')?.addEventListener('click', () => switchView('capacityConfigView'));
     document.getElementById('sdmForecastButton')?.addEventListener('click', () => switchView('sdmForecastingView'));
@@ -1393,7 +1300,7 @@ function initializeEventListeners() {
     }
 
     // Global Nav Buttons
-    document.getElementById('backToSystemViewButton')?.addEventListener('click', showSystemOverview);
+    document.getElementById('backToSystemViewButton')?.addEventListener('click', () => switchView('visualizationCarousel'));
     document.getElementById('returnHomeButton')?.addEventListener('click', returnToHome);
 
     // --- MODIFIED LISTENERS FOR THE NEW MODAL ---
