@@ -51,11 +51,7 @@
                     </div>
                 </div>
             </div>
-            <div class="create-btn-container">
-                <button id="create-ai-btn" class="create-btn">
-                    <i class="fas fa-magic"></i> Create with AI
-                </button>
-            </div>
+
             <div class="nav-groups">
                 <div class="nav-group-title">Planning</div>
                 <a href="#" class="nav-item" data-view="planningView">
@@ -142,18 +138,14 @@
             </header>
 
             <div id="main-content-area">
-                <div class="page-header-container">
-                    <h1 id="page-title-display" class="page-title">Software Management Tools</h1>
-                    <p id="page-desc-display" class="page-desc">Load a previously saved system or create a new software
-                        system</p>
-                </div>
+
 
                 <div id="welcomeView" style="display:none; padding: 40px; max-width: 1200px; margin: 0 auto;">
                     <div style="text-align: center; margin-bottom: 60px;">
                         <h1 style="font-size: 2.5rem; color: #1e293b; margin-bottom: 15px;">Welcome to SMT Platform</h1>
-                        <p style="font-size: 1.1rem; color: #64748b; max-width: 600px; margin: 0 auto;">
-                            Your comprehensive workspace for software planning, architecture visualization, and capacity
-                            management.
+                        <p style="font-size: 1.1rem; color: #64748b; max-width: 800px; margin: 0 auto;">
+                            Your comprehensive, one-stop shop for Software Managers. Plan roadmaps, visualize
+                            architecture, forecast resources, and manage team capacity—all in one unified workspace.
                         </p>
                     </div>
 
@@ -181,6 +173,19 @@
                             <h3 style="font-size: 1.25rem; margin-bottom: 10px; color: #0f172a;">Create New System</h3>
                             <p style="color: #64748b; font-size: 0.95rem;">Start a new project from scratch. Define
                                 teams, services, and strategic goals.</p>
+                        </div>
+
+                        <!-- Create with AI Card (Hidden by default) -->
+                        <div id="createWithAiCard" class="action-card"
+                            onclick="if(window.handleCreateWithAi) window.handleCreateWithAi()"
+                            style="display: none; background: white; padding: 30px; border-radius: 12px; border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                            <div
+                                style="width: 50px; height: 50px; background: #f3e8ff; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; color: #a855f7;">
+                                <i class="fas fa-magic" style="font-size: 1.5rem;"></i>
+                            </div>
+                            <h3 style="font-size: 1.25rem; margin-bottom: 10px; color: #0f172a;">Create with AI</h3>
+                            <p style="color: #64748b; font-size: 0.95rem;">Generate a complete system architecture and
+                                plan using AI assistance.</p>
                         </div>
 
                         <!-- Documentation Card -->

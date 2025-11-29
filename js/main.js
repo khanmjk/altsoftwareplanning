@@ -41,13 +41,17 @@ if (typeof mermaid !== 'undefined' && typeof mermaid.initialize === 'function') 
 function updateAiDependentUI(options = {}) {
     const { skipPlanningRender = false } = options;
     const aiEnabled = !!(globalSettings?.ai?.isEnabled);
+
+    // Toggle the new "Create with AI" card in the welcome view
+    const createWithAiCard = document.getElementById('createWithAiCard');
+    if (createWithAiCard) {
+        createWithAiCard.style.display = aiEnabled ? 'block' : 'none';
+    }
+
+    // Legacy button removal (just in case)
     const createWithAiButton = document.getElementById('createWithAiButton');
     if (createWithAiButton) {
-        if (currentMode === Modes.NAVIGATION && aiEnabled) {
-            createWithAiButton.style.display = 'inline-block';
-        } else {
-            createWithAiButton.style.display = 'none';
-        }
+        createWithAiButton.style.display = 'none';
     }
 
     const aiChatButton = document.getElementById('aiChatButton');
