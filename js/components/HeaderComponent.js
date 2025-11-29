@@ -37,27 +37,12 @@ class HeaderComponent {
             });
         }
 
-        // Documentation Toggle
-        const docBtn = this.container.querySelector('#header-doc-btn');
-        if (docBtn) {
-            docBtn.addEventListener('click', () => {
-                const docSection = document.getElementById('toolDocumentationSection');
-                if (docSection) {
-                    docSection.style.display = docSection.style.display === 'none' ? 'block' : 'none';
-                    // Scroll to it if opening
-                    if (docSection.style.display === 'block') {
-                        docSection.scrollIntoView({ behavior: 'smooth' });
-                    }
-                }
-            });
-        }
+
     }
 
     update(viewId, systemName) {
         this.updateBreadcrumbs(viewId, systemName);
-        this.updatePageHeader(viewId);
     }
-
     updateBreadcrumbs(viewId, systemName) {
         if (!this.breadcrumbsContainer) return;
 
@@ -81,15 +66,6 @@ class HeaderComponent {
         this.breadcrumbsContainer.innerHTML = html;
     }
 
-    updatePageHeader(viewId) {
-        if (!this.pageTitleElement) return;
-
-        const info = this.getViewInfo(viewId);
-        this.pageTitleElement.textContent = info.title;
-        if (this.pageDescElement) {
-            this.pageDescElement.textContent = info.desc;
-        }
-    }
 
     getViewPath(viewId) {
         // Define paths for each view
@@ -103,6 +79,7 @@ class HeaderComponent {
             'organogramView': [{ label: 'System' }, { label: 'Org Design', isLast: true }],
             'systemEditForm': [{ label: 'System' }, { label: 'Edit System', isLast: true }],
             'dashboardView': [{ label: 'Insights' }, { label: 'Dashboard', isLast: true }],
+            'helpView': [{ label: 'Help' }, { label: 'How to Guide', isLast: true }],
         };
         return paths[viewId] || [{ label: 'Home', isLast: true }];
     }

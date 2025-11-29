@@ -37,7 +37,6 @@ class SidebarComponent {
 
     updateState() {
         const hasSystem = !!window.currentSystemData;
-        console.log("SidebarComponent.updateState called. hasSystem:", hasSystem, "window.currentSystemData:", window.currentSystemData);
         const navLinks = this.container.querySelectorAll('.nav-item[data-view]');
 
         navLinks.forEach(link => {

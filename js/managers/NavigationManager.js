@@ -25,6 +25,7 @@ class NavigationManager {
         this.registerView('systemEditForm', 'systemEditForm');
         this.registerView('dashboardView', 'dashboardView');
         this.registerView('welcomeView', 'welcomeView');
+        this.registerView('helpView', 'helpView');
 
         // Legacy views that might be needed
         this.registerView('serviceDependenciesTable', 'serviceDependenciesTable');
@@ -68,6 +69,16 @@ class NavigationManager {
             this.header.update(viewId, systemName);
         }
 
+        // 4b. Ensure the active view starts at the top of the scrollable area
+        const mainContentArea = document.getElementById('main-content-area');
+        if (mainContentArea) {
+            if (typeof mainContentArea.scrollTo === 'function') {
+                mainContentArea.scrollTo({ top: 0, behavior: 'auto' });
+            } else {
+                mainContentArea.scrollTop = 0;
+            }
+        }
+
         // 5. Trigger Legacy Initialization Logic (The "Glue")
         // This replaces the switch statement in the old switchView
         this.triggerViewInit(viewId);
@@ -108,6 +119,12 @@ class NavigationManager {
         }
         if (viewId === 'ganttPlanningView') {
             if (typeof initializeGanttPlanningView === 'function') initializeGanttPlanningView();
+        }
+        if (viewId === 'helpView') {
+            if (!this.docComponent) {
+                this.docComponent = new DocumentationComponent('documentationContent', 'main-content-area');
+            }
+            this.docComponent.init();
         }
 
         // Update AI Context

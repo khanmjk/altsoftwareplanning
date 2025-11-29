@@ -120,6 +120,12 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="nav-group-title">Help</div>
+                <a href="#" class="nav-item" data-view="helpView">
+                    <div class="nav-icon"><i class="fas fa-book"></i></div>
+                    <div class="nav-text">How to Guide</div>
+                </a>
             </div>
             <div class="user-profile">
                 <div class="avatar">U</div>
@@ -133,8 +139,6 @@
                 <div class="header-actions">
                     <button id="header-ai-btn" class="header-btn" title="AI Assistant"><i
                             class="fas fa-robot"></i></button>
-                    <button id="header-doc-btn" class="header-btn" title="Documentation & Help"><i
-                            class="fas fa-question-circle"></i></button>
                     <button class="header-btn" title="Notifications"><i class="fas fa-bell"></i></button>
                 </div>
             </header>
@@ -192,7 +196,7 @@
 
                         <!-- Documentation Card -->
                         <div class="action-card"
-                            onclick="window.open('https://github.com/khanmjk/altsoftwareplanning', '_blank')"
+                            onclick="if(window.navigationManager) window.navigationManager.navigateTo('helpView')"
                             style="background: white; padding: 30px; border-radius: 12px; border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
                             <div
                                 style="width: 50px; height: 50px; background: #f8fafc; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; color: #64748b;">
@@ -229,28 +233,8 @@
                 </div>
             </div>
 
-            <div id="toolDocumentationSection"
-                style="margin-top: 20px; border: 1px solid #ccc; display: none; max-width: 90%; margin-left: auto; margin-right: auto;">
-                <h3 id="documentationHeader"
-                    style="cursor: pointer; margin: 0; padding: 10px; background-color: #e9ecef; border-bottom: 1px solid #ccc;"
-                    title="Click to expand/collapse documentation">
-                    <span id="documentationToggleIndicator" class="toggle-indicator"
-                        style="font-weight:bold; margin-right:5px;">[+] </span>
-                    Tool Documentation & Help
-                </h3>
-                <div id="documentationContent"
-                    style="display: none; padding: 15px; max-height: 450px; overflow-y: auto; background-color: #fdfdfd;">
-                    <p><em>Loading documentation... Please ensure you have an internet connection to fetch the
-                            latest
-                            help content.</em></p>
-                </div>
-                <div id="docResizeHandle"
-                    style="height: 10px; background-color: #e0e0e0; cursor: ns-resize; border-top: 1px solid #ccc; display: none;">
-                </div>
-            </div>
 
-            <div id="visualizationCarousel"
-                style="position: relative; width: 95%; max-width: 1400px; margin: 20px auto; border: 1px solid #ddd; padding: 10px; display:none; resize: both; overflow: auto; min-height: 760px;">
+            <div id="visualizationCarousel" style="display:none;">
                 <div style="text-align: center; margin-bottom: 10px;">
                     <button onclick="navigateVisualizations(-1)">&lt; Previous</button>
                     <span id="visualizationTitle" style="margin: 0 15px; font-weight: bold; font-size: 1.1em;">System
@@ -331,27 +315,8 @@
                 <button type="button" onclick="exitEditMode()">Cancel</button>
             </div>
 
-            <div id="toolDocumentationSection"
-                style="margin-top: 20px; border: 1px solid #ccc; display: none; max-width: 90%; margin-left: auto; margin-right: auto;">
-                <h3 id="documentationHeader"
-                    style="cursor: pointer; margin: 0; padding: 10px; background-color: #e9ecef; border-bottom: 1px solid #ccc;"
-                    title="Click to expand/collapse documentation">
-                    <span id="documentationToggleIndicator" class="toggle-indicator"
-                        style="font-weight:bold; margin-right:5px;">[+] </span>
-                    Tool Documentation & Help
-                </h3>
-                <div id="documentationContent"
-                    style="display: none; padding: 15px; max-height: 450px; overflow-y: auto; background-color: #fdfdfd;">
-                    <p><em>Loading documentation... Please ensure you have an internet connection to fetch the
-                            latest
-                            help content.</em></p>
-                </div>
-                <div id="docResizeHandle"
-                    style="height: 10px; background-color: #e0e0e0; cursor: ns-resize; border-top: 1px solid #ccc; display: none;">
-                </div>
-            </div>
 
-            <div id="organogramView" style="display:none; margin-top: 20px;">
+            <div id="organogramView" style="display:none;">
                 <div id="organogramToolbar" style="margin-bottom: 10px;">
                 </div>
                 <div id="organogramContent" style="border: 1px solid #ccc; padding: 15px;">
@@ -373,7 +338,7 @@
                 </div>
             </div>
 
-            <div id="planningView" style="display:none; margin-top: 20px;">
+            <div id="planningView" style="display:none; margin-top: 0;">
                 <div id="planningCapacitySummary"
                     style="margin-bottom: 15px; font-weight: bold; padding: 8px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">
                 </div>
@@ -438,7 +403,6 @@
             </div>
             <div id="roadmapView"
                 style="display:none; margin-top: 20px; max-width: 95%; margin-left: auto; margin-right: auto;">
-                <h2>Roadmap & Backlog Management</h2>
                 <div id="roadmapControlsContainer"
                     style="margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">
                 </div>
@@ -450,10 +414,19 @@
             </div>
 
             <div id="capacityConfigView"
-                style="display:none; margin-top: 20px; max-width: 90%; margin-left: auto; margin-right: auto;">
+                style="display:none; margin-top: 0; max-width: 90%; margin-left: auto; margin-right: auto;">
             </div>
             <div id="sdmForecastingView"
-                style="display:none; margin-top: 20px; max-width: 90%; margin-left: auto; margin-right: auto;">
+                style="display:none; margin-top: 0; max-width: 90%; margin-left: auto; margin-right: auto;">
+            </div>
+
+            <div id="helpView"
+                style="display:none; margin-top: 0; max-width: 90%; margin-left: auto; margin-right: auto;">
+                <div id="documentationContent" style="padding: 15px; background-color: #fdfdfd;">
+                    <p><em>Loading documentation... Please ensure you have an internet connection to fetch the
+                            latest
+                            help content.</em></p>
+                </div>
             </div>
             <div id="ganttPlanningView" style="display:none; margin-top: 20px;">
                 <div class="gantt-controls"
@@ -700,6 +673,7 @@
     <script src="js/managers/NavigationManager.js"></script>
     <script src="js/components/SidebarComponent.js"></script>
     <script src="js/components/HeaderComponent.js"></script>
+    <script src="js/components/DocumentationComponent.js"></script>
     <script src="js/components/SystemSelectionModal.js"></script>
     <script src="js/main.js"></script>
 </body>

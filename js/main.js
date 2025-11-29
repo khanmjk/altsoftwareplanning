@@ -478,24 +478,7 @@ window.onload = async function () {
         console.error("Failed to load essential HTML components on startup.", e);
     }
 
-    const docHeader = document.getElementById('documentationHeader');
-    const docResizeHandle = document.getElementById('docResizeHandle');
 
-    if (docHeader) {
-        docHeader.addEventListener('click', () => {
-            toggleCollapsibleSection('documentationContent', 'documentationToggleIndicator', 'docResizeHandle');
-        });
-        console.log("Attached toggle listener to documentation header.");
-    } else {
-        console.warn("Documentation header not found in window.onload.");
-    }
-
-    if (docResizeHandle) {
-        docResizeHandle.addEventListener('mousedown', startDocumentationResize);
-        console.log("Attached mousedown listener to docResizeHandle.");
-    } else {
-        console.warn("Documentation resize handle not found in window.onload.");
-    }
 
     initializeEventListeners();
     loadGlobalSettings();
@@ -563,22 +546,7 @@ function switchView(targetViewId, newMode = null) {
 
     // 5. Update AI UI
     updateAiDependentUI({ skipPlanningRender: true });
-    const docContent = document.getElementById('documentationContent');
-    if (docContent) {
-        const currentHTML = docContent.innerHTML.trim().toLowerCase();
-        const needsLoading = currentHTML.includes("<em>loading documentation...") ||
-            currentHTML.includes("<em>attempting to load documentation...") ||
-            currentHTML.includes("<em>waiting for help components...") ||
-            currentHTML === "";
-        if (needsLoading && typeof loadAndDisplayDocumentation === 'function') {
-            console.log("switchView (home): Conditions met to call loadAndDisplayDocumentation.");
-            loadAndDisplayDocumentation();
-        } else if (typeof loadAndDisplayDocumentation !== 'function') {
-            console.warn("switchView (home): loadAndDisplayDocumentation function is not defined.");
-        } else {
-            console.log("switchView (home): Documentation content not in initial state or already loaded. Not re-fetching.");
-        }
-    }
+
 }
 
 
@@ -967,10 +935,7 @@ function loadSavedSystem(systemName) {
 
     // Update sidebar state now that system is loaded
     if (window.sidebarComponent) {
-        console.log("[V7 LOAD] Calling sidebarComponent.updateState()...");
         window.sidebarComponent.updateState();
-    } else {
-        console.warn("[V7 LOAD] window.sidebarComponent is missing!");
     }
 
     try {
