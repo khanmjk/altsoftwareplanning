@@ -968,7 +968,7 @@ function generateRoadmapInitiativeFormFields(formElement) {
     const strategicLegend = document.createElement('legend'); strategicLegend.textContent = 'Strategic Alignment'; strategicLegend.style.fontWeight = 'bold';
     strategicFieldset.appendChild(strategicLegend);
 
-    const currentDefinedThemes = currentSystemData.definedThemes || [];
+    const currentDefinedThemes = (currentSystemData && currentSystemData.definedThemes) ? currentSystemData.definedThemes : [];
     const themeOptions = currentDefinedThemes.map(theme => ({
         value: theme.themeId,
         text: `${theme.name} (${theme.themeId.slice(0, 10)}...)`

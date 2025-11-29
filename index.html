@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="css/components/enhancedTableWidget.css">
 <link rel="stylesheet" href="css/components/aiChatPanel.css">
 <link rel="stylesheet" href="css/components/ganttChart.css">
+<link rel="stylesheet" href="css/components/Modal.css">
 <link rel="stylesheet" href="css/components/SystemSelectionModal.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css">
 
@@ -217,7 +218,7 @@
                 <div class="modal-content-wrapper">
                     <div class="modal-header">
                         <h3>AI Generation Statistics</h3>
-                        <button type="button" class="btn-secondary" onclick="closeAiStatsModal()">Close</button>
+                        <span class="close-button" onclick="closeAiStatsModal()">&times;</span>
                     </div>
                     <div class="modal-body">
                         <pre id="aiGenerationStatsContent" class="ai-stats-pre"></pre>

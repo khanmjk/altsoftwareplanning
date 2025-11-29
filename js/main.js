@@ -965,6 +965,14 @@ function loadSavedSystem(systemName) {
 
     switchView('visualizationCarousel');
 
+    // Update sidebar state now that system is loaded
+    if (window.sidebarComponent) {
+        console.log("[V7 LOAD] Calling sidebarComponent.updateState()...");
+        window.sidebarComponent.updateState();
+    } else {
+        console.warn("[V7 LOAD] window.sidebarComponent is missing!");
+    }
+
     try {
         populateServiceSelection();
         populateDependencyServiceSelection();
@@ -1126,8 +1134,19 @@ window.createNewSystem = createNewSystem;
 
 /** Return to Home **/
 function returnToHome() {
-    console.log("Returning to home view (Clearing System)...");
-    switchView(null); // Passing null shows the home screen and resets state
+    console.log("Returning to Home/Welcome screen.");
+    currentSystemData = null;
+    window.currentSystemData = null;
+
+    // Update sidebar state now that system is loaded
+    if (window.sidebarComponent) {
+        console.log("[V7 LOAD] Calling sidebarComponent.updateState()...");
+        window.sidebarComponent.updateState();
+    } else {
+        console.warn("[V7 LOAD] window.sidebarComponent is missing!");
+    }
+
+    switchView('welcomeView', 'home');
 }
 window.returnToHome = returnToHome;
 

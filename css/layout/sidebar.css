@@ -131,6 +131,12 @@
     padding-left: 9px;
 }
 
+#sidebar .nav-item.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
 #sidebar .nav-icon {
     width: 20px;
     margin-right: 12px;

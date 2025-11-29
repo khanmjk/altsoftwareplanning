@@ -31,6 +31,35 @@ class SidebarComponent {
         if (systemNameEl && window.currentSystemData) {
             systemNameEl.textContent = window.currentSystemData.systemName;
         }
+
+        this.updateState();
+    }
+
+    updateState() {
+        const hasSystem = !!window.currentSystemData;
+        console.log("SidebarComponent.updateState called. hasSystem:", hasSystem, "window.currentSystemData:", window.currentSystemData);
+        const navLinks = this.container.querySelectorAll('.nav-item[data-view]');
+
+        navLinks.forEach(link => {
+            // If we had a "Home" or "Welcome" link, we'd exclude it here.
+            // For now, all data-view links are system-specific.
+            if (!hasSystem) {
+                link.classList.add('disabled');
+            } else {
+                link.classList.remove('disabled');
+            }
+        });
+
+        // Ensure Settings is always enabled (it doesn't have data-view, it has data-toggle)
+        // But we might want to disable "Delete System" if no system is loaded.
+        const deleteSystemBtn = this.container.querySelector('.dropdown-item.danger');
+        if (deleteSystemBtn) {
+            if (!hasSystem) {
+                deleteSystemBtn.style.display = 'none';
+            } else {
+                deleteSystemBtn.style.display = 'block';
+            }
+        }
     }
 
     attachEventListeners() {
