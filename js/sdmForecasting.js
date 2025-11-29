@@ -992,4 +992,4 @@ function generateChart_SDM(weeks, simulationResult, fundedSize) {
 
 // ========= END SDM Resource Forecasting Tool Code =========
 
-window.showSdmForecastingView = showSdmForecastingView;
+

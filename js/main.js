@@ -1369,9 +1369,9 @@ function initializeEventListeners() {
     document.getElementById('manageYearPlanButton')?.addEventListener('click', showPlanningView);
     document.getElementById('manageRoadmapButton')?.addEventListener('click', showRoadmapView);
     document.getElementById('detailedPlanningButton')?.addEventListener('click', showGanttPlanningView);
-    document.getElementById('dashboardViewButton')?.addEventListener('click', showDashboardView);
-    document.getElementById('tuneCapacityButton')?.addEventListener('click', showCapacityConfigView);
-    document.getElementById('sdmForecastButton')?.addEventListener('click', showSdmForecastingView);
+    document.getElementById('dashboardViewButton')?.addEventListener('click', () => switchView('dashboardView'));
+    document.getElementById('tuneCapacityButton')?.addEventListener('click', () => switchView('capacityConfigView'));
+    document.getElementById('sdmForecastButton')?.addEventListener('click', () => switchView('sdmForecastingView'));
     document.getElementById('aiSettingsButton')?.addEventListener('click', openAiSettingsModal);
 
     // AI Chat Button
