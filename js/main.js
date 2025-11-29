@@ -741,45 +741,13 @@ function saveSampleSystemsToLocalStorage() {
 }
 
 /** Show Saved Systems Modal **/
-function showSavedSystems() {
-    console.log("Showing saved systems list...");
-    const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
-    const systemNames = Object.keys(systems);
-
-    if (systemNames.length === 0) {
-        alert('No saved systems found.');
-        return;
+function showSavedSystems(systemNames) {
+    if (!window.systemSelectionModal) {
+        window.systemSelectionModal = new SystemSelectionModal();
     }
-
-    const existingLoadListDiv = document.getElementById('systemLoadListDiv');
-    if (existingLoadListDiv) document.body.removeChild(existingLoadListDiv);
-    const existingDeleteListDiv = document.getElementById('systemDeleteListDiv');
-    if (existingDeleteListDiv) document.body.removeChild(existingDeleteListDiv);
-
-    let systemListDiv = document.createElement('div');
-    systemListDiv.id = 'systemLoadListDiv';
-    let systemListHtml = '<h2>Select a System to Load</h2><ul>';
-    systemNames.forEach(systemName => {
-        systemListHtml += `
-            <li style="margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
-                <span>${systemName}</span>
-                <button onclick="loadSavedSystem('${systemName}')" style="margin-left: 15px; padding: 3px 8px; font-size: 0.9em;">Load</button>
-            </li>`;
+    window.systemSelectionModal.show(systemNames, (selectedSystem) => {
+        loadSavedSystem(selectedSystem);
     });
-    systemListHtml += '</ul>';
-    systemListDiv.innerHTML = systemListHtml;
-
-    let closeButton = document.createElement('button');
-    closeButton.innerText = 'Cancel';
-    closeButton.style.marginTop = '15px';
-    closeButton.onclick = function () {
-        if (systemListDiv.parentNode === document.body) {
-            document.body.removeChild(systemListDiv);
-        }
-    };
-    systemListDiv.appendChild(closeButton);
-    Object.assign(systemListDiv.style, { position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', backgroundColor: '#fff', padding: '20px', border: '1px solid #ccc', boxShadow: '0 4px 8px rgba(0,0,0,0.1)', zIndex: '1001', maxHeight: '80vh', overflowY: 'auto', minWidth: '300px' });
-    document.body.appendChild(systemListDiv);
 }
 window.showSavedSystems = showSavedSystems;
 
@@ -1047,7 +1015,7 @@ function loadSystem() {
     try {
         systems = JSON.parse(systemsJSON);
     } catch (e) {
-        console.error("Error parsing local storage:", e);
+        console.error("Error parsing systems JSON:", e);
         alert('Error reading saved systems.');
         return;
     }
@@ -1059,51 +1027,12 @@ function loadSystem() {
     }
 
     if (systemNames.length === 1) {
-        // Load the only system directly
         loadSavedSystem(systemNames[0]);
     } else {
-        // Show selection list
-        showSystemSelectionList(systemNames);
+        showSavedSystems(systemNames);
     }
 }
 window.loadSystem = loadSystem;
-
-function showSystemSelectionList(systemNames) {
-    // Remove existing list if any
-    const existingList = document.getElementById('systemLoadListDiv');
-    if (existingList) document.body.removeChild(existingList);
-
-    const listDiv = document.createElement('div');
-    listDiv.id = 'systemLoadListDiv';
-
-    let html = '<h2>Select a System to Load</h2><ul>';
-    systemNames.forEach(name => {
-        html += `<li style="margin-bottom: 10px;">
-            <button onclick="loadSavedSystem('${name}'); const list = document.getElementById('systemLoadListDiv'); if(list) document.body.removeChild(list);" class="btn-secondary" style="width: 100%; text-align: left;">
-                ${name}
-            </button>
-        </li>`;
-    });
-    html += '</ul>';
-
-    const closeBtn = document.createElement('button');
-    closeBtn.innerText = 'Cancel';
-    closeBtn.className = 'btn-secondary';
-    closeBtn.style.marginTop = '15px';
-    closeBtn.onclick = () => document.body.removeChild(listDiv);
-
-    listDiv.innerHTML = html;
-    listDiv.appendChild(closeBtn);
-
-    Object.assign(listDiv.style, {
-        position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-        backgroundColor: '#fff', padding: '20px', border: '1px solid #ccc',
-        boxShadow: '0 4px 15px rgba(0,0,0,0.2)', zIndex: '2000',
-        maxHeight: '80vh', overflowY: 'auto', minWidth: '300px', borderRadius: '8px'
-    });
-
-    document.body.appendChild(listDiv);
-}
 
 /** Updated function to handle "Create New Software System" button click **/
 function createNewSystem() {
