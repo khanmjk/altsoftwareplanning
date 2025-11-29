@@ -757,10 +757,12 @@ window.toggleCapacityConstraints = toggleCapacityConstraints;
  * REVISED - Generates the planning table, dynamically populating the year selector
  * based on initiative data and ensuring data consistency.
  */
-function renderPlanningView() {
+function renderPlanningView(container) {
     console.log(`renderPlanningView: Rendering main planning view for year: ${currentPlanningYear}...`);
 
-    const container = document.getElementById('planningView');
+    if (!container) {
+        container = document.getElementById('planningView');
+    }
     if (!container) {
         console.error("Planning container #planningView not found.");
         return;

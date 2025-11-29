@@ -480,8 +480,18 @@ window.onload = async function () {
     saveSampleSystemsToLocalStorage(); // Moved here to ensure it runs before potential initial switchView
 
     setTimeout(() => {
-        console.log("Attempting initial switchView(null) after short delay.");
-        switchView(null);
+        // Check for view in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialView = urlParams.get('view');
+
+        console.log(`Attempting initial navigation. URL View: ${initialView}`);
+
+        if (initialView) {
+            // Use switchView which now uses NavigationManager
+            switchView(initialView);
+        } else {
+            switchView(null); // Default to welcome
+        }
     }, 500);
 };
 

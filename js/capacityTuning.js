@@ -2,23 +2,31 @@
 console.log("Loading capacityTuning.js...");
 
 /** NEW Function - Renders the Capacity Configuration View into the Workspace */
-function renderCapacityConfigView() {
+function renderCapacityConfigView(container) {
     console.log("Rendering Capacity Configuration View...");
-    if (!currentSystemData) {
-        // In a workspace context, we might want to render a "No System Loaded" message instead of an alert
-        const container = document.getElementById('capacityConfigView');
-        if (container) {
-            container.innerHTML = '<div style="padding: 20px;"><h3>Please load a system first.</h3></div>';
-        }
+
+    // Fallback if container not passed (legacy support)
+    if (!container) {
+        container = document.getElementById('capacityConfigView');
+    }
+
+    if (!container) {
+        console.error("Cannot render capacity view: Container not found.");
         return;
     }
 
-    // The container should already exist (created by WorkspaceComponent)
-    const container = document.getElementById('capacityConfigView');
-    if (!container) {
-        console.error("Cannot render capacity view: Container #capacityConfigView not found.");
+    if (!currentSystemData) {
+        container.innerHTML = '<div style="padding: 20px;"><h3>Please load a system first.</h3></div>';
         return;
     }
+
+    // Clear container (though WorkspaceComponent does this too)
+    // container.innerHTML = ''; 
+
+    // We need to ensure internal functions use this container or find their targets within it.
+    // For now, internal functions like generateGlobalConstraintsForm still look for ID 'capacityConfigView'.
+    // So we MUST ensure the container has that ID if we want to avoid refactoring everything.
+    // WorkspaceComponent assigns the ID, so we are good.
 
     generateGlobalConstraintsForm();
     generateTeamConstraintsForms();

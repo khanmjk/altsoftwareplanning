@@ -555,6 +555,7 @@ function deleteApi(serviceIndex, apiIndex, containerId) {
  * - "Add New Engineer" prompts for all new attributes.
  * - Engineer assignment logic correctly updates both `team.engineers` (names) and `allKnownEngineers.currentTeamId`.
  */
+
 function displayTeamsForEditing(teamsDataToDisplay, expandedTeamIndex = -1) {
     console.log("displayTeamsForEditing called. Expanded index:", expandedTeamIndex, "Using new engineer model (v2).");
     const teamsDiv = document.getElementById('teamsManagement');
@@ -1519,13 +1520,56 @@ function handleTeamInputChange(event) {
 }
 
 /** REVISED (v4) Show System Edit Form using switchView */
-function showSystemEditForm(systemData) {
+// Template for the System Edit Form
+const systemEditFormTemplate = `
+        <div id="systemEditFormContent" style="padding: 20px;">
+            <h2>Edit System</h2>
+            <form id="editSystemForm">
+                <label>System Name:</label><br>
+                <input type="text" id="systemNameInput" class="form-control" style="margin-bottom: 10px;"><br>
+                <label>System Description:</label><br>
+                <textarea id="systemDescriptionInput" class="form-control" style="margin-bottom: 10px;"></textarea><br>
+                <button type="button" class="btn btn-primary" onclick="saveSystemDetails()">Save System Details</button>
+            </form>
+
+            <h3 style="margin-top: 20px;">Services</h3>
+            <div id="editServicesManagement"></div>
+            <button type="button" class="btn btn-secondary" onclick="addNewService()">Add New Service</button><br><br>
+
+            <h3>Teams</h3>
+            <div id="teamsManagement"></div>
+            <button id="addNewTeamButton" type="button" class="btn btn-secondary" onclick="addNewTeam()">Add New Team</button><br><br>
+
+            <div style="margin-top: 20px; border-top: 1px solid #ddd; padding-top: 20px;">
+                <button type="button" class="btn btn-success" onclick="saveAllChanges()">Save All Changes</button>
+                <button type="button" class="btn btn-danger" onclick="exitEditMode()">Cancel</button>
+            </div>
+        </div>
+    `;
+
+/** REVISED (v4) Show System Edit Form using WorkspaceComponent */
+function showSystemEditForm(systemData, container) {
     console.log("Entering Edit System form (Focus Mode)...");
-    if (!systemData) { console.error("showSystemEditForm called without systemData."); return; }
 
-    // Use switchView to handle showing the form and managing buttons/title
-    switchView('systemEditForm', Modes.EDITING); // Explicitly set EDITING mode
+    // Fallback if container not passed
+    if (!container) {
+        container = document.getElementById('systemEditForm');
+    }
+    if (!container) {
+        console.error("System Edit Form container not found.");
+        return;
+    }
 
+    if (!systemData) {
+        console.error("showSystemEditForm called without systemData.");
+        container.innerHTML = '<div class="alert alert-danger">Error: No system data loaded.</div>';
+        return;
+    }
+
+    // Inject the template
+    container.innerHTML = systemEditFormTemplate;
+
+    // Populate the form
     populateSystemEditForm(systemData);
 }
 

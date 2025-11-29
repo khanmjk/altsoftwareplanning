@@ -29,6 +29,20 @@ class NavigationManager {
 
         // Legacy views that might be needed
         this.registerView('serviceDependenciesTable', 'serviceDependenciesTable');
+
+        console.log("NavigationManager initialized.");
+
+        // Handle browser back/forward buttons
+        window.addEventListener('popstate', (event) => {
+            if (event.state && event.state.viewId) {
+                console.log(`[History] Popstate event: navigating to ${event.state.viewId}`);
+                this.navigateTo(event.state.viewId, true); // true = isPopState
+            } else {
+                // Fallback for initial state or empty state
+                console.log("[History] Popstate event with no state, defaulting to welcomeView");
+                this.navigateTo('welcomeView', true);
+            }
+        });
     }
 
     registerView(viewId, elementId) {
@@ -36,151 +50,75 @@ class NavigationManager {
         this.views[viewId] = elementId;
     }
 
-    navigateTo(viewId) {
+    /**
+     * Navigates to a specific view.
+     * @param {string} viewId - The ID of the view to navigate to.
+     * @param {boolean} isPopState - If true, indicates navigation is from history (don't push state).
+     */
+    navigateTo(viewId, isPopState = false) {
         console.log(`NavigationManager: Navigating to ${viewId}`);
-        console.log(`NavigationManager: Current views map:`, JSON.stringify(this.views));
 
-        // 1. Update State
-        this.currentViewId = viewId;
-        window.currentViewId = viewId; // Keep global sync for legacy code
-
-        // 2. Hide all views
-        Object.values(this.views).forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.style.display = 'none';
-        });
-
-        // 3. Show target view
-
-        // --- Workspace Migration Check ---
-        if (viewId === 'capacityConfigView' && window.workspaceComponent) {
-            // Use the new Workspace Component for rendering
-            window.workspaceComponent.render(viewId, () => {
-                if (typeof window.renderCapacityConfigView === 'function') {
-                    window.renderCapacityConfigView();
-                } else {
-                    console.error("renderCapacityConfigView function not found!");
-                }
-            });
-            // Skip the legacy display logic below, but ensure we update state
-            this.updateComponents(viewId);
-            return;
+        // 1. Update Sidebar Selection
+        if (this.sidebar) {
+            this.sidebar.setActive(viewId);
         }
 
-        if (viewId === 'sdmForecastingView' && window.workspaceComponent) {
-            window.workspaceComponent.render(viewId, () => {
-                if (typeof window.renderSdmForecastingView === 'function') {
-                    window.renderSdmForecastingView();
-                } else {
-                    console.error("renderSdmForecastingView function not found!");
-                }
-            });
-            this.updateComponents(viewId);
-            return;
+        // 2. Update Header Breadcrumbs
+        if (this.header) {
+            const systemName = window.currentSystemData ? window.currentSystemData.systemName : 'System';
+            this.header.update(viewId, systemName);
         }
 
-        if (viewId === 'organogramView' && window.workspaceComponent) {
-            window.workspaceComponent.render(viewId, (container) => {
-                if (typeof window.renderOrgChartView === 'function') {
-                    window.renderOrgChartView(container);
-                } else {
-                    console.error("renderOrgChartView function not found!");
-                }
-            });
-            this.updateComponents(viewId);
-            return;
+        // 3. Render the View via WorkspaceComponent
+        if (window.workspaceComponent) {
+            // Map viewId to render function
+            if (viewId === 'planningView') {
+                window.workspaceComponent.render(viewId, window.renderPlanningView);
+            } else if (viewId === 'ganttPlanningView') {
+                window.workspaceComponent.render(viewId, window.renderGanttPlanningView);
+            } else if (viewId === 'capacityConfigView') {
+                window.workspaceComponent.render(viewId, window.renderCapacityConfigView);
+            } else if (viewId === 'sdmForecastingView') {
+                window.workspaceComponent.render(viewId, window.renderSdmForecastingView);
+            } else if (viewId === 'roadmapView') {
+                window.workspaceComponent.render(viewId, window.renderRoadmapView);
+            } else if (viewId === 'visualizationCarousel') {
+                window.workspaceComponent.render(viewId, window.renderSystemOverviewView);
+            } else if (viewId === 'organogramView') {
+                window.workspaceComponent.render(viewId, window.renderOrgChartView);
+            } else if (viewId === 'systemEditForm') {
+                window.workspaceComponent.render(viewId, (container) => window.showSystemEditForm(window.currentSystemData, container));
+            } else if (viewId === 'dashboardView') {
+                window.workspaceComponent.render(viewId, window.renderDashboardView);
+            } else if (viewId === 'welcomeView') {
+                window.workspaceComponent.render(viewId, (container) => {
+                    const staticWelcome = document.getElementById('welcomeViewContent');
+                    if (staticWelcome) {
+                        container.innerHTML = staticWelcome.innerHTML;
+                        container.style.display = 'block';
+                    } else {
+                        container.innerHTML = '<h1>Welcome</h1><p>Welcome content not found.</p>';
+                    }
+                });
+            } else if (viewId === 'helpView') {
+                window.workspaceComponent.render(viewId, window.renderHelpView);
+            } else {
+                console.warn(`NavigationManager: No render function mapped for ${viewId}`);
+            }
         }
 
-        if (viewId === 'roadmapView' && window.workspaceComponent) {
-            window.workspaceComponent.render(viewId, () => {
-                if (typeof window.renderRoadmapView === 'function') {
-                    window.renderRoadmapView();
-                } else {
-                    console.error("renderRoadmapView function not found!");
-                }
-            });
-            this.updateComponents(viewId);
-            return;
+        // 4. Scroll to top
+        const mainContentArea = document.getElementById('main-content-area');
+        if (mainContentArea) {
+            mainContentArea.scrollTop = 0;
         }
 
-        if (viewId === 'dashboardView' && window.workspaceComponent) {
-            window.workspaceComponent.render(viewId, () => {
-                if (typeof window.renderDashboardView === 'function') {
-                    window.renderDashboardView();
-                } else {
-                    console.error("renderDashboardView function not found!");
-                }
-            });
-            this.updateComponents(viewId);
-            return;
+        // 5. Update Browser History
+        if (!isPopState) {
+            const url = new URL(window.location);
+            url.searchParams.set('view', viewId);
+            window.history.pushState({ viewId: viewId }, '', url);
         }
-
-        if (viewId === 'ganttPlanningView' && window.workspaceComponent) {
-            window.workspaceComponent.render(viewId, () => {
-                if (typeof window.renderGanttPlanningView === 'function') {
-                    window.renderGanttPlanningView();
-                } else {
-                    console.error("renderGanttPlanningView function not found!");
-                }
-            });
-            this.updateComponents(viewId);
-            return;
-        }
-
-        if (viewId === 'visualizationCarousel' && window.workspaceComponent) {
-            window.workspaceComponent.render(viewId, (container) => {
-                if (typeof window.renderSystemOverviewView === 'function') {
-                    window.renderSystemOverviewView(container);
-                } else {
-                    console.error("renderSystemOverviewView function not found!");
-                }
-            });
-            this.updateComponents(viewId);
-            return;
-        }
-
-        if (viewId === 'planningView' && window.workspaceComponent) {
-            window.workspaceComponent.render(viewId, () => {
-                if (typeof window.renderPlanningView === 'function') {
-                    window.renderPlanningView();
-                } else {
-                    console.error("renderPlanningView function not found!");
-                }
-            });
-            this.updateComponents(viewId);
-            return;
-        }
-
-        if (viewId === 'helpView' && window.workspaceComponent) {
-            window.workspaceComponent.render(viewId, (container) => {
-                if (typeof window.renderHelpView === 'function') {
-                    window.renderHelpView(container);
-                } else {
-                    console.error("renderHelpView function not found!");
-                }
-            });
-            this.updateComponents(viewId);
-            return;
-        }
-        // ---------------------------------
-
-        const targetId = this.views[viewId];
-        console.log(`NavigationManager: Target ID for ${viewId} is ${targetId}`);
-        const targetEl = document.getElementById(targetId);
-
-        if (targetEl) {
-            targetEl.style.display = 'block';
-        } else {
-            console.warn(`View element not found for ${viewId} (${targetId})`);
-            console.log(`NavigationManager: document.getElementById('${targetId}') returned`, targetEl);
-        }
-
-        // 4. Update Components
-        this.updateComponents(viewId);
-
-        // 5. Trigger Legacy Initialization Logic (The "Glue")
-        // This replaces the switch statement in the old switchView
-        this.triggerViewInit(viewId);
     }
 
     updateComponents(viewId) {

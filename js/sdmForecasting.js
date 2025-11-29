@@ -1,12 +1,14 @@
 /**
  * NEW Function: Renders the SDM Forecasting View into the Workspace
  */
-function renderSdmForecastingView() {
+function renderSdmForecastingView(container) {
     console.log("Rendering SDM Resource Forecasting View...");
     // Note: currentSystemData check is handled by the caller or within the logic if needed, 
     // but forecasting is largely standalone or uses loaded data if available.
 
-    const container = document.getElementById('sdmForecastingView');
+    if (!container) {
+        container = document.getElementById('sdmForecastingView');
+    }
     if (!container) {
         console.error("SDM Forecasting container #sdmForecastingView not found.");
         return;

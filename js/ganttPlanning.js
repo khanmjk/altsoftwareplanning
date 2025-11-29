@@ -125,8 +125,12 @@ function captureGanttFocusFromTarget(target) {
 /**
  * NEW: Renders the Gantt Planning view into the Workspace.
  */
-function renderGanttPlanningView() {
-    const container = document.getElementById('ganttPlanningView');
+function renderGanttPlanningView(container) {
+    console.log("Rendering Gantt Planning View...");
+
+    if (!container) {
+        container = document.getElementById('ganttPlanningView');
+    }
     if (!container) {
         console.error("Gantt container #ganttPlanningView not found.");
         return;

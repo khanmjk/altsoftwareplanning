@@ -460,10 +460,12 @@ function handleDeleteTheme(themeIdToDelete) {
  * NEW: Renders the Roadmap & Backlog view into the Workspace.
  * Ensures "Manage Themes" button and its modal's "Add Theme" button listeners are set up independently.
  */
-function renderRoadmapView() {
-    console.log("Rendering Roadmap View (Modal version)...");
+function renderRoadmapView(container) {
+    console.log("Rendering Roadmap View...");
 
-    const container = document.getElementById('roadmapView');
+    if (!container) {
+        container = document.getElementById('roadmapView');
+    }
     if (!container) {
         console.error("Roadmap container #roadmapView not found.");
         return;

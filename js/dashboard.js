@@ -27,18 +27,23 @@ let currentDashboardIndex = 0;
 /**
  * NEW: Renders the Dashboard view into the Workspace.
  */
-function renderDashboardView() {
+function renderDashboardView(container) {
     console.log("Rendering Dashboard View...");
+
+    // Fallback if container not passed
+    if (!container) {
+        container = document.getElementById('dashboardView');
+    }
+
+    if (!container) {
+        console.error("Dashboard container not found.");
+        return;
+    }
+
     if (!currentSystemData) {
         // This check might be redundant if NavigationManager handles it, but good for safety
         // alert("Please load a system first to view the dashboard."); 
         // return;
-    }
-
-    const container = document.getElementById('dashboardView');
-    if (!container) {
-        console.error("Dashboard container #dashboardView not found.");
-        return;
     }
 
     // Only generate layout if it doesn't exist to preserve carousel state/DOM if possible
