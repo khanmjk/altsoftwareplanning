@@ -22,26 +22,37 @@ class HeaderComponent {
         // AI Assistant Toggle
         const aiBtn = this.container.querySelector('#header-ai-btn');
         if (aiBtn) {
+            // Initial visibility check
+            this.updateAiButtonVisibility(aiBtn);
+
+            // Listen for global settings changes (optional, but good practice if we had an event)
+            // For now, we rely on update() or manual checks if settings change.
+
             aiBtn.addEventListener('click', () => {
-                if (typeof window.toggleAiChat === 'function') {
-                    window.toggleAiChat();
-                } else if (window.aiChatAssistant) {
-                    // Fallback to existing logic if wrapper not ready
-                    const panel = document.getElementById('aiChatPanelContainer');
-                    if (panel.style.display === 'none') {
-                        panel.style.display = 'block';
+                if (window.aiChatAssistant && typeof window.aiChatAssistant.openAiChatPanel === 'function') {
+                    // Check if already open
+                    if (window.aiChatAssistant.isAiChatPanelOpen()) {
+                        window.aiChatAssistant.closeAiChatPanel();
                     } else {
-                        panel.style.display = 'none';
+                        window.aiChatAssistant.openAiChatPanel();
                     }
+                } else {
+                    console.warn('AI Chat Assistant not available');
                 }
             });
         }
+    }
 
-
+    updateAiButtonVisibility(btn) {
+        if (!btn) return;
+        const isEnabled = window.globalSettings && window.globalSettings.ai && window.globalSettings.ai.isEnabled;
+        btn.style.display = isEnabled ? 'inline-flex' : 'none';
     }
 
     update(viewId, systemName) {
         this.updateBreadcrumbs(viewId, systemName);
+        const aiBtn = this.container.querySelector('#header-ai-btn');
+        this.updateAiButtonVisibility(aiBtn);
     }
     updateBreadcrumbs(viewId, systemName) {
         if (!this.breadcrumbsContainer) return;
