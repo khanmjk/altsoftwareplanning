@@ -51,6 +51,47 @@ class NavigationManager {
         });
 
         // 3. Show target view
+
+        // --- Workspace Migration Check ---
+        if (viewId === 'capacityConfigView' && window.workspaceComponent) {
+            // Use the new Workspace Component for rendering
+            window.workspaceComponent.render(viewId, () => {
+                if (typeof window.renderCapacityConfigView === 'function') {
+                    window.renderCapacityConfigView();
+                } else {
+                    console.error("renderCapacityConfigView function not found!");
+                }
+            });
+            // Skip the legacy display logic below, but ensure we update state
+            this.updateComponents(viewId);
+            return;
+        }
+
+        if (viewId === 'sdmForecastingView' && window.workspaceComponent) {
+            window.workspaceComponent.render(viewId, () => {
+                if (typeof window.renderSdmForecastingView === 'function') {
+                    window.renderSdmForecastingView();
+                } else {
+                    console.error("renderSdmForecastingView function not found!");
+                }
+            });
+            this.updateComponents(viewId);
+            return;
+        }
+
+        if (viewId === 'organogramView' && window.workspaceComponent) {
+            window.workspaceComponent.render(viewId, () => {
+                if (typeof window.renderOrgChartView === 'function') {
+                    window.renderOrgChartView();
+                } else {
+                    console.error("renderOrgChartView function not found!");
+                }
+            });
+            this.updateComponents(viewId);
+            return;
+        }
+        // ---------------------------------
+
         const targetId = this.views[viewId];
         console.log(`NavigationManager: Target ID for ${viewId} is ${targetId}`);
         const targetEl = document.getElementById(targetId);
@@ -62,6 +103,15 @@ class NavigationManager {
             console.log(`NavigationManager: document.getElementById('${targetId}') returned`, targetEl);
         }
 
+        // 4. Update Components
+        this.updateComponents(viewId);
+
+        // 5. Trigger Legacy Initialization Logic (The "Glue")
+        // This replaces the switch statement in the old switchView
+        this.triggerViewInit(viewId);
+    }
+
+    updateComponents(viewId) {
         // 4. Update Components
         if (this.sidebar) this.sidebar.setActive(viewId);
         if (this.header) {
@@ -78,10 +128,6 @@ class NavigationManager {
                 mainContentArea.scrollTop = 0;
             }
         }
-
-        // 5. Trigger Legacy Initialization Logic (The "Glue")
-        // This replaces the switch statement in the old switchView
-        this.triggerViewInit(viewId);
     }
 
     triggerViewInit(viewId) {

@@ -465,6 +465,7 @@ window.onload = async function () {
     window.navigationManager = new NavigationManager();
     window.sidebarComponent = new SidebarComponent('sidebar', window.navigationManager);
     window.headerComponent = new HeaderComponent('main-header');
+    window.workspaceComponent = new WorkspaceComponent('main-content-area');
 
     // Init components
     window.navigationManager.init(window.sidebarComponent, window.headerComponent);

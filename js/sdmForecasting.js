@@ -1,14 +1,16 @@
 /**
- * NEW Function: Shows the SDM Forecasting View
+ * NEW Function: Renders the SDM Forecasting View into the Workspace
  */
-function showSdmForecastingView() {
-    console.log("Switching to SDM Resource Forecasting View...");
-    if (!currentSystemData) { // Check if a main system is loaded, although this tool is standalone for now
-        alert("Please load a system first (although forecasting is currently standalone).");
-        // return; // Or allow proceeding as it's standalone? Let's allow for now.
-    }
+function renderSdmForecastingView() {
+    console.log("Rendering SDM Resource Forecasting View...");
+    // Note: currentSystemData check is handled by the caller or within the logic if needed, 
+    // but forecasting is largely standalone or uses loaded data if available.
 
-    switchView('sdmForecastingView', 'forecasting'); // Use switchView for consistency
+    const container = document.getElementById('sdmForecastingView');
+    if (!container) {
+        console.error("SDM Forecasting container #sdmForecastingView not found.");
+        return;
+    }
 
     // Generate the UI content for the forecasting tool
     generateForecastingUI_SDM();
@@ -16,13 +18,13 @@ function showSdmForecastingView() {
     // Initial forecast generation on load (optional, or require button click)
     // generateForecast_SDM(); // Uncomment this if you want it to run automatically on view load
 }
-// Make globally accessible for the button
-window.showSdmForecastingView = showSdmForecastingView;
+// Make globally accessible
+window.renderSdmForecastingView = renderSdmForecastingView;
 
 /**
  * NEW Function (Phase 2b): Loads team data into forecast inputs.
  */
- function loadSdmForecastInputsForTeam(teamId) {
+function loadSdmForecastInputsForTeam(teamId) {
     console.log(`Loading forecast inputs for team ID: ${teamId}`);
     const fundedSizeInput = document.getElementById('fundedSize_SDM');
     const currentEngInput = document.getElementById('currentEngineers_SDM');
@@ -42,10 +44,10 @@ window.showSdmForecastingView = showSdmForecastingView;
         fundedSizeInput.value = '';
         currentEngInput.value = '';
         // Reset other manual inputs to defaults
-        if(hiringTimeInput) hiringTimeInput.value = 12;
-        if(rampUpTimeInput) rampUpTimeInput.value = 10;
-        if(attritionRateInput) attritionRateInput.value = 10;
-        if(closeGapWeekInput) closeGapWeekInput.value = 26;
+        if (hiringTimeInput) hiringTimeInput.value = 12;
+        if (rampUpTimeInput) rampUpTimeInput.value = 10;
+        if (attritionRateInput) attritionRateInput.value = 10;
+        if (closeGapWeekInput) closeGapWeekInput.value = 26;
         return;
     }
 
@@ -64,10 +66,10 @@ window.showSdmForecastingView = showSdmForecastingView;
 
     // TODO (Future): Load saved forecastingParams for this team here
     // For now, reset manual inputs to defaults when team changes
-     if(hiringTimeInput) hiringTimeInput.value = 12;
-     if(rampUpTimeInput) rampUpTimeInput.value = 10;
-     if(attritionRateInput) attritionRateInput.value = 10; // Reset attrition
-     if(closeGapWeekInput) closeGapWeekInput.value = 26; // Reset target week
+    if (hiringTimeInput) hiringTimeInput.value = 12;
+    if (rampUpTimeInput) rampUpTimeInput.value = 10;
+    if (attritionRateInput) attritionRateInput.value = 10; // Reset attrition
+    if (closeGapWeekInput) closeGapWeekInput.value = 26; // Reset target week
 
 
     console.log(`Inputs populated for team: ${team.teamIdentity || teamId}`);
@@ -76,7 +78,7 @@ window.showSdmForecastingView = showSdmForecastingView;
 /**
  * NEW Function: Clears the output areas of the SDM forecast view.
  */
- function clearSdmForecastOutputs() {
+function clearSdmForecastOutputs() {
     console.log("Clearing SDM forecast outputs.");
     const hiringInfoDiv = document.getElementById('hiringInfo_SDM');
     const outputSummaryDiv = document.getElementById('outputSummary_SDM');
@@ -84,10 +86,10 @@ window.showSdmForecastingView = showSdmForecastingView;
     const monthlySummaryTable = document.getElementById('monthlySummaryTable_SDM');
     const canvas = document.getElementById('forecastChart_SDM');
 
-    if(hiringInfoDiv) hiringInfoDiv.textContent = 'Select a team and click \'Generate Forecast\'.';
-    if(outputSummaryDiv) outputSummaryDiv.innerHTML = '';
-    if(forecastTable) forecastTable.innerHTML = '<thead><tr><th>Week</th><th>Effective Engineers</th></tr></thead><tbody><tr><td colspan="2">...</td></tr></tbody>';
-    if(monthlySummaryTable) monthlySummaryTable.innerHTML = '<thead><tr><th>Month</th><th>Headcount Available</th><th>SDE-Weeks</th><th>SDE-Days</th></tr></thead><tbody><tr><td colspan="4">...</td></tr></tbody>';
+    if (hiringInfoDiv) hiringInfoDiv.textContent = 'Select a team and click \'Generate Forecast\'.';
+    if (outputSummaryDiv) outputSummaryDiv.innerHTML = '';
+    if (forecastTable) forecastTable.innerHTML = '<thead><tr><th>Week</th><th>Effective Engineers</th></tr></thead><tbody><tr><td colspan="2">...</td></tr></tbody>';
+    if (monthlySummaryTable) monthlySummaryTable.innerHTML = '<thead><tr><th>Month</th><th>Headcount Available</th><th>SDE-Weeks</th><th>SDE-Days</th></tr></thead><tbody><tr><td colspan="4">...</td></tr></tbody>';
 
     // Destroy existing chart
     if (forecastChart_SDM) {
@@ -98,7 +100,7 @@ window.showSdmForecastingView = showSdmForecastingView;
     if (canvas) {
         const ctx = canvas.getContext('2d');
         if (ctx) {
-             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
     }
 }
@@ -107,7 +109,7 @@ window.showSdmForecastingView = showSdmForecastingView;
  * REVISED (Comprehensive FAQ Update): Generates the HTML structure for the forecasting tool.
  * - Includes extensively revised FAQ explaining current logic, assumptions, and future improvements.
  */
- function generateForecastingUI_SDM() {
+function generateForecastingUI_SDM() {
     console.log("Generating SDM Forecasting UI (Comprehensive FAQ Update)...");
     const container = document.getElementById('sdmForecastingView');
     if (!container) {
@@ -355,7 +357,7 @@ window.showSdmForecastingView = showSdmForecastingView;
  * - Passes selectedTeamId to simulation.
  * - Changed Hiring Rate display text.
  */
- function generateForecast_SDM() {
+function generateForecast_SDM() {
     console.log("Generating SDM Forecast (Phase 2c/Debug)...");
 
     // --- Get Selected Team ---
@@ -391,29 +393,29 @@ window.showSdmForecastingView = showSdmForecastingView;
 
     // --- Validate required inputs ---
     if (isNaN(fundedSize) || isNaN(currentEngineers) || isNaN(hiringTime) || isNaN(rampUpTime) || isNaN(attritionRate) || isNaN(closeGapWeek)) {
-         alert("Please ensure all forecast parameters (Hiring Time, Ramp-up, Attrition, Target Week) have valid numeric values.");
-         clearSdmForecastOutputs();
-         return;
+        alert("Please ensure all forecast parameters (Hiring Time, Ramp-up, Attrition, Target Week) have valid numeric values.");
+        clearSdmForecastOutputs();
+        return;
     }
-     if (!currentSystemData?.capacityConfiguration?.workingDaysPerYear || currentSystemData.capacityConfiguration.workingDaysPerYear <= 0) {
+    if (!currentSystemData?.capacityConfiguration?.workingDaysPerYear || currentSystemData.capacityConfiguration.workingDaysPerYear <= 0) {
         alert("Cannot run forecast: 'Standard Working Days Per Year' must be configured in Capacity Constraints and be greater than 0.");
         clearSdmForecastOutputs();
         return;
-     }
-     if (!currentSystemData?.capacityConfiguration?.leaveTypes) {
-         console.warn("Leave types not defined in capacity configuration. Proceeding with defaults (0).");
-     }
+    }
+    if (!currentSystemData?.capacityConfiguration?.leaveTypes) {
+        console.warn("Leave types not defined in capacity configuration. Proceeding with defaults (0).");
+    }
 
     // Feasibility Check
     if (closeGapWeek < hiringTime) {
-        if(hiringInfoDiv) hiringInfoDiv.innerHTML = `<span style="color:red">Target week (${closeGapWeek}) is earlier than hiring time (${hiringTime} weeks). Cannot reach target.</span>`;
-        if(outputSummaryDiv) outputSummaryDiv.innerHTML = `<p>Adjust Hiring Time or Target Week.</p>`;
-        if(forecastTable) forecastTable.innerHTML = '';
-        if(monthlySummaryTable) monthlySummaryTable.innerHTML = '';
+        if (hiringInfoDiv) hiringInfoDiv.innerHTML = `<span style="color:red">Target week (${closeGapWeek}) is earlier than hiring time (${hiringTime} weeks). Cannot reach target.</span>`;
+        if (outputSummaryDiv) outputSummaryDiv.innerHTML = `<p>Adjust Hiring Time or Target Week.</p>`;
+        if (forecastTable) forecastTable.innerHTML = '';
+        if (monthlySummaryTable) monthlySummaryTable.innerHTML = '';
         if (forecastChart_SDM) { forecastChart_SDM.destroy(); forecastChart_SDM = null; }
         return;
     } else {
-        if(outputSummaryDiv) outputSummaryDiv.innerHTML = '';
+        if (outputSummaryDiv) outputSummaryDiv.innerHTML = '';
     }
 
     // Calculate required hiring rate
@@ -458,11 +460,11 @@ window.showSdmForecastingView = showSdmForecastingView;
     );
 
     if (!simulationResult) {
-         alert("An error occurred during the forecast simulation. Please check the console.");
-         clearSdmForecastOutputs();
-         if(hiringInfoDiv) hiringInfoDiv.textContent = "Simulation Error.";
-         return;
-     }
+        alert("An error occurred during the forecast simulation. Please check the console.");
+        clearSdmForecastOutputs();
+        if (hiringInfoDiv) hiringInfoDiv.textContent = "Simulation Error.";
+        return;
+    }
 
     // Update global variables
     productiveEngineers_SDM = simulationResult.productiveEngineers;
@@ -484,7 +486,7 @@ window.showSdmForecastingView = showSdmForecastingView;
  * RENAMED & ADAPTED from standalone tool.
  * Phase 2c: Calls simulateTeamSize_SDM with null teamId, as only headcount matters here.
  */
- function computeHiringRate_SDM(fundedSize, currentEngineers, hiringTime, rampUpTime, attritionRate, closeGapWeek) {
+function computeHiringRate_SDM(fundedSize, currentEngineers, hiringTime, rampUpTime, attritionRate, closeGapWeek) {
     console.log("Computing SDM hiring rate...");
     let lowerBound = 0;
     let upperBound = 20; // Max plausible rate
@@ -504,18 +506,18 @@ window.showSdmForecastingView = showSdmForecastingView;
 
         // *** Check if simulationResult is valid before accessing properties ***
         if (!simulationResult || !simulationResult.totalHeadcountArray) {
-             console.error("Error: Simulation failed during hiring rate computation. Cannot proceed.");
-              // Handle error appropriately - maybe return a default rate or throw an error?
-              // Returning 0 might be safest for now, but indicates a problem.
-              return 0;
-         }
+            console.error("Error: Simulation failed during hiring rate computation. Cannot proceed.");
+            // Handle error appropriately - maybe return a default rate or throw an error?
+            // Returning 0 might be safest for now, but indicates a problem.
+            return 0;
+        }
         // *** End Check ***
 
         const totalHeadcountAtTargetWeek = simulationResult.totalHeadcountArray[closeGapWeek - 1];
 
         if (totalHeadcountAtTargetWeek === undefined) {
-             console.error(`Error: Headcount for target week ${closeGapWeek} is undefined in simulation results during rate computation.`);
-             return 0; // Indicate error
+            console.error(`Error: Headcount for target week ${closeGapWeek} is undefined in simulation results during rate computation.`);
+            return 0; // Indicate error
         }
 
         if (totalHeadcountAtTargetWeek >= fundedSize) {
@@ -525,7 +527,7 @@ window.showSdmForecastingView = showSdmForecastingView;
         }
         iterations++;
     }
-     if (iterations >= 1000) {
+    if (iterations >= 1000) {
         console.warn("computeHiringRate_SDM reached max iterations.");
     }
     // Return the upper bound as it's the lowest rate that achieves the target
@@ -542,7 +544,7 @@ window.showSdmForecastingView = showSdmForecastingView;
  * - Uses default capacity assumptions if teamId is null (for computeHiringRate call).
  * - ADDED detailed logging for capacity calculation components.
  */
- function simulateTeamSize_SDM(
+function simulateTeamSize_SDM(
     hiringRate, fundedSize, currentEngineers, hiringTime, rampUpTime, attritionRate,
     selectedTeamId = null, // Optional parameter
     capAtFundedSize = true
@@ -561,7 +563,7 @@ window.showSdmForecastingView = showSdmForecastingView;
             console.error(`Simulation error: Team not found for ID: ${selectedTeamId}`);
             return null;
         }
-         teamNameForLog = team.teamIdentity || team.teamName || teamId;
+        teamNameForLog = team.teamIdentity || team.teamName || teamId;
 
         if (!capacityConfig || !capacityConfig.workingDaysPerYear || capacityConfig.workingDaysPerYear <= 0) {
             console.error("Simulation error: Invalid 'workingDaysPerYear' in capacity configuration.");
@@ -600,7 +602,7 @@ window.showSdmForecastingView = showSdmForecastingView;
         console.log(`    = Net Available Days/Week/SDE: ${netAvailableDaysPerWeekPerSDE.toFixed(2)}`);
         // --- End Net Available Days Calculation ---
     } else {
-         console.log("  Running simulation for rate calculation (using default 5 available days/week).");
+        console.log("  Running simulation for rate calculation (using default 5 available days/week).");
     }
 
 
@@ -629,24 +631,24 @@ window.showSdmForecastingView = showSdmForecastingView;
         attritionCounter -= attritionThisWeek;
 
         if (attritionThisWeek > 0) {
-             totalHeadcount -= attritionThisWeek;
-             let preAttritionHC = totalHeadcount + attritionThisWeek;
-             let rampedProportion = (preAttritionHC > 0) ? totalRampedUpEngineers / preAttritionHC : 0;
-             let attritionFromRamped = Math.round(attritionThisWeek * rampedProportion);
-             let attritionFromRamping = attritionThisWeek - attritionFromRamped;
+            totalHeadcount -= attritionThisWeek;
+            let preAttritionHC = totalHeadcount + attritionThisWeek;
+            let rampedProportion = (preAttritionHC > 0) ? totalRampedUpEngineers / preAttritionHC : 0;
+            let attritionFromRamped = Math.round(attritionThisWeek * rampedProportion);
+            let attritionFromRamping = attritionThisWeek - attritionFromRamped;
 
-             totalRampedUpEngineers -= attritionFromRamped;
+            totalRampedUpEngineers -= attritionFromRamped;
 
-             let removedFromRamping = 0;
-             for (let i = rampingEngineers.length - 1; i >= 0 && removedFromRamping < attritionFromRamping; i--) {
-                 let removable = Math.min(rampingEngineers[i].count, attritionFromRamping - removedFromRamping);
-                 rampingEngineers[i].count -= removable;
-                 removedFromRamping += removable;
-                 if (rampingEngineers[i].count <= 0) {
-                     rampingEngineers.splice(i, 1);
-                 }
-             }
-             cumulativeAttrition += attritionThisWeek;
+            let removedFromRamping = 0;
+            for (let i = rampingEngineers.length - 1; i >= 0 && removedFromRamping < attritionFromRamping; i--) {
+                let removable = Math.min(rampingEngineers[i].count, attritionFromRamping - removedFromRamping);
+                rampingEngineers[i].count -= removable;
+                removedFromRamping += removable;
+                if (rampingEngineers[i].count <= 0) {
+                    rampingEngineers.splice(i, 1);
+                }
+            }
+            cumulativeAttrition += attritionThisWeek;
         }
 
         totalRampedUpEngineers = Math.max(0, totalRampedUpEngineers);
@@ -657,7 +659,7 @@ window.showSdmForecastingView = showSdmForecastingView;
         if (totalFutureHeadcount < fundedSize) {
             let hiringNeeded = fundedSize - totalFutureHeadcount;
             let actualHiring = Math.min(hiringRate, hiringNeeded);
-             if (actualHiring > 0) {
+            if (actualHiring > 0) {
                 hiringPipeline.push({ weeksLeft: hiringTime, count: actualHiring });
             }
         }
@@ -666,10 +668,10 @@ window.showSdmForecastingView = showSdmForecastingView;
         for (let i = hiringPipeline.length - 1; i >= 0; i--) {
             hiringPipeline[i].weeksLeft--;
             if (hiringPipeline[i].weeksLeft <= 0) {
-                 totalHeadcount += hiringPipeline[i].count;
-                 rampingEngineers.push({ weeksLeft: rampUpTime, count: hiringPipeline[i].count });
-                 hiringPipeline.splice(i, 1);
-             }
+                totalHeadcount += hiringPipeline[i].count;
+                rampingEngineers.push({ weeksLeft: rampUpTime, count: hiringPipeline[i].count });
+                hiringPipeline.splice(i, 1);
+            }
         }
 
         // Advance ramp-up pipeline -> Ramped Up
@@ -683,11 +685,11 @@ window.showSdmForecastingView = showSdmForecastingView;
 
         // Cap total headcount at funded size if required
         if (capAtFundedSize) {
-             let overflow = totalHeadcount - fundedSize;
-             if (overflow > 0) {
-                 totalHeadcount = fundedSize;
-                 totalRampedUpEngineers = Math.min(totalRampedUpEngineers, totalHeadcount);
-             }
+            let overflow = totalHeadcount - fundedSize;
+            if (overflow > 0) {
+                totalHeadcount = fundedSize;
+                totalRampedUpEngineers = Math.min(totalRampedUpEngineers, totalHeadcount);
+            }
         }
 
         // Calculate effective engineers using NET available days
@@ -715,10 +717,10 @@ window.showSdmForecastingView = showSdmForecastingView;
                 monthlyDataLocal.sdeWeeks[monthIndex] += effectiveEngineers;
                 monthlyDataLocal.sdeDays[monthIndex] += effectiveEngineers * netAvailableDaysPerWeekPerSDE;
             } else {
-                 console.warn(`Invalid month number ${monthNumber} derived for week ${week}`);
+                console.warn(`Invalid month number ${monthNumber} derived for week ${week}`);
             }
         } else {
-             console.warn(`Invalid week array index ${weekArrayIndex} calculated for week ${week}`);
+            console.warn(`Invalid week array index ${weekArrayIndex} calculated for week ${week}`);
         }
 
     } // End weekly loop
@@ -760,7 +762,7 @@ function generateWeeklyTable_SDM(weeks, productiveEngineers) {
  */
 function generateMonthlySummary_SDM(monthlyData) {
     const table = document.getElementById('monthlySummaryTable_SDM');
-     if (!table) { console.error("Monthly summary table #monthlySummaryTable_SDM not found."); return; }
+    if (!table) { console.error("Monthly summary table #monthlySummaryTable_SDM not found."); return; }
     let monthlyTableHTML = '<thead><tr><th>Month</th><th>Headcount Available</th><th>SDE-Weeks</th><th>SDE-Days</th></tr></thead><tbody>';
     for (let i = 0; i < 12; i++) {
         monthlyTableHTML += `<tr>
@@ -792,9 +794,9 @@ function handleMonthlyHeadcountInput_SDM(event) {
         // Call the specific update function for this tool
         updateMonthlyHeadcount_SDM(monthIndex, newValue);
     } else {
-         // Optional: Add validation feedback or revert
-         console.warn("Invalid input for monthly headcount:", cell.textContent);
-         // Revert? Might be complex. For now, just don't update.
+        // Optional: Add validation feedback or revert
+        console.warn("Invalid input for monthly headcount:", cell.textContent);
+        // Revert? Might be complex. For now, just don't update.
     }
 }
 
@@ -802,26 +804,26 @@ function handleMonthlyHeadcountInput_SDM(event) {
  * RENAMED & ADAPTED from standalone tool.
  * Phase 2c: Updated summary text to reflect integrated capacity calculation (Option B).
  */
- function generateOutputSummary_SDM(hiringRate, closeGapWeek, selectedTeamId, simulationResult) { // Added teamId & simResult
-     const summaryDiv = document.getElementById('outputSummary_SDM');
-     if (!summaryDiv) { console.error("Output summary div #outputSummary_SDM not found."); return; }
+function generateOutputSummary_SDM(hiringRate, closeGapWeek, selectedTeamId, simulationResult) { // Added teamId & simResult
+    const summaryDiv = document.getElementById('outputSummary_SDM');
+    if (!summaryDiv) { console.error("Output summary div #outputSummary_SDM not found."); return; }
 
-     const team = currentSystemData?.teams?.find(t => t.teamId === selectedTeamId);
-     const teamName = team ? (team.teamIdentity || team.teamName) : 'the selected team';
+    const team = currentSystemData?.teams?.find(t => t.teamId === selectedTeamId);
+    const teamName = team ? (team.teamIdentity || team.teamName) : 'the selected team';
 
-     // Get current input values using NEW IDs
-     const hiringTime = document.getElementById('hiringTime_SDM')?.value || 'N/A';
-     const rampUpTime = document.getElementById('rampUpTime_SDM')?.value || 'N/A';
-     const attritionRate = document.getElementById('attritionRate_SDM')?.value || 'N/A';
+    // Get current input values using NEW IDs
+    const hiringTime = document.getElementById('hiringTime_SDM')?.value || 'N/A';
+    const rampUpTime = document.getElementById('rampUpTime_SDM')?.value || 'N/A';
+    const attritionRate = document.getElementById('attritionRate_SDM')?.value || 'N/A';
 
-     // Get the calculated net available days from the simulation result
-     const netAvailableDays = simulationResult?.calculatedNetAvailableDaysPerWeek?.toFixed(2) || 'N/A';
-     let netDaysInfo = "";
-     if (netAvailableDays !== 'N/A') {
-          netDaysInfo = `Based on the Capacity Configuration data for <strong>${teamName}</strong> (including leave, holidays, overhead, etc.), the calculated average net available days per SDE per week is approx. <strong>${netAvailableDays}</strong> (out of 5).`;
-     } else {
-          netDaysInfo = "Could not retrieve detailed capacity configuration; using default assumptions.";
-     }
+    // Get the calculated net available days from the simulation result
+    const netAvailableDays = simulationResult?.calculatedNetAvailableDaysPerWeek?.toFixed(2) || 'N/A';
+    let netDaysInfo = "";
+    if (netAvailableDays !== 'N/A') {
+        netDaysInfo = `Based on the Capacity Configuration data for <strong>${teamName}</strong> (including leave, holidays, overhead, etc.), the calculated average net available days per SDE per week is approx. <strong>${netAvailableDays}</strong> (out of 5).`;
+    } else {
+        netDaysInfo = "Could not retrieve detailed capacity configuration; using default assumptions.";
+    }
 
     const summary = `
         <p>For team <strong>${teamName}</strong>, to reach the funded team size by week ${closeGapWeek}, the required hiring rate is approx. <strong>${hiringRate.toFixed(2)}</strong> engineers per week.</p>
@@ -856,14 +858,14 @@ function updateMonthlyHeadcount_SDM(monthIndex, newHeadcount) {
     const weeklyAvailableDaysPerEngineer = Math.max(0, 5 - weeklyLeaveDaysPerEngineer - weeklyPublicHolidaysPerEngineer);
 
     let weekStartIndex = -1, weekEndIndex = -1;
-    for(let i=0; i < weekToMonth_SDM.length; i++){
-        if(weekToMonth_SDM[i] === monthIndex + 1){
-            if(weekStartIndex === -1) weekStartIndex = i;
+    for (let i = 0; i < weekToMonth_SDM.length; i++) {
+        if (weekToMonth_SDM[i] === monthIndex + 1) {
+            if (weekStartIndex === -1) weekStartIndex = i;
             weekEndIndex = i;
         }
     }
 
-    if(weekStartIndex === -1) { console.error("Could not find weeks for month index:", monthIndex); return;}
+    if (weekStartIndex === -1) { console.error("Could not find weeks for month index:", monthIndex); return; }
 
     // Update arrays for the relevant weeks
     for (let weekIndex = weekStartIndex; weekIndex <= weekEndIndex; weekIndex++) {
@@ -884,14 +886,14 @@ function updateMonthlyHeadcount_SDM(monthIndex, newHeadcount) {
     monthlyData_SDM.sdeWeeks[monthIndex] = 0;
     monthlyData_SDM.sdeDays[monthIndex] = 0;
     for (let weekIndex = weekStartIndex; weekIndex <= weekEndIndex; weekIndex++) {
-         if (weekIndex < productiveEngineers_SDM.length) {
+        if (weekIndex < productiveEngineers_SDM.length) {
             monthlyData_SDM.sdeWeeks[monthIndex] += productiveEngineers_SDM[weekIndex];
             monthlyData_SDM.sdeDays[monthIndex] += productiveEngineers_SDM[weekIndex] * weeklyAvailableDaysPerEngineer;
-         }
+        }
     }
-     monthlyData_SDM.headcount[monthIndex] = Math.round(monthlyData_SDM.headcount[monthIndex] || 0);
-     monthlyData_SDM.sdeDays[monthIndex] = parseFloat((monthlyData_SDM.sdeDays[monthIndex] || 0).toFixed(2));
-     monthlyData_SDM.sdeWeeks[monthIndex] = parseFloat((monthlyData_SDM.sdeWeeks[monthIndex] || 0).toFixed(2));
+    monthlyData_SDM.headcount[monthIndex] = Math.round(monthlyData_SDM.headcount[monthIndex] || 0);
+    monthlyData_SDM.sdeDays[monthIndex] = parseFloat((monthlyData_SDM.sdeDays[monthIndex] || 0).toFixed(2));
+    monthlyData_SDM.sdeWeeks[monthIndex] = parseFloat((monthlyData_SDM.sdeWeeks[monthIndex] || 0).toFixed(2));
 
 
     // Refresh display elements
@@ -911,7 +913,7 @@ function updateMonthlyHeadcount_SDM(monthIndex, newHeadcount) {
  * RENAMED & ADAPTED from standalone tool. Uses new chart ID and variable names.
  * Phase 2 Debug: Added borderDash to green line for visibility.
  */
- function generateChart_SDM(weeks, simulationResult, fundedSize) {
+function generateChart_SDM(weeks, simulationResult, fundedSize) {
     console.log("Generating SDM Forecast Chart (with dashed green line)..."); // Updated log
     // Destroy existing chart instance if it exists
     if (forecastChart_SDM) {
@@ -927,8 +929,8 @@ function updateMonthlyHeadcount_SDM(monthIndex, newHeadcount) {
     }
     const ctx = canvas.getContext('2d');
     if (!ctx) {
-         console.error("Failed to get 2D context for SDM forecast chart canvas.");
-         return;
+        console.error("Failed to get 2D context for SDM forecast chart canvas.");
+        return;
     }
 
     forecastChart_SDM = new Chart(ctx, {

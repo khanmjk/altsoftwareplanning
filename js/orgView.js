@@ -8,13 +8,34 @@ let currentOrgViewMode = 'd3'; // Default to the new D3 view
  * Sets up layout switchers and calls the default renderer.
  * MODIFIED: Now handles 3 views (D3, List, Table).
  */
-function initializeOrgChartView() {
-    console.log("Initializing Organization Chart View with 3-way layout switcher...");
+/**
+ * NEW: Renders the entire Organization Overview page into the Workspace.
+ * Sets up layout switchers and calls the default renderer.
+ */
+function renderOrgChartView() {
+    console.log("Rendering Organization Chart View...");
+
+    const container = document.getElementById('organogramView');
+    if (!container) {
+        console.error("Org Chart container #organogramView not found.");
+        return;
+    }
+
+    // --- Dynamic DOM Creation for Workspace ---
+    if (!document.getElementById('organogramToolbar')) {
+        container.innerHTML = `
+            <div id="organogramToolbar" style="margin-bottom: 10px; padding: 10px; background-color: #f8f9fa; border-bottom: 1px solid #ddd;"></div>
+            <div id="organogramContent" style="overflow: auto; height: calc(100vh - 200px); position: relative;"></div>
+            <div id="teamBreakdown" style="display:none; margin-top: 30px;"></div>
+            <div id="orgEngineerListView" style="display:none; margin-top: 30px;"></div>
+        `;
+    }
+
     const toolbar = document.getElementById('organogramToolbar');
     const content = document.getElementById('organogramContent');
-    
+
     if (!toolbar || !content) {
-        console.error("Cannot initialize Org Chart view: toolbar or content div missing.");
+        console.error("Cannot initialize Org Chart view: toolbar or content div missing after creation.");
         return;
     }
 
@@ -37,7 +58,7 @@ function initializeOrgChartView() {
         currentOrgViewMode = 'd3';
         updateOrgViewRenderer();
     });
-    
+
     btnList.addEventListener('click', () => {
         currentOrgViewMode = 'list';
         updateOrgViewRenderer();
@@ -55,10 +76,9 @@ function initializeOrgChartView() {
 
     // --- 2. Render the correct view based on the current mode ---
     updateOrgViewRenderer();
-
-    // --- 3. REMOVED: generateTeamTable() is no longer called here. ---
-    // It is now called by updateOrgViewRenderer() when mode is 'table'.
 }
+// Make globally accessible
+window.renderOrgChartView = renderOrgChartView;
 
 /**
  * NEW: Helper function to render the correct org chart based on the current mode.
@@ -69,7 +89,7 @@ function updateOrgViewRenderer() {
     const btnList = document.getElementById('orgViewModeList');
     const btnTable = document.getElementById('orgViewModeTable');
     const btnEngineerList = document.getElementById('orgViewModeEngineerList');
-    
+
     // Get references to both content containers
     const chartContainer = document.getElementById('organogramContent');
     const tableContainer = document.getElementById('teamBreakdown');
@@ -98,7 +118,7 @@ function updateOrgViewRenderer() {
     if (currentOrgViewMode === 'd3') {
         btnD3.classList.add('btn-primary');
         btnD3.classList.remove('btn-secondary');
-        
+
         chartContainer.style.display = 'block'; // Show chart container
         if (typeof renderD3OrgChart === 'function') {
             renderD3OrgChart(); // Call the D3 function
@@ -122,7 +142,7 @@ function updateOrgViewRenderer() {
         tableContainer.style.display = 'block'; // Show table container
         if (typeof generateTeamTable === 'function') {
             // This function renders the EnhancedTableWidget
-            generateTeamTable(currentSystemData); 
+            generateTeamTable(currentSystemData);
         } else {
             console.error("generateTeamTable function not found.");
         }
@@ -196,8 +216,8 @@ function buildHierarchyData() {
                 sdmMap.set(unassignedSdmKey, { sdmId: unassignedSdmKey, sdmName: 'Unassigned SDM', name: 'Unassigned SDM', children: [], type: 'sdm' });
                 const unassignedSrMgrKey = 'unassigned-sr-mgr';
                 if (!srMgrMap.has(unassignedSrMgrKey)) {
-                     // Add `name` property for D3 compatibility
-                     srMgrMap.set(unassignedSrMgrKey, { seniorManagerId: unassignedSrMgrKey, seniorManagerName: 'Unassigned Senior Manager', name: 'Unassigned Senior Manager', children: [], type: 'srMgr' });
+                    // Add `name` property for D3 compatibility
+                    srMgrMap.set(unassignedSrMgrKey, { seniorManagerId: unassignedSrMgrKey, seniorManagerName: 'Unassigned Senior Manager', name: 'Unassigned Senior Manager', children: [], type: 'srMgr' });
                 }
                 srMgrMap.get(unassignedSrMgrKey).children.push(sdmMap.get(unassignedSdmKey));
             }
@@ -225,7 +245,7 @@ function renderHtmlOrgList() {
     const container = document.getElementById('organogramContent');
     if (!hierarchicalData || !container) {
         console.error("No data or container for organogram HTML.");
-        if(container) container.innerHTML = '<p style="color: red;">Could not generate organogram data.</p>';
+        if (container) container.innerHTML = '<p style="color: red;">Could not generate organogram data.</p>';
         return;
     }
     container.innerHTML = '';
@@ -238,18 +258,18 @@ function renderHtmlOrgList() {
         let nodeStyle = '';
         let detailsStyle = 'font-size: 0.8em; color: #555; margin-left: 5px;';
 
-        switch(node.type) {
+        switch (node.type) {
             case 'root':
                 nodeContent = `<strong>System: ${node.name || 'N/A'}</strong>`;
                 nodeStyle = 'font-size: 1.2em; color: #333;';
                 break;
             case 'srMgr':
-                 nodeContent = `<strong title="${node.seniorManagerId || ''}">Sr. Manager: ${node.seniorManagerName || node.name || 'N/A'}</strong>`;
-                 nodeStyle = 'font-size: 1.1em; color: #0056b3;';
+                nodeContent = `<strong title="${node.seniorManagerId || ''}">Sr. Manager: ${node.seniorManagerName || node.name || 'N/A'}</strong>`;
+                nodeStyle = 'font-size: 1.1em; color: #0056b3;';
                 break;
             case 'sdm':
-                 nodeContent = `<strong title="${node.sdmId || ''}">SDM: ${node.sdmName || node.name || 'N/A'}</strong>`;
-                 nodeStyle = 'color: #007bff;';
+                nodeContent = `<strong title="${node.sdmId || ''}">SDM: ${node.sdmName || node.name || 'N/A'}</strong>`;
+                nodeStyle = 'color: #007bff;';
                 break;
             case 'team':
                 nodeContent = `<span style="color: #17a2b8;">Team: ${node.name || 'N/A'}</span> <span style="${detailsStyle}">(${node.details || ''})</span>`;
@@ -263,7 +283,7 @@ function renderHtmlOrgList() {
                     nodeContent += '<ul style="list-style: none; padding-left: 15px; margin-top: 3px;">';
                     node.children.forEach(engNode => { // These are engineer nodes from buildHierarchyData
                         if (engNode.type === 'engineer') {
-                             nodeContent += `<li style="font-size:0.85em;">${engNode.name}</li>`;
+                            nodeContent += `<li style="font-size:0.85em;">${engNode.name}</li>`;
                         }
                     });
                     nodeContent += '</ul>';
@@ -278,7 +298,7 @@ function renderHtmlOrgList() {
         // Recursively add children for non-team, non-engineer types
         if (node.children && node.children.length > 0 && node.type !== 'team' && node.type !== 'engineer') {
             node.children.forEach(child => {
-                 html += buildHtmlLevel(child, level + 1);
+                html += buildHtmlLevel(child, level + 1);
             });
         }
         html += `</div>`;
@@ -296,10 +316,10 @@ function renderD3OrgChart() {
     console.log("Generating D3 Org Chart (Top-Down, Text Wrap v4)...");
     const hierarchicalData = buildHierarchyData();
     const container = document.getElementById('organogramContent');
-    
+
     if (!hierarchicalData || !container) {
         console.error("D3 Org Chart container or data not found.");
-        if(container) container.innerHTML = '<p style="color: red;">Could not generate D3 organogram data.</p>';
+        if (container) container.innerHTML = '<p style="color: red;">Could not generate D3 organogram data.</p>';
         return;
     }
 
@@ -309,7 +329,7 @@ function renderD3OrgChart() {
     // Get container size for responsive chart
     const width = container.clientWidth || 960;
     const height = 1200; // Fixed height, chart will be scrollable
-    
+
     // Define node box sizes and spacing
     const nodeWidth = 220;
     const nodeHeight = 80;
@@ -330,14 +350,14 @@ function renderD3OrgChart() {
 
     // Main group for chart content (for zooming)
     const g = svg.append("g");
-        
+
     // Create Tree Layout
     const tree = d3.tree()
         .nodeSize([nodeWidth + horizontalSpacing, nodeHeight + verticalSpacing]);
 
     // Create Hierarchy
     const root = d3.hierarchy(hierarchicalData);
-    
+
     // Assign `_children` for collapse/expand
     root.descendants().forEach(d => {
         d._children = d.children;
@@ -346,7 +366,7 @@ function renderD3OrgChart() {
             d.children = null;
         }
     });
-    
+
     // Set initial position for the root node
     root.x0 = width / 2; // Initial horizontal center
     root.y0 = nodeHeight;  // Initial vertical position
@@ -354,27 +374,27 @@ function renderD3OrgChart() {
     // This is the main function that draws/updates the chart
     const update = (source) => {
         const duration = 250;
-        
+
         // Recalculate layout
         const treeData = tree(root);
-        
+
         // Get nodes and links
         const nodes = treeData.descendants().reverse();
         const links = treeData.links();
 
         // Normalize for fixed-depth (y position)
-        nodes.forEach(d => { 
+        nodes.forEach(d => {
             d.y = d.depth * (nodeHeight + verticalSpacing) + nodeHeight; // y = depth * spacing
-        }); 
-        
+        });
+
         // --- LINKS ---
         function elbow(d) {
-            return `M ${d.source.x},${d.source.y + nodeHeight / 2}` + 
-                   ` V ${d.target.y - verticalSpacing / 2}` +
-                   ` H ${d.target.x}` +
-                   ` V ${d.target.y - nodeHeight / 2}`;
+            return `M ${d.source.x},${d.source.y + nodeHeight / 2}` +
+                ` V ${d.target.y - verticalSpacing / 2}` +
+                ` H ${d.target.x}` +
+                ` V ${d.target.y - nodeHeight / 2}`;
         }
-        
+
         const link = g.selectAll(".org-link")
             .data(links, d => d.target.id);
 
@@ -383,9 +403,9 @@ function renderD3OrgChart() {
             .attr("d", d => {
                 const o = { x: source.x0 || source.x, y: source.y0 || source.y };
                 return `M ${o.x},${o.y + nodeHeight / 2}` +
-                       ` V ${o.y + nodeHeight / 2}` +
-                       ` H ${o.x}` +
-                       ` V ${o.y + nodeHeight / 2}`;
+                    ` V ${o.y + nodeHeight / 2}` +
+                    ` H ${o.x}` +
+                    ` V ${o.y + nodeHeight / 2}`;
             })
             .attr("fill", "none")
             .attr("stroke", "#ccc")
@@ -398,9 +418,9 @@ function renderD3OrgChart() {
             .attr("d", d => {
                 const o = { x: source.x, y: source.y };
                 return `M ${o.x},${o.y + nodeHeight / 2}` +
-                       ` V ${o.y + nodeHeight / 2}` +
-                       ` H ${o.x}` +
-                       ` V ${o.y + nodeHeight / 2}`;
+                    ` V ${o.y + nodeHeight / 2}` +
+                    ` H ${o.x}` +
+                    ` V ${o.y + nodeHeight / 2}`;
             })
             .remove();
 
@@ -425,11 +445,11 @@ function renderD3OrgChart() {
             })
             .on("mouseover", (event, d) => {
                 let info = '';
-                switch(d.data.type) {
+                switch (d.data.type) {
                     case 'root': info = `<strong>System:</strong> ${d.data.name}`; break;
                     case 'srMgr': info = `<strong>Sr. Manager:</strong> ${d.data.name}`; break;
                     case 'sdm': info = `<strong>SDM:</strong> ${d.data.name}`; break;
-                    case 'team': 
+                    case 'team':
                         info = `<strong>Team:</strong> ${d.data.name}<br><strong>Details:</strong> ${d.data.details}`;
                         if (d.data.awayTeamCount > 0) info += `<br><strong style='color: #dc3545;'>Away:</strong> +${d.data.awayTeamCount} (${d.data.awaySourceSummary})`;
                         break;
@@ -438,8 +458,8 @@ function renderD3OrgChart() {
                 }
                 tooltip.transition().duration(200).style("opacity", .9);
                 tooltip.html(info)
-                       .style("left", (event.pageX + 15) + "px")
-                       .style("top", (event.pageY - 28) + "px");
+                    .style("left", (event.pageX + 15) + "px")
+                    .style("top", (event.pageY - 28) + "px");
             })
             .on("mouseout", () => {
                 tooltip.transition().duration(500).style("opacity", 0);
@@ -462,20 +482,20 @@ function renderD3OrgChart() {
             .attr("y", -nodeHeight / 2)
             .attr("width", nodeWidth)
             .attr("height", nodeHeight)
-            .style("pointer-events", "none"); 
+            .style("pointer-events", "none");
 
         // Add namespaced HTML div for content
         const div = fo.append("xhtml:div")
-            .attr("xmlns", "http://www.w3.org/1999/xhtml") 
+            .attr("xmlns", "http://www.w3.org/1999/xhtml")
             .attr("class", "org-node-label-wrapper");
-            
+
         div.append("xhtml:div")
-           .attr("class", "org-node-label-name")
-           .html(d => d.data.name);
-           
+            .attr("class", "org-node-label-name")
+            .html(d => d.data.name);
+
         div.append("xhtml:div")
-           .attr("class", "org-node-label-details")
-           .html(d => {
+            .attr("class", "org-node-label-details")
+            .html(d => {
                 if (d.data.type === 'team') return d.data.details;
                 if (d.data.type === 'engineer') return d.data.name.includes('[AI]') ? 'AI Software Engineer' : 'Software Engineer';
                 return d.data.type.replace('srMgr', 'Senior Manager');
@@ -483,9 +503,9 @@ function renderD3OrgChart() {
 
         // Add expand/collapse indicator (SVG text)
         nodeEnter.append("text")
-            .attr("class", "org-node-toggle") 
+            .attr("class", "org-node-toggle")
             .attr("text-anchor", "middle")
-            .attr("y", (nodeHeight / 2) + 16) 
+            .attr("y", (nodeHeight / 2) + 16)
             .text(d => {
                 if (d.data.type === 'engineer') return '';
                 return d._children ? '▼' : (d.children ? '▲' : '');
@@ -495,7 +515,7 @@ function renderD3OrgChart() {
         node.merge(nodeEnter).transition().duration(duration)
             .attr("transform", d => `translate(${d.x},${d.y})`)
             .style("opacity", 1);
-            
+
         // Update toggle text on merge
         node.merge(nodeEnter).select(".org-node-toggle")
             .text(d => {
@@ -519,16 +539,16 @@ function renderD3OrgChart() {
 
     // Initial render
     update(root);
-    
+
     // --- Initial Zoom & Pan ---
     const bounds = g.node().getBBox();
     const chartWidth = bounds.width;
-    
+
     const scale = Math.min(1, (width / (chartWidth + 100)) * 0.8);
-    
+
     const tx = (width / 2) - (root.x * scale);
     const ty = 50; // 50px margin from top
-    
+
     const initialTransform = d3.zoomIdentity.translate(tx, ty).scale(scale);
 
     const zoom = d3.zoom()
@@ -536,9 +556,9 @@ function renderD3OrgChart() {
         .on("zoom", (event) => {
             g.attr("transform", event.transform);
         });
-    
+
     svg.call(zoom)
-       .call(zoom.transform, initialTransform); 
+        .call(zoom.transform, initialTransform);
 
     console.log("D3 Org Chart (Top-Down, Text Wrap) rendered.");
 }
@@ -553,7 +573,7 @@ let teamTableWidgetInstance = null;
  */
 function generateTeamTable() {
     console.log("Generating Team Breakdown Table using EnhancedTableWidget...");
-    
+
     const tableData = prepareTeamDataForTabulator();
     const columnDefinitions = defineTeamTableColumns();
 
@@ -564,9 +584,9 @@ function generateTeamTable() {
         console.error("Cannot find #teamBreakdown div to render team table widget.");
         return;
     }
-    
+
     // Clear the old content (like the H2 and p tags) to make way for the widget
-    widgetTargetDiv.innerHTML = ''; 
+    widgetTargetDiv.innerHTML = '';
     widgetTargetDiv.style.marginTop = '30px'; // Re-apply margin
 
     // Destroy previous widget instance if it exists
@@ -615,14 +635,14 @@ function prepareTeamDataForTabulator() {
     const srMgrMap = new Map((currentSystemData.seniorManagers || []).map(sm => [sm.seniorManagerId, sm]));
     const pmtMap = new Map((currentSystemData.pmts || []).map(p => [p.pmtId, p]));
     const engineerMap = new Map((currentSystemData.allKnownEngineers || []).map(e => [e.name, e]));
-    
+
     let teamServicesMap = {};
-    (currentSystemData.services || []).forEach(service => { 
-        let teamId = service.owningTeamId; 
-        if (teamId) { 
-            if (!teamServicesMap[teamId]) teamServicesMap[teamId] = []; 
-            teamServicesMap[teamId].push(service.serviceName); 
-        } 
+    (currentSystemData.services || []).forEach(service => {
+        let teamId = service.owningTeamId;
+        if (teamId) {
+            if (!teamServicesMap[teamId]) teamServicesMap[teamId] = [];
+            teamServicesMap[teamId].push(service.serviceName);
+        }
     });
 
     return currentSystemData.teams.map(team => {
@@ -651,7 +671,7 @@ function prepareTeamDataForTabulator() {
             const type = away.attributes?.isAISWE ? ` [AI]` : '';
             return `${away.name} (L${away.level})${type} - From: ${away.sourceTeam}`;
         }).join('\n');
-        
+
         const servicesOwned = (teamServicesMap[team.teamId] || []).join('\n');
 
         return {
@@ -687,8 +707,8 @@ function getNameHeaderFilterParams(sourceArray, nameField) {
                 uniqueNames[item[nameField]] = item[nameField]; // Value is the name itself for filtering
             }
         });
-        Object.keys(uniqueNames).sort((a,b) => String(a).localeCompare(String(b))).forEach(name => {
-             options.push({ label: name, value: name });
+        Object.keys(uniqueNames).sort((a, b) => String(a).localeCompare(String(b))).forEach(name => {
+            options.push({ label: name, value: name });
         });
     }
     // Add an option for "N/A" (unassigned)
@@ -724,43 +744,43 @@ function defineTeamTableColumns() {
     };
 
     return [
-        { 
-            title: "Senior Manager", 
-            field: "seniorManagerName", 
-            minWidth: 150, 
+        {
+            title: "Senior Manager",
+            field: "seniorManagerName",
+            minWidth: 150,
             frozen: true,
             headerFilter: "list",
             headerFilterParams: () => getNameHeaderFilterParams(currentSystemData.seniorManagers, 'seniorManagerName'),
             headerFilterFunc: "="
         },
-        { 
-            title: "SDM", 
-            field: "sdmName", 
-            minWidth: 150, 
+        {
+            title: "SDM",
+            field: "sdmName",
+            minWidth: 150,
             frozen: true,
             headerFilter: "list",
             headerFilterParams: () => getNameHeaderFilterParams(currentSystemData.sdms, 'sdmName'),
             headerFilterFunc: "="
         },
-        { 
-            title: "Team Identity", 
-            field: "teamIdentity", 
-            minWidth: 150, 
+        {
+            title: "Team Identity",
+            field: "teamIdentity",
+            minWidth: 150,
             frozen: true,
             headerFilter: "list",
             headerFilterParams: () => getNameHeaderFilterParams(currentSystemData.teams, 'teamIdentity'),
             headerFilterFunc: "="
         },
-        { 
-            title: "Team Name", 
-            field: "teamName", 
-            minWidth: 200, 
+        {
+            title: "Team Name",
+            field: "teamName",
+            minWidth: 200,
             headerFilter: "input" // Team Name is free-text, so input is fine
         },
-        { 
-            title: "PMT", 
-            field: "pmtName", 
-            minWidth: 150, 
+        {
+            title: "PMT",
+            field: "pmtName",
+            minWidth: 150,
             headerFilter: "list",
             headerFilterParams: () => getNameHeaderFilterParams(currentSystemData.pmts, 'pmtName'),
             headerFilterFunc: "="
@@ -972,11 +992,11 @@ function defineEngineerTableColumns() {
                 }
             });
         }
-        options.sort((a,b) => {
+        options.sort((a, b) => {
             if (a.value === "") return -1;
             if (b.value === "") return 1;
-            if (a.value === "_UNALLOCATED_") return options.length -1; // Try to push Unallocated towards end
-            if (b.value === "_UNALLOCATED_") return -(options.length -1);
+            if (a.value === "_UNALLOCATED_") return options.length - 1; // Try to push Unallocated towards end
+            if (b.value === "_UNALLOCATED_") return -(options.length - 1);
             return String(a.label).localeCompare(String(b.label));
         });
         return { values: options, clearable: true, autocomplete: true };
@@ -992,8 +1012,8 @@ function defineEngineerTableColumns() {
                     uniqueNames[item[nameField]] = item[nameField]; // Value is the name itself for filtering
                 }
             });
-            Object.keys(uniqueNames).sort((a,b) => String(a).localeCompare(String(b))).forEach(name => {
-                 options.push({ label: name, value: name });
+            Object.keys(uniqueNames).sort((a, b) => String(a).localeCompare(String(b))).forEach(name => {
+                options.push({ label: name, value: name });
             });
         }
         return { values: options, clearable: true, autocomplete: true };
@@ -1026,7 +1046,7 @@ function defineEngineerTableColumns() {
     };
 
     return [
-        { title: "Engineer Name", field: "name", sorter: "string", minWidth: 180, frozen: true, editable: false, headerFilter: "input", headerFilterPlaceholder: "Filter by name...", accessorDownload: (v,d) => d.name },
+        { title: "Engineer Name", field: "name", sorter: "string", minWidth: 180, frozen: true, editable: false, headerFilter: "input", headerFilterPlaceholder: "Filter by name...", accessorDownload: (v, d) => d.name },
         {
             title: "Level", field: "level", width: 100, hozAlign: "left", sorter: "number",
             editor: "list", editorParams: levelCellEditorParams,
@@ -1049,7 +1069,7 @@ function defineEngineerTableColumns() {
                     console.error(`Engineer ${engineerName} not found in allKnownEngineers for level update.`);
                 }
             },
-            accessorDownload: (v,d) => (engineerLevels.find(l => l.value === d.level) || {label: d.level}).label
+            accessorDownload: (v, d) => (engineerLevels.find(l => l.value === d.level) || { label: d.level }).label
         },
         {
             title: "Type", field: "isAISWE", width: 70, hozAlign: "center",
@@ -1060,20 +1080,20 @@ function defineEngineerTableColumns() {
             headerFilter: "list", // Changed from "select" to "list"
             headerFilterParams: {
                 values: [ // Using array of objects for "list" header filter
-                    {label: "All", value: ""},
-                    {label: "AI", value: true},
-                    {label: "Human", value: false}
+                    { label: "All", value: "" },
+                    { label: "AI", value: true },
+                    { label: "Human", value: false }
                 ]
             },
             visible: false,
-            download: true, accessorDownload: (v,d) => d.isAISWE ? "AI" : "Human"
+            download: true, accessorDownload: (v, d) => d.isAISWE ? "AI" : "Human"
         },
         {
             title: "AI Agent Type", field: "aiAgentType", minWidth: 150, hozAlign: "left",
             formatter: (cell) => cell.getValue() || "-",
             headerFilter: "input", headerFilterPlaceholder: "Filter by AI Type...",
             visible: false,
-            download: true, accessorDownload: (v,d) => d.aiAgentType === "-" ? "" : d.aiAgentType // Export blank if it was just a dash
+            download: true, accessorDownload: (v, d) => d.aiAgentType === "-" ? "" : d.aiAgentType // Export blank if it was just a dash
         },
         {
             title: "Skills", field: "skills", minWidth: 200, hozAlign: "left",
@@ -1087,13 +1107,13 @@ function defineEngineerTableColumns() {
                 const newSkillsArray = newSkillsString ? newSkillsString.split(',').map(s => s.trim()).filter(s => s) : [];
                 const engineerGlobal = (currentSystemData.allKnownEngineers || []).find(e => e.name === engineerName);
                 if (engineerGlobal) {
-                    if (!engineerGlobal.attributes) engineerGlobal.attributes = {isAISWE: false, aiAgentType: null, skills:[], yearsOfExperience:0};
+                    if (!engineerGlobal.attributes) engineerGlobal.attributes = { isAISWE: false, aiAgentType: null, skills: [], yearsOfExperience: 0 };
                     engineerGlobal.attributes.skills = newSkillsArray;
                     console.log(`Updated skills for ${engineerName} to:`, newSkillsArray);
                     if (typeof saveSystemChanges === 'function') saveSystemChanges();
                 }
             },
-            download: true, accessorDownload: (v,d) => d.skills
+            download: true, accessorDownload: (v, d) => d.skills
         },
         {
             title: "Years Exp.", field: "yearsOfExperience", width: 100, hozAlign: "right", sorter: "number",
@@ -1101,9 +1121,9 @@ function defineEngineerTableColumns() {
                 const val = cell.getValue();
                 return (typeof val === 'number') ? `${val} years` : (val || "-");
             },
-            headerFilter: "number", headerFilterParams:{placeholder:"e.g. >2"}, // Tabulator uses headerFilterParams for placeholder
+            headerFilter: "number", headerFilterParams: { placeholder: "e.g. >2" }, // Tabulator uses headerFilterParams for placeholder
             visible: false,
-            download: true, accessorDownload: (v,d) => d.yearsOfExperience
+            download: true, accessorDownload: (v, d) => d.yearsOfExperience
         },
         {
             title: "Team Identity", field: "teamId", sorterParams: { alignEmptyValues: "top" }, minWidth: 170, hozAlign: "left",
@@ -1131,10 +1151,10 @@ function defineEngineerTableColumns() {
                     }
                 }
             },
-            accessorDownload: (v,d) => { const t = (currentSystemData.teams || []).find(team => team.teamId === d.teamId); return t ? (t.teamIdentity || t.teamName || d.teamId) : "Unallocated"; }
+            accessorDownload: (v, d) => { const t = (currentSystemData.teams || []).find(team => team.teamId === d.teamId); return t ? (t.teamIdentity || t.teamName || d.teamId) : "Unallocated"; }
         },
-        { title: "Manager (SDM)", field: "sdmName", sorter: "string", minWidth: 150, editable: false, headerFilter: "list", headerFilterParams: () => getNameHeaderFilterParams(currentSystemData.sdms, 'sdmName'), headerFilterFunc: "=", headerFilterPlaceholder: "Filter by SDM...", accessorDownload: (v,d) => d.sdmName },
-        { title: "Senior Manager", field: "seniorManagerName", sorter: "string", minWidth: 150, editable: false, headerFilter: "list", headerFilterParams: () => getNameHeaderFilterParams(currentSystemData.seniorManagers, 'seniorManagerName'), headerFilterFunc: "=", headerFilterPlaceholder: "Filter by Sr. Mgr...", accessorDownload: (v,d) => d.seniorManagerName },
+        { title: "Manager (SDM)", field: "sdmName", sorter: "string", minWidth: 150, editable: false, headerFilter: "list", headerFilterParams: () => getNameHeaderFilterParams(currentSystemData.sdms, 'sdmName'), headerFilterFunc: "=", headerFilterPlaceholder: "Filter by SDM...", accessorDownload: (v, d) => d.sdmName },
+        { title: "Senior Manager", field: "seniorManagerName", sorter: "string", minWidth: 150, editable: false, headerFilter: "list", headerFilterParams: () => getNameHeaderFilterParams(currentSystemData.seniorManagers, 'seniorManagerName'), headerFilterFunc: "=", headerFilterPlaceholder: "Filter by Sr. Mgr...", accessorDownload: (v, d) => d.seniorManagerName },
     ];
 }
 
@@ -1199,7 +1219,7 @@ function generateAddNewResourceSection(containerElement) {
 
     const form = document.createElement('form');
     form.id = 'addNewResourceForm';
-    form.onsubmit = function(event) { event.preventDefault(); handleAddNewResource(); };
+    form.onsubmit = function (event) { event.preventDefault(); handleAddNewResource(); };
 
     // Resource Type Selector
     form.innerHTML += `
@@ -1451,7 +1471,7 @@ function handleAddNewResource() {
         if (resourceType === 'sdm' && typeof displayTeamsForEditing === 'function' && document.getElementById('systemEditForm').style.display !== 'none') {
             displayTeamsForEditing(currentSystemData.teams, -1); // Refresh team edit view to update SDM lists
         }
-         if (resourceType === 'pmt' && typeof displayTeamsForEditing === 'function' && document.getElementById('systemEditForm').style.display !== 'none') {
+        if (resourceType === 'pmt' && typeof displayTeamsForEditing === 'function' && document.getElementById('systemEditForm').style.display !== 'none') {
             displayTeamsForEditing(currentSystemData.teams, -1); // Refresh team edit view to update PMT lists
         }
     }
