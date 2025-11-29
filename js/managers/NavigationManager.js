@@ -150,6 +150,18 @@ class NavigationManager {
             this.updateComponents(viewId);
             return;
         }
+
+        if (viewId === 'helpView' && window.workspaceComponent) {
+            window.workspaceComponent.render(viewId, (container) => {
+                if (typeof window.renderHelpView === 'function') {
+                    window.renderHelpView(container);
+                } else {
+                    console.error("renderHelpView function not found!");
+                }
+            });
+            this.updateComponents(viewId);
+            return;
+        }
         // ---------------------------------
 
         const targetId = this.views[viewId];
