@@ -53,7 +53,7 @@ function handleDragStart(event) {
 
     // Add visual feedback (defer slightly)
     setTimeout(() => {
-        if(draggedRowElement) draggedRowElement.classList.add('dragging');
+        if (draggedRowElement) draggedRowElement.classList.add('dragging');
     }, 0);
     console.log(`Drag Start: ${draggedInitiativeId}`);
 }
@@ -73,7 +73,7 @@ function handleDragOver(event) {
 /** Handles leaving a potential drop target */
 function handleDragLeave(event) {
     const targetRow = event.target.closest('tr');
-     if (targetRow) {
+    if (targetRow) {
         targetRow.classList.remove('drag-over');
     }
 }
@@ -82,7 +82,7 @@ function handleDragLeave(event) {
 function handleDrop(event) {
     event.preventDefault();
     const targetRow = event.target.closest('tr');
-    if(targetRow) targetRow.classList.remove('drag-over'); // Clean up visual indicator
+    if (targetRow) targetRow.classList.remove('drag-over'); // Clean up visual indicator
 
     if (!targetRow || !draggedInitiativeId || targetRow.getAttribute('data-initiative-id') === draggedInitiativeId) {
         console.log("Drop cancelled - invalid target or same item.");
@@ -109,27 +109,27 @@ function handleDrop(event) {
 
     // --- Apply Reordering Constraints ---
     // Constraint 0: Cannot drag anything if the dragged item wasn't found or was somehow protected
-     if (!draggedInitiative || draggedInitiative.isProtected) {
-         console.log("Drop invalid: Dragged item is protected or invalid.");
-         alert("Cannot move a protected item.");
-         // handleDragEnd will reset state
-         return;
-     }
+    if (!draggedInitiative || draggedInitiative.isProtected) {
+        console.log("Drop invalid: Dragged item is protected or invalid.");
+        alert("Cannot move a protected item.");
+        // handleDragEnd will reset state
+        return;
+    }
     // Constraint 1: Cannot drop ONTO a protected row (target is protected)
     if (targetInitiative.isProtected) {
         console.log("Drop invalid: Cannot drop onto a protected item.");
         alert("Cannot drop an item onto a protected item.");
-         // handleDragEnd will reset state
+        // handleDragEnd will reset state
         return;
     }
     // Constraint 2: Check if dropping would place the non-protected item *above* any protected items.
     // This means the new index (targetIndex) must be less than the index of the *first* non-protected item.
     const firstNonProtectedIndex = initiatives.findIndex(init => !init.isProtected);
     if (targetIndex < firstNonProtectedIndex && firstNonProtectedIndex !== -1) {
-         console.log("Drop invalid: Cannot move item above the protected block.");
-         alert("Cannot move items above the block of protected initiatives.");
-         // handleDragEnd will reset state
-         return;
+        console.log("Drop invalid: Cannot move item above the protected block.");
+        alert("Cannot move items above the block of protected initiatives.");
+        // handleDragEnd will reset state
+        return;
     }
     // --- End Constraints ---
 
@@ -138,15 +138,15 @@ function handleDrop(event) {
     const [movedItem] = initiatives.splice(draggedIndex, 1);
     const newTargetIndex = initiatives.findIndex(init => init.initiativeId === targetInitiativeId); // Recalculate index after splice
     // Determine insert position based on drop position relative to target row middle
-     const rect = targetRow.getBoundingClientRect();
-     const dropY = event.clientY;
-     const insertBefore = dropY < rect.top + rect.height / 2;
+    const rect = targetRow.getBoundingClientRect();
+    const dropY = event.clientY;
+    const insertBefore = dropY < rect.top + rect.height / 2;
 
-     if (insertBefore) {
-         initiatives.splice(newTargetIndex, 0, movedItem); // Insert before target
-     } else {
-         initiatives.splice(newTargetIndex + 1, 0, movedItem); // Insert after target
-     }
+    if (insertBefore) {
+        initiatives.splice(newTargetIndex, 0, movedItem); // Insert before target
+    } else {
+        initiatives.splice(newTargetIndex + 1, 0, movedItem); // Insert after target
+    }
 
     console.log("Reordered initiatives array:", initiatives.map(i => i.initiativeId));
     // --- End Reorder ---
@@ -161,7 +161,7 @@ function handleDrop(event) {
 /** Cleans up after drag operation ends (dropped or cancelled) */
 function handleDragEnd(event) {
     // Remove the dragging class from the original element
-     if (draggedRowElement) {
+    if (draggedRowElement) {
         draggedRowElement.classList.remove('dragging');
     }
     // Clean up any lingering drag-over styles just in case
@@ -208,11 +208,9 @@ function handleEstimateChange(event) {
         if (assignmentIndex > -1) {
             // Update existing assignment
             initiative.assignments[assignmentIndex].sdeYears = validatedValue;
-            console.log(`Updated estimate for ${initiativeId}, team ${teamId} to ${validatedValue}`);
         } else {
             // Add new assignment
             initiative.assignments.push({ teamId: teamId, sdeYears: validatedValue });
-            console.log(`Added estimate for ${initiativeId}, team ${teamId}: ${validatedValue}`);
         }
         // Optionally reformat the input value after successful update
         input.value = validatedValue.toFixed(2);
@@ -220,31 +218,73 @@ function handleEstimateChange(event) {
         // Remove assignment if value is 0 or invalid
         if (assignmentIndex > -1) {
             initiative.assignments.splice(assignmentIndex, 1);
-            console.log(`Removed assignment for ${initiativeId}, team ${teamId}`);
         }
         // Clear the input field if the value was invalid or zero
         input.value = '';
+    }
+
+    // [NEW] Top-Down Sync: Propagate changes to Work Packages to prevent reversion
+    // because renderPlanningView calls syncInitiativeTotals which overwrites from WPs.
+    if (currentSystemData.workPackages) {
+        const wps = currentSystemData.workPackages.filter(wp => wp.initiativeId === initiativeId);
+        if (wps.length > 0) {
+            // We update the first WP found. In a multi-WP scenario, this is a simplification,
+            // but it ensures the total is preserved for the initiative.
+            const targetWp = wps[0];
+            const workingDays = currentSystemData.capacityConfiguration?.workingDaysPerYear || 261;
+
+            if (!targetWp.impactedTeamAssignments) targetWp.impactedTeamAssignments = [];
+
+            const wpAssignIndex = targetWp.impactedTeamAssignments.findIndex(a => a.teamId === teamId);
+
+            if (validatedValue > 0) {
+                const newDays = validatedValue * workingDays;
+                if (wpAssignIndex > -1) {
+                    targetWp.impactedTeamAssignments[wpAssignIndex].sdeDays = newDays;
+                } else {
+                    targetWp.impactedTeamAssignments.push({
+                        teamId: teamId,
+                        sdeDays: newDays,
+                        startDate: targetWp.startDate,
+                        endDate: targetWp.endDate
+                    });
+                }
+            } else {
+                // Remove from WP if set to 0
+                if (wpAssignIndex > -1) {
+                    targetWp.impactedTeamAssignments.splice(wpAssignIndex, 1);
+                }
+            }
+            console.log(`[Top-Down Sync] Updated WorkPackage ${targetWp.workPackageId} for team ${teamId} to match initiative estimate.`);
+        }
     }
 
     // --- Refresh the entire table to recalculate totals and statuses ---
     renderPlanningView();
     // --- End Refresh ---
 
-    // Optional: Maintain focus if needed, though redraw might make it tricky
-    // input.focus(); // Might not work reliably after full redraw
+    // [NEW] Restore focus to the input field to allow continuous editing (e.g. using spinners or keyboard)
+    setTimeout(() => {
+        const newInput = document.querySelector(`input[data-initiative-id="${initiativeId}"][data-team-id="${teamId}"]`);
+        if (newInput) {
+            newInput.focus();
+            // Optional: Select the text to make it easier to type over, or just keep focus
+            // newInput.select(); 
+        }
+    }, 0);
 }
 
 /** Sets the capacity scenario for planning and redraws the table */
 function setPlanningScenario(scenario) {
-  console.log(`Setting planning scenario to: ${scenario}`);
-  // Allow 'effective', 'funded', or 'team_bis'
-  if (scenario === 'effective' || scenario === 'funded' || scenario === 'team_bis') {
-    planningCapacityScenario = scenario;
-    // Redraw the planning table to apply the change
-    renderPlanningView();
-  } else {
-    console.warn("Invalid planning scenario provided:", scenario);
-  }
+    console.log(`Setting planning scenario to: ${scenario}`);
+    // Allow 'effective', 'funded', or 'team_bis'
+    if (scenario === 'effective' || scenario === 'funded' || scenario === 'team_bis') {
+        planningCapacityScenario = scenario;
+        // Redraw the planning table to apply the change
+        renderPlanningView();
+    } else {
+        console.warn("Invalid planning scenario provided:", scenario);
+    }
 }
 // Make it globally accessible if not already
 window.setPlanningScenario = setPlanningScenario;
@@ -664,6 +704,8 @@ function renderPlanningTable(planningData) {
             estimateInput.setAttribute('data-initiative-id', initiative.initiativeId);
             estimateInput.setAttribute('data-team-id', teamId);
             Object.assign(estimateInput.style, { width: '60px', textAlign: 'right', border: 'none', backgroundColor: 'transparent' });
+            // [CHANGED] Revert to 'change' event to avoid cursor jumping issues with toFixed(2)
+            // The focus restoration logic in handleEstimateChange will handle the re-render.
             estimateInput.addEventListener('change', handleEstimateChange);
             teamCell.appendChild(estimateInput);
             teamCell.style.textAlign = 'center';
@@ -717,6 +759,52 @@ window.toggleCapacityConstraints = toggleCapacityConstraints;
  */
 function renderPlanningView() {
     console.log(`renderPlanningView: Rendering main planning view for year: ${currentPlanningYear}...`);
+
+    const container = document.getElementById('planningView');
+    if (!container) {
+        console.error("Planning container #planningView not found.");
+        return;
+    }
+
+    // [NEW] Dynamically create the layout if it doesn't exist
+    // We check for a key element (planningCapacitySummary) to decide if we need to inject the structure.
+    if (!document.getElementById('planningCapacitySummary')) {
+        console.log("Injecting Planning View DOM structure...");
+        container.innerHTML = `
+            <div id="planningCapacitySummary" style="margin-bottom: 15px; font-weight: bold; padding: 8px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;"></div>
+
+            <div id="planningScenarioControl" style="margin-bottom: 15px; padding: 8px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;"></div>
+
+            <div id="teamLoadSummarySection" style="margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px;">
+                <h4 onclick="toggleCollapsibleSection('teamLoadSummaryContent', 'teamLoadSummaryToggle')" style="cursor: pointer; margin: 0; padding: 10px; background-color: #e9ecef; border-bottom: 1px solid #ccc;" title="Click to expand/collapse team load summary">
+                    <span id="teamLoadSummaryToggle" class="toggle-indicator">(+) </span> Team Load Summary (for ATL Initiatives)
+                </h4>
+                <div id="teamLoadSummaryContent" style="display: none; padding: 10px;">
+                    <p style="font-size: 0.9em; color: #555;">Shows team load based *only* on initiatives currently Above The Line (ATL) according to the selected scenario below.</p>
+                    <table id="teamLoadSummaryTable" style="margin: 0 auto; border-collapse: collapse; font-size: 0.9em;">
+                        <thead>
+                            <tr style="background-color: #f2f2f2;">
+                                <th style="border: 1px solid #ccc; padding: 5px;">Team Name</th>
+                                <th style="border: 1px solid #ccc; padding: 5px;" title="Finance Approved Budget">Funded HC</th>
+                                <th style="border: 1px solid #ccc; padding: 5px;" title="Actual Team Members">Team BIS</th>
+                                <th style="border: 1px solid #ccc; padding: 5px;" title="Borrowed/Away Members">Away BIS</th>
+                                <th style="border: 1px solid #ccc; padding: 5px;" title="Team BIS + Away BIS">Effective BIS</th>
+                                <th style="border: 1px solid #ccc; padding: 5px;" title="SDEs assigned to this team from ATL initiatives only">Assigned ATL SDEs</th>
+                                <th style="border: 1px solid #ccc; padding: 5px;" title="Team's capacity based on selected scenario button below">Scenario Capacity Limit</th>
+                                <th style="border: 1px solid #ccc; padding: 5px;" title="Scenario Capacity Limit - Assigned ATL SDEs">Remaining Capacity (ATL)</th>
+                                <th style="border: 1px solid #ccc; padding: 5px;" title="Load status for ATL work based on Scenario Capacity Limit">ATL Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teamLoadSummaryTableBody"></tbody>
+                        <tfoot id="teamLoadSummaryTableFoot" style="font-weight: bold;"></tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <div id="planningTableContainer"></div>
+        `;
+    }
+
     if (typeof ensureWorkPackagesForInitiatives === 'function') {
         ensureWorkPackagesForInitiatives(currentSystemData, currentPlanningYear);
         if (typeof syncInitiativeTotals === 'function') {
@@ -725,14 +813,10 @@ function renderPlanningView() {
                 .forEach(init => syncInitiativeTotals(init.initiativeId, currentSystemData));
         }
     }
-    const planningViewDiv = document.getElementById('planningView');
+
     const capacitySummaryDiv = document.getElementById('planningCapacitySummary');
     const scenarioControlDiv = document.getElementById('planningScenarioControl');
     const tableContainer = document.getElementById('planningTableContainer');
-
-    if (capacitySummaryDiv) capacitySummaryDiv.innerHTML = ''; else console.error("Missing #planningCapacitySummary div");
-    if (scenarioControlDiv) scenarioControlDiv.innerHTML = ''; else console.error("Missing #planningScenarioControl div");
-    if (tableContainer) tableContainer.innerHTML = ''; else console.error("Missing #planningTableContainer div");
 
     if (!currentSystemData || !currentSystemData.teams) {
         if (tableContainer) tableContainer.innerHTML = '<p style="color: orange;">No planning data loaded or no teams found.</p>';

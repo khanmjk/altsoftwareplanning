@@ -126,6 +126,18 @@ class NavigationManager {
             this.updateComponents(viewId);
             return;
         }
+
+        if (viewId === 'planningView' && window.workspaceComponent) {
+            window.workspaceComponent.render(viewId, () => {
+                if (typeof window.renderPlanningView === 'function') {
+                    window.renderPlanningView();
+                } else {
+                    console.error("renderPlanningView function not found!");
+                }
+            });
+            this.updateComponents(viewId);
+            return;
+        }
         // ---------------------------------
 
         const targetId = this.views[viewId];

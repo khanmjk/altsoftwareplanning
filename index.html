@@ -341,69 +341,6 @@
                 </div>
             </div>
 
-            <div id="planningView" style="display:none; margin-top: 0;">
-                <div id="planningCapacitySummary"
-                    style="margin-bottom: 15px; font-weight: bold; padding: 8px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">
-                </div>
-
-                <div id="planningScenarioControl"
-                    style="margin-bottom: 15px; padding: 8px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">
-                </div>
-
-                <div id="teamLoadSummarySection"
-                    style="margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px;">
-                    <h4 onclick="toggleCollapsibleSection('teamLoadSummaryContent', 'teamLoadSummaryToggle')"
-                        style="cursor: pointer; margin: 0; padding: 10px; background-color: #e9ecef; border-bottom: 1px solid #ccc;"
-                        title="Click to expand/collapse team load summary">
-                        <span id="teamLoadSummaryToggle" class="toggle-indicator">(+) </span> Team Load Summary (for
-                        ATL
-                        Initiatives)
-                    </h4>
-                    <div id="teamLoadSummaryContent" style="display: none; padding: 10px;">
-                        <p style="font-size: 0.9em; color: #555;">Shows team load based *only* on initiatives
-                            currently
-                            Above The Line (ATL) according to the selected scenario below.</p>
-                        <table id="teamLoadSummaryTable"
-                            style="margin: 0 auto; border-collapse: collapse; font-size: 0.9em;">
-                            <thead>
-                                <tr style="background-color: #f2f2f2;">
-                                    <th style="border: 1px solid #ccc; padding: 5px;">Team Name</th>
-                                    <th style="border: 1px solid #ccc; padding: 5px;" title="Finance Approved Budget">
-                                        Funded HC</th>
-                                    <th style="border: 1px solid #ccc; padding: 5px;" title="Actual Team Members">
-                                        Team
-                                        BIS</th>
-                                    <th style="border: 1px solid #ccc; padding: 5px;" title="Borrowed/Away Members">
-                                        Away
-                                        BIS</th>
-                                    <th style="border: 1px solid #ccc; padding: 5px;" title="Team BIS + Away BIS">
-                                        Effective BIS</th>
-                                    <th style="border: 1px solid #ccc; padding: 5px;"
-                                        title="SDEs assigned to this team from ATL initiatives only">Assigned ATL
-                                        SDEs
-                                    </th>
-                                    <th style="border: 1px solid #ccc; padding: 5px;"
-                                        title="Team's capacity based on selected scenario button below">Scenario
-                                        Capacity Limit</th>
-                                    <th style="border: 1px solid #ccc; padding: 5px;"
-                                        title="Scenario Capacity Limit - Assigned ATL SDEs">Remaining Capacity (ATL)
-                                    </th>
-                                    <th style="border: 1px solid #ccc; padding: 5px;"
-                                        title="Load status for ATL work based on Scenario Capacity Limit">ATL Status
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody id="teamLoadSummaryTableBody">
-                            </tbody>
-                            <tfoot id="teamLoadSummaryTableFoot" style="font-weight: bold;">
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
-
-                <div id="planningTableContainer">
-                </div>
-            </div>
 
             <div id="helpView"
                 style="display:none; margin-top: 0; max-width: 90%; margin-left: auto; margin-right: auto;">
@@ -602,7 +539,7 @@
     <script src="js/visualizations.js"></script>
     <script src="js/editSystem.js"></script>
     <script src="js/orgView.js?v=2"></script>
-    <script src="js/yearPlanning.js"></script>
+    <script src="js/yearPlanning.js?v=3"></script>
     <script src="js/capacityTuning.js?v=2"></script>
     <script src="js/roadmap.js?v=2"></script>
     <script src="js/roadmapTableView.js"></script>
