@@ -1,0 +1,204 @@
+/* Sidebar Layout & Styling */
+:root {
+    --sidebar-bg: #1e293b;
+    /* Slate 800 */
+    --sidebar-text: #94a3b8;
+    /* Slate 400 */
+    --sidebar-text-hover: #f8fafc;
+    /* Slate 50 */
+    --sidebar-active-bg: #334155;
+    /* Slate 700 */
+    --sidebar-active-border: #3b82f6;
+    /* Blue 500 */
+    --sidebar-width: 260px;
+}
+
+#sidebar {
+    width: var(--sidebar-width);
+    background-color: var(--sidebar-bg);
+    color: var(--sidebar-text);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    transition: width 0.3s ease;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    overflow-y: auto;
+}
+
+/* Logo Area */
+#sidebar .logo-area {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.1rem;
+    border-bottom: 1px solid #334155;
+}
+
+#sidebar .logo-icon {
+    margin-right: 10px;
+    color: var(--primary-color, #3b82f6);
+}
+
+/* System Switcher */
+#sidebar .system-switcher-container {
+    padding: 15px 10px 5px 10px;
+    position: relative;
+}
+
+#sidebar .system-switcher-btn {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 10px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: background 0.2s;
+}
+
+#sidebar .system-switcher-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Create Button */
+#sidebar .create-btn-container {
+    padding: 20px;
+}
+
+#sidebar .create-btn {
+    width: 100%;
+    background-color: var(--primary-color, #3b82f6);
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background-color 0.2s;
+}
+
+#sidebar .create-btn:hover {
+    background-color: #2563eb;
+}
+
+/* Navigation Groups */
+#sidebar .nav-groups {
+    flex-grow: 1;
+    padding: 0 10px;
+}
+
+#sidebar .nav-group-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    margin: 20px 10px 10px;
+    font-weight: 600;
+}
+
+#sidebar .nav-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    margin-bottom: 2px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    color: inherit;
+}
+
+#sidebar .nav-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--sidebar-text-hover);
+}
+
+#sidebar .nav-item.active {
+    background-color: var(--sidebar-active-bg);
+    color: var(--sidebar-text-hover);
+    border-left: 3px solid var(--sidebar-active-border);
+    padding-left: 9px;
+}
+
+#sidebar .nav-icon {
+    width: 20px;
+    margin-right: 12px;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+#sidebar .nav-text {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* User Profile */
+#sidebar .user-profile {
+    padding: 15px;
+    border-top: 1px solid #334155;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: auto;
+}
+
+#sidebar .avatar {
+    width: 32px;
+    height: 32px;
+    background-color: #475569;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.8rem;
+}
+
+/* Dropdowns */
+.dropdown-menu {
+    position: absolute;
+    background: #334155;
+    border: 1px solid #475569;
+    border-radius: 6px;
+    padding: 5px 0;
+    width: 220px;
+    z-index: 1100;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    display: none;
+}
+
+.dropdown-menu.show {
+    display: block;
+}
+
+.dropdown-item {
+    display: block;
+    padding: 8px 15px;
+    color: #e2e8f0;
+    text-decoration: none;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.dropdown-item:hover {
+    background-color: #475569;
+}
+
+.dropdown-item.danger {
+    color: #f87171;
+}
+
+.dropdown-item.danger:hover {
+    background-color: rgba(239, 68, 68, 0.1);
+}

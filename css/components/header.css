@@ -1,0 +1,64 @@
+/* Header Styling */
+:root {
+    --header-bg: #ffffff;
+    --header-border: #e2e8f0;
+    --header-height: 60px;
+}
+
+#main-header {
+    background-color: var(--header-bg);
+    padding: 0 30px;
+    height: var(--header-height);
+    border-bottom: 1px solid var(--header-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 900;
+}
+
+/* Breadcrumbs */
+.breadcrumbs {
+    color: #64748b;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+}
+
+.breadcrumbs span {
+    margin: 0 5px;
+}
+
+.breadcrumbs .separator {
+    font-size: 0.7rem;
+    color: #cbd5e1;
+}
+
+.breadcrumbs .current-page {
+    color: #0f172a;
+    font-weight: 600;
+}
+
+/* Header Actions */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.header-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #64748b;
+    font-size: 1.1rem;
+    padding: 5px;
+    border-radius: 4px;
+    transition: color 0.2s, background 0.2s;
+}
+
+.header-btn:hover {
+    color: #334155;
+    background-color: #f1f5f9;
+}

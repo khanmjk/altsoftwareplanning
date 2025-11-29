@@ -7,98 +7,205 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 <link href="https://unpkg.com/tabulator-tables@5.5.2/dist/css/tabulator_simple.min.css" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/layout/main-layout.css">
+<link rel="stylesheet" href="css/layout/sidebar.css">
+<link rel="stylesheet" href="css/components/header.css">
 <link rel="stylesheet" href="css/components/enhancedTableWidget.css">
 <link rel="stylesheet" href="css/components/aiChatPanel.css">
 <link rel="stylesheet" href="css/components/ganttChart.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css">
 
-<script src="js/data.js"></script>
-<script src="js/utils.js"></script>
 
-<script src="https://d3js.org/d3.v7.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/12.3.2/markdown-it.min.js"></script>
-<script src="https://unpkg.com/markdown-it-anchor@8.6.7/dist/markdownItAnchor.umd.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/3.4.4/luxon.min.js"></script>
-<script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.5.2/dist/js/tabulator.min.js"></script>
-<script type="text/javascript" src="https://oss.sheetjs.com/sheetjs/xlsx.full.min.js"></script>
-<script src="js/sampleData/sampleStreamingPlatform.js"></script>
-<script src="js/sampleData/sampleContactCenterPlatform.js"></script>
-<script src="js/sampleData/sampleShopSphere.js"></script>
-<script src="js/sampleData/sampleInsightAI.js"></script>
-<script src="js/sampleData/sampleFinSecure.js"></script>
-
-<script src="js/components/enhancedTableWidget.js"></script>
-<script src="js/documentation.js"></script>
-<script src="js/sdmForecasting.js"></script>
-<script src="js/mermaidGenerator.js"></script>
-<script src="js/visualizations.js"></script>
-<script src="js/editSystem.js"></script>
-<script src="js/orgView.js"></script>
-<script src="js/yearPlanning.js"></script>
-<script src="js/capacityTuning.js"></script>
-<script src="js/roadmap.js"></script>
-<script src="js/roadmapTableView.js"></script>
-<script src="js/goalsView.js"></script>
-<script src="js/accomplishmentsView.js"></script>
-<script src="js/impactView.js"></script>
-<script src="js/dashboard.js"></script>
-
-<script src="js/featureFlags.js"></script>
-<script src="js/components/gantt/GanttRenderer.js"></script>
-<script src="js/components/gantt/MermaidGanttRenderer.js"></script>
-<script src="js/components/gantt/FrappeGanttRenderer.js"></script>
-<script src="js/components/gantt/GanttFactory.js"></script>
-<script src="js/components/gantt/ganttAdapter.js"></script>
-<script src="js/components/gantt/ganttGenerator.js"></script>
-<script src="js/ganttPlanning.js"></script>
-<script src="ai/aiService.js"></script>
-<script src="ai/aiChatAssistant.js"></script>
-<script src="ai/aiAgentToolset.js"></script>
-<script src="ai/aiPlanOptimizationAgent.js"></script>
-<script src="ai/aiAgentController.js"></script>
-
-<script src="js/main.js"></script>
 
 <meta charset="UTF-8">
 </head>
 
 <body>
-    <div id="topBar">
-        <span id="appTitle">Software Management Tools</span>
-        <div id="mainActions">
-            <div class="menu">
-                <button>Load System</button>
-                <button>New System</button>
-                <button id="deleteSystemButton" class="btn-danger">Delete System</button>
-                <button>Reset Defaults</button>
-                <button id="createWithAiButton" style="display: none;">Create with AI</button>
+    <div id="app-container">
+        <!-- Sidebar -->
+        <div id="sidebar">
+            <div class="logo-area">
+                <i class="fas fa-layer-group logo-icon"></i>
+                SMT Platform
             </div>
-            <div class="edit-menu" style="display: none;">
-                <button id="systemOverviewButton">System Overview</button>
-                <button id="editSystemButton">Edit System</button>
-                <button id="viewOrgChartButton">Inspect Org Design</button>
-                <button id="manageYearPlanButton">Year Plan</button>
-                <button id="manageRoadmapButton">Roadmap & Backlog</button>
-                <button id="detailedPlanningButton">Detailed Planning</button>
-                <button id="dashboardViewButton">Dashboard</button>
-                <button id="tuneCapacityButton">Capacity Tuning</button>
-                <button id="sdmForecastButton">Resource Forecasting</button>
+            <div class="system-switcher-container">
+                <div class="system-switcher-btn" data-toggle="dropdown" data-target="system-dropdown">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div
+                            style="width: 24px; height: 24px; background: var(--primary-color, #3b82f6); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold;">
+                            S</div>
+                        <div class="system-name-display" style="font-size: 0.9rem; font-weight: 600;">My System</div>
+                    </div>
+                    <i class="fas fa-chevron-down" style="font-size: 0.7rem; color: #64748b;"></i>
+                </div>
+                <div id="system-dropdown" class="dropdown-menu">
+                    <div class="dropdown-item" onclick="if(window.loadSystem) window.loadSystem()">
+                        <i class="fas fa-folder-open" style="width: 20px;"></i> Load System
+                    </div>
+                    <div class="dropdown-item" onclick="if(window.createNewSystem) window.createNewSystem()">
+                        <i class="fas fa-plus-circle" style="width: 20px;"></i> New System
+                    </div>
+                    <div style="height: 1px; background: #475569; margin: 5px 0;"></div>
+                    <div class="dropdown-item" onclick="if(window.returnToHome) window.returnToHome()">
+                        <i class="fas fa-times-circle" style="width: 20px;"></i> Close System
+                    </div>
+                </div>
             </div>
-        </div>
-        <div id="globalNavButtons">
-            <button id="returnHomeButton" onclick="returnToHome()" style="display: none;">Home</button>
-            <button id="aiChatButton" class="btn-secondary" style="display: none; color: #ffc107;">AI Assistant</button>
-            <button id="aiSettingsButton" class="btn-secondary" style="color: #ffc107;">AI Settings</button>
-        </div>
-    </div>
+            <div class="create-btn-container">
+                <button id="create-ai-btn" class="create-btn">
+                    <i class="fas fa-magic"></i> Create with AI
+                </button>
+            </div>
+            <div class="nav-groups">
+                <div class="nav-group-title">Planning</div>
+                <a href="#" class="nav-item" data-view="planningView">
+                    <div class="nav-icon"><i class="far fa-calendar-alt"></i></div>
+                    <div class="nav-text">Year Plan</div>
+                </a>
+                <a href="#" class="nav-item" data-view="ganttPlanningView">
+                    <div class="nav-icon"><i class="fas fa-stream"></i></div>
+                    <div class="nav-text">Detailed Planning</div>
+                </a>
+                <a href="#" class="nav-item" data-view="capacityConfigView">
+                    <div class="nav-icon"><i class="fas fa-sliders-h"></i></div>
+                    <div class="nav-text">Capacity Tuning</div>
+                </a>
+                <a href="#" class="nav-item" data-view="sdmForecastingView">
+                    <div class="nav-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="nav-text">Resource Forecast</div>
+                </a>
 
-    <div id="appContainer">
-        <div class="main-content-area">
-            <h1 id="pageTitle">Software Management Tools</h1>
-            <p id="systemDescription">Load a previously saved system or create a new software system</p>
+                <div class="nav-group-title">Product</div>
+                <a href="#" class="nav-item" data-view="roadmapView">
+                    <div class="nav-icon"><i class="fas fa-map"></i></div>
+                    <div class="nav-text">Roadmap & Backlog</div>
+                </a>
+
+                <div class="nav-group-title">System</div>
+                <a href="#" class="nav-item" data-view="visualizationCarousel">
+                    <div class="nav-icon"><i class="fas fa-sitemap"></i></div>
+                    <div class="nav-text">System Overview</div>
+                </a>
+                <a href="#" class="nav-item" data-view="organogramView">
+                    <div class="nav-icon"><i class="fas fa-users"></i></div>
+                    <div class="nav-text">Org Design</div>
+                </a>
+                <a href="#" class="nav-item" data-view="systemEditForm">
+                    <div class="nav-icon"><i class="fas fa-cog"></i></div>
+                    <div class="nav-text">Edit System</div>
+                </a>
+
+                <div class="nav-group-title">Insights</div>
+                <a href="#" class="nav-item" data-view="dashboardView">
+                    <div class="nav-icon"><i class="fas fa-tachometer-alt"></i></div>
+                    <div class="nav-text">Dashboard</div>
+                </a>
+
+                <div class="nav-group-title">Configuration</div>
+                <div style="position: relative;">
+                    <a href="#" class="nav-item" data-toggle="dropdown" data-target="settings-dropdown">
+                        <div class="nav-icon"><i class="fas fa-wrench"></i></div>
+                        <div class="nav-text">Settings</div>
+                    </a>
+                    <div id="settings-dropdown" class="dropdown-menu"
+                        style="bottom: 100%; left: 0; margin-bottom: 5px;">
+                        <div class="dropdown-item"
+                            onclick="if(window.openAiSettingsModal) window.openAiSettingsModal()">
+                            <i class="fas fa-robot" style="width: 20px;"></i> AI Settings
+                        </div>
+                        <div class="dropdown-item" onclick="if(window.resetToDefaults) window.resetToDefaults()">
+                            <i class="fas fa-undo" style="width: 20px;"></i> Reset Defaults
+                        </div>
+                        <div style="height: 1px; background: #475569; margin: 5px 0;"></div>
+                        <div class="dropdown-item danger" onclick="if(window.deleteSystem) window.deleteSystem()">
+                            <i class="fas fa-trash-alt" style="width: 20px;"></i> Delete System
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="user-profile">
+                <div class="avatar">U</div>
+                <div style="font-size: 0.9rem;">User Profile</div>
+            </div>
+        </div>
+
+        <div id="main-content-wrapper">
+            <header id="main-header">
+                <div class="breadcrumbs"></div>
+                <div class="header-actions">
+                    <button id="header-ai-btn" class="header-btn" title="AI Assistant"><i
+                            class="fas fa-robot"></i></button>
+                    <button id="header-doc-btn" class="header-btn" title="Documentation & Help"><i
+                            class="fas fa-question-circle"></i></button>
+                    <button class="header-btn" title="Notifications"><i class="fas fa-bell"></i></button>
+                </div>
+            </header>
+
+            <div id="main-content-area">
+                <div class="page-header-container">
+                    <h1 id="page-title-display" class="page-title">Software Management Tools</h1>
+                    <p id="page-desc-display" class="page-desc">Load a previously saved system or create a new software
+                        system</p>
+                </div>
+
+                <div id="welcomeView" style="display:none; padding: 40px; max-width: 1200px; margin: 0 auto;">
+                    <div style="text-align: center; margin-bottom: 60px;">
+                        <h1 style="font-size: 2.5rem; color: #1e293b; margin-bottom: 15px;">Welcome to SMT Platform</h1>
+                        <p style="font-size: 1.1rem; color: #64748b; max-width: 600px; margin: 0 auto;">
+                            Your comprehensive workspace for software planning, architecture visualization, and capacity
+                            management.
+                        </p>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
+                        <!-- Load System Card -->
+                        <div class="action-card" onclick="if(window.loadSystem) window.loadSystem()"
+                            style="background: white; padding: 30px; border-radius: 12px; border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                            <div
+                                style="width: 50px; height: 50px; background: #eff6ff; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; color: #3b82f6;">
+                                <i class="fas fa-folder-open" style="font-size: 1.5rem;"></i>
+                            </div>
+                            <h3 style="font-size: 1.25rem; margin-bottom: 10px; color: #0f172a;">Load Existing System
+                            </h3>
+                            <p style="color: #64748b; font-size: 0.95rem;">Access your saved architecture plans,
+                                roadmaps, and capacity configurations.</p>
+                        </div>
+
+                        <!-- Create System Card -->
+                        <div class="action-card" onclick="if(window.createNewSystem) window.createNewSystem()"
+                            style="background: white; padding: 30px; border-radius: 12px; border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                            <div
+                                style="width: 50px; height: 50px; background: #f0fdf4; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; color: #22c55e;">
+                                <i class="fas fa-plus-circle" style="font-size: 1.5rem;"></i>
+                            </div>
+                            <h3 style="font-size: 1.25rem; margin-bottom: 10px; color: #0f172a;">Create New System</h3>
+                            <p style="color: #64748b; font-size: 0.95rem;">Start a new project from scratch. Define
+                                teams, services, and strategic goals.</p>
+                        </div>
+
+                        <!-- Documentation Card -->
+                        <div class="action-card"
+                            onclick="window.open('https://github.com/khanmjk/altsoftwareplanning', '_blank')"
+                            style="background: white; padding: 30px; border-radius: 12px; border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                            <div
+                                style="width: 50px; height: 50px; background: #f8fafc; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; color: #64748b;">
+                                <i class="fas fa-book" style="font-size: 1.5rem;"></i>
+                            </div>
+                            <h3 style="font-size: 1.25rem; margin-bottom: 10px; color: #0f172a;">Documentation</h3>
+                            <p style="color: #64748b; font-size: 0.95rem;">Learn how to use the platform, best practices
+                                for modeling, and more.</p>
+                        </div>
+                    </div>
+
+                    <style>
+                        .action-card:hover {
+                            transform: translateY(-5px);
+                            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                            border-color: #cbd5e1;
+                        }
+                    </style>
+                </div>
+            </div>
 
             <div id="aiGenerationStatsModal" class="modal">
                 <div class="modal-content-wrapper">
@@ -126,7 +233,8 @@
                 </h3>
                 <div id="documentationContent"
                     style="display: none; padding: 15px; max-height: 450px; overflow-y: auto; background-color: #fdfdfd;">
-                    <p><em>Loading documentation... Please ensure you have an internet connection to fetch the latest
+                    <p><em>Loading documentation... Please ensure you have an internet connection to fetch the
+                            latest
                             help content.</em></p>
                 </div>
                 <div id="docResizeHandle"
@@ -198,7 +306,8 @@
                     <input type="text" id="systemNameInput"><br><br>
                     <label>System Description:</label><br>
                     <textarea id="systemDescriptionInput"></textarea><br><br>
-                    <button type="button" class="btn-primary" onclick="saveSystemDetails()">Save System Details</button>
+                    <button type="button" class="btn-primary" onclick="saveSystemDetails()">Save System
+                        Details</button>
                 </form>
 
                 <h3>Services</h3>
@@ -226,7 +335,8 @@
                 </h3>
                 <div id="documentationContent"
                     style="display: none; padding: 15px; max-height: 450px; overflow-y: auto; background-color: #fdfdfd;">
-                    <p><em>Loading documentation... Please ensure you have an internet connection to fetch the latest
+                    <p><em>Loading documentation... Please ensure you have an internet connection to fetch the
+                            latest
                             help content.</em></p>
                 </div>
                 <div id="docResizeHandle"
@@ -270,11 +380,13 @@
                     <h4 onclick="toggleCollapsibleSection('teamLoadSummaryContent', 'teamLoadSummaryToggle')"
                         style="cursor: pointer; margin: 0; padding: 10px; background-color: #e9ecef; border-bottom: 1px solid #ccc;"
                         title="Click to expand/collapse team load summary">
-                        <span id="teamLoadSummaryToggle" class="toggle-indicator">(+) </span> Team Load Summary (for ATL
+                        <span id="teamLoadSummaryToggle" class="toggle-indicator">(+) </span> Team Load Summary (for
+                        ATL
                         Initiatives)
                     </h4>
                     <div id="teamLoadSummaryContent" style="display: none; padding: 10px;">
-                        <p style="font-size: 0.9em; color: #555;">Shows team load based *only* on initiatives currently
+                        <p style="font-size: 0.9em; color: #555;">Shows team load based *only* on initiatives
+                            currently
                             Above The Line (ATL) according to the selected scenario below.</p>
                         <table id="teamLoadSummaryTable"
                             style="margin: 0 auto; border-collapse: collapse; font-size: 0.9em;">
@@ -283,14 +395,17 @@
                                     <th style="border: 1px solid #ccc; padding: 5px;">Team Name</th>
                                     <th style="border: 1px solid #ccc; padding: 5px;" title="Finance Approved Budget">
                                         Funded HC</th>
-                                    <th style="border: 1px solid #ccc; padding: 5px;" title="Actual Team Members">Team
+                                    <th style="border: 1px solid #ccc; padding: 5px;" title="Actual Team Members">
+                                        Team
                                         BIS</th>
-                                    <th style="border: 1px solid #ccc; padding: 5px;" title="Borrowed/Away Members">Away
+                                    <th style="border: 1px solid #ccc; padding: 5px;" title="Borrowed/Away Members">
+                                        Away
                                         BIS</th>
                                     <th style="border: 1px solid #ccc; padding: 5px;" title="Team BIS + Away BIS">
                                         Effective BIS</th>
                                     <th style="border: 1px solid #ccc; padding: 5px;"
-                                        title="SDEs assigned to this team from ATL initiatives only">Assigned ATL SDEs
+                                        title="SDEs assigned to this team from ATL initiatives only">Assigned ATL
+                                        SDEs
                                     </th>
                                     <th style="border: 1px solid #ccc; padding: 5px;"
                                         title="Team's capacity based on selected scenario button below">Scenario
@@ -389,7 +504,8 @@
                                     (Optional):</label>
                                 <textarea id="newThemeDescription_modal" rows="2" style="width: 95%;"></textarea>
                             </div>
-                            <button type="button" id="saveNewThemeButton_modal" class="btn-primary">Add Theme</button>
+                            <button type="button" id="saveNewThemeButton_modal" class="btn-primary">Add
+                                Theme</button>
                         </form>
                     </div>
                     <div class="modal-footer">
@@ -427,7 +543,8 @@
                             <div style="margin-bottom: 15px;">
                                 <input type="checkbox" id="aiModeEnabled" name="aiModeEnabled"
                                     style="margin-right: 8px; vertical-align: middle;">
-                                <label for="aiModeEnabled" style="font-weight: bold; vertical-align: middle;">Enable AI
+                                <label for="aiModeEnabled" style="font-weight: bold; vertical-align: middle;">Enable
+                                    AI
                                     Assistant Mode</label>
                             </div>
 
@@ -459,13 +576,18 @@
                                         </p>
                                         <p
                                             style="margin-bottom: 5px; color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; padding: 8px; border-radius: 4px;">
-                                            <strong>Note:</strong> Free-tier keys often have strict rate limits. If you
-                                            see a <strong>"503: Model Overloaded"</strong> error, it means the service
-                                            is busy. The app will retry, but you may need to wait and try again later.
+                                            <strong>Note:</strong> Free-tier keys often have strict rate limits. If
+                                            you
+                                            see a <strong>"503: Model Overloaded"</strong> error, it means the
+                                            service
+                                            is busy. The app will retry, but you may need to wait and try again
+                                            later.
                                         </p>
                                         <p style="margin-bottom: 5px;">
-                                            <strong>Disclaimer:</strong> This is a client-side application. Your API key
-                                            is stored exclusively in your browser's local storage and is never sent to
+                                            <strong>Disclaimer:</strong> This is a client-side application. Your API
+                                            key
+                                            is stored exclusively in your browser's local storage and is never sent
+                                            to
                                             any server other than the selected LLM provider.
                                         </p>
                                         <p style="margin-bottom: 0;">
@@ -491,12 +613,13 @@
                     </div>
                 </div>
             </div>
-        </div> <!-- end .main-content-area -->
+        </div> <!-- end #main-content-area -->
 
         <div id="chatResizeHandle" style="display: none;"></div>
         <div id="aiChatPanelContainer"></div>
 
-    </div> <!-- end #appContainer -->
+    </div> <!-- end #main-content-wrapper -->
+    </div> <!-- end #app-container -->
     <div id="aiLoadingSpinner" class="spinner-overlay" style="display:none;">
         <div class="spinner"></div>
         <p>AI is generating your system... This may take a moment.</p>
@@ -519,6 +642,58 @@
             </div>
         </div>
     </div>
+    <script src="js/data.js"></script>
+    <script src="js/utils.js"></script>
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/12.3.2/markdown-it.min.js"></script>
+    <script src="https://unpkg.com/markdown-it-anchor@8.6.7/dist/markdownItAnchor.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/3.4.4/luxon.min.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.5.2/dist/js/tabulator.min.js"></script>
+    <script type="text/javascript" src="https://oss.sheetjs.com/sheetjs/xlsx.full.min.js"></script>
+    <script src="js/sampleData/sampleStreamingPlatform.js"></script>
+    <script src="js/sampleData/sampleContactCenterPlatform.js"></script>
+    <script src="js/sampleData/sampleShopSphere.js"></script>
+    <script src="js/sampleData/sampleInsightAI.js"></script>
+    <script src="js/sampleData/sampleFinSecure.js"></script>
+
+    <script src="js/components/enhancedTableWidget.js"></script>
+    <script src="js/documentation.js"></script>
+    <script src="js/sdmForecasting.js"></script>
+    <script src="js/mermaidGenerator.js"></script>
+    <script src="js/visualizations.js"></script>
+    <script src="js/editSystem.js"></script>
+    <script src="js/orgView.js"></script>
+    <script src="js/yearPlanning.js"></script>
+    <script src="js/capacityTuning.js"></script>
+    <script src="js/roadmap.js"></script>
+    <script src="js/roadmapTableView.js"></script>
+    <script src="js/goalsView.js"></script>
+    <script src="js/accomplishmentsView.js"></script>
+    <script src="js/impactView.js"></script>
+    <script src="js/dashboard.js"></script>
+
+    <script src="js/featureFlags.js"></script>
+    <script src="js/components/gantt/GanttRenderer.js"></script>
+    <script src="js/components/gantt/MermaidGanttRenderer.js"></script>
+    <script src="js/components/gantt/FrappeGanttRenderer.js"></script>
+    <script src="js/components/gantt/GanttFactory.js"></script>
+    <script src="js/components/gantt/ganttAdapter.js"></script>
+    <script src="js/components/gantt/ganttGenerator.js"></script>
+    <script src="js/ganttPlanning.js"></script>
+    <script src="ai/aiService.js"></script>
+    <script src="ai/aiChatAssistant.js"></script>
+    <script src="ai/aiAgentToolset.js"></script>
+    <script src="ai/aiPlanOptimizationAgent.js"></script>
+    <script src="ai/aiAgentController.js"></script>
+
+    <script src="js/managers/NavigationManager.js"></script>
+    <script src="js/components/SidebarComponent.js"></script>
+    <script src="js/components/HeaderComponent.js"></script>
+    <script src="js/main.js"></script>
 </body>
 
 </html>

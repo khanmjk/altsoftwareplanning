@@ -27,6 +27,13 @@ function getRoadmapModalElements() {
 
     if (!modal || !titleElement || !formElement || !saveButton || !cancelButton) {
         console.error("One or more roadmap initiative modal elements are missing from the DOM.");
+        console.log("Missing elements:", {
+            modal: !modal,
+            titleElement: !titleElement,
+            formElement: !formElement,
+            saveButton: !saveButton,
+            cancelButton: !cancelButton
+        });
         return null;
     }
     return { modal, titleElement, formElement, saveButton, cancelButton };
@@ -149,7 +156,7 @@ function openRoadmapModalForAdd() {
 
     const statusSelect = document.getElementById('initiativeStatus_modal_roadmap');
     if (statusSelect) statusSelect.value = "Backlog";
-    
+
     const addAssignmentButtonInModal = document.getElementById('addTeamAssignmentButton_modal');
     if (addAssignmentButtonInModal) {
         // Remove existing listener to prevent duplicates if modal is reopened
@@ -180,7 +187,7 @@ function openRoadmapModalForEdit(initiativeId) {
 
     currentEditingInitiativeId = initiativeId;
     elements.titleElement.textContent = `Edit Initiative: ${initiative.title || initiativeId}`;
-    
+
     // Deep copy current assignments to temp store for editing
     tempRoadmapAssignments_modal = initiative.assignments ? JSON.parse(JSON.stringify(initiative.assignments)) : [];
 
@@ -189,7 +196,7 @@ function openRoadmapModalForEdit(initiativeId) {
     displayTempRoadmapAssignments_modal(); // Display the temp assignments for editing
 
     const addAssignmentButtonInModal = document.getElementById('addTeamAssignmentButton_modal');
-     if (addAssignmentButtonInModal) {
+    if (addAssignmentButtonInModal) {
         addAssignmentButtonInModal.removeEventListener('click', handleAddTeamAssignment_modal); // Remove old before adding new
         addAssignmentButtonInModal.addEventListener('click', handleAddTeamAssignment_modal);
     }
@@ -213,7 +220,7 @@ function openRoadmapModalForEdit(initiativeId) {
  */
 function closeRoadmapModal() {
     const elements = getRoadmapModalElements();
-    if (!elements || !elements.modal ) return; 
+    if (!elements || !elements.modal) return;
     if (elements.modal) elements.modal.style.display = 'none';
     if (elements.formElement) elements.formElement.reset();
     currentEditingInitiativeId = null;
@@ -234,14 +241,14 @@ function openThemeManagementModal() {
     if (!elements || !elements.modal) { /* ... error ... */ return; }
 
     console.log("Theme Management Modal elements found:", elements);
-    
+
     const modalElement = elements.modal;
 
     // Ensure the .modal class is present. This should be from HTML but good to double-check.
     if (!modalElement.classList.contains('modal')) {
         modalElement.classList.add('modal');
     }
-    
+
     // Ensure the content wrapper is ready for content.
     // Its styles should primarily come from CSS.
     const contentWrapper = modalElement.querySelector('.modal-content-wrapper');
@@ -255,16 +262,16 @@ function openThemeManagementModal() {
     }
 
     renderThemesForManagement(); // Populate content
-    
+
     if (elements.formElement) {
         elements.formElement.reset();
     }
 
     // Set display to block to make it visible
     modalElement.style.display = 'block';
-    
+
     // Force a reflow to help ensure styles are applied before logging
-    void modalElement.offsetHeight; 
+    void modalElement.offsetHeight;
 
     // --- Diagnostic Logging (keep this) ---
     const computedStyle = window.getComputedStyle(modalElement);
@@ -395,7 +402,7 @@ function handleAddNewTheme() {
             }
         } else {
             // For new initiative, just regenerate form, user will select themes.
-             generateRoadmapInitiativeFormFields(initiativeModalElements.formElement);
+            generateRoadmapInitiativeFormFields(initiativeModalElements.formElement);
         }
     }
 }
@@ -431,18 +438,18 @@ function handleDeleteTheme(themeIdToDelete) {
     // If the initiative modal is open, regenerate its form fields to update themes
     const initiativeModalElements = getRoadmapModalElements();
     if (initiativeModalElements && initiativeModalElements.modal.style.display === 'block' && initiativeModalElements.formElement) {
-         if (currentEditingInitiativeId) {
+        if (currentEditingInitiativeId) {
             const currentInit = (currentSystemData.yearlyInitiatives || []).find(i => i.initiativeId === currentEditingInitiativeId);
             if (currentInit) {
                 generateRoadmapInitiativeFormFields(initiativeModalElements.formElement);
                 populateRoadmapInitiativeForm_modal(currentInit); // Repopulate with updated themes
             }
         } else {
-             generateRoadmapInitiativeFormFields(initiativeModalElements.formElement);
+            generateRoadmapInitiativeFormFields(initiativeModalElements.formElement);
         }
     }
-     // Refresh the main roadmap table as theme names might have changed for some initiatives
-     renderRoadmapTable();
+    // Refresh the main roadmap table as theme names might have changed for some initiatives
+    renderRoadmapTable();
 }
 
 /**
@@ -588,10 +595,10 @@ function prepareRoadmapDataForTable() {
         console.warn("No current system data or yearly initiatives to prepare for roadmap table.");
         return [];
     }
-    let initiatives = JSON.parse(JSON.stringify(currentSystemData.yearlyInitiatives)); 
+    let initiatives = JSON.parse(JSON.stringify(currentSystemData.yearlyInitiatives));
 
     if (currentRoadmapStatusFilters.length > 0 && currentRoadmapStatusFilters.length < ALL_INITIATIVE_STATUSES.length) {
-         initiatives = initiatives.filter(init => currentRoadmapStatusFilters.includes(init.status));
+        initiatives = initiatives.filter(init => currentRoadmapStatusFilters.includes(init.status));
     }
 
     const definedThemesMap = new Map((currentSystemData.definedThemes || []).map(theme => [theme.themeId, theme.name]));
@@ -615,7 +622,7 @@ function prepareRoadmapDataForTable() {
 
         const cleanTargetDueDate = (init.targetDueDate && String(init.targetDueDate).trim() !== "") ? String(init.targetDueDate).trim() : null;
         const themeNames = (init.themes || [])
-            .map(themeId => definedThemesMap.get(themeId) || themeId) 
+            .map(themeId => definedThemesMap.get(themeId) || themeId)
             .join(', ');
 
         // NEW: Prepare display for assigned teams and total SDEs
@@ -629,8 +636,8 @@ function prepareRoadmapDataForTable() {
         }
 
         return {
-            ...init, 
-            id: init.initiativeId, 
+            ...init,
+            id: init.initiativeId,
             targetDueDate: cleanTargetDueDate,
             ownerDisplay: ownerName,
             roiSummaryDisplay: roiSummaryDisplay,
@@ -646,7 +653,7 @@ function prepareRoadmapDataForTable() {
  * Defines columns for the roadmap table, now with inline editors.
  */
 function defineRoadmapTableColumns() {
-    
+
     // Helper to generate editor params for personnel (Owner) dropdowns
     const getPersonnelEditorParams = () => {
         const options = [{ label: "- No Owner -", value: "" }];
@@ -667,7 +674,7 @@ function defineRoadmapTableColumns() {
 
     const columns = [
         {
-            title: "Title", field: "title", minWidth: 200, headerFilter: "input", frozen:true,
+            title: "Title", field: "title", minWidth: 200, headerFilter: "input", frozen: true,
             tooltip: (e, cell) => cell.getValue(),
             editor: "input",
             cellEdited: (cell) => {
@@ -696,11 +703,11 @@ function defineRoadmapTableColumns() {
                 const initiative = cell.getRow().getData();
                 const newValue = cell.getValue();
                 const oldValue = cell.getOldValue();
-                
+
                 if (newValue === "Completed") {
                     const today = luxon.DateTime.now().startOf('day');
                     const dueDate = luxon.DateTime.fromISO(initiative.targetDueDate).startOf('day');
-                    
+
                     if (oldValue !== "Committed") {
                         alert("Error: Only 'Committed' initiatives can be marked as 'Completed'.");
                         cell.restoreOldValue();
@@ -713,7 +720,7 @@ function defineRoadmapTableColumns() {
                     }
                     updateInitiative(initiative.id, { status: newValue });
                     saveSystemChanges();
-                    
+
                 } else {
                     alert("Status updates (other than to 'Completed') are managed by the Year Plan ATL/BTL process.");
                     cell.restoreOldValue();
@@ -778,13 +785,13 @@ function defineRoadmapTableColumns() {
                 const initiative = cell.getRow().getData();
                 const newDate = cell.getValue();
                 const newYear = newDate ? luxon.DateTime.fromISO(newDate).year : new Date().getFullYear();
-                
-                updateInitiative(initiative.id, { 
-                    targetDueDate: newDate, 
+
+                updateInitiative(initiative.id, {
+                    targetDueDate: newDate,
                     attributes: { ...initiative.attributes, planningYear: newYear }
                 });
                 saveSystemChanges();
-                
+
                 cell.getRow().update({ targetQuarterYearDisplay: formatDateToQuarterYear(newDate) });
             }
         },
@@ -869,10 +876,10 @@ function renderRoadmapTable() {
             exportXlsxFileName: 'roadmap_initiatives.xlsx',
             exportSheetName: 'Roadmap Initiatives'
         });
-         console.log("Roadmap table rendered using EnhancedTableWidget with fitColumns layout.");
+        console.log("Roadmap table rendered using EnhancedTableWidget with fitColumns layout.");
     } else {
         console.warn("EnhancedTableWidget not found, falling back to direct Tabulator for roadmap.");
-         if (roadmapTable && typeof roadmapTable.destroy === 'function') {
+        if (roadmapTable && typeof roadmapTable.destroy === 'function') {
             roadmapTable.destroy();
         }
         roadmapTable = new Tabulator(tableContainer, {
@@ -964,7 +971,7 @@ function generateRoadmapInitiativeFormFields(formElement) {
     const currentDefinedThemes = currentSystemData.definedThemes || [];
     const themeOptions = currentDefinedThemes.map(theme => ({
         value: theme.themeId,
-        text: `${theme.name} (${theme.themeId.slice(0,10)}...)`
+        text: `${theme.name} (${theme.themeId.slice(0, 10)}...)`
     }));
 
     if (themeOptions.length === 0) {
@@ -982,14 +989,14 @@ function generateRoadmapInitiativeFormFields(formElement) {
     } else {
         strategicFieldset.appendChild(createFormGroup('Themes:', 'initiativeThemes', 'select', themeOptions, '', '', true));
     }
-    const goalOptions = [{value: "", text:"-- None --"}].concat((currentSystemData.goals || []).map(g => ({ value: g.goalId, text: g.name })));
+    const goalOptions = [{ value: "", text: "-- None --" }].concat((currentSystemData.goals || []).map(g => ({ value: g.goalId, text: g.name })));
     strategicFieldset.appendChild(createFormGroup('Primary Goal:', 'initiativePrimaryGoalId', 'select', goalOptions));
-    const personnelOptionsForOwner = [{value: "", text: "-- Select Owner --"}];
-    (currentSystemData.sdms || []).forEach(p => personnelOptionsForOwner.push({value: `sdm:${p.sdmId}`, text: `${p.sdmName} (SDM)`}));
-    (currentSystemData.pmts || []).forEach(p => personnelOptionsForOwner.push({value: `pmt:${p.pmtId}`, text: `${p.pmtName} (PMT)`}));
-    (currentSystemData.seniorManagers || []).forEach(p => personnelOptionsForOwner.push({value: `seniorManager:${p.seniorManagerId}`, text: `${p.seniorManagerName} (Sr. Mgr)`}));
+    const personnelOptionsForOwner = [{ value: "", text: "-- Select Owner --" }];
+    (currentSystemData.sdms || []).forEach(p => personnelOptionsForOwner.push({ value: `sdm:${p.sdmId}`, text: `${p.sdmName} (SDM)` }));
+    (currentSystemData.pmts || []).forEach(p => personnelOptionsForOwner.push({ value: `pmt:${p.pmtId}`, text: `${p.pmtName} (PMT)` }));
+    (currentSystemData.seniorManagers || []).forEach(p => personnelOptionsForOwner.push({ value: `seniorManager:${p.seniorManagerId}`, text: `${p.seniorManagerName} (Sr. Mgr)` }));
     strategicFieldset.appendChild(createFormGroup('Owner:', 'initiativeOwner', 'select', personnelOptionsForOwner));
-    const pmOptions = [{value: "", text: "-- Select Project Manager --"}].concat((currentSystemData.projectManagers || []).map(p => ({ value: `projectManager:${p.pmId}`, text: p.pmName })));
+    const pmOptions = [{ value: "", text: "-- Select Project Manager --" }].concat((currentSystemData.projectManagers || []).map(p => ({ value: `projectManager:${p.pmId}`, text: p.pmName })));
     strategicFieldset.appendChild(createFormGroup('Project Manager:', 'initiativeProjectManager', 'select', pmOptions));
     formElement.appendChild(strategicFieldset);
 
@@ -1122,7 +1129,7 @@ function populateRoadmapInitiativeForm_modal(initiative) {
         form.elements['initiativeOwner_modal_roadmap'].value = "";
     }
     if (initiative.projectManager && initiative.projectManager.type && initiative.projectManager.id) {
-       form.elements['initiativeProjectManager_modal_roadmap'].value = `${initiative.projectManager.type}:${initiative.projectManager.id}`;
+        form.elements['initiativeProjectManager_modal_roadmap'].value = `${initiative.projectManager.type}:${initiative.projectManager.id}`;
     } else {
         form.elements['initiativeProjectManager_modal_roadmap'].value = "";
     }
@@ -1225,7 +1232,7 @@ function handleSaveRoadmapInitiative_modal() {
         }
     };
 
-     if (form.elements['roiTimeHorizonMonths_modal_roadmap'].value === '') { // Ensure null if empty
+    if (form.elements['roiTimeHorizonMonths_modal_roadmap'].value === '') { // Ensure null if empty
         initiativeData.roi.timeHorizonMonths = null;
     }
 
@@ -1242,7 +1249,7 @@ function handleSaveRoadmapInitiative_modal() {
     const pmValue = form.elements['initiativeProjectManager_modal_roadmap'].value;
     if (pmValue) {
         const [type, id] = pmValue.split(':');
-         const selectedOptionText = form.elements['initiativeProjectManager_modal_roadmap'].options[form.elements['initiativeProjectManager_modal_roadmap'].selectedIndex]?.text || id;
+        const selectedOptionText = form.elements['initiativeProjectManager_modal_roadmap'].options[form.elements['initiativeProjectManager_modal_roadmap'].selectedIndex]?.text || id;
         initiativeData.projectManager = { type, id, name: selectedOptionText };
     } else {
         initiativeData.projectManager = null;
@@ -1256,10 +1263,10 @@ function handleSaveRoadmapInitiative_modal() {
         const preservedData = {
             isProtected: existingInitiative?.isProtected || false,
             workPackageIds: existingInitiative?.workPackageIds || [],
-            attributes: {...(existingInitiative?.attributes || {}), ...initiativeData.attributes},
-            roi: {...(existingInitiative?.roi || {}), ...initiativeData.roi}
+            attributes: { ...(existingInitiative?.attributes || {}), ...initiativeData.attributes },
+            roi: { ...(existingInitiative?.roi || {}), ...initiativeData.roi }
         };
-        const finalUpdateData = {...existingInitiative, ...initiativeData, ...preservedData, initiativeId: currentEditingInitiativeId };
+        const finalUpdateData = { ...existingInitiative, ...initiativeData, ...preservedData, initiativeId: currentEditingInitiativeId };
         finalUpdateData.impactedServiceIds = existingInitiative?.impactedServiceIds || [];
 
         const updated = updateInitiative(currentEditingInitiativeId, finalUpdateData);
@@ -1284,7 +1291,7 @@ function handleSaveRoadmapInitiative_modal() {
 /**
  * Handles click on "Delete" button in a table row for the roadmap.
  */
-window.handleDeleteInitiativeButtonFromTable = function(initiativeId) {
+window.handleDeleteInitiativeButtonFromTable = function (initiativeId) {
     if (!initiativeId) {
         console.error("Delete called without initiativeId");
         return;

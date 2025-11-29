@@ -54,7 +54,7 @@ function displayServicesForEditing(services, containerId, expandedIndex = -1) {
                 if (otherPlatDepsSelect && currentPlatDepsSelect) {
                     const currentPlatDeps = Array.from(currentPlatDepsSelect.options).map(opt => opt.value);
                     otherPlatDepsSelect.innerHTML = ''; // Clear
-                     (currentSystemData.platformDependencies || []).forEach(dep => {
+                    (currentSystemData.platformDependencies || []).forEach(dep => {
                         if (!currentPlatDeps.includes(dep)) {
                             otherPlatDepsSelect.appendChild(new Option(dep, dep));
                         }
@@ -67,7 +67,7 @@ function displayServicesForEditing(services, containerId, expandedIndex = -1) {
                 if (otherSvcDepsSelect && currentSvcDepsSelect) {
                     const currentSvcDeps = Array.from(currentSvcDepsSelect.options).map(opt => opt.value);
                     otherSvcDepsSelect.innerHTML = ''; // Clear
-                     (currentSystemData.services || []).forEach(otherSvc => {
+                    (currentSystemData.services || []).forEach(otherSvc => {
                         if (otherSvc.serviceName !== service.serviceName && !currentSvcDeps.includes(otherSvc.serviceName)) {
                             otherSvcDepsSelect.appendChild(new Option(otherSvc.serviceName, otherSvc.serviceName));
                         }
@@ -78,19 +78,19 @@ function displayServicesForEditing(services, containerId, expandedIndex = -1) {
                 const apiEditDivs = content.querySelectorAll('.api-edit');
                 const allApisList = (currentSystemData.services || []).flatMap(s => (s.apis || []).map(a => a.apiName));
                 apiEditDivs.forEach((apiDiv, apiIdx) => {
-                     const currentApiName = service.apis[apiIdx]?.apiName; // Get current API name
-                     const otherApiDepsSelect = apiDiv.querySelector('select[data-field="availableApis"]');
-                     const currentApiDepsSelect = apiDiv.querySelector('select[data-field="currentDependentApis"]');
-                     if (otherApiDepsSelect && currentApiDepsSelect && currentApiName) {
-                         const currentApiDeps = Array.from(currentApiDepsSelect.options).map(opt => opt.value);
-                         otherApiDepsSelect.innerHTML = ''; // Clear
-                         allApisList.forEach(apiName => {
-                             if (apiName !== currentApiName && !currentApiDeps.includes(apiName)) {
-                                 otherApiDepsSelect.appendChild(new Option(apiName, apiName));
-                             }
-                         });
-                     }
-                 });
+                    const currentApiName = service.apis[apiIdx]?.apiName; // Get current API name
+                    const otherApiDepsSelect = apiDiv.querySelector('select[data-field="availableApis"]');
+                    const currentApiDepsSelect = apiDiv.querySelector('select[data-field="currentDependentApis"]');
+                    if (otherApiDepsSelect && currentApiDepsSelect && currentApiName) {
+                        const currentApiDeps = Array.from(currentApiDepsSelect.options).map(opt => opt.value);
+                        otherApiDepsSelect.innerHTML = ''; // Clear
+                        allApisList.forEach(apiName => {
+                            if (apiName !== currentApiName && !currentApiDeps.includes(apiName)) {
+                                otherApiDepsSelect.appendChild(new Option(apiName, apiName));
+                            }
+                        });
+                    }
+                });
             }
         };
 
@@ -136,81 +136,81 @@ function displayServicesForEditing(services, containerId, expandedIndex = -1) {
             },
             true, true, 'Enter New Platform Dependency', // multiSelectLeft = true, allowAddNew = true
             (newDepName) => { // Add New Callback for Platform Deps (Simplified like SDM/PMT)
-                        const textInput = platformContainer.querySelector('input[type="text"]'); // Get input relative to this dual list
-                        if (!newDepName || newDepName.trim() === '') {
-                            if(textInput) textInput.value = ''; // Clear input even if empty
-                            return null;
-                        }
-                        newDepName = newDepName.trim();
+                const textInput = platformContainer.querySelector('input[type="text"]'); // Get input relative to this dual list
+                if (!newDepName || newDepName.trim() === '') {
+                    if (textInput) textInput.value = ''; // Clear input even if empty
+                    return null;
+                }
+                newDepName = newDepName.trim();
 
-                        // Ensure global platform dependencies array exists
-                        if (!currentSystemData.platformDependencies) {
-                            currentSystemData.platformDependencies = [];
-                        }
+                // Ensure global platform dependencies array exists
+                if (!currentSystemData.platformDependencies) {
+                    currentSystemData.platformDependencies = [];
+                }
 
-                        const alreadyExistsGlobally = currentSystemData.platformDependencies.includes(newDepName);
+                const alreadyExistsGlobally = currentSystemData.platformDependencies.includes(newDepName);
 
-                        // Find the specific select lists for THIS service instance to check if already visible
-                        const currentPlatDepsSelect = platformContainer.querySelector('select[data-field="currentPlatformDependencies"]');
-                        const availablePlatDepsSelect = platformContainer.querySelector('select[data-field="availablePlatformDependencies"]');
+                // Find the specific select lists for THIS service instance to check if already visible
+                const currentPlatDepsSelect = platformContainer.querySelector('select[data-field="currentPlatformDependencies"]');
+                const availablePlatDepsSelect = platformContainer.querySelector('select[data-field="availablePlatformDependencies"]');
 
-                        if (!currentPlatDepsSelect || !availablePlatDepsSelect) {
-                             console.error("Could not find platform dependency select lists for service index:", index);
-                             if(textInput) textInput.value = '';
-                             return null;
-                         }
+                if (!currentPlatDepsSelect || !availablePlatDepsSelect) {
+                    console.error("Could not find platform dependency select lists for service index:", index);
+                    if (textInput) textInput.value = '';
+                    return null;
+                }
 
-                        const inCurrentList = Array.from(currentPlatDepsSelect.options).some(opt => opt.value === newDepName);
-                        const inAvailableList = Array.from(availablePlatDepsSelect.options).some(opt => opt.value === newDepName);
+                const inCurrentList = Array.from(currentPlatDepsSelect.options).some(opt => opt.value === newDepName);
+                const inAvailableList = Array.from(availablePlatDepsSelect.options).some(opt => opt.value === newDepName);
 
-                        if (inCurrentList || inAvailableList) {
-                             alert(`Platform dependency "${newDepName}" is already listed for this service.`);
-                             if(textInput) textInput.value = '';
-                             return null; // Already present for this service, do nothing more
-                         }
+                if (inCurrentList || inAvailableList) {
+                    alert(`Platform dependency "${newDepName}" is already listed for this service.`);
+                    if (textInput) textInput.value = '';
+                    return null; // Already present for this service, do nothing more
+                }
 
-                        // If it doesn't exist globally, add it to the global data list
-                        if (!alreadyExistsGlobally) {
-                            currentSystemData.platformDependencies.push(newDepName);
-                            console.log("Added new global platform dependency to data:", newDepName);
-                        } else {
-                            console.log(`"${newDepName}" already exists globally.`);
-                        }
+                // If it doesn't exist globally, add it to the global data list
+                if (!alreadyExistsGlobally) {
+                    currentSystemData.platformDependencies.push(newDepName);
+                    console.log("Added new global platform dependency to data:", newDepName);
+                } else {
+                    console.log(`"${newDepName}" already exists globally.`);
+                }
 
-                        // --- ALWAYS RETURN THE ITEM ---
-                        // Let createDualListContainer handle adding it to the 'Available' list for *this instance*.
-                        // The fact it's in currentSystemData.platformDependencies ensures it's available later.
-                        if (textInput) textInput.value = ''; // Clear the input field
-                        return { value: newDepName, text: newDepName };
-                    }
+                // --- ALWAYS RETURN THE ITEM ---
+                // Let createDualListContainer handle adding it to the 'Available' list for *this instance*.
+                // The fact it's in currentSystemData.platformDependencies ensures it's available later.
+                if (textInput) textInput.value = ''; // Clear the input field
+                return { value: newDepName, text: newDepName };
+            }
         );
         serviceDetails.appendChild(platformContainer);
         serviceDetails.appendChild(document.createElement('br'));
         // ---------------------------
 
-         // --- Service Dependencies ---
-         const currentSvcDeps = (service.serviceDependencies || []).map(dep => ({ value: dep, text: dep }));
-         const availableSvcDeps = (currentSystemData.services || [])
-             .filter(s => s.serviceName !== service.serviceName && !(service.serviceDependencies || []).includes(s.serviceName))
-             .map(s => ({ value: s.serviceName, text: s.serviceName }));
-         const serviceDepContainer = createDualListContainer(
-             index, 'Current Service Deps:', 'Available Services:',
-             currentSvcDeps, availableSvcDeps,
-             'currentServiceDependencies', 'availableServiceDependencies',
-             (movedSvc, direction, serviceIdx) => { // Callback updates data model directly
-                 const targetService = currentSystemData.services[serviceIdx];
-                 if (!targetService.serviceDependencies) targetService.serviceDependencies = [];
-                 if (direction === 'add') {
-                     if (!targetService.serviceDependencies.includes(movedSvc)) targetService.serviceDependencies.push(movedSvc);
-                 } else {
-                     targetService.serviceDependencies = targetService.serviceDependencies.filter(d => d !== movedSvc);
-                 }
-             },
-             true // multiSelectLeft = true
-             // Cannot add new *services* from here, only from main 'Add New Service' button
-         );
-         serviceDetails.appendChild(serviceDepContainer);
-         serviceDetails.appendChild(document.createElement('br'));
+        // --- Service Dependencies ---
+        const currentSvcDeps = (service.serviceDependencies || []).map(dep => ({ value: dep, text: dep }));
+        const availableSvcDeps = (currentSystemData.services || [])
+            .filter(s => s.serviceName !== service.serviceName && !(service.serviceDependencies || []).includes(s.serviceName))
+            .map(s => ({ value: s.serviceName, text: s.serviceName }));
+        const serviceDepContainer = createDualListContainer(
+            index, 'Current Service Deps:', 'Available Services:',
+            currentSvcDeps, availableSvcDeps,
+            'currentServiceDependencies', 'availableServiceDependencies',
+            (movedSvc, direction, serviceIdx) => { // Callback updates data model directly
+                const targetService = currentSystemData.services[serviceIdx];
+                if (!targetService.serviceDependencies) targetService.serviceDependencies = [];
+                if (direction === 'add') {
+                    if (!targetService.serviceDependencies.includes(movedSvc)) targetService.serviceDependencies.push(movedSvc);
+                } else {
+                    targetService.serviceDependencies = targetService.serviceDependencies.filter(d => d !== movedSvc);
+                }
+            },
+            true // multiSelectLeft = true
+            // Cannot add new *services* from here, only from main 'Add New Service' button
+        );
+        serviceDetails.appendChild(serviceDepContainer);
+        serviceDetails.appendChild(document.createElement('br'));
         // ------------------------
 
         // --- APIs Section ---
@@ -246,31 +246,31 @@ function displayServicesForEditing(services, containerId, expandedIndex = -1) {
                 .filter(aName => aName !== api.apiName && !(api.dependentApis || []).includes(aName))
                 .map(aName => ({ value: aName, text: aName }));
             const apiDepsContainer = createDualListContainer(
-                 apiIndex, // Context is the API index within the service
-                 'Current API Deps:', 'Available APIs:',
-                 currentApiDeps, availableApiDeps,
-                 'currentDependentApis', 'availableApis',
-                 (movedApi, direction, currentApiIndex) => { // Callback updates data model directly
-                     const targetService = currentSystemData.services[index]; // Outer service index
-                     const targetApi = targetService?.apis[currentApiIndex];
-                     if (targetApi) {
-                         if (!targetApi.dependentApis) targetApi.dependentApis = [];
-                         if (direction === 'add') {
-                             if (!targetApi.dependentApis.includes(movedApi)) targetApi.dependentApis.push(movedApi);
-                         } else {
-                             targetApi.dependentApis = targetApi.dependentApis.filter(d => d !== movedApi);
-                         }
-                     }
-                 },
-                 true // multiSelectLeft = true
-                 // Cannot add *new* APIs here, only via the service's 'Add New API' button
-             );
-             apiDiv.appendChild(apiDepsContainer);
-             apiDiv.appendChild(document.createElement('br'));
+                apiIndex, // Context is the API index within the service
+                'Current API Deps:', 'Available APIs:',
+                currentApiDeps, availableApiDeps,
+                'currentDependentApis', 'availableApis',
+                (movedApi, direction, currentApiIndex) => { // Callback updates data model directly
+                    const targetService = currentSystemData.services[index]; // Outer service index
+                    const targetApi = targetService?.apis[currentApiIndex];
+                    if (targetApi) {
+                        if (!targetApi.dependentApis) targetApi.dependentApis = [];
+                        if (direction === 'add') {
+                            if (!targetApi.dependentApis.includes(movedApi)) targetApi.dependentApis.push(movedApi);
+                        } else {
+                            targetApi.dependentApis = targetApi.dependentApis.filter(d => d !== movedApi);
+                        }
+                    }
+                },
+                true // multiSelectLeft = true
+                // Cannot add *new* APIs here, only via the service's 'Add New API' button
+            );
+            apiDiv.appendChild(apiDepsContainer);
+            apiDiv.appendChild(document.createElement('br'));
 
 
-            let deleteApiButton = document.createElement('button'); 
-            deleteApiButton.type = 'button'; 
+            let deleteApiButton = document.createElement('button');
+            deleteApiButton.type = 'button';
             deleteApiButton.className = 'btn-danger'; // Added class for styling
             deleteApiButton.innerText = 'Delete API';
             deleteApiButton.onclick = () => deleteApi(index, apiIndex, containerId); // Pass containerId
@@ -287,8 +287,8 @@ function displayServicesForEditing(services, containerId, expandedIndex = -1) {
         // --------------------
 
         // --- Action Buttons ---
-        let deleteServiceButton = document.createElement('button'); 
-        deleteServiceButton.type = 'button'; 
+        let deleteServiceButton = document.createElement('button');
+        deleteServiceButton.type = 'button';
         deleteServiceButton.className = 'btn-danger'; // Added class for styling
         deleteServiceButton.innerText = 'Delete Service';
         /* deleteServiceButton.style.color = 'red'; 
@@ -296,11 +296,11 @@ function displayServicesForEditing(services, containerId, expandedIndex = -1) {
         deleteServiceButton.onclick = () => { if (confirm('Are you sure?')) deleteService(index, containerId); }; // Pass containerId
         serviceDetails.appendChild(deleteServiceButton);
 
-        let saveServiceButton = document.createElement('button'); 
-        saveServiceButton.type = 'button'; 
+        let saveServiceButton = document.createElement('button');
+        saveServiceButton.type = 'button';
         saveServiceButton.className = 'btn-primary'; // Added class for styling
         saveServiceButton.innerText = 'Save Service Changes';
-        saveServiceButton.style.marginLeft = '10px'; 
+        saveServiceButton.style.marginLeft = '10px';
         saveServiceButton.onclick = () => saveServiceChanges(index); // Saves only this service's state from currentSystemData
         serviceDetails.appendChild(saveServiceButton);
         // --------------------
@@ -319,17 +319,17 @@ function displayServicesForEditing(services, containerId, expandedIndex = -1) {
             currentSystemData.services[serviceIndex][field] = value;
             // If service name changed, update the header
             if (field === 'serviceName') {
-                 const header = event.target.closest('.service-edit')?.querySelector('h4');
-                 if (header) {
-                     const indicatorSpan = header.querySelector('span');
-                     header.textContent = `Service: ${value || 'New Service'}`; // Recreate text
-                     if(indicatorSpan) header.insertBefore(indicatorSpan, header.firstChild); // Add indicator back
-                 }
+                const header = event.target.closest('.service-edit')?.querySelector('h4');
+                if (header) {
+                    const indicatorSpan = header.querySelector('span');
+                    header.textContent = `Service: ${value || 'New Service'}`; // Recreate text
+                    if (indicatorSpan) header.insertBefore(indicatorSpan, header.firstChild); // Add indicator back
+                }
             }
         }
     }
 
-     function handleApiInputChange(event) {
+    function handleApiInputChange(event) {
         const serviceIndex = parseInt(event.target.getAttribute('data-service-index'));
         const apiIndex = parseInt(event.target.getAttribute('data-api-index'));
         const field = event.target.getAttribute('data-field');
@@ -342,28 +342,28 @@ function displayServicesForEditing(services, containerId, expandedIndex = -1) {
     // ------------------------------------
 
     // --- Helper to find current expanded service index ---
-     function findExpandedServiceIndex(containerId = 'editServicesManagement') { // Default containerId
-         const servicesContainerDiv = document.getElementById(containerId);
-         if (!servicesContainerDiv) {
-             console.warn("findExpandedServiceIndex: Could not find container with ID:", containerId);
-             return -1;
-         }
-         const serviceDetailDivs = servicesContainerDiv.querySelectorAll('.service-details'); // Use class selector
-         for (let i = 0; i < serviceDetailDivs.length; i++) {
-             // Check the display style directly
-             if (serviceDetailDivs[i].style.display === 'block') {
-                 // Find the parent service-edit div to get the index attribute
-                 const parentEditDiv = serviceDetailDivs[i].closest('.service-edit');
-                 if (parentEditDiv) {
-                     const indexAttr = parentEditDiv.getAttribute('data-service-index');
-                     if (indexAttr !== null) {
-                         return parseInt(indexAttr); // Return the index from the attribute
-                     }
-                 }
-             }
-         }
-         return -1; // Not found or none expanded
-     }
+    function findExpandedServiceIndex(containerId = 'editServicesManagement') { // Default containerId
+        const servicesContainerDiv = document.getElementById(containerId);
+        if (!servicesContainerDiv) {
+            console.warn("findExpandedServiceIndex: Could not find container with ID:", containerId);
+            return -1;
+        }
+        const serviceDetailDivs = servicesContainerDiv.querySelectorAll('.service-details'); // Use class selector
+        for (let i = 0; i < serviceDetailDivs.length; i++) {
+            // Check the display style directly
+            if (serviceDetailDivs[i].style.display === 'block') {
+                // Find the parent service-edit div to get the index attribute
+                const parentEditDiv = serviceDetailDivs[i].closest('.service-edit');
+                if (parentEditDiv) {
+                    const indexAttr = parentEditDiv.getAttribute('data-service-index');
+                    if (indexAttr !== null) {
+                        return parseInt(indexAttr); // Return the index from the attribute
+                    }
+                }
+            }
+        }
+        return -1; // Not found or none expanded
+    }
 
 } // --- End displayServicesForEditing ---
 
@@ -418,7 +418,7 @@ function saveServiceChanges(serviceIndex) {
     // **Update the Team Breakdown and Service Dependencies Tables**
     generateTeamTable(currentSystemData);
     generateServiceDependenciesTable();
-    
+
     // Optionally collapse the service details or provide additional feedback
 }
 
@@ -472,20 +472,20 @@ function addNewService(overrides = {}) {
     try {
         displayServicesForEditing(currentSystemData.services, 'editServicesManagement');
     } catch (error) {
-         console.error("Error during displayServicesForEditing:", error);
-         alert("Error refreshing service list. Check console.");
-         return; // Stop if service display fails
+        console.error("Error during displayServicesForEditing:", error);
+        alert("Error refreshing service list. Check console.");
+        return; // Stop if service display fails
     }
 
 
     console.log("Refreshing team editors...");
     try {
-         displayTeamsForEditing(currentSystemData.teams);
-     } catch (error) {
-         console.error("Error during displayTeamsForEditing:", error);
-         alert("Error refreshing team list. Check console.");
-         return; // Stop if team display fails
-     }
+        displayTeamsForEditing(currentSystemData.teams);
+    } catch (error) {
+        console.error("Error during displayTeamsForEditing:", error);
+        alert("Error refreshing team list. Check console.");
+        return; // Stop if team display fails
+    }
     console.log("UI refresh attempt complete after adding service.");
     // ------------------------------------------------------
     return newService;
@@ -501,9 +501,9 @@ function deleteService(serviceIndex, containerId) {
     // **Update the Team Breakdown and Service Dependencies Tables**
     generateTeamTable(currentSystemData);
     generateServiceDependenciesTable();
-    
+
     // Refresh the service editing display
-    displayServicesForEditing(currentSystemData.services, containerId,serviceIndex);
+    displayServicesForEditing(currentSystemData.services, containerId, serviceIndex);
     return deletedService;
 }
 
@@ -662,11 +662,11 @@ function displayTeamsForEditing(teamsDataToDisplay, expandedTeamIndex = -1) {
         const currentServicesForTeam = (team.teamId && allServices.filter(s => s.owningTeamId === team.teamId)) || [];
         const availableServicesForTeam = allServices.filter(s => !s.owningTeamId || s.owningTeamId === null);
         const servicesContainer = createDualListContainer(
-             teamIndex, 'Services Owned:', 'Available Unowned Services:',
-             currentServicesForTeam.map(s => ({value: s.value, text: s.text})),
-             availableServicesForTeam.map(s => ({value: s.value, text: s.text})),
-             'currentServices', 'availableServices',
-             (movedServiceValue, direction, currentTeamIndexCallback) => {
+            teamIndex, 'Services Owned:', 'Available Unowned Services:',
+            currentServicesForTeam.map(s => ({ value: s.value, text: s.text })),
+            availableServicesForTeam.map(s => ({ value: s.value, text: s.text })),
+            'currentServices', 'availableServices',
+            (movedServiceValue, direction, currentTeamIndexCallback) => {
                 const serviceToUpdate = currentSystemData.services.find(s => s.serviceName === movedServiceValue);
                 const targetTeamForService = currentSystemData.teams[currentTeamIndexCallback];
                 if (serviceToUpdate && targetTeamForService) {
@@ -674,7 +674,7 @@ function displayTeamsForEditing(teamsDataToDisplay, expandedTeamIndex = -1) {
                     else serviceToUpdate.owningTeamId = null;
                     displayTeamsForEditing(currentSystemData.teams, currentTeamIndexCallback);
                 }
-             }
+            }
         );
         teamDetails.appendChild(servicesContainer);
         teamDetails.appendChild(document.createElement('br'));
@@ -697,16 +697,16 @@ function displayTeamsForEditing(teamsDataToDisplay, expandedTeamIndex = -1) {
                 }
             }, false, true, 'Enter New SDM Name',
             (newSdmNameInput) => {
-                 if (!newSdmNameInput || newSdmNameInput.trim() === '') return null;
-                 newSdmNameInput = newSdmNameInput.trim();
-                 if ((currentSystemData.sdms || []).some(s => s && s.sdmName.toLowerCase() === newSdmNameInput.toLowerCase())) {
-                     alert(`SDM "${newSdmNameInput}" already exists.`); return { preventAdd: true };
-                 }
-                 const newSdmObject = { sdmId: 'sdm-' + Date.now(), sdmName: newSdmNameInput, seniorManagerId: null };
-                 if (!currentSystemData.sdms) currentSystemData.sdms = [];
-                 currentSystemData.sdms.push(newSdmObject);
-                 displayTeamsForEditing(currentSystemData.teams, teamIndex); // Refresh all SDM lists
-                 return { value: newSdmObject.sdmId, text: newSdmObject.sdmName };
+                if (!newSdmNameInput || newSdmNameInput.trim() === '') return null;
+                newSdmNameInput = newSdmNameInput.trim();
+                if ((currentSystemData.sdms || []).some(s => s && s.sdmName.toLowerCase() === newSdmNameInput.toLowerCase())) {
+                    alert(`SDM "${newSdmNameInput}" already exists.`); return { preventAdd: true };
+                }
+                const newSdmObject = { sdmId: 'sdm-' + Date.now(), sdmName: newSdmNameInput, seniorManagerId: null };
+                if (!currentSystemData.sdms) currentSystemData.sdms = [];
+                currentSystemData.sdms.push(newSdmObject);
+                displayTeamsForEditing(currentSystemData.teams, teamIndex); // Refresh all SDM lists
+                return { value: newSdmObject.sdmId, text: newSdmObject.sdmName };
             }
         );
         sdmSection.appendChild(sdmContainer);
@@ -861,7 +861,7 @@ function displayTeamsForEditing(teamsDataToDisplay, expandedTeamIndex = -1) {
                 displayTeamsForEditing(currentSystemData.teams, currentTeamEditIndex); // Refresh all team UIs
                 // Return data for createDualListContainer to add to *this instance's* "Available" list
                 return { value: newEngineerData.name, text: `${newEngineerData.name} (L${newEngineerData.level})${newEngineerData.attributes.isAISWE ? ' [AI]' : ''} - (Unallocated)` };
-             }
+            }
         );
         engineerContainer.id = `engineersList_${teamIndex}`;
         teamDetails.appendChild(engineerContainer);
@@ -925,9 +925,9 @@ function displaySeniorManagerAssignment(sdmSectionContainer, teamIndex, currentS
     // Find the specific container using teamIndex (or could use sdmId if unique)
     let srMgrContainer = sdmSectionContainer.querySelector(`#srMgrAssignmentContainer_${teamIndex}`);
     if (!srMgrContainer) {
-         console.error("Could not find Sr Mgr container for team index", teamIndex);
-         return;
-     }
+        console.error("Could not find Sr Mgr container for team index", teamIndex);
+        return;
+    }
     srMgrContainer.innerHTML = ''; // Clear previous content
     srMgrContainer.style.paddingLeft = '20px'; // Indent slightly
 
@@ -953,18 +953,18 @@ function displaySeniorManagerAssignment(sdmSectionContainer, teamIndex, currentS
         'Current Sr. Mgr:', 'Available Sr. Mgrs:',
         currentSrMgr ? [{ value: currentSrMgr.seniorManagerId, text: currentSrMgr.seniorManagerName }] : [],
         allSeniorManagers.filter(sr => sr && sr.seniorManagerId !== currentSdm.seniorManagerId)
-                         .map(sr => ({ value: sr.seniorManagerId, text: sr.seniorManagerName })), // Map to value/text
+            .map(sr => ({ value: sr.seniorManagerId, text: sr.seniorManagerName })), // Map to value/text
         `currentSrMgr_${currentSdmId}`, // Field names specific to this SDM
         `availableSrMgrs_${currentSdmId}`,
         (movedSrMgrId, direction) => { // Callback on Sr Mgr move
             // Find the SDM in the main data again to modify it
             const sdmToUpdate = currentSystemData.sdms.find(s => s.sdmId === currentSdmId);
             if (sdmToUpdate) {
-                 sdmToUpdate.seniorManagerId = (direction === 'add') ? movedSrMgrId : null;
-                 console.log(`Set Sr Mgr for SDM ${currentSdmId} to ${sdmToUpdate.seniorManagerId}`);
-             } else {
-                 console.warn("Could not find SDM to update Sr Mgr for:", currentSdmId);
-             }
+                sdmToUpdate.seniorManagerId = (direction === 'add') ? movedSrMgrId : null;
+                console.log(`Set Sr Mgr for SDM ${currentSdmId} to ${sdmToUpdate.seniorManagerId}`);
+            } else {
+                console.warn("Could not find SDM to update Sr Mgr for:", currentSdmId);
+            }
         },
         false, // singleSelectLeft = true for current Sr Mgr (set multiSelectLeft to false)
         true, // Allow adding new Sr Mgrs
@@ -987,15 +987,15 @@ function displaySeniorManagerAssignment(sdmSectionContainer, teamIndex, currentS
         }
     );
     srMgrContainer.appendChild(srMgrDualList);
- }
+}
 
- /*
-    Since displayTeamsForEditing is now called to refresh all team UIs after significant engineer assignment changes (like adding a new engineer or moving an engineer between teams), 
-    the more granular refreshAllAvailableEngineerLists function is no longer strictly necessary and might lead to inconsistencies 
-    if not perfectly synced. For now, to simplify and ensure data integrity, we rely on the full refresh.
+/*
+   Since displayTeamsForEditing is now called to refresh all team UIs after significant engineer assignment changes (like adding a new engineer or moving an engineer between teams), 
+   the more granular refreshAllAvailableEngineerLists function is no longer strictly necessary and might lead to inconsistencies 
+   if not perfectly synced. For now, to simplify and ensure data integrity, we rely on the full refresh.
 */
 
- /** Helper to refresh available engineer lists in all open team edit sections */
+/** Helper to refresh available engineer lists in all open team edit sections */
 //function refreshAllAvailableEngineerLists() {
 //     console.log("Refreshing all available engineer lists...");
 //     const allTeamEditDivs = document.querySelectorAll('#teamsManagement .team-edit');
@@ -1033,13 +1033,13 @@ function refreshAvailableListsInDualList(contentContainer, currentListField, ava
         availableSelect.innerHTML = ''; // Clear
         allOptionsData.forEach(optionData => {
             // For services, filter out those owned by the current team OR already in the 'current' list
-             if (optionData.owningTeamId !== currentTeamId && !currentlyAssignedValues.includes(optionData.value)) {
-                 availableSelect.appendChild(new Option(optionData.text, optionData.value));
-             }
+            if (optionData.owningTeamId !== currentTeamId && !currentlyAssignedValues.includes(optionData.value)) {
+                availableSelect.appendChild(new Option(optionData.text, optionData.value));
+            }
         });
         console.log(`Refreshed available list for field: ${availableListField}`);
     } else {
-         console.warn(`Could not find select lists for refresh: ${currentListField} / ${availableListField}`);
+        console.warn(`Could not find select lists for refresh: ${currentListField} / ${availableListField}`);
     }
 }
 
@@ -1154,9 +1154,9 @@ function updateEffectiveBISDisplay(teamIndex) {
         effectiveBISSpan.textContent = effectiveBIS;
         effectiveBISSpan.title = bisTooltip; // Update value tooltip
     }
-     if (effectiveBISLabel) {
+    if (effectiveBISLabel) {
         effectiveBISLabel.title = bisTooltip; // Update label tooltip
-     }
+    }
 }
 
 function updateTeamSize(teamIndex, newSize) {
@@ -1367,14 +1367,14 @@ function saveTeamChanges(index) {
     // --- Collapse the edit section after saving attempt ---
     const teamDivs = document.querySelectorAll('#teamsManagement .team-edit');
     if (index < teamDivs.length) {
-         const teamDiv = teamDivs[index];
-         const teamDetails = teamDiv.querySelector('.team-details');
-         const indicator = teamDiv.querySelector('h4 > span');
-         // Check if elements exist before modifying
-         if (teamDetails) teamDetails.style.display = 'none';
-         if (indicator) indicator.innerText = '+ ';
-     }
-  
+        const teamDiv = teamDivs[index];
+        const teamDetails = teamDiv.querySelector('.team-details');
+        const indicator = teamDiv.querySelector('h4 > span');
+        // Check if elements exist before modifying
+        if (teamDetails) teamDetails.style.display = 'none';
+        if (indicator) indicator.innerText = '+ ';
+    }
+
 }
 
 /** Updated Add New Team **/
@@ -1507,10 +1507,10 @@ function handleTeamInputChange(event) {
             const teamDiv = input.closest('.team-edit');
             const header = teamDiv?.querySelector('h4');
             if (header) {
-                 const indicator = header.querySelector('span');
-                 const teamData = currentSystemData.teams[teamIndex];
-                 header.textContent = `Team: ${teamData.teamIdentity || teamData.teamName || 'New Team'}`;
-                 if(indicator) header.insertBefore(indicator, header.firstChild);
+                const indicator = header.querySelector('span');
+                const teamData = currentSystemData.teams[teamIndex];
+                header.textContent = `Team: ${teamData.teamIdentity || teamData.teamName || 'New Team'}`;
+                if (indicator) header.insertBefore(indicator, header.firstChild);
             }
         }
     } else {
@@ -1526,11 +1526,22 @@ function showSystemEditForm(systemData) {
     // Use switchView to handle showing the form and managing buttons/title
     switchView('systemEditForm', Modes.EDITING); // Explicitly set EDITING mode
 
+    populateSystemEditForm(systemData);
+}
+
+/**
+ * Populates the System Edit Form with data.
+ * Extracted for use by NavigationManager.
+ */
+function populateSystemEditForm(systemData) {
+    console.log("Populating System Edit Form...");
+    if (!systemData) { console.error("populateSystemEditForm called without systemData."); return; }
+
     // --- Populate form fields ---
     const nameInput = document.getElementById('systemNameInput');
     const descInput = document.getElementById('systemDescriptionInput');
-    if(nameInput) nameInput.value = systemData.systemName || '';
-    if(descInput) descInput.value = systemData.systemDescription || '';
+    if (nameInput) nameInput.value = systemData.systemName || '';
+    if (descInput) descInput.value = systemData.systemDescription || '';
     console.log("Populated edit form: Name=", nameInput?.value, "Desc=", descInput?.value);
 
     // Populate services and teams (existing logic)
@@ -1540,16 +1551,16 @@ function showSystemEditForm(systemData) {
     } catch (error) {
         console.error("Error populating services/teams in edit form:", error);
         const editFormDiv = document.getElementById('systemEditForm');
-        if(editFormDiv) editFormDiv.innerHTML = `<p style="color:red;">Error populating form details. Check console.</p>`;
+        if (editFormDiv) editFormDiv.innerHTML = `<p style="color:red;">Error populating form details. Check console.</p>`;
     }
-
 }
+window.populateSystemEditForm = populateSystemEditForm;
 
 /** Save System Details **/
 function saveSystemDetails() {
     // Get updated system name and description
-    console.log("*** 1 document.getElementById('systemNameInput').value",document.getElementById('systemNameInput').value);
-    console.log("*** 2 document.getElementById('systemDescriptionInput'",document.getElementById('systemDescriptionInput').value);
+    console.log("*** 1 document.getElementById('systemNameInput').value", document.getElementById('systemNameInput').value);
+    console.log("*** 2 document.getElementById('systemDescriptionInput'", document.getElementById('systemDescriptionInput').value);
 
     const systemNameInput = document.getElementById('systemNameInput');
     const systemDescriptionTextarea = document.getElementById('systemDescriptionInput');
@@ -1580,11 +1591,11 @@ function saveSystemDetails() {
     alert('System details saved, please continue to update the services and teams. Note: If you changed the system name, it is treated as a new system');
 
     if (currentMode == Modes.EDITING) {
-    // Update UI components
-    generateTeamTable(currentSystemData);
-    generateServiceDependenciesTable();
-    updateServiceVisualization();
-    updateDependencyVisualization();
+        // Update UI components
+        generateTeamTable(currentSystemData);
+        generateServiceDependenciesTable();
+        updateServiceVisualization();
+        updateDependencyVisualization();
     }
 }
 
@@ -1592,10 +1603,10 @@ function saveSystemDetails() {
 
 /** REVISED Save All Changes - Handles Creation and Updates */
 function saveAllChanges() {
-//    if (currentMode !== Modes.CREATING && currentMode !== Modes.EDITING) {
-//         alert('Not in creation or edit mode. No changes to save.');
-//         return;
-//    }
+    //    if (currentMode !== Modes.CREATING && currentMode !== Modes.EDITING) {
+    //         alert('Not in creation or edit mode. No changes to save.');
+    //         return;
+    //    }
 
     // --- Get Final System Name and Description from Form ---
     const systemNameInput = document.getElementById('systemNameInput');
