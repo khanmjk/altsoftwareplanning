@@ -122,25 +122,37 @@ function captureGanttFocusFromTarget(target) {
     }
 }
 
-function initializeGanttPlanningView() {
+/**
+ * NEW: Renders the Gantt Planning view into the Workspace.
+ */
+function renderGanttPlanningView() {
     const container = document.getElementById('ganttPlanningView');
-    if (!container) return;
+    if (!container) {
+        console.error("Gantt container #ganttPlanningView not found.");
+        return;
+    }
+
     if (typeof ensureWorkPackagesForInitiatives === 'function') {
         ensureWorkPackagesForInitiatives(currentSystemData, currentGanttYear);
     }
-    ganttChartInstance = null;
-    container.innerHTML = `
-        <div id="ganttPlanningControls" class="gantt-filter-bar"></div>
-        <div id="ganttSplitPane" class="gantt-split">
-            <div id="ganttPlanningTableContainer" class="gantt-panel"></div>
-            <div id="ganttSplitResizer" class="gantt-resizer" title="Drag to resize panels"></div>
-            <div id="ganttChartWrapper" class="gantt-panel">
-                <div id="ganttChartContainer" class="mermaid gantt-chart-box"></div>
+
+    // Only create layout if it doesn't exist
+    if (!document.getElementById('ganttSplitPane')) {
+        ganttChartInstance = null;
+        container.innerHTML = `
+            <div id="ganttPlanningControls" class="gantt-filter-bar"></div>
+            <div id="ganttSplitPane" class="gantt-split">
+                <div id="ganttPlanningTableContainer" class="gantt-panel"></div>
+                <div id="ganttSplitResizer" class="gantt-resizer" title="Drag to resize panels"></div>
+                <div id="ganttChartWrapper" class="gantt-panel">
+                    <div id="ganttChartContainer" class="mermaid gantt-chart-box"></div>
+                </div>
             </div>
-        </div>
-    `;
-    setupGanttResizer();
-    applyGanttSplitWidth();
+        `;
+        setupGanttResizer();
+        applyGanttSplitWidth();
+    }
+
     renderGanttControls();
     renderGanttTable();
     renderGanttChart();
@@ -236,6 +248,16 @@ function renderGanttControls() {
     row.appendChild(rendererWrap);
     controls.appendChild(row);
 
+    // RESTORED: Add the static View Mode buttons and Legend here
+    const staticControls = document.createElement('div');
+    staticControls.className = 'gantt-controls';
+    staticControls.style.marginTop = '10px';
+    staticControls.style.display = 'flex';
+    staticControls.style.justifyContent = 'space-between';
+    staticControls.style.alignItems = 'center';
+    staticControls.innerHTML = getGanttStaticControlsHTML();
+    controls.appendChild(staticControls);
+
     // Build filters
     renderDynamicGroupFilter();
     renderStatusFilter();
@@ -256,6 +278,26 @@ function renderGanttControls() {
             }
         });
     });
+}
+
+function getGanttStaticControlsHTML() {
+    return `
+        <div class="view-modes">
+            <span style="margin-right: 10px; font-weight: 500;">View:</span>
+            <div class="btn-group" role="group">
+                <button type="button" class="btn-sm btn-outline-secondary" data-view-mode="Quarter Day">Quarter Day</button>
+                <button type="button" class="btn-sm btn-outline-secondary" data-view-mode="Half Day">Half Day</button>
+                <button type="button" class="btn-sm btn-outline-secondary" data-view-mode="Day">Day</button>
+                <button type="button" class="btn-sm btn-outline-secondary" data-view-mode="Week">Week</button>
+                <button type="button" class="btn-sm btn-outline-secondary active" data-view-mode="Month">Month</button>
+            </div>
+        </div>
+        <div class="gantt-legend" style="display: flex; gap: 15px; font-size: 12px; align-items: center;">
+            <div style="display: flex; align-items: center;"><span style="width: 12px; height: 12px; background-color: #6f42c1; display: inline-block; margin-right: 5px; border-radius: 2px;"></span> Initiative</div>
+            <div style="display: flex; align-items: center;"><span style="width: 12px; height: 12px; background-color: #0366d6; display: inline-block; margin-right: 5px; border-radius: 2px;"></span> Work Package</div>
+            <div style="display: flex; align-items: center;"><span style="width: 12px; height: 12px; background-color: #2ea44f; display: inline-block; margin-right: 5px; border-radius: 2px;"></span> Assignment</div>
+        </div>
+    `;
 }
 
 function createLabeledControl(labelText, controlEl) {
@@ -1559,7 +1601,7 @@ function handleGanttUpdate({ task, start, end }) {
 }
 
 if (typeof window !== 'undefined') {
-    window.initializeGanttPlanningView = initializeGanttPlanningView;
+    window.renderGanttPlanningView = renderGanttPlanningView;
 }
 function renderDynamicGroupFilter() {
     const wrap = document.getElementById('ganttDynamicFilter');

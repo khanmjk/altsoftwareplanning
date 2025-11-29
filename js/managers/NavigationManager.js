@@ -90,6 +90,42 @@ class NavigationManager {
             this.updateComponents(viewId);
             return;
         }
+
+        if (viewId === 'roadmapView' && window.workspaceComponent) {
+            window.workspaceComponent.render(viewId, () => {
+                if (typeof window.renderRoadmapView === 'function') {
+                    window.renderRoadmapView();
+                } else {
+                    console.error("renderRoadmapView function not found!");
+                }
+            });
+            this.updateComponents(viewId);
+            return;
+        }
+
+        if (viewId === 'dashboardView' && window.workspaceComponent) {
+            window.workspaceComponent.render(viewId, () => {
+                if (typeof window.renderDashboardView === 'function') {
+                    window.renderDashboardView();
+                } else {
+                    console.error("renderDashboardView function not found!");
+                }
+            });
+            this.updateComponents(viewId);
+            return;
+        }
+
+        if (viewId === 'ganttPlanningView' && window.workspaceComponent) {
+            window.workspaceComponent.render(viewId, () => {
+                if (typeof window.renderGanttPlanningView === 'function') {
+                    window.renderGanttPlanningView();
+                } else {
+                    console.error("renderGanttPlanningView function not found!");
+                }
+            });
+            this.updateComponents(viewId);
+            return;
+        }
         // ---------------------------------
 
         const targetId = this.views[viewId];

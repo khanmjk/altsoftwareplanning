@@ -404,17 +404,6 @@
                 <div id="planningTableContainer">
                 </div>
             </div>
-            <div id="roadmapView"
-                style="display:none; margin-top: 20px; max-width: 95%; margin-left: auto; margin-right: auto;">
-                <div id="roadmapControlsContainer"
-                    style="margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">
-                </div>
-                <div id="roadmapTableContainer" style="margin-bottom: 20px;">
-                </div>
-
-            </div>
-            <div id="dashboardView" style="display:none; margin-top: 20px;">
-            </div>
 
             <div id="helpView"
                 style="display:none; margin-top: 0; max-width: 90%; margin-left: auto; margin-right: auto;">
@@ -422,36 +411,6 @@
                     <p><em>Loading documentation... Please ensure you have an internet connection to fetch the
                             latest
                             help content.</em></p>
-                </div>
-            </div>
-            <div id="ganttPlanningView" style="display:none; margin-top: 20px;">
-                <div class="gantt-controls"
-                    style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
-                    <div class="view-modes">
-                        <span style="margin-right: 10px; font-weight: 500;">View:</span>
-                        <div class="btn-group" role="group">
-                            <button type="button" class="btn-sm btn-outline-secondary"
-                                data-view-mode="Quarter Day">Quarter Day</button>
-                            <button type="button" class="btn-sm btn-outline-secondary" data-view-mode="Half Day">Half
-                                Day</button>
-                            <button type="button" class="btn-sm btn-outline-secondary" data-view-mode="Day">Day</button>
-                            <button type="button" class="btn-sm btn-outline-secondary"
-                                data-view-mode="Week">Week</button>
-                            <button type="button" class="btn-sm btn-outline-secondary active"
-                                data-view-mode="Month">Month</button>
-                        </div>
-                    </div>
-                    <div class="gantt-legend" style="display: flex; gap: 15px; font-size: 12px; align-items: center;">
-                        <div style="display: flex; align-items: center;"><span
-                                style="width: 12px; height: 12px; background-color: #6f42c1; display: inline-block; margin-right: 5px; border-radius: 2px;"></span>
-                            Initiative</div>
-                        <div style="display: flex; align-items: center;"><span
-                                style="width: 12px; height: 12px; background-color: #0366d6; display: inline-block; margin-right: 5px; border-radius: 2px;"></span>
-                            Work Package</div>
-                        <div style="display: flex; align-items: center;"><span
-                                style="width: 12px; height: 12px; background-color: #2ea44f; display: inline-block; margin-right: 5px; border-radius: 2px;"></span>
-                            Assignment</div>
-                    </div>
                 </div>
             </div>
 
@@ -645,12 +604,12 @@
     <script src="js/orgView.js?v=2"></script>
     <script src="js/yearPlanning.js"></script>
     <script src="js/capacityTuning.js?v=2"></script>
-    <script src="js/roadmap.js"></script>
+    <script src="js/roadmap.js?v=2"></script>
     <script src="js/roadmapTableView.js"></script>
     <script src="js/goalsView.js"></script>
     <script src="js/accomplishmentsView.js"></script>
     <script src="js/impactView.js"></script>
-    <script src="js/dashboard.js"></script>
+    <script src="js/dashboard.js?v=2"></script>
 
     <script src="js/featureFlags.js"></script>
     <script src="js/components/gantt/GanttRenderer.js"></script>
@@ -659,7 +618,7 @@
     <script src="js/components/gantt/GanttFactory.js"></script>
     <script src="js/components/gantt/ganttAdapter.js"></script>
     <script src="js/components/gantt/ganttGenerator.js"></script>
-    <script src="js/ganttPlanning.js"></script>
+    <script src="js/ganttPlanning.js?v=2"></script>
     <script src="ai/aiService.js"></script>
     <script src="ai/aiChatAssistant.js"></script>
     <script src="ai/aiAgentToolset.js"></script>

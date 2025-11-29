@@ -456,8 +456,27 @@ function handleDeleteTheme(themeIdToDelete) {
  * Initializes the Roadmap & Backlog view.
  * Ensures "Manage Themes" button and its modal's "Add Theme" button listeners are set up independently.
  */
-function initializeRoadmapView() {
-    console.log("Initializing Roadmap View (Modal version)...");
+/**
+ * NEW: Renders the Roadmap & Backlog view into the Workspace.
+ * Ensures "Manage Themes" button and its modal's "Add Theme" button listeners are set up independently.
+ */
+function renderRoadmapView() {
+    console.log("Rendering Roadmap View (Modal version)...");
+
+    const container = document.getElementById('roadmapView');
+    if (!container) {
+        console.error("Roadmap container #roadmapView not found.");
+        return;
+    }
+
+    // --- Dynamic DOM Creation for Workspace ---
+    if (!document.getElementById('roadmapControlsContainer')) {
+        container.innerHTML = `
+            <div id="roadmapControlsContainer" style="margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;"></div>
+            <div id="roadmapTableContainer" style="margin-bottom: 20px;"></div>
+        `;
+    }
+
     generateRoadmapControls(); // This sets up the "Manage Themes" button and its onclick to openThemeManagementModal
     renderRoadmapTable();
 
@@ -466,7 +485,7 @@ function initializeRoadmapView() {
         // Generate initiative form fields once; it will use currentSystemData.definedThemes as available
         generateRoadmapInitiativeFormFields(initiativeModalElements.formElement);
     } else {
-        console.error("Cannot generate initiative form fields, modal form element not found.");
+        console.warn("Cannot generate initiative form fields, modal form element not found (might be hidden).");
     }
 
     if (initiativeModalElements) {
@@ -481,8 +500,10 @@ function initializeRoadmapView() {
         console.error("Could not attach listener to 'Add New Theme' button in theme management modal. Button not found.");
     }
 
-    console.log("Roadmap View Initialized with Modal and Theme Management support.");
+    console.log("Roadmap View Rendered with Modal and Theme Management support.");
 }
+// Make globally accessible
+window.renderRoadmapView = renderRoadmapView;
 
 
 /**
