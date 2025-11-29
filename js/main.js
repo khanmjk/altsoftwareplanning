@@ -84,16 +84,7 @@ function updateAiDependentUI(options = {}) {
 // --- End Global App Settings ---
 
 // --- Carousel State ---
-let currentVisualizationIndex = 0;
-const visualizationItems = [
-    { id: 'visualization', title: 'System Visualization' },
-    { id: 'teamVisualization', title: 'Team Relationships Visualization' },
-    { id: 'serviceRelationshipsVisualization', title: 'Service Relationships Visualization' },
-    { id: 'dependencyVisualization', title: 'Service Dependency Visualization' },
-    { id: 'serviceDependenciesTableSlide', title: 'Service Dependency Table' },
-    { id: 'mermaidVisualization', title: 'System Architecture (Mermaid)' },
-    { id: 'mermaidApiVisualization', title: 'Service API Interactions (Mermaid)' }
-];
+// Moved to visualizations.js
 // ----------------------
 
 // ========= SDM Resource Forecasting Tool Code (Lift & Shift - Phase 1) =========
@@ -556,101 +547,7 @@ function switchView(targetViewId, newMode = null) {
 
 
 
-/**
- * Shows the visualization item at the specified index and hides others.
- */
-function showVisualization(index) {
-    const carouselContainer = document.getElementById('visualizationCarousel');
-    if (!carouselContainer) {
-        console.error("Carousel container #visualizationCarousel not found.");
-        return;
-    }
-    if (typeof window.setupVisualizationResizeObserver === 'function') {
-        window.setupVisualizationResizeObserver();
-    }
-    const items = carouselContainer.querySelectorAll('.carousel-item');
-    const titleElement = document.getElementById('visualizationTitle');
 
-    // Keep the user anchored at the top when switching between visualizations.
-    const mainContentArea = document.getElementById('main-content-area');
-    if (mainContentArea) {
-        mainContentArea.scrollTop = 0;
-    }
-    carouselContainer.scrollTop = 0;
-    if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
-        window.scrollTo({ top: 0, behavior: 'auto' });
-    }
-
-    if (index < 0 || index >= items.length || items.length === 0) {
-        console.error("Invalid visualization index or no items:", index);
-        items.forEach(item => item.style.display = 'none');
-        if (titleElement) titleElement.textContent = 'No Visualization';
-        return;
-    }
-
-    items.forEach(item => {
-        item.style.display = 'none';
-        item.classList.remove('active');
-    });
-
-    const targetItemId = visualizationItems[index]?.id;
-    const targetItem = targetItemId ? document.getElementById(targetItemId) : null;
-
-    if (targetItem) {
-        targetItem.style.display = 'block';
-        targetItem.classList.add('active');
-        if (titleElement) titleElement.textContent = visualizationItems[index].title;
-
-        // Call regenerate functions only if the specific view is now active and data is loaded
-        if (currentSystemData) {
-            switch (targetItemId) {
-                case 'visualization':
-                    if (typeof generateVisualization === 'function') generateVisualization(currentSystemData);
-                    break;
-                case 'teamVisualization':
-                    if (typeof generateTeamVisualization === 'function') generateTeamVisualization(currentSystemData);
-                    break;
-                case 'serviceRelationshipsVisualization':
-                    if (typeof populateServiceSelection === 'function') populateServiceSelection();
-                    if (typeof updateServiceVisualization === 'function') updateServiceVisualization();
-                    break;
-                case 'dependencyVisualization':
-                    if (typeof populateDependencyServiceSelection === 'function') populateDependencyServiceSelection();
-                    if (typeof updateDependencyVisualization === 'function') updateDependencyVisualization();
-                    break;
-                case 'serviceDependenciesTableSlide':
-                    if (typeof generateServiceDependenciesTable === 'function') {
-                        // Defer table render until after layout/visibility is applied to avoid zero-height issues.
-                        requestAnimationFrame(() => generateServiceDependenciesTable());
-                    }
-                    break;
-                case 'mermaidVisualization':
-                    if (typeof renderMermaidDiagram === 'function') renderMermaidDiagram();
-                    break;
-                case 'mermaidApiVisualization':
-                    if (typeof populateApiServiceSelection === 'function') populateApiServiceSelection();
-                    if (typeof renderMermaidApiDiagram === 'function') renderMermaidApiDiagram();
-                    break;
-            }
-        }
-        console.log(`Showing visualization: ${visualizationItems[index].title}`);
-    } else {
-        console.error("Target visualization element not found for ID:", targetItemId);
-        if (titleElement) titleElement.textContent = 'Error';
-    }
-    currentVisualizationIndex = index;
-}
-
-/**
- * Navigates the visualization carousel.
- */
-function navigateVisualizations(direction) {
-    let newIndex = currentVisualizationIndex + direction;
-    const totalItems = visualizationItems.length;
-    if (newIndex >= totalItems) newIndex = 0;
-    else if (newIndex < 0) newIndex = totalItems - 1;
-    showVisualization(newIndex);
-}
 
 /**
  * Toggles collapsible sections.
@@ -945,27 +842,10 @@ function loadSavedSystem(systemName) {
         window.sidebarComponent.updateState();
     }
 
-    try {
-        populateServiceSelection();
-        populateDependencyServiceSelection();
-        generateServiceDependenciesTable();
-        if (typeof populateApiServiceSelection === 'function') {
-            populateApiServiceSelection();
-        }
-        console.log("[V7 LOAD] Finished loading and preparing display for system:", currentSystemData.systemName);
-    } catch (error) {
-        console.error("[V7 LOAD] Error regenerating parts of system overview content during load:", error);
-        const carouselDiv = document.getElementById('visualizationCarousel');
-        if (carouselDiv) carouselDiv.innerHTML = '<p style="color:red">Error loading some visualization components. Check console.</p>';
-    }
+    console.log("[V7 LOAD] Finished loading and preparing display for system:", currentSystemData.systemName);
 
     // Setup toggle buttons for platform components visibility
-    if (typeof window.setupPlatformToggleButtons === 'function') {
-        window.setupPlatformToggleButtons();
-        console.log("[V7 LOAD] Called setupPlatformToggleButtons.");
-    } else {
-        console.error("[V7 LOAD] setupPlatformToggleButtons function not found. Platform toggles will not work.");
-    }
+
 }
 // window.loadSavedSystem = loadSavedSystem; // Keep global
 

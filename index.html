@@ -234,63 +234,7 @@
             </div>
 
 
-            <div id="visualizationCarousel" style="display:none;">
-                <div style="text-align: center; margin-bottom: 10px;">
-                    <button onclick="navigateVisualizations(-1)">&lt; Previous</button>
-                    <span id="visualizationTitle" style="margin: 0 15px; font-weight: bold; font-size: 1.1em;">System
-                        Visualization</span> <button onclick="navigateVisualizations(1)">Next &gt;</button>
-                </div>
 
-                <div id="visualization" class="carousel-item" style="display: block;"> <button
-                        id="togglePlatformComponentsSystem" class="button" style="margin-bottom: 10px;">Hide
-                        Platforms</button>
-                    <svg id="systemSvg" style="width: 100%; height: 600px; border: 1px solid #ccc;"></svg>
-                    <div id="legend" class="legend"></div>
-                </div>
-
-                <div id="teamVisualization" class="carousel-item" style="display: none;">
-                    <svg id="teamSvg" style="width: 100%; height: 600px; border: 1px solid #ccc;"></svg>
-                    <div id="teamLegend" class="legend"></div>
-                </div>
-
-                <div id="serviceRelationshipsVisualization" class="carousel-item" style="display: none;">
-                    <select id="serviceSelection" onchange="updateServiceVisualization()"
-                        style="margin-bottom: 5px; display: block; margin-left: auto; margin-right: auto;">
-                    </select>
-                    <button id="togglePlatformComponentsService" class="button" style="margin-bottom: 10px;">Hide
-                        Platforms</button>
-                    <svg id="serviceSvg" style="width: 100%; height: 600px; border: 1px solid #ccc;"></svg>
-                    <div id="serviceLegend" class="legend"></div>
-                </div>
-
-                <div id="dependencyVisualization" class="carousel-item" style="display: none;">
-                    <select id="dependencyServiceSelection" onchange="updateDependencyVisualization()"
-                        style="margin-bottom: 5px; display: block; margin-left: auto; margin-right: auto;">
-                    </select>
-                    <button id="togglePlatformComponentsDependency" class="button" style="margin-bottom: 10px;">Hide
-                        Platforms</button>
-                    <svg id="dependencySvg" style="width: 100%; height: 600px; border: 1px solid #ccc;"></svg>
-                    <div id="dependencyLegend" class="legend"></div>
-                </div>
-
-                <div id="serviceDependenciesTableSlide" class="carousel-item" style="display: none;">
-                    <div id="serviceDependenciesTable" style="max-width: 100%; margin: 8px auto 0 auto;">
-                        <h2>Service Dependencies Table</h2>
-                        <div id="serviceDependenciesTableHost"></div>
-                    </div>
-                </div>
-
-                <div id="mermaidVisualization" class="carousel-item" style="display: none;">
-                    <div id="mermaidGraph"></div>
-                </div>
-
-                <div id="mermaidApiVisualization" class="carousel-item" style="display: none;">
-                    <select id="apiServiceSelection"
-                        style="margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto;"></select>
-                    <div id="mermaidApiGraph"></div>
-                </div>
-
-            </div>
 
 
             <div id="systemEditForm" style="display:none;">
@@ -536,7 +480,7 @@
     <script src="js/documentation.js"></script>
     <script src="js/sdmForecasting.js?v=2"></script>
     <script src="js/mermaidGenerator.js"></script>
-    <script src="js/visualizations.js"></script>
+    <script src="js/visualizations.js?v=2"></script>
     <script src="js/editSystem.js"></script>
     <script src="js/orgView.js?v=2"></script>
     <script src="js/yearPlanning.js?v=3"></script>
@@ -562,13 +506,13 @@
     <script src="ai/aiPlanOptimizationAgent.js"></script>
     <script src="ai/aiAgentController.js"></script>
 
-    <script src="js/managers/NavigationManager.js"></script>
+    <script src="js/managers/NavigationManager.js?v=2"></script>
     <script src="js/components/SidebarComponent.js"></script>
     <script src="js/components/HeaderComponent.js"></script>
     <script src="js/components/DocumentationComponent.js"></script>
     <script src="js/components/WorkspaceComponent.js"></script>
     <script src="js/components/SystemSelectionModal.js"></script>
-    <script src="js/main.js"></script>
+    <script src="js/main.js?v=2"></script>
 </body>
 
 </html>

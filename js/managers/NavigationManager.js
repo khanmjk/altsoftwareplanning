@@ -127,6 +127,18 @@ class NavigationManager {
             return;
         }
 
+        if (viewId === 'visualizationCarousel' && window.workspaceComponent) {
+            window.workspaceComponent.render(viewId, (container) => {
+                if (typeof window.renderSystemOverviewView === 'function') {
+                    window.renderSystemOverviewView(container);
+                } else {
+                    console.error("renderSystemOverviewView function not found!");
+                }
+            });
+            this.updateComponents(viewId);
+            return;
+        }
+
         if (viewId === 'planningView' && window.workspaceComponent) {
             window.workspaceComponent.render(viewId, () => {
                 if (typeof window.renderPlanningView === 'function') {
@@ -182,9 +194,7 @@ class NavigationManager {
         // This mimics the logic from the old main.js switchView
         // We call the global functions that initialize specific views
 
-        if (viewId === 'visualizationCarousel' && typeof showVisualization === 'function') {
-            showVisualization(0);
-        }
+
         if (viewId === 'planningView') {
             if (typeof renderPlanningView === 'function') renderPlanningView();
             if (typeof adjustPlanningTableHeight === 'function') adjustPlanningTableHeight();
