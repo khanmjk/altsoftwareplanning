@@ -40,9 +40,9 @@ class SidebarComponent {
         const navLinks = this.container.querySelectorAll('.nav-item[data-view]');
 
         navLinks.forEach(link => {
-            // If we had a "Home" or "Welcome" link, we'd exclude it here.
-            // For now, all data-view links are system-specific.
-            if (!hasSystem) {
+            const viewId = link.getAttribute('data-view');
+            // Exempt Help View from disabling
+            if (!hasSystem && viewId !== 'helpView') {
                 link.classList.add('disabled');
             } else {
                 link.classList.remove('disabled');
@@ -62,11 +62,22 @@ class SidebarComponent {
     }
 
     attachEventListeners() {
+        // App Title Click -> Welcome View
+        const appTitle = document.getElementById('app-title');
+        if (appTitle) {
+            appTitle.addEventListener('click', () => {
+                this.navManager.navigateTo('welcomeView');
+            });
+        }
+
         // Navigation Links
         const navLinks = this.container.querySelectorAll('.nav-item[data-view]');
         navLinks.forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
+                // Check if disabled
+                if (link.classList.contains('disabled')) return;
+
                 const viewId = link.getAttribute('data-view');
                 this.navManager.navigateTo(viewId);
             });
