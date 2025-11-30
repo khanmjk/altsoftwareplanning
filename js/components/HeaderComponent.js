@@ -29,6 +29,13 @@ class HeaderComponent {
             // For now, we rely on update() or manual checks if settings change.
 
             aiBtn.addEventListener('click', () => {
+                const isEnabled = window.globalSettings && window.globalSettings.ai && window.globalSettings.ai.isEnabled;
+
+                if (!isEnabled) {
+                    alert('AI Assistant is currently disabled. Please enable it in Settings.');
+                    return;
+                }
+
                 if (window.aiChatAssistant && typeof window.aiChatAssistant.openAiChatPanel === 'function') {
                     // Check if already open
                     if (window.aiChatAssistant.isAiChatPanelOpen()) {
@@ -46,7 +53,21 @@ class HeaderComponent {
     updateAiButtonVisibility(btn) {
         if (!btn) return;
         const isEnabled = window.globalSettings && window.globalSettings.ai && window.globalSettings.ai.isEnabled;
-        btn.style.display = isEnabled ? 'inline-flex' : 'none';
+
+        // Show always, but style differently if disabled
+        btn.style.display = 'inline-flex';
+
+        if (isEnabled) {
+            btn.style.opacity = '1';
+            btn.style.filter = 'none';
+            btn.style.cursor = 'pointer';
+            btn.title = 'Open AI Assistant';
+        } else {
+            btn.style.opacity = '0.5';
+            btn.style.filter = 'grayscale(100%)';
+            btn.style.cursor = 'not-allowed';
+            btn.title = 'AI Assistant (Disabled)';
+        }
     }
 
     update(viewId, systemName) {
@@ -86,11 +107,14 @@ class HeaderComponent {
             'capacityConfigView': [{ label: 'Planning' }, { label: 'Capacity Tuning', isLast: true }],
             'sdmForecastingView': [{ label: 'Planning' }, { label: 'Resource Forecast', isLast: true }],
             'roadmapView': [{ label: 'Product' }, { label: 'Roadmap & Backlog', isLast: true }],
+            'managementView': [{ label: 'Product' }, { label: 'Management', isLast: true }],
             'visualizationCarousel': [{ label: 'System' }, { label: 'Overview', isLast: true }],
             'organogramView': [{ label: 'System' }, { label: 'Org Design', isLast: true }],
             'systemEditForm': [{ label: 'System' }, { label: 'Edit System', isLast: true }],
             'dashboardView': [{ label: 'Insights' }, { label: 'Dashboard', isLast: true }],
             'helpView': [{ label: 'Help' }, { label: 'How to Guide', isLast: true }],
+            'settingsView': [{ label: 'Configuration' }, { label: 'Settings', isLast: true }],
+            'systemsView': [{ label: 'System' }, { label: 'My Systems', isLast: true }],
         };
         return paths[viewId] || [{ label: 'Home', isLast: true }];
     }

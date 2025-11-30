@@ -76,6 +76,18 @@ const aiAgentController = (() => {
             { text: "What are the best practices for defining 'Initiatives'?" },
             { text: "How does the 'SDM Forecasting' model work?" }
         ],
+        managementView: [
+            { text: "Suggest 3 new themes based on our current initiatives." },
+            { text: "Analyze the distribution of initiatives across our themes." },
+            { text: "Draft a description for the 'Operational Excellence' theme." },
+            { text: "Which themes have no initiatives assigned?" }
+        ],
+        settingsView: [
+            { text: "How do I change the AI provider?" },
+            { text: "Is my API key stored securely?" },
+            { text: "What happens if I reset to defaults?" },
+            { text: "Explain the difference between Gemini and GPT-4o." }
+        ],
         default: [
             { text: "What is this system about?" },
             { text: "How many teams are there?" },
@@ -787,6 +799,17 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
                         initiatives: currentSystemData.yearlyInitiatives,
                         goals: currentSystemData.goals,
                         themes: currentSystemData.definedThemes
+                    };
+                    break;
+                    break;
+                case 'managementView':
+                    contextData.data = {
+                        viewTitle: "Product Management",
+                        themes: currentSystemData.definedThemes || [],
+                        initiatives: (currentSystemData.yearlyInitiatives || []).map(i => ({
+                            title: i.title,
+                            themeId: i.attributes?.themeId
+                        }))
                     };
                     break;
                 case 'welcomeView':

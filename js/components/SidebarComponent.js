@@ -41,8 +41,8 @@ class SidebarComponent {
 
         navLinks.forEach(link => {
             const viewId = link.getAttribute('data-view');
-            // Exempt Help View from disabling
-            if (!hasSystem && viewId !== 'helpView') {
+            // Exempt Help, Settings, and Systems views from disabling
+            if (!hasSystem && !['helpView', 'settingsView', 'systemsView'].includes(viewId)) {
                 link.classList.add('disabled');
             } else {
                 link.classList.remove('disabled');

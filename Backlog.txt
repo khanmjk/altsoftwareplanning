@@ -174,12 +174,11 @@ IN PROGRESS
 -- Start building out detailed planning features
 -- [AI] extend the diagram agents to support mermaid generation of gantt charts, organograms
 - [AI Feature] Create an AI agent that can perform actions on the system with access to the code
-
+- [MAJOR UX REFACTOR] - Upgrade the menu navigation layout - it's growing with each new feature - need a new cleaner menu navigation model  
 
 ------
 TO DO
-------
-- [UX] Upgrade the menu navigation layout - it's growing with each new feature - need a new cleaner menu navigation model
+------  
 - [Architecture] Move from Mermaid to Interactive Canvas (e.g., Frappe Gantt)
 Description: Mermaid is read-only. To enable "Drag and Drop" planning on the chart itself, replace ganttChart.js with a library like frappe-gantt or dhtmlx-gantt.
 Value: Allows users to drag bars to reschedule, which is the expected behavior for detailed planning tools.

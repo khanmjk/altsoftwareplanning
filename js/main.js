@@ -197,35 +197,6 @@ async function loadHtmlComponent(url, targetId) {
 // --- AI Assistant & Settings Functions ---
 
 /**
- * Opens the AI settings modal and populates it from globalSettings.
- */
-function openAiSettingsModal() {
-    console.log("Opening AI Settings Modal...");
-    // We don't need loadGlobalSettings() here, as it's loaded on startup
-
-    const modal = document.getElementById('aiSettingsModal');
-    const checkbox = document.getElementById('aiModeEnabled');
-    const configInputs = document.getElementById('aiConfigInputs');
-    const providerSelect = document.getElementById('aiProviderSelect');
-    const apiKeyInput = document.getElementById('aiApiKeyInput');
-
-    if (checkbox) checkbox.checked = globalSettings.ai.isEnabled;
-    if (configInputs) configInputs.style.display = globalSettings.ai.isEnabled ? 'block' : 'none';
-    if (providerSelect) providerSelect.value = globalSettings.ai.provider;
-    if (apiKeyInput) apiKeyInput.value = globalSettings.ai.apiKey || '';
-
-    if (modal) modal.style.display = 'block';
-}
-
-/**
- * Closes the AI settings modal.
- */
-function closeAiSettingsModal() {
-    const modal = document.getElementById('aiSettingsModal');
-    if (modal) modal.style.display = 'none';
-}
-
-/**
  * Loads all app settings from localStorage into the globalSettings object.
  */
 function loadGlobalSettings() {
@@ -259,47 +230,6 @@ function loadGlobalSettings() {
 
     // Update the UI based on loaded settings
     updateAiDependentUI();
-}
-
-/**
- * Saves the current state of the AI settings modal to globalSettings and localStorage.
- */
-function saveGlobalSettings() {
-    console.log("Saving global settings...");
-
-    // Read values from the AI modal
-    const checkbox = document.getElementById('aiModeEnabled');
-    const providerSelect = document.getElementById('aiProviderSelect');
-    const apiKeyInput = document.getElementById('aiApiKeyInput');
-
-    const isEnabled = checkbox ? checkbox.checked : false;
-    const provider = providerSelect ? providerSelect.value : 'google-gemini';
-    const apiKey = apiKeyInput ? apiKeyInput.value.trim() : null;
-
-    if (isEnabled && (!apiKey || apiKey.length === 0)) {
-        alert("Please enter a valid API Key to enable AI Assistant mode.");
-        if (checkbox) checkbox.checked = false; // Uncheck the box
-        globalSettings.ai.isEnabled = false; // Don't save 'enabled' state
-    } else {
-        globalSettings.ai.isEnabled = isEnabled;
-    }
-
-    globalSettings.ai.provider = provider;
-    globalSettings.ai.apiKey = apiKey;
-
-    try {
-        localStorage.setItem(APP_SETTINGS_KEY, JSON.stringify(globalSettings));
-        console.log("Saved global settings to localStorage.");
-
-        updateAiDependentUI();
-
-        closeAiSettingsModal();
-        alert("Settings saved.");
-
-    } catch (e) {
-        console.error("Error saving global settings to localStorage:", e);
-        alert("Error saving settings.");
-    }
 }
 
 /**
@@ -504,7 +434,6 @@ function switchView(targetViewId, newMode = null) {
 
     // 1. Close Modals (Legacy Logic)
     if (typeof closeRoadmapModal === 'function') closeRoadmapModal();
-    if (typeof closeThemeManagementModal === 'function') closeThemeManagementModal();
 
     // 2. Handle Home/Null State
     if (!targetViewId) {
@@ -592,46 +521,52 @@ function toggleCollapsibleSection(contentId, indicatorId, handleId = null) {
 function saveSampleSystemsToLocalStorage() {
     console.log(">>> Checking if sample systems need to be saved to LocalStorage...");
 
-    const existingData = localStorage.getItem(LOCAL_STORAGE_KEY);
+    const existingDataString = localStorage.getItem(LOCAL_STORAGE_KEY);
+    let systems = {};
 
-    // Only save sample systems if the key doesn't exist or if it's an empty object string
-    if (!existingData || existingData === '{}') {
-        console.log("No existing user data found or data is empty. Saving sample systems...");
-
-        // Prepare systems object for saving (StreamView and ConnectPro)
-        const systemsToSave = {
-            'StreamView': sampleSystemDataStreamView, // Ensure this is defined in data.js
-            'ConnectPro': sampleSystemDataContactCenter, // Ensure this is defined in data.js
-            'ShopSphere': sampleSystemDataShopSphere,
-            'InsightAI': sampleSystemDataInsightAI, // Add the new system
-            'FinSecure': sampleSystemDataFinSecure // Add the new system
-        };
-
+    if (existingDataString) {
         try {
-            const stringifiedSystems = JSON.stringify(systemsToSave);
-            localStorage.setItem(LOCAL_STORAGE_KEY, stringifiedSystems);
-            console.log("Sample systems saved successfully to LocalStorage.");
-
-        } catch (error) {
-            console.error("Error stringifying or setting sample systems in localStorage:", error);
-            alert("Error during initial sample data saving process. Check console.");
+            systems = JSON.parse(existingDataString);
+        } catch (e) {
+            console.error("Error parsing existing systems, resetting:", e);
+            systems = {};
         }
-    } else {
-        console.log("Existing user data found in LocalStorage. Sample systems will not be overwritten.");
     }
+
+    // Always update/overwrite sample systems with the latest code definitions
+    // This ensures description updates and new samples are applied
+    const sampleSystems = {
+        'StreamView': sampleSystemDataStreamView,
+        'ConnectPro': sampleSystemDataContactCenter,
+        'ShopSphere': sampleSystemDataShopSphere,
+        'InsightAI': sampleSystemDataInsightAI,
+        'FinSecure': sampleSystemDataFinSecure
+    };
+
+    let hasChanges = false;
+    Object.entries(sampleSystems).forEach(([key, data]) => {
+        // We overwrite the sample system to ensure latest data (descriptions, etc.)
+        // Note: This resets any user changes to these specific sample IDs.
+        // Users should create new systems or we should use different IDs for user forks.
+        // For now, treating these as immutable reference samples.
+        systems[key] = data;
+        hasChanges = true;
+    });
+
+    if (hasChanges) {
+        try {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
+            console.log("Sample systems updated in LocalStorage.");
+        } catch (error) {
+            console.error("Error saving updated systems to localStorage:", error);
+        }
+    }
+
     console.log("<<< Finished saveSampleSystemsToLocalStorage check.");
 }
 
 /** Show Saved Systems Modal **/
-function showSavedSystems(systemNames) {
-    if (!window.systemSelectionModal) {
-        window.systemSelectionModal = new SystemSelectionModal();
-    }
-    window.systemSelectionModal.show(systemNames, (selectedSystem) => {
-        loadSavedSystem(selectedSystem);
-    });
-}
-window.showSavedSystems = showSavedSystems;
+
 
 
 /** REVISED (v7) Load Saved System - Enhanced Logging for allKnownEngineers */
@@ -873,33 +808,30 @@ function buildGlobalPlatformDependencies() {
  * Loads a system from local storage.
  * If multiple systems exist, shows a selection list.
  */
+/**
+ * Loads a system from local storage.
+ * If multiple systems exist, shows the Systems View.
+ */
 function loadSystem() {
     console.log("loadSystem called.");
-    const systemsJSON = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (!systemsJSON) {
-        alert('No saved systems found.');
+
+    // If NavigationManager is available, use it to go to the Systems View
+    if (window.navigationManager) {
+        window.navigationManager.navigateTo('systemsView');
         return;
     }
 
-    let systems = {};
-    try {
-        systems = JSON.parse(systemsJSON);
-    } catch (e) {
-        console.error("Error parsing systems JSON:", e);
-        alert('Error reading saved systems.');
-        return;
-    }
-
-    const systemNames = Object.keys(systems);
-    if (systemNames.length === 0) {
-        alert('No saved systems found.');
-        return;
-    }
-
-    if (systemNames.length === 1) {
-        loadSavedSystem(systemNames[0]);
-    } else {
-        showSavedSystems(systemNames);
+    // Fallback if NavigationManager is not ready (shouldn't happen in normal flow)
+    console.warn("NavigationManager not found, attempting manual switch to systemsView");
+    if (window.workspaceComponent) {
+        window.workspaceComponent.render('systemsView', (container) => {
+            if (!window.systemsViewInstance) {
+                window.systemsViewInstance = new SystemsView(container.id);
+            } else {
+                window.systemsViewInstance.container = container;
+            }
+            window.systemsViewInstance.render();
+        });
     }
 }
 window.loadSystem = loadSystem;

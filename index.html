@@ -41,7 +41,8 @@
                     <i class="fas fa-chevron-down" style="font-size: 0.7rem; color: #64748b;"></i>
                 </div>
                 <div id="system-dropdown" class="dropdown-menu">
-                    <div class="dropdown-item" onclick="if(window.loadSystem) window.loadSystem()">
+                    <div class="dropdown-item"
+                        onclick="if(window.navigationManager) window.navigationManager.navigateTo('systemsView')">
                         <i class="fas fa-folder-open" style="width: 20px;"></i> Load System
                     </div>
                     <div class="dropdown-item" onclick="if(window.createNewSystem) window.createNewSystem()">
@@ -74,6 +75,10 @@
                     <div class="nav-icon"><i class="fas fa-map"></i></div>
                     <div class="nav-text">Roadmap & Backlog</div>
                 </a>
+                <a href="#" class="nav-item" data-view="managementView">
+                    <div class="nav-icon"><i class="fas fa-tasks"></i></div>
+                    <div class="nav-text">Management</div>
+                </a>
 
                 <div class="nav-group-title">Planning</div>
                 <a href="#" class="nav-item" data-view="planningView">
@@ -100,26 +105,10 @@
                 </a>
 
                 <div class="nav-group-title">Configuration</div>
-                <div style="position: relative;">
-                    <a href="#" class="nav-item" data-toggle="dropdown" data-target="settings-dropdown">
-                        <div class="nav-icon"><i class="fas fa-wrench"></i></div>
-                        <div class="nav-text">Settings</div>
-                    </a>
-                    <div id="settings-dropdown" class="dropdown-menu"
-                        style="bottom: 100%; left: 0; margin-bottom: 5px;">
-                        <div class="dropdown-item"
-                            onclick="if(window.openAiSettingsModal) window.openAiSettingsModal()">
-                            <i class="fas fa-robot" style="width: 20px;"></i> AI Settings
-                        </div>
-                        <div class="dropdown-item" onclick="if(window.resetToDefaults) window.resetToDefaults()">
-                            <i class="fas fa-undo" style="width: 20px;"></i> Reset Defaults
-                        </div>
-                        <div style="height: 1px; background: #475569; margin: 5px 0;"></div>
-                        <div class="dropdown-item danger" onclick="if(window.deleteSystem) window.deleteSystem()">
-                            <i class="fas fa-trash-alt" style="width: 20px;"></i> Delete System
-                        </div>
-                    </div>
-                </div>
+                <a href="#" class="nav-item" data-view="settingsView">
+                    <div class="nav-icon"><i class="fas fa-cog"></i></div>
+                    <div class="nav-text">Settings</div>
+                </a>
 
                 <div class="nav-group-title">Help</div>
                 <a href="#" class="nav-item" data-view="helpView">
@@ -246,139 +235,7 @@
 
 
 
-            <div id="themeManagementModal" class="modal" style="display:none;">
-                <div class="modal-content-wrapper">
-                    <div class="modal-header">
-                        <h3 id="themeManagementModalTitle">Manage Themes</h3>
-                        <span class="close-button" onclick="closeThemeManagementModal()">&times;</span>
-                    </div>
-                    <div class="modal-body">
-                        <h4>Existing Themes</h4>
-                        <div id="existingThemesList"
-                            style="margin-bottom: 20px; max-height: 200px; overflow-y: auto; border: 1px solid #eee; padding:5px;">
-                            <p><em>No themes defined yet or loading...</em></p>
-                        </div>
 
-                        <h4>Add New Theme</h4>
-                        <form id="addNewThemeForm_modal">
-                            <div style="margin-bottom: 10px;">
-                                <label for="newThemeName_modal" style="display: block;">Theme Name:</label>
-                                <input type="text" id="newThemeName_modal" style="width: 95%;" required>
-                            </div>
-                            <div style="margin-bottom: 10px;">
-                                <label for="newThemeDescription_modal" style="display: block;">Description
-                                    (Optional):</label>
-                                <textarea id="newThemeDescription_modal" rows="2" style="width: 95%;"></textarea>
-                            </div>
-                            <button type="button" id="saveNewThemeButton_modal" class="btn-primary">Add
-                                Theme</button>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn-secondary" onclick="closeThemeManagementModal()">Close</button>
-                    </div>
-                </div>
-            </div>
-            <div id="roadmapInitiativeModal" class="modal" style="display:none;">
-                <div class="modal-content-wrapper">
-                    <div class="modal-header">
-                        <h3 id="addEditRoadmapInitiativeTitle_modal">Add/Edit Initiative</h3>
-                        <span class="close-button" onclick="closeRoadmapModal()">&times;</span>
-                    </div>
-                    <div class="modal-body">
-                        <form id="roadmapInitiativeForm_modal">
-                            <p><em>Loading form...</em></p>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" id="saveRoadmapInitiativeButton_modal" class="btn-primary">Save
-                            Initiative</button>
-                        <button type="button" id="cancelRoadmapInitiativeEditButton_modal" class="btn-secondary"
-                            style="margin-left: 10px;" onclick="closeRoadmapModal()">Cancel</button>
-                    </div>
-                </div>
-            </div>
-            <div id="aiSettingsModal" class="modal" style="display:none;">
-                <div class="modal-content-wrapper">
-                    <div class="modal-header">
-                        <h3 id="aiSettingsModalTitle">AI Assistant Settings</h3>
-                        <span class="close-button" onclick="closeAiSettingsModal()">&times;</span>
-                    </div>
-                    <div class="modal-body">
-                        <form id="aiSettingsForm">
-                            <div style="margin-bottom: 15px;">
-                                <input type="checkbox" id="aiModeEnabled" name="aiModeEnabled"
-                                    style="margin-right: 8px; vertical-align: middle;">
-                                <label for="aiModeEnabled" style="font-weight: bold; vertical-align: middle;">Enable
-                                    AI
-                                    Assistant Mode</label>
-                            </div>
-
-                            <div id="aiConfigInputs" style="display:none;">
-                                <hr style="margin-bottom: 15px;">
-                                <div style="margin-bottom: 15px;">
-                                    <label for="aiProviderSelect" style="display: block; margin-bottom: 5px;">LLM
-                                        Provider:</label>
-                                    <select id="aiProviderSelect" name="aiProviderSelect">
-                                        <option value="google-gemini">Google (Gemini Pro)</option>
-                                        <option value="openai-gpt4o" disabled>OpenAI (GPT-4o)</option>
-                                        <option value="anthropic-claude35" disabled>Anthropic (Claude 3.5 Sonnet)
-                                        </option>
-                                        <option value="mistral-large" disabled>Mistral (Large 2)</option>
-                                        <option value="cohere-command-r" disabled>Cohere (Command R)</option>
-                                    </select>
-                                </div>
-                                <div style="margin-bottom: 15px;">
-                                    <label for="aiApiKeyInput" style="display: block; margin-bottom: 5px;">Your API
-                                        Key:</label>
-                                    <input type="password" id="aiApiKeyInput" name="aiApiKeyInput" style="width: 95%;"
-                                        placeholder="Paste your API key here">
-                                    <div class="api-key-disclaimer"
-                                        style="font-size: 0.85em; color: #6c757d; margin-top: 8px; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; background-color: #f8f9fa;">
-                                        <p style="margin-top: 0; margin-bottom: 5px;">
-                                            You must use a <strong>FREE API key</strong>. You can get one from <a
-                                                href="https://aistudio.google.com/app/apikey" target="_blank"
-                                                rel="noopener noreferrer">Google AI Studio</a>.
-                                        </p>
-                                        <p
-                                            style="margin-bottom: 5px; color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; padding: 8px; border-radius: 4px;">
-                                            <strong>Note:</strong> Free-tier keys often have strict rate limits. If
-                                            you
-                                            see a <strong>"503: Model Overloaded"</strong> error, it means the
-                                            service
-                                            is busy. The app will retry, but you may need to wait and try again
-                                            later.
-                                        </p>
-                                        <p style="margin-bottom: 5px;">
-                                            <strong>Disclaimer:</strong> This is a client-side application. Your API
-                                            key
-                                            is stored exclusively in your browser's local storage and is never sent
-                                            to
-                                            any server other than the selected LLM provider.
-                                        </p>
-                                        <p style="margin-bottom: 0;">
-                                            Using this app comes with risks. The author is not liable for any issues
-                                            that arise from using your own private (non-free-tier) API key.
-                                        </p>
-                                        <p
-                                            style="margin-top: 10px; margin-bottom: 0; font-style: italic; color: #c62828;">
-                                            <strong>Image Generation (Imagen):</strong> Currently mocked. Google’s
-                                            Imagen API requires a backend proxy with OAuth2 credentials. Until that
-                                            proxy exists, the app will return a placeholder diagram. See the README
-                                            section “Image Generation Status (Imagen)” for details.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" id="saveAiSettingsButton" class="btn-primary">Save Settings</button>
-                        <button type="button" class="btn-secondary" style="margin-left: 10px;"
-                            onclick="closeAiSettingsModal()">Cancel</button>
-                    </div>
-                </div>
-            </div>
         </div> <!-- end #main-content-area -->
 
         <div id="chatResizeHandle" style="display: none;"></div>
@@ -391,6 +248,25 @@
         <p>AI is generating your system... This may take a moment.</p>
     </div>
 
+    <div id="roadmapInitiativeModal" class="modal" style="display:none;">
+        <div class="modal-content-wrapper">
+            <div class="modal-header">
+                <h3 id="addEditRoadmapInitiativeTitle_modal">Add/Edit Initiative</h3>
+                <span class="close-button" onclick="closeRoadmapModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="roadmapInitiativeForm_modal">
+                    <p><em>Loading form...</em></p>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="saveRoadmapInitiativeButton_modal" class="btn-primary">Save
+                    Initiative</button>
+                <button type="button" id="cancelRoadmapInitiativeEditButton_modal" class="btn-secondary"
+                    style="margin-left: 10px;" onclick="closeRoadmapModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
     <div id="diagramModal" class="modal">
         <div class="modal-content-wrapper" style="width: 95%; height: 95%; max-width: none;">
             <div class="modal-header">
@@ -460,8 +336,10 @@
     <script src="js/components/SidebarComponent.js"></script>
     <script src="js/components/HeaderComponent.js"></script>
     <script src="js/components/DocumentationComponent.js"></script>
+    <script src="js/components/SettingsView.js"></script>
+    <script src="js/components/ManagementView.js"></script>
+    <script src="js/components/SystemsView.js"></script>
     <script src="js/components/WorkspaceComponent.js"></script>
-    <script src="js/components/SystemSelectionModal.js"></script>
     <script src="js/main.js?v=2"></script>
 </body>
 

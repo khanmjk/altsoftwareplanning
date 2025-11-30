@@ -20,12 +20,16 @@ class NavigationManager {
         this.registerView('capacityConfigView', 'capacityConfigView');
         this.registerView('sdmForecastingView', 'sdmForecastingView');
         this.registerView('roadmapView', 'roadmapView');
+        this.registerView('managementView', 'managementView');
         this.registerView('visualizationCarousel', 'visualizationCarousel');
         this.registerView('organogramView', 'organogramView');
         this.registerView('systemEditForm', 'systemEditForm');
         this.registerView('dashboardView', 'dashboardView');
         this.registerView('welcomeView', 'welcomeView');
+        this.registerView('welcomeView', 'welcomeView');
         this.registerView('helpView', 'helpView');
+        this.registerView('settingsView', 'settingsView');
+        this.registerView('systemsView', 'systemsView');
 
         // Legacy views that might be needed
         this.registerView('serviceDependenciesTable', 'serviceDependenciesTable');
@@ -91,6 +95,15 @@ class NavigationManager {
                 window.workspaceComponent.render(viewId, window.renderSdmForecastingView);
             } else if (viewId === 'roadmapView') {
                 window.workspaceComponent.render(viewId, window.renderRoadmapView);
+            } else if (viewId === 'managementView') {
+                window.workspaceComponent.render(viewId, (container) => {
+                    if (!window.managementViewInstance) {
+                        window.managementViewInstance = new ManagementView(container.id);
+                    } else {
+                        window.managementViewInstance.container = container;
+                    }
+                    window.managementViewInstance.render();
+                });
             } else if (viewId === 'visualizationCarousel') {
                 window.workspaceComponent.render(viewId, window.renderSystemOverviewView);
             } else if (viewId === 'organogramView') {
@@ -111,6 +124,26 @@ class NavigationManager {
                 });
             } else if (viewId === 'helpView') {
                 window.workspaceComponent.render(viewId, window.renderHelpView);
+            } else if (viewId === 'helpView') {
+                window.workspaceComponent.render(viewId, window.renderHelpView);
+            } else if (viewId === 'settingsView') {
+                window.workspaceComponent.render(viewId, (container) => {
+                    if (!window.settingsViewInstance) {
+                        window.settingsViewInstance = new SettingsView(container.id);
+                    } else {
+                        window.settingsViewInstance.container = container;
+                    }
+                    window.settingsViewInstance.render();
+                });
+            } else if (viewId === 'systemsView') {
+                window.workspaceComponent.render(viewId, (container) => {
+                    if (!window.systemsViewInstance) {
+                        window.systemsViewInstance = new SystemsView(container.id);
+                    } else {
+                        window.systemsViewInstance.container = container;
+                    }
+                    window.systemsViewInstance.render();
+                });
             } else {
                 console.warn(`NavigationManager: No render function mapped for ${viewId}`);
             }
