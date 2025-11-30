@@ -189,53 +189,6 @@ class NavigationManager {
             }
         }
     }
-
-    triggerViewInit(viewId) {
-        // This mimics the logic from the old main.js switchView
-        // We call the global functions that initialize specific views
-
-
-        if (viewId === 'planningView') {
-            if (typeof renderPlanningView === 'function') renderPlanningView();
-            if (typeof adjustPlanningTableHeight === 'function') adjustPlanningTableHeight();
-        }
-        if (viewId === 'roadmapView' && typeof initializeRoadmapView === 'function') {
-            initializeRoadmapView();
-        }
-        if (viewId === 'dashboardView' && typeof initializeDashboard === 'function') {
-            initializeDashboard();
-        }
-        if (viewId === 'capacityConfigView' && typeof generateGlobalConstraintsForm === 'function') {
-            generateGlobalConstraintsForm();
-        }
-        if (viewId === 'sdmForecastingView' && typeof generateForecastingUI_SDM === 'function') {
-            generateForecastingUI_SDM();
-        }
-        if (viewId === 'organogramView' && typeof initializeOrgChartView === 'function') {
-            initializeOrgChartView();
-        }
-        if (viewId === 'systemEditForm' && typeof populateSystemEditForm === 'function') {
-            if (window.currentSystemData) {
-                populateSystemEditForm(window.currentSystemData);
-            } else {
-                console.warn("NavigationManager: Cannot populate systemEditForm - no currentSystemData.");
-            }
-        }
-        if (viewId === 'ganttPlanningView') {
-            if (typeof initializeGanttPlanningView === 'function') initializeGanttPlanningView();
-        }
-        if (viewId === 'helpView') {
-            if (!this.docComponent) {
-                this.docComponent = new DocumentationComponent('documentationContent', 'main-content-area');
-            }
-            this.docComponent.init();
-        }
-
-        // Update AI Context
-        if (typeof updateAiDependentUI === 'function') {
-            updateAiDependentUI({ skipPlanningRender: true });
-        }
-    }
 }
 
 if (typeof window !== 'undefined') {
