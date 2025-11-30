@@ -1146,12 +1146,7 @@ function refreshCurrentView() {
             // Use switchView to ensure proper rendering via WorkspaceComponent
             switchView('organogramView');
             break;
-        case 'roadmapView':
-            if (typeof initializeRoadmapView === 'function') initializeRoadmapView();
-            break;
-        case 'dashboardView':
-            if (typeof initializeDashboard === 'function') initializeDashboard();
-            break;
+
         case 'capacityConfigView':
             if (typeof updateCapacityCalculationsAndDisplay === 'function') updateCapacityCalculationsAndDisplay();
             break;

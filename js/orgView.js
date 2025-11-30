@@ -1521,11 +1521,7 @@ function handleAddNewResource() {
         toggleNewResourceFields(); // This will also call toggleAIAgentTypeField
 
         // Refresh relevant views if they are currently displayed
-        if (document.getElementById('organogramView').style.display !== 'none') {
-            if (typeof initializeOrgChartView === 'function') {
-                initializeOrgChartView(); // Re-run the full init
-            }
-        }
+
         if (document.getElementById('engineerTableView').style.display !== 'none') {
             if (typeof generateEngineerTable === 'function') generateEngineerTable();
         }
