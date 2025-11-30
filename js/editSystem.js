@@ -473,7 +473,7 @@ function addNewService(overrides = {}) {
         displayServicesForEditing(currentSystemData.services, 'editServicesManagement');
     } catch (error) {
         console.error("Error during displayServicesForEditing:", error);
-        alert("Error refreshing service list. Check console.");
+        window.notificationManager.showToast("Error refreshing service list. Check console.", 'error');
         return; // Stop if service display fails
     }
 
@@ -483,7 +483,7 @@ function addNewService(overrides = {}) {
         displayTeamsForEditing(currentSystemData.teams);
     } catch (error) {
         console.error("Error during displayTeamsForEditing:", error);
-        alert("Error refreshing team list. Check console.");
+        window.notificationManager.showToast("Error refreshing team list. Check console.", 'error');
         return; // Stop if team display fails
     }
     console.log("UI refresh attempt complete after adding service.");
@@ -701,7 +701,7 @@ function displayTeamsForEditing(teamsDataToDisplay, expandedTeamIndex = -1) {
                 if (!newSdmNameInput || newSdmNameInput.trim() === '') return null;
                 newSdmNameInput = newSdmNameInput.trim();
                 if ((currentSystemData.sdms || []).some(s => s && s.sdmName.toLowerCase() === newSdmNameInput.toLowerCase())) {
-                    alert(`SDM "${newSdmNameInput}" already exists.`); return { preventAdd: true };
+                    window.notificationManager.showToast(`SDM "${newSdmNameInput}" already exists.`, 'warning'); return { preventAdd: true };
                 }
                 const newSdmObject = { sdmId: 'sdm-' + Date.now(), sdmName: newSdmNameInput, seniorManagerId: null };
                 if (!currentSystemData.sdms) currentSystemData.sdms = [];
@@ -732,7 +732,7 @@ function displayTeamsForEditing(teamsDataToDisplay, expandedTeamIndex = -1) {
                 if (!newPmtNameInput || newPmtNameInput.trim() === '') return null;
                 newPmtNameInput = newPmtNameInput.trim();
                 if ((currentSystemData.pmts || []).some(p => p && p.pmtName.toLowerCase() === newPmtNameInput.toLowerCase())) {
-                    alert(`PMT "${newPmtNameInput}" already exists.`); return { preventAdd: true };
+                    window.notificationManager.showToast(`PMT "${newPmtNameInput}" already exists.`, 'warning'); return { preventAdd: true };
                 }
                 const newPmtObject = { pmtId: 'pmt-' + Date.now(), pmtName: newPmtNameInput };
                 if (!currentSystemData.pmts) currentSystemData.pmts = [];
@@ -819,11 +819,11 @@ function displayTeamsForEditing(teamsDataToDisplay, expandedTeamIndex = -1) {
             true, true, 'Enter New Engineer Name to Add to System Pool',
             async (newEngineerNameInput, currentTeamEditIndex) => {
                 if (!newEngineerNameInput || newEngineerNameInput.trim() === '') {
-                    alert("Engineer name cannot be empty."); return null;
+                    window.notificationManager.showToast("Engineer name cannot be empty.", 'warning'); return null;
                 }
                 const name = newEngineerNameInput.trim();
                 if ((currentSystemData.allKnownEngineers || []).some(eng => eng.name.toLowerCase() === name.toLowerCase())) {
-                    alert(`An engineer named "${name}" already exists in the system pool.`);
+                    window.notificationManager.showToast(`An engineer named "${name}" already exists in the system pool.`, 'warning');
                     return { preventAdd: true }; // Prevent createDualListContainer from adding duplicate to UI
                 }
 
@@ -831,7 +831,7 @@ function displayTeamsForEditing(teamsDataToDisplay, expandedTeamIndex = -1) {
                 if (levelStr === null) return null;
                 const level = parseInt(levelStr);
                 if (isNaN(level) || level < 1 || level > 7) {
-                    alert("Invalid level. Please enter a number between 1 and 7."); return null;
+                    window.notificationManager.showToast("Invalid level. Please enter a number between 1 and 7.", 'warning'); return null;
                 }
                 const yearsStr = await window.notificationManager.prompt(`Enter years of experience for "${name}":`, "0", "Experience");
                 if (yearsStr === null) return null;
@@ -975,7 +975,7 @@ function displaySeniorManagerAssignment(sdmSectionContainer, teamIndex, currentS
             newSrMgrName = newSrMgrName.trim();
             let existingSrMgr = (currentSystemData.seniorManagers || []).find(s => s && s.seniorManagerName.toLowerCase() === newSrMgrName.toLowerCase()); // check s
             if (existingSrMgr) {
-                alert(`Senior Manager "${newSrMgrName}" already exists.`);
+                window.notificationManager.showToast(`Senior Manager "${newSrMgrName}" already exists.`, 'warning');
                 return null;
             }
             const newSrMgrId = 'srMgr-' + Date.now();
@@ -1062,9 +1062,9 @@ async function handleAddAwayTeamMember(teamIndex) {
     const sourceTeam = sourceInput?.value.trim();
 
     // Validation
-    if (!name) { alert('Please enter a name for the away-team member.'); return; }
-    if (isNaN(level) || level < 1 || level > 5) { alert('Please enter a valid level (1-5).'); return; }
-    if (!sourceTeam) { alert('Please enter the source team/organization.'); return; }
+    if (!name) { window.notificationManager.showToast('Please enter a name for the away-team member.', 'warning'); return; }
+    if (isNaN(level) || level < 1 || level > 5) { window.notificationManager.showToast('Please enter a valid level (1-5).', 'warning'); return; }
+    if (!sourceTeam) { window.notificationManager.showToast('Please enter the source team/organization.', 'warning'); return; }
 
     // Add to data model
     const team = currentSystemData.teams[teamIndex];
@@ -1073,7 +1073,7 @@ async function handleAddAwayTeamMember(teamIndex) {
 
     // Check if member with same name already exists *in this team's away list*
     if (team.awayTeamMembers.some(m => m.name.toLowerCase() === name.toLowerCase())) {
-        alert(`An away-team member named "${name}" is already assigned to this team.`);
+        window.notificationManager.showToast(`An away-team member named "${name}" is already assigned to this team.`, 'warning');
         return;
     }
 
@@ -1285,7 +1285,7 @@ function validateTeamChanges() {
     }
 
     if (validationErrors) {
-        alert('Validation Errors:\n' + validationErrors);
+        window.notificationManager.showToast('Validation Errors:\n' + validationErrors, 'error');
         return false;
     }
 
@@ -1310,7 +1310,7 @@ function saveTeamChanges(index) {
 
     // Validate required fields for this team
     if (!team.teamIdentity || !team.teamName) {
-        alert('Team Identity and Team Name are required.');
+        window.notificationManager.showToast('Team Identity and Team Name are required.', 'warning');
         return; // Don't proceed if basic info missing
     }
 
@@ -1329,7 +1329,7 @@ function saveTeamChanges(index) {
     generateTeamTable(currentSystemData); // Update main Team Breakdown table
     generateTeamVisualization(currentSystemData); // Update Team Visualization
 
-    alert(`Changes for team "${team.teamName || team.teamIdentity}" potentially saved (system state saved).`);
+    window.notificationManager.showToast(`Changes for team "${team.teamName || team.teamIdentity}" potentially saved (system state saved).`, 'success');
 
     // --- Collapse the edit section after saving attempt ---
     const teamDivs = document.querySelectorAll('#teamsManagement .team-edit');
@@ -1425,7 +1425,7 @@ async function deleteTeam(teamIndex, options = {}) {
         saveSystemChanges(); // This function should ideally save the entire currentSystemData
 
         if (!silent) {
-            alert(`Team "${teamToDelete.teamName || teamToDelete.teamIdentity}" has been deleted.`);
+            window.notificationManager.showToast(`Team "${teamToDelete.teamName || teamToDelete.teamIdentity}" has been deleted.`, 'success');
         }
 
         // Refresh the teams editing interface: Re-render all team sections
@@ -1582,7 +1582,7 @@ async function saveSystemDetails() {
     const newSystemName = systemNameInput.value.trim();
 
     if (!newSystemName) {
-        alert('System name cannot be empty.');
+        window.notificationManager.showToast('System name cannot be empty.', 'warning');
         return;
     }
 
@@ -1598,7 +1598,7 @@ async function saveSystemDetails() {
 
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
 
-    alert('System details saved, please continue to update the services and teams. Note: If you changed the system name, it is treated as a new system');
+    window.notificationManager.showToast('System details saved, please continue to update the services and teams. Note: If you changed the system name, it is treated as a new system', 'success');
 
     if (currentMode == Modes.EDITING) {
         // Update UI components
@@ -1625,7 +1625,7 @@ async function saveAllChanges() {
     const finalSystemDescription = systemDescriptionTextarea.value.trim();
 
     if (!finalSystemName) {
-        alert('System Name cannot be empty. Please enter a name before saving.');
+        window.notificationManager.showToast('System Name cannot be empty. Please enter a name before saving.', 'warning');
         systemNameInput.focus(); // Focus the input field
         return;
     }
@@ -1681,7 +1681,7 @@ async function saveAllChanges() {
         systems[finalSystemName] = currentSystemData;
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
 
-        alert(`System "${finalSystemName}" saved successfully.`);
+        window.notificationManager.showToast(`System "${finalSystemName}" saved successfully.`, 'success');
 
         // --- Post-Save Actions ---
         if (currentMode === Modes.CREATING) {
@@ -1696,7 +1696,7 @@ async function saveAllChanges() {
 
     } catch (error) {
         console.error("Error saving system to local storage:", error);
-        alert("An error occurred while trying to save the system. Please check the console for details.");
+        window.notificationManager.showToast("An error occurred while trying to save the system. Please check the console for details.", 'error');
         // Revert data object name change on error
         currentSystemData.systemName = oldSystemNameKey;
         currentSystemData.systemDescription = document.getElementById('systemDescriptionInput').value;

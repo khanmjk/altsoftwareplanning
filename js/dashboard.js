@@ -42,8 +42,7 @@ function renderDashboardView(container) {
 
     if (!currentSystemData) {
         // This check might be redundant if NavigationManager handles it, but good for safety
-        // alert("Please load a system first to view the dashboard."); 
-        // return;
+
     }
 
     // Only generate layout if it doesn't exist to preserve carousel state/DOM if possible

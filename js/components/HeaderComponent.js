@@ -32,7 +32,7 @@ class HeaderComponent {
                 const isEnabled = window.globalSettings && window.globalSettings.ai && window.globalSettings.ai.isEnabled;
 
                 if (!isEnabled) {
-                    alert('AI Assistant is currently disabled. Please enable it in Settings.');
+                    window.notificationManager.showToast('AI Assistant is currently disabled. Please enable it in Settings.', 'info');
                     return;
                 }
 

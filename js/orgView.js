@@ -1123,7 +1123,7 @@ function defineEngineerTableColumns() {
                 const engineerName = cell.getRow().getData().name;
                 const newLevelValue = parseInt(cell.getValue()); // Editor should provide the value directly
                 if (isNaN(newLevelValue) || newLevelValue < 1 || newLevelValue > 7) {
-                    alert("Invalid level. Please select a valid level from the list.");
+                    window.notificationManager.showToast("Invalid level. Please select a valid level from the list.", 'warning');
                     cell.restoreOldValue();
                     return;
                 }
@@ -1212,7 +1212,7 @@ function defineEngineerTableColumns() {
                     if (typeof generateEngineerTable === 'function') generateEngineerTable();
                 } catch (error) {
                     console.error(error);
-                    alert(error.message);
+                    window.notificationManager.showToast(error.message, 'error');
                     if (typeof cell.restoreOldValue === 'function') {
                         cell.restoreOldValue();
                     }
@@ -1444,7 +1444,7 @@ function handleAddNewResource() {
     let newResourceDataForLog = {};
 
     if (!currentSystemData) {
-        alert("Error: currentSystemData is not loaded. Cannot add resource.");
+        window.notificationManager.showToast("Error: currentSystemData is not loaded. Cannot add resource.", 'error');
         return;
     }
 
@@ -1458,7 +1458,7 @@ function handleAddNewResource() {
         const aiAgentType = isAISWE ? document.getElementById('newEngineerAIAgentType').value.trim() : null;
 
         if (!name || isNaN(level) || level < 1 || level > 7) {
-            alert("Invalid engineer name or level. Please ensure name is provided and level is between 1 and 7.");
+            window.notificationManager.showToast("Invalid engineer name or level. Please ensure name is provided and level is between 1 and 7.", 'warning');
         } else {
             try {
                 const newEngineer = addEngineerToRoster({
@@ -1474,7 +1474,7 @@ function handleAddNewResource() {
                 newResourceDataForLog = newEngineer;
                 success = true;
             } catch (error) {
-                alert(error.message);
+                window.notificationManager.showToast(error.message, 'error');
             }
         }
     } else if (resourceType === 'sdm') {
@@ -1487,8 +1487,8 @@ function handleAddNewResource() {
                 currentSystemData.sdms.push(newSdm);
                 newResourceDataForLog = newSdm;
                 success = true;
-            } else { alert(`SDM with name "${name}" already exists.`); }
-        } else { alert("SDM name cannot be empty."); }
+            } else { window.notificationManager.showToast(`SDM with name "${name}" already exists.`, 'warning'); }
+        } else { window.notificationManager.showToast("SDM name cannot be empty.", 'warning'); }
     } else if (resourceType === 'sr_manager') {
         const name = document.getElementById('newSrManagerName').value.trim();
         if (name) {
@@ -1498,8 +1498,8 @@ function handleAddNewResource() {
                 currentSystemData.seniorManagers.push(newSrManager);
                 newResourceDataForLog = newSrManager;
                 success = true;
-            } else { alert(`Senior Manager with name "${name}" already exists.`); }
-        } else { alert("Senior Manager name cannot be empty."); }
+            } else { window.notificationManager.showToast(`Senior Manager with name "${name}" already exists.`, 'warning'); }
+        } else { window.notificationManager.showToast("Senior Manager name cannot be empty.", 'warning'); }
     } else if (resourceType === 'pmt') {
         const name = document.getElementById('newPmtName').value.trim();
         if (name) {
@@ -1509,12 +1509,12 @@ function handleAddNewResource() {
                 currentSystemData.pmts.push(newPmt);
                 newResourceDataForLog = newPmt;
                 success = true;
-            } else { alert(`PMT with name "${name}" already exists.`); }
-        } else { alert("PMT name cannot be empty."); }
+            } else { window.notificationManager.showToast(`PMT with name "${name}" already exists.`, 'warning'); }
+        } else { window.notificationManager.showToast("PMT name cannot be empty.", 'warning'); }
     }
 
     if (success) {
-        alert("Resource added successfully to the system roster!");
+        window.notificationManager.showToast("Resource added successfully to the system roster!", 'success');
         console.log("Added new resource to currentSystemData:", newResourceDataForLog);
         if (typeof saveSystemChanges === 'function') saveSystemChanges();
         document.getElementById('addNewResourceForm').reset();

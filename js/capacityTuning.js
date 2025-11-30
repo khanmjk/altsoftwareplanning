@@ -1036,10 +1036,10 @@ window.generateCapacityWaterfallChart = generateCapacityWaterfallChart;
 /**
  * REVISED - Handles saving the capacity configuration.
  */
-function saveCapacityConfiguration() {
+async function saveCapacityConfiguration() {
     console.log("Attempting to save capacity configuration (including calculated metrics)...");
     if (!currentSystemData || !currentSystemData.systemName) {
-        alert("Cannot save configuration: No system data loaded or system name is missing.");
+        window.notificationManager.showToast("Cannot save configuration: No system data loaded or system name is missing.", 'error');
         return;
     }
 
@@ -1047,7 +1047,7 @@ function saveCapacityConfiguration() {
 
     const workingDays = currentSystemData.capacityConfiguration?.workingDaysPerYear;
     if (workingDays === undefined || workingDays === null || workingDays <= 0) {
-        if (!confirm(`Warning: 'Standard Working Days Per Year' (${workingDays}) is not set or is invalid. Calculations might be incorrect. Save anyway?`)) {
+        if (!await window.notificationManager.confirm(`Warning: 'Standard Working Days Per Year' (${workingDays}) is not set or is invalid. Calculations might be incorrect. Save anyway?`, 'Invalid Configuration', { confirmStyle: 'warning' })) {
             const wdInput = document.getElementById('workingDaysInput');
             if (wdInput) wdInput.focus();
             return;
@@ -1068,12 +1068,12 @@ function saveCapacityConfiguration() {
         systems[systemNameKey] = currentSystemData;
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
 
-        alert(`Capacity configuration for system "${systemNameKey}" saved successfully.`);
+        window.notificationManager.showToast(`Capacity configuration for system "${systemNameKey}" saved successfully.`, 'success');
         console.log("Capacity configuration (with calculated metrics) saved.");
 
     } catch (error) {
         console.error("Error during saveCapacityConfiguration:", error);
-        alert("An error occurred while trying to save the capacity configuration. Check console.");
+        window.notificationManager.showToast("An error occurred while trying to save the capacity configuration. Check console.", 'error');
     }
 }
 window.saveCapacityConfiguration = saveCapacityConfiguration;
