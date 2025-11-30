@@ -10,8 +10,8 @@ let currentChartTeamId = '__ORG_VIEW__'; // To track which team's chart is displ
 let capacityChartInstance = null; // To hold the Chart.js instance
 let applyCapacityConstraintsToggle = false; // Default to OFF
 let lastAiGenerationStats = null; // Cache the latest AI stats for the modal
-let currentViewId = null; // Track the currently active view for AI context scraping
-if (typeof window !== 'undefined') window.currentViewId = currentViewId;
+// currentViewId is now managed globally on window by NavigationManager
+if (typeof window !== 'undefined' && !window.currentViewId) window.currentViewId = null;
 
 // --- Global App Settings ---
 const defaultSettings = {

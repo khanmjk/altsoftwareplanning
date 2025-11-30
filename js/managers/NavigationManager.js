@@ -58,6 +58,15 @@ class NavigationManager {
     navigateTo(viewId, isPopState = false) {
         console.log(`NavigationManager: Navigating to ${viewId}`);
 
+        // 0. Update Global State for AI Context
+        // Refactored to use setter on the controller instead of global variable
+        if (window.aiAgentController && typeof window.aiAgentController.setCurrentView === 'function') {
+            window.aiAgentController.setCurrentView(viewId);
+        } else {
+            // Fallback if controller not ready (though it should be)
+            if (typeof window !== 'undefined') window.currentViewId = viewId;
+        }
+
         // 1. Update Sidebar Selection
         if (this.sidebar) {
             this.sidebar.setActive(viewId);
