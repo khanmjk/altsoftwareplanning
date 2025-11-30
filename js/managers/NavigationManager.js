@@ -57,17 +57,22 @@ class NavigationManager {
     /**
      * Navigates to a specific view.
      * @param {string} viewId - The ID of the view to navigate to.
+     * @param {object} params - Optional parameters to pass to the view.
      * @param {boolean} isPopState - If true, indicates navigation is from history (don't push state).
      */
-    navigateTo(viewId, isPopState = false) {
-        console.log(`NavigationManager: Navigating to ${viewId}`);
+    navigateTo(viewId, params = {}, isPopState = false) {
+        // Handle legacy signature where params might be boolean (isPopState)
+        if (typeof params === 'boolean') {
+            isPopState = params;
+            params = {};
+        }
+
+        console.log(`NavigationManager: Navigating to ${viewId}`, params);
 
         // 0. Update Global State for AI Context
-        // Refactored to use setter on the controller instead of global variable
         if (window.aiAgentController && typeof window.aiAgentController.setCurrentView === 'function') {
             window.aiAgentController.setCurrentView(viewId);
         } else {
-            // Fallback if controller not ready (though it should be)
             if (typeof window !== 'undefined') window.currentViewId = viewId;
         }
 
@@ -102,7 +107,12 @@ class NavigationManager {
                     } else {
                         window.managementViewInstance.container = container;
                     }
-                    window.managementViewInstance.render();
+                    // Handle tab switching via params
+                    if (params && params.tab) {
+                        window.managementViewInstance.switchTab(params.tab);
+                    } else {
+                        window.managementViewInstance.render();
+                    }
                 });
             } else if (viewId === 'visualizationCarousel') {
                 window.workspaceComponent.render(viewId, window.renderSystemOverviewView);
@@ -122,8 +132,6 @@ class NavigationManager {
                         container.innerHTML = '<h1>Welcome</h1><p>Welcome content not found.</p>';
                     }
                 });
-            } else if (viewId === 'helpView') {
-                window.workspaceComponent.render(viewId, window.renderHelpView);
             } else if (viewId === 'helpView') {
                 window.workspaceComponent.render(viewId, window.renderHelpView);
             } else if (viewId === 'settingsView') {

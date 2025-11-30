@@ -15,159 +15,15 @@ let tempRoadmapAssignments_modal = [];
 
 
 /**
- * Helper function to get modal elements for the Roadmap Initiative Modal.
- * @returns {object|null} Object containing modal elements or null if not found.
- */
-function getRoadmapModalElements() {
-    const modal = document.getElementById('roadmapInitiativeModal');
-    const titleElement = document.getElementById('addEditRoadmapInitiativeTitle_modal');
-    const formElement = document.getElementById('roadmapInitiativeForm_modal');
-    const saveButton = document.getElementById('saveRoadmapInitiativeButton_modal');
-    const cancelButton = document.getElementById('cancelRoadmapInitiativeEditButton_modal');
-
-    if (!modal || !titleElement || !formElement || !saveButton || !cancelButton) {
-        console.error("One or more roadmap initiative modal elements are missing from the DOM.");
-        console.log("Missing elements:", {
-            modal: !modal,
-            titleElement: !titleElement,
-            formElement: !formElement,
-            saveButton: !saveButton,
-            cancelButton: !cancelButton
-        });
-        return null;
-    }
-    return { modal, titleElement, formElement, saveButton, cancelButton };
-}
-
-/**
- * Helper function to get modal elements for the Theme Management Modal.
- * @returns {object|null} Object containing modal elements or null if not found.
- */
-function getThemeManagementModalElements() {
-    const modal = document.getElementById('themeManagementModal');
-    const titleElement = document.getElementById('themeManagementModalTitle');
-    const formElement = document.getElementById('addNewThemeForm_modal');
-    const existingThemesListDiv = document.getElementById('existingThemesList');
-    const saveNewThemeButton = document.getElementById('saveNewThemeButton_modal');
-
-    if (!modal || !titleElement || !formElement || !existingThemesListDiv || !saveNewThemeButton) {
-        console.error("One or more theme management modal elements are missing from the DOM.");
-        return null;
-    }
-    return { modal, titleElement, formElement, existingThemesListDiv, saveNewThemeButton };
-}
-
-/**
- * NEW: Displays temporary team assignments in the roadmap modal.
- */
-function displayTempRoadmapAssignments_modal() {
-    const displayDiv = document.getElementById('roadmapInitiativeAssignmentsDisplay_modal');
-    if (!displayDiv) {
-        console.warn("Could not find #roadmapInitiativeAssignmentsDisplay_modal to display temp assignments.");
-        return;
-    }
-    displayDiv.innerHTML = ''; // Clear current display
-
-    if (tempRoadmapAssignments_modal.length === 0) {
-        displayDiv.innerHTML = '<em>No teams assigned yet.</em>';
-        return;
-    }
-
-    tempRoadmapAssignments_modal.forEach((assignment, index) => {
-        const team = (currentSystemData.teams || []).find(t => t.teamId === assignment.teamId);
-        const teamName = team ? (team.teamIdentity || team.teamName) : assignment.teamId;
-        const assignmentDiv = document.createElement('div');
-        assignmentDiv.style.marginBottom = '3px';
-        assignmentDiv.textContent = `${teamName}: ${parseFloat(assignment.sdeYears || 0).toFixed(2)} SDE Years `;
-
-        const removeButton = document.createElement('button');
-        removeButton.textContent = 'Remove';
-        removeButton.type = 'button'; // Prevent form submission
-        removeButton.className = 'btn-danger btn-sm';
-        removeButton.style.marginLeft = '10px';
-        removeButton.style.fontSize = '0.8em';
-        removeButton.onclick = () => {
-            tempRoadmapAssignments_modal.splice(index, 1); // Remove from array
-            displayTempRoadmapAssignments_modal(); // Refresh display
-        };
-        assignmentDiv.appendChild(removeButton);
-        displayDiv.appendChild(assignmentDiv);
-        assignmentDiv.classList.add('new-item-added-fade-in');
-        setTimeout(() => {
-            assignmentDiv.classList.remove('new-item-added-fade-in');
-        }, 350);
-    });
-}
-
-/**
- * NEW: Handles clicking the 'Add Assignment' button in the roadmap modal.
- */
-function handleAddTeamAssignment_modal() {
-    const teamSelect = document.getElementById('roadmapInitiativeTeamSelect_modal');
-    const sdeYearsInput = document.getElementById('roadmapInitiativeSdeYears_modal');
-    if (!teamSelect || !sdeYearsInput) {
-        console.error("Team select or SDE years input not found in roadmap modal.");
-        return;
-    }
-
-    const teamId = teamSelect.value;
-    const sdeYears = parseFloat(sdeYearsInput.value);
-
-    if (!teamId) {
-        alert('Please select a team.');
-        return;
-    }
-    // SDE Years can be 0 for roadmap items, indicating impact without specific effort yet.
-    if (isNaN(sdeYears) || sdeYears < 0) {
-        alert('Please enter a valid non-negative number for SDE Years (0 is allowed).');
-        return;
-    }
-
-    const existingIndex = tempRoadmapAssignments_modal.findIndex(a => a.teamId === teamId);
-    if (existingIndex > -1) {
-        tempRoadmapAssignments_modal[existingIndex].sdeYears = sdeYears;
-        console.log(`Updated assignment in modal for team ${teamId} to ${sdeYears}`);
-    } else {
-        tempRoadmapAssignments_modal.push({ teamId: teamId, sdeYears: sdeYears });
-        console.log(`Added assignment in modal for team ${teamId}: ${sdeYears}`);
-    }
-
-    displayTempRoadmapAssignments_modal();
-    teamSelect.selectedIndex = 0;
-    sdeYearsInput.value = '0.0'; // Reset to 0.0
-}
-
-
-/**
  * Opens the modal for adding a new initiative.
  */
 function openRoadmapModalForAdd() {
-    const elements = getRoadmapModalElements();
-    if (!elements) return;
-
-    currentEditingInitiativeId = null;
-    elements.titleElement.textContent = 'Add New Initiative to Backlog';
-    elements.formElement.reset(); // Reset standard form inputs
-
-    tempRoadmapAssignments_modal = []; // Clear temporary assignments
-
-    generateRoadmapInitiativeFormFields(elements.formElement);
-    displayTempRoadmapAssignments_modal(); // Display empty assignments list
-
-    const statusSelect = document.getElementById('initiativeStatus_modal_roadmap');
-    if (statusSelect) statusSelect.value = "Backlog";
-
-    const addAssignmentButtonInModal = document.getElementById('addTeamAssignmentButton_modal');
-    if (addAssignmentButtonInModal) {
-        // Remove existing listener to prevent duplicates if modal is reopened
-        addAssignmentButtonInModal.removeEventListener('click', handleAddTeamAssignment_modal);
-        addAssignmentButtonInModal.addEventListener('click', handleAddTeamAssignment_modal);
+    if (window.roadmapInitiativeModal) {
+        window.roadmapInitiativeModal.onSave = handleSaveRoadmapInitiative;
+        window.roadmapInitiativeModal.open();
+    } else {
+        console.error("RoadmapInitiativeModal not initialized.");
     }
-
-
-    elements.modal.style.display = 'block';
-    const titleInput = document.getElementById('initiativeTitle_modal_roadmap');
-    if (titleInput) titleInput.focus();
 }
 
 /**
@@ -175,282 +31,38 @@ function openRoadmapModalForAdd() {
  * @param {string} initiativeId - The ID of the initiative to edit.
  */
 function openRoadmapModalForEdit(initiativeId) {
-    const elements = getRoadmapModalElements();
-    if (!elements) return;
-
-    const initiative = (currentSystemData.yearlyInitiatives || []).find(init => init.initiativeId === initiativeId);
-    if (!initiative) {
-        console.error("Initiative not found for editing:", initiativeId);
-        alert("Error: Could not find the initiative to edit.");
-        return;
+    if (window.roadmapInitiativeModal) {
+        window.roadmapInitiativeModal.onSave = handleSaveRoadmapInitiative;
+        window.roadmapInitiativeModal.open(initiativeId);
+    } else {
+        console.error("RoadmapInitiativeModal not initialized.");
     }
-
-    currentEditingInitiativeId = initiativeId;
-    elements.titleElement.textContent = `Edit Initiative: ${initiative.title || initiativeId}`;
-
-    // Deep copy current assignments to temp store for editing
-    tempRoadmapAssignments_modal = initiative.assignments ? JSON.parse(JSON.stringify(initiative.assignments)) : [];
-
-    generateRoadmapInitiativeFormFields(elements.formElement); // Regenerate form structure
-    populateRoadmapInitiativeForm_modal(initiative); // Populate with initiative data (excluding assignments, which are in temp)
-    displayTempRoadmapAssignments_modal(); // Display the temp assignments for editing
-
-    const addAssignmentButtonInModal = document.getElementById('addTeamAssignmentButton_modal');
-    if (addAssignmentButtonInModal) {
-        addAssignmentButtonInModal.removeEventListener('click', handleAddTeamAssignment_modal); // Remove old before adding new
-        addAssignmentButtonInModal.addEventListener('click', handleAddTeamAssignment_modal);
-    }
-
-    elements.modal.style.display = 'block';
-
-    const modalBody = elements.modal.querySelector('.modal-body');
-    if (modalBody) {
-        modalBody.scrollTop = 0;
-    }
-
-    const titleInput = document.getElementById('initiativeTitle_modal_roadmap');
-    if (titleInput) {
-        titleInput.focus();
-    }
-}
-
-
-/**
- * Closes the roadmap initiative modal.
- */
-function closeRoadmapModal() {
-    const elements = getRoadmapModalElements();
-    if (!elements || !elements.modal) return;
-    if (elements.modal) elements.modal.style.display = 'none';
-    if (elements.formElement) elements.formElement.reset();
-    currentEditingInitiativeId = null;
-    tempRoadmapAssignments_modal = []; // Clear temporary assignments
-}
-
-// js/roadmap.js
-
-// Replace the existing openThemeManagementModal function with this one:
-
-function openThemeManagementModal() {
-    console.log("Attempting to open Theme Management Modal (v_refined_styles)...");
-
-    if (!currentSystemData) { /* ... guard ... */ return; }
-    if (typeof currentSystemData.definedThemes === 'undefined') { /* ... guard ... */ currentSystemData.definedThemes = []; }
-
-    const elements = getThemeManagementModalElements();
-    if (!elements || !elements.modal) { /* ... error ... */ return; }
-
-    console.log("Theme Management Modal elements found:", elements);
-
-    const modalElement = elements.modal;
-
-    // Ensure the .modal class is present. This should be from HTML but good to double-check.
-    if (!modalElement.classList.contains('modal')) {
-        modalElement.classList.add('modal');
-    }
-
-    // Ensure the content wrapper is ready for content.
-    // Its styles should primarily come from CSS.
-    const contentWrapper = modalElement.querySelector('.modal-content-wrapper');
-    if (contentWrapper) {
-        // We might not need to set these if CSS is working correctly now that parentage is fixed.
-        // Let's rely on CSS for these first.
-        // contentWrapper.style.display = 'flex'; 
-        // contentWrapper.style.margin = '10% auto';
-        // contentWrapper.style.width = '60%'; 
-        // contentWrapper.style.minHeight = '300px'; // This could be useful if content is sparse
-    }
-
-    renderThemesForManagement(); // Populate content
-
-    if (elements.formElement) {
-        elements.formElement.reset();
-    }
-
-    // Set display to block to make it visible
-    modalElement.style.display = 'block';
-
-    // Force a reflow to help ensure styles are applied before logging
-    void modalElement.offsetHeight;
-
-    // --- Diagnostic Logging (keep this) ---
-    const computedStyle = window.getComputedStyle(modalElement);
-    console.log("Diagnostics for #themeManagementModal after refined open:");
-    console.log(`  - Computed display: ${computedStyle.display}`);
-    console.log(`  - Computed position: ${computedStyle.position}`);
-    console.log(`  - offsetWidth: ${modalElement.offsetWidth}, offsetHeight: ${modalElement.offsetHeight}`);
-    console.log(`  - Parent node: ${modalElement.parentNode ? modalElement.parentNode.tagName + (modalElement.parentNode.id ? '#' + modalElement.parentNode.id : '') : 'null'}`);
-
-    const themeNameInput = document.getElementById('newThemeName_modal');
-    if (themeNameInput) {
-        themeNameInput.focus();
-    }
-    console.log("*** Opened Theme Management Modal with existing themes rendered.");
 }
 
 /**
- * Closes the Theme Management modal.
+ * Handles saving the initiative (add or edit) from the new modal.
  */
-function closeThemeManagementModal() {
-    const elements = getThemeManagementModalElements();
-    if (!elements || !elements.modal) return;
-    elements.modal.style.display = 'none';
-}
-
-/**
- * Renders the list of existing themes in the Theme Management modal.
- */
-function renderThemesForManagement() {
-    const elements = getThemeManagementModalElements();
-    if (!elements) return;
-
-    elements.existingThemesListDiv.innerHTML = ''; // Clear current list
-
-    const themes = currentSystemData.definedThemes || [];
-    if (themes.length === 0) {
-        elements.existingThemesListDiv.innerHTML = '<p><em>No themes defined yet.</em></p>';
-        return;
+function handleSaveRoadmapInitiative(initiativeData, isEdit) {
+    if (!currentSystemData.yearlyInitiatives) {
+        currentSystemData.yearlyInitiatives = [];
     }
 
-    const ul = document.createElement('ul');
-    ul.style.listStyleType = 'none';
-    ul.style.paddingLeft = '0';
-
-    themes.forEach(theme => {
-        const li = document.createElement('li');
-        li.style.padding = '5px 0';
-        li.style.borderBottom = '1px solid #f0f0f0';
-        li.style.display = 'flex';
-        li.style.justifyContent = 'space-between';
-        li.style.alignItems = 'center';
-
-        const themeInfo = document.createElement('span');
-        themeInfo.innerHTML = `<strong>${theme.name || 'Unnamed Theme'}</strong> (ID: ${theme.themeId})`;
-        if (theme.description) {
-            themeInfo.innerHTML += `<br><small style="color: #555;"><em>${theme.description}</em></small>`;
+    if (isEdit) {
+        const index = currentSystemData.yearlyInitiatives.findIndex(i => i.initiativeId === initiativeData.initiativeId);
+        if (index > -1) {
+            // Merge to preserve fields not handled by modal (if any)
+            currentSystemData.yearlyInitiatives[index] = { ...currentSystemData.yearlyInitiatives[index], ...initiativeData };
         }
-        li.appendChild(themeInfo);
-
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Delete';
-        deleteButton.className = 'btn-danger btn-sm';
-        deleteButton.style.marginLeft = '10px';
-        deleteButton.onclick = () => handleDeleteTheme(theme.themeId);
-        li.appendChild(deleteButton);
-
-        ul.appendChild(li);
-    });
-    elements.existingThemesListDiv.appendChild(ul);
-    console.log("*** Rendered existing themes in Theme Management modal.");
-}
-
-/**
- * Handles adding a new theme from the Theme Management modal.
- */
-function handleAddNewTheme() {
-    const themeNameInput = document.getElementById('newThemeName_modal');
-    const themeDescriptionInput = document.getElementById('newThemeDescription_modal');
-
-    const name = themeNameInput.value.trim();
-    const description = themeDescriptionInput.value.trim();
-
-    if (!name) {
-        alert("Theme Name cannot be empty.");
-        themeNameInput.focus();
-        return;
+    } else {
+        currentSystemData.yearlyInitiatives.push(initiativeData);
     }
 
-    if (!currentSystemData.definedThemes) {
-        currentSystemData.definedThemes = [];
-    }
-
-    // Check if theme name or ID already exists
-    const themeId = 'theme-' + name.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now().toString().slice(-5);
-    if (currentSystemData.definedThemes.some(t => t.name.toLowerCase() === name.toLowerCase() || t.themeId === themeId)) {
-        alert(`A theme with a similar name or generated ID already exists: "${name}"`);
-        return;
-    }
-
-    const newTheme = {
-        themeId: themeId,
-        name: name,
-        description: description,
-        relatedGoalIds: [], // Default, can be edited elsewhere if needed
-        attributes: {}
-    };
-
-    currentSystemData.definedThemes.push(newTheme);
-    console.log("Added new theme:", newTheme);
-    saveSystemChanges(); // Persist the change
-
-    renderThemesForManagement(); // Re-render the list in the modal
-    themeNameInput.value = ''; // Clear form
-    themeDescriptionInput.value = '';
-    themeNameInput.focus();
-
-    // If the initiative modal is open, regenerate its form fields to update the themes multi-select
-    const initiativeModalElements = getRoadmapModalElements();
-    if (initiativeModalElements && initiativeModalElements.modal.style.display === 'block' && initiativeModalElements.formElement) {
-        const initiativeDataForRepopulate = {}; // Placeholder, values will be re-read or form re-populated
-        if (currentEditingInitiativeId) {
-            const currentInit = (currentSystemData.yearlyInitiatives || []).find(i => i.initiativeId === currentEditingInitiativeId);
-            if (currentInit) {
-                // We need to preserve the currently selected values for other fields
-                // A full re-populate is safer here
-                generateRoadmapInitiativeFormFields(initiativeModalElements.formElement);
-                populateRoadmapInitiativeForm_modal(currentInit);
-            }
-        } else {
-            // For new initiative, just regenerate form, user will select themes.
-            generateRoadmapInitiativeFormFields(initiativeModalElements.formElement);
-        }
-    }
-}
-
-/**
- * Handles deleting an existing theme.
- */
-function handleDeleteTheme(themeIdToDelete) {
-    if (!confirm(`Are you sure you want to delete theme "${themeIdToDelete}"? This will also remove it from any initiatives it's assigned to.`)) {
-        return;
-    }
-
-    const themeIndex = (currentSystemData.definedThemes || []).findIndex(t => t.themeId === themeIdToDelete);
-    if (themeIndex === -1) {
-        alert("Theme not found for deletion.");
-        return;
-    }
-
-    currentSystemData.definedThemes.splice(themeIndex, 1);
-
-    // Remove this themeId from all initiatives
-    (currentSystemData.yearlyInitiatives || []).forEach(initiative => {
-        if (initiative.themes && initiative.themes.includes(themeIdToDelete)) {
-            initiative.themes = initiative.themes.filter(tid => tid !== themeIdToDelete);
-        }
-    });
-
-    console.log("Deleted theme:", themeIdToDelete);
-    saveSystemChanges(); // Persist changes
-
-    renderThemesForManagement(); // Re-render list in theme management modal
-
-    // If the initiative modal is open, regenerate its form fields to update themes
-    const initiativeModalElements = getRoadmapModalElements();
-    if (initiativeModalElements && initiativeModalElements.modal.style.display === 'block' && initiativeModalElements.formElement) {
-        if (currentEditingInitiativeId) {
-            const currentInit = (currentSystemData.yearlyInitiatives || []).find(i => i.initiativeId === currentEditingInitiativeId);
-            if (currentInit) {
-                generateRoadmapInitiativeFormFields(initiativeModalElements.formElement);
-                populateRoadmapInitiativeForm_modal(currentInit); // Repopulate with updated themes
-            }
-        } else {
-            generateRoadmapInitiativeFormFields(initiativeModalElements.formElement);
-        }
-    }
-    // Refresh the main roadmap table as theme names might have changed for some initiatives
+    saveSystemChanges();
     renderRoadmapTable();
+    console.log("Initiative saved:", initiativeData);
 }
+
+
 
 /**
  * Initializes the Roadmap & Backlog view.
@@ -482,25 +94,12 @@ function renderRoadmapView(container) {
     generateRoadmapControls(); // This sets up the "Manage Themes" button and its onclick to openThemeManagementModal
     renderRoadmapTable();
 
-    const initiativeModalElements = getRoadmapModalElements();
-    if (initiativeModalElements && initiativeModalElements.formElement) {
-        // Generate initiative form fields once; it will use currentSystemData.definedThemes as available
-        generateRoadmapInitiativeFormFields(initiativeModalElements.formElement);
-    } else {
-        console.warn("Cannot generate initiative form fields, modal form element not found (might be hidden).");
+    // Initialize the modal if not already done
+    if (!window.roadmapInitiativeModal) {
+        window.roadmapInitiativeModal = new RoadmapInitiativeModal();
     }
 
-    if (initiativeModalElements) {
-        initiativeModalElements.saveButton.onclick = handleSaveRoadmapInitiative_modal;
-    }
 
-    // Attach listener for the Theme Management modal's "Add Theme" button
-    const themeModalElements = getThemeManagementModalElements();
-    if (themeModalElements && themeModalElements.saveNewThemeButton) { // Ensure the button itself exists
-        themeModalElements.saveNewThemeButton.onclick = handleAddNewTheme;
-    } else {
-        console.error("Could not attach listener to 'Add New Theme' button in theme management modal. Button not found.");
-    }
 
     console.log("Roadmap View Rendered with Modal and Theme Management support.");
 }
@@ -603,7 +202,13 @@ function generateRoadmapControls() {
     manageThemesButton.textContent = 'Manage Themes';
     manageThemesButton.className = 'btn-secondary';
     manageThemesButton.style.marginLeft = '10px';
-    manageThemesButton.onclick = openThemeManagementModal; // This should work independently
+    manageThemesButton.onclick = () => {
+        if (window.navigationManager) {
+            window.navigationManager.navigateTo('managementView', { tab: 'themes' });
+        } else {
+            console.error("NavigationManager not available");
+        }
+    };
     actionsDiv.appendChild(manageThemesButton);
 
     controlsContainer.appendChild(actionsDiv);

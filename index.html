@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="css/components/workspace.css">
 <link rel="stylesheet" href="css/components/settings.css">
 <link rel="stylesheet" href="css/components/management.css">
+<link rel="stylesheet" href="css/components/roadmapModal.css">
 <link rel="stylesheet" href="css/ai-chat.css">
 <link rel="stylesheet" href="css/components/Modal.css">
 <link rel="stylesheet" href="css/components/SystemSelectionModal.css">
@@ -252,25 +253,7 @@
         <p>AI is generating your system... This may take a moment.</p>
     </div>
 
-    <div id="roadmapInitiativeModal" class="modal" style="display:none;">
-        <div class="modal-content-wrapper">
-            <div class="modal-header">
-                <h3 id="addEditRoadmapInitiativeTitle_modal">Add/Edit Initiative</h3>
-                <span class="close-button" onclick="closeRoadmapModal()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <form id="roadmapInitiativeForm_modal">
-                    <p><em>Loading form...</em></p>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" id="saveRoadmapInitiativeButton_modal" class="btn-primary">Save
-                    Initiative</button>
-                <button type="button" id="cancelRoadmapInitiativeEditButton_modal" class="btn-secondary"
-                    style="margin-left: 10px;" onclick="closeRoadmapModal()">Cancel</button>
-            </div>
-        </div>
-    </div>
+
     <div id="diagramModal" class="modal">
         <div class="modal-content-wrapper" style="width: 95%; height: 95%; max-width: none;">
             <div class="modal-header">
@@ -343,6 +326,7 @@
     <script src="js/components/SettingsView.js"></script>
     <script src="js/components/ManagementView.js"></script>
     <script src="js/components/SystemsView.js"></script>
+    <script src="js/components/RoadmapInitiativeModal.js"></script>
     <script src="js/components/WorkspaceComponent.js"></script>
     <script src="js/main.js?v=2"></script>
 </body>
