@@ -48,16 +48,7 @@ function updateAiDependentUI(options = {}) {
         createWithAiCard.style.display = aiEnabled ? 'block' : 'none';
     }
 
-    // Legacy button removal (just in case)
-    const createWithAiButton = document.getElementById('createWithAiButton');
-    if (createWithAiButton) {
-        createWithAiButton.style.display = 'none';
-    }
 
-    const aiChatButton = document.getElementById('aiChatButton');
-    if (aiChatButton) {
-        aiChatButton.style.display = (aiEnabled && currentViewId) ? 'inline-block' : 'none';
-    }
 
     const chatContainer = document.getElementById('aiChatPanelContainer');
     const chatHandle = document.getElementById('chatResizeHandle');
@@ -126,18 +117,6 @@ let draggedRowElement = null;
 // Store temporary assignments before adding initiative
 let tempAssignments = [];
 
-// Maps a view's container ID to the ID of the button that activates it.
-const VIEW_TO_BUTTON_MAP = {
-    'visualizationCarousel': 'systemOverviewButton',
-    'systemEditForm': 'editSystemButton',
-    'organogramView': 'viewOrgChartButton',
-    'planningView': 'manageYearPlanButton',
-    'roadmapView': 'manageRoadmapButton',
-    'dashboardView': 'dashboardViewButton',
-    'capacityConfigView': 'tuneCapacityButton',
-    'sdmForecastingView': 'sdmForecastButton',
-    'ganttPlanningView': 'detailedPlanningButton'
-};
 
 // Fallback HTML snippets for components when fetch is unavailable (e.g., file:// protocol)
 const HTML_COMPONENT_FALLBACKS = {
