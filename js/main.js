@@ -1193,11 +1193,7 @@ function initializeEventListeners() {
 
 
 
-if (typeof showOrganogramView === 'function') window.showOrganogramView = showOrganogramView;
-if (typeof showEngineerTableView === 'function') window.showEngineerTableView = showEngineerTableView;
-if (typeof showPlanningView === 'function') window.showPlanningView = showPlanningView;
-if (typeof showRoadmapView === 'function') window.showRoadmapView = showRoadmapView;
-if (typeof showSystemOverview === 'function') window.showSystemOverview = showSystemOverview;
+
 if (typeof returnToHome === 'function') window.returnToHome = returnToHome;
 if (typeof createNewSystem === 'function') window.createNewSystem = createNewSystem;
 if (typeof deleteSystem === 'function') window.deleteSystem = deleteSystem;
