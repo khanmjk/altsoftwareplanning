@@ -1,5 +1,5 @@
 let currentSystemData = null;
-let newServiceData = {};
+
 
 
 
@@ -103,19 +103,17 @@ const weekToMonth_SDM = [
 // --- End SDM Forecasting Tool Globals ---
 
 // --- Documentation Resizing Logic ---
-let isDocumentationResizing = false;
-let lastMouseY = 0;
-let originalDocumentationHeight = 0;
+
 
 // Global state for engineer table sorting
-let engineerSortState = { key: 'name', ascending: true };
+
 
 // For Planning Table Drag & Drop
 let draggedInitiativeId = null;
 let draggedRowElement = null;
 
 // Store temporary assignments before adding initiative
-let tempAssignments = [];
+
 
 
 // Fallback HTML snippets for components when fetch is unavailable (e.g., file:// protocol)
