@@ -1179,51 +1179,15 @@ function refreshCurrentView() {
 function initializeEventListeners() {
     console.log("Initializing event listeners...");
 
-    // Main Menu Buttons
-    document.querySelector('.menu button:nth-child(1)')?.addEventListener('click', showSavedSystems);
-    document.querySelector('.menu button:nth-child(2)')?.addEventListener('click', createNewSystem);
-    document.getElementById('createWithAiButton')?.addEventListener('click', handleCreateWithAi);
-    document.getElementById('deleteSystemButton')?.addEventListener('click', deleteSystem);
-    document.querySelector('.menu button:nth-child(4)')?.addEventListener('click', resetToDefaults);
 
 
 
-    // AI Chat Button
-    document.getElementById('aiChatButton')?.addEventListener('click', () => {
-        if (!window.aiChatAssistant) return;
-        if (typeof window.aiChatAssistant.isAiChatPanelOpen === 'function' && window.aiChatAssistant.isAiChatPanelOpen()) {
-            if (typeof window.aiChatAssistant.closeAiChatPanel === 'function') {
-                window.aiChatAssistant.closeAiChatPanel();
-            }
-        } else if (typeof window.aiChatAssistant.openAiChatPanel === 'function') {
-            window.aiChatAssistant.openAiChatPanel();
-        }
-    });
-    // Initialize the chat panel's internal listeners
+    // Initialize the chat panel's internal listeners (Required for Header AI Button)
     if (typeof initializeAiChatPanel === 'function') {
         initializeAiChatPanel();
     } else {
         console.error("main.js: initializeAiChatPanel() function not found. aiChatAssistant.js may not have loaded.");
     }
-
-
-
-    // --- MODIFIED LISTENERS FOR THE NEW MODAL ---
-    document.getElementById('saveAiSettingsButton')?.addEventListener('click', saveGlobalSettings); // <-- Changed function
-    document.querySelector('#aiSettingsModal .close-button')?.addEventListener('click', closeAiSettingsModal);
-    document.getElementById('aiModeEnabled')?.addEventListener('change', (event) => {
-        const isChecked = event.target.checked;
-        const configInputs = document.getElementById('aiConfigInputs');
-        if (configInputs) {
-            configInputs.style.display = isChecked ? 'block' : 'none';
-        }
-        globalSettings.ai.isEnabled = isChecked;
-        syncGlobalSettingsToWindow();
-        updateAiDependentUI();
-    });
-    // --- END MODIFIED LISTENERS ---
-
-
     console.log("Event listeners initialized.");
 }
 
@@ -1238,4 +1202,4 @@ if (typeof returnToHome === 'function') window.returnToHome = returnToHome;
 if (typeof createNewSystem === 'function') window.createNewSystem = createNewSystem;
 if (typeof deleteSystem === 'function') window.deleteSystem = deleteSystem;
 if (typeof resetToDefaults === 'function') window.resetToDefaults = resetToDefaults;
-if (typeof showSavedSystems === 'function') window.showSavedSystems = showSavedSystems;
+
