@@ -164,7 +164,7 @@ function displayServicesForEditing(services, containerId, expandedIndex = -1) {
                 const inAvailableList = Array.from(availablePlatDepsSelect.options).some(opt => opt.value === newDepName);
 
                 if (inCurrentList || inAvailableList) {
-                    alert(`Platform dependency "${newDepName}" is already listed for this service.`);
+                    window.notificationManager.showToast(`Platform dependency "${newDepName}" is already listed for this service.`, 'warning');
                     if (textInput) textInput.value = '';
                     return null; // Already present for this service, do nothing more
                 }
@@ -293,7 +293,7 @@ function displayServicesForEditing(services, containerId, expandedIndex = -1) {
         deleteServiceButton.innerText = 'Delete Service';
         /* deleteServiceButton.style.color = 'red'; 
         deleteServiceButton.style.marginLeft = '10px'; */
-        deleteServiceButton.onclick = () => { if (confirm('Are you sure?')) deleteService(index, containerId); }; // Pass containerId
+        deleteServiceButton.onclick = async () => { if (await window.notificationManager.confirm('Are you sure you want to delete this service?', 'Delete Service', { confirmStyle: 'danger' })) deleteService(index, containerId); }; // Pass containerId
         serviceDetails.appendChild(deleteServiceButton);
 
         let saveServiceButton = document.createElement('button');
@@ -371,7 +371,7 @@ function saveServiceChanges(serviceIndex) {
     // Perform validation (optional)
     const service = currentSystemData.services[serviceIndex];
     if (!service.serviceName || service.serviceName.trim() === '') {
-        alert('Service name cannot be empty.');
+        window.notificationManager.showToast('Service name cannot be empty.', 'error');
         return;
     }
 
@@ -413,7 +413,7 @@ function saveServiceChanges(serviceIndex) {
     systems[currentSystemData.systemName] = currentSystemData;
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
 
-    alert('Service changes saved.');
+    window.notificationManager.showToast('Service changes saved.', 'success');
 
     // **Update the Team Breakdown and Service Dependencies Tables**
     generateTeamTable(currentSystemData);
@@ -817,7 +817,7 @@ function displayTeamsForEditing(teamsDataToDisplay, expandedTeamIndex = -1) {
                 displayTeamsForEditing(currentSystemData.teams, currentTeamEditIndex);
             },
             true, true, 'Enter New Engineer Name to Add to System Pool',
-            (newEngineerNameInput, currentTeamEditIndex) => {
+            async (newEngineerNameInput, currentTeamEditIndex) => {
                 if (!newEngineerNameInput || newEngineerNameInput.trim() === '') {
                     alert("Engineer name cannot be empty."); return null;
                 }
@@ -827,19 +827,19 @@ function displayTeamsForEditing(teamsDataToDisplay, expandedTeamIndex = -1) {
                     return { preventAdd: true }; // Prevent createDualListContainer from adding duplicate to UI
                 }
 
-                const levelStr = prompt(`Enter level (1-7) for new engineer "${name}":`, "1");
+                const levelStr = await window.notificationManager.prompt(`Enter level (1-7) for new engineer "${name}":`, "1", "Engineer Level");
                 if (levelStr === null) return null;
                 const level = parseInt(levelStr);
                 if (isNaN(level) || level < 1 || level > 7) {
                     alert("Invalid level. Please enter a number between 1 and 7."); return null;
                 }
-                const yearsStr = prompt(`Enter years of experience for "${name}":`, "0");
+                const yearsStr = await window.notificationManager.prompt(`Enter years of experience for "${name}":`, "0", "Experience");
                 if (yearsStr === null) return null;
                 const yearsOfExperience = parseInt(yearsStr) || 0;
-                const skillsStr = prompt(`Enter skills for "${name}" (comma-separated):`, "");
+                const skillsStr = await window.notificationManager.prompt(`Enter skills for "${name}" (comma-separated):`, "", "Skills");
                 const skills = skillsStr ? skillsStr.split(',').map(s => s.trim()).filter(s => s) : [];
                 // const isAISWE = confirm(`Is "${name}" an AI Software Engineer?`); replaced
-                let isAIInput = prompt(`Is "${name}" an AI Software Engineer? (Enter Yes or No)`, "No");
+                let isAIInput = await window.notificationManager.prompt(`Is "${name}" an AI Software Engineer? (Enter Yes or No)`, "No", "AI Engineer?");
                 if (isAIInput === null) {
                     // User clicked Cancel on the Yes/No prompt for AI status
                     return null; // This is intended to cancel the entire "Add New Engineer" operation
@@ -847,7 +847,7 @@ function displayTeamsForEditing(teamsDataToDisplay, expandedTeamIndex = -1) {
                 const isAISWE = isAIInput.trim().toLowerCase() === 'yes';
                 let aiAgentType = null;
                 if (isAISWE) {
-                    const typeStr = prompt(`Enter AI Agent Type for "${name}" (e.g., Code Generation):`, "General AI");
+                    const typeStr = await window.notificationManager.prompt(`Enter AI Agent Type for "${name}" (e.g., Code Generation):`, "General AI", "AI Agent Type");
                     if (typeStr === null) return null;
                     aiAgentType = typeStr.trim() || "General AI";
                 }
@@ -1084,7 +1084,7 @@ function displayAwayTeamMembers(awayMembers, teamIndex) {
 }
 
 /** Handles clicking the 'Add Away Member' button */
-function handleAddAwayTeamMember(teamIndex) {
+async function handleAddAwayTeamMember(teamIndex) {
     const nameInput = document.getElementById(`newAwayName_${teamIndex}`);
     const levelInput = document.getElementById(`newAwayLevel_${teamIndex}`);
     const sourceInput = document.getElementById(`newAwaySource_${teamIndex}`);
@@ -1418,14 +1418,14 @@ function addNewTeam(overrides = {}) {
 
 // In js/editSystem.js
 
-function deleteTeam(teamIndex, options = {}) {
+async function deleteTeam(teamIndex, options = {}) {
     const { skipConfirm = false, silent = false } = options;
     const teamToDelete = currentSystemData.teams[teamIndex];
     if (!teamToDelete) {
         console.error("Team to delete not found at index:", teamIndex);
         return false;
     }
-    const confirmDelete = skipConfirm ? true : confirm(`Are you sure you want to delete the team "${teamToDelete.teamName || teamToDelete.teamIdentity}"? This action cannot be undone.`);
+    const confirmDelete = skipConfirm ? true : await window.notificationManager.confirm(`Are you sure you want to delete the team "${teamToDelete.teamName || teamToDelete.teamIdentity}"? This action cannot be undone.`, 'Delete Team', { confirmStyle: 'danger' });
 
     if (confirmDelete) {
         const deletedTeamId = teamToDelete.teamId;
@@ -1601,7 +1601,7 @@ function populateSystemEditForm(systemData) {
 window.populateSystemEditForm = populateSystemEditForm;
 
 /** Save System Details **/
-function saveSystemDetails() {
+async function saveSystemDetails() {
     // Get updated system name and description
     console.log("*** 1 document.getElementById('systemNameInput').value", document.getElementById('systemNameInput').value);
     console.log("*** 2 document.getElementById('systemDescriptionInput'", document.getElementById('systemDescriptionInput').value);
@@ -1646,7 +1646,7 @@ function saveSystemDetails() {
 /** Save All Changes **/
 
 /** REVISED Save All Changes - Handles Creation and Updates */
-function saveAllChanges() {
+async function saveAllChanges() {
     //    if (currentMode !== Modes.CREATING && currentMode !== Modes.EDITING) {
     //         alert('Not in creation or edit mode. No changes to save.');
     //         return;
@@ -1665,7 +1665,7 @@ function saveAllChanges() {
     }
     // Basic check for description, can be optional
     if (!finalSystemDescription) {
-        if (!confirm('System Description is empty. Save anyway?')) {
+        if (!await window.notificationManager.confirm('System Description is empty. Save anyway?', 'Empty Description', { confirmStyle: 'warning' })) {
             systemDescriptionTextarea.focus();
             return;
         }
@@ -1702,7 +1702,7 @@ function saveAllChanges() {
         }
         // Check if overwriting another system with the new name (relevant for 'Create New' if name exists)
         if (systems[finalSystemName] && (currentMode === Modes.CREATING || oldSystemNameKey !== finalSystemName)) {
-            if (!confirm(`A system named "${finalSystemName}" already exists. Overwrite it?`)) {
+            if (!await window.notificationManager.confirm(`A system named "${finalSystemName}" already exists. Overwrite it?`, 'Overwrite System', { confirmStyle: 'danger' })) {
                 // Revert data object name change before cancelling
                 currentSystemData.systemName = oldSystemNameKey;
                 currentSystemData.systemDescription = document.getElementById('systemDescriptionInput').value; // Revert desc too

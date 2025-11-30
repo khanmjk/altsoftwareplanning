@@ -157,7 +157,7 @@ class SettingsView {
                 window.headerComponent.updateAiButtonVisibility();
             }
 
-            alert('AI Settings saved successfully!');
+            window.notificationManager.showToast('AI Settings saved successfully!', 'success');
         }
     }
 }

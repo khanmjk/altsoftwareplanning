@@ -111,14 +111,14 @@ function handleDrop(event) {
     // Constraint 0: Cannot drag anything if the dragged item wasn't found or was somehow protected
     if (!draggedInitiative || draggedInitiative.isProtected) {
         console.log("Drop invalid: Dragged item is protected or invalid.");
-        alert("Cannot move a protected item.");
+        window.notificationManager.showToast("Cannot move a protected item.", "warning");
         // handleDragEnd will reset state
         return;
     }
     // Constraint 1: Cannot drop ONTO a protected row (target is protected)
     if (targetInitiative.isProtected) {
         console.log("Drop invalid: Cannot drop onto a protected item.");
-        alert("Cannot drop an item onto a protected item.");
+        window.notificationManager.showToast("Cannot drop an item onto a protected item.", "warning");
         // handleDragEnd will reset state
         return;
     }
@@ -127,7 +127,7 @@ function handleDrop(event) {
     const firstNonProtectedIndex = initiatives.findIndex(init => !init.isProtected);
     if (targetIndex < firstNonProtectedIndex && firstNonProtectedIndex !== -1) {
         console.log("Drop invalid: Cannot move item above the protected block.");
-        alert("Cannot move items above the block of protected initiatives.");
+        window.notificationManager.showToast("Cannot move items above the block of protected initiatives.", "warning");
         // handleDragEnd will reset state
         return;
     }
@@ -914,7 +914,7 @@ function renderPlanningView(container) {
                     if (window.aiAgentController && typeof window.aiAgentController.runPrebuiltAgent === 'function') {
                         window.aiAgentController.runPrebuiltAgent('optimizePlan');
                     } else {
-                        alert("AI Controller is not available.");
+                        window.notificationManager.showToast("AI Controller is not available.", "error");
                     }
                 });
             }
@@ -978,7 +978,7 @@ function handleSavePlan() {
     console.log(`Saving plan for year ${currentPlanningYear}...`);
 
     if (!currentSystemData || !currentSystemData.systemName) {
-        alert("Cannot save plan: No system data loaded or system name is missing.");
+        window.notificationManager.showToast("Cannot save plan: No system data loaded or system name is missing.", "error");
         return;
     }
 
@@ -1017,12 +1017,12 @@ function handleSavePlan() {
                 });
         }
         saveSystemChanges();
-        alert(`Plan for ${currentPlanningYear} saved successfully. Initiative statuses have been updated.`);
+        window.notificationManager.showToast(`Plan for ${currentPlanningYear} saved successfully. Initiative statuses have been updated.`, "success");
         // Optionally, refresh the table to show any visual changes reflecting status updates
         renderPlanningView();
     } catch (error) {
         console.error("Error saving plan:", error);
-        alert("An error occurred while saving the plan. Please check the console for details.");
+        window.notificationManager.showToast("An error occurred while saving the plan. Please check the console for details.", "error");
     }
 }
 

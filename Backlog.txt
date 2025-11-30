@@ -167,6 +167,9 @@ bar graph per quarter to see team load/demand impact
 [Done] - [AI] Add support for AI diagramming using mermaid functionality
 [Done] - [AI] Think about refactoring the codebase for AI files - like an AI folder to keep all ai-related files, especially if we're going down the agent route (like a planning agent, resource planning agent, etc.)
 [Done]- [AI] Explore generating architecture diagramming options, apart from the app's 3d node graphs
+[Done] - [Architecture] Move from Mermaid to Interactive Canvas (e.g., Frappe Gantt)
+[Done] - [UX] Description: Mermaid is read-only. To enable "Drag and Drop" planning on the chart itself, replace ganttChart.js with a library like frappe-gantt or dhtmlx-gantt.
+[Done] - [UX] Value: Allows users to drag bars to reschedule, which is the expected behavior for detailed planning tools.
 
 ------------
 IN PROGRESS
@@ -179,10 +182,6 @@ IN PROGRESS
 ------
 TO DO
 ------  
-- [Architecture] Move from Mermaid to Interactive Canvas (e.g., Frappe Gantt)
-Description: Mermaid is read-only. To enable "Drag and Drop" planning on the chart itself, replace ganttChart.js with a library like frappe-gantt or dhtmlx-gantt.
-Value: Allows users to drag bars to reschedule, which is the expected behavior for detailed planning tools.
-
 - [AI] - Ability to export the year plan, showing ATL/BTL logic, etc. to Excel - the excel model must be generated using LLM so that formulaes in the code are applied to the excel generation
 - Now that we have a goals dashboard view, we need to think about introducing an interface to manage the lifecycle of goals
 - Working on creating a reusable modern table widget leveraging tabular library

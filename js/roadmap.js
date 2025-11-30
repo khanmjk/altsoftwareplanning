@@ -337,12 +337,12 @@ function defineRoadmapTableColumns() {
                     const dueDate = luxon.DateTime.fromISO(initiative.targetDueDate).startOf('day');
 
                     if (oldValue !== "Committed") {
-                        alert("Error: Only 'Committed' initiatives can be marked as 'Completed'.");
+                        window.notificationManager.showToast("Error: Only 'Committed' initiatives can be marked as 'Completed'.", "error");
                         cell.restoreOldValue();
                         return;
                     }
                     if (dueDate > today) {
-                        alert("Error: Cannot mark an initiative as 'Completed' before its due date has passed.");
+                        window.notificationManager.showToast("Error: Cannot mark an initiative as 'Completed' before its due date has passed.", "error");
                         cell.restoreOldValue();
                         return;
                     }
@@ -350,7 +350,7 @@ function defineRoadmapTableColumns() {
                     saveSystemChanges();
 
                 } else {
-                    alert("Status updates (other than to 'Completed') are managed by the Year Plan ATL/BTL process.");
+                    window.notificationManager.showToast("Status updates (other than to 'Completed') are managed by the Year Plan ATL/BTL process.", "info");
                     cell.restoreOldValue();
                 }
             }
@@ -795,12 +795,12 @@ function handleSaveRoadmapInitiative_modal() {
     const targetDueDateValue = form.elements['initiativeTargetDueDate_modal_roadmap'].value;
 
     if (!title) {
-        alert("Initiative Title is required.");
+        window.notificationManager.showToast("Initiative Title is required.", "error");
         form.elements['initiativeTitle_modal_roadmap'].focus();
         return;
     }
     if (!targetDueDateValue) {
-        alert("Target Due Date is required.");
+        window.notificationManager.showToast("Target Due Date is required.", "error");
         form.elements['initiativeTargetDueDate_modal_roadmap'].focus();
         return;
     }
@@ -812,7 +812,7 @@ function handleSaveRoadmapInitiative_modal() {
         if (isNaN(date.getTime())) throw new Error("Invalid date format");
         derivedPlanningYear = date.getFullYear();
     } catch (e) {
-        alert("Invalid Target Due Date. Please use the formatVSFAULT-MM-DD.");
+        window.notificationManager.showToast("Invalid Target Due Date. Please use the format YYYY-MM-DD.", "error");
         form.elements['initiativeTargetDueDate_modal_roadmap'].focus();
         return;
     }
@@ -910,16 +910,16 @@ function handleSaveRoadmapInitiative_modal() {
         saveSystemChanges();
         renderRoadmapTable();
         closeRoadmapModal();
-        alert(`Initiative ${action} successfully.`);
+        window.notificationManager.showToast(`Initiative ${action} successfully.`, "success");
     } else {
-        alert(`Failed to ${action} initiative.`);
+        window.notificationManager.showToast(`Failed to ${action} initiative.`, "error");
     }
 }
 
 /**
  * Handles click on "Delete" button in a table row for the roadmap.
  */
-window.handleDeleteInitiativeButtonFromTable = function (initiativeId) {
+window.handleDeleteInitiativeButtonFromTable = async function (initiativeId) {
     if (!initiativeId) {
         console.error("Delete called without initiativeId");
         return;
@@ -927,17 +927,17 @@ window.handleDeleteInitiativeButtonFromTable = function (initiativeId) {
     const initiativeToDelete = (currentSystemData.yearlyInitiatives || []).find(init => init.initiativeId === initiativeId);
     const initiativeTitle = initiativeToDelete ? initiativeToDelete.title : initiativeId;
 
-    if (confirm(`Are you sure you want to delete initiative "${initiativeTitle}"? This action cannot be undone.`)) {
+    if (await window.notificationManager.confirm(`Are you sure you want to delete initiative "${initiativeTitle}"? This action cannot be undone.`, 'Delete Initiative', { confirmStyle: 'danger', confirmText: 'Delete' })) {
         const success = deleteInitiative(initiativeId); // utils.js function
         if (success) {
             saveSystemChanges();
             renderRoadmapTable();
-            alert("Initiative deleted.");
+            window.notificationManager.showToast("Initiative deleted.", "success");
             if (currentEditingInitiativeId === initiativeId) {
                 closeRoadmapModal();
             }
         } else {
-            alert("Failed to delete initiative.");
+            window.notificationManager.showToast("Failed to delete initiative.", "error");
         }
     }
 };

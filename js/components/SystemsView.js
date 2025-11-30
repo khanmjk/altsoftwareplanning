@@ -12,7 +12,7 @@ class SystemsView {
         const aiButtonHtml = `
             <button class="btn-primary" 
                 style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); border: none; box-shadow: 0 4px 6px -1px rgba(124, 58, 237, 0.3); ${!aiEnabled ? 'opacity: 0.6; cursor: not-allowed; filter: grayscale(100%);' : ''}" 
-                onclick="${aiEnabled ? 'if(window.createSystemWithAI) window.createSystemWithAI()' : 'alert(\'Please enable AI in Settings to use this feature.\')'}"
+                onclick="${aiEnabled ? 'if(window.createSystemWithAI) window.createSystemWithAI()' : 'window.notificationManager.showToast(\'Please enable AI in Settings to use this feature.\', \'warning\')'}"
                 title="${aiEnabled ? 'Create a new system using AI' : 'Enable AI in Settings to use this feature'}">
                 <i class="fas fa-magic" style="margin-right: 8px;"></i> Create with AI
             </button>
@@ -159,8 +159,8 @@ class SystemsView {
         }
     }
 
-    deleteSystem(systemKey) {
-        if (confirm(`Are you sure you want to permanently delete "${systemKey}"? This action cannot be undone.`)) {
+    async deleteSystem(systemKey) {
+        if (await window.notificationManager.confirm(`Are you sure you want to permanently delete "${systemKey}"? This action cannot be undone.`, 'Delete System', { confirmStyle: 'danger' })) {
             const storageKey = window.LOCAL_STORAGE_KEY || 'architectureVisualization_systems_v10';
             const systemsString = localStorage.getItem(storageKey);
             if (systemsString) {

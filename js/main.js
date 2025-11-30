@@ -295,11 +295,11 @@ function closeAiStatsModal() {
 async function handleCreateWithAi() {
     // Read directly from the global settings
     if (!globalSettings.ai.isEnabled || !globalSettings.ai.apiKey) {
-        alert("AI Assistant mode is not enabled or API key is missing. Please check AI settings.");
+        window.notificationManager.showToast("AI Assistant mode is not enabled or API key is missing. Please check AI settings.", "error");
         return;
     }
 
-    const prompt = window.prompt("Describe the new software system you want to create (e.g., 'A video streaming service like Netflix', 'An e-commerce platform like Amazon'):");
+    const prompt = await window.notificationManager.prompt("Describe the new software system you want to create (e.g., 'A video streaming service like Netflix', 'An e-commerce platform like Amazon'):", "", "Create New System with AI");
 
     if (!prompt || prompt.trim().length === 0) {
         console.log("AI system generation cancelled by user.");
@@ -333,7 +333,7 @@ async function handleCreateWithAi() {
         if (!isValid) {
             console.error("AI Generation Failed Validation:", errors);
             const errorList = errors.slice(0, 10).join("\n- ");
-            alert(`AI generation failed validation checks. The data is inconsistent. Please try again.\n\nErrors:\n- ${errorList}${errors.length > 10 ? '\n- ...and more.' : ''}`);
+            window.notificationManager.showToast(`AI generation failed validation checks. The data is inconsistent. Please try again.\n\nErrors:\n- ${errorList}${errors.length > 10 ? '\n- ...and more.' : ''}`, "error");
             return;
         }
 
@@ -362,12 +362,12 @@ async function handleCreateWithAi() {
             showAiStatsModal(stats);
         }
 
-        alert(`Successfully created and saved system: "${finalSystemName}"! Loading it now.`);
+        window.notificationManager.showToast(`Successfully created and saved system: "${finalSystemName}"! Loading it now.`, "success");
         loadSavedSystem(finalSystemName);
 
     } catch (error) {
         // This existing alert will show the final error message after all retries fail.
-        alert("An error occurred during AI system generation. Please check the console.\nError: " + error.message);
+        window.notificationManager.showToast("An error occurred during AI system generation. Please check the console.\nError: " + error.message, "error");
         console.error("Error in handleCreateWithAi:", error);
     } finally {
         if (spinner) spinner.style.display = 'none';
@@ -383,12 +383,15 @@ window.onload = async function () {
     console.log("Initializing Application Components...");
 
     // Initialize Managers
+    window.notificationManager = new NotificationManager();
     window.navigationManager = new NavigationManager();
-    window.sidebarComponent = new SidebarComponent('sidebar', window.navigationManager);
+
+    // Initialize Components
     window.headerComponent = new HeaderComponent('main-header');
+    window.sidebarComponent = new SidebarComponent('sidebar', window.navigationManager);
     window.workspaceComponent = new WorkspaceComponent('main-content-area');
 
-    // Init components
+    // Initialize Navigation
     window.navigationManager.init(window.sidebarComponent, window.headerComponent);
     window.sidebarComponent.init();
     window.headerComponent.init();
@@ -574,7 +577,7 @@ function loadSavedSystem(systemName) {
     console.log(`[V7 LOAD] Attempting to load system: ${systemName}`);
     const systemsString = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (!systemsString) {
-        alert('No systems data found in localStorage.');
+        window.notificationManager.showToast('No systems data found in localStorage.', 'warning');
         console.error("[V7 LOAD] No systems key found in localStorage.");
         returnToHome();
         return;
@@ -584,7 +587,7 @@ function loadSavedSystem(systemName) {
     const systemData = systems[systemName];
 
     if (!systemData) {
-        alert(`System "${systemName}" not found in localStorage.`);
+        window.notificationManager.showToast(`System "${systemName}" not found in localStorage.`, 'error');
         console.error(`[V7 LOAD] System "${systemName}" not found after parsing localStorage.`);
         returnToHome();
         return;
@@ -945,20 +948,20 @@ function returnToHome() {
 window.returnToHome = returnToHome;
 
 /** Reset to Default Sample Systems **/
-function resetToDefaults() {
-    if (confirm('This will erase all your saved systems and restore the default sample systems. Do you want to proceed?')) {
+async function resetToDefaults() {
+    if (await window.notificationManager.confirm('This will erase all your saved systems and restore the default sample systems. Do you want to proceed?', 'Reset to Defaults', { confirmStyle: 'danger', confirmText: 'Reset' })) {
         try {
             localStorage.removeItem(LOCAL_STORAGE_KEY);
             console.log('Cleared user systems from localStorage.');
         } catch (error) {
             console.error('Failed to clear local storage before resetting defaults:', error);
-            alert('Unable to reset defaults because local storage could not be cleared.');
+            window.notificationManager.showToast('Unable to reset defaults because local storage could not be cleared.', 'error');
             return;
         }
         saveSampleSystemsToLocalStorage(); // This will re-add the defaults
         currentSystemData = null;
         window.currentSystemData = null;
-        alert('Systems have been reset to defaults.');
+        window.notificationManager.showToast('Systems have been reset to defaults.', 'success');
         returnToHome();
     }
 }
@@ -971,7 +974,7 @@ function deleteSystem() {
     const systemNames = Object.keys(systems);
 
     if (systemNames.length === 0) {
-        alert('No saved systems found to delete.');
+        window.notificationManager.showToast('No saved systems found to delete.', 'warning');
         return;
     }
 
@@ -1013,25 +1016,25 @@ function deleteSystem() {
 window.deleteSystem = deleteSystem;
 
 /** Confirms and deletes the specified system from localStorage **/
-function confirmAndDeleteSystem(systemName) {
+async function confirmAndDeleteSystem(systemName) {
     if (!systemName) {
         console.error("confirmAndDeleteSystem called without systemName.");
         return;
     }
-    if (confirm(`Are you sure you want to permanently delete the system "${systemName}"? This action cannot be undone.`)) {
+    if (await window.notificationManager.confirm(`Are you sure you want to permanently delete the system "${systemName}"? This action cannot be undone.`, 'Delete System', { confirmStyle: 'danger', confirmText: 'Delete' })) {
         try {
             const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
             if (systems[systemName]) {
                 delete systems[systemName];
                 localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
-                alert(`System "${systemName}" has been deleted.`);
+                window.notificationManager.showToast(`System "${systemName}" has been deleted.`, 'success');
                 const listDiv = document.getElementById('systemDeleteListDiv');
                 if (listDiv && listDiv.parentNode) document.body.removeChild(listDiv);
                 if (currentSystemData && currentSystemData.systemName === systemName) {
                     returnToHome();
                 }
             } else {
-                alert(`Error: System "${systemName}" could not be found for deletion.`);
+                window.notificationManager.showToast(`Error: System "${systemName}" could not be found for deletion.`, 'error');
                 const listDiv = document.getElementById('systemDeleteListDiv');
                 if (listDiv && listDiv.parentNode) {
                     document.body.removeChild(listDiv);
@@ -1040,7 +1043,7 @@ function confirmAndDeleteSystem(systemName) {
             }
         } catch (error) {
             console.error("Error deleting system from local storage:", error);
-            alert("An error occurred while deleting the system.");
+            window.notificationManager.showToast("An error occurred while deleting the system.", "error");
         }
     }
 }
@@ -1096,7 +1099,7 @@ function validateEngineerAssignments() {
     });
 
     if (!isValid) {
-        alert("Validation Error: Cannot save changes due to data inconsistencies.\n\n" + errorMessages.join("\n") + "\n\nPlease review team assignments and engineer records.");
+        window.notificationManager.showToast("Validation Error: Cannot save changes due to data inconsistencies.\n\n" + errorMessages.join("\n") + "\n\nPlease review team assignments and engineer records.", "error");
     }
     return isValid;
 }
@@ -1109,7 +1112,7 @@ function saveSystemChanges() {
     console.log("saveSystemChanges called. Persisting currentSystemData.");
 
     if (!currentSystemData || !currentSystemData.systemName) {
-        alert('System name cannot be empty if trying to save.');
+        window.notificationManager.showToast('System name cannot be empty if trying to save.', 'error');
         // Attempt to get it from input if in edit mode, though this function shouldn't rely on UI state.
         const systemNameInput = document.getElementById('systemNameInput');
         if (systemNameInput && systemNameInput.value.trim()) {
@@ -1141,7 +1144,7 @@ function saveSystemChanges() {
         return true; // Indicate success
     } catch (error) {
         console.error("Error saving system to local storage in saveSystemChanges:", error);
-        alert("An error occurred while saving. Please check console.");
+        window.notificationManager.showToast("An error occurred while saving. Please check console.", "error");
         return false; // Indicate failure
     }
 }

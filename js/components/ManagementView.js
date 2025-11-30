@@ -153,8 +153,8 @@ class ManagementView {
         document.getElementById('addNewThemeForm_mgmt').reset();
     }
 
-    deleteTheme(index) {
-        if (!confirm('Are you sure you want to delete this theme?')) return;
+    async deleteTheme(index) {
+        if (!await window.notificationManager.confirm('Are you sure you want to delete this theme?', 'Delete Theme', { confirmStyle: 'danger' })) return;
         if (window.currentSystemData && window.currentSystemData.definedThemes) {
             window.currentSystemData.definedThemes.splice(index, 1);
             if (window.saveSystemData) window.saveSystemData();
@@ -246,8 +246,8 @@ class ManagementView {
         this.populateInitiativesList();
     }
 
-    deleteInitiative(initiativeId) {
-        if (!confirm('Are you sure you want to delete this initiative?')) return;
+    async deleteInitiative(initiativeId) {
+        if (!await window.notificationManager.confirm('Are you sure you want to delete this initiative?', 'Delete Initiative', { confirmStyle: 'danger' })) return;
 
         if (window.currentSystemData && window.currentSystemData.yearlyInitiatives) {
             const index = window.currentSystemData.yearlyInitiatives.findIndex(i => i.initiativeId === initiativeId);
