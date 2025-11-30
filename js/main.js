@@ -1,6 +1,6 @@
 let currentSystemData = null;
 let newServiceData = {};
-let uniqueEngineers = []; // This might be fully replaced by usage of allKnownEngineers
+
 
 
 let currentMode = Modes.NAVIGATION;

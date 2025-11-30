@@ -990,39 +990,7 @@ function displaySeniorManagerAssignment(sdmSectionContainer, teamIndex, currentS
     srMgrContainer.appendChild(srMgrDualList);
 }
 
-/*
-   Since displayTeamsForEditing is now called to refresh all team UIs after significant engineer assignment changes (like adding a new engineer or moving an engineer between teams), 
-   the more granular refreshAllAvailableEngineerLists function is no longer strictly necessary and might lead to inconsistencies 
-   if not perfectly synced. For now, to simplify and ensure data integrity, we rely on the full refresh.
-*/
 
-/** Helper to refresh available engineer lists in all open team edit sections */
-//function refreshAllAvailableEngineerLists() {
-//     console.log("Refreshing all available engineer lists...");
-//     const allTeamEditDivs = document.querySelectorAll('#teamsManagement .team-edit');
-//     let allEngineerNamesMap = new Map(); // Recalculate global map
-//     (currentSystemData.teams || []).forEach(t => { (t.engineers || []).forEach(eng => { if (eng?.name) allEngineerNamesMap.set(eng.name, t.teamId); }); });
-//
-//     allTeamEditDivs.forEach((teamDiv, index) => {
-//         // Only refresh if the details are potentially visible (no easy way to know for sure without checking style)
-//         // This is a simplification; ideally, only refresh *actually* visible ones.
-//         const teamData = currentSystemData.teams[index]; // Assuming render index matches data index
-//         if (!teamData) return;
-//
-//         const availableEngineersSelect = teamDiv.querySelector('select[data-field="availableEngineers"]');
-//         const currentEngineersSelect = teamDiv.querySelector('select[data-field="currentEngineers"]');
-//
-//         if (availableEngineersSelect && currentEngineersSelect) {
-//             const currentTeamEngineers = Array.from(currentEngineersSelect.options).map(opt => opt.value);
-//             availableEngineersSelect.innerHTML = ''; // Clear current options
-//             Array.from(allEngineerNamesMap.keys())
-//                 .filter(name => !currentTeamEngineers.includes(name)) // Filter out engineers already in the current list
-//                 .forEach(name => {
-//                     availableEngineersSelect.appendChild(new Option(name, name));
-//                 });
-//         }
-//     });
-//}
 
 /** Helper to refresh available options in a specific dual list (used for services) */
 function refreshAvailableListsInDualList(contentContainer, currentListField, availableListField, allOptionsData, currentTeamId) {
@@ -1259,9 +1227,7 @@ function removeEngineerFromPreviousTeam(engineerName, prevTeamId) {
         const prevOption = Array.from(prevCurrentEngineersSelect.options).find(opt => opt.value === engineerName);
         if (prevOption) {
             prevCurrentEngineersSelect.removeChild(prevOption);
-            // Update uniqueEngineers
-            const engineer = uniqueEngineers.find(e => e.engineerName === engineerName);
-            if (engineer) engineer.teamId = null;
+
         }
     }
 }
