@@ -6,33 +6,11 @@ class NavigationManager {
     constructor() {
         this.sidebar = null;
         this.header = null;
-        this.currentViewId = null;
-        this.views = {}; // Map viewId to DOM element ID
     }
 
     init(sidebarComponent, headerComponent) {
         this.sidebar = sidebarComponent;
         this.header = headerComponent;
-
-        // Register default views
-        this.registerView('planningView', 'planningView');
-        this.registerView('ganttPlanningView', 'ganttPlanningView');
-        this.registerView('capacityConfigView', 'capacityConfigView');
-        this.registerView('sdmForecastingView', 'sdmForecastingView');
-        this.registerView('roadmapView', 'roadmapView');
-        this.registerView('managementView', 'managementView');
-        this.registerView('visualizationCarousel', 'visualizationCarousel');
-        this.registerView('organogramView', 'organogramView');
-        this.registerView('systemEditForm', 'systemEditForm');
-        this.registerView('dashboardView', 'dashboardView');
-        this.registerView('welcomeView', 'welcomeView');
-        this.registerView('welcomeView', 'welcomeView');
-        this.registerView('helpView', 'helpView');
-        this.registerView('settingsView', 'settingsView');
-        this.registerView('systemsView', 'systemsView');
-
-        // Legacy views that might be needed
-        this.registerView('serviceDependenciesTable', 'serviceDependenciesTable');
 
         console.log("NavigationManager initialized.");
 
@@ -47,11 +25,6 @@ class NavigationManager {
                 this.navigateTo('welcomeView', true);
             }
         });
-    }
-
-    registerView(viewId, elementId) {
-        console.log(`NavigationManager: Registering view '${viewId}' -> '${elementId}'`);
-        this.views[viewId] = elementId;
     }
 
     /**
@@ -171,24 +144,7 @@ class NavigationManager {
         }
     }
 
-    updateComponents(viewId) {
-        // 4. Update Components
-        if (this.sidebar) this.sidebar.setActive(viewId);
-        if (this.header) {
-            const systemName = window.currentSystemData ? window.currentSystemData.systemName : 'System';
-            this.header.update(viewId, systemName);
-        }
 
-        // 4b. Ensure the active view starts at the top of the scrollable area
-        const mainContentArea = document.getElementById('main-content-area');
-        if (mainContentArea) {
-            if (typeof mainContentArea.scrollTo === 'function') {
-                mainContentArea.scrollTo({ top: 0, behavior: 'auto' });
-            } else {
-                mainContentArea.scrollTop = 0;
-            }
-        }
-    }
 }
 
 if (typeof window !== 'undefined') {
