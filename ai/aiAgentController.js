@@ -64,6 +64,18 @@ const aiAgentController = (() => {
             { text: "Analyze the hiring rate needed to close the gap by the target week." },
             { text: "How do the 'Capacity Constraints' (like overhead) affect this forecast?" }
         ],
+        welcomeView: [
+            { text: "What can I do in this platform?" },
+            { text: "How do I create a new system?" },
+            { text: "Explain the difference between 'System' and 'Org' views." },
+            { text: "What is the 'Create with AI' feature?" }
+        ],
+        helpView: [
+            { text: "How do I add a new team to the organization?" },
+            { text: "Explain the 'Capacity Tuning' configuration." },
+            { text: "What are the best practices for defining 'Initiatives'?" },
+            { text: "How does the 'SDM Forecasting' model work?" }
+        ],
         default: [
             { text: "What is this system about?" },
             { text: "How many teams are there?" },
@@ -775,6 +787,26 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
                         initiatives: currentSystemData.yearlyInitiatives,
                         goals: currentSystemData.goals,
                         themes: currentSystemData.definedThemes
+                    };
+                    break;
+                case 'welcomeView':
+                    contextData.data = {
+                        viewTitle: "Welcome / Home",
+                        description: "The landing page of the SMT Platform.",
+                        availableActions: ["Load Existing System", "Create New System", "Create with AI", "View Documentation"],
+                        platformSummary: "SMT Platform is a comprehensive workspace for Software Managers to plan roadmaps, visualize architecture, forecast resources, and manage team capacity."
+                    };
+                    break;
+                case 'helpView':
+                    // Try to get the active documentation section if possible
+                    let activeDocSection = "General Help";
+                    const docTitleEl = document.querySelector('#documentationContent h2');
+                    if (docTitleEl) activeDocSection = docTitleEl.innerText;
+
+                    contextData.data = {
+                        viewTitle: "Documentation & Help",
+                        currentSection: activeDocSection,
+                        summary: "This view contains the user guide and documentation for the SMT Platform. It covers topics like System Modeling, Org Design, Capacity Planning, and Roadmap Management."
                     };
                     break;
                 default:
