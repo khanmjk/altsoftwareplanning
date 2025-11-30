@@ -12,7 +12,7 @@ class SystemsView {
         const aiButtonHtml = `
             <button class="btn-primary" 
                 style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); border: none; box-shadow: 0 4px 6px -1px rgba(124, 58, 237, 0.3); ${!aiEnabled ? 'opacity: 0.6; cursor: not-allowed; filter: grayscale(100%);' : ''}" 
-                onclick="${aiEnabled ? 'if(window.createSystemWithAI) window.createSystemWithAI()' : 'window.notificationManager.showToast(\'Please enable AI in Settings to use this feature.\', \'warning\')'}"
+                onclick="${aiEnabled ? 'if(window.handleCreateWithAi) window.handleCreateWithAi()' : 'window.notificationManager.showToast(\'Please enable AI in Settings to use this feature.\', \'warning\')'}"
                 title="${aiEnabled ? 'Create a new system using AI' : 'Enable AI in Settings to use this feature'}">
                 <i class="fas fa-magic" style="margin-right: 8px;"></i> Create with AI
             </button>
