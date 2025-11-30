@@ -119,20 +119,7 @@ class HeaderComponent {
         return paths[viewId] || [{ label: 'Home', isLast: true }];
     }
 
-    getViewInfo(viewId) {
-        const infos = {
-            'planningView': { title: 'Year Plan', desc: 'Manage high-level initiatives and resource allocation.' },
-            'ganttPlanningView': { title: 'Detailed Planning', desc: 'Gantt chart view for detailed project scheduling.' },
-            'capacityConfigView': { title: 'Capacity Tuning', desc: 'Adjust team capacities and constraints.' },
-            'sdmForecastingView': { title: 'Resource Forecasting', desc: 'Forecast resource needs based on SDM model.' },
-            'roadmapView': { title: 'Roadmap & Backlog', desc: 'Product roadmap and backlog management.' },
-            'visualizationCarousel': { title: 'System Overview', desc: 'Visual representations of the system architecture.' },
-            'organogramView': { title: 'Organization Design', desc: 'View and edit team structures and hierarchy.' },
-            'systemEditForm': { title: 'Edit System', desc: 'Modify system details, services, and teams.' },
-            'dashboardView': { title: 'Dashboard', desc: 'Key metrics and system health indicators.' },
-        };
-        return infos[viewId] || { title: 'Welcome', desc: 'Select a system or create a new one.' };
-    }
+
 }
 
 if (typeof window !== 'undefined') {
