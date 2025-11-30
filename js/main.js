@@ -1186,20 +1186,7 @@ function initializeEventListeners() {
     document.getElementById('deleteSystemButton')?.addEventListener('click', deleteSystem);
     document.querySelector('.menu button:nth-child(4)')?.addEventListener('click', resetToDefaults);
 
-    // Edit Menu Buttons
-    document.getElementById('systemOverviewButton')?.addEventListener('click', () => switchView('visualizationCarousel'));
-    document.getElementById('editSystemButton')?.addEventListener('click', () => {
-        currentMode = Modes.EDITING;
-        switchView('systemEditForm');
-    });
-    document.getElementById('viewOrgChartButton')?.addEventListener('click', () => switchView('organogramView'));
-    document.getElementById('manageYearPlanButton')?.addEventListener('click', () => switchView('planningView'));
-    document.getElementById('manageRoadmapButton')?.addEventListener('click', () => switchView('roadmapView'));
-    document.getElementById('detailedPlanningButton')?.addEventListener('click', () => switchView('ganttPlanningView'));
-    document.getElementById('dashboardViewButton')?.addEventListener('click', () => switchView('dashboardView'));
-    document.getElementById('tuneCapacityButton')?.addEventListener('click', () => switchView('capacityConfigView'));
-    document.getElementById('sdmForecastButton')?.addEventListener('click', () => switchView('sdmForecastingView'));
-    document.getElementById('aiSettingsButton')?.addEventListener('click', openAiSettingsModal);
+
 
     // AI Chat Button
     document.getElementById('aiChatButton')?.addEventListener('click', () => {
@@ -1219,9 +1206,7 @@ function initializeEventListeners() {
         console.error("main.js: initializeAiChatPanel() function not found. aiChatAssistant.js may not have loaded.");
     }
 
-    // Global Nav Buttons
-    document.getElementById('backToSystemViewButton')?.addEventListener('click', () => switchView('visualizationCarousel'));
-    document.getElementById('returnHomeButton')?.addEventListener('click', returnToHome);
+
 
     // --- MODIFIED LISTENERS FOR THE NEW MODAL ---
     document.getElementById('saveAiSettingsButton')?.addEventListener('click', saveGlobalSettings); // <-- Changed function
