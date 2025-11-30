@@ -238,7 +238,7 @@ function generateVisualization(systemData) {
     const svgRect = container.getBoundingClientRect();
     const width = svgRect.width > 0 ? svgRect.width : 800;
     const height = svgRect.height > 0 ? svgRect.height : 600;
-    console.log(`generateVisualization calculated width: ${width}, height: ${height}`);
+    // console.log(`generateVisualization calculated width: ${width}, height: ${height}`);
     // --- End Dimensions ---
 
     // --- Zoom Setup ---
@@ -507,7 +507,7 @@ function generateTeamVisualization(systemData) {
     const width = svgRect.width > 0 ? svgRect.width : 800; // Use container width or default
     // Keep height fixed or get from container style if needed
     const height = svgRect.height > 0 ? svgRect.height : 600;
-    console.log(`generateTeamVisualization calculated width: ${width}, height: ${height}`);
+    // console.log(`generateTeamVisualization calculated width: ${width}, height: ${height}`);
 
     // Define node radius
     const radius = 20;
@@ -774,7 +774,7 @@ function generateServiceVisualization(services, selectedServiceName) {
     const width = svgRect.width > 0 ? svgRect.width : 800; // Use container width or default
     // Keep height fixed or get from container style if needed
     const height = svgRect.height > 0 ? svgRect.height : 600;
-    console.log(`generateServiceVisualization calculated width: ${width}, height: ${height}`);
+    // console.log(`generateServiceVisualization calculated width: ${width}, height: ${height}`);
 
     // Define node radius
     const radius = 20;

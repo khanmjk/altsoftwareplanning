@@ -55,7 +55,7 @@ function handleDragStart(event) {
     setTimeout(() => {
         if (draggedRowElement) draggedRowElement.classList.add('dragging');
     }, 0);
-    console.log(`Drag Start: ${draggedInitiativeId}`);
+    // console.log(`Drag Start: ${draggedInitiativeId}`);
 }
 
 /** Handles dragging over a potential drop target */
@@ -85,13 +85,13 @@ function handleDrop(event) {
     if (targetRow) targetRow.classList.remove('drag-over'); // Clean up visual indicator
 
     if (!targetRow || !draggedInitiativeId || targetRow.getAttribute('data-initiative-id') === draggedInitiativeId) {
-        console.log("Drop cancelled - invalid target or same item.");
+        // console.log("Drop cancelled - invalid target or same item.");
         // No need to reset draggedInitiativeId here, handleDragEnd will do it
         return;
     }
 
     const targetInitiativeId = targetRow.getAttribute('data-initiative-id');
-    console.log(`Drop: ${draggedInitiativeId} onto ${targetInitiativeId}`);
+    // console.log(`Drop: ${draggedInitiativeId} onto ${targetInitiativeId}`);
 
     // --- Find initiatives and indices ---
     const initiatives = currentSystemData.yearlyInitiatives;
@@ -110,14 +110,14 @@ function handleDrop(event) {
     // --- Apply Reordering Constraints ---
     // Constraint 0: Cannot drag anything if the dragged item wasn't found or was somehow protected
     if (!draggedInitiative || draggedInitiative.isProtected) {
-        console.log("Drop invalid: Dragged item is protected or invalid.");
+        // console.log("Drop invalid: Dragged item is protected or invalid.");
         window.notificationManager.showToast("Cannot move a protected item.", "warning");
         // handleDragEnd will reset state
         return;
     }
     // Constraint 1: Cannot drop ONTO a protected row (target is protected)
     if (targetInitiative.isProtected) {
-        console.log("Drop invalid: Cannot drop onto a protected item.");
+        // console.log("Drop invalid: Cannot drop onto a protected item.");
         window.notificationManager.showToast("Cannot drop an item onto a protected item.", "warning");
         // handleDragEnd will reset state
         return;
@@ -126,7 +126,7 @@ function handleDrop(event) {
     // This means the new index (targetIndex) must be less than the index of the *first* non-protected item.
     const firstNonProtectedIndex = initiatives.findIndex(init => !init.isProtected);
     if (targetIndex < firstNonProtectedIndex && firstNonProtectedIndex !== -1) {
-        console.log("Drop invalid: Cannot move item above the protected block.");
+        // console.log("Drop invalid: Cannot move item above the protected block.");
         window.notificationManager.showToast("Cannot move items above the block of protected initiatives.", "warning");
         // handleDragEnd will reset state
         return;
@@ -148,7 +148,7 @@ function handleDrop(event) {
         initiatives.splice(newTargetIndex + 1, 0, movedItem); // Insert after target
     }
 
-    console.log("Reordered initiatives array:", initiatives.map(i => i.initiativeId));
+    // console.log("Reordered initiatives array:", initiatives.map(i => i.initiativeId));
     // --- End Reorder ---
 
 
@@ -169,7 +169,7 @@ function handleDragEnd(event) {
         row.classList.remove('drag-over');
     });
 
-    console.log("Drag End");
+    // console.log("Drag End");
     draggedInitiativeId = null;
     draggedRowElement = null;
 }
@@ -276,7 +276,7 @@ function handleEstimateChange(event) {
 
 /** Sets the capacity scenario for planning and redraws the table */
 function setPlanningScenario(scenario) {
-    console.log(`Setting planning scenario to: ${scenario}`);
+    // console.log(`Setting planning scenario to: ${scenario}`);
     // Allow 'effective', 'funded', or 'team_bis'
     if (scenario === 'effective' || scenario === 'funded' || scenario === 'team_bis') {
         planningCapacityScenario = scenario;
@@ -296,7 +296,7 @@ window.setPlanningScenario = setPlanningScenario;
  * - Retains all previous enhancements like dynamic headers and correct data sourcing.
  */
 function renderTeamLoadSummaryTable(summaryData) {
-    console.log("Rendering Team Load Summary Table from calculated data...");
+    // console.log("Rendering Team Load Summary Table from calculated data...");
     const summaryContainer = document.getElementById('teamLoadSummarySection');
     if (!summaryContainer) { return; }
     const summaryTable = summaryContainer.querySelector('#teamLoadSummaryTable');
@@ -555,7 +555,7 @@ function calculatePlanningTableData() {
  * @param {Array<object>} planningData - The array from calculatePlanningTableData().
  */
 function renderPlanningTable(planningData) {
-    console.log("Rendering main planning table from calculated data...");
+    // console.log("Rendering main planning table from calculated data...");
     const tableContainer = document.getElementById('planningTableContainer');
     if (!tableContainer) { return; }
 
@@ -746,7 +746,7 @@ window.renderTeamLoadSummaryTable = renderTeamLoadSummaryTable; // Make global i
 
 /** NEW Helper: Toggles the capacity constraint application and redraws the planning table */
 function toggleCapacityConstraints(isChecked) {
-    console.log(`Toggling capacity constraints: ${isChecked}`);
+    // console.log(`Toggling capacity constraints: ${isChecked}`);
     applyCapacityConstraintsToggle = isChecked; // Update the global state variable
     renderPlanningView(); // Redraw the table to apply the change
 }
@@ -758,7 +758,7 @@ window.toggleCapacityConstraints = toggleCapacityConstraints;
  * based on initiative data and ensuring data consistency.
  */
 function renderPlanningView(container) {
-    console.log(`renderPlanningView: Rendering main planning view for year: ${currentPlanningYear}...`);
+    // console.log(`renderPlanningView: Rendering main planning view for year: ${currentPlanningYear}...`);
 
     if (!container) {
         container = document.getElementById('planningView');
@@ -771,7 +771,7 @@ function renderPlanningView(container) {
     // [NEW] Dynamically create the layout if it doesn't exist
     // We check for a key element (planningCapacitySummary) to decide if we need to inject the structure.
     if (!document.getElementById('planningCapacitySummary')) {
-        console.log("Injecting Planning View DOM structure...");
+        // console.log("Injecting Planning View DOM structure...");
         container.innerHTML = `
             <div id="planningCapacitySummary" style="margin-bottom: 15px; font-weight: bold; padding: 8px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;"></div>
 

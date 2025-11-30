@@ -354,10 +354,10 @@ async function handleCreateWithAi() {
 }
 
 window.onload = async function () {
-    console.log("!!! window.onload: Page HTML and synchronous scripts loaded. !!!");
+    // console.log("!!! window.onload: Page HTML and synchronous scripts loaded. !!!");
     currentMode = Modes.NAVIGATION;
 
-    console.log("Initializing Application Components...");
+    // console.log("Initializing Application Components...");
 
     // Initialize Managers
     window.notificationManager = new NotificationManager();
@@ -410,7 +410,7 @@ window.onload = async function () {
  * Central function to manage switching between main views.
  */
 function switchView(targetViewId, newMode = null) {
-    console.log(`Switching view to: ${targetViewId || 'Home'}, Mode: ${newMode || 'Auto'}`);
+    // console.log(`Switching view to: ${targetViewId || 'Home'}, Mode: ${newMode || 'Auto'}`);
 
     // 1. Close Modals (Legacy Logic)
     if (typeof closeRoadmapModal === 'function') closeRoadmapModal();
@@ -472,7 +472,7 @@ function switchView(targetViewId, newMode = null) {
  * Toggles collapsible sections.
  */
 function toggleCollapsibleSection(contentId, indicatorId, handleId = null) {
-    console.log(`toggleCollapsibleSection called with contentId: '${contentId}', indicatorId: '${indicatorId}', handleId: '${handleId}'`);
+    // console.log(`toggleCollapsibleSection called with contentId: '${contentId}', indicatorId: '${indicatorId}', handleId: '${handleId}'`);
     const contentDiv = document.getElementById(contentId);
     const indicatorSpan = document.getElementById(indicatorId);
     const handleDiv = handleId ? document.getElementById(handleId) : null;
@@ -491,7 +491,7 @@ function toggleCollapsibleSection(contentId, indicatorId, handleId = null) {
         typeof adjustPlanningTableHeight === 'function') {
         adjustPlanningTableHeight();
     }
-    console.log(`Toggled section ${contentId} to ${isHidden ? 'visible' : 'hidden'}`);
+    // console.log(`Toggled section ${contentId} to ${isHidden ? 'visible' : 'hidden'}`);
 }
 
 /** Save Sample Systems to Local Storage if not already present **/
@@ -499,7 +499,7 @@ function toggleCollapsibleSection(contentId, indicatorId, handleId = null) {
  * REVISED: Saves sample systems to Local Storage ONLY if no data already exists.
  **/
 function saveSampleSystemsToLocalStorage() {
-    console.log(">>> Checking if sample systems need to be saved to LocalStorage...");
+    // console.log(">>> Checking if sample systems need to be saved to LocalStorage...");
 
     const existingDataString = localStorage.getItem(LOCAL_STORAGE_KEY);
     let systems = {};
@@ -542,7 +542,7 @@ function saveSampleSystemsToLocalStorage() {
         }
     }
 
-    console.log("<<< Finished saveSampleSystemsToLocalStorage check.");
+    // console.log("<<< Finished saveSampleSystemsToLocalStorage check.");
 }
 
 /** Show Saved Systems Modal **/
@@ -576,9 +576,9 @@ function loadSavedSystem(systemName) {
 
     // ----- IMMEDIATE CHECK of allKnownEngineers -----
     if (currentSystemData.allKnownEngineers && Array.isArray(currentSystemData.allKnownEngineers)) {
-        console.log(`[V7 LOAD - PRE-AUGMENTATION] 'currentSystemData.allKnownEngineers' IS present. Length: ${currentSystemData.allKnownEngineers.length}`);
+        // console.log(`[V7 LOAD - PRE-AUGMENTATION] 'currentSystemData.allKnownEngineers' IS present. Length: ${currentSystemData.allKnownEngineers.length}`);
         if (currentSystemData.allKnownEngineers.length > 0) {
-            console.log("[V7 LOAD - PRE-AUGMENTATION] Sample of loaded allKnownEngineers[0]:", JSON.stringify(currentSystemData.allKnownEngineers[0]));
+            // console.log("[V7 LOAD - PRE-AUGMENTATION] Sample of loaded allKnownEngineers[0]:", JSON.stringify(currentSystemData.allKnownEngineers[0]));
         }
     } else {
         console.warn(`[V7 LOAD - PRE-AUGMENTATION] 'currentSystemData.allKnownEngineers' is MISSING or not an array upon loading for system "${systemName}". Will attempt to initialize.`);
@@ -587,7 +587,7 @@ function loadSavedSystem(systemName) {
 
 
     // --- DATA AUGMENTATION: Ensure new fields/arrays exist for older saved data ---
-    console.log("[V7 LOAD] Augmenting loaded system data with new model defaults if missing...");
+    // console.log("[V7 LOAD] Augmenting loaded system data with new model defaults if missing...");
 
     // Top-level system attributes
     if (!currentSystemData.projectManagers) currentSystemData.projectManagers = [];
@@ -732,14 +732,14 @@ function loadSavedSystem(systemName) {
             if (item && !item.attributes) item.attributes = {};
         });
     });
-    console.log("[V7 LOAD] Data augmentation complete.");
+    // console.log("[V7 LOAD] Data augmentation complete.");
     // --- End Data Augmentation ---
 
 
     const systemLoadListDiv = document.getElementById('systemLoadListDiv');
     if (systemLoadListDiv && systemLoadListDiv.parentNode === document.body) {
         document.body.removeChild(systemLoadListDiv);
-        console.log("[V7 LOAD] Removed system load list modal.");
+        // console.log("[V7 LOAD] Removed system load list modal.");
     }
 
     d3.selectAll('.tooltip').remove();
@@ -793,7 +793,7 @@ function buildGlobalPlatformDependencies() {
  * If multiple systems exist, shows the Systems View.
  */
 function loadSystem() {
-    console.log("loadSystem called.");
+    // console.log("loadSystem called.");
 
     // If NavigationManager is available, use it to go to the Systems View
     if (window.navigationManager) {

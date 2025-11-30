@@ -1,9 +1,9 @@
 // js/capacityTuning.js
-console.log("Loading capacityTuning.js...");
+// console.log("Loading capacityTuning.js...");
 
 /** NEW Function - Renders the Capacity Configuration View into the Workspace */
 function renderCapacityConfigView(container) {
-    console.log("Rendering Capacity Configuration View...");
+    // console.log("Rendering Capacity Configuration View...");
 
     // Fallback if container not passed (legacy support)
     if (!container) {
@@ -44,7 +44,7 @@ window.renderCapacityConfigView = renderCapacityConfigView;
  * Fixes tbody lookup issue in renderOrgEvents.
  */
 function generateGlobalConstraintsForm() {
-    console.log("Generating Global Constraints Form (Fix 1)...");
+    // console.log("Generating Global Constraints Form (Fix 1)...");
     const container = document.getElementById('capacityConfigView');
     if (!container) {
         console.error("Cannot generate global constraints form: Container #capacityConfigView not found.");
@@ -79,7 +79,7 @@ function generateGlobalConstraintsForm() {
     // --- Create Section for Global Settings ---
     let globalSection = document.getElementById('globalConstraintsSection');
     if (!globalSection) {
-        console.log("Creating #globalConstraintsSection div...");
+        // console.log("Creating #globalConstraintsSection div...");
         globalSection = document.createElement('div');
         globalSection.id = 'globalConstraintsSection';
         globalSection.style.border = '1px solid #ccc';
@@ -91,7 +91,7 @@ function generateGlobalConstraintsForm() {
         // Insert the new section at the beginning of the main container
         container.insertBefore(globalSection, container.firstChild);
     } else {
-        console.log("Clearing existing content within #globalConstraintsSection (keeping title)...");
+        // console.log("Clearing existing content within #globalConstraintsSection (keeping title)...");
         // Clear previous content EXCEPT the title (assuming H3 is the first child)
         while (globalSection.childNodes.length > 1) {
             globalSection.removeChild(globalSection.lastChild);
@@ -209,7 +209,7 @@ function generateGlobalConstraintsForm() {
         tbodyElement.innerHTML = '';
         // Access the array safely AFTER the check/init above
         const events = currentSystemData.capacityConfiguration.globalConstraints.orgEvents;
-        console.log("[DEBUG] Rendering org events table with data:", JSON.stringify(events)); // Add log to see data used for render
+        // console.log("[DEBUG] Rendering org events table with data:", JSON.stringify(events)); // Add log to see data used for render
 
         events.forEach((event, index) => {
             const row = tbodyElement.insertRow();
@@ -246,7 +246,7 @@ function generateGlobalConstraintsForm() {
             const actionCell = row.insertCell(); /* ... Remove Button Cell ... */ actionCell.style.border = '1px solid #ccc'; actionCell.style.padding = '5px'; actionCell.style.textAlign = 'center'; const removeBtn = document.createElement('button'); removeBtn.textContent = 'Remove'; removeBtn.style.fontSize = '0.9em';
             // Remove button logic remains the same - it correctly modifies the array directly
             removeBtn.onclick = () => {
-                console.log(`Attempting to remove org event at index ${index}`);
+                // console.log(`Attempting to remove org event at index ${index}`);
                 currentSystemData.capacityConfiguration.globalConstraints.orgEvents.splice(index, 1);
                 console.log("Spliced event from array. New array:", JSON.stringify(currentSystemData.capacityConfiguration.globalConstraints.orgEvents));
                 renderOrgEvents(tbodyElement); // Re-render the table rows
@@ -332,7 +332,7 @@ function generateGlobalConstraintsForm() {
     // Note: Not adding 'Add New Leave Type' for now to keep MVP simpler.
 
     // --- Append Global Section ---
-    console.log("Finished generating Global Constraints Form.");
+    // console.log("Finished generating Global Constraints Form.");
 }
 window.generateGlobalConstraintsForm = generateGlobalConstraintsForm;
 
@@ -341,7 +341,7 @@ window.generateGlobalConstraintsForm = generateGlobalConstraintsForm;
  * the new rule for Funded Headcount, and the new AI Productivity Gain.
  */
 function calculateAllCapacityMetrics() {
-    console.log("Calculating all capacity metrics (AI-Aware with Productivity Gain)...");
+    // console.log("Calculating all capacity metrics (AI-Aware with Productivity Gain)...");
     if (!currentSystemData || !currentSystemData.capacityConfiguration || !currentSystemData.teams) {
         console.error("Cannot calculate metrics: Missing core data (config or teams).");
         return { totals: { TeamBIS: {}, EffectiveBIS: {}, FundedHC: {} } };
@@ -464,7 +464,7 @@ function calculateAllCapacityMetrics() {
         });
     });
 
-    console.log("Finished calculating AI-aware metrics with productivity gain.");
+    // console.log("Finished calculating AI-aware metrics with productivity gain.");
     return { ...teamMetrics, totals: totals };
 }
 window.calculateAllCapacityMetrics = calculateAllCapacityMetrics;
@@ -473,7 +473,7 @@ window.calculateAllCapacityMetrics = calculateAllCapacityMetrics;
  * REVISED - Triggers recalculation and redraws summary, narrative, and chart.
  */
 function updateCapacityCalculationsAndDisplay(newScenario = null) {
-    console.log(`Updating capacity display. New scenario provided: ${newScenario}, Current scenario: ${currentCapacityScenario}`);
+    // console.log(`Updating capacity display. New scenario provided: ${newScenario}, Current scenario: ${currentCapacityScenario}`);
     if (newScenario && ['TeamBIS', 'EffectiveBIS', 'FundedHC'].includes(newScenario) && newScenario !== currentCapacityScenario) {
         currentCapacityScenario = newScenario;
         console.log(`Capacity scenario changed to: ${currentCapacityScenario}`);
@@ -491,13 +491,13 @@ function updateCapacityCalculationsAndDisplay(newScenario = null) {
     }
 
     const calculatedMetrics = calculateAllCapacityMetrics();
-    console.log("Capacity metrics calculated:", calculatedMetrics);
+    // console.log("Capacity metrics calculated:", calculatedMetrics);
 
     generateCapacitySummaryDisplay(calculatedMetrics, currentCapacityScenario);
     generateCapacityNarrative(calculatedMetrics, currentCapacityScenario);
     generateCapacityWaterfallChart(calculatedMetrics, currentCapacityScenario);
 
-    console.log("All capacity displays updated.");
+    // console.log("All capacity displays updated.");
 }
 window.updateCapacityCalculationsAndDisplay = updateCapacityCalculationsAndDisplay;
 
@@ -507,7 +507,7 @@ window.updateCapacityCalculationsAndDisplay = updateCapacityCalculationsAndDispl
  * - Retains all previous enhancements like dynamic headers and correct data sourcing.
  */
 function generateCapacitySummaryDisplay(calculatedMetrics, selectedScenario) {
-    console.log(`Generating AI-Aware Capacity Summary Display for scenario: ${selectedScenario}`);
+    // console.log(`Generating AI-Aware Capacity Summary Display for scenario: ${selectedScenario}`);
     const summarySection = document.getElementById('capacitySummarySection');
     if (!summarySection) { console.error("Summary section not found."); return; }
 
@@ -683,13 +683,13 @@ window.generateCapacitySummaryDisplay = generateCapacitySummaryDisplay;
  * - This version provides a much more verbose and contextualized explanation of the capacity model.
  */
 function generateCapacityNarrative(calculatedMetrics, selectedScenario) {
-    console.log(`Attempting to generate Enhanced AI-Aware Capacity Narrative for scenario: ${selectedScenario}...`);
+    // console.log(`Attempting to generate Enhanced AI-Aware Capacity Narrative for scenario: ${selectedScenario}...`);
 
     let narrativeContainer = document.getElementById('capacityNarrativeSection');
     const mainContainer = document.getElementById('capacityConfigView');
 
     if (!narrativeContainer) {
-        console.log("Creating narrative section container with collapsible structure...");
+        // console.log("Creating narrative section container with collapsible structure...");
         narrativeContainer = document.createElement('div');
         narrativeContainer.id = 'capacityNarrativeSection';
         narrativeContainer.style.border = '1px solid rgb(204, 204, 204)';
@@ -796,7 +796,7 @@ function generateCapacityNarrative(calculatedMetrics, selectedScenario) {
     });
 
     narrativeContentContainer.innerHTML = narrativeHTML;
-    console.log("Finished generating enhanced, verbose capacity narrative.");
+    // console.log("Finished generating enhanced, verbose capacity narrative.");
 }
 window.generateCapacityNarrative = generateCapacityNarrative;
 

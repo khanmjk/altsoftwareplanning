@@ -838,7 +838,7 @@ function displayTeamsForEditing(teamsDataToDisplay, expandedTeamIndex = -1) {
                 const yearsOfExperience = parseInt(yearsStr) || 0;
                 const skillsStr = await window.notificationManager.prompt(`Enter skills for "${name}" (comma-separated):`, "", "Skills");
                 const skills = skillsStr ? skillsStr.split(',').map(s => s.trim()).filter(s => s) : [];
-                // const isAISWE = confirm(`Is "${name}" an AI Software Engineer?`); replaced
+
                 let isAIInput = await window.notificationManager.prompt(`Is "${name}" an AI Software Engineer? (Enter Yes or No)`, "No", "AI Engineer?");
                 if (isAIInput === null) {
                     // User clicked Cancel on the Yes/No prompt for AI status
@@ -1614,7 +1614,7 @@ async function saveSystemDetails() {
 /** REVISED Save All Changes - Handles Creation and Updates */
 async function saveAllChanges() {
     //    if (currentMode !== Modes.CREATING && currentMode !== Modes.EDITING) {
-    //         alert('Not in creation or edit mode. No changes to save.');
+
     //         return;
     //    }
 

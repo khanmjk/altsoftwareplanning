@@ -28,7 +28,7 @@ let currentDashboardIndex = 0;
  * NEW: Renders the Dashboard view into the Workspace.
  */
 function renderDashboardView(container) {
-    console.log("Rendering Dashboard View...");
+    // console.log("Rendering Dashboard View...");
 
     // Fallback if container not passed
     if (!container) {
@@ -150,7 +150,7 @@ function navigateDashboard(direction) {
  * Initializes the Team Demand by Quarter widget.
  */
 function initializeTeamDemandView() {
-    console.log("Initializing Team Demand by Quarter widget...");
+    // console.log("Initializing Team Demand by Quarter widget...");
     generateRoadmapTableFilters('Demand', renderTeamDemandChart, { includeThemes: false });
     renderTeamDemandChart();
 }

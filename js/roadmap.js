@@ -73,7 +73,7 @@ function handleSaveRoadmapInitiative(initiativeData, isEdit) {
  * Ensures "Manage Themes" button and its modal's "Add Theme" button listeners are set up independently.
  */
 function renderRoadmapView(container) {
-    console.log("Rendering Roadmap View...");
+    // console.log("Rendering Roadmap View...");
 
     if (!container) {
         container = document.getElementById('roadmapView');
@@ -99,9 +99,7 @@ function renderRoadmapView(container) {
         window.roadmapInitiativeModal = new RoadmapInitiativeModal();
     }
 
-
-
-    console.log("Roadmap View Rendered with Modal and Theme Management support.");
+    // console.log("Roadmap View Rendered with Modal and Theme Management support.");
 }
 // Make globally accessible
 window.renderRoadmapView = renderRoadmapView;
@@ -504,7 +502,7 @@ function renderRoadmapTable() {
             exportXlsxFileName: 'roadmap_initiatives.xlsx',
             exportSheetName: 'Roadmap Initiatives'
         });
-        console.log("Roadmap table rendered using EnhancedTableWidget with fitColumns layout.");
+        // console.log("Roadmap table rendered using EnhancedTableWidget with fitColumns layout.");
     } else {
         console.warn("EnhancedTableWidget not found, falling back to direct Tabulator for roadmap.");
         if (roadmapTable && typeof roadmapTable.destroy === 'function') {
@@ -514,7 +512,7 @@ function renderRoadmapTable() {
             ...tabulatorOptions,
             height: "600px",
         });
-        console.log("Roadmap table rendered using direct Tabulator with fitColumns layout.");
+        // console.log("Roadmap table rendered using direct Tabulator with fitColumns layout.");
     }
 }
 
