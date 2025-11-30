@@ -46,8 +46,7 @@ class SettingsView {
                 return this.renderGeneralTab();
             case 'ai':
                 return this.renderAiTab();
-            case 'themes':
-                return this.renderThemesTab();
+
             default:
                 return this.renderGeneralTab();
         }
