@@ -1,0 +1,14 @@
+/* Legend Component Styles */
+
+.legend {
+    font-size: 12px;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    margin-right: 15px;
+    margin-bottom: 5px;
+}
