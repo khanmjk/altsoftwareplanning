@@ -3,14 +3,18 @@
 /* Settings - Design tokens */
 @import url('0-settings/variables.css');
 
-/* Elements - Base HTML elements */
+/* 3. Elements - Base HTML elements */
 @import url('3-elements/typography.css');
 @import url('3-elements/base.css');
+@import url('3-elements/tables.css');
 
-/* Components - Reusable UI components */
+/* 5. Components - Reusable UI components */
 @import url('5-components/buttons.css');
 @import url('5-components/forms.css');
 @import url('5-components/modals.css');
+@import url('5-components/tooltips.css');
+@import url('5-components/legends.css');
+@import url('5-components/d3-visualizations.css');
 @import url('5-components/sidebar-enhanced.css');
 @import url('5-components/systems-view.css');
 @import url('5-components/settings-view.css');
@@ -28,5 +32,5 @@
 @import url('views/capacity-tuning-view.css');
 @import url('views/visualizations-view.css');
 
-/* Remaining legacy styles - to be further modularized */
+/* Remaining legacy styles - view-specific CSS */
 @import url('style-legacy.css');
