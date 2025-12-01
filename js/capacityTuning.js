@@ -1074,9 +1074,7 @@ async function saveCapacityConfiguration() {
             console.error("Failed to calculate metrics, calculatedCapacityMetrics will not be updated in saved data.");
         }
 
-        const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
-        systems[systemNameKey] = currentSystemData;
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
+        window.systemRepository.saveSystem(systemNameKey, currentSystemData);
 
         window.notificationManager.showToast(`Capacity configuration for system "${systemNameKey}" saved successfully.`, 'success');
         console.log("Capacity configuration (with calculated metrics) saved.");
@@ -1468,6 +1466,5 @@ function formatDeductionTooltip(breakdown) {
     return tooltipString;
 }
 // --- End Helper ---
-
 
 

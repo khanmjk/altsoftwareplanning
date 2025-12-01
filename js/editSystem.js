@@ -408,10 +408,8 @@ function saveServiceChanges(serviceIndex) {
         api.dependentApis = selectedDependentApis;
     });
 
-    // Save currentSystemData to local storage
-    const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
-    systems[currentSystemData.systemName] = currentSystemData;
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
+    // Save currentSystemData via repository
+    window.systemRepository.saveSystem(currentSystemData.systemName, currentSystemData);
 
     window.notificationManager.showToast('Service changes saved.', 'success');
 
@@ -1589,14 +1587,8 @@ async function saveSystemDetails() {
     currentSystemData.systemName = newSystemName;
     currentSystemData.systemDescription = systemDescriptionTextarea.value.trim();
 
-    // Save currentSystemData to local storage
-    const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
-
-    systems[newSystemName] = currentSystemData;
-
-    console.log('Saving to local storage:', systems);
-
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
+    // Save currentSystemData via repository (renames are treated as new entries)
+    window.systemRepository.saveSystem(newSystemName, currentSystemData);
 
     window.notificationManager.showToast('System details saved, please continue to update the services and teams. Note: If you changed the system name, it is treated as a new system', 'success');
 
@@ -1654,20 +1646,18 @@ async function saveAllChanges() {
     }
     // Add other validation checks here if needed (e.g., required fields for teams/services)
 
-    // --- Save to Local Storage ---
+    // --- Save via Repository ---
     try {
-        const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
-
         // Check if renaming an existing system or creating a new one
         if (currentMode === Modes.EDITING && oldSystemNameKey && oldSystemNameKey !== finalSystemName) {
             // If the name changed during editing, remove the old entry
-            if (systems[oldSystemNameKey]) {
-                delete systems[oldSystemNameKey];
+            if (window.systemRepository.getSystemData(oldSystemNameKey)) {
+                window.systemRepository.deleteSystem(oldSystemNameKey);
                 console.log(`Removed old system entry for key: "${oldSystemNameKey}" due to rename.`);
             }
         }
         // Check if overwriting another system with the new name (relevant for 'Create New' if name exists)
-        if (systems[finalSystemName] && (currentMode === Modes.CREATING || oldSystemNameKey !== finalSystemName)) {
+        if (window.systemRepository.getSystemData(finalSystemName) && (currentMode === Modes.CREATING || oldSystemNameKey !== finalSystemName)) {
             if (!await window.notificationManager.confirm(`A system named "${finalSystemName}" already exists. Overwrite it?`, 'Overwrite System', { confirmStyle: 'danger' })) {
                 // Revert data object name change before cancelling
                 currentSystemData.systemName = oldSystemNameKey;
@@ -1678,8 +1668,7 @@ async function saveAllChanges() {
 
 
         // Save the current data under the final name
-        systems[finalSystemName] = currentSystemData;
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
+        window.systemRepository.saveSystem(finalSystemName, currentSystemData);
 
         window.notificationManager.showToast(`System "${finalSystemName}" saved successfully.`, 'success');
 
@@ -1695,7 +1684,7 @@ async function saveAllChanges() {
         }
 
     } catch (error) {
-        console.error("Error saving system to local storage:", error);
+        console.error("Error saving system via repository:", error);
         window.notificationManager.showToast("An error occurred while trying to save the system. Please check the console for details.", 'error');
         // Revert data object name change on error
         currentSystemData.systemName = oldSystemNameKey;

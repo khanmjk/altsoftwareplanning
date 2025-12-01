@@ -4,8 +4,46 @@
  */
 class SystemRepository {
     constructor() {
-        this.storageKey = window.LOCAL_STORAGE_KEY || 'architectureVisualization_systems_v10';
+        const DEFAULT_STORAGE_KEY = 'architectureVisualization_systems_v10';
+        const mode = (typeof window !== 'undefined' && window.APP_STORAGE_MODE) || 'local';
+        this.storageMode = mode;
+        this.storageKey = (typeof window !== 'undefined' && window.LOCAL_STORAGE_KEY) || DEFAULT_STORAGE_KEY;
+        this.driver = this._createDriver();
         this.sampleSystemKeys = ['StreamView', 'ConnectPro', 'ShopSphere', 'InsightAI', 'FinSecure'];
+    }
+
+    /**
+     * Storage driver factory
+     */
+    _createDriver() {
+        if (this.storageMode === 'local') {
+            return new LocalStorageDriver(this.storageKey);
+        }
+        console.warn(`Unsupported storage mode "${this.storageMode}", falling back to local storage.`);
+        return new LocalStorageDriver(this.storageKey);
+    }
+
+    /**
+     * Internal helper to safely parse all systems from storage.
+     * @returns {Object} Map of systemId -> systemData
+     */
+    _loadSystemsMap() {
+        return this.driver.loadAll();
+    }
+
+    /**
+     * Internal helper to persist the full systems map.
+     * @param {Object} systemsMap
+     */
+    _saveSystemsMap(systemsMap) {
+        this.driver.saveAll(systemsMap);
+    }
+
+    /**
+     * Remove all systems from storage.
+     */
+    clearAllSystems() {
+        this.driver.clear();
     }
 
     /**
@@ -13,28 +51,20 @@ class SystemRepository {
      * @returns {Array<Object>} Array of system objects with id, name, description, lastModified
      */
     getAllSystems() {
-        const systemsString = localStorage.getItem(this.storageKey);
-        if (!systemsString) return [];
-
-        try {
-            const systemsMap = JSON.parse(systemsString);
-            return Object.entries(systemsMap).map(([key, data]) => ({
-                id: key,
-                name: data.systemName || key,
-                description: data.systemDescription || '',
-                lastModified: data.lastModified || null,
-                // Include the full data for advanced usage
-                data: data
-            })).sort((a, b) => {
-                // Sort by last modified descending
-                const dateA = a.lastModified ? new Date(a.lastModified) : new Date(0);
-                const dateB = b.lastModified ? new Date(b.lastModified) : new Date(0);
-                return dateB - dateA;
-            });
-        } catch (e) {
-            console.error('Error parsing systems from localStorage:', e);
-            return [];
-        }
+        const systemsMap = this._loadSystemsMap();
+        return Object.entries(systemsMap).map(([key, data]) => ({
+            id: key,
+            name: data.systemName || key,
+            description: data.systemDescription || '',
+            lastModified: data.lastModified || null,
+            // Include the full data for advanced usage
+            data: data
+        })).sort((a, b) => {
+            // Sort by last modified descending
+            const dateA = a.lastModified ? new Date(a.lastModified) : new Date(0);
+            const dateB = b.lastModified ? new Date(b.lastModified) : new Date(0);
+            return dateB - dateA;
+        });
     }
 
     /**
@@ -64,6 +94,16 @@ class SystemRepository {
     }
 
     /**
+     * Get raw system data by ID
+     * @param {string} systemId
+     * @returns {Object|null}
+     */
+    getSystemData(systemId) {
+        const systemsMap = this._loadSystemsMap();
+        return systemsMap[systemId] || null;
+    }
+
+    /**
      * Check if a system is a sample system
      * @param {string} systemId - The system ID to check
      * @returns {boolean} True if it's a sample system
@@ -78,22 +118,19 @@ class SystemRepository {
      * @returns {boolean} True if deleted successfully, false otherwise
      */
     deleteSystem(systemId) {
-        const systemsString = localStorage.getItem(this.storageKey);
-        if (!systemsString) return false;
-
         try {
-            const systemsMap = JSON.parse(systemsString);
+            const systemsMap = this._loadSystemsMap();
             if (systemsMap[systemId]) {
                 delete systemsMap[systemId];
-                localStorage.setItem(this.storageKey, JSON.stringify(systemsMap));
-                console.log(`System "${systemId}" deleted from localStorage.`);
+                this._saveSystemsMap(systemsMap);
+                console.log(`System "${systemId}" deleted from storage.`);
                 return true;
             } else {
-                console.warn(`System "${systemId}" not found in localStorage.`);
+                console.warn(`System "${systemId}" not found in storage.`);
                 return false;
             }
         } catch (e) {
-            console.error('Error deleting system from localStorage:', e);
+            console.error('Error deleting system from storage:', e);
             return false;
         }
     }
@@ -106,19 +143,18 @@ class SystemRepository {
      */
     saveSystem(systemId, systemData) {
         try {
-            const systemsString = localStorage.getItem(this.storageKey) || '{}';
-            const systemsMap = JSON.parse(systemsString);
+            const systemsMap = this._loadSystemsMap();
 
             systemsMap[systemId] = {
                 ...systemData,
                 lastModified: new Date().toISOString()
             };
 
-            localStorage.setItem(this.storageKey, JSON.stringify(systemsMap));
-            console.log(`System "${systemId}" saved to localStorage.`);
+            this._saveSystemsMap(systemsMap);
+            console.log(`System "${systemId}" saved to storage.`);
             return true;
         } catch (e) {
-            console.error('Error saving system to localStorage:', e);
+            console.error('Error saving system to storage:', e);
             return false;
         }
     }
@@ -137,6 +173,34 @@ class SystemRepository {
      */
     hasUserSystems() {
         return this.getUserSystems().length > 0;
+    }
+}
+
+/**
+ * Local storage driver encapsulation
+ */
+class LocalStorageDriver {
+    constructor(storageKey) {
+        this.storageKey = storageKey;
+    }
+
+    loadAll() {
+        const systemsString = localStorage.getItem(this.storageKey);
+        if (!systemsString) return {};
+        try {
+            return JSON.parse(systemsString);
+        } catch (e) {
+            console.error('Error parsing systems from localStorage:', e);
+            return {};
+        }
+    }
+
+    saveAll(systemsMap) {
+        localStorage.setItem(this.storageKey, JSON.stringify(systemsMap));
+    }
+
+    clear() {
+        localStorage.removeItem(this.storageKey);
     }
 }
 

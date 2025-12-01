@@ -323,16 +323,14 @@ async function handleCreateWithAi() {
 
         currentSystemData = newSystemData;
         window.currentSystemData = currentSystemData;
-        const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
 
         let finalSystemName = newSystemData.systemName;
-        if (systems[finalSystemName]) {
+        if (window.systemRepository.getSystemData(finalSystemName)) {
             finalSystemName = `${finalSystemName} (AI ${Date.now().toString().slice(-5)})`;
             newSystemData.systemName = finalSystemName;
         }
 
-        systems[finalSystemName] = newSystemData;
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
+        window.systemRepository.saveSystem(finalSystemName, newSystemData);
 
         // Display stats in modal
         if (stats) {
@@ -503,18 +501,6 @@ function toggleCollapsibleSection(contentId, indicatorId, handleId = null) {
 function saveSampleSystemsToLocalStorage(options = {}) {
     const { forceOverwrite = false } = options;
 
-    const existingDataString = localStorage.getItem(LOCAL_STORAGE_KEY);
-    let systems = {};
-
-    if (existingDataString) {
-        try {
-            systems = JSON.parse(existingDataString);
-        } catch (e) {
-            console.error("Error parsing existing systems, resetting:", e);
-            systems = {};
-        }
-    }
-
     const sampleSystems = {
         'StreamView': sampleSystemDataStreamView,
         'ConnectPro': sampleSystemDataContactCenter,
@@ -523,23 +509,12 @@ function saveSampleSystemsToLocalStorage(options = {}) {
         'FinSecure': sampleSystemDataFinSecure
     };
 
-    let hasChanges = false;
     Object.entries(sampleSystems).forEach(([key, data]) => {
-        const exists = systems[key] !== undefined;
+        const exists = window.systemRepository.getSystemData(key);
         if (forceOverwrite || !exists) {
-            systems[key] = data;
-            hasChanges = true;
+            window.systemRepository.saveSystem(key, data);
         }
     });
-
-    if (hasChanges) {
-        try {
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
-            console.log(`Sample systems ${forceOverwrite ? 'reset' : 'seeded/filled'} in LocalStorage.`);
-        } catch (error) {
-            console.error("Error saving sample systems to localStorage:", error);
-        }
-    }
 }
 
 /** Show Saved Systems Modal **/
@@ -549,27 +524,17 @@ function saveSampleSystemsToLocalStorage(options = {}) {
 /** REVISED (v7) Load Saved System - Enhanced Logging for allKnownEngineers */
 function loadSavedSystem(systemName) {
     console.log(`[V7 LOAD] Attempting to load system: ${systemName}`);
-    const systemsString = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (!systemsString) {
-        window.notificationManager.showToast('No systems data found in localStorage.', 'warning');
-        console.error("[V7 LOAD] No systems key found in localStorage.");
-        returnToHome();
-        return;
-    }
-
-    const systems = JSON.parse(systemsString || '{}');
-    const systemData = systems[systemName];
-
+    const systemData = window.systemRepository.getSystemData(systemName);
     if (!systemData) {
-        window.notificationManager.showToast(`System "${systemName}" not found in localStorage.`, 'error');
-        console.error(`[V7 LOAD] System "${systemName}" not found after parsing localStorage.`);
+        window.notificationManager.showToast(`System "${systemName}" not found in storage.`, 'error');
+        console.error(`[V7 LOAD] System "${systemName}" not found in repository.`);
         returnToHome();
         return;
     }
 
     currentSystemData = systemData; // Assign to global
     window.currentSystemData = currentSystemData;
-    console.log(`[V7 LOAD] Successfully parsed system data for: "${currentSystemData.systemName}" from localStorage.`);
+    console.log(`[V7 LOAD] Successfully loaded system data for: "${currentSystemData.systemName}" from repository.`);
 
     // ----- IMMEDIATE CHECK of allKnownEngineers -----
     if (currentSystemData.allKnownEngineers && Array.isArray(currentSystemData.allKnownEngineers)) {
@@ -925,7 +890,7 @@ window.returnToHome = returnToHome;
 async function resetToDefaults() {
     if (await window.notificationManager.confirm('This will erase all your saved systems and restore the default sample systems. Do you want to proceed?', 'Reset to Defaults', { confirmStyle: 'danger', confirmText: 'Reset' })) {
         try {
-            localStorage.removeItem(LOCAL_STORAGE_KEY);
+            window.systemRepository.clearAllSystems();
             console.log('Cleared user systems from localStorage.');
         } catch (error) {
             console.error('Failed to clear local storage before resetting defaults:', error);
@@ -972,7 +937,7 @@ function deleteSystem() {
 }
 window.deleteSystem = deleteSystem;
 
-/** Confirms and deletes the specified system from localStorage **/
+/** Confirms and deletes the specified system from storage **/
 async function confirmAndDeleteSystem(systemName) {
     if (!systemName) return;
 
@@ -984,11 +949,9 @@ async function confirmAndDeleteSystem(systemName) {
 
     if (confirmed) {
         try {
-            const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
-            if (systems[systemName]) {
-                delete systems[systemName];
-                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
-                console.log(`System "${systemName}" deleted from localStorage.`);
+            const deleted = window.systemRepository.deleteSystem(systemName);
+            if (deleted) {
+                console.log(`System "${systemName}" deleted from repository.`);
 
                 window.notificationManager.showToast(`System "${systemName}" has been deleted.`, 'success');
 
@@ -1095,15 +1058,16 @@ function saveSystemChanges() {
     }
 
     try {
-        const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
-        // Track last modified for sorting and display in Systems view
-        currentSystemData.lastModified = new Date().toISOString();
-        systems[currentSystemData.systemName] = currentSystemData;
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
-        console.log('System changes saved to local storage via saveSystemChanges.');
-        return true; // Indicate success
+        // Track last modified for sorting and display in Systems view (handled in repository)
+        const saved = window.systemRepository.saveSystem(currentSystemData.systemName, currentSystemData);
+        if (saved) {
+            console.log('System changes saved via SystemRepository.');
+            return true; // Indicate success
+        }
+        console.error("SystemRepository.saveSystem returned false.");
+        return false;
     } catch (error) {
-        console.error("Error saving system to local storage in saveSystemChanges:", error);
+        console.error("Error saving system via repository in saveSystemChanges:", error);
         window.notificationManager.showToast("An error occurred while saving. Please check console.", "error");
         return false; // Indicate failure
     }
