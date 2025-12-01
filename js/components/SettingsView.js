@@ -54,6 +54,19 @@ class SettingsView {
 
     renderGeneralTab() {
         const hasSystem = !!window.currentSystemData;
+        const systemName = hasSystem ? window.currentSystemData.systemName : '';
+        const sampleSystemNames = ['StreamView', 'ConnectPro', 'ShopSphere', 'InsightAI', 'FinSecure'];
+        const isSampleSystem = sampleSystemNames.includes(systemName);
+
+        const canDelete = hasSystem && !isSampleSystem;
+
+        let deleteButtonTitle = "Permanently delete the currently loaded system.";
+        if (isSampleSystem) {
+            deleteButtonTitle = "Built-in sample systems cannot be deleted.";
+        } else if (!hasSystem) {
+            deleteButtonTitle = "No system loaded.";
+        }
+
         return `
             <div class="settings-card">
                 <h3 class="settings-card-title">Application Data</h3>
@@ -71,12 +84,13 @@ class SettingsView {
                 <div class="settings-row">
                     <div>
                         <h4 class="settings-item-title danger">Delete Current System</h4>
-                        <p class="settings-item-desc">Permanently delete the currently loaded system.</p>
+                        <p class="settings-item-desc">${deleteButtonTitle}</p>
                     </div>
                     <button class="btn-danger" 
-                            style="background-color: ${hasSystem ? '#fee2e2' : '#f1f5f9'}; color: ${hasSystem ? '#ef4444' : '#94a3b8'}; border: 1px solid ${hasSystem ? '#fecaca' : '#cbd5e1'}; cursor: ${hasSystem ? 'pointer' : 'not-allowed'};" 
-                            onclick="if(window.deleteSystem && ${hasSystem}) window.deleteSystem()"
-                            ${!hasSystem ? 'disabled' : ''}>
+                            style="background-color: ${canDelete ? '#fee2e2' : '#f1f5f9'}; color: ${canDelete ? '#ef4444' : '#94a3b8'}; border: 1px solid ${canDelete ? '#fecaca' : '#cbd5e1'}; cursor: ${canDelete ? 'pointer' : 'not-allowed'};" 
+                            onclick="if(window.deleteSystem && ${canDelete}) window.deleteSystem()"
+                            ${!canDelete ? 'disabled' : ''}
+                            title="${deleteButtonTitle}">
                         <i class="fas fa-trash-alt"></i> Delete
                     </button>
                 </div>

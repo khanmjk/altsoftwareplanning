@@ -947,79 +947,63 @@ window.resetToDefaults = resetToDefaults;
 /** Delete System (logic to prompt user) **/
 function deleteSystem() {
     console.log("Initiating system deletion process...");
-    const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
-    const systemNames = Object.keys(systems);
 
-    if (systemNames.length === 0) {
-        window.notificationManager.showToast('No saved systems found to delete.', 'warning');
+    if (!currentSystemData || !currentSystemData.systemName) {
+        window.notificationManager.showToast('No system currently loaded to delete.', 'warning');
         return;
     }
 
-    const existingListDiv = document.getElementById('systemDeleteListDiv');
-    if (existingListDiv && existingListDiv.parentNode) {
-        document.body.removeChild(existingListDiv);
+    const systemName = currentSystemData.systemName;
+
+    // Hardcoded list of sample systems to protect
+    // Ideally this should be shared with saveSampleSystemsToLocalStorage, but for now we duplicate or check against known keys
+    const sampleSystemNames = [
+        'StreamView',
+        'ConnectPro',
+        'ShopSphere',
+        'InsightAI',
+        'FinSecure'
+    ];
+
+    if (sampleSystemNames.includes(systemName)) {
+        window.notificationManager.showToast(`Cannot delete built-in sample system: "${systemName}".`, 'error');
+        return;
     }
-    const existingLoadListDiv = document.getElementById('systemLoadListDiv');
-    if (existingLoadListDiv && existingLoadListDiv.parentNode) { // Also remove load list if open
-        document.body.removeChild(existingLoadListDiv);
-    }
 
-
-    let systemListDiv = document.createElement('div');
-    systemListDiv.id = 'systemDeleteListDiv';
-    let systemListHtml = '<h2>Select a System to Delete</h2><ul>';
-    systemNames.forEach(systemName => {
-        systemListHtml += `
-            <li style="margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
-                <span>${systemName}</span>
-                <button onclick="confirmAndDeleteSystem('${systemName}')" style="margin-left: 15px; padding: 3px 8px; font-size: 0.9em;" class="btn-danger">Delete</button>
-            </li>`;
-    });
-    systemListHtml += '</ul>';
-    systemListDiv.innerHTML = systemListHtml;
-
-    let closeButton = document.createElement('button');
-    closeButton.innerText = 'Cancel';
-    closeButton.style.marginTop = '15px';
-    closeButton.onclick = function () {
-        if (systemListDiv.parentNode === document.body) {
-            document.body.removeChild(systemListDiv);
-        }
-    };
-    systemListDiv.appendChild(closeButton);
-    Object.assign(systemListDiv.style, { position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', backgroundColor: '#fff', padding: '20px', border: '1px solid #ccc', boxShadow: '0 4px 8px rgba(0,0,0,0.1)', zIndex: '1001', maxHeight: '80vh', overflowY: 'auto', minWidth: '300px' });
-    document.body.appendChild(systemListDiv);
+    // Direct confirmation for current system
+    confirmAndDeleteSystem(systemName);
 }
 window.deleteSystem = deleteSystem;
 
 /** Confirms and deletes the specified system from localStorage **/
 async function confirmAndDeleteSystem(systemName) {
-    if (!systemName) {
-        console.error("confirmAndDeleteSystem called without systemName.");
-        return;
-    }
-    if (await window.notificationManager.confirm(`Are you sure you want to permanently delete the system "${systemName}"? This action cannot be undone.`, 'Delete System', { confirmStyle: 'danger', confirmText: 'Delete' })) {
+    if (!systemName) return;
+
+    const confirmed = await window.notificationManager.confirm(
+        `Are you sure you want to permanently delete the system "${systemName}"? This action cannot be undone.`,
+        'Delete System',
+        { confirmStyle: 'danger', confirmText: 'Delete Forever' }
+    );
+
+    if (confirmed) {
         try {
             const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
             if (systems[systemName]) {
                 delete systems[systemName];
                 localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
+                console.log(`System "${systemName}" deleted from localStorage.`);
+
                 window.notificationManager.showToast(`System "${systemName}" has been deleted.`, 'success');
-                const listDiv = document.getElementById('systemDeleteListDiv');
-                if (listDiv && listDiv.parentNode) document.body.removeChild(listDiv);
+
+                // If we deleted the current system, return to home
                 if (currentSystemData && currentSystemData.systemName === systemName) {
                     returnToHome();
                 }
             } else {
-                window.notificationManager.showToast(`Error: System "${systemName}" could not be found for deletion.`, 'error');
-                const listDiv = document.getElementById('systemDeleteListDiv');
-                if (listDiv && listDiv.parentNode) {
-                    document.body.removeChild(listDiv);
-                    deleteSystem(); // Re-show the updated list
-                }
+                window.notificationManager.showToast(`System "${systemName}" not found in storage.`, 'error');
             }
         } catch (error) {
-            console.error("Error deleting system from local storage:", error);
+            console.error("Error deleting system:", error);
             window.notificationManager.showToast("An error occurred while deleting the system.", "error");
         }
     }
