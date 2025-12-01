@@ -1,0 +1,135 @@
+/* Button Styles */
+
+/* Base button */
+button,
+.button {
+    display: inline-block;
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--color-gray-900);
+    text-align: center;
+    vertical-align: middle;
+    cursor: pointer;
+    user-select: none;
+    background-color: var(--color-gray-100);
+    border: 1px solid var(--color-gray-400);
+    padding: 0.375rem 0.75rem;
+    font-size: 0.95rem;
+    border-radius: var(--radius-sm);
+    transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out,
+        border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    text-decoration: none;
+}
+
+button:hover,
+.button:hover {
+    color: var(--color-gray-900);
+    background-color: #e2e6ea;
+    border-color: #dae0e5;
+}
+
+button:focus,
+.button:focus {
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Primary button */
+button.btn-primary,
+.button.btn-primary,
+.btn-primary {
+    color: var(--color-white);
+    background-color: var(--color-primary-600);
+    border-color: var(--color-primary-600);
+}
+
+button.btn-primary:hover,
+.button.btn-primary:hover,
+.btn-primary:hover {
+    background-color: var(--color-primary-700);
+    border-color: var(--color-primary-700);
+}
+
+/* Secondary button */
+.btn-secondary {
+    color: var(--color-gray-700);
+    background-color: var(--color-white);
+    border-color: var(--color-gray-400);
+}
+
+.btn-secondary:hover {
+    background-color: var(--color-gray-100);
+    border-color: var(--color-gray-500);
+}
+
+/* Danger/Delete button */
+button.btn-danger,
+.button.btn-danger,
+.btn-danger {
+    color: var(--color-white);
+    background-color: var(--color-danger-600);
+    border-color: var(--color-danger-600);
+}
+
+button.btn-danger:hover,
+.button.btn-danger:hover,
+.btn-danger:hover {
+    background-color: var(--color-danger-700);
+    border-color: var(--color-danger-700);
+}
+
+/* Link-style button */
+button.btn-link,
+.button.btn-link,
+.btn-link {
+    font-weight: 400;
+    color: var(--color-primary-600);
+    background-color: transparent;
+    border-color: transparent;
+    text-decoration: none;
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+}
+
+button.btn-link:hover,
+.button.btn-link:hover,
+.btn-link:hover {
+    color: var(--color-primary-700);
+    text-decoration: underline;
+    background-color: transparent;
+    border-color: transparent;
+}
+
+/* Small buttons */
+.btn-small,
+button.btn-small,
+.dual-list-container button,
+.api-edit button,
+#newInitiativeAssignmentsDisplay button {
+    font-size: 0.8em;
+    padding: 0.25rem 0.5rem;
+}
+
+/* Success button */
+.btn-success {
+    color: var(--color-white);
+    background-color: var(--color-success-600);
+    border-color: var(--color-success-600);
+}
+
+.btn-success:hover {
+    background-color: var(--color-success-700);
+    border-color: var(--color-success-700);
+}
+
+/* Warning button */
+.btn-warning {
+    color: var(--color-gray-900);
+    background-color: var(--color-warning-500);
+    border-color: var(--color-warning-500);
+}
+
+.btn-warning:hover {
+    background-color: var(--color-warning-600);
+    border-color: var(--color-warning-600);
+}

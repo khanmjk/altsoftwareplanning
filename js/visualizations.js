@@ -29,17 +29,17 @@ async function renderMermaidDiagram() {
     }
     if (!currentSystemData) {
         console.warn("renderMermaidDiagram: No system data available.");
-        graphContainer.innerHTML = '<p style="color: #666;">Load a system to see the architecture diagram.</p>';
+        graphContainer.innerHTML = '<p class="mermaid-info">Load a system to see the architecture diagram.</p>';
         return;
     }
     if (typeof mermaid === 'undefined' || typeof mermaid.render !== 'function') {
         console.error("renderMermaidDiagram: Mermaid library is unavailable.");
-        graphContainer.innerHTML = '<p style="color: red;">Mermaid is not loaded. Please check your connection.</p>';
+        graphContainer.innerHTML = '<p class="mermaid-error">Mermaid is not loaded. Please check your connection.</p>';
         return;
     }
     if (typeof generateMermaidSyntax !== 'function') {
         console.error("renderMermaidDiagram: generateMermaidSyntax is not defined.");
-        graphContainer.innerHTML = '<p style="color: red;">Mermaid generator missing. Check script loading order.</p>';
+        graphContainer.innerHTML = '<p class="mermaid-error">Mermaid generator missing. Check script loading order.</p>';
         return;
     }
 
@@ -67,7 +67,7 @@ async function renderMermaidDiagram() {
         if (definition) {
             console.error("Mermaid definition used for rendering:\n", definition);
         }
-        graphContainer.innerHTML = '<p style="color: red;">Unable to render Mermaid diagram. Check console for details.</p>';
+        graphContainer.innerHTML = '<p class="mermaid-error">Unable to render Mermaid diagram. Check console for details.</p>';
     }
 }
 

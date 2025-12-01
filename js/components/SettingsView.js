@@ -1,9 +1,17 @@
+/**
+ * SettingsView Component
+ * Displays application settings with tabbed navigation
+ * Handles General and AI Assistant configuration
+ */
 class SettingsView {
     constructor(containerId) {
         this.container = document.getElementById(containerId);
         this.activeTab = 'general';
     }
 
+    /**
+     * Render the settings view
+     */
     render() {
         if (!this.container) return;
 
@@ -17,11 +25,11 @@ class SettingsView {
                     <!-- Sidebar Navigation -->
                     <div class="settings-sidebar">
                         <div class="settings-nav-item ${this.activeTab === 'general' ? 'active' : ''}" 
-                             onclick="window.settingsViewInstance.switchTab('general')">
+                             data-tab="general">
                             <i class="fas fa-sliders-h"></i> General
                         </div>
                         <div class="settings-nav-item ${this.activeTab === 'ai' ? 'active' : ''}" 
-                             onclick="window.settingsViewInstance.switchTab('ai')">
+                             data-tab="ai">
                             <i class="fas fa-robot"></i> AI Assistant
                         </div>
                     </div>
@@ -33,25 +41,85 @@ class SettingsView {
                 </div>
             </div>
         `;
+
+        // Bind events after rendering
+        this.bindEvents();
     }
 
+    /**
+     * Bind event listeners
+     */
+    bindEvents() {
+        // Tab switching via event delegation
+        const sidebar = this.container.querySelector('.settings-sidebar');
+        if (sidebar) {
+            sidebar.addEventListener('click', this.handleTabClick.bind(this));
+        }
+
+        // Form submission for AI settings
+        const aiForm = document.getElementById('aiSettingsForm_view');
+        if (aiForm) {
+            aiForm.addEventListener('submit', this.handleAiFormSubmit.bind(this));
+        }
+
+        // AI enabled checkbox toggle
+        const aiCheckbox = document.getElementById('aiModeEnabled_view');
+        if (aiCheckbox) {
+            aiCheckbox.addEventListener('change', this.handleAiToggle.bind(this));
+        }
+
+        // General settings buttons
+        const resetBtn = this.container.querySelector('[data-action="reset"]');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', this.handleReset.bind(this));
+        }
+
+        const deleteBtn = this.container.querySelector('[data-action="delete"]');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', this.handleDelete.bind(this));
+        }
+    }
+
+    /**
+     * Handle tab click
+     * @param {Event} event - Click event
+     */
+    handleTabClick(event) {
+        const tabItem = event.target.closest('[data-tab]');
+        if (!tabItem) return;
+
+        const tabName = tabItem.dataset.tab;
+        this.switchTab(tabName);
+    }
+
+    /**
+     * Switch to a different tab
+     * @param {string} tabName - Tab identifier ('general' or 'ai')
+     */
     switchTab(tabName) {
         this.activeTab = tabName;
         this.render();
     }
 
+    /**
+     * Render the currently active tab
+     * @returns {string} HTML for active tab
+     */
     renderActiveTab() {
         switch (this.activeTab) {
             case 'general':
                 return this.renderGeneralTab();
             case 'ai':
                 return this.renderAiTab();
-
             default:
                 return this.renderGeneralTab();
         }
     }
 
+    /**
+     * Render General settings tab
+     * @returns {string} HTML for general tab
+     */
     renderGeneralTab() {
         const hasSystem = !!window.currentSystemData;
         const systemName = hasSystem ? window.currentSystemData.systemName : '';
@@ -76,7 +144,7 @@ class SettingsView {
                         <h4 class="settings-item-title">Reset to Defaults</h4>
                         <p class="settings-item-desc">Clear all local data and restore the sample dataset.</p>
                     </div>
-                    <button class="btn-secondary" onclick="if(window.resetToDefaults) window.resetToDefaults()">
+                    <button class="btn btn-secondary" data-action="reset">
                         <i class="fas fa-undo"></i> Reset
                     </button>
                 </div>
@@ -86,9 +154,8 @@ class SettingsView {
                         <h4 class="settings-item-title danger">Delete Current System</h4>
                         <p class="settings-item-desc">${deleteButtonTitle}</p>
                     </div>
-                    <button class="btn-danger" 
-                            style="background-color: ${canDelete ? '#fee2e2' : '#f1f5f9'}; color: ${canDelete ? '#ef4444' : '#94a3b8'}; border: 1px solid ${canDelete ? '#fecaca' : '#cbd5e1'}; cursor: ${canDelete ? 'pointer' : 'not-allowed'};" 
-                            onclick="if(window.deleteSystem && ${canDelete}) window.deleteSystem()"
+                    <button class="btn btn-danger ${canDelete ? 'enabled' : ''}" 
+                            data-action="delete"
                             ${!canDelete ? 'disabled' : ''}
                             title="${deleteButtonTitle}">
                         <i class="fas fa-trash-alt"></i> Delete
@@ -98,6 +165,10 @@ class SettingsView {
         `;
     }
 
+    /**
+     * Render AI Assistant settings tab
+     * @returns {string} HTML for AI tab
+     */
     renderAiTab() {
         const isEnabled = window.globalSettings?.ai?.isEnabled || false;
         const provider = window.globalSettings?.ai?.provider || 'google-gemini';
@@ -107,15 +178,15 @@ class SettingsView {
             <div class="settings-card">
                 <h3 class="settings-card-title">AI Assistant Configuration</h3>
                 
-                <form id="aiSettingsForm_view" onsubmit="event.preventDefault(); window.settingsViewInstance.saveAiSettings();">
+                <form id="aiSettingsForm_view">
                     <div class="settings-form-group">
                         <label class="toggle-switch">
-                            <input type="checkbox" id="aiModeEnabled_view" ${isEnabled ? 'checked' : ''} onchange="document.getElementById('aiConfigInputs_view').style.display = this.checked ? 'block' : 'none'">
+                            <input type="checkbox" id="aiModeEnabled_view" ${isEnabled ? 'checked' : ''}>
                             <span class="toggle-label">Enable AI Assistant</span>
                         </label>
                     </div>
 
-                    <div id="aiConfigInputs_view" class="settings-sub-section" style="display: ${isEnabled ? 'block' : 'none'};">
+                    <div id="aiConfigInputs_view" class="settings-sub-section ${isEnabled ? '' : 'hidden'}">
                         <div class="settings-form-group">
                             <label class="settings-label">LLM Provider</label>
                             <select id="aiProviderSelect_view" class="settings-select">
@@ -127,8 +198,11 @@ class SettingsView {
 
                         <div class="settings-form-group">
                             <label class="settings-label">API Key</label>
-                            <div style="position: relative;">
-                                <input type="password" id="aiApiKeyInput_view" value="${apiKey}" placeholder="Paste your API key here" 
+                            <div class="settings-input-wrapper">
+                                <input type="password" 
+                                       id="aiApiKeyInput_view" 
+                                       value="${apiKey}" 
+                                       placeholder="Paste your API key here" 
                                        class="settings-input">
                             </div>
                             <p class="settings-helper-text">
@@ -138,20 +212,79 @@ class SettingsView {
 
                         <div class="settings-alert">
                             <p>
-                                <i class="fas fa-exclamation-triangle" style="margin-right: 5px;"></i>
+                                <i class="fas fa-exclamation-triangle"></i>
                                 <strong>Note:</strong> Free-tier keys have rate limits. If you see "503 Model Overloaded", please wait a moment.
                             </p>
                         </div>
                     </div>
 
                     <div class="settings-actions">
-                        <button type="submit" class="btn-primary">Save Changes</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
                     </div>
                 </form>
             </div>
         `;
     }
 
+    /**
+     * Handle AI form submission
+     * @param {Event} event - Submit event
+     */
+    handleAiFormSubmit(event) {
+        event.preventDefault();
+        this.saveAiSettings();
+    }
+
+    /**
+     * Handle AI enabled checkbox toggle
+     * @param {Event} event - Change event
+     */
+    handleAiToggle(event) {
+        const configInputs = document.getElementById('aiConfigInputs_view');
+        if (configInputs) {
+            if (event.target.checked) {
+                configInputs.classList.remove('hidden');
+            } else {
+                configInputs.classList.add('hidden');
+            }
+        }
+    }
+
+    /**
+     * Handle reset button click
+     */
+    handleReset() {
+        if (window.resetToDefaults) {
+            window.resetToDefaults();
+        } else {
+            console.error('SettingsView: resetToDefaults function not found');
+        }
+    }
+
+    /**
+     * Handle delete button click
+     */
+    handleDelete() {
+        const hasSystem = !!window.currentSystemData;
+        const systemName = hasSystem ? window.currentSystemData.systemName : '';
+        const sampleSystemNames = ['StreamView', 'ConnectPro', 'ShopSphere', 'InsightAI', 'FinSecure'];
+        const isSampleSystem = sampleSystemNames.includes(systemName);
+        const canDelete = hasSystem && !isSampleSystem;
+
+        if (!canDelete) {
+            return; // Button should be disabled, but extra check
+        }
+
+        if (window.deleteSystem) {
+            window.deleteSystem();
+        } else {
+            console.error('SettingsView: deleteSystem function not found');
+        }
+    }
+
+    /**
+     * Save AI settings to localStorage
+     */
     saveAiSettings() {
         const enabled = document.getElementById('aiModeEnabled_view').checked;
         const provider = document.getElementById('aiProviderSelect_view').value;
@@ -170,7 +303,9 @@ class SettingsView {
                 window.headerComponent.updateAiButtonVisibility();
             }
 
-            window.notificationManager.showToast('AI Settings saved successfully!', 'success');
+            if (window.notificationManager) {
+                window.notificationManager.showToast('AI Settings saved successfully!', 'success');
+            }
         }
     }
 }

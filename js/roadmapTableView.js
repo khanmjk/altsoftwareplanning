@@ -8,9 +8,9 @@ let roadmapTimelineTable = null; // To hold the Tabulator instance for this spec
 function initializeRoadmapTableView() {
     const container = document.getElementById('roadmapTimelineWidget');
     if (!container) { return; }
-    container.innerHTML = `<div id="roadmapTableFilters" class="widget-filter-bar"></div><div id="quarterlyRoadmapContainer" style="overflow-x: auto;"></div>`;
+    container.innerHTML = `<div id="roadmapTableFilters" class="widget-filter-bar"></div><div id="quarterlyRoadmapContainer" class="quarterly-roadmap-container"></div>`;
     generateRoadmapTableFilters('', renderQuarterlyRoadmap);
-    renderQuarterlyRoadmap(); 
+    renderQuarterlyRoadmap();
 }
 
 /**
@@ -19,7 +19,7 @@ function initializeRoadmapTableView() {
 function initialize3YPRoadmapView() {
     const container = document.getElementById('threeYearPlanWidget');
     if (!container) { return; }
-    container.innerHTML = `<div id="roadmapTableFilters3YP" class="widget-filter-bar"></div><div id="threeYearPlanContainer" style="overflow-x: auto;"></div>`;
+    container.innerHTML = `<div id="roadmapTableFilters3YP" class="widget-filter-bar"></div><div id="threeYearPlanContainer" class="three-year-plan-container"></div>`;
     generateRoadmapTableFilters('3YP', render3YPRoadmap);
     render3YPRoadmap();
 }
@@ -32,7 +32,7 @@ function generateRoadmapTableFilters(idSuffix = '', renderCallback, options = { 
     const filtersContainer = document.getElementById(containerId);
     if (!filtersContainer) { return; }
 
-    filtersContainer.innerHTML = ''; 
+    filtersContainer.innerHTML = '';
 
     const createDropdownFilter = (id, labelText, options) => {
         const div = document.createElement('div');
@@ -75,16 +75,16 @@ function generateRoadmapTableFilters(idSuffix = '', renderCallback, options = { 
 
         const dropdownContainer = document.createElement('div');
         dropdownContainer.className = 'custom-multiselect-dropdown';
-        
+
         const dropdownButton = document.createElement('button');
         dropdownButton.id = 'theme-dropdown-button' + idSuffix;
         dropdownButton.className = 'dropdown-button';
         dropdownButton.type = 'button';
-        
+
         const dropdownPanel = document.createElement('div');
         dropdownPanel.id = 'theme-dropdown-panel' + idSuffix;
         dropdownPanel.className = 'dropdown-panel';
-        
+
         const selectAllContainer = document.createElement('div');
         selectAllContainer.className = 'select-all-container';
         const selectAllCheckbox = document.createElement('input');
@@ -115,7 +115,7 @@ function generateRoadmapTableFilters(idSuffix = '', renderCallback, options = { 
             themeItemsContainer.appendChild(itemDiv);
         });
         dropdownPanel.appendChild(themeItemsContainer);
-        
+
         dropdownContainer.appendChild(dropdownButton);
         dropdownContainer.appendChild(dropdownPanel);
         themeFilterWrapper.appendChild(dropdownContainer);
@@ -148,7 +148,7 @@ function generateRoadmapTableFilters(idSuffix = '', renderCallback, options = { 
                 renderCallback();
             });
         });
-        
+
         dropdownButton.addEventListener('click', (e) => { e.stopPropagation(); dropdownPanel.classList.toggle('show'); });
         document.addEventListener('click', (e) => { if (!dropdownContainer.contains(e.target)) { dropdownPanel.classList.remove('show'); } });
 
@@ -156,7 +156,7 @@ function generateRoadmapTableFilters(idSuffix = '', renderCallback, options = { 
         allCheckboxes.forEach(cb => cb.checked = true);
         updateButtonText();
     }
-    
+
     updateTeamFilterOptions(idSuffix);
 }
 
@@ -188,7 +188,7 @@ function updateTeamFilterOptions(idSuffix = '') {
         });
         teamsToShow = Array.from(teamsInOrg);
     }
-    
+
     teamsToShow.sort((a, b) => (a.teamIdentity || a.teamName).localeCompare(b.teamIdentity || b.teamName)).forEach(team => {
         teamSelect.add(new Option(team.teamIdentity || team.teamName, team.teamId));
     });
@@ -225,7 +225,7 @@ function prepareDataForQuarterlyRoadmap() {
         });
         initiatives = initiatives.filter(init => (init.assignments || []).some(a => teamsInOrg.has(a.teamId)));
     }
-    
+
     if (teamFilter !== 'all') {
         initiatives = initiatives.filter(init => (init.assignments || []).some(a => a.teamId === teamFilter));
     }
@@ -250,7 +250,7 @@ function prepareDataForQuarterlyRoadmap() {
 
         assignedThemes.forEach(themeId => {
             const themeName = themeMap.get(themeId) || "Uncategorized";
-            
+
             if (selectedThemes.length < allThemeIds.length && !selectedThemes.includes(themeId)) {
                 return;
             }
@@ -273,14 +273,14 @@ function renderQuarterlyRoadmap() {
     const themes = Object.keys(roadmapData).sort();
     const orgFilter = document.getElementById('roadmapOrgFilter')?.value || 'all';
     const teamFilter = document.getElementById('roadmapTeamFilter')?.value || 'all';
-    
+
     // This function's rendering logic is unchanged.
     // For brevity, I am not repeating the full inner HTML generation of the table,
     // as it remains the same.
-    
+
     // Re-paste the existing render logic for completeness:
     if (Object.keys(roadmapData).length === 0) {
-        container.innerHTML = `<p style="text-align: center; color: #777; margin-top: 20px;">No initiatives match the current filter criteria.</p>`;
+        container.innerHTML = `<p class="roadmap-table-view__empty">No initiatives match the current filter criteria.</p>`;
         return;
     }
 
@@ -323,7 +323,7 @@ function renderQuarterlyRoadmap() {
                         const orgAssignments = (init.assignments || []).filter(a => teamsInOrg.has(a.teamId));
                         const orgSde = orgAssignments.reduce((sum, a) => sum + (a.sdeYears || 0), 0);
                         let breakdownHTML = '';
-                        if (orgAssignments.length > 0) { 
+                        if (orgAssignments.length > 0) {
                             breakdownHTML = orgAssignments.map(a => { const team = currentSystemData.teams.find(t => t.teamId === a.teamId); const teamName = team ? (team.teamIdentity || team.teamName) : "Unknown Team"; return `<div class="initiative-sde-breakdown">${teamName}: ${a.sdeYears.toFixed(2)}</div>`; }).join('');
                         }
                         sdeDisplayHTML = `<div class="initiative-sde">Org Total: ${orgSde.toFixed(2)} of ${totalSde.toFixed(2)} SDEs</div>${breakdownHTML}`;
@@ -331,7 +331,7 @@ function renderQuarterlyRoadmap() {
                         sdeDisplayHTML = `<div class="initiative-sde">(${totalSde.toFixed(2)} SDEs)</div>`;
                     }
                     const statusClass = `status-${(init.status || 'backlog').toLowerCase().replace(/\s+/g, '-')}`;
-                    tableHTML += `<div class="initiative-card ${statusClass}" title="${init.description || init.title}" onclick="openRoadmapModalForEdit('${init.initiativeId}')"><div class="initiative-title">${init.title}</div>${sdeDisplayHTML}</div>`;
+                    tableHTML += `<div class="initiative-card ${statusClass}" title="${init.description || init.title}" data-initiative-id="${init.initiativeId}"><div class="initiative-title">${init.title}</div>${sdeDisplayHTML}</div>`;
                 });
             }
             tableHTML += `</div></td>`;
@@ -340,6 +340,16 @@ function renderQuarterlyRoadmap() {
     });
     tableHTML += `</tbody></table>`;
     container.innerHTML = tableHTML;
+
+    // Event delegation for initiative cards
+    container.querySelectorAll('.initiative-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const initiativeId = card.getAttribute('data-initiative-id');
+            if (initiativeId && typeof openRoadmapModalForEdit === 'function') {
+                openRoadmapModalForEdit(initiativeId);
+            }
+        });
+    });
 }
 
 
@@ -366,17 +376,17 @@ function prepareDataFor3YPRoadmap() {
     const selectedThemes = Array.from(themeCheckboxes).map(cb => cb.value);
 
     let initiatives = currentSystemData.yearlyInitiatives || [];
-    
+
     if (orgFilter !== 'all') {
         const teamsInOrg = new Set();
         (currentSystemData.sdms || []).forEach(sdm => { if (sdm.seniorManagerId === orgFilter) { (currentSystemData.teams || []).forEach(team => { if (team.sdmId === sdm.sdmId) teamsInOrg.add(team.teamId); }); } });
         initiatives = initiatives.filter(init => (init.assignments || []).some(a => teamsInOrg.has(a.teamId)));
     }
-    
+
     if (teamFilter !== 'all') {
         initiatives = initiatives.filter(init => (init.assignments || []).some(a => a.teamId === teamFilter));
     }
-    
+
     const allThemeIds = (currentSystemData.definedThemes || []).map(t => t.themeId);
     if (selectedThemes.length < allThemeIds.length) {
         initiatives = initiatives.filter(init => {
@@ -395,9 +405,9 @@ function prepareDataFor3YPRoadmap() {
         if (!planningYear) return;
 
         let yearBucket;
-        if (planningYear === currentYear) { yearBucket = 'Current Year'; } 
-        else if (planningYear === currentYear + 1) { yearBucket = 'Next Year'; } 
-        else if (planningYear > currentYear + 1) { yearBucket = 'Future'; } 
+        if (planningYear === currentYear) { yearBucket = 'Current Year'; }
+        else if (planningYear === currentYear + 1) { yearBucket = 'Next Year'; }
+        else if (planningYear > currentYear + 1) { yearBucket = 'Future'; }
         else { return; }
 
         const assignedThemes = init.themes && init.themes.length > 0 ? init.themes : ['uncategorized'];
@@ -427,7 +437,7 @@ function render3YPRoadmap() {
     const currentYear = new Date().getFullYear();
 
     if (Object.keys(roadmapData).length === 0) {
-        container.innerHTML = `<p style="text-align: center; color: #777; margin-top: 20px;">No initiatives match the current filter criteria for the 3YP view.</p>`;
+        container.innerHTML = `<p class="roadmap-table-view__empty">No initiatives match the current filter criteria for the 3YP view.</p>`;
         return;
     }
 
@@ -440,11 +450,11 @@ function render3YPRoadmap() {
             const initiatives = roadmapData[themeName]?.[yearBucket] || [];
             tableHTML += `<td><div class="quarter-cell">`;
             if (initiatives.length > 0) {
-                 initiatives.sort((a,b) => (a.title || '').localeCompare(b.title || '')).forEach(init => {
+                initiatives.sort((a, b) => (a.title || '').localeCompare(b.title || '')).forEach(init => {
                     const totalSde = (init.assignments || []).reduce((sum, a) => sum + (a.sdeYears || 0), 0);
                     let sdeDisplayHTML = `<div class="initiative-sde">(${totalSde.toFixed(2)} SDEs)</div>`;
                     const statusClass = `status-${(init.status || 'backlog').toLowerCase().replace(/\s+/g, '-')}`;
-                    tableHTML += `<div class="initiative-card ${statusClass}" title="${init.description || init.title}" onclick="openRoadmapModalForEdit('${init.initiativeId}')"><div class="initiative-title">${init.title}</div>${sdeDisplayHTML}</div>`;
+                    tableHTML += `<div class="initiative-card ${statusClass}" title="${init.description || init.title}" data-initiative-id="${init.initiativeId}"><div class="initiative-title">${init.title}</div>${sdeDisplayHTML}</div>`;
                 });
             }
             tableHTML += `</div></td>`;
@@ -452,6 +462,16 @@ function render3YPRoadmap() {
         tableHTML += `</tr>`;
     });
     tableHTML += `</tbody></table>`;
-    
+
     container.innerHTML = tableHTML;
+
+    // Event delegation for initiative cards
+    container.querySelectorAll('.initiative-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const initiativeId = card.getAttribute('data-initiative-id');
+            if (initiativeId && typeof openRoadmapModalForEdit === 'function') {
+                openRoadmapModalForEdit(initiativeId);
+            }
+        });
+    });
 }

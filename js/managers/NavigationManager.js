@@ -90,7 +90,7 @@ class NavigationManager {
             } else if (viewId === 'visualizationCarousel') {
                 window.workspaceComponent.render(viewId, window.renderSystemOverviewView);
             } else if (viewId === 'organogramView') {
-                window.workspaceComponent.render(viewId, window.renderOrgChartView);
+                window.workspaceComponent.render(viewId, window.renderOrgView);
             } else if (viewId === 'systemEditForm') {
                 window.workspaceComponent.render(viewId, (container) => window.showSystemEditForm(window.currentSystemData, container));
             } else if (viewId === 'dashboardView') {

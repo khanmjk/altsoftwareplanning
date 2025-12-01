@@ -257,21 +257,16 @@ function renderGanttControls() {
     const legendDiv = document.createElement('div');
     legendDiv.id = 'ganttLegendContainer';
     legendDiv.className = 'gantt-legend';
-    legendDiv.style.marginTop = '10px';
-
     // Check current renderer for initial visibility
     const currentRenderer = (typeof FeatureFlags !== 'undefined' && typeof FeatureFlags.getRenderer === 'function')
         ? FeatureFlags.getRenderer()
         : 'mermaid';
 
     legendDiv.style.display = currentRenderer === 'frappe' ? 'flex' : 'none';
-    legendDiv.style.gap = '15px';
-    legendDiv.style.fontSize = '12px';
-    legendDiv.style.alignItems = 'center';
     legendDiv.innerHTML = `
-        <div style="display: flex; align-items: center;"><span style="width: 12px; height: 12px; background-color: #6f42c1; display: inline-block; margin-right: 5px; border-radius: 2px;"></span> Initiative</div>
-        <div style="display: flex; align-items: center;"><span style="width: 12px; height: 12px; background-color: #0366d6; display: inline-block; margin-right: 5px; border-radius: 2px;"></span> Work Package</div>
-        <div style="display: flex; align-items: center;"><span style="width: 12px; height: 12px; background-color: #2ea44f; display: inline-block; margin-right: 5px; border-radius: 2px;"></span> Assignment</div>
+        <div class="gantt-legend__item"><span class="gantt-legend__color-box gantt-legend__color-box--initiative"></span> Initiative</div>
+        <div class="gantt-legend__item"><span class="gantt-legend__color-box gantt-legend__color-box--work-package"></span> Work Package</div>
+        <div class="gantt-legend__item"><span class="gantt-legend__color-box gantt-legend__color-box--assignment"></span> Assignment</div>
     `;
     controls.appendChild(legendDiv);
 
@@ -341,13 +336,13 @@ function renderGanttTable() {
         <table class="gantt-table gantt-hierarchy">
             <thead>
                 <tr>
-                    <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Initiative / Work Package</th>
-                    ${showManagerTeams ? '<th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Teams</th>' : ''}
-                    <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Start</th>
-                    <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Target</th>
-                    <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">SDEs</th>
-                    <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Dependencies</th>
-                    <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Actions</th>
+                    <th class="gantt-table__header-cell">Initiative / Work Package</th>
+                    ${showManagerTeams ? '<th class="gantt-table__header-cell">Teams</th>' : ''}
+                    <th class="gantt-table__header-cell">Start</th>
+                    <th class="gantt-table__header-cell">Target</th>
+                    <th class="gantt-table__header-cell">SDEs</th>
+                    <th class="gantt-table__header-cell">Dependencies</th>
+                    <th class="gantt-table__header-cell">Actions</th>
                 </tr>
             </thead>
             <tbody id="ganttTableBody"></tbody>
@@ -357,7 +352,7 @@ function renderGanttTable() {
     const tbody = document.getElementById('ganttTableBody');
     if (data.length === 0) {
         const emptyRow = document.createElement('tr');
-        emptyRow.innerHTML = `<td colspan="${showManagerTeams ? '7' : '6'}" style="padding:10px; text-align:center; color:#777;">No initiatives match the filters.</td>`;
+        emptyRow.innerHTML = `<td colspan="${showManagerTeams ? '7' : '6'}" class="gantt-table__empty">No initiatives match the filters.</td>`;
         tbody.appendChild(emptyRow);
         return;
     }
@@ -383,19 +378,19 @@ function renderGanttTable() {
             isFocusRow ? 'gantt-focus-row' : ''
         ].filter(Boolean).join(' ');
         tr.innerHTML = `
-            <td style="padding:6px; border-bottom:1px solid #f0f0f0; display:flex; align-items:center; gap:8px;">
+            <td class="gantt-table__cell gantt-table__cell--initiative gantt-table__cell--initiative-title">
                 <button class="gantt-expander" data-action="toggle-initiative" data-id="${init.initiativeId}" aria-label="Toggle work packages">${isExpanded ? '-' : '+'}</button>
-                <div>
-                    <div style="font-weight:600;">${init.title || '(Untitled)'}</div>
-                    <div style="font-family: monospace; color:#666; font-size:12px;">${init.initiativeId || ''}</div>
+                <div class="gantt-table__title-container">
+                    <div>${init.title || '(Untitled)'}</div>
+                    <div class="gantt-table__id-badge">${init.initiativeId || ''}</div>
                 </div>
             </td>
-            ${showManagerTeams ? `<td style="padding:6px; border-bottom:1px solid #f0f0f0;">${getTeamsForInitiative(init).join(', ')}</td>` : ''}
-            <td style="padding:6px; border-bottom:1px solid #f0f0f0;"><input type="date" value="${init.displayStart || ''}" data-kind="initiative" data-field="startDate" data-id="${init.initiativeId}" ${hasWorkPackages ? 'disabled title="Edit dates at Work Package level when WPs exist."' : ''}></td>
-            <td style="padding:6px; border-bottom:1px solid #f0f0f0;"><input type="date" value="${init.displayEnd || ''}" data-kind="initiative" data-field="targetDueDate" data-id="${init.initiativeId}" ${hasWorkPackages ? 'disabled title="Edit dates at Work Package level when WPs exist."' : ''}></td>
-            <td style="padding:6px; border-bottom:1px solid #f0f0f0;"><input type="number" step="0.01" value="${computeSdeEstimate(init)}" data-kind="initiative" data-field="sdeEstimate" data-id="${init.initiativeId}" style="width:80px;" ${hasWorkPackages ? 'disabled title="Edit SDEs at Work Package level when WPs exist."' : ''}></td>
-            <td style="padding:6px; border-bottom:1px solid #f0f0f0;">${renderInitiativePredecessorSelector(allInitiatives, init)}</td>
-            <td style="padding:6px; border-bottom:1px solid #f0f0f0;">
+            ${showManagerTeams ? `<td class="gantt-table__cell gantt-table__cell--initiative">${getTeamsForInitiative(init).join(', ')}</td>` : ''}
+            <td class="gantt-table__cell gantt-table__cell--initiative"><input type="date" value="${init.displayStart || ''}" data-kind="initiative" data-field="startDate" data-id="${init.initiativeId}" ${hasWorkPackages ? 'disabled title="Edit dates at Work Package level when WPs exist."' : ''}></td>
+            <td class="gantt-table__cell gantt-table__cell--initiative"><input type="date" value="${init.displayEnd || ''}" data-kind="initiative" data-field="targetDueDate" data-id="${init.initiativeId}" ${hasWorkPackages ? 'disabled title="Edit dates at Work Package level when WPs exist."' : ''}></td>
+            <td class="gantt-table__cell gantt-table__cell--initiative"><input type="number" step="0.01" value="${computeSdeEstimate(init)}" data-kind="initiative" data-field="sdeEstimate" data-id="${init.initiativeId}" ${hasWorkPackages ? 'disabled title="Edit SDEs at Work Package level when WPs exist."' : ''}></td>
+            <td class="gantt-table__cell gantt-table__cell--initiative">${renderInitiativePredecessorSelector(allInitiatives, init)}</td>
+            <td class="gantt-table__cell gantt-table__cell--initiative">
                 <button class="gantt-add-wp btn-primary" data-action="add-wp" data-id="${init.initiativeId}">Add WP</button>
             </td>
         `;
@@ -406,7 +401,7 @@ function renderGanttTable() {
             if (!wpList.length) {
                 const emptyWp = document.createElement('tr');
                 emptyWp.className = 'gantt-wp-row';
-                emptyWp.innerHTML = `<td colspan="${showManagerTeams ? '7' : '6'}" style="padding:6px 12px; color:#777;">No work packages yet. Click "Add WP" to create one.</td>`;
+                emptyWp.innerHTML = `<td colspan="${showManagerTeams ? '7' : '6'}" class="gantt-table__empty-wp">No work packages yet. Click "Add WP" to create one.</td>`;
                 tbody.appendChild(emptyWp);
             } else {
                 wpList.forEach(wp => {
@@ -422,20 +417,20 @@ function renderGanttTable() {
                     wpRow.className = wpRowClasses;
                     const depsValue = (wp.dependencies || []).join(', ');
                     wpRow.innerHTML = `
-                        <td style="padding:6px 6px 6px 32px; border-bottom:1px solid #f7f7f7;">
-                            <div style="display:flex; align-items:center; gap:8px;">
+                        <td class="gantt-table__cell gantt-table__cell--wp gantt-table__cell--wp-title">
+                            <div>
                                 <button class="gantt-expander" data-action="toggle-wp" data-wp-id="${wp.workPackageId}" aria-label="Toggle team assignments">${wpExpanded ? '-' : '+'}</button>
-                                <input type="text" value="${wp.title || ''}" data-kind="work-package" data-field="title" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" style="width:70%;">
+                                <input type="text" value="${wp.title || ''}" data-kind="work-package" data-field="title" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}">
                             </div>
                         </td>
-                        ${showManagerTeams ? `<td style="padding:6px; border-bottom:1px solid #f7f7f7; color:#555;">${formatWorkPackageTeams(wp, selectedTeam)}</td>` : ''}
-                        <td style="padding:6px; border-bottom:1px solid #f7f7f7;"><input type="date" value="${wp.startDate || ''}" data-kind="work-package" data-field="startDate" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}"></td>
-                        <td style="padding:6px; border-bottom:1px solid #f7f7f7;"><input type="date" value="${wp.endDate || ''}" data-kind="work-package" data-field="endDate" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}"></td>
-                        <td style="padding:6px; border-bottom:1px solid #f7f7f7; color:#333;">${computeWorkPackageSdeYears(wp, workingDaysPerYear, selectedTeam)}</td>
-                        <td style="padding:6px; border-bottom:1px solid #f7f7f7;">
+                        ${showManagerTeams ? `<td class="gantt-table__cell gantt-table__cell--wp gantt-table__cell--wp-teams">${formatWorkPackageTeams(wp, selectedTeam)}</td>` : ''}
+                        <td class="gantt-table__cell gantt-table__cell--wp"><input type="date" value="${wp.startDate || ''}" data-kind="work-package" data-field="startDate" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}"></td>
+                        <td class="gantt-table__cell gantt-table__cell--wp"><input type="date" value="${wp.endDate || ''}" data-kind="work-package" data-field="endDate" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}"></td>
+                        <td class="gantt-table__cell gantt-table__cell--wp gantt-table__cell--wp-sde">${computeWorkPackageSdeYears(wp, workingDaysPerYear, selectedTeam)}</td>
+                        <td class="gantt-table__cell gantt-table__cell--wp">
                             ${renderPredecessorSelector(allWorkPackages, wp)}
                         </td>
-                        <td style="padding:6px; border-bottom:1px solid #f7f7f7;">
+                        <td class="gantt-table__cell gantt-table__cell--wp">
                             <button data-action="delete-wp" data-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" class="btn-danger">Delete</button>
                         </td>
                     `;
@@ -463,34 +458,34 @@ function renderGanttTable() {
                             const sdeYears = ((assign.sdeDays || 0) / workingDaysPerYear).toFixed(2);
                             if (showManagerTeams) {
                                 assignRow.innerHTML = `
-                                    <td style="padding:4px 6px 4px 48px; border-bottom:1px solid #fafafa; color:#555; font-size:13px;">Team: ${getTeamName(assign.teamId) || '(Unassigned)'}</td>
-                                    <td style="padding:4px; border-bottom:1px solid #fafafa;"></td>
-                                    <td style="padding:4px; border-bottom:1px solid #fafafa;">
+                                    <td class="gantt-table__cell--assignment">Team: ${getTeamName(assign.teamId) || '(Unassigned)'}</td>
+                                    <td class="gantt-table__cell--assignment-empty"></td>
+                                    <td class="gantt-table__cell--assignment-empty">
                                         <input type="date" value="${assign.startDate || wp.startDate || ''}" data-kind="wp-assign" data-field="startDate" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" data-team-id="${assign.teamId || ''}">
                                     </td>
-                                    <td style="padding:4px; border-bottom:1px solid #fafafa;">
+                                    <td class="gantt-table__cell--assignment-empty">
                                         <input type="date" value="${assign.endDate || wp.endDate || ''}" data-kind="wp-assign" data-field="endDate" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" data-team-id="${assign.teamId || ''}">
                                     </td>
-                                    <td style="padding:4px; border-bottom:1px solid #fafafa;">
-                                        <input type="number" step="0.01" value="${sdeYears}" data-kind="wp-assign" data-field="sdeYears" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" data-team-id="${assign.teamId || ''}" style="width:80px;">
+                                    <td class="gantt-table__cell--assignment-empty">
+                                        <input type="number" step="0.01" value="${sdeYears}" data-kind="wp-assign" data-field="sdeYears" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" data-team-id="${assign.teamId || ''}">
                                     </td>
-                                    <td style="padding:4px; border-bottom:1px solid #fafafa;">${depsSelector}</td>
-                                    <td style="padding:4px; border-bottom:1px solid #fafafa;"></td>
+                                    <td class="gantt-table__cell--assignment-empty">${depsSelector}</td>
+                                    <td class="gantt-table__cell--assignment-empty"></td>
                                 `;
                             } else {
                                 assignRow.innerHTML = `
-                                    <td style="padding:4px 6px 4px 48px; border-bottom:1px solid #fafafa; color:#555; font-size:13px;">Team: ${getTeamName(assign.teamId) || '(Unassigned)'}</td>
-                                    <td style="padding:4px; border-bottom:1px solid #fafafa;">
+                                    <td class="gantt-table__cell--assignment">Team: ${getTeamName(assign.teamId) || '(Unassigned)'}</td>
+                                    <td class="gantt-table__cell--assignment-empty">
                                         <input type="date" value="${assign.startDate || wp.startDate || ''}" data-kind="wp-assign" data-field="startDate" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" data-team-id="${assign.teamId || ''}">
                                     </td>
-                                    <td style="padding:4px; border-bottom:1px solid #fafafa;">
+                                    <td class="gantt-table__cell--assignment-empty">
                                         <input type="date" value="${assign.endDate || wp.endDate || ''}" data-kind="wp-assign" data-field="endDate" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" data-team-id="${assign.teamId || ''}">
                                     </td>
-                                    <td style="padding:4px; border-bottom:1px solid #fafafa;">
-                                        <input type="number" step="0.01" value="${sdeYears}" data-kind="wp-assign" data-field="sdeYears" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" data-team-id="${assign.teamId || ''}" style="width:80px;">
+                                    <td class="gantt-table__cell--assignment-empty">
+                                        <input type="number" step="0.01" value="${sdeYears}" data-kind="wp-assign" data-field="sdeYears" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" data-team-id="${assign.teamId || ''}">
                                     </td>
-                                    <td style="padding:4px; border-bottom:1px solid #fafafa;">${depsSelector}</td>
-                                    <td style="padding:4px; border-bottom:1px solid #fafafa;"></td>
+                                    <td class="gantt-table__cell--assignment-empty">${depsSelector}</td>
+                                    <td class="gantt-table__cell--assignment-empty"></td>
                                 `;
                             }
                             tbody.appendChild(assignRow);
@@ -500,20 +495,20 @@ function renderGanttTable() {
                             const toggleRow = document.createElement('tr');
                             if (showManagerTeams) {
                                 toggleRow.innerHTML = `
-                                    <td style="padding:4px 6px 4px 48px; border-bottom:1px solid #fafafa; color:#777; font-size:12px;">Other teams (${otherAssignments.length})</td>
-                                    <td style="padding:4px; border-bottom:1px solid #fafafa;"></td>
-                                    <td colspan="4" style="padding:4px; border-bottom:1px solid #fafafa;">
-                                        <button data-action="toggle-other-teams" data-wp-id="${wp.workPackageId}" style="padding:2px 6px;">${showOtherTeams ? 'Hide' : 'Show'} other teams</button>
+                                    <td class="gantt-table__cell--other-teams">Other teams (${otherAssignments.length})</td>
+                                    <td class="gantt-table__cell--other-teams-action"></td>
+                                    <td colspan="4" class="gantt-table__cell--other-teams-action">
+                                        <button data-action="toggle-other-teams" data-wp-id="${wp.workPackageId}">${showOtherTeams ? 'Hide' : 'Show'} other teams</button>
                                     </td>
-                                    <td style="padding:4px; border-bottom:1px solid #fafafa;"></td>
+                                    <td class="gantt-table__cell--other-teams-action"></td>
                                 `;
                             } else {
                                 toggleRow.innerHTML = `
-                                    <td style="padding:4px 6px 4px 48px; border-bottom:1px solid #fafafa; color:#777; font-size:12px;">Other teams (${otherAssignments.length})</td>
-                                    <td colspan="4" style="padding:4px; border-bottom:1px solid #fafafa;">
-                                        <button data-action="toggle-other-teams" data-wp-id="${wp.workPackageId}" style="padding:2px 6px;">${showOtherTeams ? 'Hide' : 'Show'} other teams</button>
+                                    <td class="gantt-table__cell--other-teams">Other teams (${otherAssignments.length})</td>
+                                    <td colspan="4" class="gantt-table__cell--other-teams-action">
+                                        <button data-action="toggle-other-teams" data-wp-id="${wp.workPackageId}">${showOtherTeams ? 'Hide' : 'Show'} other teams</button>
                                     </td>
-                                    <td style="padding:4px; border-bottom:1px solid #fafafa;"></td>
+                                    <td class="gantt-table__cell--other-teams-action"></td>
                                 `;
                             }
                             tbody.appendChild(toggleRow);

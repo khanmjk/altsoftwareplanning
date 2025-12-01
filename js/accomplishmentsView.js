@@ -50,7 +50,7 @@ function prepareAccomplishmentsData() {
         });
         completedInitiatives = completedInitiatives.filter(init => (init.assignments || []).some(a => teamsInOrg.has(a.teamId)));
     }
-    
+
     if (teamFilter !== 'all') {
         completedInitiatives = completedInitiatives.filter(init => (init.assignments || []).some(a => a.teamId === teamFilter));
     }
@@ -59,11 +59,11 @@ function prepareAccomplishmentsData() {
     if (selectedThemes.length > 0 && selectedThemes.length < allThemeIds.length) {
         completedInitiatives = completedInitiatives.filter(init => {
             const initThemes = init.themes || [];
-            if (initThemes.length === 0) return false; 
+            if (initThemes.length === 0) return false;
             return initThemes.some(themeId => selectedThemes.includes(themeId));
         });
     }
-    
+
     // Sort by completion date, most recent first
     completedInitiatives.sort((a, b) => {
         const dateA = new Date(a.actualCompletionDate || a.targetDueDate);
@@ -83,13 +83,13 @@ function renderAccomplishmentsView() {
     if (!container) return;
 
     const accomplishments = prepareAccomplishmentsData();
-    
+
     if (accomplishments.length === 0) {
-        container.innerHTML = `<p style="text-align: center; color: #777; margin-top: 20px;">No completed initiatives match the current filter criteria.</p>`;
+        container.innerHTML = `<p class="accomplishments-container__empty">No completed initiatives match the current filter criteria.</p>`;
         return;
     }
 
-    container.innerHTML = ''; 
+    container.innerHTML = '';
     const teamMap = new Map((currentSystemData.teams || []).map(t => [t.teamId, t.teamIdentity || t.teamName]));
     const goalMap = new Map((currentSystemData.goals || []).map(g => [g.goalId, g.name]));
     const themeMap = new Map((currentSystemData.definedThemes || []).map(t => [t.themeId, t.name]));
@@ -104,16 +104,16 @@ function renderAccomplishmentsView() {
             .map(a => teamMap.get(a.teamId) || 'Unknown')
             .join(', ');
 
-        const completionDateText = init.actualCompletionDate 
-            ? `Completed: ${init.actualCompletionDate}` 
+        const completionDateText = init.actualCompletionDate
+            ? `Completed: ${init.actualCompletionDate}`
             : `Completed (Target): ${init.targetDueDate || 'N/A'}`;
-        
+
         // ** NEW: Gather additional context **
         const goalName = goalMap.get(init.primaryGoalId) || 'N/A';
         const themeNames = (init.themes || []).map(tid => themeMap.get(tid)).join(', ') || 'None';
         const ownerName = init.owner?.name || 'N/A';
         const pmName = init.projectManager?.name || 'N/A';
-        
+
         let roiText = 'N/A';
         if (init.roi && init.roi.category && init.roi.estimatedValue) {
             roiText = `${init.roi.category}: ${init.roi.estimatedValue}`;

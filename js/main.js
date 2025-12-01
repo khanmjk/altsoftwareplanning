@@ -496,10 +496,12 @@ function toggleCollapsibleSection(contentId, indicatorId, handleId = null) {
 
 /** Save Sample Systems to Local Storage if not already present **/
 /**
- * REVISED: Saves sample systems to Local Storage ONLY if no data already exists.
- **/
-function saveSampleSystemsToLocalStorage() {
-    // console.log(">>> Checking if sample systems need to be saved to LocalStorage...");
+ * Saves sample systems to Local Storage.
+ * Default: add missing samples without touching existing (editable) ones.
+ * Use { forceOverwrite: true } to reset all samples to defaults.
+ */
+function saveSampleSystemsToLocalStorage(options = {}) {
+    const { forceOverwrite = false } = options;
 
     const existingDataString = localStorage.getItem(LOCAL_STORAGE_KEY);
     let systems = {};
@@ -513,8 +515,6 @@ function saveSampleSystemsToLocalStorage() {
         }
     }
 
-    // Always update/overwrite sample systems with the latest code definitions
-    // This ensures description updates and new samples are applied
     const sampleSystems = {
         'StreamView': sampleSystemDataStreamView,
         'ConnectPro': sampleSystemDataContactCenter,
@@ -525,24 +525,21 @@ function saveSampleSystemsToLocalStorage() {
 
     let hasChanges = false;
     Object.entries(sampleSystems).forEach(([key, data]) => {
-        // We overwrite the sample system to ensure latest data (descriptions, etc.)
-        // Note: This resets any user changes to these specific sample IDs.
-        // Users should create new systems or we should use different IDs for user forks.
-        // For now, treating these as immutable reference samples.
-        systems[key] = data;
-        hasChanges = true;
+        const exists = systems[key] !== undefined;
+        if (forceOverwrite || !exists) {
+            systems[key] = data;
+            hasChanges = true;
+        }
     });
 
     if (hasChanges) {
         try {
             localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
-            console.log("Sample systems updated in LocalStorage.");
+            console.log(`Sample systems ${forceOverwrite ? 'reset' : 'seeded/filled'} in LocalStorage.`);
         } catch (error) {
-            console.error("Error saving updated systems to localStorage:", error);
+            console.error("Error saving sample systems to localStorage:", error);
         }
     }
-
-    // console.log("<<< Finished saveSampleSystemsToLocalStorage check.");
 }
 
 /** Show Saved Systems Modal **/
@@ -935,7 +932,7 @@ async function resetToDefaults() {
             window.notificationManager.showToast('Unable to reset defaults because local storage could not be cleared.', 'error');
             return;
         }
-        saveSampleSystemsToLocalStorage(); // This will re-add the defaults
+        saveSampleSystemsToLocalStorage({ forceOverwrite: true }); // Re-add defaults explicitly
         currentSystemData = null;
         window.currentSystemData = null;
         window.notificationManager.showToast('Systems have been reset to defaults.', 'success');
@@ -1099,6 +1096,8 @@ function saveSystemChanges() {
 
     try {
         const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
+        // Track last modified for sorting and display in Systems view
+        currentSystemData.lastModified = new Date().toISOString();
         systems[currentSystemData.systemName] = currentSystemData;
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
         console.log('System changes saved to local storage via saveSystemChanges.');
@@ -1180,4 +1179,3 @@ if (typeof returnToHome === 'function') window.returnToHome = returnToHome;
 if (typeof createNewSystem === 'function') window.createNewSystem = createNewSystem;
 if (typeof deleteSystem === 'function') window.deleteSystem = deleteSystem;
 if (typeof resetToDefaults === 'function') window.resetToDefaults = resetToDefaults;
-

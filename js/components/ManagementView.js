@@ -6,6 +6,11 @@ class ManagementView {
     constructor(containerId) {
         this.container = document.getElementById(containerId);
         this.activeTab = 'themes'; // Default tab
+        // Bind once to avoid duplicate listeners on re-render
+        this._boundTabClick = this.handleTabClick.bind(this);
+        this._boundButtonClick = this.handleButtonClick.bind(this);
+        this._boundSubmit = this.handleThemeFormSubmit.bind(this);
+        this._eventsBound = false;
     }
 
     render() {
@@ -21,17 +26,17 @@ class ManagementView {
                     <!-- Sidebar Navigation -->
                     <div class="management-sidebar">
                         <div class="management-nav-item ${this.activeTab === 'themes' ? 'active' : ''}" 
-                             onclick="window.managementViewInstance.switchTab('themes')">
+                             data-tab="themes">
                             <div class="management-nav-icon"><i class="fas fa-swatchbook"></i></div>
                             Themes
                         </div>
                         <div class="management-nav-item ${this.activeTab === 'initiatives' ? 'active' : ''}" 
-                             onclick="window.managementViewInstance.switchTab('initiatives')">
+                             data-tab="initiatives">
                             <div class="management-nav-icon"><i class="fas fa-list-ul"></i></div>
                             Initiatives
                         </div>
                         <div class="management-nav-item ${this.activeTab === 'goals' ? 'active' : ''}" 
-                             onclick="window.managementViewInstance.switchTab('goals')">
+                             data-tab="goals">
                             <div class="management-nav-icon"><i class="fas fa-bullseye"></i></div>
                             Goals
                         </div>
@@ -45,7 +50,10 @@ class ManagementView {
             </div>
         `;
 
-        // Post-render actions (like attaching listeners or populating lists)
+        // Bind events
+        this.bindEvents();
+
+        // Post-render actions (populate lists)
         if (this.activeTab === 'themes') {
             this.populateThemesList();
         } else if (this.activeTab === 'initiatives') {
@@ -53,6 +61,60 @@ class ManagementView {
         } else if (this.activeTab === 'goals') {
             this.populateGoalsList();
         }
+    }
+
+    /**
+     * Bind event listeners
+     */
+    bindEvents() {
+        if (this._eventsBound) return;
+        // Delegated handlers so we only bind once regardless of re-render
+        this.container.addEventListener('click', this._boundTabClick);
+        this.container.addEventListener('click', this._boundButtonClick);
+        this.container.addEventListener('submit', this._boundSubmit);
+        this._eventsBound = true;
+    }
+
+    /**
+     * Handle tab clicks
+     */
+    handleTabClick(event) {
+        const tabItem = event.target.closest('[data-tab]');
+        if (!tabItem) return;
+
+        const tabName = tabItem.dataset.tab;
+        this.switchTab(tabName);
+    }
+
+    /**
+     * Handle button clicks via delegation
+     */
+    handleButtonClick(event) {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+
+        const action = button.dataset.action;
+        const index = button.dataset.index;
+        const initiativeId = button.dataset.initiativeId;
+
+        if (action === 'delete-theme' && index !== undefined) {
+            this.deleteTheme(parseInt(index));
+        } else if (action === 'add-initiative') {
+            this.openAddInitiativeModal();
+        } else if (action === 'edit-initiative' && initiativeId) {
+            this.editInitiative(initiativeId);
+        } else if (action === 'delete-initiative' && initiativeId) {
+            this.deleteInitiative(initiativeId);
+        }
+    }
+
+    /**
+     * Handle theme form submission
+     */
+    handleThemeFormSubmit(event) {
+        if (!event || event.target?.id !== 'addNewThemeForm_mgmt') return;
+        event.preventDefault();
+        this.saveNewTheme();
     }
 
     switchTab(tabName) {
@@ -82,7 +144,7 @@ class ManagementView {
                 <div class="management-grid">
                     <div>
                         <h4 class="management-section-title">Create New Theme</h4>
-                        <form id="addNewThemeForm_mgmt" onsubmit="event.preventDefault(); window.managementViewInstance.saveNewTheme();">
+                        <form id="addNewThemeForm_mgmt">
                             <div class="management-form-group">
                                 <label class="management-label">Theme Name</label>
                                 <input type="text" id="newThemeName_mgmt" required class="management-input" placeholder="e.g. User Experience">
@@ -91,7 +153,7 @@ class ManagementView {
                                 <label class="management-label">Description</label>
                                 <textarea id="newThemeDescription_mgmt" rows="3" class="management-textarea" placeholder="Brief description of the theme..."></textarea>
                             </div>
-                            <button type="submit" class="btn-secondary">
+                            <button type="submit" class="btn btn-secondary">
                                 <i class="fas fa-plus"></i> Add Theme
                             </button>
                         </form>
@@ -125,7 +187,10 @@ class ManagementView {
                     <div class="management-item-title">${theme.name}</div>
                     <div class="management-item-desc">${theme.description || 'No description'}</div>
                 </div>
-                <button class="btn-icon" onclick="window.managementViewInstance.deleteTheme(${index})" title="Delete Theme" style="color: #ef4444;">
+                <button class="btn-icon btn-icon--danger" 
+                        data-action="delete-theme" 
+                        data-index="${index}" 
+                        title="Delete Theme">
                     <i class="fas fa-trash-alt"></i>
                 </button>
             </div>
@@ -145,7 +210,7 @@ class ManagementView {
         window.currentSystemData.definedThemes.push({
             name: name,
             description: desc,
-            themeId: 'theme_' + Date.now() // Ensure ID consistency
+            themeId: 'theme_' + Date.now()
         });
 
         if (window.saveSystemData) window.saveSystemData();
@@ -166,14 +231,14 @@ class ManagementView {
     renderInitiativesTab() {
         return `
             <div class="management-card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h3 class="management-card-title" style="margin-bottom: 0; border-bottom: none;">Initiatives Overview</h3>
-                    <button class="btn-primary" onclick="window.managementViewInstance.openAddInitiativeModal()">
+                <div class="management-header-actions">
+                    <h3 class="management-card-title management-card-title--no-border">Initiatives Overview</h3>
+                    <button class="btn btn-primary" data-action="add-initiative">
                         <i class="fas fa-plus"></i> Add Initiative
                     </button>
                 </div>
                 
-                <div id="initiativesList_mgmt" class="management-list-container" style="max-height: 600px;">
+                <div id="initiativesList_mgmt" class="management-list-container management-list-container--tall">
                     <p class="management-list-empty">Loading initiatives...</p>
                 </div>
             </div>
@@ -201,10 +266,16 @@ class ManagementView {
                     </div>
                 </div>
                 <div class="management-item-actions">
-                    <button class="btn-icon" onclick="window.managementViewInstance.editInitiative('${init.initiativeId}')" title="Edit Initiative">
+                    <button class="btn-icon" 
+                            data-action="edit-initiative" 
+                            data-initiative-id="${init.initiativeId}" 
+                            title="Edit Initiative">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn-icon" onclick="window.managementViewInstance.deleteInitiative('${init.initiativeId}')" title="Delete Initiative" style="color: #ef4444;">
+                    <button class="btn-icon btn-icon--danger" 
+                            data-action="delete-initiative" 
+                            data-initiative-id="${init.initiativeId}" 
+                            title="Delete Initiative">
                         <i class="fas fa-trash-alt"></i>
                     </button>
                 </div>

@@ -1,0 +1,2299 @@
+/* === Phase UX.A1: Foundational Styling & Top Bar === */
+
+/* Global Resets and Typography */
+body {
+    font-family: 'Inter', Arial, sans-serif;
+    margin: 0;
+    /* Remove default body margin */
+    padding: 0;
+    background-color: #f8f9fa;
+    /* Light gray page background */
+    color: #212529;
+    /* Default dark text color */
+    line-height: 1.6;
+    font-size: 16px;
+    /* Base font size */
+    overflow: hidden;
+    /* Keep the layout pinned to the viewport */
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-weight: 600;
+    /* Semi-bold for headings */
+    margin-top: 1.5em;
+    margin-bottom: 0.75em;
+    line-height: 1.2;
+}
+
+h1 {
+    font-size: 2.25rem;
+    text-align: center;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+/* 36px */
+h2 {
+    font-size: 1.75rem;
+}
+
+/* 28px */
+h3 {
+    font-size: 1.5rem;
+}
+
+/* 24px */
+h4 {
+    font-size: 1.25rem;
+}
+
+/* 20px */
+
+a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* === Phase UX.A2: Card UI & Section Styling === */
+
+/* Styling for main headers within content cards (e.g., "Edit System", "Team Breakdown") */
+/* These are typically h2 elements directly inside a main view div */
+#systemEditForm>h2,
+#organogramView>div>h2,
+/* For "Team Breakdown" which is nested */
+#engineerTableView>h2,
+#serviceDependenciesTable>h2 {
+    font-size: 1.5rem;
+    /* 24px */
+    font-weight: 600;
+    color: #16191f;
+    /* Darker text */
+    padding-bottom: 0.75rem;
+    margin-top: 0;
+    /* Remove default margin if it's the first element in a card */
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #eaeded;
+    /* Subtle separator line */
+}
+
+/* Styling for sub-section headers (h3, h4) within cards */
+/* e.g., "Services", "Teams" in Edit System; collapsible headers in Planning/Capacity views */
+.service-edit>h4,
+/* Already styled somewhat, let's refine */
+.team-edit>h4,
+/* Already styled somewhat, let's refine */
+#systemEditForm>h3,
+#planningView #addInitiativeSection>h3,
+#planningView #teamLoadSummarySection>h4,
+#capacityConfigView #globalConstraintsSection>h3,
+#capacityConfigView #teamConstraintsSection>h3,
+#capacityConfigView .team-constraint-container>h4,
+#sdmForecastingView h3 {
+    /* Target h3s in SDM tool for section titles */
+    font-size: 1.15rem;
+    /* Around 18px */
+    font-weight: 600;
+    color: #212529;
+    background-color: #f8f9fa;
+    /* Very light gray for header background */
+    padding: 10px 15px;
+    margin: -20px -20px 15px -20px;
+    /* Extend to card edges, then add bottom margin */
+    /* For collapsible headers, they might have their own margin:0 set inline/JS */
+    border-bottom: 1px solid #dee2e6;
+    border-top-left-radius: 6px;
+    /* Match card radius if it's the first element */
+    border-top-right-radius: 6px;
+    /* Match card radius */
+}
+
+/* Specific adjustments for collapsible headers to override the negative margin if needed */
+#planningView #addInitiativeSection>h3[onclick],
+#planningView #teamLoadSummarySection>h4[onclick],
+#toolDocumentationSection>h3[onclick],
+#capacityConfigView .team-constraint-container>h4[onclick],
+.service-edit>h4[onclick] {
+    /* If service headers become clickable */
+    margin: 0 0 0 0;
+    /* Reset margin if it's a clickable header within a card */
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    /* Keep existing background and padding from their specific rules or inline styles */
+}
+
+
+/* Styling for sub-sections within cards (like "Add New Initiative" or individual team edits) */
+/* This creates a "card-within-a-card" effect */
+#addInitiativeSection,
+.team-edit,
+.service-edit,
+#capacityConfigView #globalConstraintsSection,
+#capacityConfigView #teamConstraintsSection,
+#sdmForecastingView .input-section,
+#sdmForecastingView .output-section,
+#sdmForecastingView .faq-section {
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    /* Slightly softer border for nested cards */
+    border-radius: 4px;
+    padding: 15px;
+    /* Inner padding */
+    margin-bottom: 20px;
+    /* Space between sub-cards */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* For collapsible sections, their headers might already have specific styling. */
+/* We ensure the content div within these sub-cards has appropriate padding. */
+#addInitiativeContent,
+.team-details,
+/* Content of team-edit */
+.service-details,
+/* Content of service-edit */
+#teamLoadSummaryContent,
+#capacityConfigView #globalConstraintsSection>div:not(h3),
+/* Target content divs */
+#capacityConfigView .team-details,
+/* Content of team-constraint-container */
+#documentationContent,
+/* Already has padding, but ensure consistency */
+#sdmForecastingView .input-section>div:not(h3):not(.input-group),
+/* More specific for sdm tool */
+#sdmForecastingView .output-section>div:not(h3) {
+    padding-top: 15px;
+    /* Add padding if not directly on the sub-card div */
+}
+
+/* Adjust padding for direct children of input-section if they are not headers or input-groups */
+#sdmForecastingView .input-section>*:not(h3):not(.input-group):not(button) {
+    padding-left: 5px;
+    /* Indent general text a bit */
+}
+
+
+
+/* General container for views below the top bar */
+.main-content-area {
+    padding: 20px;
+    /* max-width: 1200px; */
+    /* Or your preferred max width for content */
+    width: auto;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* === End Phase UX.A2 === */
+
+/* === Phase UX.A3: Component Styling === */
+
+/* --- Button Styles --- */
+button,
+.button {
+    /* Apply to button elements and anything with class .button */
+    display: inline-block;
+    font-weight: 500;
+    /* Slightly bolder than normal text */
+    line-height: 1.5;
+    color: #212529;
+    text-align: center;
+    vertical-align: middle;
+    cursor: pointer;
+    user-select: none;
+    background-color: #f8f9fa;
+    /* Default light gray */
+    border: 1px solid #ced4da;
+    /* Standard border */
+    padding: 0.375rem 0.75rem;
+    /* Standard padding (e.g., Bootstrap's default) */
+    font-size: 0.95rem;
+    /* Match topBar button font size */
+    border-radius: 0.25rem;
+    /* Standard small border radius */
+    transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    text-decoration: none;
+    /* Remove underline from button-styled links */
+}
+
+button:hover,
+.button:hover {
+    color: #212529;
+    background-color: #e2e6ea;
+    border-color: #dae0e5;
+}
+
+button:focus,
+.button:focus {
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    /* AWS-like focus ring */
+}
+
+/* Primary Action Button (e.g., Save, Create, Add) */
+button.btn-primary,
+.button.btn-primary {
+    color: #fff;
+    background-color: #007bff;
+    /* Our primary blue */
+    border-color: #007bff;
+}
+
+button.btn-primary:hover,
+.button.btn-primary:hover {
+    background-color: #0069d9;
+    border-color: #0062cc;
+}
+
+/* Destructive Action Button (e.g., Delete, Remove) */
+button.btn-danger,
+.button.btn-danger {
+    color: #fff;
+    background-color: #dc3545;
+    /* Red */
+    border-color: #dc3545;
+}
+
+button.btn-danger:hover,
+.button.btn-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+
+/* Link-style Button (for less prominent actions) */
+button.btn-link,
+.button.btn-link {
+    font-weight: 400;
+    color: #007bff;
+    background-color: transparent;
+    border-color: transparent;
+    text-decoration: none;
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+}
+
+button.btn-link:hover,
+.button.btn-link:hover {
+    color: #0056b3;
+    text-decoration: underline;
+    background-color: transparent;
+    border-color: transparent;
+}
+
+/* Adjustments for buttons in specific contexts if needed */
+/* Top bar buttons are already styled - this new .button class won't override them unless explicitly added */
+
+/* Example: Buttons in dual list selectors or small action buttons */
+.dual-list-container button,
+.api-edit button,
+/* Delete API button */
+#newInitiativeAssignmentsDisplay button
+
+/* Remove assignment button */
+    {
+    font-size: 0.8em;
+    padding: 0.25rem 0.5rem;
+}
+
+/* Your existing CSS rules will follow here... */
+/* e.g., #visualization, #teamVisualization { max-width: 800px; ... } */
+/* ... */
+
+
+/* --- Form Element Styles --- */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+/* If you add email later */
+input[type="password"],
+/* If you add password later */
+textarea,
+select {
+    display: block;
+    /* Make them take full width by default in their containers */
+    width: 100%;
+    /* Or a specific percentage like 90% if preferred inside forms */
+    padding: 0.5rem 0.75rem;
+    font-size: 0.95rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    box-sizing: border-box;
+    /* Important for width: 100% */
+    margin-bottom: 0.5rem;
+    /* Space below form elements */
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+textarea:focus,
+select:focus {
+    border-color: #80bdff;
+    /* Lighter blue focus border */
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    /* AWS-like focus glow */
+}
+
+textarea {
+    resize: vertical;
+    /* Allow only vertical resizing */
+}
+
+select[multiple] {
+    height: auto;
+    /* Let browser determine height for multi-selects */
+    min-height: 100px;
+    /* Retain your min-height for dual lists */
+}
+
+label {
+    display: inline-block;
+    /* Or block if you prefer labels on their own line */
+    margin-bottom: 0.3rem;
+    font-weight: 500;
+}
+
+/* For specific input widths where 100% is too much (like SDE Years input) */
+#newInitiativeSdeYears,
+#planningTable tbody td input[type="number"],
+/* Targets inputs in planning table cells */
+#sdmForecastingView input[type="number"] {
+    /* Already styled specifically, ensure this doesn't break it or consolidate */
+    width: 80px;
+    /* Or your preferred smaller width */
+    display: inline-block;
+    /* Allow them to not take full line */
+}
+
+/* --- Table Styles --- */
+table {
+    /* General table reset/base */
+    width: 100%;
+    margin-bottom: 1rem;
+    color: #212529;
+    border-collapse: collapse;
+    /* Ensure this is set */
+}
+
+th,
+td {
+    padding: 0.75rem;
+    /* Default padding, can be overridden */
+    vertical-align: top;
+    border-top: 1px solid #dee2e6;
+    /* Lighter borders */
+}
+
+thead th {
+    vertical-align: bottom;
+    border-bottom: 2px solid #dee2e6;
+    /* Stronger border for header bottom */
+    background-color: #f8f9fa;
+    /* Light header background */
+    font-weight: 600;
+    /* Bolder header text */
+    text-align: left;
+    /* Default left align for headers */
+    white-space: nowrap;
+    /* Prevent header text from wrapping too early */
+}
+
+/* Specific overrides for our existing tables if needed */
+/* Example: Planning table had very specific padding/font sizes */
+#planningTable thead th {
+    /* These were very specific to make header compact. Keep them if they work. */
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background-color: #e9ecef;
+    /* Slightly darker for planning table sticky header */
+    border: 1px solid #ccc;
+    text-align: left;
+    white-space: nowrap;
+    padding: 3px 5px;
+    font-size: 0.85em;
+}
+
+#planningTable th[data-team-id] {
+    background-color: #ddeeff;
+    /* Light blue for team headers */
+    padding: 5px 2px;
+    font-size: 0.8em;
+    min-width: 25px;
+    max-width: 25px;
+    /* writing-mode and text-orientation are fine */
+}
+
+#planningTable tbody td,
+#teamLoadSummaryTable tbody td {
+    padding: 2px 4px;
+    /* Fine-tuned padding */
+    font-size: 0.82em;
+    /* Slightly adjusted font size */
+    border: 1px solid #f0f0f0;
+    /* Very light cell borders */
+    vertical-align: middle;
+}
+
+#planningTable tbody td input[type="number"] {
+    font-size: 0.9em;
+    /* Make input text slightly larger than cell text */
+    padding: 2px;
+}
+
+/* Engineer Table & Team Breakdown Table */
+#engineerTable th,
+#engineerTable td,
+#teamTable th,
+#teamTable td {
+    border: 1px solid #dee2e6;
+    padding: 0.5rem;
+    /* Standardized padding */
+}
+
+#engineerTable thead th,
+#teamTable thead th {
+    background-color: #f0f2f5;
+    /* AWS-like table header */
+}
+
+/* Team Load Summary Table */
+#teamLoadSummaryTable {
+    font-size: 0.85em;
+}
+
+#teamLoadSummaryTable thead th {
+    padding: 5px 8px;
+    /* Slightly more padding */
+    background-color: #f0f2f5;
+}
+
+#teamLoadSummaryTable tbody td,
+#teamLoadSummaryTable tfoot td {
+    padding: 4px 6px;
+    font-size: 0.85em;
+    /* Match table overall size */
+}
+
+#teamLoadSummaryTable tfoot td {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+/* Service Dependencies Table */
+#serviceDependenciesTable th {
+    background-color: #f0f2f5;
+}
+
+#serviceDependenciesTable th,
+#serviceDependenciesTable td {
+    padding: 0.5rem;
+    border: 1px solid #dee2e6;
+}
+
+/* SDM Forecasting Tables */
+#sdmForecastingView table {
+    font-size: 0.9em;
+}
+
+#sdmForecastingView th {
+    background-color: #f0f2f5;
+    padding: 6px 8px;
+}
+
+#sdmForecastingView td {
+    padding: 6px 8px;
+    border: 1px solid #dee2e6;
+}
+
+/* Add bottom margin to the form within the system edit view */
+#editSystemForm {
+    margin-bottom: 40px;
+    /* This provides 20px of space after the -20px top margin of the h3 */
+}
+
+/* Basic styling */
+h1 {
+    text-align: center;
+}
+
+#visualization,
+#teamVisualization {
+    max-width: 900px;
+    margin: 0 auto 12px auto;
+}
+
+svg {
+    width: 100%;
+    height: 560px;
+    border: 1px solid #ccc;
+}
+
+#teamTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+#teamTable th,
+#teamTable td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+    vertical-align: top;
+}
+
+.node text {
+    pointer-events: none;
+    font-size: 12px;
+}
+
+.tooltip {
+    position: absolute;
+    text-align: left;
+    width: auto;
+    max-width: 300px;
+    padding: 5px;
+    font: 12px sans-serif;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #ccc;
+    pointer-events: none;
+}
+
+.legend {
+    font-size: 12px;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    margin-right: 15px;
+    margin-bottom: 5px;
+}
+
+.team-edit {
+    margin-bottom: 15px;
+    padding: 10px;
+    border: 1px solid #ccc;
+}
+
+#systemDescription {
+    text-align: center;
+    /* Add this line to center the text */
+    /* You can add other styles here too if needed, like margin */
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+
+
+.team-edit {
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+}
+
+.team-edit h4 {
+    margin: 0;
+    padding: 10px;
+    background-color: #f2f2f2;
+}
+
+.team-details {
+    padding: 10px;
+    display: none;
+}
+
+.service-edit {
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+}
+
+.service-edit h4 {
+    margin: 0;
+    padding: 10px;
+    background-color: #e6f7ff;
+    cursor: pointer;
+}
+
+.service-details {
+    padding: 10px;
+    display: none;
+}
+
+.api-edit {
+    margin-left: 20px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    padding: 10px;
+}
+
+/* --- Visualization Carousel Styles --- */
+/* #visualizationCarousel styles moved to top of file to avoid duplication */
+
+#visualizationCarousel .carousel-item {
+    /* display: none; */
+    /* Initially set in HTML, JS will manage */
+    width: 100%;
+    margin-top: 0;
+    padding: 4px 8px;
+    box-sizing: border-box;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+#visualizationCarousel .carousel-item.active {
+    display: block;
+    /* Show the active item */
+    /* opacity: 1; */
+}
+
+/* Style for the central title */
+#visualizationTitle {
+    display: inline-block;
+    /* Allows margin */
+    min-width: 250px;
+    /* Give it some space */
+    text-align: center;
+}
+
+/* Optional: Basic button styling */
+#visualizationCarousel button {
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+/* --- End Carousel Styles --- */
+
+/* Mermaid diagram container tweaks */
+#mermaidVisualization {
+    min-height: 760px;
+}
+
+#mermaidGraph {
+    min-height: 720px;
+    resize: vertical;
+    overflow: auto;
+}
+
+#mermaidGraph svg {
+    max-width: 100%;
+    height: auto;
+}
+
+#mermaidApiGraph svg {
+    max-width: 100%;
+    height: auto;
+}
+
+
+/* Adjust SVG size for service visualization */
+#serviceSvg {
+    width: 100%;
+    height: 600px;
+    border: 1px solid #ccc;
+}
+
+/* Adjust tooltip styling if necessary */
+.tooltip {
+    position: absolute;
+    text-align: left;
+    width: auto;
+    max-width: 300px;
+    padding: 5px;
+    font: 12px sans-serif;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #ccc;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+/* Dependency visualization styles */
+.node circle {
+    fill: #fff;
+    stroke: steelblue;
+    stroke-width: 2px;
+}
+
+.node text {
+    font: 12px sans-serif;
+}
+
+.link {
+    fill: none;
+    stroke: #ccc;
+    stroke-width: 2px;
+}
+
+.tooltip {
+    position: absolute;
+    text-align: left;
+    width: auto;
+    max-width: 300px;
+    padding: 10px;
+    font: 12px sans-serif;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+#serviceDependenciesTable {
+    margin-top: 0;
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+}
+
+#serviceDependenciesTable table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#serviceDependenciesTable th,
+#serviceDependenciesTable td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+}
+
+#serviceDependenciesTable th {
+    background-color: #f2f2f2;
+}
+
+#serviceDependenciesTable tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+#serviceDependenciesTable tr:hover {
+    background-color: #e9e9e9;
+}
+
+.platform-deps-container {
+    display: flex;
+    align-items: center;
+}
+
+.current-deps,
+.other-deps {
+    flex: 1;
+    margin: 0 10px;
+}
+
+.platform-deps-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.platform-deps-buttons button {
+    margin: 5px 0;
+}
+
+.platform-deps-container select {
+    width: 100%;
+    min-height: 100px;
+}
+
+.service-deps-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.current-service-deps,
+.other-services {
+    flex: 1;
+    margin: 0 10px;
+}
+
+.service-deps-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.service-deps-buttons button {
+    margin: 5px 0;
+}
+
+.service-deps-container select {
+    width: 100%;
+    min-height: 100px;
+}
+
+/* Styles for Dependent APIs */
+.dependent-apis-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.current-dependent-apis,
+.other-apis {
+    flex: 1;
+    margin: 0 10px;
+}
+
+.dependent-apis-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.dependent-apis-buttons button {
+    margin: 5px 0;
+}
+
+.dependent-apis-container select {
+    width: 100%;
+    min-height: 100px;
+}
+
+/* Add styles for new views */
+/* #organogramView styles moved to top of file */
+#engineerTableView {
+    max-width: 90%;
+    /* Allow wider view */
+    margin: 20px auto;
+}
+
+#organogramSvg {
+    width: 100%;
+    height: 700px;
+    /* Adjust as needed */
+    border: 1px solid #ccc;
+    background-color: #f9f9f9;
+    /* Light background */
+}
+
+/* Styles for Organogram Nodes/Links (Example) */
+.organogram-link {
+    fill: none;
+    stroke: #555;
+    stroke-opacity: 0.6;
+    stroke-width: 1.5px;
+}
+
+.organogram-node circle {
+    /* Example using circles */
+    stroke: steelblue;
+    stroke-width: 1.5px;
+}
+
+.organogram-node rect {
+    /* Example using rectangles */
+    stroke: steelblue;
+    stroke-width: 1.5px;
+    fill: #fff;
+}
+
+.organogram-node text {
+    font: 10px sans-serif;
+    /* Adjust text anchor and position based on layout */
+}
+
+/* Styles for Engineer Table */
+#engineerTable th,
+#engineerTable td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+}
+
+#engineerTable th {
+    background-color: #f2f2f2;
+}
+
+#engineerTable th[data-sort-key]:hover {
+    /* Indicate sortable */
+    background-color: #e0e0e0;
+    text-decoration: underline;
+}
+
+#engineerTable tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+/* Also add some basic CSS for visual feedback (place within the <style> tag) */
+/* Add styles for drag-and-drop feedback */
+#planningTableBody tr.dragging {
+    opacity: 0.5;
+    border: 2px dashed #ccc;
+}
+
+#planningTableBody tr.drag-over {
+    border-top: 2px solid blue;
+    /* Highlight where it will drop */
+}
+
+/* --- Styles for Planning Table Enhancements (Revised for Alignment Fix) --- */
+#planningTableWrapper {
+    overflow: auto;
+    /* Enable BOTH horizontal and vertical scrolling */
+    /* max-height: 550px; */
+    /* Set max height before vertical scroll appears (Adjust as needed) */
+    max-width: 100%;
+    /* Ensure it doesn't overflow its parent */
+    margin-bottom: 15px;
+    /* Add some space below */
+    border: 1px solid #ccc;
+    /* Optional: add a border to see the scroll container */
+}
+
+/* Make headers stick within the scrollable container */
+#planningTable thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background-color: #f2f2f2;
+    border: 1px solid #ccc;
+    text-align: left;
+    white-space: nowrap;
+    /* --- ADDED specific, reduced padding and font-size --- */
+    padding: 3px 5px;
+    /* Reduced vertical and horizontal padding */
+    font-size: 0.85em;
+    /* Reduced font size */
+    /* ----------------------------------------------------- */
+}
+
+/* Ensure the background of the dynamic team headers is also solid */
+#planningTable th[data-team-id] {
+    background-color: #e6f7ff;
+    writing-mode: vertical-lr;
+    text-orientation: mixed;
+    text-align: center;
+    /* --- Apply reduced padding/font AND adjust min/max width --- */
+    padding: 5px 2px;
+    /* Adjusted padding for vertical (more top/bottom, less left/right) */
+    font-size: 0.8em;
+    /* Further reduced font for vertical names */
+    min-width: 25px;
+    /* Reduced width */
+    max-width: 25px;
+    /* Reduced width */
+
+}
+
+
+/* Center-align specific numerical columns in the planning table */
+#planningTable th:nth-child(5),
+/* Total SDE Years Header */
+#planningTable td:nth-child(5),
+/* Total SDE Years Cell */
+#planningTable th:nth-child(6),
+/* Cumulative SDE Years Header */
+#planningTable td:nth-child(6) {
+    /* Cumulative SDE Years Cell */
+    text-align: center !important;
+    /* Use important if needed */
+}
+
+/* --- REVISED: Reduce font size and padding for BOTH planning table rows AND summary table rows --- */
+#planningTable tbody td,
+#teamLoadSummaryTable tbody td {
+    /* Added summary table selector */
+    padding: 2px 3px;
+    /* Reduced vertical padding */
+    font-size: 0.80em;
+    /* Smaller row font */
+    border: 1px solid #eee;
+    vertical-align: middle;
+    /* Align content vertically */
+}
+
+/* Also target inputs in the main planning table */
+#planningTable tbody td input[type="number"] {
+    vertical-align: middle;
+    font-size: 0.85em;
+    /* Smaller row font */
+}
+
+/* Style summary table footer cells similarly */
+#teamLoadSummaryTable tfoot td {
+    padding: 2px 3px;
+    font-size: 0.80em;
+    /* Apply same font size */
+    border: 1px solid #ccc;
+    /* Keep slightly stronger border for footer */
+    background-color: #f8f9fa;
+    /* Keep footer background */
+    text-align: center;
+    /* Keep footer text centered */
+    vertical-align: middle;
+}
+
+/* Adjust the first footer cell (label) alignment */
+#teamLoadSummaryTable tfoot td:first-child {
+    text-align: left;
+}
+
+/* Control column widths for Team Load Summary Table (Attempt 2)  */
+#teamLoadSummaryTable thead th:nth-child(1) {
+    text-align: left;
+    width: 10%;
+    max-width: 30px
+}
+
+/* Team Name */
+#teamLoadSummaryTable thead th:nth-child(2),
+/* Funded HC */
+#teamLoadSummaryTable thead th:nth-child(3),
+/* Team BIS */
+#teamLoadSummaryTable thead th:nth-child(4),
+/* Away BIS */
+#teamLoadSummaryTable thead th:nth-child(5) {
+    width: 8%;
+}
+
+/* Effective BIS */
+#teamLoadSummaryTable thead th:nth-child(6) {
+    width: 12%;
+    max-width: 40px;
+}
+
+/* Assigned ATL SDEs */
+#teamLoadSummaryTable thead th:nth-child(7) {
+    width: 12%;
+    max-width: 40px;
+}
+
+/* Scenario Capacity Limit */
+#teamLoadSummaryTable thead th:nth-child(8) {
+    width: 12%;
+    max-width: 40px;
+}
+
+/* Remaining Capacity (ATL) */
+#teamLoadSummaryTable thead th:nth-child(9) {
+    width: 10%;
+}
+
+/* ATL Status */
+
+
+/* REVISED Style for clickable headers */
+#planningView h3[onclick],
+#planningView h4[onclick] {
+    /* Keep targeting both in case h4 is used later */
+    cursor: pointer;
+    /* Removed position: relative and padding-left */
+}
+
+/* REVISED Style for toggle indicator */
+#planningView h3[onclick] span.toggle-indicator,
+#planningView h4[onclick] span.toggle-indicator {
+    /* Removed absolute positioning properties */
+    display: inline-block;
+    /* Keep this */
+    font-weight: bold;
+    /* Keep this */
+    margin-right: 5px;
+    /* Add some space after the indicator */
+    /* Optional: Adjust color if desired */
+    /* color: #007bff; */
+}
+
+/* Style for the disabled constraints toggle label */
+.toggle-disabled {
+    opacity: 0.6;
+    /* Make it appear faded */
+    color: #6c757d;
+    /* Grey out the text */
+    cursor: not-allowed !important;
+    /* Ensure 'not-allowed' cursor */
+}
+
+.toggle-disabled input[type="checkbox"] {
+    cursor: not-allowed !important;
+    /* Apply to checkbox too */
+}
+
+/* --- Styles specifically for SDM Forecasting Tool View --- */
+#sdmForecastingView .input-section,
+#sdmForecastingView .output-section {
+    margin-bottom: 30px;
+    padding: 15px;
+    border: 1px solid #eee;
+    /* Add a light border */
+    border-radius: 4px;
+}
+
+#sdmForecastingView .input-group {
+    margin-bottom: 15px;
+    /* Increased spacing */
+}
+
+#sdmForecastingView label {
+    display: block;
+    /* Ensure label is on its own line */
+    margin-top: 10px;
+    font-weight: bold;
+    /* Make label stand out */
+    margin-bottom: 3px;
+    /* Space between label and input */
+}
+
+#sdmForecastingView input[type="number"] {
+    /* Target number inputs */
+    width: 150px;
+    /* Adjust width as needed */
+    padding: 8px;
+    margin-top: 0;
+    /* Remove default top margin */
+    box-sizing: border-box;
+    /* Include padding in width */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#sdmForecastingView .help-text {
+    font-size: 0.9em;
+    color: #555;
+    margin-top: 4px;
+    /* Space above help text */
+    margin-left: 5px;
+    /* Indent slightly */
+}
+
+/* Style the info/summary divs if needed */
+#sdmForecastingView .info,
+#sdmForecastingView .summary {
+    margin-top: 10px;
+    font-weight: bold;
+    padding: 10px;
+    background-color: #e9ecef;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+}
+
+/* Style tables within the view */
+#sdmForecastingView table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 0.9em;
+    /* Slightly smaller font for tables */
+}
+
+#sdmForecastingView th,
+#sdmForecastingView td {
+    border: 1px solid #ccc;
+    padding: 6px 8px;
+    /* Adjust padding */
+    text-align: center;
+}
+
+#sdmForecastingView th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+#sdmForecastingView td.editable {
+    /* Keep editable style */
+    background-color: #f9f9f9;
+    cursor: pointer;
+}
+
+/* Style the FAQ section */
+#sdmForecastingView .faq-section {
+    margin-top: 40px;
+    border-top: 1px solid #ccc;
+    padding-top: 20px;
+}
+
+#sdmForecastingView .faq-item {
+    margin-bottom: 20px;
+}
+
+#sdmForecastingView .faq-item h4 {
+    margin-bottom: 5px;
+    /* Adjust spacing */
+    color: #0056b3;
+}
+
+#sdmForecastingView .faq-item p,
+#sdmForecastingView .faq-item ul,
+#sdmForecastingView .faq-item ol {
+    font-size: 0.95em;
+    color: #333;
+    margin-left: 15px;
+    /* Indent FAQ content */
+}
+
+/* --- End SDM Forecasting Tool Styles --- */
+
+/* --- UX Enhancement: Hover Effects --- */
+
+/* 1. Table Row Hover Effects */
+#teamTable tbody tr:hover td,
+/* Target TDs within the hovered TR */
+#serviceDependenciesTable tbody tr:hover td,
+#planningTableBody tr:hover td,
+#teamLoadSummaryTable tbody tr:hover td,
+#sdmForecastingView #forecastTable_SDM tbody tr:hover td,
+#sdmForecastingView #monthlySummaryTable_SDM tbody tr:hover td {
+    background-color: #f0f8ff !important;
+    /* Alice blue, try with !important first for testing planning table */
+    transition: background-color 0.15s ease-in-out;
+}
+
+/* Attempt to make inputs transparent on row hover in planning table */
+#planningTableBody tr:hover td input[type="number"] {
+    background-color: transparent;
+}
+
+
+/* 2. Collapsible Section Header Hover Effects */
+#documentationHeader:hover,
+#planningView #addInitiativeSection>h3:hover,
+#planningView #teamLoadSummarySection>h4:hover,
+#capacityConfigView #globalConstraintsSection>h3:hover,
+#capacityConfigView #teamConstraintsSection>h3:hover,
+#capacityConfigView .team-constraint-container>h4:hover,
+#sdmForecastingView .input-section>h3:hover,
+#sdmForecastingView .output-section>h3:hover,
+#sdmForecastingView .faq-section>h3:hover,
+#capacityConfigView #narrativeHeader:hover,
+#capacityConfigView #chartHeader:hover {
+    background-color: #e2e6ea;
+    color: #0056b3;
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+/* Ensure these are active for Edit System collapsible headers */
+#systemEditForm .service-edit>h4:hover,
+#systemEditForm .team-edit>h4:hover {
+    background-color: #dce9f5;
+    /* Distinct light blue for testing edit mode hover */
+    color: #004a99;
+    /* Distinct darker blue for testing */
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+/* --- UX Enhancement: Improved Focus Indicators --- */
+
+/*
+  :focus-visible is a pseudo-class that applies when an element matches :focus
+  and the browser heuristically determines that the focus should be made visible
+  (e.g., when focused via keyboard or script, but not always on mouse click).
+*/
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+a:focus-visible {
+    /* For any standalone interactive links */
+    outline: 3px solid #007bff;
+    /* A clear, slightly thicker blue outline */
+    outline-offset: 2px;
+    /* Space between the element and the outline */
+    /* Optional: A softer box-shadow can also be used, but outline is often preferred for clarity */
+    /* box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.35); */
+    transition: outline 0.1s ease-in-out, outline-offset 0.1s ease-in-out;
+    /* Smooth transition for the outline */
+}
+
+/*
+  Consider carefully if you want to remove the default outline universally.
+  If :focus-visible is not supported by an older browser,
+  removing the default :focus outline would leave no focus indicator.
+  However, :focus-visible has good modern browser support.
+
+  If you are confident in your target browsers, you might do:
+*/
+/*
+button:focus,
+input:focus,
+textarea:focus,
+select:focus,
+a:focus {
+    outline: none; /* Remove default outline ONLY if :focus-visible is providing a better one */
+/*}
+*/
+/* A safer approach is to let the default :focus outline exist for older browsers,
+   and :focus-visible will enhance it for modern browsers.
+   Or, provide a fallback :focus style that is less obtrusive than the default if needed.
+*/
+
+/* Specific styling for top bar buttons when focused via keyboard */
+#topBar button:focus-visible {
+    /* The general rule above might be sufficient, but you can make it more specific */
+    /* For example, to ensure it stands out against the dark top bar */
+    outline: 2px solid #79c0ff;
+    /* A lighter blue for dark backgrounds */
+    outline-offset: 1px;
+    box-shadow: 0 0 0 2px rgba(121, 192, 255, 0.4);
+    /* Adjusted shadow for top bar */
+}
+
+/*
+  For Tabulator tables, focus on cells or rows might be handled by Tabulator's
+  own navigation features. These global styles will primarily affect standalone
+  form elements and buttons.
+*/
+
+/* --- UX Enhancement: Modern Scrollbar Styling --- */
+
+/* Target specific scrollable containers */
+#documentationContent,
+#planningTableWrapper {
+    /* For Firefox */
+    scrollbar-width: thin;
+    /* Options: "auto", "thin", "none" */
+    scrollbar-color: #adb5bd #f0f2f5;
+    /* thumb color, track color */
+}
+
+/* For WebKit-based browsers (Chrome, Safari, Edge, Opera) */
+#documentationContent::-webkit-scrollbar,
+#planningTableWrapper::-webkit-scrollbar {
+    width: 10px;
+    /* Width of the vertical scrollbar */
+    height: 10px;
+    /* Height of the horizontal scrollbar */
+}
+
+#documentationContent::-webkit-scrollbar-track,
+#planningTableWrapper::-webkit-scrollbar-track {
+    background: #f0f2f5;
+    /* Color of the track (the area the scrollbar moves along) */
+    border-radius: 10px;
+    /* Rounded corners for the track */
+}
+
+#documentationContent::-webkit-scrollbar-thumb,
+#planningTableWrapper::-webkit-scrollbar-thumb {
+    background-color: #adb5bd;
+    /* Color of the scrollbar thumb (the draggable part) */
+    border-radius: 10px;
+    /* Rounded corners for the thumb */
+    border: 2px solid #f0f2f5;
+    /* Creates padding around thumb, using track color */
+}
+
+#documentationContent::-webkit-scrollbar-thumb:hover,
+#planningTableWrapper::-webkit-scrollbar-thumb:hover {
+    background-color: #6c757d;
+    /* Darker color when hovering over the thumb */
+}
+
+/* Optional: For corner where vertical and horizontal scrollbars meet (if both are present) */
+#documentationContent::-webkit-scrollbar-corner,
+#planningTableWrapper::-webkit-scrollbar-corner {
+    background: #f0f2f5;
+    /* Match track color */
+}
+
+/* --- UX Enhancement: Animations for Element Entry --- */
+
+@keyframes fadeInAndSlideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-15px);
+        /* Start slightly above */
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.new-item-added-fade-in-slide-down {
+    animation: fadeInAndSlideDown 0.4s ease-out forwards;
+}
+
+/* Optional: A simpler fade-in if slide is too much for some contexts */
+@keyframes simpleFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.new-item-added-fade-in {
+    animation: simpleFadeIn 0.3s ease-out forwards;
+}
+
+/* --- Style for Planning Year Selector --- */
+#planningScenarioControl label[for="planningYearSelector"] {
+    font-weight: bold;
+    margin-left: 20px;
+}
+
+#planningYearSelector {
+    padding: 5px 8px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    background-color: #fff;
+    font-size: 0.9em;
+    margin-left: 5px;
+    cursor: pointer;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+#planningYearSelector:hover {
+    border-color: #adb5bd;
+}
+
+#planningYearSelector:focus {
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* --- End Style --- */
+
+/* --- Quarterly Roadmap Table Styles --- */
+.quarterly-roadmap-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    /* Ensures columns are of equal width */
+}
+
+.quarterly-roadmap-table thead th {
+    background-color: #e9ecef;
+    border: 1px solid #dee2e6;
+    padding: 12px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.quarterly-roadmap-table tbody td {
+    border: 1px solid #dee2e6;
+    vertical-align: top;
+    padding: 0;
+}
+
+.quarterly-roadmap-table .theme-cell {
+    font-weight: 600;
+    background-color: #f8f9fa;
+    padding: 10px;
+    text-align: left;
+    width: 200px;
+    /* Fixed width for the theme column */
+}
+
+.quarterly-roadmap-table .quarter-cell {
+    padding: 8px;
+    min-height: 80px;
+    /* Ensures rows have some height even if empty */
+}
+
+.initiative-card {
+    background-color: #ffffff;
+    border: 1px solid #ccc;
+    border-left: 5px solid #007bff;
+    /* Blue accent color */
+    border-radius: 4px;
+    padding: 8px;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    cursor: help;
+    /* Indicates more info on hover */
+}
+
+.initiative-title {
+    font-weight: 500;
+    font-size: 0.9em;
+    margin-bottom: 4px;
+}
+
+.initiative-sde {
+    font-size: 0.8em;
+    color: #555;
+    text-align: right;
+}
+
+/* --- Quarterly Roadmap Table Polish --- */
+
+.quarterly-roadmap-table .quarter-cell {
+    background-color: #fdfdfd;
+    /* Very light gray for empty cells */
+    min-height: 80px;
+    padding: 8px;
+}
+
+.initiative-card {
+    transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+.initiative-card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-color: #999;
+}
+
+/* --- Styling for Team Breakdown in Org Filter --- */
+.initiative-sde-breakdown {
+    font-size: 0.8em;
+    /* Maintain the slightly smaller size for detail */
+    color: #555;
+    text-align: right;
+    white-space: nowrap;
+    /* Prevent team names from wrapping */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    /* Add ellipsis for very long team names */
+}
+
+/* --- Final Polish for Quarterly Roadmap Widget --- */
+
+.initiative-card {
+    border-left-width: 5px;
+    transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+    cursor: pointer;
+    /* Change cursor to indicate it's clickable */
+}
+
+.initiative-card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-color: #333;
+    /* Darken border on hover */
+}
+
+/* Status Indicator Colors */
+.initiative-card.status-backlog {
+    border-left-color: #6c757d;
+}
+
+/* Gray */
+.initiative-card.status-defined {
+    border-left-color: #17a2b8;
+}
+
+/* Teal */
+.initiative-card.status-committed {
+    border-left-color: #007bff;
+}
+
+/* Blue */
+.initiative-card.status-in-progress {
+    border-left-color: #ffc107;
+}
+
+/* Yellow */
+.initiative-card.status-completed {
+    border-left-color: #28a745;
+}
+
+/* Green */
+
+/* --- Styles for Custom Multi-Select Dropdown --- */
+
+.custom-multiselect-dropdown {
+    position: relative;
+    /* This is the anchor for the dropdown panel */
+    display: inline-block;
+}
+
+.dropdown-button {
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.25rem;
+    text-align: left;
+    cursor: pointer;
+    width: 200px;
+    /* Give it a fixed width like other dropdowns */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dropdown-button:after {
+    content: '▼';
+    font-size: 0.8em;
+    color: #6c757d;
+}
+
+.dropdown-panel {
+    display: none;
+    position: absolute;
+    top: 100%;
+    /* Position it right below the button */
+    left: 0;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1050;
+    width: 250px;
+    /* Give the panel a good width */
+    max-height: 250px;
+    overflow-y: auto;
+    border-radius: 4px;
+    margin-top: 2px;
+}
+
+.dropdown-panel.show {
+    display: block;
+}
+
+.select-all-container {
+    padding: 8px 12px;
+    border-bottom: 1px solid #eee;
+    background-color: #f8f9fa;
+    position: sticky;
+    /* Keep it visible while scrolling */
+    top: 0;
+    display: flex;
+    /* Add this line */
+    align-items: center;
+    /* Add this line */
+}
+
+.select-all-container label {
+    font-weight: bold;
+    margin-left: 8px;
+    cursor: pointer;
+    display: inline-block;
+    width: calc(100% - 25px);
+    /* Ensure label text doesn't wrap oddly */
+}
+
+.select-all-container input[type="checkbox"] {
+    vertical-align: middle;
+}
+
+.dropdown-items-container {
+    padding: 5px 0;
+}
+
+.dropdown-item {
+    padding: 8px 12px;
+    /* Increased padding */
+    display: flex;
+    align-items: center;
+}
+
+.dropdown-item:hover {
+    background-color: #e9ecef;
+}
+
+.dropdown-item label {
+    font-weight: normal;
+    margin-left: 8px;
+    /* Increased margin */
+    cursor: pointer;
+    width: 100%;
+}
+
+.dropdown-item input[type="checkbox"] {
+    cursor: pointer;
+    vertical-align: middle;
+    margin: 0;
+}
+
+#roadmapTableFilters>div {
+    display: flex;
+    align-items: center;
+}
+
+/* --- Styles for Shared Dashboard Filter Bar --- */
+.widget-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 20px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+.widget-filter-bar .filter-item {
+    display: flex;
+    align-items: center;
+}
+
+.widget-filter-bar .filter-item label {
+    font-weight: bold;
+    margin-right: 5px;
+    white-space: nowrap;
+}
+
+.widget-filter-bar .filter-item select,
+.widget-filter-bar .filter-item .dropdown-button {
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.25rem;
+    border: 1px solid #ced4da;
+}
+
+/* --- Styles for Mini Initiative Cards in Goal View --- */
+
+.initiatives-list {
+    list-style-type: none;
+    /* We are using divs now, not LIs */
+    padding-left: 0;
+    margin-top: 10px;
+    font-size: 0.9em;
+}
+
+.no-initiatives-text {
+    font-style: italic;
+    color: #6c757d;
+    padding: 10px 0;
+}
+
+.mini-initiative-card {
+    /* display: flex; was removed to allow children to stack vertically */
+    padding: 8px;
+    margin-bottom: 5px;
+    border-radius: 3px;
+    border: 1px solid #e9ecef;
+    border-left-width: 4px;
+}
+
+.mini-card-title {
+    flex-grow: 1;
+    padding-right: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mini-card-sde {
+    flex-shrink: 0;
+    font-weight: 500;
+    font-size: 0.9em;
+    color: #495057;
+}
+
+/* Status colors for mini-cards, matching the main initiative cards */
+.mini-initiative-card.status-backlog {
+    border-left-color: #6c757d;
+}
+
+.mini-initiative-card.status-defined {
+    border-left-color: #17a2b8;
+}
+
+.mini-initiative-card.status-committed {
+    border-left-color: #007bff;
+}
+
+.mini-initiative-card.status-in-progress {
+    border-left-color: #ffc107;
+}
+
+.mini-initiative-card.status-completed {
+    border-left-color: #28a745;
+}
+
+/* Special style for BTL initiatives */
+.mini-initiative-card.btl {
+    background-color: #fff3cd;
+    /* A light yellow to indicate caution */
+    border-left-color: #dc3545;
+    /* Red border to signify risk */
+}
+
+/* --- Styles for SDE Breakdown in Mini Initiative Cards --- */
+
+.mini-card-main-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.mini-card-breakdown {
+    padding-left: 15px;
+    margin-top: 5px;
+    font-size: 0.85em;
+    /* Slightly smaller for compactness */
+    color: #555;
+    border-top: 1px solid #f0f0f0;
+    padding-top: 5px;
+    line-height: 1.5;
+    /* Allow text to wrap nicely */
+}
+
+/* --- Styles for Goal Card Enhancements (Progress Bar) --- */
+
+.metric-progress {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 33%;
+    /* Ensure it takes up its third of the space */
+}
+
+.progress-bar-container {
+    width: 90%;
+    height: 20px;
+    background-color: #e9ecef;
+    border-radius: 10px;
+    margin-bottom: 5px;
+    position: relative;
+    overflow: hidden;
+    /* Ensures fill stays inside */
+    border: 1px solid #dee2e6;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background-color: #28a745;
+    /* Green for progress */
+    border-radius: 8px;
+    transition: width 0.5s ease-in-out;
+}
+
+.progress-bar-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.8em;
+    font-weight: bold;
+    color: #212529;
+    text-shadow: 0 0 2px #fff;
+    /* Make text readable over the bar */
+}
+
+
+
+/* === NEW Styles for D3 Org Chart (Block View) === */
+
+/* Style for the SVG links (lines) */
+.org-link {
+    fill: none;
+    stroke: #aaa;
+    /* Softer gray line */
+    stroke-width: 1.5px;
+}
+
+/* Style for the <g> element wrapping each node */
+.org-node {
+    font-family: 'Inter', Arial, sans-serif;
+}
+
+/* Style the invisible <foreignObject> - no style needed */
+/* .org-node foreignObject { ... } */
+
+/* This is the <div> wrapper inside the <foreignObject> */
+.org-node-label-wrapper {
+    /* **REQUIRED:** These styles must be on the HTML element */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    padding: 5px;
+    box-sizing: border-box;
+    text-align: center;
+    /* **REQUIRED:** Prevent inheriting SVG styles */
+    font-family: 'Inter', Arial, sans-serif;
+    color: #212529;
+}
+
+/* This is the primary name text */
+.org-node-label-name {
+    font-size: 14px;
+    /* Larger font */
+    font-weight: 600;
+    word-wrap: break-word;
+    /* Wrap long text */
+    max-height: 40px;
+    /* Limit name to approx 2 lines */
+    overflow: hidden;
+}
+
+/* This is the secondary details text */
+.org-node-label-details {
+    font-size: 11px;
+    color: #555;
+    word-wrap: break-word;
+    max-height: 25px;
+    /* Limit details to approx 2 lines */
+    overflow: hidden;
+}
+
+
+/* Style for the rectangle (the "block") */
+.org-node-rect {
+    stroke-width: 1.5px;
+    stroke: #999;
+    fill: #fff;
+    /* Default fill */
+    transition: fill 0.2s ease-in-out, stroke 0.2s ease-in-out;
+}
+
+/* Style node rectangles based on type */
+.org-type-root .org-node-rect {
+    fill: #232f3e;
+    /* Dark blue, matching top bar */
+    stroke: #232f3e;
+}
+
+.org-type-srMgr .org-node-rect {
+    fill: #f0f8ff;
+    /* Light alice blue */
+    stroke: #0056b3;
+}
+
+.org-type-sdm .org-node-rect {
+    fill: #f0f8ff;
+    /* Light alice blue */
+    stroke: #007bff;
+}
+
+.org-type-team .org-node-rect {
+    fill: #e6fffa;
+    /* Light teal/cyan */
+    stroke: #17a2b8;
+}
+
+.org-type-engineer .org-node-rect {
+    fill: #fdfdfd;
+    /* Off-white */
+    stroke: #adb5bd;
+}
+
+/* Make root node text white */
+.org-type-root .org-node-label-wrapper {
+    color: #fff;
+    /* This will be inherited by children */
+}
+
+.org-type-root .org-node-label-details {
+    color: #eee;
+    /* Lighter color for details on dark bg */
+}
+
+
+/* Style for the +/- toggle */
+.org-node-toggle {
+    font-size: 16px;
+    font-weight: bold;
+    fill: #6c757d;
+    cursor: pointer;
+    text-anchor: middle;
+}
+
+.org-node-toggle:hover {
+    fill: #007bff;
+}
+
+/* Hover effect for the node */
+.org-node:hover .org-node-rect {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    stroke-width: 2.5px;
+}
+
+/* === End D3 Org Chart Styles === */
+
+/* === Modal Base Styles === */
+.modal {
+    display: none;
+    /* Hidden by default (JS will override this) */
+    position: fixed;
+    /* Stay in place */
+    z-index: 1050;
+    /* Sit on top of everything else */
+    left: 0;
+    top: 0;
+    width: 100%;
+    /* Full width */
+    height: 100%;
+    /* Full height */
+    overflow: auto;
+    /* Enable scroll if needed */
+    background-color: rgba(0, 0, 0, 0.4);
+    /* Black w/ opacity */
+}
+
+.modal-content-wrapper {
+    position: relative;
+    background-color: #fefefe;
+    margin: 10% auto;
+    /* 10% from the top and centered */
+    padding: 0;
+    border: 1px solid #888;
+    width: 60%;
+    /* Or your preferred width */
+    max-width: 700px;
+    /* Max width */
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    padding: 12px 20px;
+    background-color: #e9ecef;
+    border-bottom: 1px solid #dee2e6;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.modal-body {
+    padding: 20px;
+    flex-grow: 1;
+    max-height: 60vh;
+    /* Make body scrollable */
+    overflow-y: auto;
+}
+
+.modal-footer {
+    padding: 12px 20px;
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    text-align: right;
+}
+
+.ai-stats-pre {
+    white-space: pre-wrap;
+    word-break: break-word;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 12px;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+.close-button {
+    color: #6c757d;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* === End Modal Styles === */
+
+/* --- AI Loading Spinner --- */
+.spinner-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    color: white;
+    text-align: center;
+}
+
+.spinner {
+    border: 8px solid #f3f3f3;
+    border-top: 8px solid #3498db;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1.5s linear infinite;
+    margin-bottom: 20px;
+}
+
+.spinner-overlay p {
+    font-size: 1.2em;
+    font-weight: 500;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Add any additional styles as needed */
+
+
+.main-content-area {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 20px;
+    min-width: 0;
+}
+
+#chatResizeHandle {
+    width: 5px;
+    background-color: #ccc;
+    cursor: col-resize;
+    flex-shrink: 0;
+    display: none;
+}
+
+#chatResizeHandle:hover {
+    background-color: #007bff;
+}
+
+#aiChatPanelContainer {
+    width: 0;
+    height: 100%;
+    flex-shrink: 0;
+    overflow: hidden;
+    background-color: #f8f9fa;
+}
+
+/* --- [END MODIFIED] --- */
+
+/* System Selection Modal */
+.system-selection-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(15, 23, 42, 0.6);
+    /* Slate 900 with opacity */
+    backdrop-filter: blur(4px);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.system-selection-modal {
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    width: 100%;
+    max-width: 480px;
+    overflow: hidden;
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.system-selection-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.system-selection-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: #0f172a;
+    font-weight: 600;
+}
+
+.system-selection-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.system-selection-item {
+    padding: 16px 24px;
+    border-bottom: 1px solid #f1f5f9;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.system-selection-item:hover {
+    background-color: #f8fafc;
+}
+
+.system-selection-item:last-child {
+    border-bottom: none;
+}
+
+.system-selection-name {
+    font-weight: 500;
+    color: #334155;
+    font-size: 1rem;
+}
+
+.system-selection-meta {
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.system-selection-footer {
+    padding: 16px 24px;
+    background-color: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-modal-cancel {
+    background-color: white;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-modal-cancel:hover {
+    background-color: #f1f5f9;
+    border-color: #94a3b8;
+    color: #0f172a;
+}
