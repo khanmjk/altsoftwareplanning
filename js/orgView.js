@@ -8,13 +8,40 @@ let currentOrgViewMode = 'd3'; // Default to the new D3 view
  * Sets up layout switchers and calls the default renderer.
  * MODIFIED: Now handles 3 views (D3, List, Table).
  */
-function initializeOrgChartView() {
-    console.log("Initializing Organization Chart View with 3-way layout switcher...");
-    const toolbar = document.getElementById('organogramToolbar');
-    const content = document.getElementById('organogramContent');
-    
+/**
+ * NEW: Renders the entire Organization Overview page into the Workspace.
+ * Sets up layout switchers and calls the default renderer.
+ */
+function renderOrgChartView(container) {
+    console.log("Rendering Organization Chart View...");
+
+    if (!container) {
+        console.error("Org Chart container not provided to renderOrgChartView.");
+        // Fallback for legacy calls (if any)
+        container = document.getElementById('organogramView');
+        if (!container) {
+            console.error("Fallback container #organogramView also not found.");
+            return;
+        }
+    }
+
+    // --- Dynamic DOM Creation for Workspace ---
+    // We need to ensure the structure exists INSIDE the provided container.
+    // We can't rely on IDs being unique if we have multiple views, but for now we'll assume one org view.
+    // Better to use classes or scoped selectors, but let's stick to IDs for now to minimize refactoring of internal functions.
+
+    container.innerHTML = `
+        <div id="organogramToolbar" style="margin-bottom: 10px; padding: 10px; background-color: #f8f9fa; border-bottom: 1px solid #ddd;"></div>
+        <div id="organogramContent" style="overflow: auto; height: calc(100vh - 200px); width: 100%; position: relative;"></div>
+        <div id="teamBreakdown" style="display:none; margin-top: 30px;"></div>
+        <div id="orgEngineerListView" style="display:none; margin-top: 30px;"></div>
+    `;
+
+    const toolbar = container.querySelector('#organogramToolbar');
+    const content = container.querySelector('#organogramContent');
+
     if (!toolbar || !content) {
-        console.error("Cannot initialize Org Chart view: toolbar or content div missing.");
+        console.error("Cannot initialize Org Chart view: toolbar or content div missing after creation.");
         return;
     }
 
@@ -37,7 +64,7 @@ function initializeOrgChartView() {
         currentOrgViewMode = 'd3';
         updateOrgViewRenderer();
     });
-    
+
     btnList.addEventListener('click', () => {
         currentOrgViewMode = 'list';
         updateOrgViewRenderer();
@@ -54,24 +81,24 @@ function initializeOrgChartView() {
     });
 
     // --- 2. Render the correct view based on the current mode ---
-    updateOrgViewRenderer();
-
-    // --- 3. REMOVED: generateTeamTable() is no longer called here. ---
-    // It is now called by updateOrgViewRenderer() when mode is 'table'.
+    updateOrgViewRenderer(content);
 }
+// Make globally accessible
+window.renderOrgChartView = renderOrgChartView;
 
 /**
  * NEW: Helper function to render the correct org chart based on the current mode.
  * MODIFIED: Now controls visibility of organogramContent AND teamBreakdown.
  */
-function updateOrgViewRenderer() {
+function updateOrgViewRenderer(chartContainer) {
     const btnD3 = document.getElementById('orgViewModeD3');
     const btnList = document.getElementById('orgViewModeList');
     const btnTable = document.getElementById('orgViewModeTable');
     const btnEngineerList = document.getElementById('orgViewModeEngineerList');
-    
+
     // Get references to both content containers
-    const chartContainer = document.getElementById('organogramContent');
+    // If chartContainer is not passed, try to find it (fallback)
+    if (!chartContainer) chartContainer = document.getElementById('organogramContent');
     const tableContainer = document.getElementById('teamBreakdown');
     const engineerListContainer = document.getElementById('orgEngineerListView');
 
@@ -98,10 +125,10 @@ function updateOrgViewRenderer() {
     if (currentOrgViewMode === 'd3') {
         btnD3.classList.add('btn-primary');
         btnD3.classList.remove('btn-secondary');
-        
+
         chartContainer.style.display = 'block'; // Show chart container
         if (typeof renderD3OrgChart === 'function') {
-            renderD3OrgChart(); // Call the D3 function
+            renderD3OrgChart(chartContainer); // Pass container explicitly
         } else {
             console.error("renderD3OrgChart function not found.");
         }
@@ -111,7 +138,7 @@ function updateOrgViewRenderer() {
 
         chartContainer.style.display = 'block'; // Show chart container
         if (typeof renderHtmlOrgList === 'function') {
-            renderHtmlOrgList(); // Call the renamed "list" function
+            renderHtmlOrgList(chartContainer); // Pass container explicitly
         } else {
             console.error("renderHtmlOrgList function not found.");
         }
@@ -122,7 +149,7 @@ function updateOrgViewRenderer() {
         tableContainer.style.display = 'block'; // Show table container
         if (typeof generateTeamTable === 'function') {
             // This function renders the EnhancedTableWidget
-            generateTeamTable(currentSystemData); 
+            generateTeamTable(currentSystemData);
         } else {
             console.error("generateTeamTable function not found.");
         }
@@ -196,8 +223,8 @@ function buildHierarchyData() {
                 sdmMap.set(unassignedSdmKey, { sdmId: unassignedSdmKey, sdmName: 'Unassigned SDM', name: 'Unassigned SDM', children: [], type: 'sdm' });
                 const unassignedSrMgrKey = 'unassigned-sr-mgr';
                 if (!srMgrMap.has(unassignedSrMgrKey)) {
-                     // Add `name` property for D3 compatibility
-                     srMgrMap.set(unassignedSrMgrKey, { seniorManagerId: unassignedSrMgrKey, seniorManagerName: 'Unassigned Senior Manager', name: 'Unassigned Senior Manager', children: [], type: 'srMgr' });
+                    // Add `name` property for D3 compatibility
+                    srMgrMap.set(unassignedSrMgrKey, { seniorManagerId: unassignedSrMgrKey, seniorManagerName: 'Unassigned Senior Manager', name: 'Unassigned Senior Manager', children: [], type: 'srMgr' });
                 }
                 srMgrMap.get(unassignedSrMgrKey).children.push(sdmMap.get(unassignedSdmKey));
             }
@@ -219,13 +246,15 @@ function buildHierarchyData() {
  * RENAMED: Was previously generateOrganogram()
  * Generates the Organogram using HTML list structure.
  */
-function renderHtmlOrgList() {
+function renderHtmlOrgList(container) {
     console.log("Generating Organogram HTML List...");
     const hierarchicalData = buildHierarchyData();
-    const container = document.getElementById('organogramContent');
+
+    if (!container) container = document.getElementById('organogramContent');
+
     if (!hierarchicalData || !container) {
         console.error("No data or container for organogram HTML.");
-        if(container) container.innerHTML = '<p style="color: red;">Could not generate organogram data.</p>';
+        if (container) container.innerHTML = '<p style="color: red;">Could not generate organogram data.</p>';
         return;
     }
     container.innerHTML = '';
@@ -238,18 +267,18 @@ function renderHtmlOrgList() {
         let nodeStyle = '';
         let detailsStyle = 'font-size: 0.8em; color: #555; margin-left: 5px;';
 
-        switch(node.type) {
+        switch (node.type) {
             case 'root':
                 nodeContent = `<strong>System: ${node.name || 'N/A'}</strong>`;
                 nodeStyle = 'font-size: 1.2em; color: #333;';
                 break;
             case 'srMgr':
-                 nodeContent = `<strong title="${node.seniorManagerId || ''}">Sr. Manager: ${node.seniorManagerName || node.name || 'N/A'}</strong>`;
-                 nodeStyle = 'font-size: 1.1em; color: #0056b3;';
+                nodeContent = `<strong title="${node.seniorManagerId || ''}">Sr. Manager: ${node.seniorManagerName || node.name || 'N/A'}</strong>`;
+                nodeStyle = 'font-size: 1.1em; color: #0056b3;';
                 break;
             case 'sdm':
-                 nodeContent = `<strong title="${node.sdmId || ''}">SDM: ${node.sdmName || node.name || 'N/A'}</strong>`;
-                 nodeStyle = 'color: #007bff;';
+                nodeContent = `<strong title="${node.sdmId || ''}">SDM: ${node.sdmName || node.name || 'N/A'}</strong>`;
+                nodeStyle = 'color: #007bff;';
                 break;
             case 'team':
                 nodeContent = `<span style="color: #17a2b8;">Team: ${node.name || 'N/A'}</span> <span style="${detailsStyle}">(${node.details || ''})</span>`;
@@ -263,7 +292,7 @@ function renderHtmlOrgList() {
                     nodeContent += '<ul style="list-style: none; padding-left: 15px; margin-top: 3px;">';
                     node.children.forEach(engNode => { // These are engineer nodes from buildHierarchyData
                         if (engNode.type === 'engineer') {
-                             nodeContent += `<li style="font-size:0.85em;">${engNode.name}</li>`;
+                            nodeContent += `<li style="font-size:0.85em;">${engNode.name}</li>`;
                         }
                     });
                     nodeContent += '</ul>';
@@ -278,7 +307,7 @@ function renderHtmlOrgList() {
         // Recursively add children for non-team, non-engineer types
         if (node.children && node.children.length > 0 && node.type !== 'team' && node.type !== 'engineer') {
             node.children.forEach(child => {
-                 html += buildHtmlLevel(child, level + 1);
+                html += buildHtmlLevel(child, level + 1);
             });
         }
         html += `</div>`;
@@ -292,255 +321,313 @@ function renderHtmlOrgList() {
  * NEW (v4): Generates the Organogram using a D3 Tree Layout (Top-Down).
  * MODIFIED: Uses <foreignObject> and adds correct xmlns attribute for HTML text wrapping.
  */
-function renderD3OrgChart() {
+function renderD3OrgChart(container) {
     console.log("Generating D3 Org Chart (Top-Down, Text Wrap v4)...");
     const hierarchicalData = buildHierarchyData();
-    const container = document.getElementById('organogramContent');
-    
+
+    // Fallback if container not passed
+    if (!container) container = document.getElementById('organogramContent');
+
     if (!hierarchicalData || !container) {
         console.error("D3 Org Chart container or data not found.");
-        if(container) container.innerHTML = '<p style="color: red;">Could not generate D3 organogram data.</p>';
+        if (container) container.innerHTML = '<p style="color: red;">Could not generate D3 organogram data.</p>';
         return;
     }
+
+    // DEBUG: Check container dimensions and visibility
+    const rect = container.getBoundingClientRect();
+    console.log(`D3 Org Chart Container Debug: ID=${container.id}, Width=${rect.width}, Height=${rect.height}, Display=${getComputedStyle(container).display}, Visibility=${getComputedStyle(container).visibility}`);
+
 
     container.innerHTML = ''; // Clear existing content
     container.style.fontFamily = ''; // Unset inline style
 
-    // Get container size for responsive chart
-    const width = container.clientWidth || 960;
-    const height = 1200; // Fixed height, chart will be scrollable
-    
-    // Define node box sizes and spacing
-    const nodeWidth = 220;
-    const nodeHeight = 80;
-    const verticalSpacing = 100;   // Space BETWEEN nodes vertically
-    const horizontalSpacing = 20;   // Space BETWEEN nodes horizontally
 
-    // Create SVG
-    const svg = d3.select(container).append("svg")
-        .attr("width", "100%")
-        .attr("height", height)
-        .attr("viewBox", [0, 0, width, height])
-        .style("overflow", "auto"); // Enable overflow for zoom/pan
 
-    // Tooltip
-    const tooltip = d3.select("body").selectAll(".tooltip").data([null]).join("div")
-        .attr("class", "tooltip")
-        .style("opacity", 0);
-
-    // Main group for chart content (for zooming)
-    const g = svg.append("g");
-        
-    // Create Tree Layout
-    const tree = d3.tree()
-        .nodeSize([nodeWidth + horizontalSpacing, nodeHeight + verticalSpacing]);
-
-    // Create Hierarchy
-    const root = d3.hierarchy(hierarchicalData);
-    
-    // Assign `_children` for collapse/expand
-    root.descendants().forEach(d => {
-        d._children = d.children;
-        // Start with engineers collapsed (teams are parents of engineers)
-        if (d.data.type === 'team') {
-            d.children = null;
+    // Use ResizeObserver to ensure container has dimensions before rendering
+    // This handles the first-load race condition where clientWidth is 0
+    const renderChart = (force = false) => {
+        // Get container size for responsive chart
+        // If force is true, or if clientWidth is 0, use a default width
+        let width = container.clientWidth;
+        if (width === 0) {
+            if (force) {
+                console.warn("D3 Org Chart: Container width is 0, using default 960px.");
+                width = 960;
+            } else {
+                return; // Still waiting for layout
+            }
         }
-    });
-    
-    // Set initial position for the root node
-    root.x0 = width / 2; // Initial horizontal center
-    root.y0 = nodeHeight;  // Initial vertical position
+        const height = 1200; // Fixed height, chart will be scrollable
 
-    // This is the main function that draws/updates the chart
-    const update = (source) => {
-        const duration = 250;
-        
-        // Recalculate layout
-        const treeData = tree(root);
-        
-        // Get nodes and links
-        const nodes = treeData.descendants().reverse();
-        const links = treeData.links();
+        if (width === 0) return; // Still waiting for layout
 
-        // Normalize for fixed-depth (y position)
-        nodes.forEach(d => { 
-            d.y = d.depth * (nodeHeight + verticalSpacing) + nodeHeight; // y = depth * spacing
-        }); 
-        
-        // --- LINKS ---
-        function elbow(d) {
-            return `M ${d.source.x},${d.source.y + nodeHeight / 2}` + 
-                   ` V ${d.target.y - verticalSpacing / 2}` +
-                   ` H ${d.target.x}` +
-                   ` V ${d.target.y - nodeHeight / 2}`;
-        }
-        
-        const link = g.selectAll(".org-link")
-            .data(links, d => d.target.id);
+        console.log(`D3 Render: Calculated Width=${width}, Height=${height}`);
 
-        const linkEnter = link.enter().append("path")
-            .attr("class", "org-link")
-            .attr("d", d => {
-                const o = { x: source.x0 || source.x, y: source.y0 || source.y };
-                return `M ${o.x},${o.y + nodeHeight / 2}` +
-                       ` V ${o.y + nodeHeight / 2}` +
-                       ` H ${o.x}` +
-                       ` V ${o.y + nodeHeight / 2}`;
-            })
-            .attr("fill", "none")
-            .attr("stroke", "#ccc")
-            .attr("stroke-width", 1.5);
+        // Define node box sizes and spacing
+        const nodeWidth = 220;
+        const nodeHeight = 80;
+        const verticalSpacing = 100;   // Space BETWEEN nodes vertically
+        const horizontalSpacing = 20;   // Space BETWEEN nodes horizontally
 
-        link.merge(linkEnter).transition().duration(duration)
-            .attr("d", elbow);
+        // Create SVG
+        const svg = d3.select(container).append("svg")
+            .attr("width", "100%")
+            .attr("height", height)
+            .attr("viewBox", [0, 0, width, height])
+            .style("overflow", "auto"); // Enable overflow for zoom/pan
 
-        link.exit().transition().duration(duration)
-            .attr("d", d => {
-                const o = { x: source.x, y: source.y };
-                return `M ${o.x},${o.y + nodeHeight / 2}` +
-                       ` V ${o.y + nodeHeight / 2}` +
-                       ` H ${o.x}` +
-                       ` V ${o.y + nodeHeight / 2}`;
-            })
-            .remove();
+        // Tooltip
+        const tooltip = d3.select("body").selectAll(".tooltip").data([null]).join("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0);
 
-        // --- NODES ---
-        const node = g.selectAll(".org-node")
-            .data(nodes, d => d.data.id || d.data.name + Math.random());
+        // Main group for chart content (for zooming)
+        const g = svg.append("g");
 
-        const nodeEnter = node.enter().append("g")
-            .attr("class", d => `org-node org-type-${d.data.type}`)
-            .attr("transform", d => `translate(${source.x0 || source.x},${source.y0 || source.y})`)
-            .style("opacity", 0)
-            .on("click", (event, d) => {
-                if (d.data.type === 'engineer') return;
-                if (d.children) {
-                    d._children = d.children;
-                    d.children = null;
-                } else {
-                    d.children = d._children;
-                    d._children = null;
-                }
-                update(d);
-            })
-            .on("mouseover", (event, d) => {
-                let info = '';
-                switch(d.data.type) {
-                    case 'root': info = `<strong>System:</strong> ${d.data.name}`; break;
-                    case 'srMgr': info = `<strong>Sr. Manager:</strong> ${d.data.name}`; break;
-                    case 'sdm': info = `<strong>SDM:</strong> ${d.data.name}`; break;
-                    case 'team': 
-                        info = `<strong>Team:</strong> ${d.data.name}<br><strong>Details:</strong> ${d.data.details}`;
-                        if (d.data.awayTeamCount > 0) info += `<br><strong style='color: #dc3545;'>Away:</strong> +${d.data.awayTeamCount} (${d.data.awaySourceSummary})`;
-                        break;
-                    case 'engineer': info = `<strong>Engineer:</strong> ${d.data.name}`; break;
-                    default: info = d.data.name;
-                }
-                tooltip.transition().duration(200).style("opacity", .9);
-                tooltip.html(info)
-                       .style("left", (event.pageX + 15) + "px")
-                       .style("top", (event.pageY - 28) + "px");
-            })
-            .on("mouseout", () => {
-                tooltip.transition().duration(500).style("opacity", 0);
-            });
+        // Create Tree Layout
+        const tree = d3.tree()
+            .nodeSize([nodeWidth + horizontalSpacing, nodeHeight + verticalSpacing]);
 
-        // Add the rectangle for the node
-        nodeEnter.append("rect")
-            .attr("class", "org-node-rect")
-            .attr("width", nodeWidth)
-            .attr("height", nodeHeight)
-            .attr("x", -nodeWidth / 2)
-            .attr("y", -nodeHeight / 2)
-            .attr("rx", 4)
-            .attr("ry", 4)
-            .style("cursor", d => d.data.type !== 'engineer' ? "pointer" : "default");
+        // Create Hierarchy
+        const root = d3.hierarchy(hierarchicalData);
 
-        // Add <foreignObject> for text wrapping
-        const fo = nodeEnter.append("foreignObject")
-            .attr("x", -nodeWidth / 2)
-            .attr("y", -nodeHeight / 2)
-            .attr("width", nodeWidth)
-            .attr("height", nodeHeight)
-            .style("pointer-events", "none"); 
-
-        // Add namespaced HTML div for content
-        const div = fo.append("xhtml:div")
-            .attr("xmlns", "http://www.w3.org/1999/xhtml") 
-            .attr("class", "org-node-label-wrapper");
-            
-        div.append("xhtml:div")
-           .attr("class", "org-node-label-name")
-           .html(d => d.data.name);
-           
-        div.append("xhtml:div")
-           .attr("class", "org-node-label-details")
-           .html(d => {
-                if (d.data.type === 'team') return d.data.details;
-                if (d.data.type === 'engineer') return d.data.name.includes('[AI]') ? 'AI Software Engineer' : 'Software Engineer';
-                return d.data.type.replace('srMgr', 'Senior Manager');
-            });
-
-        // Add expand/collapse indicator (SVG text)
-        nodeEnter.append("text")
-            .attr("class", "org-node-toggle") 
-            .attr("text-anchor", "middle")
-            .attr("y", (nodeHeight / 2) + 16) 
-            .text(d => {
-                if (d.data.type === 'engineer') return '';
-                return d._children ? '▼' : (d.children ? '▲' : '');
-            });
-
-        // Transition nodes to their new position.
-        node.merge(nodeEnter).transition().duration(duration)
-            .attr("transform", d => `translate(${d.x},${d.y})`)
-            .style("opacity", 1);
-            
-        // Update toggle text on merge
-        node.merge(nodeEnter).select(".org-node-toggle")
-            .text(d => {
-                if (d.data.type === 'engineer') return '';
-                return d._children ? '▼' : (d.children ? '▲' : '');
-            });
-
-        // Transition exiting nodes to the parent's new position.
-        node.exit().transition().duration(duration)
-            .attr("transform", d => `translate(${source.x},${source.y})`)
-            .style("opacity", 0)
-            .remove();
-
-        // Stash the old positions for transition.
-        nodes.forEach(d => {
-            d.x0 = d.x;
-            d.y0 = d.y;
+        // Assign `_children` for collapse/expand
+        root.descendants().forEach(d => {
+            d._children = d.children;
+            // Start with engineers collapsed (teams are parents of engineers)
+            if (d.data.type === 'team') {
+                d.children = null;
+            }
         });
 
-    }; // End of update function
+        // Set initial position for the root node
+        root.x0 = width / 2; // Initial horizontal center
+        root.y0 = nodeHeight;  // Initial vertical position
 
-    // Initial render
-    update(root);
-    
-    // --- Initial Zoom & Pan ---
-    const bounds = g.node().getBBox();
-    const chartWidth = bounds.width;
-    
-    const scale = Math.min(1, (width / (chartWidth + 100)) * 0.8);
-    
-    const tx = (width / 2) - (root.x * scale);
-    const ty = 50; // 50px margin from top
-    
-    const initialTransform = d3.zoomIdentity.translate(tx, ty).scale(scale);
+        // This is the main function that draws/updates the chart
+        const update = (source) => {
+            const duration = 250;
 
-    const zoom = d3.zoom()
-        .scaleExtent([0.1, 2])
-        .on("zoom", (event) => {
-            g.attr("transform", event.transform);
+            // Recalculate layout
+            const treeData = tree(root);
+
+            // Get nodes and links
+            const nodes = treeData.descendants().reverse();
+            const links = treeData.links();
+
+            // Normalize for fixed-depth (y position)
+            nodes.forEach(d => {
+                d.y = d.depth * (nodeHeight + verticalSpacing) + nodeHeight; // y = depth * spacing
+            });
+
+            // --- LINKS ---
+            function elbow(d) {
+                return `M ${d.source.x},${d.source.y + nodeHeight / 2}` +
+                    ` V ${d.target.y - verticalSpacing / 2}` +
+                    ` H ${d.target.x}` +
+                    ` V ${d.target.y - nodeHeight / 2}`;
+            }
+
+            const link = g.selectAll(".org-link")
+                .data(links, d => d.target.id);
+
+            const linkEnter = link.enter().append("path")
+                .attr("class", "org-link")
+                .attr("d", d => {
+                    const o = { x: source.x0 || source.x, y: source.y0 || source.y };
+                    return `M ${o.x},${o.y + nodeHeight / 2}` +
+                        ` V ${o.y + nodeHeight / 2}` +
+                        ` H ${o.x}` +
+                        ` V ${o.y + nodeHeight / 2}`;
+                })
+                .attr("fill", "none")
+                .attr("stroke", "#ccc")
+                .attr("stroke-width", 1.5);
+
+            link.merge(linkEnter).transition().duration(duration)
+                .attr("d", elbow);
+
+            link.exit().transition().duration(duration)
+                .attr("d", d => {
+                    const o = { x: source.x, y: source.y };
+                    return `M ${o.x},${o.y + nodeHeight / 2}` +
+                        ` V ${o.y + nodeHeight / 2}` +
+                        ` H ${o.x}` +
+                        ` V ${o.y + nodeHeight / 2}`;
+                })
+                .remove();
+
+            // --- NODES ---
+            const node = g.selectAll(".org-node")
+                .data(nodes, d => d.data.id || d.data.name + Math.random());
+
+            const nodeEnter = node.enter().append("g")
+                .attr("class", d => `org-node org-type-${d.data.type}`)
+                .attr("transform", d => `translate(${source.x0 || source.x},${source.y0 || source.y})`)
+                .style("opacity", 0)
+                .on("click", (event, d) => {
+                    if (d.data.type === 'engineer') return;
+                    if (d.children) {
+                        d._children = d.children;
+                        d.children = null;
+                    } else {
+                        d.children = d._children;
+                        d._children = null;
+                    }
+                    update(d);
+                })
+                .on("mouseover", (event, d) => {
+                    let info = '';
+                    switch (d.data.type) {
+                        case 'root': info = `<strong>System:</strong> ${d.data.name}`; break;
+                        case 'srMgr': info = `<strong>Sr. Manager:</strong> ${d.data.name}`; break;
+                        case 'sdm': info = `<strong>SDM:</strong> ${d.data.name}`; break;
+                        case 'team':
+                            info = `<strong>Team:</strong> ${d.data.name}<br><strong>Details:</strong> ${d.data.details}`;
+                            if (d.data.awayTeamCount > 0) info += `<br><strong style='color: #dc3545;'>Away:</strong> +${d.data.awayTeamCount} (${d.data.awaySourceSummary})`;
+                            break;
+                        case 'engineer': info = `<strong>Engineer:</strong> ${d.data.name}`; break;
+                        default: info = d.data.name;
+                    }
+                    tooltip.transition().duration(200).style("opacity", .9);
+                    tooltip.html(info)
+                        .style("left", (event.pageX + 15) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                })
+                .on("mouseout", () => {
+                    tooltip.transition().duration(500).style("opacity", 0);
+                });
+
+            // Add the rectangle for the node
+            nodeEnter.append("rect")
+                .attr("class", "org-node-rect")
+                .attr("width", nodeWidth)
+                .attr("height", nodeHeight)
+                .attr("x", -nodeWidth / 2)
+                .attr("y", -nodeHeight / 2)
+                .attr("rx", 4)
+                .attr("ry", 4)
+                .style("cursor", d => d.data.type !== 'engineer' ? "pointer" : "default");
+
+            // Add <foreignObject> for text wrapping
+            const fo = nodeEnter.append("foreignObject")
+                .attr("x", -nodeWidth / 2)
+                .attr("y", -nodeHeight / 2)
+                .attr("width", nodeWidth)
+                .attr("height", nodeHeight)
+                .style("pointer-events", "none");
+
+            // Add namespaced HTML div for content
+            const div = fo.append("xhtml:div")
+                .attr("xmlns", "http://www.w3.org/1999/xhtml")
+                .attr("class", "org-node-label-wrapper");
+
+            div.append("xhtml:div")
+                .attr("class", "org-node-label-name")
+                .html(d => d.data.name);
+
+            div.append("xhtml:div")
+                .attr("class", "org-node-label-details")
+                .html(d => {
+                    if (d.data.type === 'team') return d.data.details;
+                    if (d.data.type === 'engineer') return d.data.name.includes('[AI]') ? 'AI Software Engineer' : 'Software Engineer';
+                    return d.data.type.replace('srMgr', 'Senior Manager');
+                });
+
+            // Add expand/collapse indicator (SVG text)
+            nodeEnter.append("text")
+                .attr("class", "org-node-toggle")
+                .attr("text-anchor", "middle")
+                .attr("y", (nodeHeight / 2) + 16)
+                .text(d => {
+                    if (d.data.type === 'engineer') return '';
+                    return d._children ? '▼' : (d.children ? '▲' : '');
+                });
+
+            // Transition nodes to their new position.
+            node.merge(nodeEnter).transition().duration(duration)
+                .attr("transform", d => `translate(${d.x},${d.y})`)
+                .style("opacity", 1);
+
+            // Update toggle text on merge
+            node.merge(nodeEnter).select(".org-node-toggle")
+                .text(d => {
+                    if (d.data.type === 'engineer') return '';
+                    return d._children ? '▼' : (d.children ? '▲' : '');
+                });
+
+            // Transition exiting nodes to the parent's new position.
+            node.exit().transition().duration(duration)
+                .attr("transform", d => `translate(${source.x},${source.y})`)
+                .style("opacity", 0)
+                .remove();
+
+            // Stash the old positions for transition.
+            nodes.forEach(d => {
+                d.x0 = d.x;
+                d.y0 = d.y;
+            });
+
+        }; // End of update function
+
+        // Initial render
+        update(root);
+
+        // --- Initial Zoom & Pan ---
+        const bounds = g.node().getBBox();
+        const chartWidth = bounds.width;
+
+        const scale = Math.min(1, (width / (chartWidth + 100)) * 0.8);
+
+        const tx = (width / 2) - (root.x * scale);
+        const ty = 50; // 50px margin from top
+
+        const initialTransform = d3.zoomIdentity.translate(tx, ty).scale(scale);
+
+        const zoom = d3.zoom()
+            .scaleExtent([0.1, 2])
+            .on("zoom", (event) => {
+                g.attr("transform", event.transform);
+            });
+
+        svg.call(zoom)
+            .call(zoom.transform, initialTransform);
+
+        console.log("D3 Org Chart (Top-Down, Text Wrap) rendered.");
+    };
+
+    // Check if we can render immediately
+    if (container.clientWidth > 0) {
+        renderChart();
+    } else {
+        console.log("D3 Org Chart: Container has 0 width, waiting for resize...");
+
+        let rendered = false;
+        const observer = new ResizeObserver((entries) => {
+            for (let entry of entries) {
+                if (entry.contentRect.width > 0 && !rendered) {
+                    console.log("D3 Org Chart: Container resized, rendering...");
+                    rendered = true;
+                    renderChart();
+                    observer.disconnect();
+                    break;
+                }
+            }
         });
-    
-    svg.call(zoom)
-       .call(zoom.transform, initialTransform); 
+        observer.observe(container);
 
-    console.log("D3 Org Chart (Top-Down, Text Wrap) rendered.");
+        // Fallback: If resize doesn't fire within 500ms, force render (assuming layout settled)
+        setTimeout(() => {
+            if (!rendered) {
+                console.warn("D3 Org Chart: ResizeObserver timed out, forcing render...");
+                rendered = true;
+                observer.disconnect();
+                renderChart(true); // Force render with default width
+            }
+        }, 500);
+    }
+
 }
 
 
@@ -553,7 +640,7 @@ let teamTableWidgetInstance = null;
  */
 function generateTeamTable() {
     console.log("Generating Team Breakdown Table using EnhancedTableWidget...");
-    
+
     const tableData = prepareTeamDataForTabulator();
     const columnDefinitions = defineTeamTableColumns();
 
@@ -564,9 +651,9 @@ function generateTeamTable() {
         console.error("Cannot find #teamBreakdown div to render team table widget.");
         return;
     }
-    
+
     // Clear the old content (like the H2 and p tags) to make way for the widget
-    widgetTargetDiv.innerHTML = ''; 
+    widgetTargetDiv.innerHTML = '';
     widgetTargetDiv.style.marginTop = '30px'; // Re-apply margin
 
     // Destroy previous widget instance if it exists
@@ -615,14 +702,14 @@ function prepareTeamDataForTabulator() {
     const srMgrMap = new Map((currentSystemData.seniorManagers || []).map(sm => [sm.seniorManagerId, sm]));
     const pmtMap = new Map((currentSystemData.pmts || []).map(p => [p.pmtId, p]));
     const engineerMap = new Map((currentSystemData.allKnownEngineers || []).map(e => [e.name, e]));
-    
+
     let teamServicesMap = {};
-    (currentSystemData.services || []).forEach(service => { 
-        let teamId = service.owningTeamId; 
-        if (teamId) { 
-            if (!teamServicesMap[teamId]) teamServicesMap[teamId] = []; 
-            teamServicesMap[teamId].push(service.serviceName); 
-        } 
+    (currentSystemData.services || []).forEach(service => {
+        let teamId = service.owningTeamId;
+        if (teamId) {
+            if (!teamServicesMap[teamId]) teamServicesMap[teamId] = [];
+            teamServicesMap[teamId].push(service.serviceName);
+        }
     });
 
     return currentSystemData.teams.map(team => {
@@ -651,7 +738,7 @@ function prepareTeamDataForTabulator() {
             const type = away.attributes?.isAISWE ? ` [AI]` : '';
             return `${away.name} (L${away.level})${type} - From: ${away.sourceTeam}`;
         }).join('\n');
-        
+
         const servicesOwned = (teamServicesMap[team.teamId] || []).join('\n');
 
         return {
@@ -687,8 +774,8 @@ function getNameHeaderFilterParams(sourceArray, nameField) {
                 uniqueNames[item[nameField]] = item[nameField]; // Value is the name itself for filtering
             }
         });
-        Object.keys(uniqueNames).sort((a,b) => String(a).localeCompare(String(b))).forEach(name => {
-             options.push({ label: name, value: name });
+        Object.keys(uniqueNames).sort((a, b) => String(a).localeCompare(String(b))).forEach(name => {
+            options.push({ label: name, value: name });
         });
     }
     // Add an option for "N/A" (unassigned)
@@ -724,43 +811,43 @@ function defineTeamTableColumns() {
     };
 
     return [
-        { 
-            title: "Senior Manager", 
-            field: "seniorManagerName", 
-            minWidth: 150, 
+        {
+            title: "Senior Manager",
+            field: "seniorManagerName",
+            minWidth: 150,
             frozen: true,
             headerFilter: "list",
             headerFilterParams: () => getNameHeaderFilterParams(currentSystemData.seniorManagers, 'seniorManagerName'),
             headerFilterFunc: "="
         },
-        { 
-            title: "SDM", 
-            field: "sdmName", 
-            minWidth: 150, 
+        {
+            title: "SDM",
+            field: "sdmName",
+            minWidth: 150,
             frozen: true,
             headerFilter: "list",
             headerFilterParams: () => getNameHeaderFilterParams(currentSystemData.sdms, 'sdmName'),
             headerFilterFunc: "="
         },
-        { 
-            title: "Team Identity", 
-            field: "teamIdentity", 
-            minWidth: 150, 
+        {
+            title: "Team Identity",
+            field: "teamIdentity",
+            minWidth: 150,
             frozen: true,
             headerFilter: "list",
             headerFilterParams: () => getNameHeaderFilterParams(currentSystemData.teams, 'teamIdentity'),
             headerFilterFunc: "="
         },
-        { 
-            title: "Team Name", 
-            field: "teamName", 
-            minWidth: 200, 
+        {
+            title: "Team Name",
+            field: "teamName",
+            minWidth: 200,
             headerFilter: "input" // Team Name is free-text, so input is fine
         },
-        { 
-            title: "PMT", 
-            field: "pmtName", 
-            minWidth: 150, 
+        {
+            title: "PMT",
+            field: "pmtName",
+            minWidth: 150,
             headerFilter: "list",
             headerFilterParams: () => getNameHeaderFilterParams(currentSystemData.pmts, 'pmtName'),
             headerFilterFunc: "="
@@ -972,11 +1059,11 @@ function defineEngineerTableColumns() {
                 }
             });
         }
-        options.sort((a,b) => {
+        options.sort((a, b) => {
             if (a.value === "") return -1;
             if (b.value === "") return 1;
-            if (a.value === "_UNALLOCATED_") return options.length -1; // Try to push Unallocated towards end
-            if (b.value === "_UNALLOCATED_") return -(options.length -1);
+            if (a.value === "_UNALLOCATED_") return options.length - 1; // Try to push Unallocated towards end
+            if (b.value === "_UNALLOCATED_") return -(options.length - 1);
             return String(a.label).localeCompare(String(b.label));
         });
         return { values: options, clearable: true, autocomplete: true };
@@ -992,8 +1079,8 @@ function defineEngineerTableColumns() {
                     uniqueNames[item[nameField]] = item[nameField]; // Value is the name itself for filtering
                 }
             });
-            Object.keys(uniqueNames).sort((a,b) => String(a).localeCompare(String(b))).forEach(name => {
-                 options.push({ label: name, value: name });
+            Object.keys(uniqueNames).sort((a, b) => String(a).localeCompare(String(b))).forEach(name => {
+                options.push({ label: name, value: name });
             });
         }
         return { values: options, clearable: true, autocomplete: true };
@@ -1026,7 +1113,7 @@ function defineEngineerTableColumns() {
     };
 
     return [
-        { title: "Engineer Name", field: "name", sorter: "string", minWidth: 180, frozen: true, editable: false, headerFilter: "input", headerFilterPlaceholder: "Filter by name...", accessorDownload: (v,d) => d.name },
+        { title: "Engineer Name", field: "name", sorter: "string", minWidth: 180, frozen: true, editable: false, headerFilter: "input", headerFilterPlaceholder: "Filter by name...", accessorDownload: (v, d) => d.name },
         {
             title: "Level", field: "level", width: 100, hozAlign: "left", sorter: "number",
             editor: "list", editorParams: levelCellEditorParams,
@@ -1036,7 +1123,7 @@ function defineEngineerTableColumns() {
                 const engineerName = cell.getRow().getData().name;
                 const newLevelValue = parseInt(cell.getValue()); // Editor should provide the value directly
                 if (isNaN(newLevelValue) || newLevelValue < 1 || newLevelValue > 7) {
-                    alert("Invalid level. Please select a valid level from the list.");
+                    window.notificationManager.showToast("Invalid level. Please select a valid level from the list.", 'warning');
                     cell.restoreOldValue();
                     return;
                 }
@@ -1049,7 +1136,7 @@ function defineEngineerTableColumns() {
                     console.error(`Engineer ${engineerName} not found in allKnownEngineers for level update.`);
                 }
             },
-            accessorDownload: (v,d) => (engineerLevels.find(l => l.value === d.level) || {label: d.level}).label
+            accessorDownload: (v, d) => (engineerLevels.find(l => l.value === d.level) || { label: d.level }).label
         },
         {
             title: "Type", field: "isAISWE", width: 70, hozAlign: "center",
@@ -1060,20 +1147,20 @@ function defineEngineerTableColumns() {
             headerFilter: "list", // Changed from "select" to "list"
             headerFilterParams: {
                 values: [ // Using array of objects for "list" header filter
-                    {label: "All", value: ""},
-                    {label: "AI", value: true},
-                    {label: "Human", value: false}
+                    { label: "All", value: "" },
+                    { label: "AI", value: true },
+                    { label: "Human", value: false }
                 ]
             },
             visible: false,
-            download: true, accessorDownload: (v,d) => d.isAISWE ? "AI" : "Human"
+            download: true, accessorDownload: (v, d) => d.isAISWE ? "AI" : "Human"
         },
         {
             title: "AI Agent Type", field: "aiAgentType", minWidth: 150, hozAlign: "left",
             formatter: (cell) => cell.getValue() || "-",
             headerFilter: "input", headerFilterPlaceholder: "Filter by AI Type...",
             visible: false,
-            download: true, accessorDownload: (v,d) => d.aiAgentType === "-" ? "" : d.aiAgentType // Export blank if it was just a dash
+            download: true, accessorDownload: (v, d) => d.aiAgentType === "-" ? "" : d.aiAgentType // Export blank if it was just a dash
         },
         {
             title: "Skills", field: "skills", minWidth: 200, hozAlign: "left",
@@ -1087,13 +1174,13 @@ function defineEngineerTableColumns() {
                 const newSkillsArray = newSkillsString ? newSkillsString.split(',').map(s => s.trim()).filter(s => s) : [];
                 const engineerGlobal = (currentSystemData.allKnownEngineers || []).find(e => e.name === engineerName);
                 if (engineerGlobal) {
-                    if (!engineerGlobal.attributes) engineerGlobal.attributes = {isAISWE: false, aiAgentType: null, skills:[], yearsOfExperience:0};
+                    if (!engineerGlobal.attributes) engineerGlobal.attributes = { isAISWE: false, aiAgentType: null, skills: [], yearsOfExperience: 0 };
                     engineerGlobal.attributes.skills = newSkillsArray;
                     console.log(`Updated skills for ${engineerName} to:`, newSkillsArray);
                     if (typeof saveSystemChanges === 'function') saveSystemChanges();
                 }
             },
-            download: true, accessorDownload: (v,d) => d.skills
+            download: true, accessorDownload: (v, d) => d.skills
         },
         {
             title: "Years Exp.", field: "yearsOfExperience", width: 100, hozAlign: "right", sorter: "number",
@@ -1101,9 +1188,9 @@ function defineEngineerTableColumns() {
                 const val = cell.getValue();
                 return (typeof val === 'number') ? `${val} years` : (val || "-");
             },
-            headerFilter: "number", headerFilterParams:{placeholder:"e.g. >2"}, // Tabulator uses headerFilterParams for placeholder
+            headerFilter: "number", headerFilterParams: { placeholder: "e.g. >2" }, // Tabulator uses headerFilterParams for placeholder
             visible: false,
-            download: true, accessorDownload: (v,d) => d.yearsOfExperience
+            download: true, accessorDownload: (v, d) => d.yearsOfExperience
         },
         {
             title: "Team Identity", field: "teamId", sorterParams: { alignEmptyValues: "top" }, minWidth: 170, hozAlign: "left",
@@ -1125,16 +1212,16 @@ function defineEngineerTableColumns() {
                     if (typeof generateEngineerTable === 'function') generateEngineerTable();
                 } catch (error) {
                     console.error(error);
-                    alert(error.message);
+                    window.notificationManager.showToast(error.message, 'error');
                     if (typeof cell.restoreOldValue === 'function') {
                         cell.restoreOldValue();
                     }
                 }
             },
-            accessorDownload: (v,d) => { const t = (currentSystemData.teams || []).find(team => team.teamId === d.teamId); return t ? (t.teamIdentity || t.teamName || d.teamId) : "Unallocated"; }
+            accessorDownload: (v, d) => { const t = (currentSystemData.teams || []).find(team => team.teamId === d.teamId); return t ? (t.teamIdentity || t.teamName || d.teamId) : "Unallocated"; }
         },
-        { title: "Manager (SDM)", field: "sdmName", sorter: "string", minWidth: 150, editable: false, headerFilter: "list", headerFilterParams: () => getNameHeaderFilterParams(currentSystemData.sdms, 'sdmName'), headerFilterFunc: "=", headerFilterPlaceholder: "Filter by SDM...", accessorDownload: (v,d) => d.sdmName },
-        { title: "Senior Manager", field: "seniorManagerName", sorter: "string", minWidth: 150, editable: false, headerFilter: "list", headerFilterParams: () => getNameHeaderFilterParams(currentSystemData.seniorManagers, 'seniorManagerName'), headerFilterFunc: "=", headerFilterPlaceholder: "Filter by Sr. Mgr...", accessorDownload: (v,d) => d.seniorManagerName },
+        { title: "Manager (SDM)", field: "sdmName", sorter: "string", minWidth: 150, editable: false, headerFilter: "list", headerFilterParams: () => getNameHeaderFilterParams(currentSystemData.sdms, 'sdmName'), headerFilterFunc: "=", headerFilterPlaceholder: "Filter by SDM...", accessorDownload: (v, d) => d.sdmName },
+        { title: "Senior Manager", field: "seniorManagerName", sorter: "string", minWidth: 150, editable: false, headerFilter: "list", headerFilterParams: () => getNameHeaderFilterParams(currentSystemData.seniorManagers, 'seniorManagerName'), headerFilterFunc: "=", headerFilterPlaceholder: "Filter by Sr. Mgr...", accessorDownload: (v, d) => d.seniorManagerName },
     ];
 }
 
@@ -1199,7 +1286,7 @@ function generateAddNewResourceSection(containerElement) {
 
     const form = document.createElement('form');
     form.id = 'addNewResourceForm';
-    form.onsubmit = function(event) { event.preventDefault(); handleAddNewResource(); };
+    form.onsubmit = function (event) { event.preventDefault(); handleAddNewResource(); };
 
     // Resource Type Selector
     form.innerHTML += `
@@ -1357,7 +1444,7 @@ function handleAddNewResource() {
     let newResourceDataForLog = {};
 
     if (!currentSystemData) {
-        alert("Error: currentSystemData is not loaded. Cannot add resource.");
+        window.notificationManager.showToast("Error: currentSystemData is not loaded. Cannot add resource.", 'error');
         return;
     }
 
@@ -1371,7 +1458,7 @@ function handleAddNewResource() {
         const aiAgentType = isAISWE ? document.getElementById('newEngineerAIAgentType').value.trim() : null;
 
         if (!name || isNaN(level) || level < 1 || level > 7) {
-            alert("Invalid engineer name or level. Please ensure name is provided and level is between 1 and 7.");
+            window.notificationManager.showToast("Invalid engineer name or level. Please ensure name is provided and level is between 1 and 7.", 'warning');
         } else {
             try {
                 const newEngineer = addEngineerToRoster({
@@ -1387,7 +1474,7 @@ function handleAddNewResource() {
                 newResourceDataForLog = newEngineer;
                 success = true;
             } catch (error) {
-                alert(error.message);
+                window.notificationManager.showToast(error.message, 'error');
             }
         }
     } else if (resourceType === 'sdm') {
@@ -1400,8 +1487,8 @@ function handleAddNewResource() {
                 currentSystemData.sdms.push(newSdm);
                 newResourceDataForLog = newSdm;
                 success = true;
-            } else { alert(`SDM with name "${name}" already exists.`); }
-        } else { alert("SDM name cannot be empty."); }
+            } else { window.notificationManager.showToast(`SDM with name "${name}" already exists.`, 'warning'); }
+        } else { window.notificationManager.showToast("SDM name cannot be empty.", 'warning'); }
     } else if (resourceType === 'sr_manager') {
         const name = document.getElementById('newSrManagerName').value.trim();
         if (name) {
@@ -1411,8 +1498,8 @@ function handleAddNewResource() {
                 currentSystemData.seniorManagers.push(newSrManager);
                 newResourceDataForLog = newSrManager;
                 success = true;
-            } else { alert(`Senior Manager with name "${name}" already exists.`); }
-        } else { alert("Senior Manager name cannot be empty."); }
+            } else { window.notificationManager.showToast(`Senior Manager with name "${name}" already exists.`, 'warning'); }
+        } else { window.notificationManager.showToast("Senior Manager name cannot be empty.", 'warning'); }
     } else if (resourceType === 'pmt') {
         const name = document.getElementById('newPmtName').value.trim();
         if (name) {
@@ -1422,23 +1509,19 @@ function handleAddNewResource() {
                 currentSystemData.pmts.push(newPmt);
                 newResourceDataForLog = newPmt;
                 success = true;
-            } else { alert(`PMT with name "${name}" already exists.`); }
-        } else { alert("PMT name cannot be empty."); }
+            } else { window.notificationManager.showToast(`PMT with name "${name}" already exists.`, 'warning'); }
+        } else { window.notificationManager.showToast("PMT name cannot be empty.", 'warning'); }
     }
 
     if (success) {
-        alert("Resource added successfully to the system roster!");
+        window.notificationManager.showToast("Resource added successfully to the system roster!", 'success');
         console.log("Added new resource to currentSystemData:", newResourceDataForLog);
         if (typeof saveSystemChanges === 'function') saveSystemChanges();
         document.getElementById('addNewResourceForm').reset();
         toggleNewResourceFields(); // This will also call toggleAIAgentTypeField
 
         // Refresh relevant views if they are currently displayed
-        if (document.getElementById('organogramView').style.display !== 'none') {
-            if (typeof initializeOrgChartView === 'function') {
-                initializeOrgChartView(); // Re-run the full init
-            }
-        }
+
         if (document.getElementById('engineerTableView').style.display !== 'none') {
             if (typeof generateEngineerTable === 'function') generateEngineerTable();
         }
@@ -1451,7 +1534,7 @@ function handleAddNewResource() {
         if (resourceType === 'sdm' && typeof displayTeamsForEditing === 'function' && document.getElementById('systemEditForm').style.display !== 'none') {
             displayTeamsForEditing(currentSystemData.teams, -1); // Refresh team edit view to update SDM lists
         }
-         if (resourceType === 'pmt' && typeof displayTeamsForEditing === 'function' && document.getElementById('systemEditForm').style.display !== 'none') {
+        if (resourceType === 'pmt' && typeof displayTeamsForEditing === 'function' && document.getElementById('systemEditForm').style.display !== 'none') {
             displayTeamsForEditing(currentSystemData.teams, -1); // Refresh team edit view to update PMT lists
         }
     }

@@ -165,8 +165,8 @@ class EnhancedTableWidget {
             this.columnVisibilityDropdown.remove();
             // If it was the same button click, just close it
             if (this.columnVisibilityDropdown._trigger === buttonElement) {
-                 this.columnVisibilityDropdown = null;
-                 return;
+                this.columnVisibilityDropdown = null;
+                return;
             }
         }
         this.columnVisibilityDropdown = null; // Reset
@@ -220,16 +220,16 @@ class EnhancedTableWidget {
             item.onclick = () => {
                 try {
                     if (format === "xlsx" && typeof XLSX === 'undefined') {
-                        alert("XLSX export requires the SheetJS library (xlsx.full.min.js) to be included.");
+                        window.notificationManager.showToast("XLSX export requires the SheetJS library (xlsx.full.min.js) to be included.", "error");
                         console.warn("SheetJS library not found for XLSX export.");
                         return;
                     }
                     this.tabulatorInstance.download(format, fileName, format === "xlsx" ? { sheetName: this.options.exportSheetName } : undefined);
                 } catch (e) {
                     console.error(`Error downloading as ${format}:`, e);
-                    alert(`Could not download as ${format}. Check console for details.`);
+                    window.notificationManager.showToast(`Could not download as ${format}. Check console for details.`, "error");
                 }
-                if(this.exportDropdown) this.exportDropdown.remove(); // Close dropdown after action
+                if (this.exportDropdown) this.exportDropdown.remove(); // Close dropdown after action
                 this.exportDropdown = null;
             };
             this.exportDropdown.appendChild(item);
@@ -239,7 +239,7 @@ class EnhancedTableWidget {
         createExportOption('JSON', 'json', this.options.exportJsonFileName);
         // Conditionally add XLSX if SheetJS library is loaded (basic check)
         if (typeof XLSX !== 'undefined' || this.options.forceXlsxExportOption) { // Added force option for testing
-             createExportOption('XLSX (Excel)', 'xlsx', this.options.exportXlsxFileName);
+            createExportOption('XLSX (Excel)', 'xlsx', this.options.exportXlsxFileName);
         }
 
 
@@ -267,7 +267,7 @@ class EnhancedTableWidget {
         const clickOutsideHandler = (event) => {
             if (!dropdownElement.contains(event.target) && event.target !== buttonElement) {
                 if (dropdownElement.parentNode) {
-                     dropdownElement.remove();
+                    dropdownElement.remove();
                 }
                 if (dropdownElement === this.columnVisibilityDropdown) this.columnVisibilityDropdown = null;
                 if (dropdownElement === this.exportDropdown) this.exportDropdown = null;
@@ -333,7 +333,7 @@ class EnhancedTableWidget {
      * @param {string|number} id - The unique ID of the row to delete.
      */
     deleteRow(id) {
-         if (this.tabulatorInstance) {
+        if (this.tabulatorInstance) {
             this.tabulatorInstance.deleteRow(id)
                 .then(() => console.log(`EnhancedTableWidget: Row ${id} deleted.`))
                 .catch(err => console.error(`EnhancedTableWidget: Error deleting row ${id}:`, err));

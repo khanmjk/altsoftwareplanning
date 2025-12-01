@@ -1,0 +1,188 @@
+/* Roadmap Initiative Modal Styles */
+
+.roadmap-modal-overlay {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+}
+
+.roadmap-modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 0;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    width: 70%;
+    max-width: 900px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.roadmap-modal-header {
+    padding: 20px 25px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f8fafc;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.roadmap-modal-title {
+    margin: 0;
+    font-size: 1.25rem;
+    color: #1e293b;
+    font-weight: 600;
+}
+
+.roadmap-modal-close {
+    color: #94a3b8;
+    font-size: 1.5rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.2s;
+    background: none;
+    border: none;
+    padding: 0;
+    line-height: 1;
+}
+
+.roadmap-modal-close:hover {
+    color: #ef4444;
+}
+
+.roadmap-modal-body {
+    padding: 25px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.roadmap-modal-footer {
+    padding: 15px 25px;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    background-color: #f8fafc;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+/* Form Styles */
+.roadmap-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.roadmap-form-group {
+    margin-bottom: 15px;
+}
+
+.roadmap-form-group.full-width {
+    grid-column: span 2;
+}
+
+.roadmap-label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #475569;
+    font-size: 0.9rem;
+}
+
+.roadmap-input,
+.roadmap-select,
+.roadmap-textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
+}
+
+.roadmap-input:focus,
+.roadmap-select:focus,
+.roadmap-textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.roadmap-section-title {
+    margin-top: 20px;
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #334155;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+/* Assignments Section */
+.assignments-container {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 15px;
+}
+
+.assignments-list {
+    margin-bottom: 15px;
+}
+
+.assignment-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    margin-bottom: 5px;
+    animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.assignment-controls {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+.btn-sm {
+    padding: 5px 10px;
+    font-size: 0.85rem;
+}

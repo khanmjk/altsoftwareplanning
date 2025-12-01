@@ -1,20 +1,32 @@
 // js/capacityTuning.js
+// console.log("Loading capacityTuning.js...");
 
-/** NEW Function - Shows the Capacity Configuration View */
-function showCapacityConfigView() {
-    console.log("Switching to Capacity Configuration View (Focus Mode)...");
-    if (!currentSystemData) {
-        alert("Please load a system first.");
-        return;
-    }
-    const container = document.getElementById('capacityConfigView');
+/** NEW Function - Renders the Capacity Configuration View into the Workspace */
+function renderCapacityConfigView(container) {
+    // console.log("Rendering Capacity Configuration View...");
+
+    // Fallback if container not passed (legacy support)
     if (!container) {
-        console.error("Cannot generate global constraints form: Container #capacityConfigView not found.");
+        container = document.getElementById('capacityConfigView');
+    }
+
+    if (!container) {
+        console.error("Cannot render capacity view: Container not found.");
         return;
     }
 
-    // Use switchView to handle view transition and UI elements
-    switchView('capacityConfigView'); // Pass the ID of the new view container
+    if (!currentSystemData) {
+        container.innerHTML = '<div style="padding: 20px;"><h3>Please load a system first.</h3></div>';
+        return;
+    }
+
+    // Clear container (though WorkspaceComponent does this too)
+    // container.innerHTML = ''; 
+
+    // We need to ensure internal functions use this container or find their targets within it.
+    // For now, internal functions like generateGlobalConstraintsForm still look for ID 'capacityConfigView'.
+    // So we MUST ensure the container has that ID if we want to avoid refactoring everything.
+    // WorkspaceComponent assigns the ID, so we are good.
 
     generateGlobalConstraintsForm();
     generateTeamConstraintsForms();
@@ -24,50 +36,50 @@ function showCapacityConfigView() {
     updateCapacityCalculationsAndDisplay();
 
 }
-// Make it globally accessible for the button's onclick
-window.showCapacityConfigView = showCapacityConfigView;
+// Make it globally accessible
+window.renderCapacityConfigView = renderCapacityConfigView;
 
 /**
  * Generates the form elements for global capacity constraints.
  * Fixes tbody lookup issue in renderOrgEvents.
  */
 function generateGlobalConstraintsForm() {
-    console.log("Generating Global Constraints Form (Fix 1)...");
+    // console.log("Generating Global Constraints Form (Fix 1)...");
     const container = document.getElementById('capacityConfigView');
     if (!container) {
         console.error("Cannot generate global constraints form: Container #capacityConfigView not found.");
         return;
     }
     if (!currentSystemData || !currentSystemData.capacityConfiguration) {
-         console.error("Cannot generate global constraints form: Missing currentSystemData.capacityConfiguration.");
-         container.innerHTML = '<p style="color:red;">Error: Capacity configuration data missing in the loaded system.</p>';
-         return;
+        console.error("Cannot generate global constraints form: Missing currentSystemData.capacityConfiguration.");
+        container.innerHTML = '<p style="color:red;">Error: Capacity configuration data missing in the loaded system.</p>';
+        return;
     }
 
     // Ensure nested structure exists
     if (!currentSystemData.capacityConfiguration.globalConstraints) {
-         currentSystemData.capacityConfiguration.globalConstraints = { publicHolidays: null, orgEvents: [] };
+        currentSystemData.capacityConfiguration.globalConstraints = { publicHolidays: null, orgEvents: [] };
     }
 
     if (!currentSystemData.capacityConfiguration.globalConstraints.orgEvents || !Array.isArray(currentSystemData.capacityConfiguration.globalConstraints.orgEvents)) {
-         console.warn("Initializing missing or invalid orgEvents array.");
-         currentSystemData.capacityConfiguration.globalConstraints.orgEvents = [];
-     }
+        console.warn("Initializing missing or invalid orgEvents array.");
+        currentSystemData.capacityConfiguration.globalConstraints.orgEvents = [];
+    }
 
-     if (!currentSystemData.capacityConfiguration.leaveTypes) {
-         currentSystemData.capacityConfiguration.leaveTypes = [
-             { id: "annual", name: "Annual Leave", defaultEstimatedDays: 0 },
-             { id: "sick", name: "Sick Leave", defaultEstimatedDays: 0 },
-             { id: "study", name: "Study Leave", defaultEstimatedDays: 0 },
-             { id: "inlieu", name: "Time off In-lieu Leave", defaultEstimatedDays: 0 }
-         ];
-     }
+    if (!currentSystemData.capacityConfiguration.leaveTypes) {
+        currentSystemData.capacityConfiguration.leaveTypes = [
+            { id: "annual", name: "Annual Leave", defaultEstimatedDays: 0 },
+            { id: "sick", name: "Sick Leave", defaultEstimatedDays: 0 },
+            { id: "study", name: "Study Leave", defaultEstimatedDays: 0 },
+            { id: "inlieu", name: "Time off In-lieu Leave", defaultEstimatedDays: 0 }
+        ];
+    }
 
 
     // --- Create Section for Global Settings ---
     let globalSection = document.getElementById('globalConstraintsSection');
     if (!globalSection) {
-        console.log("Creating #globalConstraintsSection div...");
+        // console.log("Creating #globalConstraintsSection div...");
         globalSection = document.createElement('div');
         globalSection.id = 'globalConstraintsSection';
         globalSection.style.border = '1px solid #ccc';
@@ -79,12 +91,12 @@ function generateGlobalConstraintsForm() {
         // Insert the new section at the beginning of the main container
         container.insertBefore(globalSection, container.firstChild);
     } else {
-        console.log("Clearing existing content within #globalConstraintsSection (keeping title)...");
+        // console.log("Clearing existing content within #globalConstraintsSection (keeping title)...");
         // Clear previous content EXCEPT the title (assuming H3 is the first child)
         while (globalSection.childNodes.length > 1) {
             globalSection.removeChild(globalSection.lastChild);
         }
-      }
+    }
     globalSection.style.border = '1px solid #ccc';
     globalSection.style.padding = '15px';
     globalSection.style.marginBottom = '20px';
@@ -148,7 +160,7 @@ function generateGlobalConstraintsForm() {
             console.log("Updated publicHolidays:", value);
             // --- Sanity Check ---
             if (value > 30) { // Example sanity check
-                 warningMsg = 'Value seems high for public holidays (more than 30).';
+                warningMsg = 'Value seems high for public holidays (more than 30).';
             }
             // --- End Sanity Check ---
             updateCapacityCalculationsAndDisplay();
@@ -193,11 +205,11 @@ function generateGlobalConstraintsForm() {
 
     // --- REVISED renderOrgEvents function within generateGlobalConstraintsForm ---
     const renderOrgEvents = (tbodyElement) => {
-        if (!tbodyElement) {console.error("Org events tbody not found for rendering"); return;}
+        if (!tbodyElement) { console.error("Org events tbody not found for rendering"); return; }
         tbodyElement.innerHTML = '';
         // Access the array safely AFTER the check/init above
         const events = currentSystemData.capacityConfiguration.globalConstraints.orgEvents;
-        console.log("[DEBUG] Rendering org events table with data:", JSON.stringify(events)); // Add log to see data used for render
+        // console.log("[DEBUG] Rendering org events table with data:", JSON.stringify(events)); // Add log to see data used for render
 
         events.forEach((event, index) => {
             const row = tbodyElement.insertRow();
@@ -219,22 +231,22 @@ function generateGlobalConstraintsForm() {
             const daysCell = row.insertCell(); /* ... Days Input Cell ... */ daysCell.style.border = '1px solid #ccc'; daysCell.style.padding = '5px'; daysCell.style.textAlign = 'center'; const daysInput = document.createElement('input'); daysInput.type = 'number'; daysInput.min = '0'; daysInput.step = '0.5'; daysInput.value = event.estimatedDaysPerSDE || 0; daysInput.style.width = '60px';
             // *** MODIFIED DAYS INPUT ONCHANGE ***
             daysInput.onchange = (e) => {
-                 // Explicitly find the event in currentSystemData using index
-                 const eventToUpdate = currentSystemData.capacityConfiguration.globalConstraints.orgEvents[index];
-                 if (eventToUpdate) {
-                     eventToUpdate.estimatedDaysPerSDE = parseFloat(e.target.value) || 0; // Update the object in the main data structure
-                     console.log(`Updated org event[${index}] days in currentSystemData`);
-                     updateCapacityCalculationsAndDisplay(); // Trigger update
-                 } else {
-                     console.error(`Could not find org event at index ${index} to update days.`);
-                 }
+                // Explicitly find the event in currentSystemData using index
+                const eventToUpdate = currentSystemData.capacityConfiguration.globalConstraints.orgEvents[index];
+                if (eventToUpdate) {
+                    eventToUpdate.estimatedDaysPerSDE = parseFloat(e.target.value) || 0; // Update the object in the main data structure
+                    console.log(`Updated org event[${index}] days in currentSystemData`);
+                    updateCapacityCalculationsAndDisplay(); // Trigger update
+                } else {
+                    console.error(`Could not find org event at index ${index} to update days.`);
+                }
             };
             daysCell.appendChild(daysInput);
 
             const actionCell = row.insertCell(); /* ... Remove Button Cell ... */ actionCell.style.border = '1px solid #ccc'; actionCell.style.padding = '5px'; actionCell.style.textAlign = 'center'; const removeBtn = document.createElement('button'); removeBtn.textContent = 'Remove'; removeBtn.style.fontSize = '0.9em';
             // Remove button logic remains the same - it correctly modifies the array directly
             removeBtn.onclick = () => {
-                console.log(`Attempting to remove org event at index ${index}`);
+                // console.log(`Attempting to remove org event at index ${index}`);
                 currentSystemData.capacityConfiguration.globalConstraints.orgEvents.splice(index, 1);
                 console.log("Spliced event from array. New array:", JSON.stringify(currentSystemData.capacityConfiguration.globalConstraints.orgEvents));
                 renderOrgEvents(tbodyElement); // Re-render the table rows
@@ -256,18 +268,18 @@ function generateGlobalConstraintsForm() {
     addOrgEventBtn.textContent = 'Add Org Event';
     addOrgEventBtn.style.marginTop = '10px';
     addOrgEventBtn.onclick = () => {
-         if (!currentSystemData.capacityConfiguration.globalConstraints.orgEvents) {
-             currentSystemData.capacityConfiguration.globalConstraints.orgEvents = [];
-         }
-         currentSystemData.capacityConfiguration.globalConstraints.orgEvents.push({ id: 'evt-' + Date.now(), name: 'New Org Event', estimatedDaysPerSDE: 0 });
-         // *** Pass the correct tbody element when re-rendering after add ***
-         if(orgEventsTbody) renderOrgEvents(orgEventsTbody);
-         // Trigger recalculation of summary display
-         updateCapacityCalculationsAndDisplay();
-     };
-     globalSection.appendChild(addOrgEventBtn);
-     globalSection.appendChild(document.createElement('br'));
-     globalSection.appendChild(document.createElement('br'));
+        if (!currentSystemData.capacityConfiguration.globalConstraints.orgEvents) {
+            currentSystemData.capacityConfiguration.globalConstraints.orgEvents = [];
+        }
+        currentSystemData.capacityConfiguration.globalConstraints.orgEvents.push({ id: 'evt-' + Date.now(), name: 'New Org Event', estimatedDaysPerSDE: 0 });
+        // *** Pass the correct tbody element when re-rendering after add ***
+        if (orgEventsTbody) renderOrgEvents(orgEventsTbody);
+        // Trigger recalculation of summary display
+        updateCapacityCalculationsAndDisplay();
+    };
+    globalSection.appendChild(addOrgEventBtn);
+    globalSection.appendChild(document.createElement('br'));
+    globalSection.appendChild(document.createElement('br'));
 
 
     // --- Standard Leave Types (Defaults) ---
@@ -292,9 +304,9 @@ function generateGlobalConstraintsForm() {
     globalSection.appendChild(leaveTypesTable);
 
     const tbodyLeave = leaveTypesTable.querySelector('#leaveTypesTbody'); // Find tbody within this table
-    if(tbodyLeave) {
+    if (tbodyLeave) {
         (currentSystemData.capacityConfiguration.leaveTypes || []).forEach(leaveType => {
-            if(!leaveType) return; // Skip if invalid
+            if (!leaveType) return; // Skip if invalid
             const row = tbodyLeave.insertRow();
             const nameCell = row.insertCell();
             nameCell.style.border = '1px solid #ccc'; nameCell.style.padding = '5px';
@@ -309,10 +321,10 @@ function generateGlobalConstraintsForm() {
                 const value = parseInt(e.target.value);
                 leaveType.defaultEstimatedDays = (!isNaN(value) && value >= 0) ? value : 0;
                 console.log(`Updated default days for ${leaveType.id} to ${leaveType.defaultEstimatedDays}`);
-                 //Trigger recalculation of summary display
-                 updateCapacityCalculationsAndDisplay();
-             });
-             daysCell.appendChild(daysInput);
+                //Trigger recalculation of summary display
+                updateCapacityCalculationsAndDisplay();
+            });
+            daysCell.appendChild(daysInput);
         });
     } else {
         console.error("Could not find #leaveTypesTbody within the created leaveTypesTable.");
@@ -320,7 +332,7 @@ function generateGlobalConstraintsForm() {
     // Note: Not adding 'Add New Leave Type' for now to keep MVP simpler.
 
     // --- Append Global Section ---
-    console.log("Finished generating Global Constraints Form.");
+    // console.log("Finished generating Global Constraints Form.");
 }
 window.generateGlobalConstraintsForm = generateGlobalConstraintsForm;
 
@@ -329,7 +341,7 @@ window.generateGlobalConstraintsForm = generateGlobalConstraintsForm;
  * the new rule for Funded Headcount, and the new AI Productivity Gain.
  */
 function calculateAllCapacityMetrics() {
-    console.log("Calculating all capacity metrics (AI-Aware with Productivity Gain)...");
+    // console.log("Calculating all capacity metrics (AI-Aware with Productivity Gain)...");
     if (!currentSystemData || !currentSystemData.capacityConfiguration || !currentSystemData.teams) {
         console.error("Cannot calculate metrics: Missing core data (config or teams).");
         return { totals: { TeamBIS: {}, EffectiveBIS: {}, FundedHC: {} } };
@@ -418,14 +430,14 @@ function calculateAllCapacityMetrics() {
             };
 
             const totalDeductYrs = Object.values(deductionsBreakdown).reduce((sum, val) => sum + (val || 0), 0);
-            
+
             // --- NEW: Calculate and apply AI Productivity Gain ---
             const aiProductivityGainPercent = team.teamCapacityAdjustments?.aiProductivityGainPercent || 0;
             const humanGrossYrs = humanHeadcount * sdesPerSdeYear;
             // All deductions are already based on human headcount
             const humanNetWorkYrs_BeforeGain = humanGrossYrs - totalDeductYrs;
             const aiGainInSdeYears = humanNetWorkYrs_BeforeGain * (aiProductivityGainPercent / 100);
-            
+
             deductionsBreakdown.aiProductivityGainYrs = aiGainInSdeYears;
 
             const netYrs = (grossYrs - totalDeductYrs) + aiGainInSdeYears;
@@ -445,14 +457,14 @@ function calculateAllCapacityMetrics() {
             totals[scenario].grossYrs += grossYrs;
             totals[scenario].deductYrs += totalDeductYrs;
             totals[scenario].netYrs += netYrs;
-            
+
             Object.keys(deductionsBreakdown).forEach(key => {
                 totals[scenario].deductionsBreakdown[key] = (totals[scenario].deductionsBreakdown[key] || 0) + (deductionsBreakdown[key] || 0);
             });
         });
     });
 
-    console.log("Finished calculating AI-aware metrics with productivity gain.");
+    // console.log("Finished calculating AI-aware metrics with productivity gain.");
     return { ...teamMetrics, totals: totals };
 }
 window.calculateAllCapacityMetrics = calculateAllCapacityMetrics;
@@ -461,7 +473,7 @@ window.calculateAllCapacityMetrics = calculateAllCapacityMetrics;
  * REVISED - Triggers recalculation and redraws summary, narrative, and chart.
  */
 function updateCapacityCalculationsAndDisplay(newScenario = null) {
-    console.log(`Updating capacity display. New scenario provided: ${newScenario}, Current scenario: ${currentCapacityScenario}`);
+    // console.log(`Updating capacity display. New scenario provided: ${newScenario}, Current scenario: ${currentCapacityScenario}`);
     if (newScenario && ['TeamBIS', 'EffectiveBIS', 'FundedHC'].includes(newScenario) && newScenario !== currentCapacityScenario) {
         currentCapacityScenario = newScenario;
         console.log(`Capacity scenario changed to: ${currentCapacityScenario}`);
@@ -479,13 +491,13 @@ function updateCapacityCalculationsAndDisplay(newScenario = null) {
     }
 
     const calculatedMetrics = calculateAllCapacityMetrics();
-    console.log("Capacity metrics calculated:", calculatedMetrics);
+    // console.log("Capacity metrics calculated:", calculatedMetrics);
 
     generateCapacitySummaryDisplay(calculatedMetrics, currentCapacityScenario);
     generateCapacityNarrative(calculatedMetrics, currentCapacityScenario);
     generateCapacityWaterfallChart(calculatedMetrics, currentCapacityScenario);
 
-    console.log("All capacity displays updated.");
+    // console.log("All capacity displays updated.");
 }
 window.updateCapacityCalculationsAndDisplay = updateCapacityCalculationsAndDisplay;
 
@@ -495,7 +507,7 @@ window.updateCapacityCalculationsAndDisplay = updateCapacityCalculationsAndDispl
  * - Retains all previous enhancements like dynamic headers and correct data sourcing.
  */
 function generateCapacitySummaryDisplay(calculatedMetrics, selectedScenario) {
-    console.log(`Generating AI-Aware Capacity Summary Display for scenario: ${selectedScenario}`);
+    // console.log(`Generating AI-Aware Capacity Summary Display for scenario: ${selectedScenario}`);
     const summarySection = document.getElementById('capacitySummarySection');
     if (!summarySection) { console.error("Summary section not found."); return; }
 
@@ -531,7 +543,7 @@ function generateCapacitySummaryDisplay(calculatedMetrics, selectedScenario) {
 
     const thead = summaryTable.createTHead();
     const headerRow = thead.insertRow();
-    
+
     const headers = [
         { text: 'Team Identity', title: 'Team Identifier' },
         { text: `Headcount (${selectedScenario})`, title: 'Total headcount (Human + AI) for the selected scenario' },
@@ -567,7 +579,7 @@ function generateCapacitySummaryDisplay(calculatedMetrics, selectedScenario) {
         hcCell.title = `Total: ${teamMetrics.totalHeadcount.toFixed(1)}, Humans: ${teamMetrics.humanHeadcount.toFixed(1)}, AI: ${aiEngineers.toFixed(1)}`;
 
         row.insertCell().textContent = teamMetrics.grossYrs.toFixed(2);
-        
+
         const deductCell = row.insertCell();
         deductCell.textContent = teamMetrics.deductYrs.toFixed(2);
         const deductInfoIcon = document.createElement('span');
@@ -588,13 +600,13 @@ function generateCapacitySummaryDisplay(calculatedMetrics, selectedScenario) {
         aiGainInfoIcon.textContent = ' ℹ️';
         aiGainInfoIcon.style.cursor = 'help';
         aiGainInfoIcon.style.fontSize = '0.8em';
-        
+
         // Construct the tooltip text for AI Gain calculation
         const humanGrossYrs = teamMetrics.humanHeadcount * 1.0; // SDE Year per human
         const humanNetBeforeGain = humanGrossYrs - teamMetrics.deductYrs;
         const productivityPercent = team.teamCapacityAdjustments?.aiProductivityGainPercent || 0;
         aiGainInfoIcon.title = `Calculation: (Human Net Capacity Before Gain) * AI Gain %\n` +
-                             `(${humanNetBeforeGain.toFixed(2)} SDE Yrs * ${productivityPercent}%) = +${aiGainValue.toFixed(2)} SDE Yrs`;
+            `(${humanNetBeforeGain.toFixed(2)} SDE Yrs * ${productivityPercent}%) = +${aiGainValue.toFixed(2)} SDE Yrs`;
         aiGainCell.appendChild(aiGainInfoIcon);
 
 
@@ -623,7 +635,7 @@ function generateCapacitySummaryDisplay(calculatedMetrics, selectedScenario) {
     totalHcCell.title = `Total: ${totals.totalHeadcount.toFixed(1)}, Humans: ${totals.humanHeadcount.toFixed(1)}, AI: ${totalAiEngineers.toFixed(1)}`;
 
     footerRow.insertCell().textContent = totals.grossYrs.toFixed(2);
-    
+
     const deductTotalCell = footerRow.insertCell();
     deductTotalCell.textContent = totals.deductYrs.toFixed(2);
     const totalDeductInfoIcon = document.createElement('span');
@@ -645,7 +657,7 @@ function generateCapacitySummaryDisplay(calculatedMetrics, selectedScenario) {
     const totalHumanGrossYrs = totals.humanHeadcount * 1.0;
     const totalHumanNetBeforeGain = totalHumanGrossYrs - totals.deductYrs;
     totalAIGainInfoIcon.title = `Represents the sum of all team AI gains.\n` +
-                                `Calculated from each team's Human Net Capacity multiplied by their respective AI Gain %.`;
+        `Calculated from each team's Human Net Capacity multiplied by their respective AI Gain %.`;
     totalAIGainCell.appendChild(totalAIGainInfoIcon);
 
 
@@ -657,7 +669,7 @@ function generateCapacitySummaryDisplay(calculatedMetrics, selectedScenario) {
     } else {
         netTotalCell.style.backgroundColor = '#d4edda';
     }
-    
+
     Array.from(footerRow.cells).forEach((cell, i) => {
         cell.style.borderTop = '2px solid #666';
         if (i > 0) cell.style.textAlign = 'center';
@@ -671,13 +683,13 @@ window.generateCapacitySummaryDisplay = generateCapacitySummaryDisplay;
  * - This version provides a much more verbose and contextualized explanation of the capacity model.
  */
 function generateCapacityNarrative(calculatedMetrics, selectedScenario) {
-    console.log(`Attempting to generate Enhanced AI-Aware Capacity Narrative for scenario: ${selectedScenario}...`);
+    // console.log(`Attempting to generate Enhanced AI-Aware Capacity Narrative for scenario: ${selectedScenario}...`);
 
     let narrativeContainer = document.getElementById('capacityNarrativeSection');
     const mainContainer = document.getElementById('capacityConfigView');
 
     if (!narrativeContainer) {
-        console.log("Creating narrative section container with collapsible structure...");
+        // console.log("Creating narrative section container with collapsible structure...");
         narrativeContainer = document.createElement('div');
         narrativeContainer.id = 'capacityNarrativeSection';
         narrativeContainer.style.border = '1px solid rgb(204, 204, 204)';
@@ -718,16 +730,16 @@ function generateCapacityNarrative(calculatedMetrics, selectedScenario) {
         if (mainContainer) {
             const summarySection = mainContainer.querySelector('#capacitySummarySection');
             if (summarySection && summarySection.parentNode === mainContainer) {
-                 summarySection.insertAdjacentElement('afterend', narrativeContainer);
+                summarySection.insertAdjacentElement('afterend', narrativeContainer);
             } else {
-                 mainContainer.appendChild(narrativeContainer);
+                mainContainer.appendChild(narrativeContainer);
             }
         } else {
             console.error("Main container #capacityConfigView not found. Cannot append narrative section.");
             return;
         }
     } else {
-        if(narrativeContainer) narrativeContainer.style.display = 'block';
+        if (narrativeContainer) narrativeContainer.style.display = 'block';
     }
 
     const narrativeContentContainer = document.getElementById('narrativeContent');
@@ -739,33 +751,33 @@ function generateCapacityNarrative(calculatedMetrics, selectedScenario) {
 
     const totals = calculatedMetrics.totals[selectedScenario] || {};
     const toFixed = (num, places = 2) => (num || 0).toFixed(places);
-    
+
     // --- Overall Summary Narrative ---
     let narrativeHTML = `<h4>Overall Capacity Summary (${selectedScenario})</h4>`;
-    
+
     const totalHeadcount = totals.totalHeadcount || 0;
     const humanHeadcount = totals.humanHeadcount || 0;
     const aiHeadcount = totalHeadcount - humanHeadcount;
-    
+
     narrativeHTML += `<p>For this scenario, the organization's **Gross Capacity is ${toFixed(totals.grossYrs)} SDE Years**. ` +
-                     `This initial figure is derived from a total headcount of **${toFixed(totalHeadcount, 1)}**, which is composed of ` +
-                     `<strong>${toFixed(humanHeadcount, 1)} Human Engineers</strong> and <strong>${toFixed(aiHeadcount, 1)} AI Engineers</strong>.</p>`;
+        `This initial figure is derived from a total headcount of **${toFixed(totalHeadcount, 1)}**, which is composed of ` +
+        `<strong>${toFixed(humanHeadcount, 1)} Human Engineers</strong> and <strong>${toFixed(aiHeadcount, 1)} AI Engineers</strong>.</p>`;
 
     narrativeHTML += `<p>To determine realistic project availability, we first subtract time for operational overheads. These "capacity sinks"—such as leave, public holidays, recurring meetings, and organizational events—amount to a total deduction of ` +
-                     `<strong>${toFixed(totals.deductYrs)} SDE Years</strong>. It's important to note that these sinks are calculated based on the ` +
-                     `<em>human headcount only</em>, as AI engineers do not take vacation or attend most team meetings.</p>`;
+        `<strong>${toFixed(totals.deductYrs)} SDE Years</strong>. It's important to note that these sinks are calculated based on the ` +
+        `<em>human headcount only</em>, as AI engineers do not take vacation or attend most team meetings.</p>`;
 
     narrativeHTML += `<p>After accounting for those deductions, a productivity dividend is applied. The use of AI tooling provides a calculated gain of ` +
-                     `<strong>${toFixed(totals.deductionsBreakdown?.aiProductivityGainYrs)} SDE Years</strong> across the organization. This gain is applied back to the available human capacity.</p>`;
+        `<strong>${toFixed(totals.deductionsBreakdown?.aiProductivityGainYrs)} SDE Years</strong> across the organization. This gain is applied back to the available human capacity.</p>`;
 
     narrativeHTML += `<p>Therefore, after subtracting the sinks from the gross capacity and adding back the AI productivity gains, the final estimated ` +
-                     `<strong>Net Project Capacity is ${toFixed(totals.netYrs)} SDE Years</strong> for the organization.</p>`;
+        `<strong>Net Project Capacity is ${toFixed(totals.netYrs)} SDE Years</strong> for the organization.</p>`;
 
     narrativeHTML += `<hr style='border:none; border-top: 1px solid #ccc; margin: 1.5em 0;'>`;
 
     // --- Team-Specific Breakdown Narrative ---
     narrativeHTML += `<h4>Team-Specific Breakdown (${selectedScenario} Scenario)</h4>`;
-    
+
     (currentSystemData.teams || []).forEach(team => {
         const teamMetrics = calculatedMetrics[team.teamId]?.[selectedScenario];
         if (!teamMetrics) return;
@@ -777,14 +789,14 @@ function generateCapacityNarrative(calculatedMetrics, selectedScenario) {
         const teamNet = teamMetrics.netYrs || 0;
 
         narrativeHTML += `<p><strong><u>${teamName}</u>:</strong> ` +
-                         `Starts with a Gross Capacity of <strong>${toFixed(teamGross)} SDE Years</strong>. ` +
-                         `From this, <strong>${toFixed(teamSinks)} SDE Years</strong> are deducted for human-centric sinks (leave, overhead, etc.). ` +
-                         `An estimated <strong>${toFixed(teamAIGain)} SDE Years</strong> are then regained through AI tooling productivity enhancements, ` +
-                         `resulting in a final Net Project Capacity of <strong>${toFixed(teamNet)} SDE Years</strong> for this team.</p>`;
+            `Starts with a Gross Capacity of <strong>${toFixed(teamGross)} SDE Years</strong>. ` +
+            `From this, <strong>${toFixed(teamSinks)} SDE Years</strong> are deducted for human-centric sinks (leave, overhead, etc.). ` +
+            `An estimated <strong>${toFixed(teamAIGain)} SDE Years</strong> are then regained through AI tooling productivity enhancements, ` +
+            `resulting in a final Net Project Capacity of <strong>${toFixed(teamNet)} SDE Years</strong> for this team.</p>`;
     });
 
     narrativeContentContainer.innerHTML = narrativeHTML;
-    console.log("Finished generating enhanced, verbose capacity narrative.");
+    // console.log("Finished generating enhanced, verbose capacity narrative.");
 }
 window.generateCapacityNarrative = generateCapacityNarrative;
 
@@ -880,12 +892,12 @@ function generateCapacityWaterfallChart(calculatedMetrics, selectedScenario) {
     if (currentSystemData && currentSystemData.teams && currentSystemData.teams.length > 0) {
         currentSystemData.teams.forEach(team => {
             const button = document.createElement('button');
-             button.textContent = team.teamIdentity || team.teamName; button.type = 'button';
-             button.style.cssText = `padding: 3px 8px; margin: 0 5px 5px 0; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; font-size: 0.85em;`;
-             if (team.teamId === currentChartTeamId) { button.style.backgroundColor = '#007bff'; button.style.color = 'white'; button.style.fontWeight = 'bold'; }
-             else { button.style.backgroundColor = '#e9ecef'; button.style.color = '#495057'; }
-             button.onclick = () => { currentChartTeamId = team.teamId; generateCapacityWaterfallChart(calculatedMetrics, selectedScenario); };
-             teamSelectorContainer.appendChild(button);
+            button.textContent = team.teamIdentity || team.teamName; button.type = 'button';
+            button.style.cssText = `padding: 3px 8px; margin: 0 5px 5px 0; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; font-size: 0.85em;`;
+            if (team.teamId === currentChartTeamId) { button.style.backgroundColor = '#007bff'; button.style.color = 'white'; button.style.fontWeight = 'bold'; }
+            else { button.style.backgroundColor = '#e9ecef'; button.style.color = '#495057'; }
+            button.onclick = () => { currentChartTeamId = team.teamId; generateCapacityWaterfallChart(calculatedMetrics, selectedScenario); };
+            teamSelectorContainer.appendChild(button);
         });
     }
 
@@ -989,7 +1001,7 @@ function generateCapacityWaterfallChart(calculatedMetrics, selectedScenario) {
                 title: { display: true, text: `Capacity Waterfall: ${viewLabel} (${selectedScenario})`, padding: { top: 10, bottom: 15 }, font: { size: 16 } },
                 tooltip: {
                     callbacks: {
-                        label: function(context) {
+                        label: function (context) {
                             const value = context.raw;
                             let label = context.dataset.label || '';
                             if (label) { label += ': '; }
@@ -998,11 +1010,11 @@ function generateCapacityWaterfallChart(calculatedMetrics, selectedScenario) {
                                 const end = value[1];
                                 const change = end - start;
                                 if (context.label === 'Gross' || context.label === 'Net Project') {
-                                     label += `${end.toFixed(2)} SDE Yrs`;
+                                    label += `${end.toFixed(2)} SDE Yrs`;
                                 } else if (context.label === 'AI Gain') {
                                     label += `+${change.toFixed(2)} SDE Yrs`;
                                 } else {
-                                     label += `${change.toFixed(2)} SDE Yrs`;
+                                    label += `${change.toFixed(2)} SDE Yrs`;
                                 }
                             }
                             return label;
@@ -1024,10 +1036,10 @@ window.generateCapacityWaterfallChart = generateCapacityWaterfallChart;
 /**
  * REVISED - Handles saving the capacity configuration.
  */
-function saveCapacityConfiguration() {
+async function saveCapacityConfiguration() {
     console.log("Attempting to save capacity configuration (including calculated metrics)...");
     if (!currentSystemData || !currentSystemData.systemName) {
-        alert("Cannot save configuration: No system data loaded or system name is missing.");
+        window.notificationManager.showToast("Cannot save configuration: No system data loaded or system name is missing.", 'error');
         return;
     }
 
@@ -1035,9 +1047,9 @@ function saveCapacityConfiguration() {
 
     const workingDays = currentSystemData.capacityConfiguration?.workingDaysPerYear;
     if (workingDays === undefined || workingDays === null || workingDays <= 0) {
-        if (!confirm(`Warning: 'Standard Working Days Per Year' (${workingDays}) is not set or is invalid. Calculations might be incorrect. Save anyway?`)) {
+        if (!await window.notificationManager.confirm(`Warning: 'Standard Working Days Per Year' (${workingDays}) is not set or is invalid. Calculations might be incorrect. Save anyway?`, 'Invalid Configuration', { confirmStyle: 'warning' })) {
             const wdInput = document.getElementById('workingDaysInput');
-            if(wdInput) wdInput.focus();
+            if (wdInput) wdInput.focus();
             return;
         }
     }
@@ -1056,12 +1068,12 @@ function saveCapacityConfiguration() {
         systems[systemNameKey] = currentSystemData;
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
 
-        alert(`Capacity configuration for system "${systemNameKey}" saved successfully.`);
+        window.notificationManager.showToast(`Capacity configuration for system "${systemNameKey}" saved successfully.`, 'success');
         console.log("Capacity configuration (with calculated metrics) saved.");
 
     } catch (error) {
         console.error("Error during saveCapacityConfiguration:", error);
-        alert("An error occurred while trying to save the capacity configuration. Check console.");
+        window.notificationManager.showToast("An error occurred while trying to save the capacity configuration. Check console.", 'error');
     }
 }
 window.saveCapacityConfiguration = saveCapacityConfiguration;
@@ -1098,9 +1110,9 @@ function generateTeamConstraintsForms() {
         const teamContainer = document.getElementById(`teamConstraintContainer_${teamIndex}`); if (!teamContainer) return; const totalDisplayElement = teamContainer.querySelector('.total-std-leave-display'); if (!totalDisplayElement) return; const team = currentSystemData.teams[teamIndex]; if (!team?.teamCapacityAdjustments?.leaveUptakeEstimates) return; let totalEffectiveDays = 0; globalLeaveTypes.forEach(leaveType => { if (!leaveType || !leaveType.id) return; const currentGlobalDefaultObj = currentSystemData.capacityConfiguration.leaveTypes.find(lt => lt.id === leaveType.id); const globalDefault = currentGlobalDefaultObj ? (currentGlobalDefaultObj.defaultEstimatedDays || 0) : 0; const teamUptake = team.teamCapacityAdjustments.leaveUptakeEstimates.find(est => est.leaveTypeId === leaveType.id); const uptakePercent = teamUptake ? (teamUptake.estimatedUptakePercent ?? 100) : 100; totalEffectiveDays += globalDefault * (uptakePercent / 100); }); totalDisplayElement.textContent = totalEffectiveDays.toFixed(1);
     };
 
-     const updateVariableLeaveTotalDisplay = (teamIndex, leaveKey) => {
-         const teamContainer = document.getElementById(`teamConstraintContainer_${teamIndex}`); if (!teamContainer) { console.warn(`updateVariableLeaveTotalDisplay: Cannot find container for team ${teamIndex}`); return; } const totalDisplayElement = teamContainer.querySelector(`.variable-leave-total-display[data-leave-key="${leaveKey}"]`); if (!totalDisplayElement) { console.warn(`updateVariableLeaveTotalDisplay: Cannot find total display span for team ${teamIndex}, key ${leaveKey}`); return; } const team = currentSystemData.teams[teamIndex]; const impact = team?.teamCapacityAdjustments?.variableLeaveImpact?.[leaveKey]; if (impact) { const affectedSDEs = impact.affectedSDEs ?? 0; const avgDays = impact.avgDaysPerAffectedSDE ?? 0; const totalDays = affectedSDEs * avgDays; totalDisplayElement.textContent = totalDays.toFixed(0); } else { totalDisplayElement.textContent = '0'; }
-     };
+    const updateVariableLeaveTotalDisplay = (teamIndex, leaveKey) => {
+        const teamContainer = document.getElementById(`teamConstraintContainer_${teamIndex}`); if (!teamContainer) { console.warn(`updateVariableLeaveTotalDisplay: Cannot find container for team ${teamIndex}`); return; } const totalDisplayElement = teamContainer.querySelector(`.variable-leave-total-display[data-leave-key="${leaveKey}"]`); if (!totalDisplayElement) { console.warn(`updateVariableLeaveTotalDisplay: Cannot find total display span for team ${teamIndex}, key ${leaveKey}`); return; } const team = currentSystemData.teams[teamIndex]; const impact = team?.teamCapacityAdjustments?.variableLeaveImpact?.[leaveKey]; if (impact) { const affectedSDEs = impact.affectedSDEs ?? 0; const avgDays = impact.avgDaysPerAffectedSDE ?? 0; const totalDays = affectedSDEs * avgDays; totalDisplayElement.textContent = totalDays.toFixed(0); } else { totalDisplayElement.textContent = '0'; }
+    };
 
     const renderTeamActivitiesTable = (teamIndex, targetContainer) => {
         console.log(`Rendering SIMPLIFIED team activities table for team index ${teamIndex}`);
@@ -1134,18 +1146,18 @@ function generateTeamConstraintsForms() {
             row.style.borderBottom = '1px solid #eee';
 
             const createCell = (elementType = 'input', attributes = {}, styles = {}, options = null) => {
-                 const cell = row.insertCell(); const element = document.createElement(elementType); for (const attr in attributes) { element[attr] = attributes[attr]; } for (const style in styles) { element.style[style] = styles[style]; } if (elementType === 'select' && options) { options.forEach(opt => element.add(new Option(opt.text, opt.value))); }
-                 element.onchange = (e) => {
-                     const field = e.target.name; let value = e.target.value; if (e.target.type === 'number') value = parseFloat(value) || 0;
-                     activity[field] = value; console.log(`Updated activity[${activityIndex}].${field} to ${value}`);
-                     if (field === 'estimateType') {
-                         const valueInput = row.querySelector('input[name="value"]');
-                         if(valueInput) valueInput.title = value === 'perSDE' ? 'Enter average days per SDE.' : 'Enter total days for the entire team activity.';
-                     }
-                     updateCapacityCalculationsAndDisplay();
-                 };
-                 cell.appendChild(element); return element;
-             };
+                const cell = row.insertCell(); const element = document.createElement(elementType); for (const attr in attributes) { element[attr] = attributes[attr]; } for (const style in styles) { element.style[style] = styles[style]; } if (elementType === 'select' && options) { options.forEach(opt => element.add(new Option(opt.text, opt.value))); }
+                element.onchange = (e) => {
+                    const field = e.target.name; let value = e.target.value; if (e.target.type === 'number') value = parseFloat(value) || 0;
+                    activity[field] = value; console.log(`Updated activity[${activityIndex}].${field} to ${value}`);
+                    if (field === 'estimateType') {
+                        const valueInput = row.querySelector('input[name="value"]');
+                        if (valueInput) valueInput.title = value === 'perSDE' ? 'Enter average days per SDE.' : 'Enter total days for the entire team activity.';
+                    }
+                    updateCapacityCalculationsAndDisplay();
+                };
+                cell.appendChild(element); return element;
+            };
 
             createCell('input', { type: 'text', value: activity.name || '', name: 'name', placeholder: 'e.g., AWS Training' }, { width: '95%' });
             createCell('input', { type: 'text', value: activity.type || '', name: 'type', placeholder: 'Optional' }, { width: '90%' });
@@ -1181,10 +1193,10 @@ function generateTeamConstraintsForms() {
         detailsContainer.innerHTML = '';
         const team = currentSystemData.teams[teamIndex]; if (!team) return;
         if (!team.teamCapacityAdjustments) {
-            team.teamCapacityAdjustments = { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }}, teamActivities: [], recurringOverhead: [], aiProductivityGainPercent: 0 };
+            team.teamCapacityAdjustments = { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 } }, teamActivities: [], recurringOverhead: [], aiProductivityGainPercent: 0 };
         } else {
             if (!team.teamCapacityAdjustments.leaveUptakeEstimates) team.teamCapacityAdjustments.leaveUptakeEstimates = [];
-            if (!team.teamCapacityAdjustments.variableLeaveImpact) team.teamCapacityAdjustments.variableLeaveImpact = { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }};
+            if (!team.teamCapacityAdjustments.variableLeaveImpact) team.teamCapacityAdjustments.variableLeaveImpact = { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 } };
             if (!team.teamCapacityAdjustments.teamActivities) team.teamCapacityAdjustments.teamActivities = [];
             if (!team.teamCapacityAdjustments.recurringOverhead) team.teamCapacityAdjustments.recurringOverhead = [];
             if (team.teamCapacityAdjustments.aiProductivityGainPercent === undefined) team.teamCapacityAdjustments.aiProductivityGainPercent = 0; // Backward compatibility
@@ -1192,71 +1204,71 @@ function generateTeamConstraintsForms() {
             if (!varLeave.maternity) varLeave.maternity = { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }; if (!varLeave.paternity) varLeave.paternity = { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }; if (!varLeave.familyResp) varLeave.familyResp = { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }; if (!varLeave.medical) varLeave.medical = { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 };
         }
 
-         const stdLeaveTitle = document.createElement('h5'); stdLeaveTitle.textContent = 'Standard Leave Uptake Estimate (%)'; stdLeaveTitle.style.marginTop = '10px'; stdLeaveTitle.title = 'Estimate % of Org Default leave days taken per SDE (e.g., 80%). Blank=100%. Affects Annual, Sick, Study, etc.'; detailsContainer.appendChild(stdLeaveTitle); const stdLeaveTable = document.createElement('table'); stdLeaveTable.style.marginLeft = '20px'; stdLeaveTable.style.width = 'auto';
-         stdLeaveTable.innerHTML = `<thead> <tr> <th style="text-align: left; padding: 4px 8px;">Leave Type</th> <th style="text-align: center; padding: 4px 8px;" title="Estimated % uptake for this team (0-100). Blank=100%">Team Uptake (%)</th> <th style="text-align: center; padding: 4px 8px;" title="Calculated Effective Days/SDE (Default * Uptake %)">Effective Days/SDE</th> </tr> </thead> <tbody></tbody>`;
-         const stdLeaveTbody = stdLeaveTable.querySelector('tbody'); detailsContainer.appendChild(stdLeaveTable); const totalStdLeaveDiv = document.createElement('div'); totalStdLeaveDiv.style.marginLeft = '20px'; totalStdLeaveDiv.style.marginTop = '5px'; totalStdLeaveDiv.style.fontWeight = 'bold'; totalStdLeaveDiv.innerHTML = `Total Avg. Standard Leave Days/SDE: <span class="total-std-leave-display">0.0</span>`; detailsContainer.appendChild(totalStdLeaveDiv);
-         let teamTotalAvgStdLeave = 0;
-         globalLeaveTypes.forEach(leaveType => {
-             if (!leaveType || !leaveType.id) return;
-             const currentGlobalDefaultObj = currentSystemData.capacityConfiguration.leaveTypes.find(lt => lt.id === leaveType.id); const globalDefault = currentGlobalDefaultObj ? (currentGlobalDefaultObj.defaultEstimatedDays || 0) : 0;
-             const teamUptakeObj = team.teamCapacityAdjustments.leaveUptakeEstimates.find(est => est.leaveTypeId === leaveType.id); const teamUptakePercentValue = teamUptakeObj ? (teamUptakeObj.estimatedUptakePercent ?? '') : ''; const displayUptakePercent = teamUptakeObj ? (teamUptakeObj.estimatedUptakePercent ?? 100) : 100; const effectiveDays = globalDefault * (displayUptakePercent / 100); teamTotalAvgStdLeave += effectiveDays;
-             const row = stdLeaveTbody.insertRow(); row.insertCell().textContent = leaveType.name;
-             const percentCell = row.insertCell(); percentCell.style.textAlign = 'center'; const percentInput = document.createElement('input'); percentInput.type = 'number'; percentInput.min = '0'; percentInput.max = '100'; percentInput.step = '5'; percentInput.value = teamUptakePercentValue; percentInput.placeholder = '100'; percentInput.style.width = '60px'; percentInput.style.textAlign = 'center'; percentInput.title = `Enter % uptake (0-100) for ${leaveType.name}. Blank means 100% of default: ${globalDefault}`; percentInput.setAttribute('data-leave-type-id', leaveType.id); percentInput.setAttribute('data-team-index', teamIndex); const effectiveDaysCell = row.insertCell(); effectiveDaysCell.id = `effectiveDays_${teamIndex}_${leaveType.id}`; effectiveDaysCell.textContent = effectiveDays.toFixed(1); effectiveDaysCell.style.textAlign = 'center'; effectiveDaysCell.style.fontWeight = 'bold';
-              percentInput.addEventListener('change', (e) => {
-                  const inputVal = e.target.value.trim();
-                  const lTypeId = e.target.getAttribute('data-leave-type-id');
-                  const tIdx = parseInt(e.target.getAttribute('data-team-index'));
-                  const targetTeam = currentSystemData.teams[tIdx];
-                  if (!targetTeam?.teamCapacityAdjustments?.leaveUptakeEstimates) return;
+        const stdLeaveTitle = document.createElement('h5'); stdLeaveTitle.textContent = 'Standard Leave Uptake Estimate (%)'; stdLeaveTitle.style.marginTop = '10px'; stdLeaveTitle.title = 'Estimate % of Org Default leave days taken per SDE (e.g., 80%). Blank=100%. Affects Annual, Sick, Study, etc.'; detailsContainer.appendChild(stdLeaveTitle); const stdLeaveTable = document.createElement('table'); stdLeaveTable.style.marginLeft = '20px'; stdLeaveTable.style.width = 'auto';
+        stdLeaveTable.innerHTML = `<thead> <tr> <th style="text-align: left; padding: 4px 8px;">Leave Type</th> <th style="text-align: center; padding: 4px 8px;" title="Estimated % uptake for this team (0-100). Blank=100%">Team Uptake (%)</th> <th style="text-align: center; padding: 4px 8px;" title="Calculated Effective Days/SDE (Default * Uptake %)">Effective Days/SDE</th> </tr> </thead> <tbody></tbody>`;
+        const stdLeaveTbody = stdLeaveTable.querySelector('tbody'); detailsContainer.appendChild(stdLeaveTable); const totalStdLeaveDiv = document.createElement('div'); totalStdLeaveDiv.style.marginLeft = '20px'; totalStdLeaveDiv.style.marginTop = '5px'; totalStdLeaveDiv.style.fontWeight = 'bold'; totalStdLeaveDiv.innerHTML = `Total Avg. Standard Leave Days/SDE: <span class="total-std-leave-display">0.0</span>`; detailsContainer.appendChild(totalStdLeaveDiv);
+        let teamTotalAvgStdLeave = 0;
+        globalLeaveTypes.forEach(leaveType => {
+            if (!leaveType || !leaveType.id) return;
+            const currentGlobalDefaultObj = currentSystemData.capacityConfiguration.leaveTypes.find(lt => lt.id === leaveType.id); const globalDefault = currentGlobalDefaultObj ? (currentGlobalDefaultObj.defaultEstimatedDays || 0) : 0;
+            const teamUptakeObj = team.teamCapacityAdjustments.leaveUptakeEstimates.find(est => est.leaveTypeId === leaveType.id); const teamUptakePercentValue = teamUptakeObj ? (teamUptakeObj.estimatedUptakePercent ?? '') : ''; const displayUptakePercent = teamUptakeObj ? (teamUptakeObj.estimatedUptakePercent ?? 100) : 100; const effectiveDays = globalDefault * (displayUptakePercent / 100); teamTotalAvgStdLeave += effectiveDays;
+            const row = stdLeaveTbody.insertRow(); row.insertCell().textContent = leaveType.name;
+            const percentCell = row.insertCell(); percentCell.style.textAlign = 'center'; const percentInput = document.createElement('input'); percentInput.type = 'number'; percentInput.min = '0'; percentInput.max = '100'; percentInput.step = '5'; percentInput.value = teamUptakePercentValue; percentInput.placeholder = '100'; percentInput.style.width = '60px'; percentInput.style.textAlign = 'center'; percentInput.title = `Enter % uptake (0-100) for ${leaveType.name}. Blank means 100% of default: ${globalDefault}`; percentInput.setAttribute('data-leave-type-id', leaveType.id); percentInput.setAttribute('data-team-index', teamIndex); const effectiveDaysCell = row.insertCell(); effectiveDaysCell.id = `effectiveDays_${teamIndex}_${leaveType.id}`; effectiveDaysCell.textContent = effectiveDays.toFixed(1); effectiveDaysCell.style.textAlign = 'center'; effectiveDaysCell.style.fontWeight = 'bold';
+            percentInput.addEventListener('change', (e) => {
+                const inputVal = e.target.value.trim();
+                const lTypeId = e.target.getAttribute('data-leave-type-id');
+                const tIdx = parseInt(e.target.getAttribute('data-team-index'));
+                const targetTeam = currentSystemData.teams[tIdx];
+                if (!targetTeam?.teamCapacityAdjustments?.leaveUptakeEstimates) return;
 
-                  const estimateIndex = targetTeam.teamCapacityAdjustments.leaveUptakeEstimates.findIndex(est => est.leaveTypeId === lTypeId);
-                  let validatedPercent = 100;
+                const estimateIndex = targetTeam.teamCapacityAdjustments.leaveUptakeEstimates.findIndex(est => est.leaveTypeId === lTypeId);
+                let validatedPercent = 100;
 
-                  if (inputVal !== '') {
-                      const numericVal = parseInt(inputVal);
-                      if (!isNaN(numericVal) && numericVal >= 0 && numericVal <= 100) {
-                          validatedPercent = numericVal;
-                      } else {
-                          const previousEstimate = (estimateIndex > -1) ? targetTeam.teamCapacityAdjustments.leaveUptakeEstimates[estimateIndex] : null;
-                          e.target.value = previousEstimate ? (previousEstimate.estimatedUptakePercent ?? '') : '';
-                          validatedPercent = previousEstimate ? (previousEstimate.estimatedUptakePercent ?? 100) : 100;
-                      }
-                  }
+                if (inputVal !== '') {
+                    const numericVal = parseInt(inputVal);
+                    if (!isNaN(numericVal) && numericVal >= 0 && numericVal <= 100) {
+                        validatedPercent = numericVal;
+                    } else {
+                        const previousEstimate = (estimateIndex > -1) ? targetTeam.teamCapacityAdjustments.leaveUptakeEstimates[estimateIndex] : null;
+                        e.target.value = previousEstimate ? (previousEstimate.estimatedUptakePercent ?? '') : '';
+                        validatedPercent = previousEstimate ? (previousEstimate.estimatedUptakePercent ?? 100) : 100;
+                    }
+                }
 
-                  if (inputVal === '' || validatedPercent === 100) {
-                      if (estimateIndex > -1) {
-                          targetTeam.teamCapacityAdjustments.leaveUptakeEstimates.splice(estimateIndex, 1);
-                          console.log(`Removed leave uptake entry for team ${tIdx}, type ${lTypeId}`);
-                      }
-                      e.target.value = '';
-                      validatedPercent = 100;
-                  } else {
-                      if (estimateIndex > -1) {
-                          targetTeam.teamCapacityAdjustments.leaveUptakeEstimates[estimateIndex].estimatedUptakePercent = validatedPercent;
-                          console.log(`Updated leave uptake for team ${tIdx}, type ${lTypeId} to ${validatedPercent}%`);
-                      } else {
-                          targetTeam.teamCapacityAdjustments.leaveUptakeEstimates.push({ leaveTypeId: lTypeId, estimatedUptakePercent: validatedPercent });
-                          console.log(`Added leave uptake for team ${tIdx}, type ${lTypeId} as ${validatedPercent}%`);
-                      }
-                      e.target.value = validatedPercent;
-                  }
+                if (inputVal === '' || validatedPercent === 100) {
+                    if (estimateIndex > -1) {
+                        targetTeam.teamCapacityAdjustments.leaveUptakeEstimates.splice(estimateIndex, 1);
+                        console.log(`Removed leave uptake entry for team ${tIdx}, type ${lTypeId}`);
+                    }
+                    e.target.value = '';
+                    validatedPercent = 100;
+                } else {
+                    if (estimateIndex > -1) {
+                        targetTeam.teamCapacityAdjustments.leaveUptakeEstimates[estimateIndex].estimatedUptakePercent = validatedPercent;
+                        console.log(`Updated leave uptake for team ${tIdx}, type ${lTypeId} to ${validatedPercent}%`);
+                    } else {
+                        targetTeam.teamCapacityAdjustments.leaveUptakeEstimates.push({ leaveTypeId: lTypeId, estimatedUptakePercent: validatedPercent });
+                        console.log(`Added leave uptake for team ${tIdx}, type ${lTypeId} as ${validatedPercent}%`);
+                    }
+                    e.target.value = validatedPercent;
+                }
 
-                  const currentDefaultObj = currentSystemData.capacityConfiguration.leaveTypes.find(lt => lt.id === lTypeId);
-                  const currentDefaultVal = currentDefaultObj ? (currentDefaultObj.defaultEstimatedDays || 0) : 0;
-                  const effectiveCell = document.getElementById(`effectiveDays_${tIdx}_${lTypeId}`);
-                  if (effectiveCell) effectiveCell.textContent = (currentDefaultVal * (validatedPercent / 100)).toFixed(1);
+                const currentDefaultObj = currentSystemData.capacityConfiguration.leaveTypes.find(lt => lt.id === lTypeId);
+                const currentDefaultVal = currentDefaultObj ? (currentDefaultObj.defaultEstimatedDays || 0) : 0;
+                const effectiveCell = document.getElementById(`effectiveDays_${tIdx}_${lTypeId}`);
+                if (effectiveCell) effectiveCell.textContent = (currentDefaultVal * (validatedPercent / 100)).toFixed(1);
 
-                  updateTotalStdLeaveDisplay(tIdx);
-                  updateCapacityCalculationsAndDisplay();
-              });
-              percentCell.appendChild(percentInput);
-         });
-         const totalDisplaySpan = totalStdLeaveDiv.querySelector('.total-std-leave-display'); if(totalDisplaySpan) totalDisplaySpan.textContent = teamTotalAvgStdLeave.toFixed(1);
+                updateTotalStdLeaveDisplay(tIdx);
+                updateCapacityCalculationsAndDisplay();
+            });
+            percentCell.appendChild(percentInput);
+        });
+        const totalDisplaySpan = totalStdLeaveDiv.querySelector('.total-std-leave-display'); if (totalDisplaySpan) totalDisplaySpan.textContent = teamTotalAvgStdLeave.toFixed(1);
 
-         const varLeaveTitle = document.createElement('h5'); varLeaveTitle.textContent = 'Variable Leave Impact Estimate'; varLeaveTitle.style.marginTop = '15px'; varLeaveTitle.title = 'Estimate the total impact ON THE TEAM for variable leave (Maternity, Paternity, etc.). Enter # SDEs affected and Avg Days/SDE for each.'; detailsContainer.appendChild(varLeaveTitle); const varLeaveContainer = document.createElement('div'); varLeaveContainer.style.marginLeft = '20px';
-         const handleVariableLeaveInputChange = (e) => { const input = e.target; const tIdx = parseInt(input.getAttribute('data-team-index')); const leaveKey = input.getAttribute('data-leave-key'); const field = input.getAttribute('data-field'); const targetTeam = currentSystemData.teams[tIdx]; if (!targetTeam?.teamCapacityAdjustments?.variableLeaveImpact?.[leaveKey] || !field) return; const value = parseInt(input.value); const validatedValue = (!isNaN(value) && value >= 0) ? value : 0; targetTeam.teamCapacityAdjustments.variableLeaveImpact[leaveKey][field] = validatedValue; input.value = validatedValue; console.log(`Updated ${leaveKey}.${field} for team ${tIdx} to ${validatedValue}`); updateVariableLeaveTotalDisplay(tIdx, leaveKey); updateCapacityCalculationsAndDisplay();};
-         const createVarLeaveInputRow = (targetTeam, leaveKey, labelText) => { const div = document.createElement('div'); div.style.marginBottom = '5px'; div.style.display = 'flex'; div.style.alignItems = 'center'; const label = document.createElement('label'); label.textContent = `${labelText}: `; label.style.width = '180px'; label.style.marginRight = '10px'; div.appendChild(label); const sdesInput = document.createElement('input'); sdesInput.type = 'number'; sdesInput.min = '0'; sdesInput.step = '1'; sdesInput.value = targetTeam.teamCapacityAdjustments.variableLeaveImpact[leaveKey]?.affectedSDEs || 0; sdesInput.style.width = '60px'; sdesInput.style.marginRight = '5px'; sdesInput.title = '# SDEs Affected'; sdesInput.setAttribute('data-team-index', teamIndex); sdesInput.setAttribute('data-leave-key', leaveKey); sdesInput.setAttribute('data-field', 'affectedSDEs'); sdesInput.addEventListener('change', handleVariableLeaveInputChange); div.appendChild(sdesInput); div.appendChild(document.createTextNode(' SDEs * ')); const daysInput = document.createElement('input'); daysInput.type = 'number'; daysInput.min = '0'; daysInput.step = '1'; daysInput.value = targetTeam.teamCapacityAdjustments.variableLeaveImpact[leaveKey]?.avgDaysPerAffectedSDE || 0; daysInput.style.width = '60px'; daysInput.style.marginRight = '10px'; daysInput.title = 'Avg. Days per Affected SDE'; daysInput.setAttribute('data-team-index', teamIndex); daysInput.setAttribute('data-leave-key', leaveKey); daysInput.setAttribute('data-field', 'avgDaysPerAffectedSDE'); daysInput.addEventListener('change', handleVariableLeaveInputChange); div.appendChild(daysInput); div.appendChild(document.createTextNode(' Days/SDE = ')); const totalDisplay = document.createElement('span'); totalDisplay.className = 'variable-leave-total-display'; totalDisplay.setAttribute('data-leave-key', leaveKey); totalDisplay.style.fontWeight = 'bold'; totalDisplay.style.minWidth = '40px'; totalDisplay.style.display = 'inline-block'; const initialTotal = (sdesInput.valueAsNumber || 0) * (daysInput.valueAsNumber || 0); totalDisplay.textContent = initialTotal.toFixed(0); div.appendChild(totalDisplay); div.appendChild(document.createTextNode(' Total SDE Days')); return div; };
-         varLeaveContainer.appendChild(createVarLeaveInputRow(team, 'maternity', 'Maternity Leave')); varLeaveContainer.appendChild(createVarLeaveInputRow(team, 'paternity', 'Paternity Leave')); varLeaveContainer.appendChild(createVarLeaveInputRow(team, 'familyResp', 'Family Responsibility')); varLeaveContainer.appendChild(createVarLeaveInputRow(team, 'medical', 'Medical Leave')); detailsContainer.appendChild(varLeaveContainer);
+        const varLeaveTitle = document.createElement('h5'); varLeaveTitle.textContent = 'Variable Leave Impact Estimate'; varLeaveTitle.style.marginTop = '15px'; varLeaveTitle.title = 'Estimate the total impact ON THE TEAM for variable leave (Maternity, Paternity, etc.). Enter # SDEs affected and Avg Days/SDE for each.'; detailsContainer.appendChild(varLeaveTitle); const varLeaveContainer = document.createElement('div'); varLeaveContainer.style.marginLeft = '20px';
+        const handleVariableLeaveInputChange = (e) => { const input = e.target; const tIdx = parseInt(input.getAttribute('data-team-index')); const leaveKey = input.getAttribute('data-leave-key'); const field = input.getAttribute('data-field'); const targetTeam = currentSystemData.teams[tIdx]; if (!targetTeam?.teamCapacityAdjustments?.variableLeaveImpact?.[leaveKey] || !field) return; const value = parseInt(input.value); const validatedValue = (!isNaN(value) && value >= 0) ? value : 0; targetTeam.teamCapacityAdjustments.variableLeaveImpact[leaveKey][field] = validatedValue; input.value = validatedValue; console.log(`Updated ${leaveKey}.${field} for team ${tIdx} to ${validatedValue}`); updateVariableLeaveTotalDisplay(tIdx, leaveKey); updateCapacityCalculationsAndDisplay(); };
+        const createVarLeaveInputRow = (targetTeam, leaveKey, labelText) => { const div = document.createElement('div'); div.style.marginBottom = '5px'; div.style.display = 'flex'; div.style.alignItems = 'center'; const label = document.createElement('label'); label.textContent = `${labelText}: `; label.style.width = '180px'; label.style.marginRight = '10px'; div.appendChild(label); const sdesInput = document.createElement('input'); sdesInput.type = 'number'; sdesInput.min = '0'; sdesInput.step = '1'; sdesInput.value = targetTeam.teamCapacityAdjustments.variableLeaveImpact[leaveKey]?.affectedSDEs || 0; sdesInput.style.width = '60px'; sdesInput.style.marginRight = '5px'; sdesInput.title = '# SDEs Affected'; sdesInput.setAttribute('data-team-index', teamIndex); sdesInput.setAttribute('data-leave-key', leaveKey); sdesInput.setAttribute('data-field', 'affectedSDEs'); sdesInput.addEventListener('change', handleVariableLeaveInputChange); div.appendChild(sdesInput); div.appendChild(document.createTextNode(' SDEs * ')); const daysInput = document.createElement('input'); daysInput.type = 'number'; daysInput.min = '0'; daysInput.step = '1'; daysInput.value = targetTeam.teamCapacityAdjustments.variableLeaveImpact[leaveKey]?.avgDaysPerAffectedSDE || 0; daysInput.style.width = '60px'; daysInput.style.marginRight = '10px'; daysInput.title = 'Avg. Days per Affected SDE'; daysInput.setAttribute('data-team-index', teamIndex); daysInput.setAttribute('data-leave-key', leaveKey); daysInput.setAttribute('data-field', 'avgDaysPerAffectedSDE'); daysInput.addEventListener('change', handleVariableLeaveInputChange); div.appendChild(daysInput); div.appendChild(document.createTextNode(' Days/SDE = ')); const totalDisplay = document.createElement('span'); totalDisplay.className = 'variable-leave-total-display'; totalDisplay.setAttribute('data-leave-key', leaveKey); totalDisplay.style.fontWeight = 'bold'; totalDisplay.style.minWidth = '40px'; totalDisplay.style.display = 'inline-block'; const initialTotal = (sdesInput.valueAsNumber || 0) * (daysInput.valueAsNumber || 0); totalDisplay.textContent = initialTotal.toFixed(0); div.appendChild(totalDisplay); div.appendChild(document.createTextNode(' Total SDE Days')); return div; };
+        varLeaveContainer.appendChild(createVarLeaveInputRow(team, 'maternity', 'Maternity Leave')); varLeaveContainer.appendChild(createVarLeaveInputRow(team, 'paternity', 'Paternity Leave')); varLeaveContainer.appendChild(createVarLeaveInputRow(team, 'familyResp', 'Family Responsibility')); varLeaveContainer.appendChild(createVarLeaveInputRow(team, 'medical', 'Medical Leave')); detailsContainer.appendChild(varLeaveContainer);
 
         const activitiesTitle = document.createElement('h5');
         activitiesTitle.textContent = 'Team Activities (Training, Conferences, etc.)';
@@ -1349,14 +1361,14 @@ function generateTeamConstraintsForms() {
             const tIdx = parseInt(e.target.getAttribute('data-team-index'));
             const targetTeam = currentSystemData.teams[tIdx];
             if (!targetTeam?.teamCapacityAdjustments) return;
-            
+
             const value = parseFloat(e.target.value) || 0;
             targetTeam.teamCapacityAdjustments.aiProductivityGainPercent = value;
             e.target.value = value;
             console.log(`Updated aiProductivityGainPercent for team ${tIdx} to ${value}`);
             updateCapacityCalculationsAndDisplay();
         });
-        
+
         productivityContainer.appendChild(productivityLabel);
         productivityContainer.appendChild(productivityInput);
         detailsContainer.appendChild(productivityContainer);
@@ -1367,36 +1379,36 @@ function generateTeamConstraintsForms() {
         if (!team || !team.teamId) return;
         const teamContainer = document.createElement('div'); teamContainer.id = `teamConstraintContainer_${teamIndex}`; teamContainer.className = 'team-constraint-container'; teamContainer.style.borderTop = '1px solid #ccc'; teamContainer.style.paddingTop = '10px'; teamContainer.style.marginTop = '10px'; const teamHeader = document.createElement('h4'); teamHeader.style.cursor = 'pointer'; teamHeader.style.backgroundColor = '#f8f9fa'; teamHeader.style.padding = '8px'; teamHeader.style.margin = '0'; teamHeader.title = `Click to expand/collapse settings for ${team.teamName || team.teamIdentity}`; const indicator = document.createElement('span'); indicator.id = `teamConstraintToggle_${teamIndex}`; indicator.className = 'toggle-indicator'; indicator.innerText = '(+) '; indicator.style.fontWeight = 'bold'; indicator.style.marginRight = '5px'; teamHeader.appendChild(indicator); teamHeader.appendChild(document.createTextNode(`Team: ${team.teamIdentity || team.teamName || team.teamId}`)); teamContainer.appendChild(teamHeader); const teamDetails = document.createElement('div'); teamDetails.id = `teamConstraintContent_${teamIndex}`; teamDetails.style.display = 'none'; teamDetails.style.padding = '10px'; teamDetails.style.border = '1px solid #eee'; teamDetails.style.borderTop = 'none';
         teamHeader.onclick = () => {
-             const contentDiv = teamDetails; const indicatorSpan = indicator; const isHidden = contentDiv.style.display === 'none' || contentDiv.style.display === ''; if (isHidden) { renderTeamConstraintDetails(teamIndex, contentDiv); contentDiv.style.display = 'block'; indicatorSpan.textContent = '(-)'; } else { contentDiv.style.display = 'none'; indicatorSpan.textContent = '(+)'; contentDiv.innerHTML = ''; }
-         };
+            const contentDiv = teamDetails; const indicatorSpan = indicator; const isHidden = contentDiv.style.display === 'none' || contentDiv.style.display === ''; if (isHidden) { renderTeamConstraintDetails(teamIndex, contentDiv); contentDiv.style.display = 'block'; indicatorSpan.textContent = '(-)'; } else { contentDiv.style.display = 'none'; indicatorSpan.textContent = '(+)'; contentDiv.innerHTML = ''; }
+        };
         teamContainer.appendChild(teamDetails); teamsSection.appendChild(teamContainer);
     });
 
     let summarySection = document.getElementById('capacitySummarySection');
-     if (!summarySection) { 
-        summarySection = document.createElement('div'); 
-        summarySection.id = 'capacitySummarySection'; 
-        summarySection.style.border = '1px solid #666'; 
-        summarySection.style.backgroundColor = '#f0f0f0'; 
-        summarySection.style.padding = '15px'; 
-        summarySection.style.marginTop = '20px'; 
-        const summaryTitle = document.createElement('h3'); 
-        summaryTitle.textContent = 'Calculated Net Project Capacity Summary'; 
-        summarySection.appendChild(summaryTitle); 
-        const summaryPlaceholder = document.createElement('p'); 
-        summaryPlaceholder.id = 'capacitySummaryPlaceholder'; 
-        summaryPlaceholder.textContent = ''; 
-        summaryPlaceholder.style.fontStyle = 'italic'; summarySection.appendChild(summaryPlaceholder); 
-        container.appendChild(summarySection); 
-    } else { 
-        const placeholder = summarySection.querySelector('#capacitySummaryPlaceholder'); 
-        if (placeholder) placeholder.style.display = 'block'; 
+    if (!summarySection) {
+        summarySection = document.createElement('div');
+        summarySection.id = 'capacitySummarySection';
+        summarySection.style.border = '1px solid #666';
+        summarySection.style.backgroundColor = '#f0f0f0';
+        summarySection.style.padding = '15px';
+        summarySection.style.marginTop = '20px';
+        const summaryTitle = document.createElement('h3');
+        summaryTitle.textContent = 'Calculated Net Project Capacity Summary';
+        summarySection.appendChild(summaryTitle);
+        const summaryPlaceholder = document.createElement('p');
+        summaryPlaceholder.id = 'capacitySummaryPlaceholder';
+        summaryPlaceholder.textContent = '';
+        summaryPlaceholder.style.fontStyle = 'italic'; summarySection.appendChild(summaryPlaceholder);
+        container.appendChild(summarySection);
+    } else {
+        const placeholder = summarySection.querySelector('#capacitySummaryPlaceholder');
+        if (placeholder) placeholder.style.display = 'block';
         const table = summarySection.querySelector('table');
-         if(table) table.style.display = 'none'; 
-        }
+        if (table) table.style.display = 'none';
+    }
 
-     let saveButtonContainer = document.getElementById('capacitySaveButtonContainer');
-      if (!saveButtonContainer) {
+    let saveButtonContainer = document.getElementById('capacitySaveButtonContainer');
+    if (!saveButtonContainer) {
         saveButtonContainer = document.createElement('div');
         saveButtonContainer.id = 'capacitySaveButtonContainer';
         saveButtonContainer.style.textAlign = 'center';
@@ -1437,15 +1449,15 @@ function formatDeductionTooltip(breakdown) {
         `  Org Events: -${orgEvents.toFixed(2)}\n` +
         `  Team Acts: -${teamActs.toFixed(2)}\n` +
         `  Overhead: -${overhead.toFixed(2)}`;
-    
+
     if (aiGain > 0) {
         tooltipString += `\n\nGains (SDE Yrs):\n` +
-                         `  AI Productivity: +${aiGain.toFixed(2)}`;
+            `  AI Productivity: +${aiGain.toFixed(2)}`;
     }
-    
+
     return tooltipString;
 }
 // --- End Helper ---
 
-window.showCapacityConfigView = showCapacityConfigView;
+
 

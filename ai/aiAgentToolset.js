@@ -310,9 +310,7 @@ async function executeTool(command, payload = {}) {
 
 function _smartRefreshInitiative(initiative) {
     if (!initiative || typeof currentEditingInitiativeId === 'undefined') return;
-    if (currentEditingInitiativeId && initiative.initiativeId === currentEditingInitiativeId && typeof populateRoadmapInitiativeForm_modal === 'function') {
-        populateRoadmapInitiativeForm_modal(initiative);
-    }
+    // Removed legacy modal update logic
 }
 
 /**

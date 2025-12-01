@@ -1,6 +1,7 @@
 const aiAgentController = (() => {
     let chatSessionHistory = [];
     let sessionTotalTokens = 0;
+    let currentViewId = null; // [NEW] Internal state for view context
     const CONVERSATION_HISTORY_LENGTH = 30;
     const USE_FULL_SYSTEM_CONTEXT_TOGGLE = true;
     const md = window.markdownit();
@@ -62,6 +63,30 @@ const aiAgentController = (() => {
             { text: "What's the difference between 'Total Ramped Up Engineers' and 'Total Headcount'?" },
             { text: "Analyze the hiring rate needed to close the gap by the target week." },
             { text: "How do the 'Capacity Constraints' (like overhead) affect this forecast?" }
+        ],
+        welcomeView: [
+            { text: "What can I do in this platform?" },
+            { text: "How do I create a new system?" },
+            { text: "Explain the difference between 'System' and 'Org' views." },
+            { text: "What is the 'Create with AI' feature?" }
+        ],
+        helpView: [
+            { text: "How do I add a new team to the organization?" },
+            { text: "Explain the 'Capacity Tuning' configuration." },
+            { text: "What are the best practices for defining 'Initiatives'?" },
+            { text: "How does the 'SDM Forecasting' model work?" }
+        ],
+        managementView: [
+            { text: "Suggest 3 new themes based on our current initiatives." },
+            { text: "Analyze the distribution of initiatives across our themes." },
+            { text: "Draft a description for the 'Operational Excellence' theme." },
+            { text: "Which themes have no initiatives assigned?" }
+        ],
+        settingsView: [
+            { text: "How do I change the AI provider?" },
+            { text: "Is my API key stored securely?" },
+            { text: "What happens if I reset to defaults?" },
+            { text: "Explain the difference between Gemini and GPT-4o." }
         ],
         default: [
             { text: "What is this system about?" },
@@ -142,7 +167,13 @@ ${toolsetDescription}`;
     }
 
     function renderSuggestionsForCurrentView() {
-        const suggestions = SUGGESTED_QUESTIONS[currentViewId] || SUGGESTED_QUESTIONS.default;
+        const currentView = (typeof window !== 'undefined' && window.currentViewId) ? window.currentViewId : 'default';
+        // Use internal state if available, otherwise fallback to window (though we should rely on internal now)
+        const effectiveViewId = currentViewId || currentView;
+
+        const suggestions = SUGGESTED_QUESTIONS[effectiveViewId] || SUGGESTED_QUESTIONS.default;
+        console.log(`[AI CHAT] sample questions for this screen:`, suggestions.map(s => s.text));
+
         if (window.aiChatAssistant && typeof window.aiChatAssistant.setSuggestionPills === 'function') {
             window.aiChatAssistant.setSuggestionPills(suggestions);
         }
@@ -377,7 +408,7 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
                 }
                 const result = await window.aiAgentToolset.executeTool(step.command, resolvedPayload);
                 stepResults[i] = result;
-                 console.debug('[AI Agent Controller] Step completed:', { step: step.command, payload: resolvedPayload, result });
+                console.debug('[AI Agent Controller] Step completed:', { step: step.command, payload: resolvedPayload, result });
                 stepSummaries.push(_describeAgentStep(step.command, resolvedPayload, result, i));
                 if (view && typeof view.postAgentMessageToView === 'function') {
                     view.postAgentMessageToView(`Step ${i + 1} complete.`);
@@ -548,8 +579,8 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
         console.log(`[AI Agent Controller] Received request to run prebuilt agent: ${agentName}`, payload);
         const view = window.aiChatAssistant;
         if (!view) {
-             console.error("AI Chat Assistant view is not available.");
-             return;
+            console.error("AI Chat Assistant view is not available.");
+            return;
         }
 
         // 1. Open the chat panel
@@ -575,11 +606,11 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
                         throw new Error("The Plan Optimization Agent (aiPlanOptimizationAgent.js) is not loaded or does not have a 'runOptimization' function.");
                     }
                     break;
-                
+
                 case 'initiateDeleteEngineer':
                     // Placeholder for when we implement this
                     if (window.aiOrgChangeAgent && typeof window.aiOrgChangeAgent.initiateDeleteEngineer === 'function') {
-                         window.aiOrgChangeAgent.initiateDeleteEngineer(payload.engineerName);
+                        window.aiOrgChangeAgent.initiateDeleteEngineer(payload.engineerName);
                     } else {
                         throw new Error("The Org Change Agent (aiOrgChangeAgent.js) is not loaded or is missing 'initiateDeleteEngineer'.");
                     }
@@ -619,7 +650,7 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
                 window.aiPlanOptimizationAgent.discardPendingChanges();
                 actionHandled = true;
             }
-        } 
+        }
         // else if (window.aiOrgChangeAgent && window.aiOrgChangeAgent.hasPendingChanges()) {
         //     // Logic for other agents will go here
         // } 
@@ -661,12 +692,14 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
     }
 
     function scrapeCurrentViewContext() {
+        // Use internal state if available, otherwise fallback to window (though we should rely on internal now)
+        const currentView = currentViewId || ((typeof window !== 'undefined' && window.currentViewId) ? window.currentViewId : null);
         let contextData = {
-            view: currentViewId,
+            view: currentView,
             timestamp: new Date().toISOString()
         };
 
-        console.log(`[AI CHAT] Scraping context for view: ${currentViewId || 'none'}`);
+        console.log(`[AI CHAT] Scraping context for view: ${currentView || 'none'}`);
 
         if (!currentSystemData) {
             contextData.data = "No system is currently loaded.";
@@ -678,7 +711,7 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
         contextData.systemDescription = currentSystemData.systemDescription;
 
         try {
-            switch (currentViewId) {
+            switch (currentView) {
                 case 'planningView':
                     contextData.data = {
                         viewTitle: "Year Plan",
@@ -753,19 +786,50 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
                         console.warn('Dashboard widget context error:', error);
                     }
                     break;
-            case 'visualizationCarousel':
-                contextData.data = {
-                    services: currentSystemData.services,
-                    dependencies: currentSystemData.serviceDependencies,
-                    platformDependencies: currentSystemData.platformDependencies,
-                    serviceDependenciesTable: typeof window !== 'undefined' ? (window.currentServiceDependenciesTableData || []) : []
-                };
-                break;
+                case 'visualizationCarousel':
+                    contextData.data = {
+                        services: currentSystemData.services,
+                        dependencies: currentSystemData.serviceDependencies,
+                        platformDependencies: currentSystemData.platformDependencies,
+                        serviceDependenciesTable: typeof window !== 'undefined' ? (window.currentServiceDependenciesTableData || []) : []
+                    };
+                    break;
                 case 'roadmapView':
                     contextData.data = {
                         initiatives: currentSystemData.yearlyInitiatives,
                         goals: currentSystemData.goals,
                         themes: currentSystemData.definedThemes
+                    };
+                    break;
+                    break;
+                case 'managementView':
+                    contextData.data = {
+                        viewTitle: "Product Management",
+                        themes: currentSystemData.definedThemes || [],
+                        initiatives: (currentSystemData.yearlyInitiatives || []).map(i => ({
+                            title: i.title,
+                            themeId: i.attributes?.themeId
+                        }))
+                    };
+                    break;
+                case 'welcomeView':
+                    contextData.data = {
+                        viewTitle: "Welcome / Home",
+                        description: "The landing page of the SMT Platform.",
+                        availableActions: ["Load Existing System", "Create New System", "Create with AI", "View Documentation"],
+                        platformSummary: "SMT Platform is a comprehensive workspace for Software Managers to plan roadmaps, visualize architecture, forecast resources, and manage team capacity."
+                    };
+                    break;
+                case 'helpView':
+                    // Try to get the active documentation section if possible
+                    let activeDocSection = "General Help";
+                    const docTitleEl = document.querySelector('#documentationContent h2');
+                    if (docTitleEl) activeDocSection = docTitleEl.innerText;
+
+                    contextData.data = {
+                        viewTitle: "Documentation & Help",
+                        currentSection: activeDocSection,
+                        summary: "This view contains the user guide and documentation for the SMT Platform. It covers topics like System Modeling, Org Design, Capacity Planning, and Roadmap Management."
                     };
                     break;
                 default:
@@ -810,7 +874,12 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
         getAvailableTools,
         runPrebuiltAgent,        // [NEW]
         confirmPrebuiltAgent,     // [NEW]
-        _waitForAnalysisFunction  // [NEW] Expose helper for specialist agents
+        _waitForAnalysisFunction,  // [NEW] Expose helper for specialist agents
+        setCurrentView: (viewId) => {
+            console.log(`[AI CHAT] AI Chat Panel - input context changed to screen [${viewId}]`);
+            currentViewId = viewId;
+            renderSuggestionsForCurrentView();
+        }
     };
 })();
 

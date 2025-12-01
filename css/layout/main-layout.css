@@ -1,0 +1,72 @@
+/* Main Layout Structure */
+:root {
+    --content-bg: #f1f5f9;
+    /* Slate 100 */
+}
+
+body {
+    background-color: var(--content-bg);
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    /* Prevent body scroll, handle in #main-content */
+}
+
+#app-container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+}
+
+/* Main Content Area (Right side) */
+#main-content-wrapper {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    margin-left: var(--sidebar-width, 260px);
+    /* Offset for fixed sidebar */
+    height: 100vh;
+    overflow: hidden;
+    transition: margin-left 0.3s ease;
+}
+
+#main-content-area {
+    padding: 0 20px 16px 20px;
+    overflow-y: auto;
+    flex-grow: 1;
+    position: relative;
+    min-height: 0;
+    /* Critical for nested flex scrolling */
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 10px;
+}
+
+/* Page Header (H1 + Desc) */
+.page-header-container {
+    margin-bottom: 30px;
+}
+
+.page-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 10px 0;
+}
+
+.page-desc {
+    color: #64748b;
+    margin: 0;
+}
+
+/* Utility classes for the new layout */
+.card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid #e2e8f0;
+}

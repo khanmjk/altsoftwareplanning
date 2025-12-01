@@ -7,6 +7,20 @@ if (typeof window !== 'undefined') {
 let visualizationResizeObserver = null;
 let resizeDebounceHandle = null;
 
+
+// --- Carousel State ---
+let currentVisualizationIndex = 0;
+const visualizationItems = [
+    { id: 'visualization', title: 'System Visualization' },
+    { id: 'teamVisualization', title: 'Team Relationships Visualization' },
+    { id: 'serviceRelationshipsVisualization', title: 'Service Relationships Visualization' },
+    { id: 'dependencyVisualization', title: 'Service Dependency Visualization' },
+    { id: 'serviceDependenciesTableSlide', title: 'Service Dependency Table' },
+    { id: 'mermaidVisualization', title: 'System Architecture (Mermaid)' },
+    { id: 'mermaidApiVisualization', title: 'Service API Interactions (Mermaid)' }
+];
+// ----------------------
+
 async function renderMermaidDiagram() {
     const graphContainer = document.getElementById('mermaidGraph');
     if (!graphContainer) {
@@ -152,12 +166,27 @@ function debounceResize(callback, delay = 200) {
 }
 
 function setupVisualizationResizeObserver() {
-    if (visualizationResizeObserver) return;
-    const carousel = document.getElementById('visualizationCarousel');
-    if (!carousel || typeof ResizeObserver === 'undefined') {
+    // Only run if we are in the visualization view
+    // This prevents it from interfering with other views like Org Chart
+    const carouselContainer = document.getElementById('visualizationCarousel');
+    if (!carouselContainer || carouselContainer.offsetParent === null) {
+        // Container is not visible or doesn't exist
+        if (visualizationResizeObserver) {
+            visualizationResizeObserver.disconnect();
+            visualizationResizeObserver = null;
+        }
         return;
     }
-    const debounced = debounceResize(() => {
+
+    if (visualizationResizeObserver) {
+        visualizationResizeObserver.disconnect(); // Clear existing
+    }
+
+    const debouncedRender = debounceResize(() => {
+        // Double check visibility inside the callback
+        if (document.getElementById('visualizationCarousel')?.offsetParent === null) {
+            return;
+        }
         if (!currentSystemData) return;
         const activeId = getActiveVisualizationId();
         switch (activeId) {
@@ -183,8 +212,8 @@ function setupVisualizationResizeObserver() {
                 break;
         }
     }, 200);
-    visualizationResizeObserver = new ResizeObserver(debounced);
-    visualizationResizeObserver.observe(carousel);
+    visualizationResizeObserver = new ResizeObserver(debouncedRender);
+    visualizationResizeObserver.observe(carouselContainer);
 }
 
 if (typeof window !== 'undefined') {
@@ -208,8 +237,8 @@ function generateVisualization(systemData) {
     }
     const svgRect = container.getBoundingClientRect();
     const width = svgRect.width > 0 ? svgRect.width : 800;
-    const height = parseInt(svg.style('height')) || 600;
-    console.log(`generateVisualization calculated width: ${width}, height: ${height}`);
+    const height = svgRect.height > 0 ? svgRect.height : 600;
+    // console.log(`generateVisualization calculated width: ${width}, height: ${height}`);
     // --- End Dimensions ---
 
     // --- Zoom Setup ---
@@ -362,7 +391,7 @@ function generateVisualization(systemData) {
         .attr('class', 'tooltip')
         .style('opacity', 0);
 
-    node.on('mouseover', function(event, d) {
+    node.on('mouseover', function (event, d) {
         let info = '';
         if (d.type === 'service') {
             let service = (systemData.services || []).find(s => s.serviceName === d.id);
@@ -385,7 +414,7 @@ function generateVisualization(systemData) {
         }
         tooltip.transition().duration(200).style('opacity', .9);
         tooltip.html(info).style('left', (event.pageX + 10) + 'px').style('top', (event.pageY - 28) + 'px');
-    }).on('mouseout', function() {
+    }).on('mouseout', function () {
         tooltip.transition().duration(500).style('opacity', 0);
     });
     // --- End Tooltip ---
@@ -411,7 +440,7 @@ function generateVisualization(systemData) {
         function dragstarted(event, d) {
             // *** FIX: Stop event propagation to prevent zoom/pan interference ***
             if (event.sourceEvent) { // Ensure sourceEvent exists
-                 event.sourceEvent.stopPropagation();
+                event.sourceEvent.stopPropagation();
             }
             // *******************************************************************
             if (!event.active) simulation.alphaTarget(0.3).restart();
@@ -471,18 +500,18 @@ function generateTeamVisualization(systemData) {
     // Get SVG element and its parent container
     const container = document.getElementById('teamVisualization'); // Get the container div
     if (!container) {
-         console.error("Container #teamVisualization not found for generateTeamVisualization.");
-         return;
+        console.error("Container #teamVisualization not found for generateTeamVisualization.");
+        return;
     }
     const svgRect = container.getBoundingClientRect(); // Get dimensions of the container
     const width = svgRect.width > 0 ? svgRect.width : 800; // Use container width or default
     // Keep height fixed or get from container style if needed
-    const height = parseInt(svg.style('height')) || 600;
-    console.log(`generateTeamVisualization calculated width: ${width}, height: ${height}`);
+    const height = svgRect.height > 0 ? svgRect.height : 600;
+    // console.log(`generateTeamVisualization calculated width: ${width}, height: ${height}`);
 
     // Define node radius
     const radius = 20;
-    
+
     // Prepare nodes and links data
     let nodes = [];
     let links = [];
@@ -590,7 +619,7 @@ function generateTeamVisualization(systemData) {
         .attr('class', 'tooltip')
         .style('opacity', 0);
 
-    node.on('mouseover', function(event, d) {
+    node.on('mouseover', function (event, d) {
         let team = systemData.teams.find(t => t.teamId === d.id);
         let sdm = systemData.sdms.find(s => s.sdmId === team.sdmId);
         let pmt = systemData.pmts.find(p => p.pmtId === team.pmtId);
@@ -608,7 +637,7 @@ function generateTeamVisualization(systemData) {
         tooltip.html(info)
             .style('left', (event.pageX + 10) + 'px')
             .style('top', (event.pageY - 28) + 'px');
-    }).on('mouseout', function() {
+    }).on('mouseout', function () {
         tooltip.transition()
             .duration(500)
             .style('opacity', 0);
@@ -675,6 +704,7 @@ function generateTeamVisualization(systemData) {
 
 function populateServiceSelection() {
     const serviceSelection = document.getElementById('serviceSelection');
+    if (!serviceSelection) return; // Exit if element doesn't exist
     serviceSelection.innerHTML = ''; // Clear existing options
 
     // Add "All Services View" option
@@ -712,7 +742,7 @@ function updateServiceVisualization() {
     const selectedService = document.getElementById('serviceSelection').value;
 
     // populateServiceSelection(); // <--- REMOVE THIS LINE
-    
+
     if (selectedService === 'all') {
         generateServiceVisualization(currentSystemData.services, null); // No service is selected
     } else {
@@ -732,23 +762,23 @@ function generateServiceVisualization(services, selectedServiceName) {
     let nodes = [];
     let links = [];
     let nodeMap = {};
-   
+
     // Set SVG dimensions
     // Get SVG element and its parent container
     const container = document.getElementById('serviceRelationshipsVisualization'); // Get the container div
     if (!container) {
-         console.error("Container #serviceRelationshipsVisualization not found for generateServiceVisualization.");
-         return;
+        console.error("Container #serviceRelationshipsVisualization not found for generateServiceVisualization.");
+        return;
     }
     const svgRect = container.getBoundingClientRect(); // Get dimensions of the container
     const width = svgRect.width > 0 ? svgRect.width : 800; // Use container width or default
     // Keep height fixed or get from container style if needed
-    const height = parseInt(svg.style('height')) || 600;
-    console.log(`generateServiceVisualization calculated width: ${width}, height: ${height}`);
+    const height = svgRect.height > 0 ? svgRect.height : 600;
+    // console.log(`generateServiceVisualization calculated width: ${width}, height: ${height}`);
 
     // Define node radius
     const radius = 20;
-   
+
     // Create a color scale based on teams
     const teamColorScale = d3.scaleOrdinal(d3.schemeCategory10);
     const teamIds = currentSystemData.teams.map(team => team.teamId);
@@ -849,7 +879,7 @@ function generateServiceVisualization(services, selectedServiceName) {
         .attr('class', 'tooltip')
         .style('opacity', 0);
 
-    node.on('mouseover', function(event, d) {
+    node.on('mouseover', function (event, d) {
         let info = '';
         if (d.type === 'service') {
             let service = serviceMap[d.id];
@@ -866,7 +896,7 @@ function generateServiceVisualization(services, selectedServiceName) {
         tooltip.html(info)
             .style('left', (event.pageX + 10) + 'px')
             .style('top', (event.pageY - 28) + 'px');
-    }).on('mouseout', function() {
+    }).on('mouseout', function () {
         tooltip.transition()
             .duration(500)
             .style('opacity', 0);
@@ -947,6 +977,7 @@ function generateServiceVisualization(services, selectedServiceName) {
 //Create a function to populate the dropdown menu with available services.
 function populateDependencyServiceSelection() {
     const serviceSelection = document.getElementById('dependencyServiceSelection');
+    if (!serviceSelection) return; // Exit if element doesn't exist
     serviceSelection.innerHTML = ''; // Clear existing options
 
     // Add individual services
@@ -1139,7 +1170,7 @@ function generateDependencyForceVisualization(selectedServiceName) {
     if (!svg || svg.empty()) {
         console.error("generateDependencyForceVisualization: #dependencySvg element not found or is empty. Cannot generate visualization.");
         const containerDiv = document.getElementById('dependencyVisualization');
-        if(containerDiv) {
+        if (containerDiv) {
             containerDiv.innerHTML = '<p style="color: red; text-align: center;">Error: Could not load dependency visualization.</p>';
         }
         return;
@@ -1156,7 +1187,7 @@ function generateDependencyForceVisualization(selectedServiceName) {
     }
     const svgRect = container.getBoundingClientRect();
     const width = svgRect.width > 0 ? svgRect.width : 800;
-    const height = parseInt(svg.style('height')) || 600;
+    const height = svgRect.height > 0 ? svgRect.height : 600;
     console.log(`generateDependencyForceVisualization calculated width: ${width}, height: ${height}`);
 
     // --- Initialize Selections Early ---
@@ -1186,53 +1217,53 @@ function generateDependencyForceVisualization(selectedServiceName) {
         .on('tick', ticked);
     // --- End Simulation Setup ---
 
-     // Define arrowheads
-     const defs = svg.append('defs');
-     defs.selectAll('marker')
+    // Define arrowheads
+    const defs = svg.append('defs');
+    defs.selectAll('marker')
         .data(['service-dependency', 'platform-dependency'])
         .join('marker')
-            .attr('id', d => `arrow-${d}`)
-            .attr('viewBox', '0 -5 10 10')
-            .attr('refX', 19)
-            .attr('refY', 0)
-            .attr('markerWidth', 6)
-            .attr('markerHeight', 6)
-            .attr('orient', 'auto')
+        .attr('id', d => `arrow-${d}`)
+        .attr('viewBox', '0 -5 10 10')
+        .attr('refX', 19)
+        .attr('refY', 0)
+        .attr('markerWidth', 6)
+        .attr('markerHeight', 6)
+        .attr('orient', 'auto')
         .append('path')
-            .attr('d', 'M0,-5L10,0L0,5')
-            .attr('fill', '#999');
+        .attr('d', 'M0,-5L10,0L0,5')
+        .attr('fill', '#999');
 
     // --- Data Binding and Element Creation ---
     link = link
         .data(graphLinks, d => `${d.source.id}-${d.target.id}`)
         .join('line')
-            .attr('stroke-width', 2)
-            .attr('marker-end', d => `url(#arrow-${d.type})`)
-            .attr('stroke', '#999')
-            .attr('stroke-opacity', 0.6)
-            .attr('stroke-dasharray', d => d.type === 'platform-dependency' ? '5,5' : '0');
+        .attr('stroke-width', 2)
+        .attr('marker-end', d => `url(#arrow-${d.type})`)
+        .attr('stroke', '#999')
+        .attr('stroke-opacity', 0.6)
+        .attr('stroke-dasharray', d => d.type === 'platform-dependency' ? '5,5' : '0');
 
     node = node
         .data(graphNodes, d => d.id)
         .join('circle')
-            .attr('r', d => d.id === selectedServiceName ? 15 : 10)
-            .attr('fill', d => d.id === selectedServiceName ? 'red' : color(d.type))
-            .attr('stroke', '#fff')
-            .attr('stroke-width', d => d.id === selectedServiceName ? 3 : 1.5)
-            .call(drag(simulation))
-            .on('mouseover', handleMouseOver)
-            .on('mouseout', handleMouseOut);
+        .attr('r', d => d.id === selectedServiceName ? 15 : 10)
+        .attr('fill', d => d.id === selectedServiceName ? 'red' : color(d.type))
+        .attr('stroke', '#fff')
+        .attr('stroke-width', d => d.id === selectedServiceName ? 3 : 1.5)
+        .call(drag(simulation))
+        .on('mouseover', handleMouseOver)
+        .on('mouseout', handleMouseOut);
 
     label = label
         .data(graphNodes, d => d.id)
         .join('text')
-            .attr('dy', -15)
-            .attr('text-anchor', 'middle')
-            .text(d => d.id)
-            .attr('font-size', '10px')
-            .style('pointer-events', 'none') // Prevent labels interfering with node hover
-            .attr('font-weight', d => d.id === selectedServiceName ? 'bold' : 'normal')
-            .attr('fill', d => d.id === selectedServiceName ? 'red' : 'black');
+        .attr('dy', -15)
+        .attr('text-anchor', 'middle')
+        .text(d => d.id)
+        .attr('font-size', '10px')
+        .style('pointer-events', 'none') // Prevent labels interfering with node hover
+        .attr('font-weight', d => d.id === selectedServiceName ? 'bold' : 'normal')
+        .attr('fill', d => d.id === selectedServiceName ? 'red' : 'black');
     // --- End Data Binding ---
 
     // --- Zoom Setup ---
@@ -1302,7 +1333,7 @@ function generateDependencyForceVisualization(selectedServiceName) {
 
     // --- Ticked Function ---
     function ticked() {
-         if (link.empty() || node.empty() || label.empty()) return; // Safeguard
+        if (link.empty() || node.empty() || label.empty()) return; // Safeguard
 
         link
             .attr('x1', d => d.source.x)
@@ -1321,7 +1352,7 @@ function generateDependencyForceVisualization(selectedServiceName) {
     // --- Drag Functions ---
     function drag(simulation) {
         function dragstarted(event, d) {
-            if(event.sourceEvent) event.sourceEvent.stopPropagation(); // Prevent interference
+            if (event.sourceEvent) event.sourceEvent.stopPropagation(); // Prevent interference
             if (!event.active) simulation.alphaTarget(0.3).restart();
             d.fx = d.x; d.fy = d.y;
         }
@@ -1691,6 +1722,208 @@ function setupPlatformToggleButtons() {
     updateAllToggleButtonsText(showPlatformComponents); // Ensures initial sync
 }
 
+
+function showVisualization(index) {
+    // We need to find the container. Since this might be called before the element is in the DOM (unlikely if triggered by button),
+    // or if we are just switching.
+    const carouselContainer = document.getElementById('visualizationCarousel');
+    if (!carouselContainer) {
+        console.error("Carousel container #visualizationCarousel not found.");
+        return;
+    }
+
+    if (typeof setupVisualizationResizeObserver === 'function') {
+        setupVisualizationResizeObserver();
+    }
+
+    const items = carouselContainer.querySelectorAll('.carousel-item');
+    const titleElement = document.getElementById('visualizationTitle');
+
+    // Keep the user anchored at the top when switching between visualizations.
+    // We can try to scroll the container or the main content area.
+    const mainContentArea = document.getElementById('main-content-area');
+    if (mainContentArea) {
+        mainContentArea.scrollTop = 0;
+    }
+    carouselContainer.scrollTop = 0;
+
+    if (index < 0 || index >= items.length || items.length === 0) {
+        console.error("Invalid visualization index or no items:", index);
+        items.forEach(item => item.style.display = 'none');
+        if (titleElement) titleElement.textContent = 'No Visualization';
+        return;
+    }
+
+    items.forEach(item => {
+        item.style.display = 'none';
+        item.classList.remove('active');
+    });
+
+    const targetItemId = visualizationItems[index]?.id;
+    // We look for the item within the container to be safe, or document.getElementById
+    const targetItem = document.getElementById(targetItemId);
+
+    if (targetItem) {
+        targetItem.style.display = 'block';
+        // If it's an SVG container, we might want to ensure it has height
+        if (targetItem.tagName === 'DIV' && !targetItem.style.height) {
+            targetItem.style.height = '100%';
+        }
+
+        targetItem.classList.add('active');
+        if (titleElement) titleElement.textContent = visualizationItems[index].title;
+
+        // Call regenerate functions only if the specific view is now active and data is loaded
+        if (currentSystemData) {
+            switch (targetItemId) {
+                case 'visualization':
+                    if (typeof generateVisualization === 'function') generateVisualization(currentSystemData);
+                    break;
+                case 'teamVisualization':
+                    if (typeof generateTeamVisualization === 'function') generateTeamVisualization(currentSystemData);
+                    break;
+                case 'serviceRelationshipsVisualization':
+                    if (typeof populateServiceSelection === 'function') populateServiceSelection();
+                    if (typeof updateServiceVisualization === 'function') updateServiceVisualization();
+                    break;
+                case 'dependencyVisualization':
+                    if (typeof populateDependencyServiceSelection === 'function') populateDependencyServiceSelection();
+                    if (typeof updateDependencyVisualization === 'function') updateDependencyVisualization();
+                    break;
+                case 'serviceDependenciesTableSlide':
+                    if (typeof generateServiceDependenciesTable === 'function') {
+                        // Defer table render until after layout/visibility is applied to avoid zero-height issues.
+                        requestAnimationFrame(() => generateServiceDependenciesTable());
+                    }
+                    break;
+                case 'mermaidVisualization':
+                    if (typeof renderMermaidDiagram === 'function') renderMermaidDiagram();
+                    break;
+                case 'mermaidApiVisualization':
+                    if (typeof populateApiServiceSelection === 'function') populateApiServiceSelection();
+                    if (typeof renderMermaidApiDiagram === 'function') renderMermaidApiDiagram();
+                    break;
+            }
+        }
+        console.log(`Showing visualization: ${visualizationItems[index].title}`);
+    } else {
+        console.error("Target visualization element not found for ID:", targetItemId);
+        if (titleElement) titleElement.textContent = 'Error';
+    }
+    currentVisualizationIndex = index;
+}
+
+function navigateVisualizations(direction) {
+    let newIndex = currentVisualizationIndex + direction;
+    const totalItems = visualizationItems.length;
+    if (newIndex >= totalItems) newIndex = 0;
+    else if (newIndex < 0) newIndex = totalItems - 1;
+    showVisualization(newIndex);
+}
+
+function renderSystemOverviewView(container) {
+    if (!container) {
+        console.error("renderSystemOverviewView: No container provided.");
+        return;
+    }
+
+    container.style.display = 'flex';
+    container.style.flexDirection = 'column';
+    container.style.height = '100%';
+    container.style.width = '100%';
+    container.style.overflow = 'hidden'; // Prevent outer scroll
+
+    container.innerHTML = `
+        <div style="text-align: center; margin-bottom: 10px; flex-shrink: 0; padding-top: 10px;">
+            <button id="prevVizBtn" class="button">&lt; Previous</button>
+            <span id="visualizationTitle" style="margin: 0 15px; font-weight: bold; font-size: 1.1em;">System Visualization</span>
+            <button id="nextVizBtn" class="button">Next &gt;</button>
+        </div>
+
+        <div id="visualizationContent" style="flex-grow: 1; position: relative; overflow: hidden; padding: 10px;">
+            <div id="visualization" class="carousel-item" style="display: block; height: 100%;">
+                <button id="togglePlatformComponentsSystem" class="button" style="margin-bottom: 10px;">Hide Platforms</button>
+                <svg id="systemSvg" style="width: 100%; height: 90%; border: 1px solid #ccc;"></svg>
+                <div id="legend" class="legend"></div>
+            </div>
+
+            <div id="teamVisualization" class="carousel-item" style="display: none; height: 100%;">
+                <svg id="teamSvg" style="width: 100%; height: 100%; border: 1px solid #ccc;"></svg>
+                <div id="teamLegend" class="legend"></div>
+            </div>
+
+            <div id="serviceRelationshipsVisualization" class="carousel-item" style="display: none; height: 100%;">
+                <select id="serviceSelection" style="margin-bottom: 5px; display: block; margin-left: auto; margin-right: auto;"></select>
+                <button id="togglePlatformComponentsService" class="button" style="margin-bottom: 10px;">Hide Platforms</button>
+                <svg id="serviceSvg" style="width: 100%; height: 90%; border: 1px solid #ccc;"></svg>
+                <div id="serviceLegend" class="legend"></div>
+            </div>
+
+            <div id="dependencyVisualization" class="carousel-item" style="display: none; height: 100%;">
+                <select id="dependencyServiceSelection" style="margin-bottom: 5px; display: block; margin-left: auto; margin-right: auto;"></select>
+                <button id="togglePlatformComponentsDependency" class="button" style="margin-bottom: 10px;">Hide Platforms</button>
+                <svg id="dependencySvg" style="width: 100%; height: 90%; border: 1px solid #ccc;"></svg>
+                <div id="dependencyLegend" class="legend"></div>
+            </div>
+
+            <div id="serviceDependenciesTableSlide" class="carousel-item" style="display: none; height: 100%; overflow: auto;">
+                <div id="serviceDependenciesTable" style="max-width: 100%; margin: 8px auto 0 auto; height: 100%;">
+                    <h2>Service Dependencies Table</h2>
+                    <div id="serviceDependenciesTableHost" style="height: calc(100% - 40px);"></div>
+                </div>
+            </div>
+
+            <div id="mermaidVisualization" class="carousel-item" style="display: none; height: 100%; overflow: auto;">
+                <div id="mermaidGraph"></div>
+            </div>
+
+            <div id="mermaidApiVisualization" class="carousel-item" style="display: none; height: 100%; overflow: auto;">
+                <select id="apiServiceSelection" style="margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto;"></select>
+                <div id="mermaidApiGraph"></div>
+            </div>
+        </div>
+    `;
+
+    // Attach Event Listeners
+    container.querySelector('#prevVizBtn').addEventListener('click', () => navigateVisualizations(-1));
+    container.querySelector('#nextVizBtn').addEventListener('click', () => navigateVisualizations(1));
+
+    const serviceSelect = container.querySelector('#serviceSelection');
+    if (serviceSelect) serviceSelect.addEventListener('change', updateServiceVisualization);
+
+    const depServiceSelect = container.querySelector('#dependencyServiceSelection');
+    if (depServiceSelect) depServiceSelect.addEventListener('change', updateDependencyVisualization);
+
+    const apiServiceSelect = container.querySelector('#apiServiceSelection');
+    if (apiServiceSelect) apiServiceSelect.addEventListener('change', renderMermaidApiDiagram);
+
+    // Setup Platform Toggles
+    const toggleSystem = container.querySelector('#togglePlatformComponentsSystem');
+    const toggleService = container.querySelector('#togglePlatformComponentsService');
+    const toggleDependency = container.querySelector('#togglePlatformComponentsDependency');
+
+    const handleToggle = () => {
+        showPlatformComponents = !showPlatformComponents;
+        rerenderCurrentVisualizationForPlatformToggle();
+        updateAllToggleButtonsText(showPlatformComponents);
+    };
+
+    if (toggleSystem) toggleSystem.addEventListener('click', handleToggle);
+    if (toggleService) toggleService.addEventListener('click', handleToggle);
+    if (toggleDependency) toggleDependency.addEventListener('click', handleToggle);
+
+    // Initialize View
+    setTimeout(() => {
+        showVisualization(currentVisualizationIndex);
+        updateAllToggleButtonsText(showPlatformComponents);
+        setupVisualizationResizeObserver();
+    }, 0);
+}
+
 if (typeof window !== 'undefined') {
     window.setupPlatformToggleButtons = setupPlatformToggleButtons;
+    window.renderSystemOverviewView = renderSystemOverviewView;
+    window.navigateVisualizations = navigateVisualizations;
+    window.showVisualization = showVisualization;
 }
+

@@ -5,7 +5,7 @@ let investmentDoughnutChart = null;
 let investmentTrendChart = null;
 let teamDemandChart = null; // Add a global for the new chart
 
-let dashboardPlanningYear = 'all'; 
+let dashboardPlanningYear = 'all';
 
 // State for the new dashboard carousel
 const dashboardItems = [
@@ -16,7 +16,7 @@ const dashboardItems = [
     { id: 'teamDemandWidget', title: 'Team Demand by Quarter', generator: initializeTeamDemandView }, // New widget added here
     { id: 'roadmapTimelineWidget', title: 'Roadmap by Quarter', generator: initializeRoadmapTableView },
     { id: 'threeYearPlanWidget', title: '3-Year Plan (3YP)', generator: initialize3YPRoadmapView },
-    { id: 'initiativeImpactWidget', title: 'Initiative Impact', generator: initializeImpactView }    
+    { id: 'initiativeImpactWidget', title: 'Initiative Impact', generator: initializeImpactView }
 ];
 let currentDashboardIndex = 0;
 // --- End Globals ---
@@ -24,41 +24,40 @@ let currentDashboardIndex = 0;
 /**
  * Main function to trigger the display of the Dashboard view.
  */
-function showDashboardView() {
-    console.log("Requesting to show Dashboard View...");
-    if (!currentSystemData) {
-        alert("Please load a system first to view the dashboard.");
+/**
+ * NEW: Renders the Dashboard view into the Workspace.
+ */
+function renderDashboardView(container) {
+    // console.log("Rendering Dashboard View...");
+
+    // Fallback if container not passed
+    if (!container) {
+        container = document.getElementById('dashboardView');
+    }
+
+    if (!container) {
+        console.error("Dashboard container not found.");
         return;
     }
-    switchView('dashboardView', 'dashboard');
-}
 
-/**
- * Initializes all content for the dashboard. Called by switchView.
- */
-function initializeDashboard() {
-    console.log("Initializing dashboard content with carousel...");
-    generateDashboardLayout();
+    if (!currentSystemData) {
+        // This check might be redundant if NavigationManager handles it, but good for safety
+
+    }
+
+    // Only generate layout if it doesn't exist to preserve carousel state/DOM if possible
+    if (!document.getElementById('dashboardCarousel')) {
+        generateDashboardLayout(container);
+    }
+
+    // Initialize/Refresh the current widget
     showDashboardWidget(currentDashboardIndex);
 }
 
 /**
- * Handles the change event from the year selector dropdown.
+ * Creates the carousel shell and its static elements.
  */
-function handleDashboardYearChange(selectedYear) {
-    dashboardPlanningYear = selectedYear;
-    console.log(`Year filter changed to: ${dashboardPlanningYear}`);
-    const currentWidget = dashboardItems[currentDashboardIndex];
-    currentWidget.generator();
-}
-
-/**
- * Main function to create the carousel shell and its static elements.
- */
-function generateDashboardLayout() {
-    const container = document.getElementById('dashboardView');
-    if (!container) return;
-
+function generateDashboardLayout(container) {
     const yearSelectorHTML = generateYearSelectorHTML();
 
     container.innerHTML = `
@@ -93,14 +92,14 @@ function generateDashboardLayout() {
 function generateYearSelectorHTML() {
     let availableYears = [...new Set((currentSystemData.yearlyInitiatives || []).map(init => init.attributes.planningYear).filter(Boolean))].sort((a, b) => a - b);
     if (availableYears.length === 0) availableYears.push(new Date().getFullYear());
-    
+
     if (!dashboardPlanningYear || (dashboardPlanningYear !== 'all' && !availableYears.includes(parseInt(dashboardPlanningYear)))) {
         dashboardPlanningYear = 'all';
     }
 
-    let yearOptionsHTML = '<option value="all" ' + (dashboardPlanningYear === 'all' ? 'selected' : '') + '>All Years</option>' + 
-                          availableYears.map(year => `<option value="${year}" ${year == dashboardPlanningYear ? 'selected' : ''}>${year}</option>`).join('');
-    
+    let yearOptionsHTML = '<option value="all" ' + (dashboardPlanningYear === 'all' ? 'selected' : '') + '>All Years</option>' +
+        availableYears.map(year => `<option value="${year}" ${year == dashboardPlanningYear ? 'selected' : ''}>${year}</option>`).join('');
+
     return yearOptionsHTML;
 }
 
@@ -110,7 +109,7 @@ function generateYearSelectorHTML() {
 function showDashboardWidget(index) {
     currentDashboardIndex = index;
     document.querySelectorAll('.dashboard-carousel-item').forEach(item => item.style.display = 'none');
-    
+
     const widgetToShow = dashboardItems[index];
     document.getElementById('dashboardTitle').textContent = widgetToShow.title;
     const elementToShow = document.getElementById(widgetToShow.id);
@@ -121,8 +120,8 @@ function showDashboardWidget(index) {
         const isFilterApplicable = ['strategicGoalsWidget', 'accomplishmentsWidget', 'investmentDistributionWidget', 'investmentTrendWidget', 'roadmapTimelineWidget', 'teamDemandWidget'].includes(widgetToShow.id);
         yearFilterContainer.style.display = isFilterApplicable ? 'block' : 'none';
     }
-    
-    if(elementToShow) {
+
+    if (elementToShow) {
         elementToShow.style.display = 'block';
         if (elementToShow.innerHTML === '') {
             if (widgetToShow.id === 'investmentDistributionWidget') {
@@ -151,7 +150,7 @@ function navigateDashboard(direction) {
  * Initializes the Team Demand by Quarter widget.
  */
 function initializeTeamDemandView() {
-    console.log("Initializing Team Demand by Quarter widget...");
+    // console.log("Initializing Team Demand by Quarter widget...");
     generateRoadmapTableFilters('Demand', renderTeamDemandChart, { includeThemes: false });
     renderTeamDemandChart();
 }
@@ -186,7 +185,7 @@ function processTeamDemandData() {
     }
 
     // Aggregate data
-    const teamDemand = {}; 
+    const teamDemand = {};
     initiatives.forEach(init => {
         const quarterIndex = getQuarterIndexFromDate(init.targetDueDate);
         if (quarterIndex === -1) return;
@@ -258,7 +257,7 @@ function renderTeamDemandChart() {
                 meta.data.forEach((bar, index) => {
                     const value = dataset.data[index];
                     // Only draw label if the bar segment is tall enough
-                    if (value > 0 && bar.height > 15) { 
+                    if (value > 0 && bar.height > 15) {
                         ctx.fillText(value.toFixed(1), bar.x, bar.y + bar.height / 2);
                     }
                 });
@@ -331,10 +330,10 @@ function createHatchPattern(color = '#000000') {
     canvas.width = size;
     canvas.height = size;
 
-    ctx.fillStyle = d3.color(color).copy({opacity: 0.3});
+    ctx.fillStyle = d3.color(color).copy({ opacity: 0.3 });
     ctx.fillRect(0, 0, size, size);
-    
-    ctx.strokeStyle = d3.color(color).copy({opacity: 0.5});
+
+    ctx.strokeStyle = d3.color(color).copy({ opacity: 0.5 });
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(0, size);
@@ -353,14 +352,14 @@ function createHatchPattern(color = '#000000') {
  */
 function generateInvestmentDistributionChart() {
     const canvas = document.getElementById('investmentDistributionChart');
-    if (!canvas) { 
-        console.error("Canvas for doughnut chart not found. Bailing out of render."); 
-        return; 
+    if (!canvas) {
+        console.error("Canvas for doughnut chart not found. Bailing out of render.");
+        return;
     }
     if (investmentDoughnutChart) investmentDoughnutChart.destroy();
 
     const data = processInvestmentData(dashboardPlanningYear);
-    
+
     investmentDoughnutChart = new Chart(canvas, {
         type: 'doughnut',
         data: {
@@ -380,7 +379,7 @@ function generateInvestmentDistributionChart() {
             }
         }
     });
-    
+
     generateInvestmentTable(data);
 }
 
@@ -391,11 +390,11 @@ function generateInvestmentTrendChart() {
     const canvas = document.getElementById('investmentTrendChart');
     if (!canvas) { console.error("Canvas for trend chart not found."); return; }
     if (investmentTrendChart) investmentTrendChart.destroy();
-    
-    const allYears = [...new Set(currentSystemData.yearlyInitiatives.map(init => init.attributes.planningYear).filter(Boolean))].sort((a,b) => a - b);
+
+    const allYears = [...new Set(currentSystemData.yearlyInitiatives.map(init => init.attributes.planningYear).filter(Boolean))].sort((a, b) => a - b);
     const allThemes = [...new Set(currentSystemData.definedThemes.map(t => t.name))];
     const themeColors = ['#4E79A7', '#F28E2B', '#E15759', '#76B7B2', '#59A14F', '#EDC948', '#B07AA1', '#FF9DA7', '#9C755F', '#BAB0AC'];
-    
+
     const datasets = allThemes.map((themeName, index) => ({
         label: themeName,
         data: [],
@@ -432,7 +431,7 @@ function generateInvestmentTrendChart() {
                 title: { display: false },
                 tooltip: {
                     callbacks: {
-                        label: function(context) {
+                        label: function (context) {
                             let label = context.dataset.label || '';
                             if (label) label += ': ';
                             if (context.parsed.y !== null) {
@@ -478,11 +477,11 @@ function processInvestmentData(selectedYear) {
             }
         }
     });
-    
+
     const sortedData = Object.entries(investmentByTheme)
         .filter(([, sde]) => sde > 0)
         .sort(([, a], [, b]) => b - a);
-        
+
     return {
         labels: sortedData.map(([label]) => label),
         sdeValues: sortedData.map(([, sde]) => sde),
@@ -549,4 +548,4 @@ function formatTooltipLabel(context, total) {
     return label;
 }
 
-window.showDashboardView = showDashboardView;
+window.renderDashboardView = renderDashboardView;

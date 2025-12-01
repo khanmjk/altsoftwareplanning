@@ -71,118 +71,118 @@ const sampleAllKnownEngineersStreamView = [
 ];
 
 const sampleTeamsDataStreamView = [
-    { teamId: 'team1', teamName: 'User Experience Team', teamIdentity: 'Avengers', fundedHeadcount: 7, engineers: ['Alice Johnson', 'Mark Evans', 'Sophia Lee', 'John Doe', 'Emma Davis'], awayTeamMembers: [], sdmId: 'sdm1', pmtId: 'pmt1', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }}, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 6, aiProductivityGainPercent: 10 }, attributes: {} },
-    { teamId: 'team2', teamName: 'Streaming Team', teamIdentity: 'Spartans', fundedHeadcount: 5, engineers: ['Emily Clark', 'Daniel Thompson', 'Olivia Brown', 'Liam Wilson', 'AI-Coder-001 (StreamView)'], awayTeamMembers: [ { name: 'Borrowed Betty', level: 3, sourceTeam: 'External Partner X', attributes:{} } ], sdmId: 'sdm2', pmtId: 'pmt2', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }}, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 5, aiProductivityGainPercent: 20 }, attributes: {} },
-    { teamId: 'team3', teamName: 'Content Team', teamIdentity: 'Crusaders', fundedHeadcount: 4, engineers: ['Carol Davis', 'Kevin Moore', 'Isabella Martinez'], awayTeamMembers: [], sdmId: 'sdm3', pmtId: 'pmt2', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }}, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 4, aiProductivityGainPercent: 5 }, attributes: {} },
-    { teamId: 'team4', teamName: 'Recommendation Team', teamIdentity: 'Olympus', fundedHeadcount: 6, engineers: ['Grace Lee', 'Ethan Harris', 'Mia Turner', 'Noah Walker'], awayTeamMembers: [ { name: 'Loaned Larry', level: 4, sourceTeam: 'Core Platform BU', attributes:{} }, { name: 'Visiting Vinny', level: 2, sourceTeam: 'Data Science Org', attributes:{} } ], sdmId: 'sdm4', pmtId: 'pmt3', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }}, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 8, aiProductivityGainPercent: 25 }, attributes: {} },
-    { teamId: 'team5', teamName: 'Finance Team', teamIdentity: 'Falcons', fundedHeadcount: 4, engineers: ['Ian Turner', 'Charlotte Adams', 'Benjamin Scott'], awayTeamMembers: [], sdmId: 'sdm5', pmtId: 'pmt3', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }}, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 4 }, attributes: {} },
-    { teamId: 'team6', teamName: 'Communication Team', teamIdentity: 'Ninjas', fundedHeadcount: 3, engineers: ['Karen Adams', 'Lucas Wright'], awayTeamMembers: [], sdmId: 'sdm6', pmtId: 'pmt2', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }}, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 3 }, attributes: {} },
-    { teamId: 'team7', teamName: 'Analytics Team', teamIdentity: 'Dragons', fundedHeadcount: 5, engineers: ['Natalie Green', 'Andrew Hall', 'Ella Young', 'AI-Analyst-007 (StreamView)'], awayTeamMembers: [], sdmId: 'sdm7', pmtId: 'pmt4', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }}, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 5 }, attributes: {} },
-    { teamId: 'team8', teamName: 'Search Team', teamIdentity: 'Search', fundedHeadcount: 3, engineers: ['Zoe King', 'Michael Baker'], awayTeamMembers: [], sdmId: 'sdm8', pmtId: 'pmt1', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }}, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 4, aiProductivityGainPercent: 15 }, attributes: {} }
+    { teamId: 'team1', teamName: 'User Experience Team', teamIdentity: 'Avengers', fundedHeadcount: 7, engineers: ['Alice Johnson', 'Mark Evans', 'Sophia Lee', 'John Doe', 'Emma Davis'], awayTeamMembers: [], sdmId: 'sdm1', pmtId: 'pmt1', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 } }, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 6, aiProductivityGainPercent: 10 }, attributes: {} },
+    { teamId: 'team2', teamName: 'Streaming Team', teamIdentity: 'Spartans', fundedHeadcount: 5, engineers: ['Emily Clark', 'Daniel Thompson', 'Olivia Brown', 'Liam Wilson', 'AI-Coder-001 (StreamView)'], awayTeamMembers: [{ name: 'Borrowed Betty', level: 3, sourceTeam: 'External Partner X', attributes: {} }], sdmId: 'sdm2', pmtId: 'pmt2', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 } }, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 5, aiProductivityGainPercent: 20 }, attributes: {} },
+    { teamId: 'team3', teamName: 'Content Team', teamIdentity: 'Crusaders', fundedHeadcount: 4, engineers: ['Carol Davis', 'Kevin Moore', 'Isabella Martinez'], awayTeamMembers: [], sdmId: 'sdm3', pmtId: 'pmt2', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 } }, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 4, aiProductivityGainPercent: 5 }, attributes: {} },
+    { teamId: 'team4', teamName: 'Recommendation Team', teamIdentity: 'Olympus', fundedHeadcount: 6, engineers: ['Grace Lee', 'Ethan Harris', 'Mia Turner', 'Noah Walker'], awayTeamMembers: [{ name: 'Loaned Larry', level: 4, sourceTeam: 'Core Platform BU', attributes: {} }, { name: 'Visiting Vinny', level: 2, sourceTeam: 'Data Science Org', attributes: {} }], sdmId: 'sdm4', pmtId: 'pmt3', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 } }, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 8, aiProductivityGainPercent: 25 }, attributes: {} },
+    { teamId: 'team5', teamName: 'Finance Team', teamIdentity: 'Falcons', fundedHeadcount: 4, engineers: ['Ian Turner', 'Charlotte Adams', 'Benjamin Scott'], awayTeamMembers: [], sdmId: 'sdm5', pmtId: 'pmt3', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 } }, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 4 }, attributes: {} },
+    { teamId: 'team6', teamName: 'Communication Team', teamIdentity: 'Ninjas', fundedHeadcount: 3, engineers: ['Karen Adams', 'Lucas Wright'], awayTeamMembers: [], sdmId: 'sdm6', pmtId: 'pmt2', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 } }, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 3 }, attributes: {} },
+    { teamId: 'team7', teamName: 'Analytics Team', teamIdentity: 'Dragons', fundedHeadcount: 5, engineers: ['Natalie Green', 'Andrew Hall', 'Ella Young', 'AI-Analyst-007 (StreamView)'], awayTeamMembers: [], sdmId: 'sdm7', pmtId: 'pmt4', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 } }, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 5 }, attributes: {} },
+    { teamId: 'team8', teamName: 'Search Team', teamIdentity: 'Search', fundedHeadcount: 3, engineers: ['Zoe King', 'Michael Baker'], awayTeamMembers: [], sdmId: 'sdm8', pmtId: 'pmt1', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 } }, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 4, aiProductivityGainPercent: 15 }, attributes: {} }
 ];
 
 const sampleServicesDataStreamView = [
     {
-      serviceName: 'User Management Service',
-      serviceDescription: 'Handles user registration, authentication, profiles, and account settings.',
-      owningTeamId: 'team1',
-      apis: [
-          { apiName: 'Register API', apiDescription: 'Allows new users to sign up.', dependentApis: [], attributes: {} },
-          { apiName: 'Login API', apiDescription: 'Authenticates users and starts a session.', dependentApis: [], attributes: {} },
-          { apiName: 'Profile API', apiDescription: 'Manages user profiles and account settings.', dependentApis: [], attributes: {} },
-          { apiName: 'Logout API', apiDescription: 'Ends the user session.', dependentApis: [], attributes: {} }
-      ],
-      serviceDependencies: [],
-      platformDependencies: ['Auth0', 'AWS DynamoDB'],
-      attributes: {}
+        serviceName: 'User Management Service',
+        serviceDescription: 'Handles user registration, authentication, profiles, and account settings.',
+        owningTeamId: 'team1',
+        apis: [
+            { apiName: 'Register API', apiDescription: 'Allows new users to sign up.', dependentApis: [], attributes: {} },
+            { apiName: 'Login API', apiDescription: 'Authenticates users and starts a session.', dependentApis: [], attributes: {} },
+            { apiName: 'Profile API', apiDescription: 'Manages user profiles and account settings.', dependentApis: [], attributes: {} },
+            { apiName: 'Logout API', apiDescription: 'Ends the user session.', dependentApis: [], attributes: {} }
+        ],
+        serviceDependencies: [],
+        platformDependencies: ['Auth0', 'AWS DynamoDB'],
+        attributes: {}
     },
     {
-      serviceName: 'Content Delivery Service',
-      serviceDescription: 'Manages content streaming and delivery to users.',
-      owningTeamId: 'team2',
-      apis: [
-          { apiName: 'Stream Content API', apiDescription: 'Streams selected content to the user.', dependentApis: ['Subscription API', 'Profile API'], attributes: {} },
-          { apiName: 'Adaptive Bitrate API', apiDescription: 'Adjusts streaming quality based on network conditions.', dependentApis: [], attributes: {} },
-          { apiName: 'Content Caching API', apiDescription: 'Manages caching of frequently accessed content.', dependentApis: [], attributes: {} }
-      ],
-      serviceDependencies: ['Content Management Service', 'User Management Service', 'Billing and Subscription Service'],
-      platformDependencies: ['AWS CloudFront', 'AWS S3'],
-      attributes: {}
+        serviceName: 'Content Delivery Service',
+        serviceDescription: 'Manages content streaming and delivery to users.',
+        owningTeamId: 'team2',
+        apis: [
+            { apiName: 'Stream Content API', apiDescription: 'Streams selected content to the user.', dependentApis: ['Subscription API', 'Profile API'], attributes: {} },
+            { apiName: 'Adaptive Bitrate API', apiDescription: 'Adjusts streaming quality based on network conditions.', dependentApis: [], attributes: {} },
+            { apiName: 'Content Caching API', apiDescription: 'Manages caching of frequently accessed content.', dependentApis: [], attributes: {} }
+        ],
+        serviceDependencies: ['Content Management Service', 'User Management Service', 'Billing and Subscription Service'],
+        platformDependencies: ['AWS CloudFront', 'AWS S3'],
+        attributes: {}
     },
     {
-      serviceName: 'Content Management Service',
-      serviceDescription: 'Handles content ingestion, metadata, and catalog management.',
-      owningTeamId: 'team3',
-      apis: [
-          { apiName: 'Content Ingestion API', apiDescription: 'Ingests new content into the platform.', dependentApis: [], attributes: {} },
-          { apiName: 'Metadata API', apiDescription: 'Manages content metadata like titles, descriptions, genres.', dependentApis: [], attributes: {} },
-          { apiName: 'Catalog API', apiDescription: 'Provides the catalog of available content.', dependentApis: [], attributes: {} }
-      ],
-      serviceDependencies: [],
-      platformDependencies: ['AWS S3', 'AWS Lambda'],
-      attributes: {}
+        serviceName: 'Content Management Service',
+        serviceDescription: 'Handles content ingestion, metadata, and catalog management.',
+        owningTeamId: 'team3',
+        apis: [
+            { apiName: 'Content Ingestion API', apiDescription: 'Ingests new content into the platform.', dependentApis: [], attributes: {} },
+            { apiName: 'Metadata API', apiDescription: 'Manages content metadata like titles, descriptions, genres.', dependentApis: [], attributes: {} },
+            { apiName: 'Catalog API', apiDescription: 'Provides the catalog of available content.', dependentApis: [], attributes: {} }
+        ],
+        serviceDependencies: [],
+        platformDependencies: ['AWS S3', 'AWS Lambda'],
+        attributes: {}
     },
     {
-      serviceName: 'Recommendation Engine Service',
-      serviceDescription: 'Provides personalized content recommendations to users based on viewing history and preferences.',
-      owningTeamId: 'team4',
-      apis: [
-          { apiName: 'Recommendations API', apiDescription: 'Retrieves recommended content for a user.', dependentApis: ['User Behavior Tracking API', 'Metadata API'], attributes: {} },
-          { apiName: 'User Behavior Tracking API', apiDescription: 'Tracks user interactions and viewing history.', dependentApis: [], attributes: {} }
-      ],
-      serviceDependencies: ['User Management Service', 'Content Management Service', 'Analytics Service'],
-      platformDependencies: ['AWS Machine Learning', 'Apache Spark'],
-      attributes: {}
+        serviceName: 'Recommendation Engine Service',
+        serviceDescription: 'Provides personalized content recommendations to users based on viewing history and preferences.',
+        owningTeamId: 'team4',
+        apis: [
+            { apiName: 'Recommendations API', apiDescription: 'Retrieves recommended content for a user.', dependentApis: ['User Behavior Tracking API', 'Metadata API'], attributes: {} },
+            { apiName: 'User Behavior Tracking API', apiDescription: 'Tracks user interactions and viewing history.', dependentApis: [], attributes: {} }
+        ],
+        serviceDependencies: ['User Management Service', 'Content Management Service', 'Analytics Service'],
+        platformDependencies: ['AWS Machine Learning', 'Apache Spark'],
+        attributes: {}
     },
     {
-      serviceName: 'Billing and Subscription Service',
-      serviceDescription: 'Manages user subscriptions, billing, and payment processing.',
-      owningTeamId: 'team5',
-      apis: [
-          { apiName: 'Subscription API', apiDescription: 'Manages user subscription plans.', dependentApis: [], attributes: {} },
-          { apiName: 'Payment Processing API', apiDescription: 'Processes payments securely.', dependentApis: ['Email Notification API'], attributes: {} },
-          { apiName: 'Invoice API', apiDescription: 'Generates invoices and billing statements.', dependentApis: [], attributes: {} }
-      ],
-      serviceDependencies: ['User Management Service', 'Notification Service'],
-      platformDependencies: ['Stripe API', 'AWS RDS'],
-      attributes: {}
+        serviceName: 'Billing and Subscription Service',
+        serviceDescription: 'Manages user subscriptions, billing, and payment processing.',
+        owningTeamId: 'team5',
+        apis: [
+            { apiName: 'Subscription API', apiDescription: 'Manages user subscription plans.', dependentApis: [], attributes: {} },
+            { apiName: 'Payment Processing API', apiDescription: 'Processes payments securely.', dependentApis: ['Email Notification API'], attributes: {} },
+            { apiName: 'Invoice API', apiDescription: 'Generates invoices and billing statements.', dependentApis: [], attributes: {} }
+        ],
+        serviceDependencies: ['User Management Service', 'Notification Service'],
+        platformDependencies: ['Stripe API', 'AWS RDS'],
+        attributes: {}
     },
     {
-      serviceName: 'Notification Service',
-      serviceDescription: 'Sends notifications, emails, and in-app messages to users.',
-      owningTeamId: 'team6',
-      apis: [
-          { apiName: 'Email Notification API', apiDescription: 'Sends email notifications to users.', dependentApis: [], attributes: {} },
-          { apiName: 'Push Notification API', apiDescription: 'Sends push notifications to user devices.', dependentApis: ['Profile API'], attributes: {} },
-          { apiName: 'In-App Messaging API', apiDescription: 'Displays messages within the app.', dependentApis: [], attributes: {} }
-      ],
-      serviceDependencies: ['User Management Service', 'Billing and Subscription Service'],
-      platformDependencies: ['AWS SNS', 'Firebase Cloud Messaging'],
-      attributes: {}
+        serviceName: 'Notification Service',
+        serviceDescription: 'Sends notifications, emails, and in-app messages to users.',
+        owningTeamId: 'team6',
+        apis: [
+            { apiName: 'Email Notification API', apiDescription: 'Sends email notifications to users.', dependentApis: [], attributes: {} },
+            { apiName: 'Push Notification API', apiDescription: 'Sends push notifications to user devices.', dependentApis: ['Profile API'], attributes: {} },
+            { apiName: 'In-App Messaging API', apiDescription: 'Displays messages within the app.', dependentApis: [], attributes: {} }
+        ],
+        serviceDependencies: ['User Management Service', 'Billing and Subscription Service'],
+        platformDependencies: ['AWS SNS', 'Firebase Cloud Messaging'],
+        attributes: {}
     },
     {
-      serviceName: 'Analytics Service',
-      serviceDescription: 'Collects and analyzes data on user engagement, content performance, and platform metrics.',
-      owningTeamId: 'team7',
-      apis: [
-          { apiName: 'Data Collection API', apiDescription: 'Collects data from various services.', dependentApis: [], attributes: {} },
-          { apiName: 'Reporting API', apiDescription: 'Provides analytical reports and dashboards.', dependentApis: [], attributes: {} }
-      ],
-      serviceDependencies: ['User Management Service', 'Content Delivery Service', 'Recommendation Engine Service'],
-      platformDependencies: ['AWS Redshift', 'Tableau'],
-      attributes: {}
+        serviceName: 'Analytics Service',
+        serviceDescription: 'Collects and analyzes data on user engagement, content performance, and platform metrics.',
+        owningTeamId: 'team7',
+        apis: [
+            { apiName: 'Data Collection API', apiDescription: 'Collects data from various services.', dependentApis: [], attributes: {} },
+            { apiName: 'Reporting API', apiDescription: 'Provides analytical reports and dashboards.', dependentApis: [], attributes: {} }
+        ],
+        serviceDependencies: ['User Management Service', 'Content Delivery Service', 'Recommendation Engine Service'],
+        platformDependencies: ['AWS Redshift', 'Tableau'],
+        attributes: {}
     },
     {
-      serviceName: 'Search Service',
-      serviceDescription: 'Enables users to search for content across the platform.',
-      owningTeamId: 'team8',
-      apis: [
-          { apiName: 'Search API', apiDescription: 'Allows users to search for content by title, genre, etc.', dependentApis: [], attributes: {} },
-          { apiName: 'Autocomplete API', apiDescription: 'Provides search suggestions as users type.', dependentApis: [], attributes: {} }
-      ],
-      serviceDependencies: ['Content Management Service', 'User Management Service'],
-      platformDependencies: ['Elasticsearch'],
-      attributes: {}
+        serviceName: 'Search Service',
+        serviceDescription: 'Enables users to search for content across the platform.',
+        owningTeamId: 'team8',
+        apis: [
+            { apiName: 'Search API', apiDescription: 'Allows users to search for content by title, genre, etc.', dependentApis: [], attributes: {} },
+            { apiName: 'Autocomplete API', apiDescription: 'Provides search suggestions as users type.', dependentApis: [], attributes: {} }
+        ],
+        serviceDependencies: ['Content Management Service', 'User Management Service'],
+        platformDependencies: ['Elasticsearch'],
+        attributes: {}
     }
 ];
 
@@ -193,7 +193,7 @@ const sampleYearlyInitiativesStreamView = [
             { teamId: 'team1', sdeYears: 1.0 }, { teamId: 'team2', sdeYears: 1.0 }, { teamId: 'team3', sdeYears: 0.75 }, { teamId: 'team4', sdeYears: 1.25 },
             { teamId: 'team5', sdeYears: 0.75 }, { teamId: 'team6', sdeYears: 0.5 }, { teamId: 'team7', sdeYears: 1.0 }, { teamId: 'team8', sdeYears: 0.5 }
         ],
-        impactedServiceIds: [], 
+        impactedServiceIds: [],
         roi: { category: 'Tech Debt', valueType: 'QualitativeScore', estimatedValue: 'Critical', currency: null, timeHorizonMonths: 12, confidenceLevel: 'High', calculationMethodology: 'Essential for platform stability and developer velocity.', businessCaseLink: null, overrideJustification: 'KTLO is mandatory and foundational.' },
         targetDueDate: null, actualCompletionDate: null, status: 'Committed',
         themes: ['theme-eng-excellence-sv', 'theme-platform-stability-sv'], primaryGoalId: 'goal-stability-sv-2025',
@@ -203,8 +203,8 @@ const sampleYearlyInitiativesStreamView = [
     {
         initiativeId: 'init-sv-oncall', title: 'On-Call / Production Support', description: 'Dedicated capacity for handling live site issues and production incidents.', isProtected: true,
         assignments: [
-             { teamId: 'team1', sdeYears: 1.0 }, { teamId: 'team2', sdeYears: 1.0 }, { teamId: 'team3', sdeYears: 1.0 }, { teamId: 'team4', sdeYears: 1.0 },
-             { teamId: 'team5', sdeYears: 1.0 }, { teamId: 'team6', sdeYears: 1.0 }, { teamId: 'team7', sdeYears: 1.0 }, { teamId: 'team8', sdeYears: 1.0 }
+            { teamId: 'team1', sdeYears: 1.0 }, { teamId: 'team2', sdeYears: 1.0 }, { teamId: 'team3', sdeYears: 1.0 }, { teamId: 'team4', sdeYears: 1.0 },
+            { teamId: 'team5', sdeYears: 1.0 }, { teamId: 'team6', sdeYears: 1.0 }, { teamId: 'team7', sdeYears: 1.0 }, { teamId: 'team8', sdeYears: 1.0 }
         ],
         impactedServiceIds: [],
         roi: { category: 'Risk Mitigation', valueType: 'QualitativeScore', estimatedValue: 'Critical', currency: null, timeHorizonMonths: 12, confidenceLevel: 'High', calculationMethodology: 'Prevents revenue loss and reputational damage from outages.', businessCaseLink: null, overrideJustification: 'Essential for operational stability.' },
@@ -215,7 +215,7 @@ const sampleYearlyInitiativesStreamView = [
     },
     {
         initiativeId: 'init-sv-security', title: 'Mandatory Security Hardening (Compliance)', description: 'Address critical security vulnerabilities and ensure compliance (e.g., SOC2, GDPR).', isProtected: true,
-        assignments: [ { teamId: 'team1', sdeYears: 0.5 }, { teamId: 'team5', sdeYears: 0.75 }, { teamId: 'team2', sdeYears: 0.5 } ],
+        assignments: [{ teamId: 'team1', sdeYears: 0.5 }, { teamId: 'team5', sdeYears: 0.75 }, { teamId: 'team2', sdeYears: 0.5 }],
         impactedServiceIds: ['User Management Service', 'Billing and Subscription Service', 'Content Delivery Service'],
         roi: { category: 'Compliance', valueType: 'QualitativeScore', estimatedValue: 'Mandatory', currency: null, timeHorizonMonths: 12, confidenceLevel: 'High', calculationMethodology: 'Required for legal and regulatory compliance.', businessCaseLink: null, overrideJustification: 'Compliance is non-negotiable.' },
         targetDueDate: "2025-06-30", actualCompletionDate: null, status: 'Committed',
@@ -254,7 +254,7 @@ const sampleYearlyInitiativesStreamView = [
         workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2025 }
     },
     {
-        initiativeId: 'init-sv-004', title: 'Expand CDN to South America', description: 'Set up CDN infrastructure in SA region.', isProtected: false, 
+        initiativeId: 'init-sv-004', title: 'Expand CDN to South America', description: 'Set up CDN infrastructure in SA region.', isProtected: false,
         assignments: [{ teamId: 'team2', sdeYears: 1.5 }],
         impactedServiceIds: ['Content Delivery Service'],
         roi: { category: 'Strategic Alignment', valueType: 'Narrative', estimatedValue: 'Market Expansion to SA', currency: null, timeHorizonMonths: 18, confidenceLevel: 'Medium', calculationMethodology: 'Enables entry into new geographic market.', businessCaseLink: null, overrideJustification: null },
@@ -264,7 +264,7 @@ const sampleYearlyInitiativesStreamView = [
         workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2026 }
     },
     {
-        initiativeId: 'init-sv-005', title: 'User Profile Enhancements', description: 'Add customizable avatars and viewing preferences.', isProtected: false, 
+        initiativeId: 'init-sv-005', title: 'User Profile Enhancements', description: 'Add customizable avatars and viewing preferences.', isProtected: false,
         assignments: [{ teamId: 'team1', sdeYears: 1.5 }],
         impactedServiceIds: ['User Management Service'],
         roi: { category: 'User Experience', valueType: 'MetricImprovement', estimatedValue: '2% increase in profile completion', currency: null, timeHorizonMonths: 6, confidenceLevel: 'Medium', calculationMethodology: 'Increased personalization options expected to improve profile completion rates.', businessCaseLink: null, overrideJustification: null },
@@ -274,7 +274,7 @@ const sampleYearlyInitiativesStreamView = [
         workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2025 }
     },
     {
-        initiativeId: 'init-sv-006', title: 'Content Search Facets', description: 'Improve search with filters for genre, rating, year.', isProtected: false, 
+        initiativeId: 'init-sv-006', title: 'Content Search Facets', description: 'Improve search with filters for genre, rating, year.', isProtected: false,
         assignments: [{ teamId: 'team8', sdeYears: 1.0 }, { teamId: 'team3', sdeYears: 0.5 }],
         impactedServiceIds: ['Search Service', 'Content Management Service'],
         roi: { category: 'User Experience', valueType: 'MetricImprovement', estimatedValue: '10% faster content discovery', currency: null, timeHorizonMonths: 6, confidenceLevel: 'High', calculationMethodology: 'Facets expected to significantly reduce time to find content.', businessCaseLink: null, overrideJustification: null },
@@ -284,7 +284,7 @@ const sampleYearlyInitiativesStreamView = [
         workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2025 }
     },
     {
-        initiativeId: 'init-sv-007', title: 'Offline Viewing Improvements', description: 'Enhance download stability and management.', isProtected: false, 
+        initiativeId: 'init-sv-007', title: 'Offline Viewing Improvements', description: 'Enhance download stability and management.', isProtected: false,
         assignments: [{ teamId: 'team2', sdeYears: 1.0 }],
         impactedServiceIds: ['Content Delivery Service'],
         roi: { category: 'User Experience', valueType: 'MetricImprovement', estimatedValue: '5% reduction in download failures', currency: null, timeHorizonMonths: 9, confidenceLevel: 'Medium', calculationMethodology: 'Improved reliability for offline feature.', businessCaseLink: null, overrideJustification: null },
@@ -294,7 +294,7 @@ const sampleYearlyInitiativesStreamView = [
         workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2025 }
     },
     {
-        initiativeId: 'init-sv-008', title: 'A/B Testing Framework', description: 'Build internal framework for feature A/B testing.', isProtected: false, 
+        initiativeId: 'init-sv-008', title: 'A/B Testing Framework', description: 'Build internal framework for feature A/B testing.', isProtected: false,
         assignments: [{ teamId: 'team7', sdeYears: 2.0 }],
         impactedServiceIds: ['Analytics Service'],
         roi: { category: 'Engineering Excellence', valueType: 'Productivity/Efficiency', estimatedValue: 'Faster Experimentation', currency: null, timeHorizonMonths: 12, confidenceLevel: 'High', calculationMethodology: 'Reduces time to run A/B tests by 50%, enabling quicker data-driven decisions.', businessCaseLink: null, overrideJustification: null },
@@ -304,37 +304,37 @@ const sampleYearlyInitiativesStreamView = [
         workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2025 }
     },
     {
-        initiativeId: 'init-sv-009', title: 'Parental Controls V2', description: 'Granular controls per profile and content rating.', isProtected: false, 
+        initiativeId: 'init-sv-009', title: 'Parental Controls V2', description: 'Granular controls per profile and content rating.', isProtected: false,
         assignments: [{ teamId: 'team1', sdeYears: 1.0 }],
         impactedServiceIds: ['User Management Service'],
         roi: { category: 'Compliance', valueType: 'QualitativeScore', estimatedValue: 'Medium', currency: null, timeHorizonMonths: 6, confidenceLevel: 'High', calculationMethodology: 'Addresses user demand and improves platform trust for families.', businessCaseLink: null, overrideJustification: null },
         targetDueDate: "2025-08-15", actualCompletionDate: null, status: 'Committed',
-        themes: ['theme-compliance-sv', 'theme-user-experience-sv'], primaryGoalId: 'goal-security-compliance-sv-2025', 
+        themes: ['theme-compliance-sv', 'theme-user-experience-sv'], primaryGoalId: 'goal-security-compliance-sv-2025',
         projectManager: null, owner: { type: 'pmt', id: 'pmt1', name: 'Bob Smith' }, technicalPOC: { type: 'sdm', id: 'sdm1', name: 'Alice Johnson' },
         workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2025 }
     },
     {
-        initiativeId: 'init-sv-010', title: 'Interactive Content POC', description: 'Proof-of-concept for choose-your-own-adventure style content.', isProtected: false, 
+        initiativeId: 'init-sv-010', title: 'Interactive Content POC', description: 'Proof-of-concept for choose-your-own-adventure style content.', isProtected: false,
         assignments: [{ teamId: 'team2', sdeYears: 0.75 }, { teamId: 'team3', sdeYears: 0.5 }],
         impactedServiceIds: ['Content Delivery Service', 'Content Management Service'],
         roi: { category: 'Innovation', valueType: 'Narrative', estimatedValue: 'Explore new content formats', currency: null, timeHorizonMonths: 4, confidenceLevel: 'Medium', calculationMethodology: 'POC to determine feasibility and user interest.', businessCaseLink: null, overrideJustification: null },
-        targetDueDate: "2025-07-31", actualCompletionDate: null, status: 'Backlog', 
+        targetDueDate: "2025-07-31", actualCompletionDate: null, status: 'Backlog',
         themes: ['theme-innovation-sv'], primaryGoalId: 'goal-ux-enhancement-sv-2025',
         projectManager: null, owner: { type: 'pmt', id: 'pmt2', name: 'Frank Thompson' }, technicalPOC: { type: 'sdm', id: 'sdm3', name: 'Carol Davis' },
         workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2025 }
     },
     {
-        initiativeId: 'init-sv-011', title: 'Payment Gateway Integration (New Region)', description: 'Add local payment options for APAC.', isProtected: false, 
+        initiativeId: 'init-sv-011', title: 'Payment Gateway Integration (New Region)', description: 'Add local payment options for APAC.', isProtected: false,
         assignments: [{ teamId: 'team5', sdeYears: 1.5 }],
         impactedServiceIds: ['Billing and Subscription Service'],
         roi: { category: 'Strategic Alignment', valueType: 'Narrative', estimatedValue: 'Market Expansion APAC', currency: null, timeHorizonMonths: 9, confidenceLevel: 'Medium', calculationMethodology: 'Required for APAC market launch.', businessCaseLink: null, overrideJustification: null },
         targetDueDate: "2026-01-31", actualCompletionDate: null, status: 'Backlog',
-        themes: ['theme-global-expansion-sv'], primaryGoalId: 'goal-expansion-sv-2026', 
+        themes: ['theme-global-expansion-sv'], primaryGoalId: 'goal-expansion-sv-2026',
         projectManager: { type: 'projectManager', id: 'pmSV002', name: 'Marcus Scope' }, owner: { type: 'pmt', id: 'pmt3', name: 'Jane Parker' }, technicalPOC: { type: 'sdm', id: 'sdm5', name: 'Ian Turner' },
         workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2026 }
     },
     {
-        initiativeId: 'init-sv-012', title: 'Real-time Analytics Dashboard', description: 'Internal dashboard for viewing concurrency and errors.', isProtected: false, 
+        initiativeId: 'init-sv-012', title: 'Real-time Analytics Dashboard', description: 'Internal dashboard for viewing concurrency and errors.', isProtected: false,
         assignments: [{ teamId: 'team7', sdeYears: 1.0 }],
         impactedServiceIds: ['Analytics Service'],
         roi: { category: 'Operational Stability', valueType: 'Productivity/Efficiency', estimatedValue: 'Faster Incident Response', currency: null, timeHorizonMonths: 6, confidenceLevel: 'High', calculationMethodology: 'Reduces MTTR by providing real-time insights.', businessCaseLink: null, overrideJustification: null },
@@ -344,7 +344,7 @@ const sampleYearlyInitiativesStreamView = [
         workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2025 }
     },
     {
-        initiativeId: 'init-sv-013', title: 'Watch Party Feature', description: 'Allow users to watch content synchronously with friends.', isProtected: false, 
+        initiativeId: 'init-sv-013', title: 'Watch Party Feature', description: 'Allow users to watch content synchronously with friends.', isProtected: false,
         assignments: [{ teamId: 'team1', sdeYears: 1.0 }, { teamId: 'team2', sdeYears: 1.5 }, { teamId: 'team6', sdeYears: 0.5 }],
         impactedServiceIds: ['User Management Service', 'Content Delivery Service', 'Notification Service'],
         roi: { category: 'User Engagement', valueType: 'MetricImprovement', estimatedValue: 'Increased Social Interaction', currency: null, timeHorizonMonths: 9, confidenceLevel: 'Medium', calculationMethodology: 'Aims to boost user stickiness and social sharing.', businessCaseLink: null, overrideJustification: null },
@@ -354,7 +354,7 @@ const sampleYearlyInitiativesStreamView = [
         workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2025 }
     },
     {
-        initiativeId: 'init-sv-014', title: 'Metadata Enrichment AI', description: 'Use AI to auto-tag content metadata.', isProtected: false, 
+        initiativeId: 'init-sv-014', title: 'Metadata Enrichment AI', description: 'Use AI to auto-tag content metadata.', isProtected: false,
         assignments: [{ teamId: 'team3', sdeYears: 1.5 }, { teamId: 'team4', sdeYears: 0.5 }],
         impactedServiceIds: ['Content Management Service', 'Recommendation Engine Service'],
         roi: { category: 'Productivity/Efficiency', valueType: 'TimeSaved_HoursPerYear', estimatedValue: 1000, currency: null, timeHorizonMonths: 12, confidenceLevel: 'Medium', calculationMethodology: 'Automates manual tagging, saving approx. 1000 editor hours/year.', businessCaseLink: null, overrideJustification: null },
@@ -364,7 +364,7 @@ const sampleYearlyInitiativesStreamView = [
         workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2025 }
     },
     {
-        initiativeId: 'init-sv-015', title: 'GDPR Data Deletion Automation', description: 'Automate user data deletion requests for GDPR.', isProtected: false, 
+        initiativeId: 'init-sv-015', title: 'GDPR Data Deletion Automation', description: 'Automate user data deletion requests for GDPR.', isProtected: false,
         assignments: [{ teamId: 'team1', sdeYears: 0.75 }, { teamId: 'team7', sdeYears: 0.25 }],
         impactedServiceIds: ['User Management Service', 'Analytics Service'],
         roi: { category: 'Compliance', valueType: 'Risk Mitigation', estimatedValue: 'Reduced Manual Effort & Risk', currency: null, timeHorizonMonths: 6, confidenceLevel: 'High', calculationMethodology: 'Ensures timely compliance and reduces manual processing overhead.', businessCaseLink: null, overrideJustification: null },
@@ -374,7 +374,7 @@ const sampleYearlyInitiativesStreamView = [
         workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2025 }
     },
     {
-        initiativeId: 'init-sv-016', title: 'Improved Subtitle Customization', description: 'Allow users to change subtitle font, size, color.', isProtected: false, 
+        initiativeId: 'init-sv-016', title: 'Improved Subtitle Customization', description: 'Allow users to change subtitle font, size, color.', isProtected: false,
         assignments: [{ teamId: 'team1', sdeYears: 0.5 }],
         impactedServiceIds: ['User Management Service'],
         roi: { category: 'Accessibility', valueType: 'QualitativeScore', estimatedValue: 'High', currency: null, timeHorizonMonths: 4, confidenceLevel: 'High', calculationMethodology: 'Improves accessibility and user satisfaction for a key feature.', businessCaseLink: null, overrideJustification: null },
@@ -384,7 +384,7 @@ const sampleYearlyInitiativesStreamView = [
         workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2025 }
     },
     {
-        initiativeId: 'init-sv-017', title: 'Search Performance Optimization', description: 'Reduce search latency by 50%.', isProtected: false, 
+        initiativeId: 'init-sv-017', title: 'Search Performance Optimization', description: 'Reduce search latency by 50%.', isProtected: false,
         assignments: [{ teamId: 'team8', sdeYears: 1.0 }],
         impactedServiceIds: ['Search Service'],
         roi: { category: 'Engineering Excellence', valueType: 'MetricImprovement', estimatedValue: '50% Latency Reduction', currency: null, timeHorizonMonths: 6, confidenceLevel: 'High', calculationMethodology: 'Improves core search performance for better UX.', businessCaseLink: null, overrideJustification: null },
@@ -394,7 +394,7 @@ const sampleYearlyInitiativesStreamView = [
         workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2025 }
     },
     {
-        initiativeId: 'init-sv-018', title: 'Gift Subscriptions', description: 'Allow users to purchase subscriptions for others.', isProtected: false, 
+        initiativeId: 'init-sv-018', title: 'Gift Subscriptions', description: 'Allow users to purchase subscriptions for others.', isProtected: false,
         assignments: [{ teamId: 'team5', sdeYears: 1.0 }, { teamId: 'team6', sdeYears: 0.25 }],
         impactedServiceIds: ['Billing and Subscription Service', 'Notification Service'],
         roi: { category: 'Revenue Generation', valueType: 'Monetary', estimatedValue: 50000, currency: 'USD', timeHorizonMonths: 12, confidenceLevel: 'Low', calculationMethodology: 'New revenue stream, estimate based on 1% of user base gifting.', businessCaseLink: null, overrideJustification: null },
@@ -404,17 +404,17 @@ const sampleYearlyInitiativesStreamView = [
         workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2025 }
     },
     {
-        initiativeId: 'init-sv-019', title: 'Video Player Accessibility Audit & Fixes', description: 'Ensure player meets WCAG AA standards.', isProtected: false, 
+        initiativeId: 'init-sv-019', title: 'Video Player Accessibility Audit & Fixes', description: 'Ensure player meets WCAG AA standards.', isProtected: false,
         assignments: [{ teamId: 'team1', sdeYears: 0.75 }],
         impactedServiceIds: ['User Management Service'],
         roi: { category: 'Compliance', valueType: 'QualitativeScore', estimatedValue: 'High', currency: null, timeHorizonMonths: 5, confidenceLevel: 'High', calculationMethodology: 'Ensures WCAG AA compliance for video player.', businessCaseLink: null, overrideJustification: null },
         targetDueDate: "2025-08-31", actualCompletionDate: null, status: 'Committed',
         themes: ['theme-compliance-sv', 'theme-user-experience-sv'], primaryGoalId: 'goal-security-compliance-sv-2025',
         projectManager: null, owner: { type: 'pmt', id: 'pmt1', name: 'Bob Smith' }, technicalPOC: { type: 'engineer', id: 'engJohnDoe_team1_sv', name: 'John Doe (Avengers)' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2025 } 
+        workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2025 }
     },
     {
-        initiativeId: 'init-sv-020', title: 'Reduce Streaming Startup Time', description: 'Optimize playback start time for users.', isProtected: false, 
+        initiativeId: 'init-sv-020', title: 'Reduce Streaming Startup Time', description: 'Optimize playback start time for users.', isProtected: false,
         assignments: [{ teamId: 'team2', sdeYears: 1.5 }],
         impactedServiceIds: ['Content Delivery Service'],
         roi: { category: 'User Experience', valueType: 'MetricImprovement', estimatedValue: '200ms reduction in P95 startup', currency: null, timeHorizonMonths: 9, confidenceLevel: 'Medium', calculationMethodology: 'Optimizations in player and initial segment delivery.', businessCaseLink: null, overrideJustification: null },
@@ -424,17 +424,17 @@ const sampleYearlyInitiativesStreamView = [
         workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2025 }
     },
     {
-        initiativeId: 'init-sv-021', title: 'Content Partner Reporting Portal', description: 'Allow content partners to view performance data.', isProtected: false, 
+        initiativeId: 'init-sv-021', title: 'Content Partner Reporting Portal', description: 'Allow content partners to view performance data.', isProtected: false,
         assignments: [{ teamId: 'team3', sdeYears: 0.5 }, { teamId: 'team7', sdeYears: 1.0 }],
         impactedServiceIds: ['Content Management Service', 'Analytics Service'],
         roi: { category: 'Strategic Alignment', valueType: 'Narrative', estimatedValue: 'Improved Partner Relations', currency: null, timeHorizonMonths: 12, confidenceLevel: 'Medium', calculationMethodology: 'Provides transparency and value to content partners.', businessCaseLink: null, overrideJustification: null },
         targetDueDate: "2026-02-28", actualCompletionDate: null, status: 'Backlog',
-        themes: ['theme-partnerships-sv'], primaryGoalId: null, 
+        themes: ['theme-partnerships-sv'], primaryGoalId: null,
         projectManager: { type: 'projectManager', id: 'pmSV002', name: 'Marcus Scope' }, owner: { type: 'pmt', id: 'pmt2', name: 'Frank Thompson' }, technicalPOC: { type: 'sdm', id: 'sdm7', name: 'Natalie Green' },
         workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2026 }
     },
     {
-        initiativeId: 'init-sv-022', title: 'Personalized Push Notifications', description: 'Send targeted notifications based on viewing habits.', isProtected: false, 
+        initiativeId: 'init-sv-022', title: 'Personalized Push Notifications', description: 'Send targeted notifications based on viewing habits.', isProtected: false,
         assignments: [{ teamId: 'team6', sdeYears: 1.0 }, { teamId: 'team4', sdeYears: 0.5 }],
         impactedServiceIds: ['Notification Service', 'Recommendation Engine Service'],
         roi: { category: 'User Engagement', valueType: 'MetricImprovement', estimatedValue: '5% increase in DAU', currency: null, timeHorizonMonths: 6, confidenceLevel: 'Low', calculationMethodology: 'Targeted notifications to re-engage users.', businessCaseLink: null, overrideJustification: null },
@@ -448,14 +448,14 @@ const sampleYearlyInitiativesStreamView = [
 
 const sampleSystemDataStreamView = {
     systemName: 'StreamView',
-    systemDescription: 'StreamView is a video streaming platform that provides personalized content to users worldwide.',
+    systemDescription: 'StreamView is a video streaming platform like Netflix',
     seniorManagers: sampleSeniorManagersDataStreamView,
     teams: sampleTeamsDataStreamView,
     sdms: sampleSDMsDataStreamView,
     pmts: samplePMTsDataStreamView,
     projectManagers: sampleProjectManagersDataStreamView,
     services: sampleServicesDataStreamView,
-    platformDependencies: [], 
+    platformDependencies: [],
     capacityConfiguration: {
         workingDaysPerYear: 261,
         standardHoursPerDay: 8,
@@ -474,7 +474,7 @@ const sampleSystemDataStreamView = {
         ],
         attributes: {}
     },
-    yearlyInitiatives: sampleYearlyInitiativesStreamView, 
+    yearlyInitiatives: sampleYearlyInitiativesStreamView,
     goals: [
         {
             goalId: 'goal-stability-sv-2025', name: 'Maintain Platform Stability & Reliability 2025', description: 'Ensure StreamView platform meets 99.99% uptime and key performance indicators.', strategyLink: null,
@@ -507,7 +507,7 @@ const sampleSystemDataStreamView = {
         { themeId: 'theme-platform-stability-sv', name: 'Platform Stability', description: 'Ensuring the reliability and uptime of the platform.', relatedGoalIds: ['goal-stability-sv-2025'], attributes: {} },
         { themeId: 'theme-user-experience-sv', name: 'User Experience', description: 'Enhancing the overall user journey and satisfaction.', relatedGoalIds: ['goal-ux-enhancement-sv-2025'], attributes: {} },
         { themeId: 'theme-revenue-growth-sv', name: 'Revenue Growth', description: 'Initiatives directly aimed at increasing company revenue.', relatedGoalIds: ['goal-revenue-sv-2025'], attributes: {} },
-        { themeId: 'theme-cost-reduction-sv', name: 'Cost Reduction', description: 'Initiatives aimed at reducing operational or other costs.', relatedGoalIds: [], attributes: {} }, 
+        { themeId: 'theme-cost-reduction-sv', name: 'Cost Reduction', description: 'Initiatives aimed at reducing operational or other costs.', relatedGoalIds: [], attributes: {} },
         { themeId: 'theme-security-sv', name: 'Security', description: 'Initiatives focused on platform and data security.', relatedGoalIds: ['goal-security-compliance-sv-2025'], attributes: {} },
         { themeId: 'theme-compliance-sv', name: 'Compliance', description: 'Meeting legal, regulatory, and industry standards.', relatedGoalIds: ['goal-security-compliance-sv-2025'], attributes: {} },
         { themeId: 'theme-innovation-sv', name: 'Innovation', description: 'Exploring new technologies and product ideas.', relatedGoalIds: ['goal-ux-enhancement-sv-2025'], attributes: {} },
@@ -515,8 +515,8 @@ const sampleSystemDataStreamView = {
         { themeId: 'theme-partnerships-sv', name: 'Partnerships', description: 'Developing and managing content or technology partnerships.', relatedGoalIds: [], attributes: {} }
     ],
     archivedYearlyPlans: [],
-    workPackages: [], 
+    workPackages: [],
     calculatedCapacityMetrics: null,
-    allKnownEngineers: sampleAllKnownEngineersStreamView, 
-    attributes: {} 
+    allKnownEngineers: sampleAllKnownEngineersStreamView,
+    attributes: {}
 };

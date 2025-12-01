@@ -122,25 +122,41 @@ function captureGanttFocusFromTarget(target) {
     }
 }
 
-function initializeGanttPlanningView() {
-    const container = document.getElementById('ganttPlanningView');
-    if (!container) return;
+/**
+ * NEW: Renders the Gantt Planning view into the Workspace.
+ */
+function renderGanttPlanningView(container) {
+    console.log("Rendering Gantt Planning View...");
+
+    if (!container) {
+        container = document.getElementById('ganttPlanningView');
+    }
+    if (!container) {
+        console.error("Gantt container #ganttPlanningView not found.");
+        return;
+    }
+
     if (typeof ensureWorkPackagesForInitiatives === 'function') {
         ensureWorkPackagesForInitiatives(currentSystemData, currentGanttYear);
     }
-    ganttChartInstance = null;
-    container.innerHTML = `
-        <div id="ganttPlanningControls" class="gantt-filter-bar"></div>
-        <div id="ganttSplitPane" class="gantt-split">
-            <div id="ganttPlanningTableContainer" class="gantt-panel"></div>
-            <div id="ganttSplitResizer" class="gantt-resizer" title="Drag to resize panels"></div>
-            <div id="ganttChartWrapper" class="gantt-panel">
-                <div id="ganttChartContainer" class="mermaid gantt-chart-box"></div>
+
+    // Only create layout if it doesn't exist
+    if (!document.getElementById('ganttSplitPane')) {
+        ganttChartInstance = null;
+        container.innerHTML = `
+            <div id="ganttPlanningControls" class="gantt-filter-bar"></div>
+            <div id="ganttSplitPane" class="gantt-split">
+                <div id="ganttPlanningTableContainer" class="gantt-panel"></div>
+                <div id="ganttSplitResizer" class="gantt-resizer" title="Drag to resize panels"></div>
+                <div id="ganttChartWrapper" class="gantt-panel">
+                    <div id="ganttChartContainer" class="mermaid gantt-chart-box"></div>
+                </div>
             </div>
-        </div>
-    `;
-    setupGanttResizer();
-    applyGanttSplitWidth();
+        `;
+        setupGanttResizer();
+        applyGanttSplitWidth();
+    }
+
     renderGanttControls();
     renderGanttTable();
     renderGanttChart();
@@ -236,27 +252,36 @@ function renderGanttControls() {
     row.appendChild(rendererWrap);
     controls.appendChild(row);
 
+    // RESTORED: Add the Legend here (View Mode buttons removed per user request)
+    // CONDITIONAL: Only show for Frappe renderer
+    const legendDiv = document.createElement('div');
+    legendDiv.id = 'ganttLegendContainer';
+    legendDiv.className = 'gantt-legend';
+    legendDiv.style.marginTop = '10px';
+
+    // Check current renderer for initial visibility
+    const currentRenderer = (typeof FeatureFlags !== 'undefined' && typeof FeatureFlags.getRenderer === 'function')
+        ? FeatureFlags.getRenderer()
+        : 'mermaid';
+
+    legendDiv.style.display = currentRenderer === 'frappe' ? 'flex' : 'none';
+    legendDiv.style.gap = '15px';
+    legendDiv.style.fontSize = '12px';
+    legendDiv.style.alignItems = 'center';
+    legendDiv.innerHTML = `
+        <div style="display: flex; align-items: center;"><span style="width: 12px; height: 12px; background-color: #6f42c1; display: inline-block; margin-right: 5px; border-radius: 2px;"></span> Initiative</div>
+        <div style="display: flex; align-items: center;"><span style="width: 12px; height: 12px; background-color: #0366d6; display: inline-block; margin-right: 5px; border-radius: 2px;"></span> Work Package</div>
+        <div style="display: flex; align-items: center;"><span style="width: 12px; height: 12px; background-color: #2ea44f; display: inline-block; margin-right: 5px; border-radius: 2px;"></span> Assignment</div>
+    `;
+    controls.appendChild(legendDiv);
+
     // Build filters
     renderDynamicGroupFilter();
     renderStatusFilter();
     setupGanttRendererToggle();
-
-    // View Mode Buttons
-    const viewModeButtons = controls.querySelectorAll('.view-modes .btn-sm');
-    viewModeButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            // Update active state
-            viewModeButtons.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-
-            // Update chart view mode
-            const mode = btn.dataset.viewMode;
-            if (ganttChartInstance && typeof ganttChartInstance.changeViewMode === 'function') {
-                ganttChartInstance.changeViewMode(mode);
-            }
-        });
-    });
 }
+
+
 
 function createLabeledControl(labelText, controlEl) {
     const wrap = document.createElement('div');
@@ -499,7 +524,7 @@ function renderGanttTable() {
         }
     });
 
-    tbody.addEventListener('click', (e) => {
+    tbody.addEventListener('click', async (e) => {
         const target = e.target;
         captureGanttFocusFromTarget(target);
         const action = target.dataset.action;
@@ -532,7 +557,7 @@ function renderGanttTable() {
         } else if (action === 'delete-wp') {
             const wpId = target.dataset.id;
             const initId = target.dataset.initiativeId;
-            if (!window.confirm('Delete this work package?')) {
+            if (!await window.notificationManager.confirm('Delete this work package?', 'Delete Work Package', { confirmStyle: 'danger' })) {
                 return;
             }
             const deleted = typeof deleteWorkPackage === 'function' ? deleteWorkPackage(wpId) : false;
@@ -584,7 +609,7 @@ function renderGanttTable() {
             const workingDaysPerYearLocal = currentSystemData?.capacityConfiguration?.workingDaysPerYear || 261;
             if (field === 'startDate') {
                 if (hasWpsForInit) {
-                    alert('Initiative dates cannot be edited when work packages exist. Edit at the work package level.');
+                    window.notificationManager.showToast('Initiative dates cannot be edited when work packages exist. Edit at the work package level.', 'warning');
                     renderGanttTable();
                     return;
                 }
@@ -593,7 +618,7 @@ function renderGanttTable() {
                 setWorkPackageDatesForTeam(init.initiativeId, { startDate: value }, selectedTeamLocal);
             } else if (field === 'targetDueDate') {
                 if (hasWpsForInit) {
-                    alert('Initiative dates cannot be edited when work packages exist. Edit at the work package level.');
+                    window.notificationManager.showToast('Initiative dates cannot be edited when work packages exist. Edit at the work package level.', 'warning');
                     renderGanttTable();
                     return;
                 }
@@ -708,12 +733,12 @@ function renderGanttTable() {
             if (e.target.checked) {
                 if (depNorm === normalizeGanttId(assignId)) {
                     e.target.checked = false;
-                    alert('A task cannot depend on itself.');
+                    window.notificationManager.showToast('A task cannot depend on itself.', 'warning');
                     return;
                 }
                 if (wouldCreateAssignmentCycle(wp, assignId, depId)) {
                     e.target.checked = false;
-                    alert('Circular dependency not allowed between tasks in this work package.');
+                    window.notificationManager.showToast('Circular dependency not allowed between tasks in this work package.', 'warning');
                     return;
                 }
                 deps.add(depNorm);
@@ -737,7 +762,7 @@ function renderGanttTable() {
                 if (wouldCreateDependencyCycle(wpId, depId, allWps)) {
                     e.target.checked = false;
                     console.warn(`[GANTT] Prevented circular dependency: ${wpId} -> ${depId}`);
-                    alert('Circular dependency not allowed (would create a cycle).');
+                    window.notificationManager.showToast('Circular dependency not allowed (would create a cycle).', 'warning');
                     return;
                 }
                 deps.add(depId);
@@ -1121,6 +1146,13 @@ function setupGanttRendererToggle() {
         const next = current === 'mermaid' ? 'frappe' : 'mermaid';
         FeatureFlags.setRenderer(next);
         updateLabel();
+
+        // Update legend visibility
+        const legend = document.getElementById('ganttLegendContainer');
+        if (legend) {
+            legend.style.display = next === 'frappe' ? 'flex' : 'none';
+        }
+
         ganttChartInstance = null; // Force re-create with new renderer
         renderGanttChart();
     });
@@ -1559,7 +1591,7 @@ function handleGanttUpdate({ task, start, end }) {
 }
 
 if (typeof window !== 'undefined') {
-    window.initializeGanttPlanningView = initializeGanttPlanningView;
+    window.renderGanttPlanningView = renderGanttPlanningView;
 }
 function renderDynamicGroupFilter() {
     const wrap = document.getElementById('ganttDynamicFilter');

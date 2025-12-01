@@ -1,6 +1,7 @@
 let currentSystemData = null;
-let newServiceData = {};
-let uniqueEngineers = []; // This might be fully replaced by usage of allKnownEngineers
+
+
+
 
 let currentMode = Modes.NAVIGATION;
 let planningCapacityScenario = 'effective'; // Default to 'effective'
@@ -9,8 +10,8 @@ let currentChartTeamId = '__ORG_VIEW__'; // To track which team's chart is displ
 let capacityChartInstance = null; // To hold the Chart.js instance
 let applyCapacityConstraintsToggle = false; // Default to OFF
 let lastAiGenerationStats = null; // Cache the latest AI stats for the modal
-let currentViewId = null; // Track the currently active view for AI context scraping
-if (typeof window !== 'undefined') window.currentViewId = currentViewId;
+// currentViewId is now managed globally on window by NavigationManager
+if (typeof window !== 'undefined' && !window.currentViewId) window.currentViewId = null;
 
 // --- Global App Settings ---
 const defaultSettings = {
@@ -40,19 +41,14 @@ if (typeof mermaid !== 'undefined' && typeof mermaid.initialize === 'function') 
 function updateAiDependentUI(options = {}) {
     const { skipPlanningRender = false } = options;
     const aiEnabled = !!(globalSettings?.ai?.isEnabled);
-    const createWithAiButton = document.getElementById('createWithAiButton');
-    if (createWithAiButton) {
-        if (currentMode === Modes.NAVIGATION && aiEnabled) {
-            createWithAiButton.style.display = 'inline-block';
-        } else {
-            createWithAiButton.style.display = 'none';
-        }
+
+    // Toggle the new "Create with AI" card in the welcome view
+    const createWithAiCard = document.getElementById('createWithAiCard');
+    if (createWithAiCard) {
+        createWithAiCard.style.display = aiEnabled ? 'block' : 'none';
     }
 
-    const aiChatButton = document.getElementById('aiChatButton');
-    if (aiChatButton) {
-        aiChatButton.style.display = (aiEnabled && currentViewId) ? 'inline-block' : 'none';
-    }
+
 
     const chatContainer = document.getElementById('aiChatPanelContainer');
     const chatHandle = document.getElementById('chatResizeHandle');
@@ -79,15 +75,7 @@ function updateAiDependentUI(options = {}) {
 // --- End Global App Settings ---
 
 // --- Carousel State ---
-let currentVisualizationIndex = 0;
-const visualizationItems = [
-    { id: 'visualization', title: 'System Visualization' },
-    { id: 'teamVisualization', title: 'Team Relationships Visualization' },
-    { id: 'serviceRelationshipsVisualization', title: 'Service Relationships Visualization' },
-    { id: 'dependencyVisualization', title: 'Service Dependency Visualization' },
-    { id: 'mermaidVisualization', title: 'System Architecture (Mermaid)' },
-    { id: 'mermaidApiVisualization', title: 'Service API Interactions (Mermaid)' }
-];
+// Moved to visualizations.js
 // ----------------------
 
 // ========= SDM Resource Forecasting Tool Code (Lift & Shift - Phase 1) =========
@@ -115,32 +103,18 @@ const weekToMonth_SDM = [
 // --- End SDM Forecasting Tool Globals ---
 
 // --- Documentation Resizing Logic ---
-let isDocumentationResizing = false;
-let lastMouseY = 0;
-let originalDocumentationHeight = 0;
+
 
 // Global state for engineer table sorting
-let engineerSortState = { key: 'name', ascending: true };
+
 
 // For Planning Table Drag & Drop
 let draggedInitiativeId = null;
 let draggedRowElement = null;
 
 // Store temporary assignments before adding initiative
-let tempAssignments = [];
 
-// Maps a view's container ID to the ID of the button that activates it.
-const VIEW_TO_BUTTON_MAP = {
-    'visualizationCarousel': 'systemOverviewButton',
-    'systemEditForm': 'editSystemButton',
-    'organogramView': 'viewOrgChartButton',
-    'planningView': 'manageYearPlanButton',
-    'roadmapView': 'manageRoadmapButton',
-    'dashboardView': 'dashboardViewButton',
-    'capacityConfigView': 'tuneCapacityButton',
-    'sdmForecastingView': 'sdmForecastButton',
-    'ganttPlanningView': 'detailedPlanningButton'
-};
+
 
 // Fallback HTML snippets for components when fetch is unavailable (e.g., file:// protocol)
 const HTML_COMPONENT_FALLBACKS = {
@@ -194,50 +168,10 @@ async function loadHtmlComponent(url, targetId) {
     }
 }
 
-// --- Trigger Top Bar Animation ---
-document.addEventListener('DOMContentLoaded', function () {
-    const topBar = document.getElementById('topBar');
-    console.debug("DOMContentLoaded event triggered for animation. Top bar element:", topBar);
-    if (topBar) {
-        setTimeout(() => {
-            topBar.classList.add('top-bar-loaded');
-            console.debug("Added .top-bar-loaded class to #topBar to trigger animation.");
-        }, 150);
-    } else {
-        console.error("ANIMATION ERROR: #topBar element not found in DOMContentLoaded.");
-    }
-});
+// --- Initialization ---
+// Moved initialization to window.onload to ensure correct order
 
 // --- AI Assistant & Settings Functions ---
-
-/**
- * Opens the AI settings modal and populates it from globalSettings.
- */
-function openAiSettingsModal() {
-    console.log("Opening AI Settings Modal...");
-    // We don't need loadGlobalSettings() here, as it's loaded on startup
-
-    const modal = document.getElementById('aiSettingsModal');
-    const checkbox = document.getElementById('aiModeEnabled');
-    const configInputs = document.getElementById('aiConfigInputs');
-    const providerSelect = document.getElementById('aiProviderSelect');
-    const apiKeyInput = document.getElementById('aiApiKeyInput');
-
-    if (checkbox) checkbox.checked = globalSettings.ai.isEnabled;
-    if (configInputs) configInputs.style.display = globalSettings.ai.isEnabled ? 'block' : 'none';
-    if (providerSelect) providerSelect.value = globalSettings.ai.provider;
-    if (apiKeyInput) apiKeyInput.value = globalSettings.ai.apiKey || '';
-
-    if (modal) modal.style.display = 'block';
-}
-
-/**
- * Closes the AI settings modal.
- */
-function closeAiSettingsModal() {
-    const modal = document.getElementById('aiSettingsModal');
-    if (modal) modal.style.display = 'none';
-}
 
 /**
  * Loads all app settings from localStorage into the globalSettings object.
@@ -273,47 +207,6 @@ function loadGlobalSettings() {
 
     // Update the UI based on loaded settings
     updateAiDependentUI();
-}
-
-/**
- * Saves the current state of the AI settings modal to globalSettings and localStorage.
- */
-function saveGlobalSettings() {
-    console.log("Saving global settings...");
-
-    // Read values from the AI modal
-    const checkbox = document.getElementById('aiModeEnabled');
-    const providerSelect = document.getElementById('aiProviderSelect');
-    const apiKeyInput = document.getElementById('aiApiKeyInput');
-
-    const isEnabled = checkbox ? checkbox.checked : false;
-    const provider = providerSelect ? providerSelect.value : 'google-gemini';
-    const apiKey = apiKeyInput ? apiKeyInput.value.trim() : null;
-
-    if (isEnabled && (!apiKey || apiKey.length === 0)) {
-        alert("Please enter a valid API Key to enable AI Assistant mode.");
-        if (checkbox) checkbox.checked = false; // Uncheck the box
-        globalSettings.ai.isEnabled = false; // Don't save 'enabled' state
-    } else {
-        globalSettings.ai.isEnabled = isEnabled;
-    }
-
-    globalSettings.ai.provider = provider;
-    globalSettings.ai.apiKey = apiKey;
-
-    try {
-        localStorage.setItem(APP_SETTINGS_KEY, JSON.stringify(globalSettings));
-        console.log("Saved global settings to localStorage.");
-
-        updateAiDependentUI();
-
-        closeAiSettingsModal();
-        alert("Settings saved.");
-
-    } catch (e) {
-        console.error("Error saving global settings to localStorage:", e);
-        alert("Error saving settings.");
-    }
 }
 
 /**
@@ -379,11 +272,11 @@ function closeAiStatsModal() {
 async function handleCreateWithAi() {
     // Read directly from the global settings
     if (!globalSettings.ai.isEnabled || !globalSettings.ai.apiKey) {
-        alert("AI Assistant mode is not enabled or API key is missing. Please check AI settings.");
+        window.notificationManager.showToast("AI Assistant mode is not enabled or API key is missing. Please check AI settings.", "error");
         return;
     }
 
-    const prompt = window.prompt("Describe the new software system you want to create (e.g., 'A video streaming service like Netflix', 'An e-commerce platform like Amazon'):");
+    const prompt = await window.notificationManager.prompt("Describe the new software system you want to create (e.g., 'A video streaming service like Netflix', 'An e-commerce platform like Amazon'):", "", "Create New System with AI");
 
     if (!prompt || prompt.trim().length === 0) {
         console.log("AI system generation cancelled by user.");
@@ -417,7 +310,7 @@ async function handleCreateWithAi() {
         if (!isValid) {
             console.error("AI Generation Failed Validation:", errors);
             const errorList = errors.slice(0, 10).join("\n- ");
-            alert(`AI generation failed validation checks. The data is inconsistent. Please try again.\n\nErrors:\n- ${errorList}${errors.length > 10 ? '\n- ...and more.' : ''}`);
+            window.notificationManager.showToast(`AI generation failed validation checks. The data is inconsistent. Please try again.\n\nErrors:\n- ${errorList}${errors.length > 10 ? '\n- ...and more.' : ''}`, "error");
             return;
         }
 
@@ -429,6 +322,7 @@ async function handleCreateWithAi() {
         console.log("AI generation successful and validated:", newSystemData);
 
         currentSystemData = newSystemData;
+        window.currentSystemData = currentSystemData;
         const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
 
         let finalSystemName = newSystemData.systemName;
@@ -445,12 +339,12 @@ async function handleCreateWithAi() {
             showAiStatsModal(stats);
         }
 
-        alert(`Successfully created and saved system: "${finalSystemName}"! Loading it now.`);
+        window.notificationManager.showToast(`Successfully created and saved system: "${finalSystemName}"! Loading it now.`, "success");
         loadSavedSystem(finalSystemName);
 
     } catch (error) {
         // This existing alert will show the final error message after all retries fail.
-        alert("An error occurred during AI system generation. Please check the console.\nError: " + error.message);
+        window.notificationManager.showToast("An error occurred during AI system generation. Please check the console.\nError: " + error.message, "error");
         console.error("Error in handleCreateWithAi:", error);
     } finally {
         if (spinner) spinner.style.display = 'none';
@@ -460,8 +354,24 @@ async function handleCreateWithAi() {
 }
 
 window.onload = async function () {
-    console.log("!!! window.onload: Page HTML and synchronous scripts loaded. !!!");
+    // console.log("!!! window.onload: Page HTML and synchronous scripts loaded. !!!");
     currentMode = Modes.NAVIGATION;
+
+    // console.log("Initializing Application Components...");
+
+    // Initialize Managers
+    window.notificationManager = new NotificationManager();
+    window.navigationManager = new NavigationManager();
+
+    // Initialize Components
+    window.headerComponent = new HeaderComponent('main-header');
+    window.sidebarComponent = new SidebarComponent('sidebar', window.navigationManager);
+    window.workspaceComponent = new WorkspaceComponent('main-content-area');
+
+    // Initialize Navigation
+    window.navigationManager.init(window.sidebarComponent, window.headerComponent);
+    window.sidebarComponent.init();
+    window.headerComponent.init();
 
     // Load HTML components before wiring up listeners
     try {
@@ -471,24 +381,7 @@ window.onload = async function () {
         console.error("Failed to load essential HTML components on startup.", e);
     }
 
-    const docHeader = document.getElementById('documentationHeader');
-    const docResizeHandle = document.getElementById('docResizeHandle');
 
-    if (docHeader) {
-        docHeader.addEventListener('click', () => {
-            toggleCollapsibleSection('documentationContent', 'documentationToggleIndicator', 'docResizeHandle');
-        });
-        console.log("Attached toggle listener to documentation header.");
-    } else {
-        console.warn("Documentation header not found in window.onload.");
-    }
-
-    if (docResizeHandle) {
-        docResizeHandle.addEventListener('mousedown', startDocumentationResize);
-        console.log("Attached mousedown listener to docResizeHandle.");
-    } else {
-        console.warn("Documentation resize handle not found in window.onload.");
-    }
 
     initializeEventListeners();
     loadGlobalSettings();
@@ -497,8 +390,18 @@ window.onload = async function () {
     saveSampleSystemsToLocalStorage(); // Moved here to ensure it runs before potential initial switchView
 
     setTimeout(() => {
-        console.log("Attempting initial switchView(null) after short delay.");
-        switchView(null);
+        // Check for view in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialView = urlParams.get('view');
+
+        console.log(`Attempting initial navigation. URL View: ${initialView}`);
+
+        if (initialView) {
+            // Use switchView which now uses NavigationManager
+            switchView(initialView);
+        } else {
+            switchView(null); // Default to welcome
+        }
     }, 500);
 };
 
@@ -507,342 +410,69 @@ window.onload = async function () {
  * Central function to manage switching between main views.
  */
 function switchView(targetViewId, newMode = null) {
-    console.log(`Switching view to: ${targetViewId || 'Home'}, Mode: ${newMode || 'Auto'}`);
-    currentViewId = targetViewId;
+    // console.log(`Switching view to: ${targetViewId || 'Home'}, Mode: ${newMode || 'Auto'}`);
+
+    // 1. Close Modals (Legacy Logic)
+    if (typeof closeRoadmapModal === 'function') closeRoadmapModal();
+
+    // 2. Handle Home/Null State
+    if (!targetViewId) {
+        // "Home" state - Show welcome/landing
+        // REVISED: Keep sidebar and header visible for "Workspace" feel.
+        const sidebar = document.getElementById('sidebar');
+        const header = document.getElementById('main-header');
+        if (sidebar) sidebar.style.display = 'flex';
+        if (header) header.style.display = 'flex';
+
+        if (window.navigationManager) {
+            window.navigationManager.navigateTo('welcomeView');
+        }
+        return;
+    }
+
+
+    // 3. Show UI Elements
+    const sidebar = document.getElementById('sidebar');
+    const header = document.getElementById('main-header');
+    if (sidebar) sidebar.style.display = 'flex';
+    if (header) header.style.display = 'flex';
+
+    // 4. Use Navigation Manager
+    if (!window.navigationManager) {
+        console.warn("NavigationManager not initialized in switchView! Attempting lazy initialization.");
+        try {
+            window.navigationManager = new NavigationManager();
+            if (window.sidebarComponent && window.headerComponent) {
+                window.navigationManager.init(window.sidebarComponent, window.headerComponent);
+            }
+        } catch (e) {
+            console.error("Failed to lazy initialize NavigationManager:", e);
+        }
+    }
+
+    if (window.navigationManager) {
+        window.navigationManager.navigateTo(targetViewId);
+    } else {
+        console.error("NavigationManager still not initialized!");
+    }
+
+    // 5. Update AI UI
     updateAiDependentUI({ skipPlanningRender: true });
 
-    const allViewIds = [
-        'systemEditForm', 'visualizationCarousel', 'serviceDependenciesTable',
-        'organogramView', 'engineerTableView', 'planningView',
-        'capacityConfigView', 'sdmForecastingView', 'toolDocumentationSection',
-        'roadmapView', 'dashboardView', 'ganttPlanningView' // Now includes dashboard + detailed planning
-    ];
-    const documentationSection = document.getElementById('toolDocumentationSection');
-
-    const updateDOMForViewChange = () => {
-        // --- Call closeRoadmapModal here ---
-        if (typeof closeRoadmapModal === 'function') {
-            console.log("switchView: Attempting to close roadmap modal if open.");
-            closeRoadmapModal();
-        } else {
-            console.warn("switchView: closeRoadmapModal function not found. Roadmap modal might not be hidden correctly.");
-        }
-        // --- Call closeThemeManagementModal here ---
-        if (typeof closeThemeManagementModal === 'function') {
-            console.log("switchView: Attempting to close theme management modal if open.");
-            closeThemeManagementModal();
-        } else {
-            console.warn("switchView: closeThemeManagementModal function not found. Theme modal might not be hidden correctly.");
-        }
-        // --- End modal closing logic ---       
-
-        if (typeof aiAgentController !== 'undefined' && typeof aiAgentController.renderSuggestionsForCurrentView === 'function') {
-            aiAgentController.renderSuggestionsForCurrentView();
-        }
-
-        allViewIds.forEach(id => {
-            const element = document.getElementById(id);
-            if (element) {
-                if (id === 'serviceDependenciesTable' && targetViewId === 'visualizationCarousel') {
-                    // Visibility managed by showVisualization()
-                } else {
-                    element.style.display = 'none';
-                }
-            }
-        });
-
-        const pageTitleH1 = document.getElementById('pageTitle');
-        const systemDescP = document.getElementById('systemDescription');
-        const editMenu = document.querySelector('.edit-menu');
-        const mainMenu = document.querySelector('.menu');
-        const returnHomeBtn = document.getElementById('returnHomeButton');
-        const backButton = document.getElementById('backToSystemViewButton');
-        const createWithAiButton = document.getElementById('createWithAiButton');
-
-        if (targetViewId) {
-            currentMode = newMode || Modes.Browse;
-            const targetElement = document.getElementById(targetViewId);
-            if (targetElement) {
-                targetElement.style.display = 'block';
-            } else {
-                console.error(`switchView: Target element with ID '${targetViewId}' not found! Attempting to return home.`);
-                if (targetViewId !== null && typeof returnToHome === 'function') {
-                    returnToHome();
-                    return; // Exit current execution
-                }
-            }
-
-            // --- MODIFICATION ---
-            if (createWithAiButton) createWithAiButton.style.display = 'none';
-
-            // (Future) Show the chat assistant if AI mode is on
-            // const chatAssistant = document.getElementById('aiChatAssistant');
-            // if (chatAssistant) chatAssistant.style.display = globalSettings.ai.isEnabled ? 'block' : 'none';
-            // --- END MODIFICATION ---
-
-
-            if (pageTitleH1 && currentSystemData) {
-                let titleSuffix = '';
-                if (targetViewId === 'planningView') titleSuffix = ' - Year Plan';
-                else if (targetViewId === 'roadmapView') titleSuffix = ' - Roadmap & Backlog';
-                else if (targetViewId === 'dashboardView') titleSuffix = ' - Dashboard';
-                else if (targetViewId === 'organogramView') titleSuffix = ' - Organization Overview';
-                else if (targetViewId === 'systemEditForm') titleSuffix = ' - Edit System';
-                else if (targetViewId === 'visualizationCarousel') titleSuffix = ' - Overview';
-                else if (targetViewId === 'capacityConfigView') titleSuffix = ' - Capacity Constraints';
-                else if (targetViewId === 'sdmForecastingView') titleSuffix = ' - SDM Resource Forecasting Model';
-                pageTitleH1.innerText = `${currentSystemData.systemName || 'System'}${titleSuffix}`;
-                pageTitleH1.style.display = 'block';
-            } else if (pageTitleH1) {
-                pageTitleH1.style.display = 'none';
-            }
-
-            if (systemDescP) {
-                const isOverview = (targetViewId === 'visualizationCarousel');
-                systemDescP.style.display = isOverview ? 'block' : 'none';
-                if (systemDescP.style.display === 'block' && currentSystemData) {
-                    systemDescP.innerText = currentSystemData.systemDescription || '';
-                }
-            }
-
-            if (mainMenu) mainMenu.style.display = 'none';
-            if (editMenu) editMenu.style.display = 'block'; // ALWAYS show for any system view
-            if (returnHomeBtn) returnHomeBtn.style.display = 'block';
-            if (backButton) backButton.style.display = 'none'; // ALWAYS hide this now
-
-        } else { // Showing the Home Screen
-            currentMode = Modes.NAVIGATION;
-            currentSystemData = null;
-            if (pageTitleH1) { pageTitleH1.innerText = "Software Management Tools"; pageTitleH1.style.display = 'block'; }
-            if (systemDescP) { systemDescP.innerText = "Load a previously saved system or create a new software system"; systemDescP.style.display = 'block'; }
-            if (mainMenu) mainMenu.style.display = 'block';
-            if (editMenu) editMenu.style.display = 'none';
-            if (returnHomeBtn) returnHomeBtn.style.display = 'none';
-            if (backButton) backButton.style.display = 'none';
-
-            // --- MODIFICATION ---
-            // Show "Create with AI" button ONLY if AI mode is enabled
-            if (createWithAiButton) {
-                createWithAiButton.style.display = globalSettings.ai.isEnabled ? 'inline-block' : 'none';
-            }
-            // (Future) Hide the chat assistant
-            // const chatAssistant = document.getElementById('aiChatAssistant');
-            // if (chatAssistant) chatAssistant.style.display = 'none';
-            // --- END MODIFICATION ---
-
-            if (documentationSection) {
-                documentationSection.style.display = 'block';
-                const docContent = document.getElementById('documentationContent');
-                if (docContent) {
-                    const currentHTML = docContent.innerHTML.trim().toLowerCase();
-                    const needsLoading = currentHTML.includes("<em>loading documentation...") ||
-                        currentHTML.includes("<em>attempting to load documentation...") ||
-                        currentHTML.includes("<em>waiting for help components...") ||
-                        currentHTML === "";
-                    if (needsLoading && typeof loadAndDisplayDocumentation === 'function') {
-                        console.log("switchView (home): Conditions met to call loadAndDisplayDocumentation.");
-                        loadAndDisplayDocumentation();
-                    } else if (typeof loadAndDisplayDocumentation !== 'function') {
-                        console.warn("switchView (home): loadAndDisplayDocumentation function is not defined.");
-                    } else {
-                        console.log("switchView (home): Documentation content not in initial state or already loaded. Not re-fetching.");
-                    }
-                }
-            }
-
-            const systemListDiv = document.getElementById('systemLoadListDiv');
-            if (systemListDiv && systemListDiv.parentNode) document.body.removeChild(systemListDiv);
-            const systemDeleteListDiv = document.getElementById('systemDeleteListDiv');
-            if (systemDeleteListDiv && systemDeleteListDiv.parentNode) document.body.removeChild(systemDeleteListDiv);
-
-            if (typeof d3 !== 'undefined' && typeof d3.selectAll === 'function') {
-                d3.selectAll('.tooltip').remove();
-            } else {
-                console.warn("switchView (home): d3 or d3.selectAll is not available to remove tooltips.");
-            }
-        }
-    };
-
-    if (!document.startViewTransition) {
-        console.warn("View Transitions API not supported by this browser. Switching view directly.");
-        updateDOMForViewChange();
-        // Manually trigger post-switch logic for direct switches
-        if (targetViewId === 'visualizationCarousel' && typeof showVisualization === 'function') {
-            showVisualization(0);
-        }
-        if (targetViewId === 'planningView') {
-            if (typeof renderPlanningView === 'function') {
-                renderPlanningView();
-            }
-            if (typeof adjustPlanningTableHeight === 'function') {
-                const planningTableContainer = document.getElementById('planningTableContainer');
-                if (planningTableContainer && planningTableContainer.offsetParent !== null) {
-                    adjustPlanningTableHeight();
-                }
-            }
-        }
-        if (targetViewId === 'roadmapView' && typeof initializeRoadmapView === 'function') {
-            initializeRoadmapView();
-        }
-        if (targetViewId === 'dashboardView' && typeof initializeDashboard === 'function') {
-            initializeDashboard();
-        }
-        console.log(`View switched directly. Current mode: ${currentMode}`);
-        return;
-    }
-
-    const transition = document.startViewTransition(updateDOMForViewChange);
-
-    transition.ready.then(() => {
-        console.debug("View transition ready (pseudo-elements created, animation about to start).");
-    }).catch(err => {
-        console.error("View transition 'ready' phase error:", err);
-    });
-
-    transition.finished.then(() => {
-        console.debug("View transition finished.");
-        // Trigger post-switch logic AFTER the transition is complete
-        if (targetViewId === 'visualizationCarousel' && typeof showVisualization === 'function') {
-            showVisualization(0);
-        }
-        if (targetViewId === 'planningView') {
-            if (typeof renderPlanningView === 'function') {
-                renderPlanningView();
-            }
-            if (typeof adjustPlanningTableHeight === 'function') {
-                const planningTableContainer = document.getElementById('planningTableContainer');
-                if (planningTableContainer && planningTableContainer.offsetParent !== null) {
-                    adjustPlanningTableHeight();
-                }
-            }
-        }
-        if (targetViewId === 'roadmapView' && typeof initializeRoadmapView === 'function') {
-            initializeRoadmapView();
-        }
-        // FIX: Call the new initializer function, not the view-switcher
-        if (targetViewId === 'dashboardView' && typeof initializeDashboard === 'function') {
-            initializeDashboard();
-        }
-    }).catch(err => {
-        console.error("View transition 'finished' phase error:", err);
-    });
-
-    // --- NEW: Handle Active Button Highlighting ---
-    const allNavButtons = document.querySelectorAll('#topBar .edit-menu button');
-    allNavButtons.forEach(btn => {
-        btn.classList.remove('active-nav-button');
-    });
-
-    const activeButtonId = VIEW_TO_BUTTON_MAP[targetViewId];
-    if (activeButtonId) {
-        const activeButton = document.getElementById(activeButtonId);
-        if (activeButton) {
-            activeButton.classList.add('active-nav-button');
-        }
-    }
-    // --- END NEW SECTION ---
-
-
-    console.log(`View switched (attempted with transition). Current mode: ${currentMode}`);
 }
 
 
-/**
- * Shows the visualization item at the specified index and hides others.
- */
-function showVisualization(index) {
-    const carouselContainer = document.getElementById('visualizationCarousel');
-    if (!carouselContainer) {
-        console.error("Carousel container #visualizationCarousel not found.");
-        return;
-    }
-    if (typeof window.setupVisualizationResizeObserver === 'function') {
-        window.setupVisualizationResizeObserver();
-    }
-    const items = carouselContainer.querySelectorAll('.carousel-item');
-    const titleElement = document.getElementById('visualizationTitle');
-    const serviceDepsTableDiv = document.getElementById('serviceDependenciesTable');
 
-    if (index < 0 || index >= items.length || items.length === 0) {
-        console.error("Invalid visualization index or no items:", index);
-        items.forEach(item => item.style.display = 'none');
-        if (titleElement) titleElement.textContent = 'No Visualization';
-        if (serviceDepsTableDiv) serviceDepsTableDiv.style.display = 'none';
-        return;
-    }
 
-    items.forEach(item => {
-        item.style.display = 'none';
-        item.classList.remove('active');
-    });
 
-    if (serviceDepsTableDiv) serviceDepsTableDiv.style.display = 'none';
 
-    const targetItemId = visualizationItems[index]?.id;
-    const targetItem = targetItemId ? document.getElementById(targetItemId) : null;
 
-    if (targetItem) {
-        targetItem.style.display = 'block';
-        targetItem.classList.add('active');
-        if (titleElement) titleElement.textContent = visualizationItems[index].title;
-
-        if (targetItemId === 'dependencyVisualization' && serviceDepsTableDiv) {
-            serviceDepsTableDiv.style.display = 'block';
-        }
-
-        // Call regenerate functions only if the specific view is now active and data is loaded
-        if (currentSystemData) {
-            switch (targetItemId) {
-                case 'visualization':
-                    if (typeof generateVisualization === 'function') generateVisualization(currentSystemData);
-                    break;
-                case 'teamVisualization':
-                    if (typeof generateTeamVisualization === 'function') generateTeamVisualization(currentSystemData);
-                    break;
-                case 'serviceRelationshipsVisualization':
-                    if (typeof populateServiceSelection === 'function') populateServiceSelection();
-                    if (typeof updateServiceVisualization === 'function') updateServiceVisualization();
-                    break;
-                case 'dependencyVisualization':
-                    if (typeof populateDependencyServiceSelection === 'function') populateDependencyServiceSelection();
-                    if (typeof updateDependencyVisualization === 'function') updateDependencyVisualization();
-                    if (typeof generateServiceDependenciesTable === 'function' && serviceDepsTableDiv.style.display === 'block') {
-                        generateServiceDependenciesTable();
-                    }
-                    break;
-                case 'mermaidVisualization':
-                    if (typeof renderMermaidDiagram === 'function') renderMermaidDiagram();
-                    break;
-                case 'mermaidApiVisualization':
-                    if (typeof populateApiServiceSelection === 'function') populateApiServiceSelection();
-                    if (typeof renderMermaidApiDiagram === 'function') renderMermaidApiDiagram();
-                    break;
-            }
-        }
-        console.log(`Showing visualization: ${visualizationItems[index].title}`);
-    } else {
-        console.error("Target visualization element not found for ID:", targetItemId);
-        if (titleElement) titleElement.textContent = 'Error';
-    }
-    currentVisualizationIndex = index;
-}
-
-/**
- * Navigates the visualization carousel.
- */
-function navigateVisualizations(direction) {
-    let newIndex = currentVisualizationIndex + direction;
-    const totalItems = visualizationItems.length;
-    if (newIndex >= totalItems) newIndex = 0;
-    else if (newIndex < 0) newIndex = totalItems - 1;
-    showVisualization(newIndex);
-}
 
 /**
  * Toggles collapsible sections.
  */
 function toggleCollapsibleSection(contentId, indicatorId, handleId = null) {
-    console.log(`toggleCollapsibleSection called with contentId: '${contentId}', indicatorId: '${indicatorId}', handleId: '${handleId}'`);
+    // console.log(`toggleCollapsibleSection called with contentId: '${contentId}', indicatorId: '${indicatorId}', handleId: '${handleId}'`);
     const contentDiv = document.getElementById(contentId);
     const indicatorSpan = document.getElementById(indicatorId);
     const handleDiv = handleId ? document.getElementById(handleId) : null;
@@ -861,7 +491,7 @@ function toggleCollapsibleSection(contentId, indicatorId, handleId = null) {
         typeof adjustPlanningTableHeight === 'function') {
         adjustPlanningTableHeight();
     }
-    console.log(`Toggled section ${contentId} to ${isHidden ? 'visible' : 'hidden'}`);
+    // console.log(`Toggled section ${contentId} to ${isHidden ? 'visible' : 'hidden'}`);
 }
 
 /** Save Sample Systems to Local Storage if not already present **/
@@ -869,80 +499,54 @@ function toggleCollapsibleSection(contentId, indicatorId, handleId = null) {
  * REVISED: Saves sample systems to Local Storage ONLY if no data already exists.
  **/
 function saveSampleSystemsToLocalStorage() {
-    console.log(">>> Checking if sample systems need to be saved to LocalStorage...");
+    // console.log(">>> Checking if sample systems need to be saved to LocalStorage...");
 
-    const existingData = localStorage.getItem(LOCAL_STORAGE_KEY);
+    const existingDataString = localStorage.getItem(LOCAL_STORAGE_KEY);
+    let systems = {};
 
-    // Only save sample systems if the key doesn't exist or if it's an empty object string
-    if (!existingData || existingData === '{}') {
-        console.log("No existing user data found or data is empty. Saving sample systems...");
-
-        // Prepare systems object for saving (StreamView and ConnectPro)
-        const systemsToSave = {
-            'StreamView': sampleSystemDataStreamView, // Ensure this is defined in data.js
-            'ConnectPro': sampleSystemDataContactCenter, // Ensure this is defined in data.js
-            'ShopSphere': sampleSystemDataShopSphere,
-            'InsightAI': sampleSystemDataInsightAI, // Add the new system
-            'FinSecure': sampleSystemDataFinSecure // Add the new system
-        };
-
+    if (existingDataString) {
         try {
-            const stringifiedSystems = JSON.stringify(systemsToSave);
-            localStorage.setItem(LOCAL_STORAGE_KEY, stringifiedSystems);
-            console.log("Sample systems saved successfully to LocalStorage.");
-
-        } catch (error) {
-            console.error("Error stringifying or setting sample systems in localStorage:", error);
-            alert("Error during initial sample data saving process. Check console.");
+            systems = JSON.parse(existingDataString);
+        } catch (e) {
+            console.error("Error parsing existing systems, resetting:", e);
+            systems = {};
         }
-    } else {
-        console.log("Existing user data found in LocalStorage. Sample systems will not be overwritten.");
     }
-    console.log("<<< Finished saveSampleSystemsToLocalStorage check.");
+
+    // Always update/overwrite sample systems with the latest code definitions
+    // This ensures description updates and new samples are applied
+    const sampleSystems = {
+        'StreamView': sampleSystemDataStreamView,
+        'ConnectPro': sampleSystemDataContactCenter,
+        'ShopSphere': sampleSystemDataShopSphere,
+        'InsightAI': sampleSystemDataInsightAI,
+        'FinSecure': sampleSystemDataFinSecure
+    };
+
+    let hasChanges = false;
+    Object.entries(sampleSystems).forEach(([key, data]) => {
+        // We overwrite the sample system to ensure latest data (descriptions, etc.)
+        // Note: This resets any user changes to these specific sample IDs.
+        // Users should create new systems or we should use different IDs for user forks.
+        // For now, treating these as immutable reference samples.
+        systems[key] = data;
+        hasChanges = true;
+    });
+
+    if (hasChanges) {
+        try {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
+            console.log("Sample systems updated in LocalStorage.");
+        } catch (error) {
+            console.error("Error saving updated systems to localStorage:", error);
+        }
+    }
+
+    // console.log("<<< Finished saveSampleSystemsToLocalStorage check.");
 }
 
 /** Show Saved Systems Modal **/
-function showSavedSystems() {
-    console.log("Showing saved systems list...");
-    const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
-    const systemNames = Object.keys(systems);
 
-    if (systemNames.length === 0) {
-        alert('No saved systems found.');
-        return;
-    }
-
-    const existingLoadListDiv = document.getElementById('systemLoadListDiv');
-    if (existingLoadListDiv) document.body.removeChild(existingLoadListDiv);
-    const existingDeleteListDiv = document.getElementById('systemDeleteListDiv');
-    if (existingDeleteListDiv) document.body.removeChild(existingDeleteListDiv);
-
-    let systemListDiv = document.createElement('div');
-    systemListDiv.id = 'systemLoadListDiv';
-    let systemListHtml = '<h2>Select a System to Load</h2><ul>';
-    systemNames.forEach(systemName => {
-        systemListHtml += `
-            <li style="margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
-                <span>${systemName}</span>
-                <button onclick="loadSavedSystem('${systemName}')" style="margin-left: 15px; padding: 3px 8px; font-size: 0.9em;">Load</button>
-            </li>`;
-    });
-    systemListHtml += '</ul>';
-    systemListDiv.innerHTML = systemListHtml;
-
-    let closeButton = document.createElement('button');
-    closeButton.innerText = 'Cancel';
-    closeButton.style.marginTop = '15px';
-    closeButton.onclick = function () {
-        if (systemListDiv.parentNode === document.body) {
-            document.body.removeChild(systemListDiv);
-        }
-    };
-    systemListDiv.appendChild(closeButton);
-    Object.assign(systemListDiv.style, { position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', backgroundColor: '#fff', padding: '20px', border: '1px solid #ccc', boxShadow: '0 4px 8px rgba(0,0,0,0.1)', zIndex: '1001', maxHeight: '80vh', overflowY: 'auto', minWidth: '300px' });
-    document.body.appendChild(systemListDiv);
-}
-window.showSavedSystems = showSavedSystems;
 
 
 /** REVISED (v7) Load Saved System - Enhanced Logging for allKnownEngineers */
@@ -950,7 +554,7 @@ function loadSavedSystem(systemName) {
     console.log(`[V7 LOAD] Attempting to load system: ${systemName}`);
     const systemsString = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (!systemsString) {
-        alert('No systems data found in localStorage.');
+        window.notificationManager.showToast('No systems data found in localStorage.', 'warning');
         console.error("[V7 LOAD] No systems key found in localStorage.");
         returnToHome();
         return;
@@ -960,20 +564,21 @@ function loadSavedSystem(systemName) {
     const systemData = systems[systemName];
 
     if (!systemData) {
-        alert(`System "${systemName}" not found in localStorage.`);
+        window.notificationManager.showToast(`System "${systemName}" not found in localStorage.`, 'error');
         console.error(`[V7 LOAD] System "${systemName}" not found after parsing localStorage.`);
         returnToHome();
         return;
     }
 
     currentSystemData = systemData; // Assign to global
+    window.currentSystemData = currentSystemData;
     console.log(`[V7 LOAD] Successfully parsed system data for: "${currentSystemData.systemName}" from localStorage.`);
 
     // ----- IMMEDIATE CHECK of allKnownEngineers -----
     if (currentSystemData.allKnownEngineers && Array.isArray(currentSystemData.allKnownEngineers)) {
-        console.log(`[V7 LOAD - PRE-AUGMENTATION] 'currentSystemData.allKnownEngineers' IS present. Length: ${currentSystemData.allKnownEngineers.length}`);
+        // console.log(`[V7 LOAD - PRE-AUGMENTATION] 'currentSystemData.allKnownEngineers' IS present. Length: ${currentSystemData.allKnownEngineers.length}`);
         if (currentSystemData.allKnownEngineers.length > 0) {
-            console.log("[V7 LOAD - PRE-AUGMENTATION] Sample of loaded allKnownEngineers[0]:", JSON.stringify(currentSystemData.allKnownEngineers[0]));
+            // console.log("[V7 LOAD - PRE-AUGMENTATION] Sample of loaded allKnownEngineers[0]:", JSON.stringify(currentSystemData.allKnownEngineers[0]));
         }
     } else {
         console.warn(`[V7 LOAD - PRE-AUGMENTATION] 'currentSystemData.allKnownEngineers' is MISSING or not an array upon loading for system "${systemName}". Will attempt to initialize.`);
@@ -982,7 +587,7 @@ function loadSavedSystem(systemName) {
 
 
     // --- DATA AUGMENTATION: Ensure new fields/arrays exist for older saved data ---
-    console.log("[V7 LOAD] Augmenting loaded system data with new model defaults if missing...");
+    // console.log("[V7 LOAD] Augmenting loaded system data with new model defaults if missing...");
 
     // Top-level system attributes
     if (!currentSystemData.projectManagers) currentSystemData.projectManagers = [];
@@ -1127,14 +732,14 @@ function loadSavedSystem(systemName) {
             if (item && !item.attributes) item.attributes = {};
         });
     });
-    console.log("[V7 LOAD] Data augmentation complete.");
+    // console.log("[V7 LOAD] Data augmentation complete.");
     // --- End Data Augmentation ---
 
 
     const systemLoadListDiv = document.getElementById('systemLoadListDiv');
     if (systemLoadListDiv && systemLoadListDiv.parentNode === document.body) {
         document.body.removeChild(systemLoadListDiv);
-        console.log("[V7 LOAD] Removed system load list modal.");
+        // console.log("[V7 LOAD] Removed system load list modal.");
     }
 
     d3.selectAll('.tooltip').remove();
@@ -1157,27 +762,15 @@ function loadSavedSystem(systemName) {
 
     switchView('visualizationCarousel');
 
-    try {
-        populateServiceSelection();
-        populateDependencyServiceSelection();
-        generateServiceDependenciesTable();
-        if (typeof populateApiServiceSelection === 'function') {
-            populateApiServiceSelection();
-        }
-        console.log("[V7 LOAD] Finished loading and preparing display for system:", currentSystemData.systemName);
-    } catch (error) {
-        console.error("[V7 LOAD] Error regenerating parts of system overview content during load:", error);
-        const carouselDiv = document.getElementById('visualizationCarousel');
-        if (carouselDiv) carouselDiv.innerHTML = '<p style="color:red">Error loading some visualization components. Check console.</p>';
+    // Update sidebar state now that system is loaded
+    if (window.sidebarComponent) {
+        window.sidebarComponent.updateState();
     }
 
+    console.log("[V7 LOAD] Finished loading and preparing display for system:", currentSystemData.systemName);
+
     // Setup toggle buttons for platform components visibility
-    if (typeof window.setupPlatformToggleButtons === 'function') {
-        window.setupPlatformToggleButtons();
-        console.log("[V7 LOAD] Called setupPlatformToggleButtons.");
-    } else {
-        console.error("[V7 LOAD] setupPlatformToggleButtons function not found. Platform toggles will not work.");
-    }
+
 }
 // window.loadSavedSystem = loadSavedSystem; // Keep global
 
@@ -1190,6 +783,38 @@ function buildGlobalPlatformDependencies() {
     });
     currentSystemData.platformDependencies = Array.from(platformDepsSet);
 }
+
+/**
+ * Loads a system from local storage.
+ * If multiple systems exist, shows a selection list.
+ */
+/**
+ * Loads a system from local storage.
+ * If multiple systems exist, shows the Systems View.
+ */
+function loadSystem() {
+    // console.log("loadSystem called.");
+
+    // If NavigationManager is available, use it to go to the Systems View
+    if (window.navigationManager) {
+        window.navigationManager.navigateTo('systemsView');
+        return;
+    }
+
+    // Fallback if NavigationManager is not ready (shouldn't happen in normal flow)
+    console.warn("NavigationManager not found, attempting manual switch to systemsView");
+    if (window.workspaceComponent) {
+        window.workspaceComponent.render('systemsView', (container) => {
+            if (!window.systemsViewInstance) {
+                window.systemsViewInstance = new SystemsView(container.id);
+            } else {
+                window.systemsViewInstance.container = container;
+            }
+            window.systemsViewInstance.render();
+        });
+    }
+}
+window.loadSystem = loadSystem;
 
 /** Updated function to handle "Create New Software System" button click **/
 function createNewSystem() {
@@ -1273,34 +898,47 @@ function createNewSystem() {
     };
 
     currentSystemData = defaultSystemData;
+    window.currentSystemData = currentSystemData;
     console.log("Initialized new currentSystemData:", JSON.parse(JSON.stringify(currentSystemData)));
 
-    enterEditMode(true);
+    switchView('systemEditForm');
 }
 window.createNewSystem = createNewSystem;
 
 
 /** Return to Home **/
 function returnToHome() {
-    console.log("Returning to home view (Clearing System)...");
-    switchView(null); // Passing null shows the home screen and resets state
+    console.log("Returning to Home/Welcome screen.");
+    currentSystemData = null;
+    window.currentSystemData = null;
+
+    // Update sidebar state now that system is loaded
+    if (window.sidebarComponent) {
+        console.log("[V7 LOAD] Calling sidebarComponent.updateState()...");
+        window.sidebarComponent.updateState();
+    } else {
+        console.warn("[V7 LOAD] window.sidebarComponent is missing!");
+    }
+
+    switchView('welcomeView', 'home');
 }
 window.returnToHome = returnToHome;
 
 /** Reset to Default Sample Systems **/
-function resetToDefaults() {
-    if (confirm('This will erase all your saved systems and restore the default sample systems. Do you want to proceed?')) {
+async function resetToDefaults() {
+    if (await window.notificationManager.confirm('This will erase all your saved systems and restore the default sample systems. Do you want to proceed?', 'Reset to Defaults', { confirmStyle: 'danger', confirmText: 'Reset' })) {
         try {
             localStorage.removeItem(LOCAL_STORAGE_KEY);
             console.log('Cleared user systems from localStorage.');
         } catch (error) {
             console.error('Failed to clear local storage before resetting defaults:', error);
-            alert('Unable to reset defaults because local storage could not be cleared.');
+            window.notificationManager.showToast('Unable to reset defaults because local storage could not be cleared.', 'error');
             return;
         }
         saveSampleSystemsToLocalStorage(); // This will re-add the defaults
         currentSystemData = null;
-        alert('Systems have been reset to defaults.');
+        window.currentSystemData = null;
+        window.notificationManager.showToast('Systems have been reset to defaults.', 'success');
         returnToHome();
     }
 }
@@ -1309,80 +947,64 @@ window.resetToDefaults = resetToDefaults;
 /** Delete System (logic to prompt user) **/
 function deleteSystem() {
     console.log("Initiating system deletion process...");
-    const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
-    const systemNames = Object.keys(systems);
 
-    if (systemNames.length === 0) {
-        alert('No saved systems found to delete.');
+    if (!currentSystemData || !currentSystemData.systemName) {
+        window.notificationManager.showToast('No system currently loaded to delete.', 'warning');
         return;
     }
 
-    const existingListDiv = document.getElementById('systemDeleteListDiv');
-    if (existingListDiv && existingListDiv.parentNode) {
-        document.body.removeChild(existingListDiv);
+    const systemName = currentSystemData.systemName;
+
+    // Hardcoded list of sample systems to protect
+    // Ideally this should be shared with saveSampleSystemsToLocalStorage, but for now we duplicate or check against known keys
+    const sampleSystemNames = [
+        'StreamView',
+        'ConnectPro',
+        'ShopSphere',
+        'InsightAI',
+        'FinSecure'
+    ];
+
+    if (sampleSystemNames.includes(systemName)) {
+        window.notificationManager.showToast(`Cannot delete built-in sample system: "${systemName}".`, 'error');
+        return;
     }
-    const existingLoadListDiv = document.getElementById('systemLoadListDiv');
-    if (existingLoadListDiv && existingLoadListDiv.parentNode) { // Also remove load list if open
-        document.body.removeChild(existingLoadListDiv);
-    }
 
-
-    let systemListDiv = document.createElement('div');
-    systemListDiv.id = 'systemDeleteListDiv';
-    let systemListHtml = '<h2>Select a System to Delete</h2><ul>';
-    systemNames.forEach(systemName => {
-        systemListHtml += `
-            <li style="margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
-                <span>${systemName}</span>
-                <button onclick="confirmAndDeleteSystem('${systemName}')" style="margin-left: 15px; padding: 3px 8px; font-size: 0.9em;" class="btn-danger">Delete</button>
-            </li>`;
-    });
-    systemListHtml += '</ul>';
-    systemListDiv.innerHTML = systemListHtml;
-
-    let closeButton = document.createElement('button');
-    closeButton.innerText = 'Cancel';
-    closeButton.style.marginTop = '15px';
-    closeButton.onclick = function () {
-        if (systemListDiv.parentNode === document.body) {
-            document.body.removeChild(systemListDiv);
-        }
-    };
-    systemListDiv.appendChild(closeButton);
-    Object.assign(systemListDiv.style, { position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', backgroundColor: '#fff', padding: '20px', border: '1px solid #ccc', boxShadow: '0 4px 8px rgba(0,0,0,0.1)', zIndex: '1001', maxHeight: '80vh', overflowY: 'auto', minWidth: '300px' });
-    document.body.appendChild(systemListDiv);
+    // Direct confirmation for current system
+    confirmAndDeleteSystem(systemName);
 }
 window.deleteSystem = deleteSystem;
 
 /** Confirms and deletes the specified system from localStorage **/
-function confirmAndDeleteSystem(systemName) {
-    if (!systemName) {
-        console.error("confirmAndDeleteSystem called without systemName.");
-        return;
-    }
-    if (confirm(`Are you sure you want to permanently delete the system "${systemName}"? This action cannot be undone.`)) {
+async function confirmAndDeleteSystem(systemName) {
+    if (!systemName) return;
+
+    const confirmed = await window.notificationManager.confirm(
+        `Are you sure you want to permanently delete the system "${systemName}"? This action cannot be undone.`,
+        'Delete System',
+        { confirmStyle: 'danger', confirmText: 'Delete Forever' }
+    );
+
+    if (confirmed) {
         try {
             const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
             if (systems[systemName]) {
                 delete systems[systemName];
                 localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
-                alert(`System "${systemName}" has been deleted.`);
-                const listDiv = document.getElementById('systemDeleteListDiv');
-                if (listDiv && listDiv.parentNode) document.body.removeChild(listDiv);
+                console.log(`System "${systemName}" deleted from localStorage.`);
+
+                window.notificationManager.showToast(`System "${systemName}" has been deleted.`, 'success');
+
+                // If we deleted the current system, return to home
                 if (currentSystemData && currentSystemData.systemName === systemName) {
                     returnToHome();
                 }
             } else {
-                alert(`Error: System "${systemName}" could not be found for deletion.`);
-                const listDiv = document.getElementById('systemDeleteListDiv');
-                if (listDiv && listDiv.parentNode) {
-                    document.body.removeChild(listDiv);
-                    deleteSystem(); // Re-show the updated list
-                }
+                window.notificationManager.showToast(`System "${systemName}" not found in storage.`, 'error');
             }
         } catch (error) {
-            console.error("Error deleting system from local storage:", error);
-            alert("An error occurred while deleting the system.");
+            console.error("Error deleting system:", error);
+            window.notificationManager.showToast("An error occurred while deleting the system.", "error");
         }
     }
 }
@@ -1438,7 +1060,7 @@ function validateEngineerAssignments() {
     });
 
     if (!isValid) {
-        alert("Validation Error: Cannot save changes due to data inconsistencies.\n\n" + errorMessages.join("\n") + "\n\nPlease review team assignments and engineer records.");
+        window.notificationManager.showToast("Validation Error: Cannot save changes due to data inconsistencies.\n\n" + errorMessages.join("\n") + "\n\nPlease review team assignments and engineer records.", "error");
     }
     return isValid;
 }
@@ -1451,7 +1073,7 @@ function saveSystemChanges() {
     console.log("saveSystemChanges called. Persisting currentSystemData.");
 
     if (!currentSystemData || !currentSystemData.systemName) {
-        alert('System name cannot be empty if trying to save.');
+        window.notificationManager.showToast('System name cannot be empty if trying to save.', 'error');
         // Attempt to get it from input if in edit mode, though this function shouldn't rely on UI state.
         const systemNameInput = document.getElementById('systemNameInput');
         if (systemNameInput && systemNameInput.value.trim()) {
@@ -1483,84 +1105,19 @@ function saveSystemChanges() {
         return true; // Indicate success
     } catch (error) {
         console.error("Error saving system to local storage in saveSystemChanges:", error);
-        alert("An error occurred while saving. Please check console.");
+        window.notificationManager.showToast("An error occurred while saving. Please check console.", "error");
         return false; // Indicate failure
     }
 }
 
 
-/** Shows the main system overview **/
-function showSystemOverview() {
-    console.log("Navigating back to system overview...");
-    if (!currentSystemData) {
-        console.warn("showSystemOverview called but no system is loaded. Returning home instead.");
-        if (typeof returnToHome === 'function') returnToHome();
-        return;
-    }
-    if (typeof buildGlobalPlatformDependencies === 'function') buildGlobalPlatformDependencies();
-    switchView('visualizationCarousel');
-    // Visualizations are now updated within showVisualization when it's called by switchView's transition.finished
-}
-window.showSystemOverview = showSystemOverview;
 
-// << NEW Function to show Roadmap View >>
-/**
- * Shows the Roadmap & Backlog Management View.
- */
-function showRoadmapView() {
-    console.log("Switching to Roadmap & Backlog View...");
-    if (!currentSystemData) {
-        alert("Please load a system first to manage its roadmap and backlog.");
-        return;
-    }
-    // Assuming Modes.PLANNING is suitable, or create a new Modes.ROADMAP
-    switchView('roadmapView', Modes.PLANNING);
 
-    // The actual generation of content (table, form) will be triggered
-    // by switchView's transition.finished callback, which will call initializeRoadmapView.
-}
-window.showRoadmapView = showRoadmapView;
 
-function showGanttPlanningView() {
-    console.log("Switching to Detailed Planning (Gantt) View...");
-    if (!currentSystemData) {
-        alert("Please load a system first to manage detailed planning.");
-        return;
-    }
-    switchView('ganttPlanningView', Modes.PLANNING);
-    if (typeof initializeGanttPlanningView === 'function') {
-        initializeGanttPlanningView();
-    }
-}
-window.showGanttPlanningView = showGanttPlanningView;
 
-/**
- * Shows the Organization Chart view.
- * MODIFIED: Now calls the new initializeOrgChartView to handle layout switching.
- */
-function showOrganogramView() {
-    console.log("Switching to Organogram View...");
-    if (!currentSystemData) {
-        alert("Please load a system first.");
-        return;
-    }
-    switchView('organogramView', 'browse');
 
-    // MODIFIED: Call the new initializer instead of old direct functions
-    if (typeof initializeOrgChartView === 'function') {
-        initializeOrgChartView();
-    } else {
-        console.error("initializeOrgChartView function not found. Cannot render org view.");
-    }
 
-    // REMOVED: These are now called by initializeOrgChartView
-    // if (typeof generateOrganogram === 'function') {
-    //     generateOrganogram();
-    // }
-    // if (typeof generateTeamTable === 'function') {
-    //     generateTeamTable(currentSystemData);
-    // }
-}
+
 
 function refreshCurrentView() {
     switch (currentViewId) {
@@ -1568,14 +1125,10 @@ function refreshCurrentView() {
             if (typeof renderPlanningView === 'function') renderPlanningView();
             break;
         case 'organogramView':
-            if (typeof initializeOrgChartView === 'function') initializeOrgChartView();
+            // Use switchView to ensure proper rendering via WorkspaceComponent
+            switchView('organogramView');
             break;
-        case 'roadmapView':
-            if (typeof initializeRoadmapView === 'function') initializeRoadmapView();
-            break;
-        case 'dashboardView':
-            if (typeof initializeDashboard === 'function') initializeDashboard();
-            break;
+
         case 'capacityConfigView':
             if (typeof updateCapacityCalculationsAndDisplay === 'function') updateCapacityCalculationsAndDisplay();
             break;
@@ -1593,44 +1146,13 @@ function refreshCurrentView() {
     }
 }
 
-/**
- * Shows the Yearly Planning view.
- */
-function showPlanningView() {
-    console.log("Switching to Year Planning View...");
-    if (!currentSystemData) {
-        alert("Please load a system first.");
-        return;
-    }
-    switchView('planningView', 'planning');
-    if (typeof renderPlanningView === 'function') {
-        renderPlanningView();
-    } else {
-        console.error("renderPlanningView function not found. Did yearPlanning.js load correctly?");
-    }
-}
+
 
 // Ensure the functions are globally accessible for the old onclick attributes,
 // or for the new event listener setup.
-if (typeof showOrganogramView === 'function') window.showOrganogramView = showOrganogramView;
-if (typeof showEngineerTableView === 'function') window.showEngineerTableView = showEngineerTableView;
-if (typeof showPlanningView === 'function') window.showPlanningView = showPlanningView;
 
-// It's also best practice to move enterEditMode here from index.html
-function enterEditMode(creatingNewSystem = false) {
-    const mode = creatingNewSystem ? Modes.CREATING : Modes.EDITING;
-    console.log(`Entering mode: ${mode}`);
-    currentMode = mode;
 
-    if (!currentSystemData) {
-        alert("No system data to edit.");
-        returnToHome();
-        return;
-    }
-    // This function will call switchView internally
-    showSystemEditForm(currentSystemData);
-}
-window.enterEditMode = enterEditMode;
+
 
 /**
  * NEW: Initializes all event listeners for the top bar.
@@ -1639,75 +1161,23 @@ window.enterEditMode = enterEditMode;
 function initializeEventListeners() {
     console.log("Initializing event listeners...");
 
-    // Main Menu Buttons
-    document.querySelector('.menu button:nth-child(1)')?.addEventListener('click', showSavedSystems);
-    document.querySelector('.menu button:nth-child(2)')?.addEventListener('click', createNewSystem);
-    document.getElementById('createWithAiButton')?.addEventListener('click', handleCreateWithAi);
-    document.getElementById('deleteSystemButton')?.addEventListener('click', deleteSystem);
-    document.querySelector('.menu button:nth-child(4)')?.addEventListener('click', resetToDefaults);
 
-    // Edit Menu Buttons
-    document.getElementById('systemOverviewButton')?.addEventListener('click', showSystemOverview);
-    document.getElementById('editSystemButton')?.addEventListener('click', () => enterEditMode());
-    document.getElementById('viewOrgChartButton')?.addEventListener('click', showOrganogramView);
-    document.getElementById('manageYearPlanButton')?.addEventListener('click', showPlanningView);
-    document.getElementById('manageRoadmapButton')?.addEventListener('click', showRoadmapView);
-    document.getElementById('detailedPlanningButton')?.addEventListener('click', showGanttPlanningView);
-    document.getElementById('dashboardViewButton')?.addEventListener('click', showDashboardView);
-    document.getElementById('tuneCapacityButton')?.addEventListener('click', showCapacityConfigView);
-    document.getElementById('sdmForecastButton')?.addEventListener('click', showSdmForecastingView);
-    document.getElementById('aiSettingsButton')?.addEventListener('click', openAiSettingsModal);
 
-    // AI Chat Button
-    document.getElementById('aiChatButton')?.addEventListener('click', () => {
-        if (!window.aiChatAssistant) return;
-        if (typeof window.aiChatAssistant.isAiChatPanelOpen === 'function' && window.aiChatAssistant.isAiChatPanelOpen()) {
-            if (typeof window.aiChatAssistant.closeAiChatPanel === 'function') {
-                window.aiChatAssistant.closeAiChatPanel();
-            }
-        } else if (typeof window.aiChatAssistant.openAiChatPanel === 'function') {
-            window.aiChatAssistant.openAiChatPanel();
-        }
-    });
-    // Initialize the chat panel's internal listeners
+
+    // Initialize the chat panel's internal listeners (Required for Header AI Button)
     if (typeof initializeAiChatPanel === 'function') {
         initializeAiChatPanel();
     } else {
         console.error("main.js: initializeAiChatPanel() function not found. aiChatAssistant.js may not have loaded.");
     }
-
-    // Global Nav Buttons
-    document.getElementById('backToSystemViewButton')?.addEventListener('click', showSystemOverview);
-    document.getElementById('returnHomeButton')?.addEventListener('click', returnToHome);
-
-    // --- MODIFIED LISTENERS FOR THE NEW MODAL ---
-    document.getElementById('saveAiSettingsButton')?.addEventListener('click', saveGlobalSettings); // <-- Changed function
-    document.querySelector('#aiSettingsModal .close-button')?.addEventListener('click', closeAiSettingsModal);
-    document.getElementById('aiModeEnabled')?.addEventListener('change', (event) => {
-        const isChecked = event.target.checked;
-        const configInputs = document.getElementById('aiConfigInputs');
-        if (configInputs) {
-            configInputs.style.display = isChecked ? 'block' : 'none';
-        }
-        globalSettings.ai.isEnabled = isChecked;
-        syncGlobalSettingsToWindow();
-        updateAiDependentUI();
-    });
-    // --- END MODIFIED LISTENERS ---
-
-
     console.log("Event listeners initialized.");
 }
 
 
 
-if (typeof showOrganogramView === 'function') window.showOrganogramView = showOrganogramView;
-if (typeof showEngineerTableView === 'function') window.showEngineerTableView = showEngineerTableView;
-if (typeof showPlanningView === 'function') window.showPlanningView = showPlanningView;
-if (typeof showRoadmapView === 'function') window.showRoadmapView = showRoadmapView;
-if (typeof showSystemOverview === 'function') window.showSystemOverview = showSystemOverview;
+
 if (typeof returnToHome === 'function') window.returnToHome = returnToHome;
 if (typeof createNewSystem === 'function') window.createNewSystem = createNewSystem;
 if (typeof deleteSystem === 'function') window.deleteSystem = deleteSystem;
 if (typeof resetToDefaults === 'function') window.resetToDefaults = resetToDefaults;
-if (typeof showSavedSystems === 'function') window.showSavedSystems = showSavedSystems;
+

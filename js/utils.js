@@ -113,31 +113,7 @@ function calculateOverheadDaysPerSDE(team, workingDaysPerYear) {
     return totalOverheadDays;
 }
 
-/**
- * Helper (Phase 7b): Formats the deduction breakdown object into a tooltip string.
- */
-function formatDeductionTooltip(breakdown) {
-    if (!breakdown) {
-        return "Breakdown not available.";
-    }
-    // Ensure all potential keys exist, defaulting to 0
-    const stdLeave = breakdown.stdLeaveYrs || 0;
-    const varLeave = breakdown.varLeaveYrs || 0;
-    const holidays = breakdown.holidayYrs || 0;
-    const orgEvents = breakdown.orgEventYrs || 0;
-    const teamActs = breakdown.teamActivityYrs || 0;
-    const overhead = breakdown.overheadYrs || 0;
 
-    // Format the string for the tooltip title attribute
-    return `Breakdown (SDE Yrs):
-Std Leave: ${stdLeave.toFixed(2)}
-Var Leave: ${varLeave.toFixed(2)}
-Holidays: ${holidays.toFixed(2)}
-Org Events: ${orgEvents.toFixed(2)}
-Team Acts: ${teamActs.toFixed(2)}
-Overhead: ${overhead.toFixed(2)}`;
-}
-// --- End Helper ---
 
 // Helper to get team name (you might already have this or similar)
 function getTeamNameById(teamId) {
@@ -304,88 +280,9 @@ function generateUniqueId(prefix = 'id') {
 }
 
 
-/**
- * Custom slugify function to match the README's Table of Contents link style.
- * - Converts to lowercase
- * - Replaces spaces and multiple hyphens with a single hyphen
- * - Removes leading numbers and dots (e.g., "1. Purpose" -> "purpose")
- * - Removes most other non-alphanumeric characters except hyphens
- * - Handles ampersands by replacing with '-and-' then simplifying.
- */
-function customSlugify(str) {
-    if (typeof str !== 'string') return '';
-    const AMPERSAND_PLACEHOLDER = '_AMPERSANDREPLACEMENT_'; // Unique placeholder
-
-    let s = str.toString().trim()
-        .toLowerCase()
-        // Remove leading numbers and dots like "1. ", "2.3. "
-        .replace(/^\d+(\.\d+)*\.\s*/, '')
-        // Replace '&' (and surrounding spaces) with a placeholder
-        .replace(/\s*&\s*/g, AMPERSAND_PLACEHOLDER)
-        // Replace any remaining '&' (e.g., if no spaces like "foo&bar")
-        .replace(/&/g, AMPERSAND_PLACEHOLDER)
-        // Replace spaces and common punctuation with a single hyphen
-        .replace(/\s+|[/\\?,:()!"“„#$'%~`´]/g, '-')
-        // Remove any characters that are not word characters (letters, numbers, underscore) or hyphens.
-        // (Placeholder contains underscores and letters, so it's safe as \w includes underscore)
-        .replace(/[^\w-]+/g, '')
-        // Replace multiple hyphens with a single hyphen
-        .replace(/-+/g, '-')
-        // Trim leading/trailing hyphens that might result
-        .replace(/^-+|-+$/g, '');
-
-    // Replace the placeholder with the desired double hyphen
-    s = s.replace(new RegExp(AMPERSAND_PLACEHOLDER, 'g'), '--');
-
-    return s;
-}
-
-const MIN_DOCUMENTATION_HEIGHT = 100; // Minimum height in pixels
-const MAX_DOCUMENT_HEIGHT_PERCENTAGE = 0.85; // Max height as 85% of viewport height
-
-function startDocumentationResize(event) {
-    isDocumentationResizing = true;
-    lastMouseY = event.clientY;
-    const contentDiv = document.getElementById('documentationContent');
-    originalDocumentationHeight = contentDiv.offsetHeight; // Get current actual height
-
-    document.addEventListener('mousemove', duringDocumentationResize);
-    document.addEventListener('mouseup', stopDocumentationResize);
-    document.body.style.userSelect = 'none'; // Prevent text selection during drag
-    event.preventDefault(); // Prevent default drag behavior
-}
-
-function duringDocumentationResize(event) {
-    if (!isDocumentationResizing) return;
-
-    const contentDiv = document.getElementById('documentationContent');
-    const deltaY = event.clientY - lastMouseY;
-    // Calculate new height based on the original height when mousedown started, plus the total delta
-    let newHeight = originalDocumentationHeight + (event.clientY - lastMouseY);
 
 
-    // Apply constraints
-    const maxPossibleHeight = window.innerHeight * MAX_DOCUMENT_HEIGHT_PERCENTAGE; // Corrected const name
-    newHeight = Math.max(MIN_DOCUMENTATION_HEIGHT, newHeight); // Enforce minimum
-    newHeight = Math.min(maxPossibleHeight, newHeight);     // Enforce maximum
 
-    contentDiv.style.maxHeight = newHeight + 'px';
-    // If you want to update the height based on *incremental* changes from the *last* mousemove:
-    // originalDocumentationHeight = contentDiv.offsetHeight; // Update for next delta (if not using mousedown original)
-    // lastMouseY = event.clientY; // Update for next delta
-}
-
-function stopDocumentationResize() {
-    if (!isDocumentationResizing) return;
-    isDocumentationResizing = false;
-    document.removeEventListener('mousemove', duringDocumentationResize);
-    document.removeEventListener('mouseup', stopDocumentationResize);
-    document.body.style.userSelect = ''; // Re-enable text selection
-    const contentDiv = document.getElementById('documentationContent');
-    if (contentDiv) {
-        console.log("Documentation resize ended. New max-height:", contentDiv.style.maxHeight);
-    }
-}
 // --- End Documentation Resizing Logic (Corrected Names) ---
 
 // --- NEW CRUD functions for Initiatives ---

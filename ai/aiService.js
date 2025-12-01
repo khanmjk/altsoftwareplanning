@@ -36,7 +36,7 @@ async function _fetchWithRetry(url, options, maxRetries = 5, initialDelay = 1000
     while (attempt < maxRetries) {
         // [LOG] Added for debugging
         console.log(`[AI-DEBUG] Fetch Attempt ${attempt + 1}/${maxRetries}: POST to ${url.split('?')[0]}`);
-        
+
         try {
             const response = await fetch(url, options);
 
@@ -65,18 +65,18 @@ async function _fetchWithRetry(url, options, maxRetries = 5, initialDelay = 1000
                 // Try to get the JSON body from the server error
                 let errorBody = null;
                 try { errorBody = await response.json(); } catch (e) { /* no json body */ }
-                const errorMessage = `API Error: ${errorBody?.error?.message || response.statusText} (Status: ${response.status})`;                
+                const errorMessage = `API Error: ${errorBody?.error?.message || response.statusText} (Status: ${response.status})`;
                 lastDetailedError = new Error(errorMessage); // Store the detailed 5xx error
                 // We throw an error to trigger the catch block's retry logic.
                 throw new Error(`Retryable error: ${response.statusText}`);
             }
-            
+
             // Handle other unexpected non-ok statuses
             throw new Error(`Unhandled HTTP error: ${response.status}`);
 
         } catch (error) {
             // This catch block handles network errors AND our thrown retryable errors.
-            
+
             // If the error was a non-retryable 4xx, re-throw it immediately.
             if (error.message.includes("Google API request failed")) {
                 throw error;
@@ -84,13 +84,13 @@ async function _fetchWithRetry(url, options, maxRetries = 5, initialDelay = 1000
 
             console.warn(`[AI-DEBUG] Fetch attempt ${attempt + 1} failed: ${error.message}`);
             attempt++;
-            
+
             if (attempt >= maxRetries) {
                 console.error("[AI-DEBUG] Fetch failed after all retries.", lastDetailedError || error);
 
                 // Throw an error that includes the lastDetailedError.message
                 const finalErrorMessage = lastDetailedError ? lastDetailedError.message : error.message;
-                throw new Error(`API request failed after ${maxRetries} attempts. Last error: ${finalErrorMessage}`);                           
+                throw new Error(`API request failed after ${maxRetries} attempts. Last error: ${finalErrorMessage}`);
             }
 
             // Calculate exponential backoff + jitter
@@ -101,7 +101,7 @@ async function _fetchWithRetry(url, options, maxRetries = 5, initialDelay = 1000
             if (spinnerP) {
                 spinnerP.textContent = `AI service is busy (Attempt ${attempt}/${maxRetries}). Retrying in ${(delay / 1000).toFixed(1)}s...`;
             }
-            
+
             console.log(`[AI-DEBUG] Waiting ${delay.toFixed(0)}ms before next retry...`);
             await new Promise(resolve => setTimeout(resolve, delay));
         }
@@ -123,7 +123,7 @@ async function _fetchWithRetry(url, options, maxRetries = 5, initialDelay = 1000
 async function generateSystemFromPrompt(userPrompt, apiKey, provider, spinnerP = null) {
     // [LOG] Added for debugging
     console.log(`[AI-DEBUG] generateSystemFromPrompt: Routing for provider '${provider}' with prompt: "${userPrompt}"`);
-    
+
     // 1. Get the shared "System Prompt" (the schema and rules)
     const systemPrompt = _getSystemGenerationPrompt();
 
@@ -139,30 +139,30 @@ async function generateSystemFromPrompt(userPrompt, apiKey, provider, spinnerP =
             case 'openai-gpt4o':
                 // return await _generateSystemWithOpenAI(systemPrompt, userPrompt, apiKey);
                 console.warn("OpenAI generation not yet implemented.");
-                alert("AI provider 'OpenAI (GPT-4o)' is not yet implemented.");
+                window.notificationManager.showToast("AI provider 'OpenAI (GPT-4o)' is not yet implemented.", 'warning');
                 return { data: null, stats: null }; // TODO
             case 'anthropic-claude35':
                 // return await _generateSystemWithAnthropic(systemPrompt, userPrompt, apiKey);
                 console.warn("Anthropic generation not yet implemented.");
-                alert("AI provider 'Anthropic (Claude 3.5 Sonnet)' is not yet implemented.");
+                window.notificationManager.showToast("AI provider 'Anthropic (Claude 3.5 Sonnet)' is not yet implemented.", 'warning');
                 return { data: null, stats: null }; // TODO
             case 'mistral-large':
                 console.warn("Mistral generation not yet implemented.");
-                alert("AI provider 'Mistral (Large 2)' is not yet implemented.");
+                window.notificationManager.showToast("AI provider 'Mistral (Large 2)' is not yet implemented.", 'warning');
                 return { data: null, stats: null }; // TODO
             case 'cohere-command-r':
                 console.warn("Cohere generation not yet implemented.");
-                alert("AI provider 'Cohere (Command R)' is not yet implemented.");
+                window.notificationManager.showToast("AI provider 'Cohere (Command R)' is not yet implemented.", 'warning');
                 return { data: null, stats: null }; // TODO
             default:
                 console.error(`Unknown AI provider: ${provider}`);
-                alert(`AI System Generation for "${provider}" is not yet supported.`);
+                window.notificationManager.showToast(`AI System Generation for "${provider}" is not yet supported.`, 'warning');
                 return { data: null, stats: null };
         }
     } catch (error) {
         console.error(`Error during AI generation with ${provider}:`, error);
         // Changed this alert to show the specific error message
-        alert(`An error occurred while communicating with the AI. Check the console.\nError: ${error.message}`);
+        window.notificationManager.showToast(`An error occurred while communicating with the AI. Check the console.\nError: ${error.message}`, 'error');
         return { data: null, stats: null };
     }
 }
@@ -199,7 +199,7 @@ async function generateDiagramFromPrompt(userPrompt, contextJson, apiKey, provid
 function _getSystemGenerationPrompt() {
     // [LOG] Added for debugging
     console.log("[AI-DEBUG] _getSystemGenerationPrompt: Building master system prompt...");
-    
+
     // This is the most important part. We give the AI its persona, rules, and the exact schema.
     // We will use one of our sample data files as a perfect example.
     // !!!!! The LLM struggles with large inputs, so we must pick a smaller but still rich example. !!!!!
@@ -208,165 +208,165 @@ function _getSystemGenerationPrompt() {
     // !!!! Need to create a smaller example schema to fit within token limits !!!!
     // [NEW] Define a minimal schema example instead of the full sample data
     // !!!! This drastically reduces the input token count to prevent context window errors.
-    
-const minimalSchemaExample = {
-      "systemName": "Example System",
-      "systemDescription": "A brief description of the system.",
-      "seniorManagers": [
-        { "seniorManagerId": "srMgr-example", "seniorManagerName": "Example Sr. Manager", "attributes": {} }
-      ],
-      "sdms": [
-        { "sdmId": "sdm-example", "sdmName": "Example SDM", "seniorManagerId": "srMgr-example", "attributes": {} }
-      ],
-      "pmts": [
-        { "pmtId": "pmt-example", "pmtName": "Example PMT", "attributes": {} }
-      ],
-      "projectManagers": [
-        { "pmId": "pm-example", "pmName": "Example Project Manager", "attributes": {} }
-      ],
-      "teams": [
-        {
-          "teamId": "team-example",
-          "teamName": "Example Team",
-          "teamIdentity": "Phoenix",
-          "fundedHeadcount": 5,
-          "engineers": ["Example Engineer 1 (L4)"],
-          "awayTeamMembers": [
-            { "name": "Contractor 1", "level": 3, "sourceTeam": "External", "attributes": {} }
-          ],
-          "sdmId": "sdm-example",
-          "pmtId": "pmt-example",
-          "teamCapacityAdjustments": {
-            "leaveUptakeEstimates": [],
-            "variableLeaveImpact": { "maternity": { "affectedSDEs": 0, "avgDaysPerAffectedSDE": 0 } },
-            "teamActivities": [],
-            "avgOverheadHoursPerWeekPerSDE": 6,
-            "aiProductivityGainPercent": 10
-          },
-          "attributes": {}
-        }
-      ],
-      "allKnownEngineers": [
-        {
-          "name": "Example Engineer 1 (L4)",
-          "level": 4,
-          "currentTeamId": "team-example",
-          "attributes": {
-            "isAISWE": false,
-            "aiAgentType": null,
-            "skills": ["Java", "AWS", "React"],
-            "yearsOfExperience": 5
-          }
-        },
-        {
-          "name": "AI-Bot-01",
-          "level": 4,
-          "currentTeamId": "team-example",
-          "attributes": {
-            "isAISWE": true,
-            "aiAgentType": "Code Generation",
-            "skills": ["Python", "Unit Tests"],
-            "yearsOfExperience": null
-          }
-        }
-      ],
-      "services": [
-        {
-          "serviceName": "ExampleService",
-          "serviceDescription": "The main service.",
-          "owningTeamId": "team-example",
-          "apis": [
-            { "apiName": "GetExampleAPI", "apiDescription": "Gets data.", "dependentApis": [], "attributes": {} }
-          ],
-          "serviceDependencies": [],
-          "platformDependencies": ["AWS S3", "PostgreSQL"],
-          "attributes": {}
-        }
-      ],
-      "capacityConfiguration": {
-        "workingDaysPerYear": 261,
-        "standardHoursPerDay": 8,
-        "globalConstraints": {
-          "publicHolidays": 10,
-          "orgEvents": [
-            { "id": "event-1", "name": "Global All-Hands", "estimatedDaysPerSDE": 1, "attributes": {} }
-          ]
-        },
-        "leaveTypes": [
-          { "id": "annual", "name": "Annual Leave", "defaultEstimatedDays": 20, "attributes": {} }
+
+    const minimalSchemaExample = {
+        "systemName": "Example System",
+        "systemDescription": "A brief description of the system.",
+        "seniorManagers": [
+            { "seniorManagerId": "srMgr-example", "seniorManagerName": "Example Sr. Manager", "attributes": {} }
         ],
-        "attributes": {}
-      },
-      "yearlyInitiatives": [
-        {
-          "initiativeId": "init-example-001",
-          "title": "Example Initiative (Year 1)",
-          "description": "An example initiative.",
-          "isProtected": true,
-          "assignments": [
-            { "teamId": "team-example", "sdeYears": 1.5 }
-          ],
-          "impactedServiceIds": ["ExampleService"],
-          "roi": {
-            "category": "Tech Debt",
-            "valueType": "QualitativeScore",
-            "estimatedValue": "Critical",
-            "currency": null,
-            "timeHorizonMonths": 12,
-            "confidenceLevel": "High",
-            "calculationMethodology": "N/A",
-            "businessCaseLink": null,
-            "overrideJustification": null,
+        "sdms": [
+            { "sdmId": "sdm-example", "sdmName": "Example SDM", "seniorManagerId": "srMgr-example", "attributes": {} }
+        ],
+        "pmts": [
+            { "pmtId": "pmt-example", "pmtName": "Example PMT", "attributes": {} }
+        ],
+        "projectManagers": [
+            { "pmId": "pm-example", "pmName": "Example Project Manager", "attributes": {} }
+        ],
+        "teams": [
+            {
+                "teamId": "team-example",
+                "teamName": "Example Team",
+                "teamIdentity": "Phoenix",
+                "fundedHeadcount": 5,
+                "engineers": ["Example Engineer 1 (L4)"],
+                "awayTeamMembers": [
+                    { "name": "Contractor 1", "level": 3, "sourceTeam": "External", "attributes": {} }
+                ],
+                "sdmId": "sdm-example",
+                "pmtId": "pmt-example",
+                "teamCapacityAdjustments": {
+                    "leaveUptakeEstimates": [],
+                    "variableLeaveImpact": { "maternity": { "affectedSDEs": 0, "avgDaysPerAffectedSDE": 0 } },
+                    "teamActivities": [],
+                    "avgOverheadHoursPerWeekPerSDE": 6,
+                    "aiProductivityGainPercent": 10
+                },
+                "attributes": {}
+            }
+        ],
+        "allKnownEngineers": [
+            {
+                "name": "Example Engineer 1 (L4)",
+                "level": 4,
+                "currentTeamId": "team-example",
+                "attributes": {
+                    "isAISWE": false,
+                    "aiAgentType": null,
+                    "skills": ["Java", "AWS", "React"],
+                    "yearsOfExperience": 5
+                }
+            },
+            {
+                "name": "AI-Bot-01",
+                "level": 4,
+                "currentTeamId": "team-example",
+                "attributes": {
+                    "isAISWE": true,
+                    "aiAgentType": "Code Generation",
+                    "skills": ["Python", "Unit Tests"],
+                    "yearsOfExperience": null
+                }
+            }
+        ],
+        "services": [
+            {
+                "serviceName": "ExampleService",
+                "serviceDescription": "The main service.",
+                "owningTeamId": "team-example",
+                "apis": [
+                    { "apiName": "GetExampleAPI", "apiDescription": "Gets data.", "dependentApis": [], "attributes": {} }
+                ],
+                "serviceDependencies": [],
+                "platformDependencies": ["AWS S3", "PostgreSQL"],
+                "attributes": {}
+            }
+        ],
+        "capacityConfiguration": {
+            "workingDaysPerYear": 261,
+            "standardHoursPerDay": 8,
+            "globalConstraints": {
+                "publicHolidays": 10,
+                "orgEvents": [
+                    { "id": "event-1", "name": "Global All-Hands", "estimatedDaysPerSDE": 1, "attributes": {} }
+                ]
+            },
+            "leaveTypes": [
+                { "id": "annual", "name": "Annual Leave", "defaultEstimatedDays": 20, "attributes": {} }
+            ],
             "attributes": {}
-          },
-          "targetDueDate": "2025-12-31",
-          "actualCompletionDate": null,
-          "status": "Committed",
-          "themes": ["theme-example"],
-          "primaryGoalId": "goal-example",
-          "projectManager": { "type": "pm", "id": "pm-example", "name": "Example Project Manager" },
-          "owner": { "type": "sdm", "id": "sdm-example", "name": "Example SDM" },
-          "technicalPOC": { "type": "engineer", "id": "eng-example", "name": "Example Engineer 1 (L4)" },
-          "workPackageIds": ["wp-example-001"], // This ID must be present below
-          "attributes": {
-            "pmCapacityNotes": "Example note.",
-            "planningYear": 2025
-          }
-        }
-      ],
-      "goals": [
-        { "goalId": "goal-example", "name": "Example Goal 2025", "description": "...", "initiativeIds": ["init-example-001"], "attributes": {} }
-      ],
-      "definedThemes": [
-        { "themeId": "theme-example", "name": "Example Theme", "description": "...", "relatedGoalIds": ["goal-example"], "attributes": {} }
-      ],
-      "archivedYearlyPlans": [],
-      // [MODIFIED] This array is no longer empty.
-      "workPackages": [
-        {
-          "workPackageId": "wp-example-001", // This ID matches the one in yearlyInitiatives
-          "initiativeId": "init-example-001",
-          "name": "Example Work Package",
-          "description": "The first phase of work for the example initiative.",
-          "owner": { "type": "sdm", "id": "sdm-example", "name": "Example SDM" },
-          "status": "Defined",
-          "deliveryPhases": [
-            { "phaseName": "Requirements & Definition", "status": "Completed", "startDate": "2025-01-01", "endDate": "2025-01-31", "notes": "Initial spec complete." }
-          ],
-          "plannedDeliveryDate": "2025-12-31",
-          "actualDeliveryDate": null,
-          "impactedTeamAssignments": [ { "teamId": "team-example", "sdeDaysEstimate": 100 } ],
-          "totalCapacitySDEdays": 100,
-          "impactedServiceIds": ["ExampleService"],
-          "dependencies": [],
-          "attributes": {}
-        }
-      ],
-      "calculatedCapacityMetrics": null,
-      "attributes": {}
+        },
+        "yearlyInitiatives": [
+            {
+                "initiativeId": "init-example-001",
+                "title": "Example Initiative (Year 1)",
+                "description": "An example initiative.",
+                "isProtected": true,
+                "assignments": [
+                    { "teamId": "team-example", "sdeYears": 1.5 }
+                ],
+                "impactedServiceIds": ["ExampleService"],
+                "roi": {
+                    "category": "Tech Debt",
+                    "valueType": "QualitativeScore",
+                    "estimatedValue": "Critical",
+                    "currency": null,
+                    "timeHorizonMonths": 12,
+                    "confidenceLevel": "High",
+                    "calculationMethodology": "N/A",
+                    "businessCaseLink": null,
+                    "overrideJustification": null,
+                    "attributes": {}
+                },
+                "targetDueDate": "2025-12-31",
+                "actualCompletionDate": null,
+                "status": "Committed",
+                "themes": ["theme-example"],
+                "primaryGoalId": "goal-example",
+                "projectManager": { "type": "pm", "id": "pm-example", "name": "Example Project Manager" },
+                "owner": { "type": "sdm", "id": "sdm-example", "name": "Example SDM" },
+                "technicalPOC": { "type": "engineer", "id": "eng-example", "name": "Example Engineer 1 (L4)" },
+                "workPackageIds": ["wp-example-001"], // This ID must be present below
+                "attributes": {
+                    "pmCapacityNotes": "Example note.",
+                    "planningYear": 2025
+                }
+            }
+        ],
+        "goals": [
+            { "goalId": "goal-example", "name": "Example Goal 2025", "description": "...", "initiativeIds": ["init-example-001"], "attributes": {} }
+        ],
+        "definedThemes": [
+            { "themeId": "theme-example", "name": "Example Theme", "description": "...", "relatedGoalIds": ["goal-example"], "attributes": {} }
+        ],
+        "archivedYearlyPlans": [],
+        // [MODIFIED] This array is no longer empty.
+        "workPackages": [
+            {
+                "workPackageId": "wp-example-001", // This ID matches the one in yearlyInitiatives
+                "initiativeId": "init-example-001",
+                "name": "Example Work Package",
+                "description": "The first phase of work for the example initiative.",
+                "owner": { "type": "sdm", "id": "sdm-example", "name": "Example SDM" },
+                "status": "Defined",
+                "deliveryPhases": [
+                    { "phaseName": "Requirements & Definition", "status": "Completed", "startDate": "2025-01-01", "endDate": "2025-01-31", "notes": "Initial spec complete." }
+                ],
+                "plannedDeliveryDate": "2025-12-31",
+                "actualDeliveryDate": null,
+                "impactedTeamAssignments": [{ "teamId": "team-example", "sdeDaysEstimate": 100 }],
+                "totalCapacitySDEdays": 100,
+                "impactedServiceIds": ["ExampleService"],
+                "dependencies": [],
+                "attributes": {}
+            }
+        ],
+        "calculatedCapacityMetrics": null,
+        "attributes": {}
     };
     // [MODIFIED] Use the new minimal example
-const schemaExample = JSON.stringify(minimalSchemaExample, null, 2);    
+    const schemaExample = JSON.stringify(minimalSchemaExample, null, 2);
 
     const promptString = `
 You are a seasoned VP of Engineering and strategic business partner, acting as a founding technology leader. Your purpose is to help a user create a tech business and organize their software development teams. You are an expert in software team topologies and organizational structure design, taking the best from industry players like Google, Microsoft, Apple, Netflix, Amazon, etc.
@@ -454,12 +454,12 @@ Proceed to generate the new JSON object based on the user's prompt.
 async function _generateSystemWithGemini(systemPrompt, userPrompt, apiKey, spinnerP = null) {
     // [LOG] Added for debugging
     console.log("[AI-DEBUG] _generateSystemWithGemini: Preparing to call Gemini for system generation...");
-    
+
     // TODO: [SECURITY] This is a client-side call using a user-provided API key.
     // This architecture is unsafe for production. Before merging to a public site,
     // this function MUST be refactored to call a secure server-side proxy
     // that manages the API key and makes the actual request to the Google API.
-    
+
     //const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`;
     //Switched from gemini-2.5-pro to gemini-2.5-flash, the correct model for this API endpoint.
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
@@ -499,16 +499,16 @@ async function _generateSystemWithGemini(systemPrompt, userPrompt, apiKey, spinn
 
     // [LOG] Added for debugging
     console.log("[AI-DEBUG] _generateSystemWithGemini: Fetch successful. Parsing response data...");
-    
+
     const responseData = await response.json();
-    
+
     if (!responseData.candidates || !responseData.candidates[0].content.parts[0].text) {
         console.error("[AI-DEBUG] Invalid response structure from Gemini:", responseData);
         throw new Error("Received an invalid response from the AI.");
     }
 
     const jsonString = responseData.candidates[0].content.parts[0].text;
-    
+
     // [LOG] Added for debugging
     console.log(`[AI-DEBUG] _generateSystemWithGemini: Received raw response string (${jsonString.length} chars).`);
 
@@ -607,15 +607,15 @@ async function getAnalysisFromPrompt(chatHistory, apiKey, provider) {
         console.warn("[AI-DEBUG] MOCK MODE ENABLED. Returning fake data without API call.");
         await new Promise(resolve => setTimeout(resolve, 750));
         const mockResponse = `This is a mock AI response. I received a history of ${chatHistory.length} turns.`;
-        return { 
-            textResponse: mockResponse, 
+        return {
+            textResponse: mockResponse,
             usage: { totalTokenCount: 100 } // Mock usage
         };
     }
     // --- End Mock Mode ---
-    
+
     // 1. [REMOVED] System prompt is no longer built here. It's in the chatHistory.
-    
+
     // 2. Route to the correct provider
     try {
         switch (provider) {
@@ -648,8 +648,8 @@ if (typeof window !== 'undefined') {
  */
 async function _getAnalysisWithGemini(chatHistory, apiKey) {
     console.log("[AI-DEBUG] _getAnalysisWithGemini: Preparing to call Gemini with full chat history.");
-    
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;    
+
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
     // [MODIFIED] The request body is now just the history
     const requestBody = {
@@ -677,7 +677,7 @@ async function _getAnalysisWithGemini(chatHistory, apiKey) {
     // [MODIFIED] Extract text AND usage metadata
     const textResponse = responseData.candidates[0].content.parts[0].text;
     const usage = responseData.usageMetadata || { totalTokenCount: 0 }; // Ensure usage object exists
-    
+
     console.log(`[AI-DEBUG] _getAnalysisWithGemini: Received analysis text. Tokens: ${usage.totalTokenCount}`);
 
     // [MODIFIED] Return the object
@@ -740,7 +740,7 @@ async function _generateImageWithImagen(userPrompt, contextJson, apiKey) {
     // !!! IMPORTANT: REPLACE WITH YOUR PROJECT ID FROM GOOGLE CLOUD CONSOLE !!!
     const GCP_PROJECT_ID = "gen-lang-client-0801101504"; // e.g., "gen-lang-client-0..."
     const GCP_REGION = "us-central1"; // Imagen is often in us-central1
-    
+
     if (GCP_PROJECT_ID === "YOUR-PROJECT-ID-HERE") {
         throw new Error("Missing GCP_PROJECT_ID in js/aiService.js, _generateImageWithImagen");
     }
@@ -768,14 +768,14 @@ async function _generateImageWithImagen(userPrompt, contextJson, apiKey) {
 
     // [THE FIX] This is the correct request body format for the Vertex AI API
     const requestBody = {
-      "instances": [
-        { "prompt": combinedPrompt }
-      ],
-      "parameters": {
-        "number_of_images": 1
-      }
+        "instances": [
+            { "prompt": combinedPrompt }
+        ],
+        "parameters": {
+            "number_of_images": 1
+        }
     };
-    
+
     const fetchOptions = {
         method: 'POST',
         headers: {
@@ -795,7 +795,7 @@ async function _generateImageWithImagen(userPrompt, contextJson, apiKey) {
         console.error("[AI-DEBUG] Invalid response structure from Vertex AI (Imagen):", responseData);
         throw new Error("Received an invalid or empty response from the Imagen AI.");
     }
-    
+
     // 3. Convert Base64 to a Data URL
     const base64ImageData = responseData.predictions[0].bytesBase64Encoded;
     const imageUrl = `data:image/png;base64,${base64ImageData}`;

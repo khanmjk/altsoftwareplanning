@@ -1,6 +1,29 @@
 // js/documentation.js
 
 /**
+ * NEW: Renders the Help/Documentation View into the Workspace.
+ */
+function renderHelpView(container) {
+    console.log("Rendering Help View...");
+    if (!container) {
+        console.error("Help View container not provided.");
+        return;
+    }
+
+    // Create the content wrapper if it doesn't exist
+    // This wrapper allows us to control scrolling and padding independent of the main container
+    container.innerHTML = `
+        <div id="documentationContent" style="padding: 30px; max-width: 1000px; margin: 0 auto; background-color: #fff; min-height: 100%;">
+            <p><em>Loading documentation...</em></p>
+        </div>
+    `;
+
+    // Trigger the load
+    loadAndDisplayDocumentation();
+}
+window.renderHelpView = renderHelpView;
+
+/**
  * Fetches README.md, converts Markdown to HTML, displays it,
  * and handles internal anchor link scrolling.
  * Uses custom slugify for markdown-it-anchor.
@@ -20,8 +43,6 @@ async function loadAndDisplayDocumentation() {
         console.error(errorMsg);
         contentDiv.innerHTML = `<p style="color:red;">${errorMsg}</p>`;
         return;
-    } else {
-        console.log("LAD_SLUGIFY: window.markdownit is DEFINED.");
     }
 
     let md = window.markdownit({
@@ -31,26 +52,16 @@ async function loadAndDisplayDocumentation() {
     });
 
     if (typeof window.markdownItAnchor === 'function' && typeof window.customSlugify === 'function') {
-        console.log("LAD_SLUGIFY: markdown-it-anchor and customSlugify are DEFINED. Applying anchor plugin.");
         try {
             md = md.use(window.markdownItAnchor, {
                 permalink: window.markdownItAnchor.permalink.headerLink(),
                 level: [1, 2, 3, 4, 5, 6],
-                slugify: s => window.customSlugify(s) // Ensure window.customSlugify is called
+                slugify: s => window.customSlugify(s)
             });
         } catch (e) {
             console.error("LAD_SLUGIFY: Error applying markdown-it-anchor:", e);
         }
-    } else {
-        if (typeof window.markdownItAnchor !== 'function') {
-            console.warn("LAD_SLUGIFY: window.markdownItAnchor is UNDEFINED. Links may not function as expected.");
-        }
-        if (typeof window.customSlugify !== 'function') {
-            console.warn("LAD_SLUGIFY: window.customSlugify is UNDEFINED. Links may not use custom slugs.");
-        }
     }
-
-    contentDiv.innerHTML = '<p><em>Fetching latest documentation from GitHub...</em></p>';
 
     try {
         const response = await fetch(readmeUrl);
@@ -65,30 +76,28 @@ async function loadAndDisplayDocumentation() {
         console.log("LAD_SLUGIFY: Documentation rendered.");
 
         // Re-attach internal link listeners
+        // Note: We attach to the container provided by WorkspaceComponent if possible, 
+        // but here we are inside the contentDiv. 
+        // We need to scroll the *scrollable parent*. 
+        // In WorkspaceComponent, the container passed to render() is usually the scrollable one, 
+        // or its parent. 
+        // Let's find the nearest scrollable parent.
+        const scrollableParent = contentDiv.closest('.workspace-view-container') || document.getElementById('main-content-area') || window;
+
         const internalLinks = contentDiv.querySelectorAll('a[href^="#"]');
         internalLinks.forEach(link => {
-            link.addEventListener('click', function(event) {
+            link.addEventListener('click', function (event) {
                 event.preventDefault();
                 const targetId = this.getAttribute('href').substring(1);
                 const targetElement = document.getElementById(targetId);
 
-                if (targetElement && contentDiv.contains(targetElement)) {
-                    const contentDivScrollTop = contentDiv.scrollTop;
-                    const contentDivRect = contentDiv.getBoundingClientRect();
-                    const targetElementRect = targetElement.getBoundingClientRect();
-                    const targetOffsetFromContentDivTop = targetElementRect.top - contentDivRect.top;
-                    let scrollToPosition = contentDivScrollTop + targetOffsetFromContentDivTop - 10; // Small offset
-                    scrollToPosition = Math.max(0, scrollToPosition);
-                    contentDiv.scrollTop = scrollToPosition;
-                    console.log(`LAD_SLUGIFY: Scrolled to: #${targetId}`);
+                if (targetElement) {
+                    targetElement.scrollIntoView({ behavior: 'smooth' });
                 } else {
-                    console.warn(`LAD_SLUGIFY: Target element for link #${targetId} not found or not within contentDiv.`);
-                    const generatedIds = Array.from(contentDiv.querySelectorAll('[id]')).map(el => el.id);
-                    console.log("LAD_SLUGIFY: Available IDs in documentation content:", generatedIds);
+                    console.warn(`LAD_SLUGIFY: Target element #${targetId} not found.`);
                 }
             });
         });
-        console.log("LAD_SLUGIFY: Internal link listeners attached.");
 
     } catch (error) {
         console.error("LAD_SLUGIFY: Failed to load or render documentation:", error);
@@ -114,3 +123,4 @@ function customSlugify(str) {
 
     return s.replace(new RegExp(AMPERSAND_PLACEHOLDER, 'g'), '--');
 }
+window.customSlugify = customSlugify;
