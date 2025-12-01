@@ -26,6 +26,13 @@ class TemplateLoader {
             return html;
         } catch (error) {
             console.error('Template loading error:', error);
+            // Fallback to inline templates if available
+            if (typeof window !== 'undefined' && window.TEMPLATE_FALLBACKS && window.TEMPLATE_FALLBACKS[path]) {
+                console.warn(`Using inline fallback for template: ${path}`);
+                const html = window.TEMPLATE_FALLBACKS[path];
+                this.cache.set(path, html);
+                return html;
+            }
             throw error;
         }
     }

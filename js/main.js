@@ -137,6 +137,32 @@ const HTML_COMPONENT_FALLBACKS = {
 </div>`
 };
 
+// Inline template fallbacks for TemplateLoader consumers
+window.TEMPLATE_FALLBACKS = {
+    'html/components/systems-view-template.html': `
+<div class="systems-view">
+    <div class="systems-view__header">
+        <h1 class="systems-view__title">
+            <i class="fas fa-server systems-view__icon"></i>
+            My Systems
+        </h1>
+        <div class="systems-view__actions">
+            <button id="createWithAiBtn" class="btn btn--primary btn--gradient" data-action="create-ai">
+                <i class="fas fa-magic"></i> Create with AI
+            </button>
+            <button id="createSystemBtn" class="btn btn--primary" data-action="create-new">
+                <i class="fas fa-plus"></i> Create New System
+            </button>
+        </div>
+    </div>
+
+    <div id="systemsGrid" class="systems-grid">
+        <p>Loading systems...</p>
+    </div>
+</div>
+`
+};
+
 /**
  * Helper to load HTML components from files into target containers.
  */
