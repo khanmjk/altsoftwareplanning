@@ -6,9 +6,11 @@
 <link href="https://unpkg.com/tabulator-tables@5.5.2/dist/css/tabulator.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 <link href="https://unpkg.com/tabulator-tables@5.5.2/dist/css/tabulator_simple.min.css" rel="stylesheet">
+<link rel="stylesheet" href="css/0-settings/variables.css">
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/layout/main-layout.css">
 <link rel="stylesheet" href="css/layout/sidebar.css">
+<link rel="stylesheet" href="css/components/sidebar-enhanced.css">
 <link rel="stylesheet" href="css/components/header.css">
 <link rel="stylesheet" href="css/components/enhancedTableWidget.css">
 <link rel="stylesheet" href="css/components/aiChatPanel.css">
@@ -18,6 +20,19 @@
 <link rel="stylesheet" href="css/components/management.css">
 <link rel="stylesheet" href="css/components/roadmapModal.css">
 <link rel="stylesheet" href="css/ai-chat.css">
+<link rel="stylesheet" href="css/views/welcome-view.css">
+<link rel="stylesheet" href="css/views/dashboard-view.css">
+<link rel="stylesheet" href="css/views/org-view.css">
+<link rel="stylesheet" href="css/views/roadmap-view.css">
+<link rel="stylesheet" href="css/views/gantt-planning-view.css">
+<link rel="stylesheet" href="css/views/accomplishments-view.css">
+<link rel="stylesheet" href="css/views/goals-view.css">
+<link rel="stylesheet" href="css/views/roadmap-table-view.css">
+<link rel="stylesheet" href="css/views/capacity-tuning-view.css">
+<link rel="stylesheet" href="css/views/visualizations-view.css">
+<link rel="stylesheet" href="css/components/systems-view.css">
+<link rel="stylesheet" href="css/components/settings-view.css">
+<link rel="stylesheet" href="css/components/management-view.css">
 <link rel="stylesheet" href="css/components/Modal.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css">
 
@@ -30,31 +45,30 @@
     <div id="app-container">
         <!-- Sidebar -->
         <div id="sidebar">
-            <div class="logo-area" id="app-title" style="cursor: pointer;">
+            <div class="logo-area sidebar__logo-area" id="app-title">
                 <i class="fas fa-layer-group logo-icon"></i>
                 SMT Platform
             </div>
             <div class="system-switcher-container">
                 <div class="system-switcher-btn" data-toggle="dropdown" data-target="system-dropdown">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <div
-                            style="width: 24px; height: 24px; background: var(--primary-color, #3b82f6); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold;">
+                    <div class="sidebar__system-switcher-content">
+                        <div class="sidebar__system-icon">
                             S</div>
-                        <div class="system-name-display" style="font-size: 0.9rem; font-weight: 600;">My System</div>
+                        <div class="system-name-display sidebar__system-name">My System</div>
                     </div>
-                    <i class="fas fa-chevron-down" style="font-size: 0.7rem; color: #64748b;"></i>
+                    <i class="fas fa-chevron-down sidebar__chevron-icon"></i>
                 </div>
                 <div id="system-dropdown" class="dropdown-menu">
                     <div class="dropdown-item"
                         onclick="if(window.navigationManager) window.navigationManager.navigateTo('systemsView')">
-                        <i class="fas fa-folder-open" style="width: 20px;"></i> Load System
+                        <i class="fas fa-folder-open sidebar__menu-icon"></i> Load System
                     </div>
                     <div class="dropdown-item" onclick="if(window.createNewSystem) window.createNewSystem()">
-                        <i class="fas fa-plus-circle" style="width: 20px;"></i> New System
+                        <i class="fas fa-plus-circle sidebar__menu-icon"></i> New System
                     </div>
-                    <div style="height: 1px; background: #475569; margin: 5px 0;"></div>
+                    <div class="sidebar__menu-separator"></div>
                     <div class="dropdown-item" onclick="if(window.returnToHome) window.returnToHome()">
-                        <i class="fas fa-times-circle" style="width: 20px;"></i> Close System
+                        <i class="fas fa-times-circle sidebar__menu-icon"></i> Close System
                     </div>
                 </div>
             </div>
@@ -167,75 +181,61 @@
             <div id="main-content-area">
 
 
-                <div id="welcomeViewContent" style="display:none; padding: 40px; max-width: 1200px; margin: 0 auto;">
-                    <div style="text-align: center; margin-bottom: 60px;">
-                        <h1 style="font-size: 2.5rem; color: #1e293b; margin-bottom: 15px;">Welcome to SMT Platform</h1>
-                        <p style="font-size: 1.1rem; color: #64748b; max-width: 800px; margin: 0 auto;">
-                            Your comprehensive, one-stop shop for Software Managers. Plan roadmaps, visualize
-                            architecture, forecast resources, and manage team capacity—all in one unified workspace.
-                        </p>
-                    </div>
-
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
-                        <!-- Load System Card -->
-                        <div class="action-card" onclick="if(window.loadSystem) window.loadSystem()"
-                            style="background: white; padding: 30px; border-radius: 12px; border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-                            <div
-                                style="width: 50px; height: 50px; background: #eff6ff; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; color: #3b82f6;">
-                                <i class="fas fa-folder-open" style="font-size: 1.5rem;"></i>
-                            </div>
-                            <h3 style="font-size: 1.25rem; margin-bottom: 10px; color: #0f172a;">Load Existing System
-                            </h3>
-                            <p style="color: #64748b; font-size: 0.95rem;">Access your saved architecture plans,
-                                roadmaps, and capacity configurations.</p>
+                <div id="welcomeViewContent" class="template-hidden">
+                    <div class="welcome-view">
+                        <div class="welcome-header">
+                            <h1 class="welcome-header__title">Welcome to SMT Platform</h1>
+                            <p class="welcome-header__subtitle">
+                                Your comprehensive, one-stop shop for Software Managers. Plan roadmaps, visualize
+                                architecture, forecast resources, and manage team capacity—all in one unified workspace.
+                            </p>
                         </div>
 
-                        <!-- Create System Card -->
-                        <div class="action-card" onclick="if(window.createNewSystem) window.createNewSystem()"
-                            style="background: white; padding: 30px; border-radius: 12px; border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-                            <div
-                                style="width: 50px; height: 50px; background: #f0fdf4; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; color: #22c55e;">
-                                <i class="fas fa-plus-circle" style="font-size: 1.5rem;"></i>
+                        <div class="welcome-grid">
+                            <!-- Load System Card -->
+                            <div class="action-card" onclick="if(window.loadSystem) window.loadSystem()">
+                                <div class="action-card__icon-container action-card__icon-container--blue">
+                                    <i class="fas fa-folder-open action-card__icon"></i>
+                                </div>
+                                <h3 class="action-card__title">Load Existing System</h3>
+                                <p class="action-card__description">Access your saved architecture plans,
+                                    roadmaps, and capacity configurations.</p>
                             </div>
-                            <h3 style="font-size: 1.25rem; margin-bottom: 10px; color: #0f172a;">Create New System</h3>
-                            <p style="color: #64748b; font-size: 0.95rem;">Start a new project from scratch. Define
-                                teams, services, and strategic goals.</p>
-                        </div>
 
-                        <!-- Create with AI Card (Hidden by default) -->
-                        <div id="createWithAiCard" class="action-card"
-                            onclick="if(window.handleCreateWithAi) window.handleCreateWithAi()"
-                            style="display: none; background: white; padding: 30px; border-radius: 12px; border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-                            <div
-                                style="width: 50px; height: 50px; background: #f3e8ff; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; color: #a855f7;">
-                                <i class="fas fa-magic" style="font-size: 1.5rem;"></i>
+                            <!-- Create System Card -->
+                            <div class="action-card" onclick="if(window.createNewSystem) window.createNewSystem()">
+                                <div class="action-card__icon-container action-card__icon-container--green">
+                                    <i class="fas fa-plus-circle action-card__icon"></i>
+                                </div>
+                                <h3 class="action-card__title">Create New System</h3>
+                                <p class="action-card__description">Start a new project from scratch. Define
+                                    teams, services, and strategic goals.</p>
                             </div>
-                            <h3 style="font-size: 1.25rem; margin-bottom: 10px; color: #0f172a;">Create with AI</h3>
-                            <p style="color: #64748b; font-size: 0.95rem;">Generate a complete system architecture and
-                                plan using AI assistance.</p>
-                        </div>
 
-                        <!-- Documentation Card -->
-                        <div class="action-card"
-                            onclick="if(window.navigationManager) window.navigationManager.navigateTo('helpView')"
-                            style="background: white; padding: 30px; border-radius: 12px; border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-                            <div
-                                style="width: 50px; height: 50px; background: #f8fafc; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; color: #64748b;">
-                                <i class="fas fa-book" style="font-size: 1.5rem;"></i>
+                            <!-- Create with AI Card (Hidden by default) -->
+                            <div id="createWithAiCard" class="action-card"
+                                onclick="if(window.handleCreateWithAi) window.handleCreateWithAi()"
+                                style="display: none;">
+                                <div class="action-card__icon-container action-card__icon-container--purple">
+                                    <i class="fas fa-magic action-card__icon"></i>
+                                </div>
+                                <h3 class="action-card__title">Create with AI</h3>
+                                <p class="action-card__description">Generate a complete system architecture and
+                                    plan using AI assistance.</p>
                             </div>
-                            <h3 style="font-size: 1.25rem; margin-bottom: 10px; color: #0f172a;">Documentation</h3>
-                            <p style="color: #64748b; font-size: 0.95rem;">Learn how to use the platform, best practices
-                                for modeling, and more.</p>
+
+                            <!-- Documentation Card -->
+                            <div class="action-card"
+                                onclick="if(window.navigationManager) window.navigationManager.navigateTo('helpView')">
+                                <div class="action-card__icon-container action-card__icon-container--gray">
+                                    <i class="fas fa-book action-card__icon"></i>
+                                </div>
+                                <h3 class="action-card__title">Documentation</h3>
+                                <p class="action-card__description">Learn how to use the platform, best practices
+                                    for modeling, and more.</p>
+                            </div>
                         </div>
                     </div>
-
-                    <style>
-                        .action-card:hover {
-                            transform: translateY(-5px);
-                            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-                            border-color: #cbd5e1;
-                        }
-                    </style>
                 </div>
             </div>
 
@@ -316,6 +316,9 @@
 
     <!-- Application Scripts -->
     <!-- Managers (Load first) -->
+    <script src="js/utils/TemplateLoader.js"></script>
+    <script src="js/state/AppState.js"></script>
+    <script src="js/repositories/SystemRepository.js"></script>
     <script src="js/data.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/managers/NavigationManager.js?v=2"></script>
@@ -332,16 +335,15 @@
     <script src="js/mermaidGenerator.js"></script>
     <script src="js/visualizations.js?v=2"></script>
     <script src="js/editSystem.js"></script>
-    <script src="js/orgView.js?v=2"></script>
+    <script src="js/components/OrgView.js"></script>
     <script src="js/yearPlanning.js?v=3"></script>
     <script src="js/capacityTuning.js?v=2"></script>
-    <script src="js/roadmap.js?v=2"></script>
+    <script src="js/components/RoadmapView.js"></script>
     <script src="js/roadmapTableView.js"></script>
     <script src="js/goalsView.js"></script>
     <script src="js/accomplishmentsView.js"></script>
     <script src="js/impactView.js"></script>
-    <script src="js/dashboard.js?v=2"></script>
-
+    <script src="js/components/DashboardView.js"></script>
     <script src="js/featureFlags.js"></script>
     <script src="js/components/gantt/GanttRenderer.js"></script>
     <script src="js/components/gantt/MermaidGanttRenderer.js"></script>
