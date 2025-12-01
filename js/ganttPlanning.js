@@ -252,57 +252,36 @@ function renderGanttControls() {
     row.appendChild(rendererWrap);
     controls.appendChild(row);
 
-    // RESTORED: Add the static View Mode buttons and Legend here
-    const staticControls = document.createElement('div');
-    staticControls.className = 'gantt-controls';
-    staticControls.style.marginTop = '10px';
-    staticControls.style.display = 'flex';
-    staticControls.style.justifyContent = 'space-between';
-    staticControls.style.alignItems = 'center';
-    staticControls.innerHTML = getGanttStaticControlsHTML();
-    controls.appendChild(staticControls);
+    // RESTORED: Add the Legend here (View Mode buttons removed per user request)
+    // CONDITIONAL: Only show for Frappe renderer
+    const legendDiv = document.createElement('div');
+    legendDiv.id = 'ganttLegendContainer';
+    legendDiv.className = 'gantt-legend';
+    legendDiv.style.marginTop = '10px';
+
+    // Check current renderer for initial visibility
+    const currentRenderer = (typeof FeatureFlags !== 'undefined' && typeof FeatureFlags.getRenderer === 'function')
+        ? FeatureFlags.getRenderer()
+        : 'mermaid';
+
+    legendDiv.style.display = currentRenderer === 'frappe' ? 'flex' : 'none';
+    legendDiv.style.gap = '15px';
+    legendDiv.style.fontSize = '12px';
+    legendDiv.style.alignItems = 'center';
+    legendDiv.innerHTML = `
+        <div style="display: flex; align-items: center;"><span style="width: 12px; height: 12px; background-color: #6f42c1; display: inline-block; margin-right: 5px; border-radius: 2px;"></span> Initiative</div>
+        <div style="display: flex; align-items: center;"><span style="width: 12px; height: 12px; background-color: #0366d6; display: inline-block; margin-right: 5px; border-radius: 2px;"></span> Work Package</div>
+        <div style="display: flex; align-items: center;"><span style="width: 12px; height: 12px; background-color: #2ea44f; display: inline-block; margin-right: 5px; border-radius: 2px;"></span> Assignment</div>
+    `;
+    controls.appendChild(legendDiv);
 
     // Build filters
     renderDynamicGroupFilter();
     renderStatusFilter();
     setupGanttRendererToggle();
-
-    // View Mode Buttons
-    const viewModeButtons = controls.querySelectorAll('.view-modes .btn-sm');
-    viewModeButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            // Update active state
-            viewModeButtons.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-
-            // Update chart view mode
-            const mode = btn.dataset.viewMode;
-            if (ganttChartInstance && typeof ganttChartInstance.changeViewMode === 'function') {
-                ganttChartInstance.changeViewMode(mode);
-            }
-        });
-    });
 }
 
-function getGanttStaticControlsHTML() {
-    return `
-        <div class="view-modes">
-            <span style="margin-right: 10px; font-weight: 500;">View:</span>
-            <div class="btn-group" role="group">
-                <button type="button" class="btn-sm btn-outline-secondary" data-view-mode="Quarter Day">Quarter Day</button>
-                <button type="button" class="btn-sm btn-outline-secondary" data-view-mode="Half Day">Half Day</button>
-                <button type="button" class="btn-sm btn-outline-secondary" data-view-mode="Day">Day</button>
-                <button type="button" class="btn-sm btn-outline-secondary" data-view-mode="Week">Week</button>
-                <button type="button" class="btn-sm btn-outline-secondary active" data-view-mode="Month">Month</button>
-            </div>
-        </div>
-        <div class="gantt-legend" style="display: flex; gap: 15px; font-size: 12px; align-items: center;">
-            <div style="display: flex; align-items: center;"><span style="width: 12px; height: 12px; background-color: #6f42c1; display: inline-block; margin-right: 5px; border-radius: 2px;"></span> Initiative</div>
-            <div style="display: flex; align-items: center;"><span style="width: 12px; height: 12px; background-color: #0366d6; display: inline-block; margin-right: 5px; border-radius: 2px;"></span> Work Package</div>
-            <div style="display: flex; align-items: center;"><span style="width: 12px; height: 12px; background-color: #2ea44f; display: inline-block; margin-right: 5px; border-radius: 2px;"></span> Assignment</div>
-        </div>
-    `;
-}
+
 
 function createLabeledControl(labelText, controlEl) {
     const wrap = document.createElement('div');
@@ -1167,6 +1146,13 @@ function setupGanttRendererToggle() {
         const next = current === 'mermaid' ? 'frappe' : 'mermaid';
         FeatureFlags.setRenderer(next);
         updateLabel();
+
+        // Update legend visibility
+        const legend = document.getElementById('ganttLegendContainer');
+        if (legend) {
+            legend.style.display = next === 'frappe' ? 'flex' : 'none';
+        }
+
         ganttChartInstance = null; // Force re-create with new renderer
         renderGanttChart();
     });
