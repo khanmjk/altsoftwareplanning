@@ -16,6 +16,7 @@ class HeaderComponent {
             return;
         }
         this.attachEventListeners();
+        this.setupNotifications();
     }
 
     attachEventListeners() {
@@ -45,6 +46,31 @@ class HeaderComponent {
                     }
                 } else {
                     console.warn('AI Chat Assistant not available');
+                }
+            });
+        }
+    }
+
+    setupNotifications() {
+        const notifBtn = this.container.querySelector('#header-notifications-btn');
+        const notifDropdown = this.container.querySelector('#notifications-dropdown');
+
+        if (notifBtn && notifDropdown) {
+            notifBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // Close other dropdowns if any (optional, but good practice)
+                const otherDropdowns = document.querySelectorAll('.dropdown-menu.show');
+                otherDropdowns.forEach(d => {
+                    if (d !== notifDropdown) d.classList.remove('show');
+                });
+
+                notifDropdown.classList.toggle('show');
+            });
+
+            // Close on outside click
+            document.addEventListener('click', (e) => {
+                if (!notifDropdown.contains(e.target) && !notifBtn.contains(e.target)) {
+                    notifDropdown.classList.remove('show');
                 }
             });
         }
