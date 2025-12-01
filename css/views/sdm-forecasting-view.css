@@ -1,0 +1,129 @@
+/* SDM Forecasting Tool Styles */
+
+/* Sections (Input, Output, FAQ) */
+#sdmForecastingView .input-section,
+#sdmForecastingView .output-section {
+    margin-bottom: 30px;
+    padding: 15px;
+    border: 1px solid #eee;
+    /* Add a light border */
+    border-radius: 4px;
+}
+
+#sdmForecastingView .input-group {
+    margin-bottom: 15px;
+    /* Increased spacing */
+}
+
+#sdmForecastingView label {
+    display: block;
+    /* Ensure label is on its own line */
+    margin-top: 10px;
+    font-weight: bold;
+    /* Make label stand out */
+    margin-bottom: 3px;
+    /* Space between label and input */
+}
+
+#sdmForecastingView input[type="number"] {
+    /* Target number inputs */
+    width: 150px;
+    /* Adjust width as needed */
+    padding: 8px;
+    margin-top: 0;
+    /* Remove default top margin */
+    box-sizing: border-box;
+    /* Include padding in width */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#sdmForecastingView .help-text {
+    font-size: 0.9em;
+    color: #555;
+    margin-top: 4px;
+    /* Space above help text */
+    margin-left: 5px;
+    /* Indent slightly */
+}
+
+/* Style the info/summary divs if needed */
+#sdmForecastingView .info,
+#sdmForecastingView .summary {
+    margin-top: 10px;
+    font-weight: bold;
+    padding: 10px;
+    background-color: #e9ecef;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+}
+
+/* Style tables within the view */
+#sdmForecastingView table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 0.9em;
+    /* Slightly smaller font for tables */
+}
+
+#sdmForecastingView th,
+#sdmForecastingView td {
+    border: 1px solid #ccc;
+    padding: 6px 8px;
+    /* Adjust padding */
+    text-align: center;
+}
+
+#sdmForecastingView th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+#sdmForecastingView td.editable {
+    /* Keep editable style */
+    background-color: #f9f9f9;
+    cursor: pointer;
+}
+
+/* Style the FAQ section */
+#sdmForecastingView .faq-section {
+    margin-top: 40px;
+    border-top: 1px solid #ccc;
+    padding-top: 20px;
+}
+
+#sdmForecastingView .faq-item {
+    margin-bottom: 20px;
+}
+
+#sdmForecastingView .faq-item h4 {
+    margin-bottom: 5px;
+    /* Adjust spacing */
+    color: #0056b3;
+}
+
+#sdmForecastingView .faq-item p,
+#sdmForecastingView .faq-item ul,
+#sdmForecastingView .faq-item ol {
+    font-size: 0.95em;
+    color: #333;
+    margin-left: 15px;
+    /* Indent FAQ content */
+}
+
+/* Table hover effects for SDM tables */
+#sdmForecastingView #forecastTable_SDM tbody tr:hover td,
+#sdmForecastingView #monthlySummaryTable_SDM tbody tr:hover td {
+    background-color: #f0f8ff !important;
+    transition: background-color 0.15s ease-in-out;
+}
+
+/* Collapsible section header hover effects */
+#sdmForecastingView .input-section>h3:hover,
+#sdmForecastingView .output-section>h3:hover,
+#sdmForecastingView .faq-section>h3:hover {
+    background-color: #e2e6ea;
+    color: #0056b3;
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
