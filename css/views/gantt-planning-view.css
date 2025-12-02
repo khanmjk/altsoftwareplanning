@@ -5,6 +5,7 @@
     height: 100%;
     display: flex;
     flex-direction: column;
+    min-height: 0;
 }
 
 /* Filter Bar */
@@ -57,15 +58,22 @@
 
 /* Split Pane Layout */
 .gantt-split {
-    display: flex;
+    display: grid;
+    grid-template-columns: 36% 8px 64%;
+    grid-template-rows: 1fr;
     flex: 1;
     overflow: hidden;
     position: relative;
+    min-height: 0;
 }
 
 .gantt-panel {
     overflow: auto;
     flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
 }
 
 .gantt-resizer {
@@ -85,6 +93,8 @@
 .gantt-table-wrapper {
     overflow: auto;
     height: 100%;
+    flex: 1;
+    min-height: 0;
 }
 
 /* Table */
@@ -258,6 +268,10 @@
     padding: var(--space-md);
     background: var(--color-white);
     min-height: 400px;
+    height: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    flex: 1;
 }
 
 /* Input Fields in Table */

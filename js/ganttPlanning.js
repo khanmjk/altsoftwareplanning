@@ -1057,10 +1057,21 @@ function renderStatusFilter() {
 
 function applyGanttSplitWidth() {
     const split = document.getElementById('ganttSplitPane');
+    const table = document.getElementById('ganttPlanningTableContainer');
+    const chart = document.getElementById('ganttChartWrapper');
     if (!split) return;
     const clamped = Math.min(85, Math.max(5, ganttTableWidthPct));
     ganttTableWidthPct = clamped;
-    split.style.gridTemplateColumns = `${clamped}% 10px ${100 - clamped}%`;
+    const chartPct = 100 - clamped;
+    // Primary layout: CSS grid columns
+    split.style.gridTemplateColumns = `${clamped}% 8px ${chartPct}%`;
+    // Fallback for older layouts (flex)
+    if (table) {
+        table.style.flexBasis = `${clamped}%`;
+    }
+    if (chart) {
+        chart.style.flexBasis = `${chartPct}%`;
+    }
 }
 
 function setupGanttResizer() {
