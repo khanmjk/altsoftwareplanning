@@ -181,10 +181,12 @@ IN PROGRESS
 - [AI Feature] Create an AI agent that can perform actions on the system with access to the code
 
 - [TECH DEBT] - Enhance the codebase to be more modular, portable, separate concerns
+-- [TD UX] - Enhance the workspace UX feature, move away from antiquated form views and caroussels - the page needs to be seen as an integrated part of the workspace view
 
 ------
 TO DO
 ------  
+- [AI] Tune the system prompt so the AI created systems include rich planning metadata for goals, initiatives, work packages, tasks, start date, end date, etc.
 - [AI] - Ability to export the year plan, showing ATL/BTL logic, etc. to Excel - the excel model must be generated using LLM so that formulaes in the code are applied to the excel generation
 - Now that we have a goals dashboard view, we need to think about introducing an interface to manage the lifecycle of goals
 - Working on creating a reusable modern table widget leveraging tabular library
