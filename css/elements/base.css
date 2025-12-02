@@ -1,0 +1,44 @@
+/* Base HTML Element Styles */
+
+/* Main content container */
+.main-content-area {
+    padding: 20px;
+    width: auto;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Card/Section containers */
+#addInitiativeSection,
+.team-edit,
+.service-edit,
+#capacityConfigView #globalConstraintsSection,
+#capacityConfigView #teamConstraintsSection,
+#sdmForecastingView .input-section,
+#sdmForecastingView .output-section,
+#sdmForecastingView .faq-section {
+    background-color: var(--color-white);
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Content padding within sections */
+#addInitiativeContent,
+.team-details,
+.service-details,
+#teamLoadSummaryContent,
+#capacityConfigView #globalConstraintsSection>div:not(h3),
+#capacityConfigView .team-details,
+#documentationContent,
+#sdmForecastingView .input-section>div:not(h3):not(.input-group),
+#sdmForecastingView .output-section>div:not(h3) {
+    padding-top: 15px;
+}
+
+/* SDM tool specific adjustments */
+#sdmForecastingView .input-section>*:not(h3):not(.input-group):not(button) {
+    padding-left: 5px;
+}

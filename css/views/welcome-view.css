@@ -1,0 +1,100 @@
+/* Welcome View Styles */
+
+.welcome-view {
+    padding: 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.welcome-header {
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.welcome-header__title {
+    font-size: 2.5rem;
+    color: var(--color-gray-900);
+    margin-bottom: 15px;
+}
+
+.welcome-header__subtitle {
+    font-size: 1.1rem;
+    color: var(--color-gray-600);
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.welcome-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+}
+
+.action-card {
+    background: var(--color-white);
+    padding: 30px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-gray-200);
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: var(--shadow-md);
+}
+
+.action-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--color-gray-400);
+}
+
+.action-card__icon-container {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+/* Modifiers for icon colors */
+.action-card__icon-container--blue {
+    background: #eff6ff;
+    color: var(--color-primary);
+}
+
+.action-card__icon-container--green {
+    background: #f0fdf4;
+    color: var(--color-success);
+}
+
+.action-card__icon-container--purple {
+    background: #f3e8ff;
+    color: #a855f7;
+    /* No variable for purple yet, keeping hex */
+}
+
+.action-card__icon-container--gray {
+    background: var(--color-gray-50);
+    color: var(--color-gray-600);
+}
+
+.action-card__icon {
+    font-size: 1.5rem;
+}
+
+.action-card__title {
+    font-size: 1.25rem;
+    margin-bottom: 10px;
+    color: #0f172a;
+    /* Dark slate */
+}
+
+.action-card__description {
+    color: var(--color-gray-600);
+    font-size: 0.95rem;
+}
+
+/* Hidden template container */
+.template-hidden {
+    display: none !important;
+}

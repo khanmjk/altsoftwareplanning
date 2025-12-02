@@ -1,0 +1,15 @@
+/* Tooltip Component Styles */
+
+.tooltip {
+    position: absolute;
+    text-align: left;
+    width: auto;
+    max-width: 300px;
+    padding: 10px;
+    font: 12px sans-serif;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    pointer-events: none;
+    z-index: 1000;
+}

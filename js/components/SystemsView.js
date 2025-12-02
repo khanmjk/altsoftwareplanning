@@ -1,175 +1,303 @@
+/**
+ * SystemsView Component
+ * Displays user systems and sample systems in a grid layout
+ * Uses template loading, event delegation, and repository pattern
+ */
 class SystemsView {
     constructor(containerId) {
         this.container = document.getElementById(containerId);
+        this.repository = window.systemRepository;
+        this._boundClickHandler = this.handleClick.bind(this);
+        this._eventsBound = false;
     }
 
-    render() {
-        if (!this.container) return;
+    /**
+     * Render the systems view
+     * @returns {Promise<void>}
+     */
+    async render() {
+        if (!this.container) {
+            console.error('SystemsView: Container not found');
+            return;
+        }
+
+        try {
+            // Load the template
+            const template = await window.templateLoader.load('html/components/systems-view-template.html');
+            this.container.innerHTML = template;
+
+            // Update UI based on AI settings
+            this.updateAIButton();
+
+            // Bind events
+            this.bindEvents();
+
+            // Populate systems data
+            this.populateSystems();
+        } catch (error) {
+            console.error('SystemsView: Error rendering view', error);
+            this.container.innerHTML = '<p style="color: red;">Error loading systems view. Please refresh the page.</p>';
+        }
+    }
+
+    /**
+     * Update AI button state based on settings
+     */
+    updateAIButton() {
+        const aiButton = document.getElementById('createWithAiBtn');
+        if (!aiButton) return;
 
         const aiEnabled = window.globalSettings?.ai?.isEnabled || false;
 
-        // Button logic: Show always, but disable if AI is not enabled
-        const aiButtonHtml = `
-            <button class="btn-primary" 
-                style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); border: none; box-shadow: 0 4px 6px -1px rgba(124, 58, 237, 0.3); ${!aiEnabled ? 'opacity: 0.6; cursor: not-allowed; filter: grayscale(100%);' : ''}" 
-                onclick="${aiEnabled ? 'if(window.handleCreateWithAi) window.handleCreateWithAi()' : 'window.notificationManager.showToast(\'Please enable AI in Settings to use this feature.\', \'warning\')'}"
-                title="${aiEnabled ? 'Create a new system using AI' : 'Enable AI in Settings to use this feature'}">
-                <i class="fas fa-magic" style="margin-right: 8px;"></i> Create with AI
-            </button>
-        `;
-
-        this.container.innerHTML = `
-            <div class="systems-view-container" style="padding: 40px; max-width: 1200px; margin: 0 auto;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; border-bottom: 1px solid #e2e8f0; padding-bottom: 20px;">
-                    <h1 style="font-size: 2rem; color: #1e293b; margin: 0;">
-                        <i class="fas fa-server" style="margin-right: 10px; color: #64748b;"></i> My Systems
-                    </h1>
-                    <div style="display: flex; gap: 15px;">
-                        ${aiButtonHtml}
-                        <button class="btn-primary" onclick="if(window.createNewSystem) window.createNewSystem()">
-                            <i class="fas fa-plus" style="margin-right: 5px;"></i> Create New System
-                        </button>
-                    </div>
-                </div>
-
-                <div id="systemsGrid">
-                    <!-- Systems will be populated here -->
-                    <p>Loading systems...</p>
-                </div>
-            </div>
-        `;
-
-        this.populateSystems(aiButtonHtml);
+        if (!aiEnabled) {
+            aiButton.classList.add('disabled');
+            aiButton.disabled = true;
+            aiButton.title = 'Enable AI in Settings to use this feature';
+        } else {
+            aiButton.classList.remove('disabled');
+            aiButton.disabled = false;
+            aiButton.title = 'Create a new system using AI';
+        }
     }
 
-    populateSystems(aiButtonHtml) {
+    /**
+     * Bind event listeners using event delegation
+     */
+    bindEvents() {
+        if (this._eventsBound) return;
+        // Event delegation for all clicks within the container
+        this.container.addEventListener('click', this._boundClickHandler);
+        this._eventsBound = true;
+    }
+
+    /**
+     * Handle all click events via delegation
+     * @param {Event} event - The click event
+     */
+    handleClick(event) {
+        const target = event.target.closest('[data-action]');
+        if (!target) return;
+
+        const action = target.dataset.action;
+        const systemId = target.dataset.systemId;
+
+        switch (action) {
+            case 'create-ai':
+                this.handleCreateWithAi();
+                break;
+            case 'create-new':
+                this.handleCreateNew();
+                break;
+            case 'load':
+                if (systemId) this.loadSystem(systemId);
+                break;
+            case 'delete':
+                if (systemId) this.deleteSystem(systemId);
+                break;
+            default:
+                console.warn(`SystemsView: Unknown action "${action}"`);
+        }
+    }
+
+    /**
+     * Handle Create with AI button click
+     */
+    handleCreateWithAi() {
+        const aiEnabled = window.globalSettings?.ai?.isEnabled || false;
+
+        if (!aiEnabled) {
+            if (window.notificationManager) {
+                window.notificationManager.showToast('Please enable AI in Settings to use this feature.', 'warning');
+            }
+            return;
+        }
+
+        if (window.handleCreateWithAi) {
+            window.handleCreateWithAi();
+        } else {
+            console.error('SystemsView: handleCreateWithAi function not found');
+        }
+    }
+
+    /**
+     * Handle Create New System button click
+     */
+    handleCreateNew() {
+        if (window.createNewSystem) {
+            window.createNewSystem();
+        } else {
+            console.error('SystemsView: createNewSystem function not found');
+        }
+    }
+
+    /**
+     * Populate the systems grid with data
+     */
+    populateSystems() {
         const grid = document.getElementById('systemsGrid');
         if (!grid) return;
 
-        const allSystems = this.getAllSystems();
-        const sampleKeys = ['StreamView', 'ConnectPro', 'ShopSphere', 'InsightAI', 'FinSecure'];
-
-        const sampleSystems = allSystems.filter(sys => sampleKeys.includes(sys.id));
-        const userSystems = allSystems.filter(sys => !sampleKeys.includes(sys.id));
+        const userSystems = this.repository.getUserSystems();
+        const sampleSystems = this.repository.getSampleSystems();
 
         let html = '';
 
         // 1. User Systems Section
-        html += `
-            <div style="margin-bottom: 50px;">
-                <h2 style="font-size: 1.5rem; color: #334155; margin-bottom: 20px; border-left: 4px solid #3b82f6; padding-left: 15px;">My Systems</h2>
-                ${userSystems.length > 0 ? `
-                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 25px;">
-                        ${userSystems.map(sys => this.renderSystemCard(sys, true)).join('')}
-                    </div>
-                ` : `
-                    <div style="text-align: center; padding: 40px; background: #f8fafc; border-radius: 12px; border: 2px dashed #cbd5e1;">
-                        <i class="fas fa-box-open" style="font-size: 2rem; color: #94a3b8; margin-bottom: 15px;"></i>
-                        <p style="color: #64748b; margin-bottom: 15px;">You haven't created any custom systems yet.</p>
-                        <div style="display: flex; gap: 15px; justify-content: center;">
-                            ${aiButtonHtml}
-                            <button class="btn-primary" onclick="if(window.createNewSystem) window.createNewSystem()">Create Your First System</button>
-                        </div>
-                    </div>
-                `}
-            </div>
-        `;
+        html += this.renderUserSystemsSection(userSystems);
 
         // 2. Sample Systems Section
         if (sampleSystems.length > 0) {
-            html += `
-                <div>
-                    <h2 style="font-size: 1.5rem; color: #334155; margin-bottom: 20px; border-left: 4px solid #64748b; padding-left: 15px;">Sample Systems</h2>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 25px;">
-                        ${sampleSystems.map(sys => this.renderSystemCard(sys, false)).join('')}
-                    </div>
-                </div>
-            `;
+            html += this.renderSampleSystemsSection(sampleSystems);
         }
 
         grid.innerHTML = html;
-        // Remove grid-template-columns from the container as we now have sections
-        grid.style.display = 'block';
     }
 
-    renderSystemCard(sys, isUserSystem) {
+    /**
+     * Render user systems section
+     * @param {Array} userSystems - Array of user system objects
+     * @returns {string} HTML string
+     */
+    renderUserSystemsSection(userSystems) {
+        if (userSystems.length > 0) {
+            return `
+                <div class="systems-section">
+                    <h2 class="systems-section__title">My Systems</h2>
+                    <div class="systems-section__grid">
+                        ${userSystems.map(sys => this.renderSystemCard(sys, true)).join('')}
+                    </div>
+                </div>
+            `;
+        } else {
+            return this.renderEmptyState();
+        }
+    }
+
+    /**
+     * Render sample systems section
+     * @param {Array} sampleSystems - Array of sample system objects
+     * @returns {string} HTML string
+     */
+    renderSampleSystemsSection(sampleSystems) {
         return `
-            <div class="system-card" style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; flex-direction: column;">
-                <div style="flex-grow: 1;">
-                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
-                        <div style="width: 50px; height: 50px; background: #eff6ff; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #3b82f6; font-size: 1.2rem;">
-                            ${sys.name.charAt(0).toUpperCase()}
-                        </div>
-                        ${isUserSystem ? `
-                        <div class="system-badge" style="background: #f1f5f9; color: #64748b; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem;">
-                            ${sys.lastModified ? new Date(sys.lastModified).toLocaleDateString() : 'Unknown Date'}
-                        </div>
-                        ` : ''}
+            <div class="systems-section">
+                <h2 class="systems-section__title systems-section__title--secondary">Sample Systems</h2>
+                <div class="systems-section__grid">
+                    ${sampleSystems.map(sys => this.renderSystemCard(sys, false)).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Render empty state when no user systems exist
+     * @returns {string} HTML string
+     */
+    renderEmptyState() {
+        const aiEnabled = window.globalSettings?.ai?.isEnabled || false;
+        const aiButtonClass = aiEnabled ? '' : 'disabled';
+        const aiButtonDisabled = aiEnabled ? '' : 'disabled';
+
+        return `
+            <div class="systems-section">
+                <h2 class="systems-section__title">My Systems</h2>
+                <div class="empty-state">
+                    <i class="fas fa-box-open empty-state__icon"></i>
+                    <p class="empty-state__message">You haven't created any custom systems yet.</p>
+                    <div class="empty-state__actions">
+                        <button class="btn btn-primary btn--gradient ${aiButtonClass}" 
+                                data-action="create-ai" 
+                                ${aiButtonDisabled}>
+                            <i class="fas fa-magic"></i> Create with AI
+                        </button>
+                        <button class="btn btn-primary" data-action="create-new">
+                            <i class="fas fa-plus"></i> Create Your First System
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Render a single system card
+     * @param {Object} sys - System object
+     * @param {boolean} isUserSystem - Whether this is a user-created system
+     * @returns {string} HTML string
+     */
+    renderSystemCard(sys, isUserSystem) {
+        const dateDisplay = isUserSystem && sys.lastModified
+            ? new Date(sys.lastModified).toLocaleDateString()
+            : '';
+
+        return `
+            <div class="system-card">
+                <div class="system-card__body">
+                    <div class="system-card__header">
+                        <div class="system-card__avatar">${sys.name.charAt(0).toUpperCase()}</div>
+                        ${dateDisplay ? `<div class="system-card__date">${dateDisplay}</div>` : ''}
                     </div>
                     
-                    <h3 style="font-size: 1.25rem; color: #0f172a; margin: 0 0 10px 0;">${sys.name}</h3>
-                    <p style="color: #64748b; font-size: 0.95rem; margin: 0 0 20px 0; line-height: 1.5;">
+                    <h3 class="system-card__title">${sys.name}</h3>
+                    <p class="system-card__description">
                         ${sys.description || 'No description provided.'}
                     </p>
                 </div>
 
-                <div style="display: flex; gap: 10px; border-top: 1px solid #f1f5f9; padding-top: 20px; margin-top: 10px;">
-                    <button class="btn-primary" style="flex-grow: 1;" onclick="window.systemsViewInstance.loadSystem('${sys.id}')">
-                        <i class="fas fa-folder-open" style="margin-right: 5px;"></i> Load
+                <div class="system-card__actions">
+                    <button class="btn btn-primary system-card__button--load" 
+                            data-action="load" 
+                            data-system-id="${sys.id}">
+                        <i class="fas fa-folder-open"></i> Load
                     </button>
                     ${isUserSystem ? `
-                    <button class="btn-secondary" style="color: #ef4444; border-color: #fecaca; background: #fff;" onclick="window.systemsViewInstance.deleteSystem('${sys.id}')" title="Delete System">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
+                        <button class="btn btn-secondary system-card__button--delete" 
+                                data-action="delete" 
+                                data-system-id="${sys.id}" 
+                                title="Delete System">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
                     ` : ''}
                 </div>
             </div>
         `;
     }
 
-    getAllSystems() {
-        const storageKey = window.LOCAL_STORAGE_KEY || 'architectureVisualization_systems_v10';
-        const systemsString = localStorage.getItem(storageKey);
-        if (!systemsString) return [];
-
-        try {
-            const systemsMap = JSON.parse(systemsString);
-            return Object.entries(systemsMap).map(([key, data]) => ({
-                id: key, // The key in the map is the system name/ID
-                name: data.systemName || key,
-                description: data.systemDescription || '',
-                lastModified: data.lastModified || null
-            })).sort((a, b) => {
-                // Sort by last modified descending
-                const dateA = a.lastModified ? new Date(a.lastModified) : new Date(0);
-                const dateB = b.lastModified ? new Date(b.lastModified) : new Date(0);
-                return dateB - dateA;
-            });
-        } catch (e) {
-            console.error('Error parsing systems from localStorage', e);
-            return [];
-        }
-    }
-
+    /**
+     * Load a system
+     * @param {string} systemKey - The system ID to load
+     */
     loadSystem(systemKey) {
         if (window.loadSavedSystem) {
             window.loadSavedSystem(systemKey);
         } else {
-            console.error('loadSavedSystem function not found');
+            console.error('SystemsView: loadSavedSystem function not found');
         }
     }
 
+    /**
+     * Delete a system
+     * @param {string} systemKey - The system ID to delete
+     */
     async deleteSystem(systemKey) {
-        if (await window.notificationManager.confirm(`Are you sure you want to permanently delete "${systemKey}"? This action cannot be undone.`, 'Delete System', { confirmStyle: 'danger' })) {
-            const storageKey = window.LOCAL_STORAGE_KEY || 'architectureVisualization_systems_v10';
-            const systemsString = localStorage.getItem(storageKey);
-            if (systemsString) {
-                const systemsMap = JSON.parse(systemsString);
-                if (systemsMap[systemKey]) {
-                    delete systemsMap[systemKey];
-                    localStorage.setItem(storageKey, JSON.stringify(systemsMap));
-                    this.render(); // Refresh view
-                }
+        if (!window.notificationManager) {
+            console.error('SystemsView: notificationManager not found');
+            return;
+        }
+
+        const confirmed = await window.notificationManager.confirm(
+            `Are you sure you want to permanently delete "${systemKey}"? This action cannot be undone.`,
+            'Delete System',
+            { confirmStyle: 'danger' }
+        );
+
+        if (confirmed) {
+            const success = this.repository.deleteSystem(systemKey);
+            if (success) {
+                window.notificationManager.showToast(`System "${systemKey}" has been deleted.`, 'success');
+                this.render(); // Refresh the view
+            } else {
+                window.notificationManager.showToast('Failed to delete system.', 'error');
             }
         }
     }

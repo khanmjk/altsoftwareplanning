@@ -1,0 +1,53 @@
+/* Collapsible Component - Collapsible sections and headers */
+
+/* Collapsible Header Base */
+#toolDocumentationSection>h3[onclick],
+.service-edit>h4[onclick] {
+    margin: 0 0 0 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Toggle Indicator - ON LEFT SIDE (original behavior) */
+.toggle-indicator {
+    display: inline-block;
+    font-weight: bold;
+    margin-right: 5px;
+    transition: transform 0.2s ease-in-out;
+}
+
+.toggle-indicator.collapsed {
+    transform: rotate(-90deg);
+}
+
+/* Toggle Disabled State */
+.toggle-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Collapsible Header Hover Effects */
+#documentationHeader:hover {
+    background-color: var(--color-gray-200);
+    color: var(--color-primary-600);
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+#systemEditForm .service-edit>h4:hover {
+    background-color: #dce9f5;
+    color: #004a99;
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+/* Collapsible Content */
+.collapsible-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-in-out;
+}
+
+.collapsible-content.expanded {
+    max-height: 5000px;
+}

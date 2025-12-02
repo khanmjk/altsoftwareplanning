@@ -1,0 +1,53 @@
+/* Dependencies Component - Service and API dependencies UI */
+
+/* Service Dependencies Container */
+.service-deps-container,
+.platform-deps-container,
+.dependent-apis-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+/* Current and Other Dependencies Lists */
+.current-deps,
+.other-deps {
+    flex: 1;
+    margin: 0 10px;
+}
+
+/* Dependencies Buttons */
+.service-deps-buttons,
+.platform-deps-buttons,
+.dependent-apis-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.service-deps-buttons button,
+.platform-deps-buttons button,
+.dependent-apis-buttons button {
+    min-width: 80px;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.85rem;
+}
+
+/* Dependencies List Items */
+.dependency-item {
+    padding: 6px 10px;
+    margin-bottom: 4px;
+    background-color: var(--color-gray-50);
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.dependency-item:hover {
+    background-color: var(--color-gray-100);
+}
+
+.dependency-item.selected {
+    background-color: var(--color-primary-50);
+    border-color: var(--color-primary-300);
+}

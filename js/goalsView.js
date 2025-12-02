@@ -16,7 +16,7 @@ function initializeGoalsView() {
         </div>
         <div id="goalCardsContainer" class="goal-cards-container"></div>
     `;
-    
+
     generateRoadmapTableFilters('Goals', renderGoalsView, { includeThemes: false });
     renderGoalsView();
 }
@@ -64,16 +64,16 @@ function prepareGoalData() {
                 return null;
             }
         }
-        
+
         if (teamFilter !== 'all') {
             if (!contributingTeams.has(teamFilter)) {
                 return null;
             }
         }
-        
+
         let finalContributingTeams = new Set(contributingTeams);
         if (teamFilter !== 'all') {
-            if(!finalContributingTeams.has(teamFilter)) return null;
+            if (!finalContributingTeams.has(teamFilter)) return null;
         } else if (orgFilter !== 'all') {
             const teamsInOrg = new Set();
             (currentSystemData.sdms || []).forEach(sdm => {
@@ -98,8 +98,8 @@ function prepareGoalData() {
             overallStatus = 'Completed';
             statusReason = 'All linked initiatives for this period are completed.';
         } else {
-            const atRiskInitiatives = initiativesForYear.filter(init => 
-                (init.attributes.planningStatusFundedHc === 'BTL') || 
+            const atRiskInitiatives = initiativesForYear.filter(init =>
+                (init.attributes.planningStatusFundedHc === 'BTL') ||
                 (new Date(init.targetDueDate) < new Date() && init.status !== 'Completed')
             );
 
@@ -108,7 +108,7 @@ function prepareGoalData() {
                 statusReason = `At risk due to: ${atRiskInitiatives.map(i => `'${i.title}'`).join(', ')}.`;
             }
         }
-        
+
         const contributingThemes = new Set();
         initiativesForYear.forEach(init => {
             (init.themes || []).forEach(t => contributingThemes.add(t));
@@ -133,7 +133,7 @@ function prepareGoalData() {
             displayContributingTeams: Array.from(contributingTeams),
             displaySdeBreakdown: sdeBreakdownByTeam, // Add breakdown to data
             displayThemes: Array.from(contributingThemes),
-            displayInitiatives: initiativesForYear 
+            displayInitiatives: initiativesForYear
         };
     }).filter(Boolean);
 
@@ -150,13 +150,13 @@ function renderGoalsView() {
     if (!container) return;
 
     const goalData = prepareGoalData();
-    
+
     if (goalData.length === 0) {
-        container.innerHTML = `<p style="text-align: center; color: #777; margin-top: 20px;">No goals match the current filter criteria.</p>`;
+        container.innerHTML = `<p class="goal-cards-container__empty">No goals match the current filter criteria.</p>`;
         return;
     }
 
-    container.innerHTML = ''; 
+    container.innerHTML = '';
     const themeMap = new Map((currentSystemData.definedThemes || []).map(t => [t.themeId, t.name]));
     const teamMap = new Map((currentSystemData.teams || []).map(t => [t.teamId, t.teamIdentity || t.teamName]));
 
@@ -169,7 +169,7 @@ function renderGoalsView() {
 
         const initiativesListId = `initiatives-list-${goal.goalId}`;
         const initiativeCardsHTML = goal.displayInitiatives.map(init => {
-            const totalSde = (init.assignments || []).reduce((s,a) => s + (a.sdeYears || 0), 0);
+            const totalSde = (init.assignments || []).reduce((s, a) => s + (a.sdeYears || 0), 0);
             const statusClass = `status-${(init.status || 'backlog').toLowerCase().replace(/\s+/g, '-')}`;
             const isBTL = init.attributes.planningStatusFundedHc === 'BTL' ? 'btl' : '';
             const breakdownHTML = (init.assignments || []).filter(a => a.sdeYears > 0).map(a => `<strong>${teamMap.get(a.teamId) || '??'}</strong>: ${a.sdeYears.toFixed(2)}`).join(', ');
@@ -180,7 +180,7 @@ function renderGoalsView() {
         const sdeTooltipText = Object.entries(goal.displaySdeBreakdown)
             .map(([teamId, sde]) => `• ${teamMap.get(teamId) || 'Unknown'}: ${sde.toFixed(2)} SDEs`)
             .join('\n');
-        
+
         const progressPercentage = goal.displayTotalInitiatives > 0 ? (goal.displayCompletedCount / goal.displayTotalInitiatives) * 100 : 0;
         const progressBarHTML = `
             <div class="progress-bar-container" title="${progressPercentage.toFixed(0)}% Complete">
@@ -245,13 +245,16 @@ function renderGoalsView() {
                 <strong>Contributing Teams:</strong> ${teamNames || 'None'}
             </div>
             <div class="goal-themes">
-                <strong>Strategic Themes:</strong> ${themeNames || 'None'}
+                <strong>Strategic Themes:</strong>
+                <div class="goal-themes-pills">
+                    ${goal.displayThemes.map(tid => `<span class="theme-pill">${themeMap.get(tid) || 'Uncategorized'}</span>`).join('')}
+                </div>
             </div>
             <div class="goal-initiatives-toggle">
                 <div class="toggle-summary" data-target-id="${initiativesListId}">
                     View Linked Initiatives (${goal.displayInitiatives.length}) <span class="toggle-arrow">▼</span>
                 </div>
-                <div id="${initiativesListId}" class="initiatives-list" style="display: none;">
+                <div id="${initiativesListId}" class="initiatives-list initiatives-list--hidden">
                     ${initiativeCardsHTML}
                 </div>
             </div>
@@ -267,10 +270,9 @@ function renderGoalsView() {
             const arrow = toggle.querySelector('.toggle-arrow');
 
             if (targetList) {
-                const isHidden = targetList.style.display === 'none';
-                targetList.style.display = isHidden ? 'block' : 'none';
+                targetList.classList.toggle('initiatives-list--hidden');
                 if (arrow) {
-                    arrow.textContent = isHidden ? '▲' : '▼';
+                    arrow.textContent = targetList.classList.contains('initiatives-list--hidden') ? '▼' : '▲';
                 }
             }
         });

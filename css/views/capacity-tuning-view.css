@@ -1,0 +1,276 @@
+/* Capacity Tuning View Styles */
+
+/* Error States */
+.capacity-config-view__error {
+    padding: 20px;
+}
+
+.capacity-config-view__error--missing-data {
+    color: red;
+}
+
+/* Global Constraints Section */
+#globalConstraintsSection {
+    border: 1px solid #ccc;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+/* Scenario Buttons */
+#capacityScenarioButtons {
+    margin-bottom: 15px;
+}
+
+.capacity-scenario-selector__label {
+    margin-right: 10px;
+    font-weight: 600;
+}
+
+.capacity-scenario-button {
+    padding: 5px 10px;
+    margin-right: 10px;
+    border: 1px solid var(--color-gray-400);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.9em;
+    background: var(--color-gray-200);
+    color: var(--color-gray-700);
+    transition: all 0.2s ease;
+}
+
+.capacity-scenario-button--active {
+    background-color: var(--color-primary-600);
+    color: white;
+    border-color: var(--color-primary-700);
+    font-weight: bold;
+}
+
+.capacity-scenario-button:hover {
+    background: var(--color-primary-100);
+}
+
+.capacity-scenario-button--active:hover {
+    background-color: var(--color-primary-700);
+}
+
+/* Capacity Tables */
+.capacity-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.capacity-table th,
+.capacity-table td {
+    border: 1px solid var(--color-gray-300);
+    padding: 5px;
+}
+
+.capacity-table thead th {
+    background-color: var(--color-gray-100);
+}
+
+.capacity-table tbody td {
+    text-align: center;
+}
+
+.capacity-table tbody td:first-child {
+    text-align: left;
+}
+
+.capacity-table tfoot td {
+    font-weight: bold;
+    border-top: 2px solid #666;
+}
+
+/* Org Events Table */
+#orgEventsTbody td {
+    border: 1px solid var(--color-gray-300);
+    padding: 5px;
+}
+
+#orgEventsTbody td:nth-child(2) {
+    text-align: center;
+}
+
+#orgEventsTbody td:nth-child(3) {
+    text-align: center;
+    width: 80px;
+}
+
+/* Leave Types Table */
+#leaveTypesTbody td {
+    border: 1px solid var(--color-gray-300);
+    padding: 5px;
+}
+
+#leaveTypesTbody td:nth-child(2) {
+    text-align: center;
+}
+
+/* Team Activities Table */
+.team-activities-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.team-activities-table thead {
+    background-color: var(--color-gray-100);
+}
+
+.team-activities-table th,
+.team-activities-table td {
+    border: 1px solid var(--color-gray-300);
+    padding: 4px;
+}
+
+.team-activities-table th:nth-child(1) {
+    width: 40%;
+}
+
+.team-activities-table th:nth-child(2) {
+    width: 20%;
+}
+
+.team-activities-table th:nth-child(3) {
+    width: 20%;
+}
+
+.team-activities-table th:nth-child(4) {
+    width: 10%;
+}
+
+.team-activities-table th:nth-child(5) {
+    width: 10%;
+}
+
+/* Headcount Breakdown */
+.capacity-headcount-breakdown {
+    font-size: 0.8em;
+    color: var(--color-gray-600);
+}
+
+/* Narrative Section */
+#capacityNarrativeSection {
+    border: 1px solid var(--color-gray-300);
+    margin-top: 20px;
+    background-color: var(--color-gray-100);
+}
+
+#narrativeHeader {
+    margin: 0;
+    padding: 10px 15px;
+    cursor: pointer;
+    background-color: var(--color-gray-200);
+    border-bottom: 1px solid var(--color-gray-400);
+}
+
+#narrativeContent {
+    padding: 15px;
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+}
+
+#narrativeContent.collapsed {
+    display: none;
+}
+
+.toggle-indicator {
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+/* Narrative Divider */
+.capacity-narrative__divider {
+    border: none;
+    border-top: 1px solid var(--color-gray-300);
+    margin: 1.5em 0;
+}
+
+/* Chart Section */
+#capacityChartContainer {
+    border: 1px solid var(--color-gray-300);
+    margin-top: 20px;
+    background-color: var(--color-gray-50);
+}
+
+#chartHeader {
+    margin: 0;
+    padding: 10px 15px;
+    cursor: pointer;
+    background-color: var(--color-gray-200);
+    border-bottom: 1px solid var(--color-gray-400);
+}
+
+#chartToggleContent {
+    padding: 15px;
+}
+
+#chartToggleContent.collapsed {
+    display: none;
+}
+
+/* Team Selector */
+#teamSelectorContainer {
+    margin-bottom: 15px;
+}
+
+.capacity-team-selector__label {
+    margin-right: 10px;
+    font-weight: 600;
+}
+
+/* Standard Leave Table */
+.standard-leave-table th {
+    text-align: left;
+    padding: 4px 8px;
+}
+
+.standard-leave-table th:nth-child(2),
+.standard-leave-table th:nth-child(3) {
+    text-align: center;
+}
+/* Additional Capacity Tuning CSS */
+#capacityConfigView #globalConstraintsSection>h3,
+#capacityConfigView #teamConstraintsSection>h3,
+#capacityConfigView .team-constraint-container>h4 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #212529;
+    background-color: #f8f9fa;
+    padding: 10px 15px;
+    margin: -20px -20px 15px -20px;
+    border-bottom: 1px solid #dee2e6;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+}
+
+#capacityConfigView .team-constraint-container>h4[onclick] {
+    margin: 0 0 0 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+#capacityConfigView #globalConstraintsSection,
+#capacityConfigView #teamConstraintsSection {
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+#capacityConfigView #globalConstraintsSection>div:not(h3),
+#capacityConfigView .team-details {
+    padding-top: 15px;
+}
+
+#capacityConfigView #globalConstraintsSection>h3:hover,
+#capacityConfigView #teamConstraintsSection>h3:hover,
+#capacityConfigView .team-constraint-container>h4:hover,
+#capacityConfigView #narrativeHeader:hover,
+#capacityConfigView #chartHeader:hover {
+    background-color: #e2e6ea;
+    color: #0056b3;
+}

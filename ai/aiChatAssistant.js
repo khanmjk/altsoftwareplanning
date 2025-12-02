@@ -109,8 +109,12 @@ function openAiChatPanel() {
     if (panel) {
         panel.style.display = 'block';
         panel.style.width = '400px';
+        setChatLayoutWidth(panel.style.width);
     }
-    if (handle) handle.style.display = 'block';
+    if (handle) {
+        handle.style.display = 'block';
+        handle.style.right = panel ? panel.style.width : '0';
+    }
     chatPanelIsOpen = true;
     if (window.aiAgentController && typeof window.aiAgentController.renderSuggestionsForCurrentView === 'function') {
         window.aiAgentController.renderSuggestionsForCurrentView();
@@ -123,6 +127,7 @@ function closeAiChatPanel() {
     const handle = document.getElementById('chatResizeHandle');
     if (panel) panel.style.width = '0';
     if (handle) handle.style.display = 'none';
+    setChatLayoutWidth('0px');
     chatPanelIsOpen = false;
 }
 
@@ -437,11 +442,14 @@ function onChatResizeMouseDown(e) {
 function onChatResizeMouseMove(e) {
     if (!isChatResizing) return;
     const panel = document.getElementById('aiChatPanelContainer');
+    const handle = document.getElementById('chatResizeHandle');
     if (!panel) return;
     let newWidth = window.innerWidth - e.clientX;
     if (newWidth < 300) newWidth = 300;
     if (newWidth > window.innerWidth / 2) newWidth = window.innerWidth / 2;
     panel.style.width = newWidth + 'px';
+    if (handle) handle.style.right = panel.style.width;
+    setChatLayoutWidth(panel.style.width);
 }
 
 function onChatResizeMouseUp() {
@@ -450,6 +458,12 @@ function onChatResizeMouseUp() {
     document.body.style.userSelect = 'auto';
     document.removeEventListener('mousemove', onChatResizeMouseMove);
     document.removeEventListener('mouseup', onChatResizeMouseUp);
+}
+
+function setChatLayoutWidth(widthValue) {
+    if (typeof document !== 'undefined') {
+        document.documentElement.style.setProperty('--chat-panel-width', widthValue || '0px');
+    }
 }
 
 function openDiagramModal(code, title = 'Generated Diagram') {

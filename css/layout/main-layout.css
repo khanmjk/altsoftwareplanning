@@ -24,6 +24,7 @@ body {
     display: flex;
     flex-direction: column;
     margin-left: var(--sidebar-width, 260px);
+    margin-right: var(--chat-panel-width, 0px);
     /* Offset for fixed sidebar */
     height: 100vh;
     overflow: hidden;

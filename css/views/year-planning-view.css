@@ -1,0 +1,57 @@
+/* Year Planning View - EXACT CSS from style-legacy.css commit 5fee202 */
+
+/* Planning Table Headers */
+#planningTable thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background-color: #e9ecef;
+    border: 1px solid #ccc;
+    text-align: left;
+    white-space: nowrap;
+    padding: 3px 5px;
+    font-size: 0.85em;
+}
+
+#planningTable th[data-team-id] {
+    background-color: #ddeeff;
+    padding: 5px 2px;
+    font-size: 0.8em;
+    min-width: 25px;
+    max-width: 25px;
+}
+
+/* Planning Table Body Cells - EXACT ORIGINAL */
+#planningTable tbody td,
+#teamLoadSummaryTable tbody td {
+    padding: 2px 4px;
+    font-size: 0.82em;
+    border: 1px solid #f0f0f0;
+    vertical-align: middle;
+}
+
+#planningTable tbody td input[type="number"] {
+    font-size: 0.9em;
+    padding: 2px;
+}
+
+/* Team Load Summary Table */
+#teamLoadSummaryTable {
+    font-size: 0.85em;
+}
+
+#teamLoadSummaryTable thead th {
+    padding: 5px 8px;
+    background-color: #f0f2f5;
+}
+
+#teamLoadSummaryTable tbody td,
+#teamLoadSummaryTable tfoot td {
+    padding: 4px 6px;
+    font-size: 0.85em;
+}
+
+#teamLoadSummaryTable tfoot td {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}

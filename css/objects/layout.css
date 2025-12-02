@@ -1,0 +1,64 @@
+/* Layout Objects - Structural layout patterns */
+
+/* Main Content Area - Used by all views */
+.main-content-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-lg);
+    background-color: var(--color-white);
+}
+
+/* AI Chat Panel Container */
+#aiChatPanelContainer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    width: 0;
+    overflow: hidden;
+    background-color: var(--color-white);
+    border-left: 1px solid var(--color-gray-300);
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    transition: width 0.2s ease;
+}
+
+/* Chat Resize Handle */
+#chatResizeHandle {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    width: 6px;
+    background-color: var(--color-gray-200);
+    cursor: col-resize;
+    border-left: 1px solid var(--color-gray-300);
+    z-index: 1001;
+}
+
+#chatResizeHandle:hover {
+    background-color: var(--color-gray-300);
+}
+
+/* Scrollbar Styling for AI Chat */
+#aiChatPanelContainer::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+#aiChatPanelContainer::-webkit-scrollbar-track {
+    background: var(--color-gray-100);
+    border-radius: 10px;
+}
+
+#aiChatPanelContainer::-webkit-scrollbar-thumb {
+    background-color: var(--color-gray-400);
+    border-radius: 10px;
+    border: 2px solid var(--color-gray-100);
+}
+
+#aiChatPanelContainer::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-gray-500);
+}

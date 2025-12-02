@@ -1,0 +1,54 @@
+/* Sidebar Enhanced Styles */
+
+.sidebar__logo-area {
+    cursor: pointer;
+}
+
+.sidebar__system-switcher-content {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    /* 10px -> 8px, close enough or use gap: 10px if strict */
+}
+
+.sidebar__system-icon {
+    width: 24px;
+    height: 24px;
+    background: var(--color-primary);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: bold;
+    color: var(--color-white);
+}
+
+.sidebar__system-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.sidebar__chevron-icon {
+    font-size: 0.7rem;
+    color: var(--color-gray-600);
+}
+
+.sidebar__menu-icon {
+    width: 20px;
+    display: inline-block;
+    /* Ensure width applies */
+    text-align: center;
+    /* Center icon in the fixed width */
+}
+
+.sidebar__menu-separator {
+    height: 1px;
+    background: var(--color-gray-700);
+    margin: 5px 0;
+}
+
+/* User Profile (if uncommented) */
+.sidebar__user-name {
+    font-size: 0.9rem;
+}

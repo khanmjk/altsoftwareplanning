@@ -16,7 +16,7 @@ function renderCapacityConfigView(container) {
     }
 
     if (!currentSystemData) {
-        container.innerHTML = '<div style="padding: 20px;"><h3>Please load a system first.</h3></div>';
+        container.innerHTML = '<div class="capacity-config-view__error"><h3>Please load a system first.</h3></div>';
         return;
     }
 
@@ -52,7 +52,7 @@ function generateGlobalConstraintsForm() {
     }
     if (!currentSystemData || !currentSystemData.capacityConfiguration) {
         console.error("Cannot generate global constraints form: Missing currentSystemData.capacityConfiguration.");
-        container.innerHTML = '<p style="color:red;">Error: Capacity configuration data missing in the loaded system.</p>';
+        container.innerHTML = '<p class="capacity-config-view__error capacity-config-view__error--missing-data">Error: Capacity configuration data missing in the loaded system.</p>';
         return;
     }
 
@@ -523,11 +523,21 @@ function generateCapacitySummaryDisplay(calculatedMetrics, selectedScenario) {
     const inactiveButtonStyle = baseButtonStyle + ' background-color: #e9ecef; color: #495057;';
 
     scenarioButtonsDiv.innerHTML = `
-        <strong style="margin-right: 10px;">Show Summary For:</strong>
-        <button type="button" style="${selectedScenario === 'EffectiveBIS' ? activeButtonStyle : inactiveButtonStyle}" onclick="updateCapacityCalculationsAndDisplay('EffectiveBIS')">Effective BIS</button>
-        <button type="button" style="${selectedScenario === 'TeamBIS' ? activeButtonStyle : inactiveButtonStyle}" onclick="updateCapacityCalculationsAndDisplay('TeamBIS')">Team BIS</button>
-        <button type="button" style="${selectedScenario === 'FundedHC' ? activeButtonStyle : inactiveButtonStyle}" onclick="updateCapacityCalculationsAndDisplay('FundedHC')">Funded HC</button>
+        <strong class="capacity-scenario-selector__label">Show Summary For:</strong>
+        <button type="button" class="capacity-scenario-button ${selectedScenario === 'EffectiveBIS' ? 'capacity-scenario-button--active' : ''}" data-scenario="EffectiveBIS">Effective BIS</button>
+        <button type="button" class="capacity-scenario-button ${selectedScenario === 'TeamBIS' ? 'capacity-scenario-button--active' : ''}" data-scenario="TeamBIS">Team BIS</button>
+        <button type="button" class="capacity-scenario-button ${selectedScenario === 'FundedHC' ? 'capacity-scenario-button--active' : ''}" data-scenario="FundedHC">Funded HC</button>
     `;
+
+    // Event delegation for scenario buttons
+    scenarioButtonsDiv.querySelectorAll('.capacity-scenario-button').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const scenario = btn.getAttribute('data-scenario');
+            if (scenario && typeof updateCapacityCalculationsAndDisplay === 'function') {
+                updateCapacityCalculationsAndDisplay(scenario);
+            }
+        });
+    });
 
     let summaryTable = summarySection.querySelector('#capacitySummaryTable');
     if (!summaryTable) {
@@ -1064,9 +1074,7 @@ async function saveCapacityConfiguration() {
             console.error("Failed to calculate metrics, calculatedCapacityMetrics will not be updated in saved data.");
         }
 
-        const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
-        systems[systemNameKey] = currentSystemData;
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
+        window.systemRepository.saveSystem(systemNameKey, currentSystemData);
 
         window.notificationManager.showToast(`Capacity configuration for system "${systemNameKey}" saved successfully.`, 'success');
         console.log("Capacity configuration (with calculated metrics) saved.");
@@ -1458,6 +1466,5 @@ function formatDeductionTooltip(breakdown) {
     return tooltipString;
 }
 // --- End Helper ---
-
 
 

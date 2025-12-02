@@ -137,6 +137,32 @@ const HTML_COMPONENT_FALLBACKS = {
 </div>`
 };
 
+// Inline template fallbacks for TemplateLoader consumers
+window.TEMPLATE_FALLBACKS = {
+    'html/components/systems-view-template.html': `
+<div class="systems-view">
+    <div class="systems-view__header">
+        <h1 class="systems-view__title">
+            <i class="fas fa-server systems-view__icon"></i>
+            My Systems
+        </h1>
+        <div class="systems-view__actions">
+            <button id="createWithAiBtn" class="btn btn--primary btn--gradient" data-action="create-ai">
+                <i class="fas fa-magic"></i> Create with AI
+            </button>
+            <button id="createSystemBtn" class="btn btn--primary" data-action="create-new">
+                <i class="fas fa-plus"></i> Create New System
+            </button>
+        </div>
+    </div>
+
+    <div id="systemsGrid" class="systems-grid">
+        <p>Loading systems...</p>
+    </div>
+</div>
+`
+};
+
 /**
  * Helper to load HTML components from files into target containers.
  */
@@ -323,16 +349,14 @@ async function handleCreateWithAi() {
 
         currentSystemData = newSystemData;
         window.currentSystemData = currentSystemData;
-        const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
 
         let finalSystemName = newSystemData.systemName;
-        if (systems[finalSystemName]) {
+        if (window.systemRepository.getSystemData(finalSystemName)) {
             finalSystemName = `${finalSystemName} (AI ${Date.now().toString().slice(-5)})`;
             newSystemData.systemName = finalSystemName;
         }
 
-        systems[finalSystemName] = newSystemData;
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
+        window.systemRepository.saveSystem(finalSystemName, newSystemData);
 
         // Display stats in modal
         if (stats) {
@@ -496,25 +520,13 @@ function toggleCollapsibleSection(contentId, indicatorId, handleId = null) {
 
 /** Save Sample Systems to Local Storage if not already present **/
 /**
- * REVISED: Saves sample systems to Local Storage ONLY if no data already exists.
- **/
-function saveSampleSystemsToLocalStorage() {
-    // console.log(">>> Checking if sample systems need to be saved to LocalStorage...");
+ * Saves sample systems to Local Storage.
+ * Default: add missing samples without touching existing (editable) ones.
+ * Use { forceOverwrite: true } to reset all samples to defaults.
+ */
+function saveSampleSystemsToLocalStorage(options = {}) {
+    const { forceOverwrite = false } = options;
 
-    const existingDataString = localStorage.getItem(LOCAL_STORAGE_KEY);
-    let systems = {};
-
-    if (existingDataString) {
-        try {
-            systems = JSON.parse(existingDataString);
-        } catch (e) {
-            console.error("Error parsing existing systems, resetting:", e);
-            systems = {};
-        }
-    }
-
-    // Always update/overwrite sample systems with the latest code definitions
-    // This ensures description updates and new samples are applied
     const sampleSystems = {
         'StreamView': sampleSystemDataStreamView,
         'ConnectPro': sampleSystemDataContactCenter,
@@ -523,26 +535,12 @@ function saveSampleSystemsToLocalStorage() {
         'FinSecure': sampleSystemDataFinSecure
     };
 
-    let hasChanges = false;
     Object.entries(sampleSystems).forEach(([key, data]) => {
-        // We overwrite the sample system to ensure latest data (descriptions, etc.)
-        // Note: This resets any user changes to these specific sample IDs.
-        // Users should create new systems or we should use different IDs for user forks.
-        // For now, treating these as immutable reference samples.
-        systems[key] = data;
-        hasChanges = true;
-    });
-
-    if (hasChanges) {
-        try {
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
-            console.log("Sample systems updated in LocalStorage.");
-        } catch (error) {
-            console.error("Error saving updated systems to localStorage:", error);
+        const exists = window.systemRepository.getSystemData(key);
+        if (forceOverwrite || !exists) {
+            window.systemRepository.saveSystem(key, data);
         }
-    }
-
-    // console.log("<<< Finished saveSampleSystemsToLocalStorage check.");
+    });
 }
 
 /** Show Saved Systems Modal **/
@@ -552,27 +550,17 @@ function saveSampleSystemsToLocalStorage() {
 /** REVISED (v7) Load Saved System - Enhanced Logging for allKnownEngineers */
 function loadSavedSystem(systemName) {
     console.log(`[V7 LOAD] Attempting to load system: ${systemName}`);
-    const systemsString = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (!systemsString) {
-        window.notificationManager.showToast('No systems data found in localStorage.', 'warning');
-        console.error("[V7 LOAD] No systems key found in localStorage.");
-        returnToHome();
-        return;
-    }
-
-    const systems = JSON.parse(systemsString || '{}');
-    const systemData = systems[systemName];
-
+    const systemData = window.systemRepository.getSystemData(systemName);
     if (!systemData) {
-        window.notificationManager.showToast(`System "${systemName}" not found in localStorage.`, 'error');
-        console.error(`[V7 LOAD] System "${systemName}" not found after parsing localStorage.`);
+        window.notificationManager.showToast(`System "${systemName}" not found in storage.`, 'error');
+        console.error(`[V7 LOAD] System "${systemName}" not found in repository.`);
         returnToHome();
         return;
     }
 
     currentSystemData = systemData; // Assign to global
     window.currentSystemData = currentSystemData;
-    console.log(`[V7 LOAD] Successfully parsed system data for: "${currentSystemData.systemName}" from localStorage.`);
+    console.log(`[V7 LOAD] Successfully loaded system data for: "${currentSystemData.systemName}" from repository.`);
 
     // ----- IMMEDIATE CHECK of allKnownEngineers -----
     if (currentSystemData.allKnownEngineers && Array.isArray(currentSystemData.allKnownEngineers)) {
@@ -928,14 +916,14 @@ window.returnToHome = returnToHome;
 async function resetToDefaults() {
     if (await window.notificationManager.confirm('This will erase all your saved systems and restore the default sample systems. Do you want to proceed?', 'Reset to Defaults', { confirmStyle: 'danger', confirmText: 'Reset' })) {
         try {
-            localStorage.removeItem(LOCAL_STORAGE_KEY);
+            window.systemRepository.clearAllSystems();
             console.log('Cleared user systems from localStorage.');
         } catch (error) {
             console.error('Failed to clear local storage before resetting defaults:', error);
             window.notificationManager.showToast('Unable to reset defaults because local storage could not be cleared.', 'error');
             return;
         }
-        saveSampleSystemsToLocalStorage(); // This will re-add the defaults
+        saveSampleSystemsToLocalStorage({ forceOverwrite: true }); // Re-add defaults explicitly
         currentSystemData = null;
         window.currentSystemData = null;
         window.notificationManager.showToast('Systems have been reset to defaults.', 'success');
@@ -975,7 +963,7 @@ function deleteSystem() {
 }
 window.deleteSystem = deleteSystem;
 
-/** Confirms and deletes the specified system from localStorage **/
+/** Confirms and deletes the specified system from storage **/
 async function confirmAndDeleteSystem(systemName) {
     if (!systemName) return;
 
@@ -987,11 +975,9 @@ async function confirmAndDeleteSystem(systemName) {
 
     if (confirmed) {
         try {
-            const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
-            if (systems[systemName]) {
-                delete systems[systemName];
-                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
-                console.log(`System "${systemName}" deleted from localStorage.`);
+            const deleted = window.systemRepository.deleteSystem(systemName);
+            if (deleted) {
+                console.log(`System "${systemName}" deleted from repository.`);
 
                 window.notificationManager.showToast(`System "${systemName}" has been deleted.`, 'success');
 
@@ -1098,13 +1084,16 @@ function saveSystemChanges() {
     }
 
     try {
-        const systems = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
-        systems[currentSystemData.systemName] = currentSystemData;
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(systems));
-        console.log('System changes saved to local storage via saveSystemChanges.');
-        return true; // Indicate success
+        // Track last modified for sorting and display in Systems view (handled in repository)
+        const saved = window.systemRepository.saveSystem(currentSystemData.systemName, currentSystemData);
+        if (saved) {
+            console.log('System changes saved via SystemRepository.');
+            return true; // Indicate success
+        }
+        console.error("SystemRepository.saveSystem returned false.");
+        return false;
     } catch (error) {
-        console.error("Error saving system to local storage in saveSystemChanges:", error);
+        console.error("Error saving system via repository in saveSystemChanges:", error);
         window.notificationManager.showToast("An error occurred while saving. Please check console.", "error");
         return false; // Indicate failure
     }
@@ -1120,29 +1109,36 @@ function saveSystemChanges() {
 
 
 function refreshCurrentView() {
-    switch (currentViewId) {
-        case 'planningView':
-            if (typeof renderPlanningView === 'function') renderPlanningView();
-            break;
-        case 'organogramView':
-            // Use switchView to ensure proper rendering via WorkspaceComponent
-            switchView('organogramView');
-            break;
+    // Prefer NavigationManager so views render through WorkspaceComponent (consistent with refactor)
+    if (window.navigationManager && typeof window.navigationManager.navigateTo === 'function' && currentViewId) {
+        // Use popstate flag to avoid duplicating history entries
+        window.navigationManager.navigateTo(currentViewId, {}, true);
+        return;
+    }
 
-        case 'capacityConfigView':
-            if (typeof updateCapacityCalculationsAndDisplay === 'function') updateCapacityCalculationsAndDisplay();
-            break;
-        case 'visualizationCarousel':
-            if (typeof showVisualization === 'function') showVisualization(currentVisualizationIndex || 0);
-            break;
-        case 'systemEditForm':
-            if (typeof showSystemEditForm === 'function') {
-                showSystemEditForm(currentSystemData);
-            }
-            break;
-        default:
-            console.log(`[REFRESH] No specific refresh handler for view: ${currentViewId}`);
-            break;
+    switch (currentViewId) {
+    case 'planningView':
+        if (typeof renderPlanningView === 'function') renderPlanningView();
+        break;
+    case 'organogramView':
+        // Use switchView to ensure proper rendering via WorkspaceComponent
+        switchView('organogramView');
+        break;
+
+    case 'capacityConfigView':
+        if (typeof updateCapacityCalculationsAndDisplay === 'function') updateCapacityCalculationsAndDisplay();
+        break;
+    case 'visualizationCarousel':
+        if (typeof showVisualization === 'function') showVisualization(currentVisualizationIndex || 0);
+        break;
+    case 'systemEditForm':
+        if (typeof showSystemEditForm === 'function') {
+            showSystemEditForm(currentSystemData);
+        }
+        break;
+    default:
+        console.log(`[REFRESH] No specific refresh handler for view: ${currentViewId}`);
+        break;
     }
 }
 
@@ -1180,4 +1176,3 @@ if (typeof returnToHome === 'function') window.returnToHome = returnToHome;
 if (typeof createNewSystem === 'function') window.createNewSystem = createNewSystem;
 if (typeof deleteSystem === 'function') window.deleteSystem = deleteSystem;
 if (typeof resetToDefaults === 'function') window.resetToDefaults = resetToDefaults;
-

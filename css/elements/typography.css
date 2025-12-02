@@ -1,0 +1,101 @@
+/* Typography - Base text styles */
+
+/* Body */
+body {
+    font-family: 'Inter', Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--color-gray-900);
+}
+
+/* Headings */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-weight: 600;
+    margin-top: 1.5em;
+    margin-bottom: 0.75em;
+    line-height: 1.2;
+}
+
+h1 {
+    font-size: 2.25rem;
+    /* 36px */
+    text-align: center;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+h2 {
+    font-size: 1.75rem;
+    /* 28px */
+}
+
+h3 {
+    font-size: 1.5rem;
+    /* 24px */
+}
+
+h4 {
+    font-size: 1.25rem;
+    /* 20px */
+}
+
+/* Links */
+a {
+    color: var(--color-primary-600);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Content headers - specific to main views */
+#systemEditForm>h2,
+#organogramView>div>h2,
+#engineerTableView>h2,
+#serviceDependenciesTable>h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #16191f;
+    padding-bottom: 0.75rem;
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #eaeded;
+}
+
+/* Sub-section headers */
+.service-edit>h4,
+.team-edit>h4,
+#systemEditForm>h3,
+#planningView #addInitiativeSection>h3,
+#planningView #teamLoadSummarySection>h4,
+#capacityConfigView #globalConstraintsSection>h3,
+#capacityConfigView #teamConstraintsSection>h3,
+#capacityConfigView .team-constraint-container>h4,
+#sdmForecastingView h3 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--color-gray-900);
+    background-color: var(--color-gray-100);
+    padding: 10px 15px;
+    margin: -20px -20px 15px -20px;
+    border-bottom: 1px solid var(--color-gray-300);
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+}
+
+/* Collapsible header adjustments */
+#planningView #addInitiativeSection>h3[onclick],
+#planningView #teamLoadSummarySection>h4[onclick],
+#toolDocumentationSection>h3[onclick],
+#capacityConfigView .team-constraint-container>h4[onclick],
+.service-edit>h4[onclick] {
+    margin: 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}

@@ -1,6 +1,6 @@
 // js/data.js
 
-/** Define a unique key for local storage **/
+/** Define a unique key for local storage (internal to repository) **/
 const LOCAL_STORAGE_KEY = 'architectureVisualization_systems_v10';
 const APP_SETTINGS_KEY = 'architectureVisualization_appSettings_v1';
 
@@ -316,7 +316,7 @@ if (typeof window !== 'undefined') {
     window.updateWorkPackage = updateWorkPackage;
     window.recalculateWorkPackageDates = recalculateWorkPackageDates;
     window.deleteWorkPackage = deleteWorkPackage;
-    window.LOCAL_STORAGE_KEY = LOCAL_STORAGE_KEY;
+    // Storage key no longer exported; repository manages storage internally.
     window.APP_SETTINGS_KEY = APP_SETTINGS_KEY;
     window.Modes = Modes;
 }

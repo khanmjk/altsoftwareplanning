@@ -1,0 +1,296 @@
+/* Goals View Styles */
+
+/* Container - Using column layout (masonry style) like original */
+.goal-cards-container {
+    column-count: 3;
+    column-gap: 20px;
+    padding: 20px;
+}
+
+/* Add media queries to make the column count responsive */
+@media (max-width: 1200px) {
+    .goal-cards-container {
+        column-count: 2;
+    }
+}
+
+@media (max-width: 768px) {
+    .goal-cards-container {
+        column-count: 1;
+    }
+}
+
+/* Empty State */
+.goal-cards-container__empty {
+    text-align: center;
+    color: #777;
+    margin-top: 20px;
+    column-span: all;
+}
+
+/* Goal Card - Original Design */
+.goal-card {
+    /* Prevents card from breaking across columns */
+    break-inside: avoid;
+    margin-bottom: 20px;
+
+    /* Card styling */
+    border: 1px solid #ddd;
+    border-left-width: 5px;
+    border-radius: 5px;
+    padding: 15px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Status border colors */
+.goal-card.status-on-track {
+    border-left-color: #007bff;
+}
+
+.goal-card.status-at-risk {
+    border-left-color: #ffc107;
+}
+
+.goal-card.status-completed {
+    border-left-color: #28a745;
+}
+
+/* Card Header */
+.goal-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.goal-card-header h3 {
+    margin: 0;
+    font-size: 1.25em;
+    color: #333;
+}
+
+/* Status Badge - Original Design */
+.goal-status {
+    font-weight: bold;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    color: #fff;
+}
+
+.status-on-track .goal-status {
+    background-color: #007bff;
+}
+
+.status-at-risk .goal-status {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.status-completed .goal-status {
+    background-color: #28a745;
+}
+
+
+/* Description */
+.goal-description {
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: 15px;
+    flex-grow: 1;
+}
+
+/* Metrics - Original simpler design */
+.goal-metrics {
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
+    padding: 10px 0;
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 15px;
+}
+
+.goal-metrics>div {
+    flex: 1;
+}
+
+.metric-value {
+    display: block;
+    font-size: 1.5em;
+    font-weight: 600;
+    color: #0056b3;
+}
+
+.metric-label {
+    font-size: 0.8em;
+    color: #6c757d;
+}
+
+/* Progress Bar (kept for compatibility) */
+.metric-progress {
+    flex: 1;
+}
+
+.progress-bar-container {
+    position: relative;
+    height: 24px;
+    background: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: help;
+    margin-bottom: 5px;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745, #20c997);
+    transition: width 0.3s ease;
+}
+
+.progress-bar-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #212529;
+    z-index: 1;
+}
+
+/*  Details Sections - Original simpler style */
+.goal-ownership,
+.goal-teams,
+.goal-themes {
+    font-size: 0.9em;
+    line-height: 1.5;
+    margin-bottom: 15px;
+    color: #495057;
+}
+
+.goal-ownership strong,
+.goal-teams strong,
+.goal-themes strong {
+    color: #212529;
+}
+
+/* Theme Pills/Badges */
+.goal-themes-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.theme-pill {
+    display: inline-block;
+    padding: 4px 12px;
+    background: #fbbf24;
+    color: #78350f;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Initiatives Toggle - Original style */
+.goal-initiatives-toggle {
+    border-top: 1px dashed #ccc;
+    padding-top: 10px;
+    margin-top: 10px;
+}
+
+.toggle-summary {
+    cursor: pointer;
+    font-weight: bold;
+    color: #0056b3;
+    display: inline-block;
+    user-select: none;
+}
+
+.toggle-summary:hover {
+    text-decoration: underline;
+}
+
+.toggle-arrow {
+    transition: transform 0.2s ease-in-out;
+    float: right;
+}
+
+.initiatives-list {
+    margin-top: var(--space-sm);
+    padding: var(--space-sm);
+    background: var(--color-gray-50);
+    border-radius: var(--radius-sm);
+}
+
+.initiatives-list--hidden {
+    display: none;
+}
+
+/* Mini Initiative Cards */
+.mini-initiative-card {
+    background: var(--color-white);
+    border-left: 3px solid var(--color-gray-400);
+    padding: var(--space-sm);
+    margin-bottom: var(--space-sm);
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+}
+
+.mini-initiative-card:last-child {
+    margin-bottom: 0;
+}
+
+.mini-initiative-card.status-completed {
+    border-left-color: var(--color-success-500);
+}
+
+.mini-initiative-card.status-in-progress {
+    border-left-color: var(--color-primary-500);
+}
+
+.mini-initiative-card.status-blocked {
+    border-left-color: var(--color-danger-500);
+}
+
+.mini-initiative-card.btl {
+    background: #fff8e6;
+}
+
+.mini-card-main-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.mini-card-title {
+    font-weight: 600;
+    color: var(--color-gray-900);
+    flex: 1;
+}
+
+.mini-card-sde {
+    font-size: 0.8rem;
+    color: var(--color-gray-600);
+    white-space: nowrap;
+    margin-left: var(--space-sm);
+}
+
+.mini-card-breakdown {
+    font-size: 0.75rem;
+    color: var(--color-gray-600);
+}
+
+.no-initiatives-text {
+    text-align: center;
+    color: var(--color-gray-500);
+    padding: var(--space-md);
+    font-style: italic;
+}

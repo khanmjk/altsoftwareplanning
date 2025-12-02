@@ -1,0 +1,71 @@
+/* System Editing View Styles - EXACT original from style-legacy.css */
+
+/* Service Edit Sections */
+.service-edit {
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    background-color: #f9f9f9;
+}
+
+.service-edit h4 {
+    margin: 0;
+    padding: 10px;
+    background-color: #e6f7ff;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* API Edit Sections */
+.api-edit {
+    margin: 5px 0;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+}
+
+.api-edit button {
+    padding: 4px 8px;
+    font-size: 0.85em;
+}
+
+/* Team Edit Sections */
+.team-edit {
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    background-color: #f9f9f9;
+}
+
+.team-edit h4 {
+    margin: 0;
+    padding: 10px;
+    background-color: #e6f7ff;
+    cursor: pointer;
+    user-select: none;
+}
+
+.team-details {
+    padding: 10px;
+    display: none;
+}
+
+/* System Edit Form */
+#editSystemForm {
+    max-width: 1000px;
+    margin: 20px auto;
+}
+
+/* New Initiative SDE Years Input */
+#newInitiativeSdeYears {
+    width: 80px;
+    display: inline-block;
+}
+
+/* Hover effects for collapsible headers */
+#systemEditForm .service-edit>h4:hover,
+#systemEditForm .team-edit>h4:hover {
+    background-color: #dce9f5;
+    color: #004a99;
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}

@@ -1,0 +1,98 @@
+/* Roadmap View Component Styles */
+
+.roadmap-view {
+    padding: var(--space-lg);
+}
+
+/* Controls Bar */
+.roadmap-controls {
+    margin-bottom: var(--space-lg);
+    padding: var(--space-md);
+    background: var(--color-gray-50);
+    border: 1px solid var(--color-gray-300);
+    border-radius: var(--radius-md);
+}
+
+.roadmap-filter-group {
+    margin-bottom: var(--space-md);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.roadmap-filter-label {
+    font-weight: 600;
+    color: var(--color-gray-900);
+}
+
+.roadmap-filter-checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.roadmap-filter-checkbox {
+    margin: 0;
+    cursor: pointer;
+}
+
+.roadmap-filter-checkbox-label {
+    font-weight: normal;
+    cursor: pointer;
+    user-select: none;
+    margin: 0;
+}
+
+/* Actions Row */
+.roadmap-actions {
+    display: flex;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+}
+
+/* Table Container */
+.roadmap-table-container {
+    margin-bottom: var(--space-xl);
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 4px 12px;
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    display: inline-block;
+}
+
+.status-badge--backlog {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.status-badge--defined {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.status-badge--committed {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-badge--in-progress {
+    background: #ddd6fe;
+    color: #5b21b6;
+}
+
+.status-badge--completed {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+/* Action Buttons in Table */
+.roadmap-action-buttons {
+    display: flex;
+    gap: var(--space-xs);
+}

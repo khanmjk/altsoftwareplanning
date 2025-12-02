@@ -1,0 +1,318 @@
+/* Gantt Planning View Styles */
+
+/* Container */
+.gantt-planning-view {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+/* Filter Bar */
+.gantt-filter-bar {
+    padding: var(--space-md);
+    background: var(--color-gray-50);
+    border-bottom: 1px solid var(--color-gray-300);
+}
+
+.gantt-filter-row {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-md);
+    align-items: center;
+}
+
+/* Legend */
+.gantt-legend {
+    display: flex;
+    gap: 15px;
+    font-size: 12px;
+    align-items: center;
+    margin-top: var(--space-md);
+}
+
+.gantt-legend__item {
+    display: flex;
+    align-items: center;
+}
+
+.gantt-legend__color-box {
+    width: 12px;
+    height: 12px;
+    display: inline-block;
+    margin-right: 5px;
+    border-radius: 2px;
+}
+
+.gantt-legend__color-box--initiative {
+    background-color: #6f42c1;
+}
+
+.gantt-legend__color-box--work-package {
+    background-color: #0366d6;
+}
+
+.gantt-legend__color-box--assignment {
+    background-color: #2ea44f;
+}
+
+/* Split Pane Layout */
+.gantt-split {
+    display: grid;
+    grid-template-columns: 36% 8px 64%;
+    grid-template-rows: 1fr;
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    min-height: 0;
+}
+
+.gantt-panel {
+    overflow: auto;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+}
+
+.gantt-resizer {
+    width: 8px;
+    background: var(--color-gray-300);
+    cursor: col-resize;
+    flex-shrink: 0;
+    position: relative;
+    user-select: none;
+}
+
+.gantt-resizer:hover {
+    background: var(--color-primary-500);
+}
+
+/* Table Wrapper */
+.gantt-table-wrapper {
+    overflow: auto;
+    height: 100%;
+    flex: 1;
+    min-height: 0;
+}
+
+/* Table */
+.gantt-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.gantt-hierarchy {
+    table-layout: auto;
+}
+
+/* Table Headers */
+.gantt-table__header-cell {
+    text-align: left;
+    padding: 6px;
+    border-bottom: 1px solid #ddd;
+    background: var(--color-gray-100);
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+/* Base Cell Styles */
+.gantt-table__cell {
+    padding: 6px;
+    border-bottom: 1px solid #f0f0f0;
+    vertical-align: middle;
+}
+
+/* Initiative Row Cells */
+.gantt-table__cell--initiative {
+    border-bottom-color: #f0f0f0;
+}
+
+.gantt-table__cell--initiative-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.gantt-table__title-container>div:first-child {
+    font-weight: 600;
+}
+
+.gantt-table__id-badge {
+    font-family: monospace;
+    color: #666;
+    font-size: 12px;
+}
+
+/* Work Package Row Cells */
+.gantt-table__cell--wp {
+    padding: 6px 6px 6px 32px;
+    border-bottom: 1px solid #f7f7f7;
+}
+
+.gantt-table__cell--wp-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.gantt-table__cell--wp-teams {
+    color: #555;
+}
+
+.gantt-table__cell--wp-sde {
+    color: #333;
+}
+
+/* Assignment Row Cells */
+.gantt-table__cell--assignment {
+    padding: 4px 6px 4px 48px;
+    border-bottom: 1px solid #fafafa;
+    color: #555;
+    font-size: 13px;
+}
+
+.gantt-table__cell--assignment-empty {
+    padding: 4px;
+    border-bottom: 1px solid #fafafa;
+}
+
+/* Other Teams Toggle Row */
+.gantt-table__cell--other-teams {
+    padding: 4px 6px 4px 48px;
+    border-bottom: 1px solid #fafafa;
+    color: #777;
+    font-size: 12px;
+}
+
+.gantt-table__cell--other-teams-action {
+    padding: 4px;
+    border-bottom: 1px solid #fafafa;
+}
+
+/* Empty State */
+.gantt-table__empty {
+    padding: 10px;
+    text-align: center;
+    color: #777;
+}
+
+.gantt-table__empty-wp {
+    padding: 6px 12px;
+    color: #777;
+}
+
+/* Expander Button */
+.gantt-expander {
+    width: 24px;
+    height: 24px;
+    border: 1px solid var(--color-gray-400);
+    background: var(--color-white);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.gantt-expander:hover {
+    background: var(--color-gray-100);
+    border-color: var(--color-primary-500);
+}
+
+/* Action Buttons */
+.gantt-add-wp {
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+/* Row States */
+.gantt-init-row {
+    background: var(--color-white);
+}
+
+.gantt-init-row:hover {
+    background: var(--color-gray-50);
+}
+
+.gantt-wp-row {
+    background: #fafafa;
+}
+
+.gantt-wp-row:hover {
+    background: #f5f5f5;
+}
+
+.gantt-wp-assign-row {
+    background: #fcfcfc;
+}
+
+.gantt-wp-assign-row:hover {
+    background: #f8f8f8;
+}
+
+/* Focus States */
+.gantt-focus-row {
+    background: #fff8e1 !important;
+}
+
+.gantt-focus-initiative {
+    border-left: 3px solid var(--color-primary-500);
+}
+
+/* Chart Container */
+.gantt-chart-box {
+    padding: var(--space-md);
+    background: var(--color-white);
+    min-height: 400px;
+    height: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    flex: 1;
+}
+
+/* Input Fields in Table */
+.gantt-table input[type="text"],
+.gantt-table input[type="date"],
+.gantt-table input[type="number"] {
+    padding: 4px 6px;
+    border: 1px solid var(--color-gray-300);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+}
+
+.gantt-table input[disabled] {
+    background: var(--color-gray-100);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.gantt-table input[type="text"] {
+    width: 70%;
+}
+
+.gantt-table input[type="number"] {
+    width: 80px;
+}
+
+/* Select Dropdowns */
+.gantt-table select {
+    padding: 4px 6px;
+    border: 1px solid var(--color-gray-300);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    max-width: 200px;
+}
+
+/* Buttons in Table */
+.gantt-table button {
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+.gantt-table button[data-action="toggle-other-teams"] {
+    padding: 2px 6px;
+}
