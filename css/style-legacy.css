@@ -92,91 +92,32 @@ a:hover {
 .team-edit>h4,
 /* Already styled somewhat, let's refine */
 #systemEditForm>h3,
-#planningView #addInitiativeSection>h3,
-#planningView #teamLoadSummarySection>h4,
-#capacityConfigView #globalConstraintsSection>h3,
-#capacityConfigView #teamConstraintsSection>h3,
-#capacityConfigView .team-constraint-container>h4,
-#sdmForecastingView h3 {
-    /* Target h3s in SDM tool for section titles */
-    font-size: 1.15rem;
-    /* Around 18px */
-    font-weight: 600;
-    color: #212529;
-    background-color: #f8f9fa;
-    /* Very light gray for header background */
-    padding: 10px 15px;
-    margin: -20px -20px 15px -20px;
-    /* Extend to card edges, then add bottom margin */
-    /* For collapsible headers, they might have their own margin:0 set inline/JS */
-    border-bottom: 1px solid #dee2e6;
-    border-top-left-radius: 6px;
-    /* Match card radius if it's the first element */
-    border-top-right-radius: 6px;
-    /* Match card radius */
-}
+/* Feature-specific h3/h4 styles moved to respective view files */
 
-/* Specific adjustments for collapsible headers to override the negative margin if needed */
-#planningView #addInitiativeSection>h3[onclick],
-#planningView #teamLoadSummarySection>h4[onclick],
+/* Specific adjustments for collapsible headers */
 #toolDocumentationSection>h3[onclick],
-#capacityConfigView .team-constraint-container>h4[onclick],
 .service-edit>h4[onclick] {
-    /* If service headers become clickable */
     margin: 0 0 0 0;
-    /* Reset margin if it's a clickable header within a card */
     border-top-left-radius: 0;
     border-top-right-radius: 0;
-    /* Keep existing background and padding from their specific rules or inline styles */
 }
 
-
-/* Styling for sub-sections within cards (like "Add New Initiative" or individual team edits) */
-/* This creates a "card-within-a-card" effect */
+/* Styling for sub-sections within cards */
 #addInitiativeSection,
-.team-edit,
-.service-edit,
-#capacityConfigView #globalConstraintsSection,
-#capacityConfigView #teamConstraintsSection,
-#sdmForecastingView .input-section,
-#sdmForecastingView .output-section,
-#sdmForecastingView .faq-section {
+.service-edit {
     background-color: #ffffff;
     border: 1px solid #e0e0e0;
-    /* Slightly softer border for nested cards */
     border-radius: 4px;
     padding: 15px;
-    /* Inner padding */
     margin-bottom: 20px;
-    /* Space between sub-cards */
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-/* For collapsible sections, their headers might already have specific styling. */
-/* We ensure the content div within these sub-cards has appropriate padding. */
+/* Content divs within sections */
 #addInitiativeContent,
-.team-details,
-/* Content of team-edit */
 .service-details,
-/* Content of service-edit */
-#teamLoadSummaryContent,
-#capacityConfigView #globalConstraintsSection>div:not(h3),
-/* Target content divs */
-#capacityConfigView .team-details,
-/* Content of team-constraint-container */
-#documentationContent,
-/* Already has padding, but ensure consistency */
-#sdmForecastingView .input-section>div:not(h3):not(.input-group),
-/* More specific for sdm tool */
-#sdmForecastingView .output-section>div:not(h3) {
+#teamLoadSummaryContent {
     padding-top: 15px;
-    /* Add padding if not directly on the sub-card div */
-}
-
-/* Adjust padding for direct children of input-section if they are not headers or input-groups */
-#sdmForecastingView .input-section>*:not(h3):not(.input-group):not(button) {
-    padding-left: 5px;
-    /* Indent general text a bit */
 }
 
 
@@ -475,20 +416,10 @@ thead th {
     border: 1px solid #dee2e6;
 }
 
+/* #teamTable styles moved to org-view.css */
+
 /* SDM Forecasting Tables */
-#sdmForecastingView table {
-    font-size: 0.9em;
-}
-
-#sdmForecastingView th {
-    background-color: #f0f2f5;
-    padding: 6px 8px;
-}
-
-#sdmForecastingView td {
-    padding: 6px 8px;
-    border: 1px solid #dee2e6;
-}
+/* #sdmForecastingView table styles moved to sdm-forecasting-view.css */
 
 /* #editSystemForm style moved to system-edit-view.css */
 
@@ -509,19 +440,7 @@ svg {
     border: 1px solid #ccc;
 }
 
-#teamTable {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-}
-
-#teamTable th,
-#teamTable td {
-    border: 1px solid #ccc;
-    padding: 8px;
-    text-align: left;
-    vertical-align: top;
-}
+/* #teamTable styles moved to org-view.css */
 
 .node text {
     pointer-events: none;
@@ -708,45 +627,22 @@ svg {
 
 /* --- UX Enhancement: Hover Effects --- */
 
-/* 1. Table Row Hover Effects */
-#teamTable tbody tr:hover td,
-/* Target TDs within the hovered TR */
-#serviceDependenciesTable tbody tr:hover td,
-#planningTableBody tr:hover td,
-#teamLoadSummaryTable tbody tr:hover td,
-#sdmForecastingView #forecastTable_SDM tbody tr:hover td,
-#sdmForecastingView #monthlySummaryTable_SDM tbody tr:hover td {
-    background-color: #f0f8ff !important;
-    /* Alice blue, try with !important first for testing planning table */
-    transition: background-color 0.15s ease-in-out;
-}
+/* Feature-specific table hover effects moved to respective view files */
 
 /* Attempt to make inputs transparent on row hover in planning table */
 #planningTableBody tr:hover td input[type="number"] {
     background-color: transparent;
 }
 
-
-/* 2. Collapsible Section Header Hover Effects */
-#documentationHeader:hover,
-#planningView #addInitiativeSection>h3:hover,
-#planningView #teamLoadSummarySection>h4:hover,
-#capacityConfigView #globalConstraintsSection>h3:hover,
-#capacityConfigView #teamConstraintsSection>h3:hover,
-#capacityConfigView .team-constraint-container>h4:hover,
-#sdmForecastingView .input-section>h3:hover,
-#sdmForecastingView .output-section>h3:hover,
-#sdmForecastingView .faq-section>h3:hover,
-#capacityConfigView #narrativeHeader:hover,
-#capacityConfigView #chartHeader:hover {
+/* Collapsible section header base hover */
+#documentationHeader:hover {
     background-color: #e2e6ea;
     color: #0056b3;
     transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
 }
 
-/* Ensure these are active for Edit System collapsible headers */
-#systemEditForm .service-edit>h4:hover,
-#systemEditForm .team-edit>h4:hover {
+/* Feature-specific hover effects moved to view files */
+#systemEditForm .service-edit>h4:hover {
     background-color: #dce9f5;
     /* Distinct light blue for testing edit mode hover */
     color: #004a99;
@@ -820,11 +716,12 @@ a:focus {
 /* --- UX Enhancement: Modern Scrollbar Styling --- */
 
 /* Target specific scrollable containers */
-#documentationContent,
+/* #documentationContent moved to documentation-view.css */
+#aiChatPanelContainer,
 /* Planning table wrapper scrollbar styles moved to year-planning-view.css */
 
 /* For WebKit-based browsers (Chrome, Safari, Edge, Opera) */
-#documentationContent::-webkit-scrollbar {
+#aiChatPanelContainer::-webkit-scrollbar {
     width: 10px;
     height: 10px;
 }

@@ -34,6 +34,7 @@
 @import url('views/sdm-forecasting-view.css');
 @import url('views/year-planning-view.css');
 @import url('views/system-edit-view.css');
+@import url('views/documentation-view.css');
 
 /* Remaining legacy styles - shared CSS */
 @import url('style-legacy.css');

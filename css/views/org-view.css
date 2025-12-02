@@ -233,3 +233,23 @@
 #engineerTable tr:nth-child(even) {
     background-color: #f9f9f9;
 }
+
+/* Team Table CSS */
+#teamTable {
+    width: 100%;
+    margin-top: 20px;
+}
+
+#teamTable th,
+#teamTable td {
+    border: 1px solid #dee2e6;
+    padding: 0.5rem;
+}
+
+#teamTable thead th {
+    background-color: #f0f2f5;
+}
+
+#teamTable tbody tr:hover td {
+    background-color: #f0f8ff !important;
+}
