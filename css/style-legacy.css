@@ -367,16 +367,7 @@ label {
 }
 
 /* For specific input widths where 100% is too much (like SDE Years input) */
-#newInitiativeSdeYears,
-#planningTable tbody td input[type="number"],
-/* Targets inputs in planning table cells */
-#sdmForecastingView input[type="number"] {
-    /* Already styled specifically, ensure this doesn't break it or consolidate */
-    width: 80px;
-    /* Or your preferred smaller width */
-    display: inline-block;
-    /* Allow them to not take full line */
-}
+/* #newInitiativeSdeYears style moved to system-edit-view.css */
 
 /* --- Table Styles --- */
 table {
@@ -471,27 +462,7 @@ thead th {
 }
 
 /* Team Load Summary Table */
-#teamLoadSummaryTable {
-    font-size: 0.85em;
-}
-
-#teamLoadSummaryTable thead th {
-    padding: 5px 8px;
-    /* Slightly more padding */
-    background-color: #f0f2f5;
-}
-
-#teamLoadSummaryTable tbody td,
-#teamLoadSummaryTable tfoot td {
-    padding: 4px 6px;
-    font-size: 0.85em;
-    /* Match table overall size */
-}
-
-#teamLoadSummaryTable tfoot td {
-    background-color: #f8f9fa;
-    font-weight: 600;
-}
+/* Team Load Summary Table styles moved to year-planning-view.css */
 
 /* Service Dependencies Table */
 #serviceDependenciesTable th {
@@ -519,11 +490,7 @@ thead th {
     border: 1px solid #dee2e6;
 }
 
-/* Add bottom margin to the form within the system edit view */
-#editSystemForm {
-    margin-bottom: 40px;
-    /* This provides 20px of space after the -20px top margin of the h3 */
-}
+/* #editSystemForm style moved to system-edit-view.css */
 
 /* Basic styling */
 h1 {
@@ -586,12 +553,6 @@ svg {
     margin-bottom: 5px;
 }
 
-.team-edit {
-    margin-bottom: 15px;
-    padding: 10px;
-    border: 1px solid #ccc;
-}
-
 #systemDescription {
     text-align: center;
     /* Add this line to center the text */
@@ -600,190 +561,14 @@ svg {
     margin-bottom: 20px;
 }
 
-
-.team-edit {
-    margin-bottom: 15px;
-    border: 1px solid #ccc;
-}
-
-.team-edit h4 {
-    margin: 0;
-    padding: 10px;
-    background-color: #f2f2f2;
-}
-
-.team-details {
-    padding: 10px;
-    display: none;
-}
-
-.service-edit {
-    margin-bottom: 15px;
-    border: 1px solid #ccc;
-}
-
-.service-edit h4 {
-    margin: 0;
-    padding: 10px;
-    background-color: #e6f7ff;
-    cursor: pointer;
-}
-
-.service-details {
-    padding: 10px;
-    display: none;
-}
-
-.api-edit {
-    margin-left: 20px;
-    margin-bottom: 10px;
-    border: 1px solid #ddd;
-    padding: 10px;
-}
+/* Service and API edit styles moved to system-edit-view.css */
 
 /* --- Visualization Carousel Styles --- */
-/* #visualizationCarousel styles moved to top of file to avoid duplication */
-
-#visualizationCarousel .carousel-item {
-    /* display: none; */
-    /* Initially set in HTML, JS will manage */
-    width: 100%;
-    margin-top: 0;
-    padding: 4px 8px;
-    box-sizing: border-box;
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-}
-
-#visualizationCarousel .carousel-item.active {
-    display: block;
-    /* Show the active item */
-    /* opacity: 1; */
-}
-
-/* Style for the central title */
-#visualizationTitle {
-    display: inline-block;
-    /* Allows margin */
-    min-width: 250px;
-    /* Give it some space */
-    text-align: center;
-}
-
-/* Optional: Basic button styling */
-#visualizationCarousel button {
-    padding: 5px 10px;
-    cursor: pointer;
-}
-
-/* --- End Carousel Styles --- */
-
-/* Mermaid diagram container tweaks */
-#mermaidVisualization {
-    min-height: 760px;
-}
-
-#mermaidGraph {
-    min-height: 720px;
-    resize: vertical;
-    overflow: auto;
-}
-
-#mermaidGraph svg {
-    max-width: 100%;
-    height: auto;
-}
-
-#mermaidApiGraph svg {
-    max-width: 100%;
-    height: auto;
-}
+/* #visualizationCarousel styles moved to visualizations-view.css */
+/* #mermaidVisualization styles moved to visualizations-view.css */
+/* #serviceDependenciesTable styles moved to visualizations-view.css */
 
 
-/* Adjust SVG size for service visualization */
-#serviceSvg {
-    width: 100%;
-    height: 600px;
-    border: 1px solid #ccc;
-}
-
-/* Adjust tooltip styling if necessary */
-.tooltip {
-    position: absolute;
-    text-align: left;
-    width: auto;
-    max-width: 300px;
-    padding: 5px;
-    font: 12px sans-serif;
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid #ccc;
-    pointer-events: none;
-    z-index: 1000;
-}
-
-/* Dependency visualization styles */
-.node circle {
-    fill: #fff;
-    stroke: steelblue;
-    stroke-width: 2px;
-}
-
-.node text {
-    font: 12px sans-serif;
-}
-
-.link {
-    fill: none;
-    stroke: #ccc;
-    stroke-width: 2px;
-}
-
-.tooltip {
-    position: absolute;
-    text-align: left;
-    width: auto;
-    max-width: 300px;
-    padding: 10px;
-    font: 12px sans-serif;
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    pointer-events: none;
-    z-index: 1000;
-}
-
-#serviceDependenciesTable {
-    margin-top: 0;
-    width: 100%;
-    max-width: none;
-    box-sizing: border-box;
-}
-
-#serviceDependenciesTable table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-#serviceDependenciesTable th,
-#serviceDependenciesTable td {
-    border: 1px solid #ccc;
-    padding: 8px;
-    text-align: left;
-}
-
-#serviceDependenciesTable th {
-    background-color: #f2f2f2;
-}
-
-#serviceDependenciesTable tr:nth-child(even) {
-    background-color: #f9f9f9;
-}
-
-#serviceDependenciesTable tr:hover {
-    background-color: #e9e9e9;
-}
 
 .platform-deps-container {
     display: flex;
@@ -867,226 +652,15 @@ svg {
 }
 
 /* Add styles for new views */
-/* #organogramView styles moved to top of file */
-#engineerTableView {
-    max-width: 90%;
-    /* Allow wider view */
-    margin: 20px auto;
-}
+/* #organogramView styles moved to org-view.css */
+/* #engineerTable styles moved to org-view.css */
+/* .organogram-node style moved to org-view.css */
 
-#organogramSvg {
-    width: 100%;
-    height: 700px;
-    /* Adjust as needed */
-    border: 1px solid #ccc;
-    background-color: #f9f9f9;
-    /* Light background */
-}
 
-/* Styles for Organogram Nodes/Links (Example) */
-.organogram-link {
-    fill: none;
-    stroke: #555;
-    stroke-opacity: 0.6;
-    stroke-width: 1.5px;
-}
-
-.organogram-node circle {
-    /* Example using circles */
-    stroke: steelblue;
-    stroke-width: 1.5px;
-}
-
-.organogram-node rect {
-    /* Example using rectangles */
-    stroke: steelblue;
-    stroke-width: 1.5px;
-    fill: #fff;
-}
-
-.organogram-node text {
-    font: 10px sans-serif;
-    /* Adjust text anchor and position based on layout */
-}
-
-/* Styles for Engineer Table */
-#engineerTable th,
-#engineerTable td {
-    border: 1px solid #ccc;
-    padding: 8px;
-    text-align: left;
-}
-
-#engineerTable th {
-    background-color: #f2f2f2;
-}
-
-#engineerTable th[data-sort-key]:hover {
-    /* Indicate sortable */
-    background-color: #e0e0e0;
-    text-decoration: underline;
-}
-
-#engineerTable tr:nth-child(even) {
-    background-color: #f9f9f9;
-}
 
 /* Also add some basic CSS for visual feedback (place within the <style> tag) */
 /* Add styles for drag-and-drop feedback */
-#planningTableBody tr.dragging {
-    opacity: 0.5;
-    border: 2px dashed #ccc;
-}
-
-#planningTableBody tr.drag-over {
-    border-top: 2px solid blue;
-    /* Highlight where it will drop */
-}
-
-/* --- Styles for Planning Table Enhancements (Revised for Alignment Fix) --- */
-#planningTableWrapper {
-    overflow: auto;
-    /* Enable BOTH horizontal and vertical scrolling */
-    /* max-height: 550px; */
-    /* Set max height before vertical scroll appears (Adjust as needed) */
-    max-width: 100%;
-    /* Ensure it doesn't overflow its parent */
-    margin-bottom: 15px;
-    /* Add some space below */
-    border: 1px solid #ccc;
-    /* Optional: add a border to see the scroll container */
-}
-
-/* Make headers stick within the scrollable container */
-#planningTable thead th {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    background-color: #f2f2f2;
-    border: 1px solid #ccc;
-    text-align: left;
-    white-space: nowrap;
-    /* --- ADDED specific, reduced padding and font-size --- */
-    padding: 3px 5px;
-    /* Reduced vertical and horizontal padding */
-    font-size: 0.85em;
-    /* Reduced font size */
-    /* ----------------------------------------------------- */
-}
-
-/* Ensure the background of the dynamic team headers is also solid */
-#planningTable th[data-team-id] {
-    background-color: #e6f7ff;
-    writing-mode: vertical-lr;
-    text-orientation: mixed;
-    text-align: center;
-    /* --- Apply reduced padding/font AND adjust min/max width --- */
-    padding: 5px 2px;
-    /* Adjusted padding for vertical (more top/bottom, less left/right) */
-    font-size: 0.8em;
-    /* Further reduced font for vertical names */
-    min-width: 25px;
-    /* Reduced width */
-    max-width: 25px;
-    /* Reduced width */
-
-}
-
-
-/* Center-align specific numerical columns in the planning table */
-#planningTable th:nth-child(5),
-/* Total SDE Years Header */
-#planningTable td:nth-child(5),
-/* Total SDE Years Cell */
-#planningTable th:nth-child(6),
-/* Cumulative SDE Years Header */
-#planningTable td:nth-child(6) {
-    /* Cumulative SDE Years Cell */
-    text-align: center !important;
-    /* Use important if needed */
-}
-
-/* --- REVISED: Reduce font size and padding for BOTH planning table rows AND summary table rows --- */
-#planningTable tbody td,
-#teamLoadSummaryTable tbody td {
-    /* Added summary table selector */
-    padding: 2px 3px;
-    /* Reduced vertical padding */
-    font-size: 0.80em;
-    /* Smaller row font */
-    border: 1px solid #eee;
-    vertical-align: middle;
-    /* Align content vertically */
-}
-
-/* Also target inputs in the main planning table */
-#planningTable tbody td input[type="number"] {
-    vertical-align: middle;
-    font-size: 0.85em;
-    /* Smaller row font */
-}
-
-/* Style summary table footer cells similarly */
-#teamLoadSummaryTable tfoot td {
-    padding: 2px 3px;
-    font-size: 0.80em;
-    /* Apply same font size */
-    border: 1px solid #ccc;
-    /* Keep slightly stronger border for footer */
-    background-color: #f8f9fa;
-    /* Keep footer background */
-    text-align: center;
-    /* Keep footer text centered */
-    vertical-align: middle;
-}
-
-/* Adjust the first footer cell (label) alignment */
-#teamLoadSummaryTable tfoot td:first-child {
-    text-align: left;
-}
-
-/* Control column widths for Team Load Summary Table (Attempt 2)  */
-#teamLoadSummaryTable thead th:nth-child(1) {
-    text-align: left;
-    width: 10%;
-    max-width: 30px
-}
-
-/* Team Name */
-#teamLoadSummaryTable thead th:nth-child(2),
-/* Funded HC */
-#teamLoadSummaryTable thead th:nth-child(3),
-/* Team BIS */
-#teamLoadSummaryTable thead th:nth-child(4),
-/* Away BIS */
-#teamLoadSummaryTable thead th:nth-child(5) {
-    width: 8%;
-}
-
-/* Effective BIS */
-#teamLoadSummaryTable thead th:nth-child(6) {
-    width: 12%;
-    max-width: 40px;
-}
-
-/* Assigned ATL SDEs */
-#teamLoadSummaryTable thead th:nth-child(7) {
-    width: 12%;
-    max-width: 40px;
-}
-
-/* Scenario Capacity Limit */
-#teamLoadSummaryTable thead th:nth-child(8) {
-    width: 12%;
-    max-width: 40px;
-}
-
-/* Remaining Capacity (ATL) */
-#teamLoadSummaryTable thead th:nth-child(9) {
-    width: 10%;
-}
-
-/* ATL Status */
+/* Planning table drag/drop and wrapper styles moved to year-planning-view.css */
 
 
 /* REVISED Style for clickable headers */
@@ -1247,52 +821,31 @@ a:focus {
 
 /* Target specific scrollable containers */
 #documentationContent,
-#planningTableWrapper {
-    /* For Firefox */
-    scrollbar-width: thin;
-    /* Options: "auto", "thin", "none" */
-    scrollbar-color: #adb5bd #f0f2f5;
-    /* thumb color, track color */
-}
+/* Planning table wrapper scrollbar styles moved to year-planning-view.css */
 
 /* For WebKit-based browsers (Chrome, Safari, Edge, Opera) */
-#documentationContent::-webkit-scrollbar,
-#planningTableWrapper::-webkit-scrollbar {
+#documentationContent::-webkit-scrollbar {
     width: 10px;
-    /* Width of the vertical scrollbar */
     height: 10px;
-    /* Height of the horizontal scrollbar */
 }
 
-#documentationContent::-webkit-scrollbar-track,
-#planningTableWrapper::-webkit-scrollbar-track {
+#documentationContent::-webkit-scrollbar-track {
     background: #f0f2f5;
-    /* Color of the track (the area the scrollbar moves along) */
     border-radius: 10px;
-    /* Rounded corners for the track */
 }
 
-#documentationContent::-webkit-scrollbar-thumb,
-#planningTableWrapper::-webkit-scrollbar-thumb {
+#documentationContent::-webkit-scrollbar-thumb {
     background-color: #adb5bd;
-    /* Color of the scrollbar thumb (the draggable part) */
     border-radius: 10px;
-    /* Rounded corners for the thumb */
     border: 2px solid #f0f2f5;
-    /* Creates padding around thumb, using track color */
 }
 
-#documentationContent::-webkit-scrollbar-thumb:hover,
-#planningTableWrapper::-webkit-scrollbar-thumb:hover {
+#documentationContent::-webkit-scrollbar-thumb:hover {
     background-color: #6c757d;
-    /* Darker color when hovering over the thumb */
 }
 
-/* Optional: For corner where vertical and horizontal scrollbars meet (if both are present) */
-#documentationContent::-webkit-scrollbar-corner,
-#planningTableWrapper::-webkit-scrollbar-corner {
+#documentationContent::-webkit-scrollbar-corner {
     background: #f0f2f5;
-    /* Match track color */
 }
 
 /* --- UX Enhancement: Animations for Element Entry --- */
@@ -1359,53 +912,18 @@ a:focus {
 /* --- End Style --- */
 
 /* --- Quarterly Roadmap Table Styles --- */
-.quarterly-roadmap-table {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
-    /* Ensures columns are of equal width */
-}
-
-.quarterly-roadmap-table thead th {
-    background-color: #e9ecef;
-    border: 1px solid #dee2e6;
-    padding: 12px;
-    font-weight: 600;
-    text-align: center;
-}
-
-.quarterly-roadmap-table tbody td {
-    border: 1px solid #dee2e6;
-    vertical-align: top;
-    padding: 0;
-}
-
-.quarterly-roadmap-table .theme-cell {
-    font-weight: 600;
-    background-color: #f8f9fa;
-    padding: 10px;
-    text-align: left;
-    width: 200px;
-    /* Fixed width for the theme column */
-}
-
-.quarterly-roadmap-table .quarter-cell {
-    padding: 8px;
-    min-height: 80px;
-    /* Ensures rows have some height even if empty */
-}
+/* Quarterly roadmap table styles moved to year-planning-view.css */
 
 .initiative-card {
     background-color: #ffffff;
     border: 1px solid #ccc;
     border-left: 5px solid #007bff;
-    /* Blue accent color */
     border-radius: 4px;
     padding: 8px;
     margin-bottom: 8px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     cursor: help;
-    /* Indicates more info on hover */
+    transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
 }
 
 .initiative-title {
@@ -1418,19 +936,6 @@ a:focus {
     font-size: 0.8em;
     color: #555;
     text-align: right;
-}
-
-/* --- Quarterly Roadmap Table Polish --- */
-
-.quarterly-roadmap-table .quarter-cell {
-    background-color: #fdfdfd;
-    /* Very light gray for empty cells */
-    min-height: 80px;
-    padding: 8px;
-}
-
-.initiative-card {
-    transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
 }
 
 .initiative-card:hover {

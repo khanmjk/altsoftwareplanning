@@ -171,4 +171,65 @@
 .org-view__team-breakdown.active,
 .org-view__engineer-list.active {
     display: block;
+}/* Additional Engineer Table and Organogram Styles */
+
+/* Engineer Table View Container */
+#engineerTableView {
+    max-width: 90%;
+    margin: 20px auto;
+}
+
+/* Organogram SVG Container */
+#organogramSvg {
+    width: 100%;
+    height: 700px;
+    border: 1px solid #ccc;
+    background-color: #f9f9f9;
+}
+
+/* Organogram Links */
+.organogram-link {
+    fill: none;
+    stroke: #555;
+    stroke-opacity: 0.6;
+    stroke-width: 1.5px;
+}
+
+/* Organogram Nodes - Circle variant */
+.organogram-node circle {
+    stroke: steelblue;
+    stroke-width: 1.5px;
+}
+
+/* Organogram Nodes - Rectangle variant */
+.organogram-node rect {
+    stroke: steelblue;
+    stroke-width: 1.5px;
+    fill: #fff;
+}
+
+/* Organogram Node Text */
+.organogram-node text {
+    font: 10px sans-serif;
+}
+
+/* Engineer Table Specific Styles */
+#engineerTable th,
+#engineerTable td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+}
+
+#engineerTable th {
+    background-color: #f2f2f2;
+}
+
+#engineerTable th[data-sort-key]:hover {
+    background-color: #e0e0e0;
+    text-decoration: underline;
+}
+
+#engineerTable tr:nth-child(even) {
+    background-color: #f9f9f9;
 }

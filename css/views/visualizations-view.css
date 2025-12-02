@@ -151,3 +151,89 @@
     width: 100%;
     height: 100%;
 }
+/* Visualization Carousel */
+#visualizationCarousel .carousel-item {
+    width: 100%;
+    margin-top: 0;
+    padding: 4px 8px;
+    box-sizing: border-box;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+#visualizationCarousel .carousel-item.active {
+    display: block;
+}
+
+#visualizationTitle {
+    display: inline-block;
+    min-width: 250px;
+    text-align: center;
+}
+
+#visualizationCarousel button {
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+/* Mermaid Diagram Containers */
+#mermaidVisualization {
+    min-height: 760px;
+}
+
+#mermaidGraph {
+    min-height: 720px;
+    resize: vertical;
+    overflow: auto;
+}
+
+#mermaidGraph svg {
+    max-width: 100%;
+    height: auto;
+}
+
+#mermaidApiGraph svg {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Service Visualization SVG */
+#serviceSvg {
+    width: 100%;
+    height: 600px;
+    border: 1px solid #ccc;
+}
+
+/* Service Dependencies Table */
+#serviceDependenciesTable {
+    margin-top: 0;
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+}
+
+#serviceDependenciesTable table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#serviceDependenciesTable th,
+#serviceDependenciesTable td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+}
+
+#serviceDependenciesTable th {
+    background-color: #f2f2f2;
+}
+
+#serviceDependenciesTable tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+#serviceDependenciesTable tr:hover {
+    background-color: #e9e9e9;
+}

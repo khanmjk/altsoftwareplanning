@@ -32,6 +32,8 @@
 @import url('views/capacity-tuning-view.css');
 @import url('views/visualizations-view.css');
 @import url('views/sdm-forecasting-view.css');
+@import url('views/year-planning-view.css');
+@import url('views/system-edit-view.css');
 
-/* Remaining legacy styles - view-specific CSS */
+/* Remaining legacy styles - shared CSS */
 @import url('style-legacy.css');
