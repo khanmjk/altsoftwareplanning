@@ -1,33 +1,49 @@
 /* Master CSS Import File - ITCSS Architecture */
 
 /* Settings Layer - Variables and config */
-@import url('0-settings/variables.css');
+@import url('settings/variables.css');
 
 /* Elements Layer - Base HTML elements */
-@import url('3-elements/typography.css');
-@import url('3-elements/base.css');
-@import url('3-elements/tables.css');
+@import url('elements/typography.css');
+@import url('elements/base.css');
+@import url('elements/tables.css');
 
 /* Objects Layer - Layout patterns */
-@import url('4-objects/layout.css');
+@import url('objects/layout.css');
 
-/* Components Layer - UI components */
-@import url('5-components/buttons.css');
-@import url('5-components/forms.css');
-@import url('5-components/modals.css');
-@import url('5-components/tooltips.css');
-@import url('5-components/legends.css');
-@import url('5-components/d3-visualizations.css');
-@import url('5-components/sidebar-enhanced.css');
-@import url('5-components/topbar-minimal.css');
-@import url('5-components/cards.css');
-@import url('5-components/dual-list.css');
-@import url('5-components/dropdowns.css');
-@import url('5-components/system-selector.css');
-@import url('5-components/collapsible.css');
-@import url('5-components/dependencies.css');
-@import url('5-components/ai-chat.css');
-@import url('5-components/loading.css');
+/* Components Layer - UI foundational components that can be shared across pages */
+@import url('foundation-components/buttons.css');
+@import url('foundation-components/forms.css');
+@import url('foundation-components/modals.css');
+@import url('foundation-components/tooltips.css');
+@import url('foundation-components/legends.css');
+@import url('foundation-components/d3-visualizations.css');
+@import url('foundation-components/sidebar-enhanced.css');
+@import url('foundation-components/topbar-minimal.css');
+@import url('foundation-components/cards.css');
+@import url('foundation-components/dual-list.css');
+@import url('foundation-components/dropdowns.css');
+@import url('foundation-components/system-selector.css');
+@import url('foundation-components/collapsible.css');
+@import url('foundation-components/dependencies.css');
+@import url('foundation-components/ai-chat.css');
+@import url('foundation-components/loading.css');
+
+/* Components Layer - UI page-specific components */
+@import url('components/aiChatPanel.css');
+@import url('components/enhancedTableWidget.css');
+@import url('components/ganttChart.css');
+@import url('components/header.css');
+@import url('components/management-view.css');
+@import url('components/management.css');
+@import url('components/Modal.css');
+@import url('components/notifications.css');
+@import url('components/roadmapModal.css');
+@import url('components/settings-view.css');
+@import url('components/settings.css');
+@import url('components/sidebar-enhanced.css');
+@import url('components/systems-view.css');
+
 
 /* Views Layer - Page-specific styles */
 @import url('views/welcome-view.css');
@@ -46,4 +62,4 @@
 @import url('views/documentation-view.css');
 
 /* Utilities Layer - Helpers and overrides */
-@import url('6-utilities/animations.css');
+@import url('utilities/animations.css');
