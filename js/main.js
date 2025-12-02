@@ -1109,29 +1109,36 @@ function saveSystemChanges() {
 
 
 function refreshCurrentView() {
-    switch (currentViewId) {
-        case 'planningView':
-            if (typeof renderPlanningView === 'function') renderPlanningView();
-            break;
-        case 'organogramView':
-            // Use switchView to ensure proper rendering via WorkspaceComponent
-            switchView('organogramView');
-            break;
+    // Prefer NavigationManager so views render through WorkspaceComponent (consistent with refactor)
+    if (window.navigationManager && typeof window.navigationManager.navigateTo === 'function' && currentViewId) {
+        // Use popstate flag to avoid duplicating history entries
+        window.navigationManager.navigateTo(currentViewId, {}, true);
+        return;
+    }
 
-        case 'capacityConfigView':
-            if (typeof updateCapacityCalculationsAndDisplay === 'function') updateCapacityCalculationsAndDisplay();
-            break;
-        case 'visualizationCarousel':
-            if (typeof showVisualization === 'function') showVisualization(currentVisualizationIndex || 0);
-            break;
-        case 'systemEditForm':
-            if (typeof showSystemEditForm === 'function') {
-                showSystemEditForm(currentSystemData);
-            }
-            break;
-        default:
-            console.log(`[REFRESH] No specific refresh handler for view: ${currentViewId}`);
-            break;
+    switch (currentViewId) {
+    case 'planningView':
+        if (typeof renderPlanningView === 'function') renderPlanningView();
+        break;
+    case 'organogramView':
+        // Use switchView to ensure proper rendering via WorkspaceComponent
+        switchView('organogramView');
+        break;
+
+    case 'capacityConfigView':
+        if (typeof updateCapacityCalculationsAndDisplay === 'function') updateCapacityCalculationsAndDisplay();
+        break;
+    case 'visualizationCarousel':
+        if (typeof showVisualization === 'function') showVisualization(currentVisualizationIndex || 0);
+        break;
+    case 'systemEditForm':
+        if (typeof showSystemEditForm === 'function') {
+            showSystemEditForm(currentSystemData);
+        }
+        break;
+    default:
+        console.log(`[REFRESH] No specific refresh handler for view: ${currentViewId}`);
+        break;
     }
 }
 

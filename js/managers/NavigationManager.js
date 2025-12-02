@@ -45,8 +45,9 @@ class NavigationManager {
         // 0. Update Global State for AI Context
         if (window.aiAgentController && typeof window.aiAgentController.setCurrentView === 'function') {
             window.aiAgentController.setCurrentView(viewId);
-        } else {
-            if (typeof window !== 'undefined') window.currentViewId = viewId;
+        }
+        if (typeof window !== 'undefined') {
+            window.currentViewId = viewId;
         }
 
         // 1. Update Sidebar Selection
