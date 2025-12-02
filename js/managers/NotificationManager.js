@@ -5,6 +5,8 @@
 class NotificationManager {
     constructor() {
         this.toastContainer = null;
+        this.history = [];
+        this.listeners = new Set();
         this.init();
     }
 
@@ -20,12 +22,22 @@ class NotificationManager {
     }
 
     /**
-     * Shows a toast notification.
+     * Shows a toast notification and records it to history.
      * @param {string} message - The message to display.
      * @param {string} type - 'success', 'error', 'warning', 'info'.
      * @param {number} duration - Duration in ms (default 5000).
      */
     showToast(message, type = 'info', duration = 5000) {
+        const entry = {
+            id: `notif-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+            message,
+            type,
+            timestamp: Date.now(),
+            read: false
+        };
+        this.history.push(entry);
+        this._notifyListeners();
+
         const toast = document.createElement('div');
         toast.className = `toast toast-${type}`;
 
@@ -67,6 +79,53 @@ class NotificationManager {
                 });
             }, duration);
         }
+    }
+
+    /**
+     * Returns a copy of recorded notifications (newest first).
+     */
+    getNotifications() {
+        return [...this.history].sort((a, b) => b.timestamp - a.timestamp);
+    }
+
+    /**
+     * Marks all notifications as read.
+     */
+    markAllRead() {
+        this.history = this.history.map(n => ({ ...n, read: true }));
+        this._notifyListeners();
+    }
+
+    /**
+     * Removes a notification by id.
+     * @param {string} id
+     */
+    removeNotification(id) {
+        const before = this.history.length;
+        this.history = this.history.filter(n => n.id !== id);
+        if (this.history.length !== before) {
+            this._notifyListeners();
+        }
+    }
+
+    /**
+     * Adds a listener that is called whenever history changes.
+     * @param {function} cb
+     * @returns {function} unsubscribe
+     */
+    addListener(cb) {
+        if (typeof cb !== 'function') return () => {};
+        this.listeners.add(cb);
+        // push initial state
+        cb(this.getNotifications());
+        return () => this.listeners.delete(cb);
+    }
+
+    _notifyListeners() {
+        const snapshot = this.getNotifications();
+        this.listeners.forEach(fn => {
+            try { fn(snapshot); } catch (err) { console.error('Notification listener failed', err); }
+        });
     }
 
     /**

@@ -54,6 +54,10 @@ class HeaderComponent {
     setupNotifications() {
         const notifBtn = this.container.querySelector('#header-notifications-btn');
         const notifDropdown = this.container.querySelector('#notifications-dropdown');
+        const notifList = this.container.querySelector('#notifications-list');
+        const notifMarkRead = this.container.querySelector('#notifications-mark-read');
+        const badge = this.container.querySelector('#notification-badge');
+        const manager = window.notificationManager;
 
         if (notifBtn && notifDropdown) {
             notifBtn.addEventListener('click', (e) => {
@@ -72,6 +76,27 @@ class HeaderComponent {
                 if (!notifDropdown.contains(e.target) && !notifBtn.contains(e.target)) {
                     notifDropdown.classList.remove('show');
                 }
+            });
+        }
+
+        if (manager && notifList) {
+            // Render initial & subscribe to changes
+            this.unsubscribeNotifications = manager.addListener((items) => {
+                this.renderNotificationsList(items, notifList, badge);
+            });
+
+            notifList.addEventListener('click', (e) => {
+                const target = e.target;
+                if (target.dataset.action === 'remove-notification' && target.dataset.id) {
+                    manager.removeNotification(target.dataset.id);
+                }
+            });
+        }
+
+        if (manager && notifMarkRead) {
+            notifMarkRead.addEventListener('click', (e) => {
+                e.stopPropagation();
+                manager.markAllRead();
             });
         }
     }
@@ -100,6 +125,49 @@ class HeaderComponent {
         this.updateBreadcrumbs(viewId, systemName);
         const aiBtn = this.container.querySelector('#header-ai-btn');
         this.updateAiButtonVisibility(aiBtn);
+    }
+
+    renderNotificationsList(items = [], listEl, badgeEl) {
+        if (!listEl) return;
+        if (!Array.isArray(items) || items.length === 0) {
+            listEl.innerHTML = `
+                <div class="notifications-empty">
+                    <div class="notifications-empty__icon"><i class="far fa-bell-slash"></i></div>
+                    <p>No notifications yet</p>
+                </div>
+            `;
+        } else {
+            listEl.innerHTML = items.map(item => {
+                const ts = new Date(item.timestamp);
+                const timeLabel = isNaN(ts) ? '' : ts.toLocaleString();
+                return `
+                    <div class="notification-item ${item.read ? 'notification-item--read' : ''}">
+                        <div class="notification-item__icon notification-item__icon--${item.type || 'info'}">
+                            <i class="fas ${this.iconForType(item.type)}"></i>
+                        </div>
+                        <div class="notification-item__content">
+                            <div class="notification-item__message">${item.message}</div>
+                            <div class="notification-item__meta">${timeLabel}</div>
+                        </div>
+                        <button class="notification-item__remove" data-action="remove-notification" data-id="${item.id}" title="Remove notification">&times;</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        if (badgeEl) {
+            const unread = items.filter(n => !n.read).length;
+            badgeEl.style.display = unread > 0 ? 'block' : 'none';
+        }
+    }
+
+    iconForType(type) {
+        switch (type) {
+            case 'success': return 'fa-check-circle';
+            case 'error': return 'fa-exclamation-circle';
+            case 'warning': return 'fa-exclamation-triangle';
+            default: return 'fa-info-circle';
+        }
     }
     updateBreadcrumbs(viewId, systemName) {
         if (!this.breadcrumbsContainer) return;
