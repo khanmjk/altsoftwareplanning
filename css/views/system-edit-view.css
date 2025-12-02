@@ -1,15 +1,17 @@
-/* System Editing View Styles */
+/* System Editing View Styles - EXACT original from style-legacy.css */
 
 /* Service Edit Sections */
 .service-edit {
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
-    padding: 10px;
     margin-bottom: 15px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    background-color: #f9f9f9;
 }
 
 .service-edit h4 {
-    margin-top: 0;
+    margin: 0;
+    padding: 10px;
+    background-color: #e6f7ff;
     cursor: pointer;
     user-select: none;
 }
@@ -27,6 +29,27 @@
     font-size: 0.85em;
 }
 
+/* Team Edit Sections */
+.team-edit {
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    background-color: #f9f9f9;
+}
+
+.team-edit h4 {
+    margin: 0;
+    padding: 10px;
+    background-color: #e6f7ff;
+    cursor: pointer;
+    user-select: none;
+}
+
+.team-details {
+    padding: 10px;
+    display: none;
+}
+
 /* System Edit Form */
 #editSystemForm {
     max-width: 1000px;
@@ -42,32 +65,7 @@
 /* Hover effects for collapsible headers */
 #systemEditForm .service-edit>h4:hover,
 #systemEditForm .team-edit>h4:hover {
-    background-color: #e2e6ea;
-    color: #0056b3;
+    background-color: #dce9f5;
+    color: #004a99;
     transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
-}
-/* Team Edit CSS */
-.team-edit {
-    background-color: #ffffff;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
-    padding: 15px;
-    margin-bottom: 20px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-
-.team-edit>h4 {
-    font-size: 1.15rem;
-    font-weight: 600;
-    color: #212529;
-    background-color: #f8f9fa;
-    padding: 10px 15px;
-    margin: -20px -20px 15px -20px;
-    border-bottom: 1px solid #dee2e6;
-    border-top-left-radius: 6px;
-    border-top-right-radius: 6px;
-}
-
-.team-details {
-    padding-top: 15px;
 }

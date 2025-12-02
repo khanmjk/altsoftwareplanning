@@ -1,14 +1,17 @@
-/* Modular CSS Master Import File */
+/* Master CSS Import File - ITCSS Architecture */
 
-/* Settings - Design tokens */
+/* Settings Layer - Variables and config */
 @import url('0-settings/variables.css');
 
-/* 3. Elements - Base HTML elements */
+/* Elements Layer - Base HTML elements */
 @import url('3-elements/typography.css');
 @import url('3-elements/base.css');
 @import url('3-elements/tables.css');
 
-/* 5. Components - Reusable UI components */
+/* Objects Layer - Layout patterns */
+@import url('4-objects/layout.css');
+
+/* Components Layer - UI components */
 @import url('5-components/buttons.css');
 @import url('5-components/forms.css');
 @import url('5-components/modals.css');
@@ -16,11 +19,17 @@
 @import url('5-components/legends.css');
 @import url('5-components/d3-visualizations.css');
 @import url('5-components/sidebar-enhanced.css');
-@import url('5-components/systems-view.css');
-@import url('5-components/settings-view.css');
-@import url('5-components/management-view.css');
+@import url('5-components/topbar-minimal.css');
+@import url('5-components/cards.css');
+@import url('5-components/dual-list.css');
+@import url('5-components/dropdowns.css');
+@import url('5-components/system-selector.css');
+@import url('5-components/collapsible.css');
+@import url('5-components/dependencies.css');
+@import url('5-components/ai-chat.css');
+@import url('5-components/loading.css');
 
-/* Views - Page-specific styles */
+/* Views Layer - Page-specific styles */
 @import url('views/welcome-view.css');
 @import url('views/dashboard-view.css');
 @import url('views/org-view.css');
@@ -36,5 +45,5 @@
 @import url('views/system-edit-view.css');
 @import url('views/documentation-view.css');
 
-/* Remaining legacy styles - shared CSS */
-@import url('style-legacy.css');
+/* Utilities Layer - Helpers and overrides */
+@import url('6-utilities/animations.css');
