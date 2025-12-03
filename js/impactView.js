@@ -25,7 +25,7 @@ function initializeImpactView() {
 
     const svg = d3.select(svgContainer).append("svg")
         .attr("width", "100%")
-        .attr("height", "650px");
+        .attr("height", "800px");
 
     const summaryContainer = document.createElement('div');
     summaryContainer.id = 'impact-summary-container';

@@ -64,7 +64,11 @@
 }
 
 /* Initiative Impact View Styles */
-/* impact-graph-container has no specific styles - blends with workspace */
+/* Impact View Styles */
+#impact-graph-container svg {
+    border: none !important;
+    background-color: transparent !important;
+}
 
 #impact-summary-container {
     padding: 10px 0;
