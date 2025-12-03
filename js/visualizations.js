@@ -380,60 +380,7 @@ function debounceResize(callback, delay = 200) {
     };
 }
 
-function setupVisualizationResizeObserver() {
-    // Only run if we are in the visualization view
-    // This prevents it from interfering with other views like Org Chart
-    const carouselContainer = document.getElementById('visualizationCarousel');
-    if (!carouselContainer || carouselContainer.offsetParent === null) {
-        // Container is not visible or doesn't exist
-        if (visualizationResizeObserver) {
-            visualizationResizeObserver.disconnect();
-            visualizationResizeObserver = null;
-        }
-        return;
-    }
-
-    if (visualizationResizeObserver) {
-        visualizationResizeObserver.disconnect(); // Clear existing
-    }
-
-    const debouncedRender = debounceResize(() => {
-        // Double check visibility inside the callback
-        if (document.getElementById('visualizationCarousel')?.offsetParent === null) {
-            return;
-        }
-        if (!currentSystemData) return;
-        const activeId = getActiveVisualizationId();
-        switch (activeId) {
-            case 'visualization':
-                if (typeof generateVisualization === 'function') generateVisualization(currentSystemData);
-                break;
-            case 'teamVisualization':
-                if (typeof generateTeamVisualization === 'function') generateTeamVisualization(currentSystemData);
-                break;
-            case 'serviceRelationshipsVisualization':
-                if (typeof updateServiceVisualization === 'function') updateServiceVisualization();
-                break;
-            case 'dependencyVisualization':
-                if (typeof updateDependencyVisualization === 'function') updateDependencyVisualization();
-                break;
-            case 'mermaidVisualization':
-                if (typeof renderMermaidDiagram === 'function') renderMermaidDiagram();
-                break;
-            case 'mermaidApiVisualization':
-                if (typeof renderMermaidApiDiagram === 'function') renderMermaidApiDiagram();
-                break;
-            default:
-                break;
-        }
-    }, 200);
-    visualizationResizeObserver = new ResizeObserver(debouncedRender);
-    visualizationResizeObserver.observe(carouselContainer);
-}
-
-if (typeof window !== 'undefined') {
-    window.setupVisualizationResizeObserver = setupVisualizationResizeObserver;
-}
+// setupVisualizationResizeObserver removed - workspace canvas handles scrolling
 
 /**
  * REVISED (v2) - Generates the main system visualization (Services, APIs, Platforms).
@@ -1952,9 +1899,8 @@ function showVisualization(index) {
         return;
     }
 
-    if (typeof setupVisualizationResizeObserver === 'function') {
-        setupVisualizationResizeObserver();
-    }
+    // setupVisualizationResizeObserver call removed
+
 
     const items = carouselContainer.querySelectorAll('.carousel-item');
     const titleElement = document.getElementById('visualizationTitle');

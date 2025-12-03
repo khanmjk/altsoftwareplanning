@@ -111,10 +111,9 @@ class SystemOverviewView {
         this.switchView(this.currentView);
 
         // Setup resize observer if available
-        if (typeof setupVisualizationResizeObserver === 'function') {
-            setTimeout(() => setupVisualizationResizeObserver(), 100);
-        }
+        // setupVisualizationResizeObserver call removed
     }
+
 
     /**
      * Creates the DOM structure for all visualization views
