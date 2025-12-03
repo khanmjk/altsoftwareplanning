@@ -142,21 +142,27 @@ class NavigationManager {
         // (Refactored views like 'roadmapView' handle this themselves)
         const selfManagedViews = ['roadmapView', 'managementView', 'dashboardView', 'settingsView', 'helpView'];
         if (window.workspaceComponent && !selfManagedViews.includes(viewId)) {
-            const title = this.getViewTitle(viewId);
-
-            // Construct Breadcrumbs
+            let title = this.getViewTitle(viewId);
             let breadcrumbs = [];
 
-            // 1. Home/System Context
-            if (window.currentSystemData && window.currentSystemData.systemName) {
-                breadcrumbs.push(window.currentSystemData.systemName);
-            }
+            // Special handling for Create System mode
+            if (viewId === 'systemEditForm' && params && params.createMode) {
+                title = 'Create System';
+                breadcrumbs.push('System');
+                breadcrumbs.push('Create System');
+            } else {
+                // Standard Breadcrumbs
+                // 1. Home/System Context
+                if (window.currentSystemData && window.currentSystemData.systemName) {
+                    breadcrumbs.push(window.currentSystemData.systemName);
+                }
 
-            // 2. View Path (from HeaderComponent mapping)
-            if (this.header && typeof this.header.getViewPath === 'function') {
-                const path = this.header.getViewPath(viewId);
-                if (path && Array.isArray(path)) {
-                    path.forEach(step => breadcrumbs.push(step.label));
+                // 2. View Path (from HeaderComponent mapping)
+                if (this.header && typeof this.header.getViewPath === 'function') {
+                    const path = this.header.getViewPath(viewId);
+                    if (path && Array.isArray(path)) {
+                        path.forEach(step => breadcrumbs.push(step.label));
+                    }
                 }
             }
 
