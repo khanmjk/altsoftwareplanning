@@ -244,3 +244,51 @@
 #serviceDependenciesTable tr:hover {
     background-color: #e9e9e9;
 }
+
+/* Refactored Visualization Styles */
+
+.visualization-container-wrapper {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.visualization-view-container {
+    width: 100%;
+    height: 600px;
+}
+
+.visualization-view-padding {
+    padding: 20px;
+}
+
+.visualization-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+}
+
+.visualization-toolbar-select {
+    min-width: 200px;
+}
+
+.visualization-toolbar-label {
+    font-weight: 600;
+}
+
+.visualization-toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.visualization-toolbar-separator {
+    width: 1px;
+    height: 20px;
+    background-color: #ccc;
+}
+
+.visualization-toolbar-service-select {
+    min-width: 150px;
+}

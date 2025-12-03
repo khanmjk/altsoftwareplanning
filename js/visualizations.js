@@ -64,9 +64,7 @@ function switchVisualizationMode(modeId) {
     container.innerHTML = '';
     const contentWrapper = document.createElement('div');
     contentWrapper.id = 'visualizationContainer';
-    contentWrapper.style.width = '100%';
-    contentWrapper.style.height = '100%';
-    contentWrapper.style.position = 'relative';
+    contentWrapper.className = 'visualization-container-wrapper';
     container.appendChild(contentWrapper);
 
     // 3. Render Specific View
@@ -77,34 +75,34 @@ function switchVisualizationMode(modeId) {
 
     switch (modeId) {
         case 'visualization':
-            contentWrapper.innerHTML = '<div id="visualization" style="width:100%; height:600px;"><svg id="systemSvg" width="100%" height="100%"></svg><div id="legend"></div></div>';
+            contentWrapper.innerHTML = '<div id="visualization" class="visualization-view-container"><svg id="systemSvg" width="100%" height="100%"></svg><div id="legend"></div></div>';
             generateVisualization(currentSystemData);
             break;
         case 'teamVisualization':
-            contentWrapper.innerHTML = '<div id="teamVisualization" style="width:100%; height:600px;"><svg id="teamSvg" width="100%" height="100%"></svg><div id="teamLegend"></div></div>';
+            contentWrapper.innerHTML = '<div id="teamVisualization" class="visualization-view-container"><svg id="teamSvg" width="100%" height="100%"></svg><div id="teamLegend"></div></div>';
             generateTeamVisualization(currentSystemData);
             break;
         case 'serviceRelationshipsVisualization':
-            contentWrapper.innerHTML = '<div id="serviceRelationshipsVisualization" style="width:100%; height:600px;"><svg id="serviceSvg" width="100%" height="100%"></svg></div>';
+            contentWrapper.innerHTML = '<div id="serviceRelationshipsVisualization" class="visualization-view-container"><svg id="serviceSvg" width="100%" height="100%"></svg></div>';
             // Note: The toolbar now handles the dropdown, so we need to trigger the initial render
             // We might need to pass the default 'all' or handle it in the update function
             updateServiceVisualization('all');
             break;
         case 'dependencyVisualization':
-            contentWrapper.innerHTML = '<div id="dependencyVisualization" style="width:100%; height:600px;"><svg id="dependencySvg" width="100%" height="100%"></svg></div>';
+            contentWrapper.innerHTML = '<div id="dependencyVisualization" class="visualization-view-container"><svg id="dependencySvg" width="100%" height="100%"></svg></div>';
             // Similar to above, trigger initial update
             updateDependencyVisualization();
             break;
         case 'serviceDependenciesTableSlide':
-            contentWrapper.innerHTML = '<div id="serviceDependenciesTableSlide" style="padding: 20px;"><h3>Service Dependencies</h3><div id="serviceDependenciesTableWidget"></div></div>';
+            contentWrapper.innerHTML = '<div id="serviceDependenciesTableSlide" class="visualization-view-padding"><h3>Service Dependencies</h3><div id="serviceDependenciesTableWidget"></div></div>';
             renderServiceDependenciesTable();
             break;
         case 'mermaidVisualization':
-            contentWrapper.innerHTML = '<div id="mermaidVisualization" style="padding: 20px;"><div id="mermaidGraph"></div></div>';
+            contentWrapper.innerHTML = '<div id="mermaidVisualization" class="visualization-view-padding"><div id="mermaidGraph"></div></div>';
             renderMermaidDiagram();
             break;
         case 'mermaidApiVisualization':
-            contentWrapper.innerHTML = '<div id="mermaidApiVisualization" style="padding: 20px;"><div id="mermaidApiGraph"></div></div>';
+            contentWrapper.innerHTML = '<div id="mermaidApiVisualization" class="visualization-view-padding"><div id="mermaidApiGraph"></div></div>';
             // Toolbar handles the selection, trigger initial
             renderMermaidApiDiagram('all');
             break;
@@ -119,15 +117,10 @@ function updateVisualizationToolbar(activeModeId) {
 
     const toolbar = document.createElement('div');
     toolbar.className = 'visualization-toolbar';
-    toolbar.style.display = 'flex';
-    toolbar.style.alignItems = 'center';
-    toolbar.style.gap = '16px';
-    toolbar.style.width = '100%';
 
     // View Selector
     const viewSelect = document.createElement('select');
-    viewSelect.className = 'form-select form-select-sm';
-    viewSelect.style.minWidth = '200px';
+    viewSelect.className = 'form-select form-select-sm visualization-toolbar-select';
     visualizationModes.forEach(mode => {
         const opt = document.createElement('option');
         opt.value = mode.id;
@@ -139,12 +132,10 @@ function updateVisualizationToolbar(activeModeId) {
 
     const label = document.createElement('span');
     label.textContent = 'View:';
-    label.style.fontWeight = '600';
+    label.className = 'visualization-toolbar-label';
 
     const leftGroup = document.createElement('div');
-    leftGroup.style.display = 'flex';
-    leftGroup.style.alignItems = 'center';
-    leftGroup.style.gap = '10px';
+    leftGroup.className = 'visualization-toolbar-group';
     leftGroup.appendChild(label);
     leftGroup.appendChild(viewSelect);
     toolbar.appendChild(leftGroup);
@@ -153,8 +144,7 @@ function updateVisualizationToolbar(activeModeId) {
     if (activeModeId === 'serviceRelationshipsVisualization') {
         const serviceSelect = document.createElement('select');
         serviceSelect.id = 'serviceSelection'; // Keep ID for compatibility if needed, or pass directly
-        serviceSelect.className = 'form-select form-select-sm';
-        serviceSelect.style.minWidth = '150px';
+        serviceSelect.className = 'form-select form-select-sm visualization-toolbar-service-select';
 
         // Populate options
         const allOpt = document.createElement('option');
@@ -181,14 +171,13 @@ function updateVisualizationToolbar(activeModeId) {
 
         const svcLabel = document.createElement('span');
         svcLabel.textContent = 'Focus Service:';
-        svcLabel.style.fontWeight = '600';
+        svcLabel.className = 'visualization-toolbar-label';
         toolbar.appendChild(svcLabel);
         toolbar.appendChild(serviceSelect);
     } else if (activeModeId === 'mermaidApiVisualization') {
         const apiSelect = document.createElement('select');
         apiSelect.id = 'apiServiceSelection';
-        apiSelect.className = 'form-select form-select-sm';
-        apiSelect.style.minWidth = '150px';
+        apiSelect.className = 'form-select form-select-sm visualization-toolbar-service-select';
 
         const allOpt = document.createElement('option');
         allOpt.value = 'all';
@@ -210,14 +199,12 @@ function updateVisualizationToolbar(activeModeId) {
         apiSelect.onchange = (e) => renderMermaidApiDiagram(e.target.value);
 
         const sep = document.createElement('div');
-        sep.style.width = '1px';
-        sep.style.height = '20px';
-        sep.style.backgroundColor = '#ccc';
+        sep.className = 'visualization-toolbar-separator';
         toolbar.appendChild(sep);
 
         const apiLabel = document.createElement('span');
         apiLabel.textContent = 'Filter API Interactions:';
-        apiLabel.style.fontWeight = '600';
+        apiLabel.className = 'visualization-toolbar-label';
         toolbar.appendChild(apiLabel);
         toolbar.appendChild(apiSelect);
     }
@@ -257,11 +244,7 @@ async function renderMermaidDiagram() {
         graphContainer.innerHTML = '';
         const result = await mermaid.render(renderId, definition, graphContainer);
         graphContainer.innerHTML = result.svg;
-        const svg = graphContainer.querySelector('svg');
-        if (svg) {
-            svg.style.width = '100%';
-            svg.style.height = 'auto';
-        }
+        // SVG styling handled by CSS
         graphContainer.style.display = 'block';
     } catch (error) {
         console.error("Failed to render Mermaid diagram:", error);
@@ -320,15 +303,15 @@ async function renderMermaidApiDiagram(serviceParam) {
         return;
     }
     if (!currentSystemData) {
-        graphContainer.innerHTML = '<p style="color: #666;">Load a system to see API interactions.</p>';
+        graphContainer.innerHTML = '<p class="mermaid-info">Load a system to see API interactions.</p>';
         return;
     }
     if (typeof mermaid === 'undefined' || typeof mermaid.render !== 'function') {
-        graphContainer.innerHTML = '<p style="color: red;">Mermaid is not loaded.</p>';
+        graphContainer.innerHTML = '<p class="mermaid-error">Mermaid is not loaded.</p>';
         return;
     }
     if (typeof generateMermaidApiSyntax !== 'function') {
-        graphContainer.innerHTML = '<p style="color: red;">API mermaid generator missing.</p>';
+        graphContainer.innerHTML = '<p class="mermaid-error">API mermaid generator missing.</p>';
         return;
     }
 
@@ -347,14 +330,10 @@ async function renderMermaidApiDiagram(serviceParam) {
         graphContainer.innerHTML = '';
         const result = await mermaid.render(renderId, definition, graphContainer);
         graphContainer.innerHTML = result.svg;
-        const svg = graphContainer.querySelector('svg');
-        if (svg) {
-            svg.style.width = '100%';
-            svg.style.height = 'auto';
-        }
+        // SVG styling handled by CSS
     } catch (error) {
         console.error("Failed to render Mermaid API diagram:", error);
-        graphContainer.innerHTML = '<p style="color: red;">Unable to render API interactions diagram. Check console for details.</p>';
+        graphContainer.innerHTML = '<p class="mermaid-error">Unable to render API interactions diagram. Check console for details.</p>';
     }
 }
 
