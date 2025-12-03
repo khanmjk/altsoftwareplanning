@@ -195,41 +195,73 @@ async function saveSystemDetails() {
 async function saveAllChanges() {
     console.log("saveAllChanges called.");
 
-    // 1. Validate System Details
+    // 1. Get Inputs
     const systemNameInput = document.getElementById('systemNameInput');
     const systemDescriptionTextarea = document.getElementById('systemDescriptionInput');
-    const newSystemName = systemNameInput ? systemNameInput.value.trim() : '';
+    const finalSystemName = systemNameInput ? systemNameInput.value.trim() : '';
+    const finalSystemDescription = systemDescriptionTextarea ? systemDescriptionTextarea.value.trim() : '';
 
-    if (!newSystemName) {
-        window.notificationManager.showToast('System name cannot be empty.', 'error');
+    // 2. Validate Inputs
+    if (!finalSystemName) {
+        window.notificationManager.showToast('System Name cannot be empty.', 'warning');
+        if (systemNameInput) systemNameInput.focus();
         return;
     }
 
-    // 2. Update System Data from Inputs
-    currentSystemData.systemName = newSystemName;
-    if (systemDescriptionTextarea) {
-        currentSystemData.systemDescription = systemDescriptionTextarea.value.trim();
+    if (!finalSystemDescription) {
+        if (!await window.notificationManager.confirm('System Description is empty. Save anyway?', 'Empty Description', { confirmStyle: 'warning' })) {
+            if (systemDescriptionTextarea) systemDescriptionTextarea.focus();
+            return;
+        }
     }
 
-    // 3. Validate Engineer Assignments
+    // 3. Update Data Object (temporarily)
+    const oldSystemNameKey = currentSystemData.systemName;
+    currentSystemData.systemName = finalSystemName;
+    currentSystemData.systemDescription = finalSystemDescription;
+
+    // 4. Validate Engineer Assignments
     if (!validateEngineerAssignments()) {
-        return; // Validation failed, toast already shown
+        // Revert name change on validation failure to avoid state mismatch
+        currentSystemData.systemName = oldSystemNameKey;
+        return;
     }
 
-    // 4. Save to Repository
+    // 5. Save to Repository (with Rename/Overwrite Logic)
     try {
-        const saved = window.systemRepository.saveSystem(newSystemName, currentSystemData);
-        if (saved) {
-            window.notificationManager.showToast('All changes saved successfully!', 'success');
+        // Check for Rename: In this app, renaming acts as "Save Copy". 
+        // We DO NOT delete the old system. This allows users to experiment by creating variations.
+        // if (oldSystemNameKey && oldSystemNameKey !== finalSystemName) { ... } // DELETED
 
-            // 5. Exit Edit Mode
+        // Check for Overwrite: If new name exists (and it's not the same as old name)
+        if (window.systemRepository.getSystemData(finalSystemName) && oldSystemNameKey !== finalSystemName) {
+            if (!await window.notificationManager.confirm(`A system named "${finalSystemName}" already exists. Overwrite it?`, 'Overwrite System', { confirmStyle: 'danger' })) {
+                // Revert and Cancel
+                currentSystemData.systemName = oldSystemNameKey;
+                return;
+            }
+        }
+
+        // Perform Save
+        const saved = window.systemRepository.saveSystem(finalSystemName, currentSystemData);
+
+        if (saved) {
+            window.notificationManager.showToast(`System "${finalSystemName}" saved successfully!`, 'success');
+
+            // 6. Post-Save: Exit Edit Mode
+            // If we were creating, this effectively switches us to "Browse" mode for the new system
+            if (typeof currentMode !== 'undefined') {
+                currentMode = (typeof Modes !== 'undefined' && Modes.Browse) ? Modes.Browse : 'browse';
+            }
             exitEditMode();
         } else {
             window.notificationManager.showToast('Failed to save system. Please try again.', 'error');
+            currentSystemData.systemName = oldSystemNameKey; // Revert on failure
         }
     } catch (error) {
         console.error("Error saving system:", error);
         window.notificationManager.showToast('An error occurred while saving.', 'error');
+        currentSystemData.systemName = oldSystemNameKey; // Revert on error
     }
 }
 window.saveAllChanges = saveAllChanges;
