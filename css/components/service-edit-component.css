@@ -1,0 +1,393 @@
+/* Service Edit Component Styles */
+
+/* Container */
+.service-edit-list {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+/* Service Item Card */
+.service-edit-item {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    margin-bottom: 0;
+    box-shadow: none;
+    overflow: visible;
+    transition: background-color 0.2s ease;
+    border-bottom: 1px solid var(--color-gray-100);
+}
+
+.service-edit-item:last-child {
+    border-bottom: none;
+}
+
+/* Header */
+.service-edit-header {
+    margin: 0;
+    padding: 4px 0;
+    /* Minimal padding */
+    background-color: transparent;
+    border-bottom: none;
+    cursor: pointer;
+    user-select: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--color-gray-700);
+    display: flex;
+    align-items: center;
+    transition: background-color 0.1s ease, color 0.1s ease;
+    border-radius: var(--radius-sm);
+}
+
+.service-edit-header:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+    color: var(--color-gray-900);
+    padding-left: 4px;
+    /* Visual feedback on hover */
+}
+
+.service-edit-indicator {
+    margin-right: 4px;
+    color: var(--color-gray-400);
+    font-weight: normal;
+    font-family: monospace;
+    font-size: 1em;
+    width: 12px;
+    display: inline-block;
+    text-align: center;
+}
+
+/* Details Area */
+.service-edit-details {
+    padding: var(--space-md) var(--space-lg);
+    background-color: transparent;
+    display: none;
+    /* Toggled by JS */
+    margin-top: 4px;
+    margin-bottom: var(--space-md);
+    border-left: 2px solid var(--color-gray-200);
+    margin-left: 12px;
+}
+
+.service-edit-details.expanded {
+    display: block;
+}
+
+/* Form Elements */
+.service-edit-form-group {
+    margin-bottom: var(--space-sm);
+}
+
+.service-edit-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--color-gray-600);
+    margin-bottom: 4px;
+}
+
+.service-edit-input,
+.service-edit-textarea {
+    width: 100%;
+    padding: 6px 10px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: var(--color-gray-900);
+    background-color: #fff;
+    border: 1px solid var(--color-gray-300);
+    border-radius: var(--radius-sm);
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.service-edit-input:focus,
+.service-edit-textarea:focus {
+    border-color: var(--color-primary);
+    outline: 0;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.service-edit-textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+/* Nested Collapsible Sections */
+.service-edit-section {
+    margin-top: var(--space-md);
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-sm);
+    background-color: rgba(255, 255, 255, 0.5);
+    overflow: hidden;
+}
+
+.service-edit-section-header {
+    padding: 8px 12px;
+    background-color: rgba(0, 0, 0, 0.02);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    user-select: none;
+    transition: background-color 0.1s ease;
+}
+
+.service-edit-section-header:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+}
+
+.service-edit-section-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-gray-600);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0;
+}
+
+.service-edit-section-content {
+    display: none;
+    padding: var(--space-md);
+    border-top: 1px solid var(--color-gray-200);
+}
+
+.service-edit-section-content.expanded {
+    display: block;
+}
+
+/* API Section Specifics */
+.service-edit-api-item {
+    background-color: #fff;
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-sm);
+    padding: var(--space-md);
+    margin-bottom: var(--space-sm);
+}
+
+/* Buttons */
+.service-edit-btn {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 0.9rem;
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+}
+
+.service-edit-btn-primary {
+    background-color: var(--color-primary);
+    color: #fff;
+    border-color: var(--color-primary);
+}
+
+.service-edit-btn-primary:hover {
+    background-color: var(--color-primary-dark);
+}
+
+.service-edit-btn-danger {
+    background-color: transparent;
+    color: var(--color-danger);
+    border-color: var(--color-danger);
+}
+
+.service-edit-btn-danger:hover {
+    background-color: var(--color-danger);
+    color: #fff;
+}
+
+.service-edit-btn-secondary {
+    background-color: #fff;
+    color: var(--color-gray-700);
+    border-color: var(--color-gray-300);
+}
+
+.service-edit-btn-secondary:hover {
+    background-color: var(--color-gray-50);
+    border-color: var(--color-gray-400);
+}
+
+/* Utility */
+.service-edit-spacer {
+    height: var(--space-sm);
+}
+
+
+/* Service Item Card */
+.service-edit-item {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    margin-bottom: 0;
+    box-shadow: none;
+    overflow: visible;
+    transition: background-color 0.2s ease;
+    border-bottom: 1px solid var(--color-gray-100);
+}
+
+.service-edit-item:last-child {
+    border-bottom: none;
+}
+
+/* Header */
+.service-edit-header {
+    margin: 0;
+    padding: 4px 0;
+    /* Minimal padding */
+    background-color: transparent;
+    border-bottom: none;
+    cursor: pointer;
+    user-select: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--color-gray-700);
+    display: flex;
+    align-items: center;
+    transition: background-color 0.1s ease, color 0.1s ease;
+    border-radius: var(--radius-sm);
+}
+
+.service-edit-header:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+    color: var(--color-gray-900);
+    padding-left: 4px;
+    /* Visual feedback on hover */
+}
+
+.service-edit-indicator {
+    margin-right: 4px;
+    color: var(--color-gray-400);
+    font-weight: normal;
+    font-family: monospace;
+    font-size: 1em;
+    width: 12px;
+    display: inline-block;
+    text-align: center;
+}
+
+/* Details Area */
+.service-edit-details {
+    padding: var(--space-md) var(--space-lg);
+    background-color: transparent;
+    display: none;
+    /* Toggled by JS */
+    margin-top: 4px;
+    margin-bottom: var(--space-md);
+    border-left: 2px solid var(--color-gray-200);
+    margin-left: 12px;
+}
+
+.service-edit-details.expanded {
+    display: block;
+}
+
+/* Form Elements */
+.service-edit-form-group {
+    margin-bottom: var(--space-sm);
+}
+
+.service-edit-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--color-gray-600);
+    margin-bottom: 4px;
+}
+
+.service-edit-input,
+.service-edit-textarea {
+    width: 100%;
+    padding: 6px 10px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: var(--color-gray-900);
+    background-color: #fff;
+    border: 1px solid var(--color-gray-300);
+    border-radius: var(--radius-sm);
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.service-edit-input:focus,
+.service-edit-textarea:focus {
+    border-color: var(--color-primary);
+    outline: 0;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.service-edit-textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+/* API Section */
+.service-edit-apis-container {
+    margin-top: var(--space-md);
+    padding-top: var(--space-sm);
+    border-top: 1px dashed var(--color-gray-200);
+}
+
+.service-edit-apis-title {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-gray-500);
+    margin-bottom: var(--space-sm);
+}
+
+.service-edit-api-item {
+    background-color: rgba(255, 255, 255, 0.5);
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-sm);
+    padding: var(--space-md);
+    margin-bottom: var(--space-sm);
+}
+
+/* Buttons */
+.service-edit-btn {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 0.9rem;
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+}
+
+.service-edit-btn-primary {
+    background-color: var(--color-primary);
+    color: #fff;
+    border-color: var(--color-primary);
+}
+
+.service-edit-btn-primary:hover {
+    background-color: var(--color-primary-dark);
+}
+
+.service-edit-btn-danger {
+    background-color: transparent;
+    color: var(--color-danger);
+    border-color: var(--color-danger);
+}
+
+.service-edit-btn-danger:hover {
+    background-color: var(--color-danger);
+    color: #fff;
+}
+
+.service-edit-btn-secondary {
+    background-color: #fff;
+    color: var(--color-gray-700);
+    border-color: var(--color-gray-300);
+}
+
+.service-edit-btn-secondary:hover {
+    background-color: var(--color-gray-50);
+    border-color: var(--color-gray-400);
+}
+
+/* Utility */
+.service-edit-spacer {
+    height: var(--space-sm);
+}
