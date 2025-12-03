@@ -1232,3 +1232,179 @@ function validateGeneratedSystem(systemData) {
 }
 
 
+
+// =================================================================
+// ROADMAP DATA UTILITIES
+// =================================================================
+
+/**
+ * Helper: Determines the quarter (Q1-Q4) from a date string (YYYY-MM-DD).
+ */
+function getQuarterFromDate(dateString) {
+    if (!dateString) return null;
+    try {
+        const month = parseInt(dateString.substring(5, 7), 10);
+        if (month >= 1 && month <= 3) return 'Q1';
+        if (month >= 4 && month <= 6) return 'Q2';
+        if (month >= 7 && month <= 9) return 'Q3';
+        if (month >= 10 && month <= 12) return 'Q4';
+        return null;
+    } catch (e) { return null; }
+}
+
+/**
+ * Helper: Returns the last date of the quarter for a given year.
+ * @param {string} quarter - 'Q1', 'Q2', 'Q3', 'Q4'
+ * @param {number} year - The year (e.g., 2025)
+ * @returns {string} Date string 'YYYY-MM-DD'
+ */
+function getEndDateForQuarter(quarter, year) {
+    if (!quarter || !year) return null;
+    switch (quarter) {
+        case 'Q1': return `${year}-03-31`;
+        case 'Q2': return `${year}-06-30`;
+        case 'Q3': return `${year}-09-30`;
+        case 'Q4': return `${year}-12-31`;
+        default: return null;
+    }
+}
+
+/**
+ * Extracts and structures data for the Quarterly Roadmap view.
+ * @param {Object} filters - { year, orgId, teamId, themeIds }
+ * @returns {Object} Structured data { ThemeName: { Q1: [], Q2: [], Q3: [], Q4: [] } }
+ */
+function getQuarterlyRoadmapData({ year, orgId, teamId, themeIds }) {
+    let initiatives = currentSystemData.yearlyInitiatives || [];
+
+    // 1. Filter by Year
+    if (year && year !== 'all') {
+        initiatives = initiatives.filter(init => init.attributes.planningYear == year);
+    }
+
+    // 2. Filter by Organization
+    if (orgId && orgId !== 'all') {
+        const teamsInOrg = new Set();
+        (currentSystemData.sdms || []).forEach(sdm => {
+            if (sdm.seniorManagerId === orgId) {
+                (currentSystemData.teams || []).forEach(team => {
+                    if (team.sdmId === sdm.sdmId) teamsInOrg.add(team.teamId);
+                });
+            }
+        });
+        initiatives = initiatives.filter(init => (init.assignments || []).some(a => teamsInOrg.has(a.teamId)));
+    }
+
+    // 3. Filter by Team
+    if (teamId && teamId !== 'all') {
+        initiatives = initiatives.filter(init => (init.assignments || []).some(a => a.teamId === teamId));
+    }
+
+    // 4. Filter by Themes
+    const allThemeIds = (currentSystemData.definedThemes || []).map(t => t.themeId);
+    const selectedThemes = themeIds || [];
+    if (selectedThemes.length > 0 && selectedThemes.length < allThemeIds.length) {
+        initiatives = initiatives.filter(init => {
+            const initThemes = init.themes || [];
+            if (initThemes.length === 0) return false;
+            return initThemes.some(themeId => selectedThemes.includes(themeId));
+        });
+    }
+
+    // 5. Structure Data
+    const roadmapData = {};
+    const themeMap = new Map((currentSystemData.definedThemes || []).map(t => [t.themeId, t.name]));
+
+    initiatives.forEach(init => {
+        // Prioritize explicit targetQuarter (from drag-and-drop), otherwise derive from date
+        const quarter = init.targetQuarter || getQuarterFromDate(init.targetDueDate);
+        if (!quarter) return;
+
+        const assignedThemes = init.themes && init.themes.length > 0 ? init.themes : ['uncategorized'];
+
+        assignedThemes.forEach(themeId => {
+            const themeName = themeMap.get(themeId) || "Uncategorized";
+
+            if (selectedThemes.length > 0 && selectedThemes.length < allThemeIds.length && !selectedThemes.includes(themeId)) {
+                return;
+            }
+
+            if (!roadmapData[themeName]) {
+                roadmapData[themeName] = { Q1: [], Q2: [], Q3: [], Q4: [] };
+            }
+            roadmapData[themeName][quarter].push(init);
+        });
+    });
+
+    return roadmapData;
+}
+
+/**
+ * Extracts and structures data for the 3-Year Plan view.
+ * @param {Object} filters - { orgId, teamId, themeIds }
+ * @returns {Object} Structured data { ThemeName: { 'Current Year': [], 'Next Year': [], 'Future': [] } }
+ */
+function get3YearPlanData({ orgId, teamId, themeIds }) {
+    let initiatives = currentSystemData.yearlyInitiatives || [];
+
+    // 1. Filter by Organization
+    if (orgId && orgId !== 'all') {
+        const teamsInOrg = new Set();
+        (currentSystemData.sdms || []).forEach(sdm => {
+            if (sdm.seniorManagerId === orgId) {
+                (currentSystemData.teams || []).forEach(team => {
+                    if (team.sdmId === sdm.sdmId) teamsInOrg.add(team.teamId);
+                });
+            }
+        });
+        initiatives = initiatives.filter(init => (init.assignments || []).some(a => teamsInOrg.has(a.teamId)));
+    }
+
+    // 2. Filter by Team
+    if (teamId && teamId !== 'all') {
+        initiatives = initiatives.filter(init => (init.assignments || []).some(a => a.teamId === teamId));
+    }
+
+    // 3. Filter by Themes
+    const allThemeIds = (currentSystemData.definedThemes || []).map(t => t.themeId);
+    const selectedThemes = themeIds || [];
+    if (selectedThemes.length > 0 && selectedThemes.length < allThemeIds.length) {
+        initiatives = initiatives.filter(init => {
+            const initThemes = init.themes || [];
+            if (initThemes.length === 0) return false;
+            return initThemes.some(themeId => selectedThemes.includes(themeId));
+        });
+    }
+
+    // 4. Structure Data
+    const roadmapData = {};
+    const themeMap = new Map((currentSystemData.definedThemes || []).map(t => [t.themeId, t.name]));
+    const currentYear = new Date().getFullYear();
+
+    initiatives.forEach(init => {
+        const planningYear = init.attributes.planningYear;
+        if (!planningYear) return;
+
+        let yearBucket;
+        if (planningYear === currentYear) { yearBucket = 'Current Year'; }
+        else if (planningYear === currentYear + 1) { yearBucket = 'Next Year'; }
+        else if (planningYear > currentYear + 1) { yearBucket = 'Future'; }
+        else { return; }
+
+        const assignedThemes = init.themes && init.themes.length > 0 ? init.themes : ['uncategorized'];
+        assignedThemes.forEach(themeId => {
+            const themeName = themeMap.get(themeId) || "Uncategorized";
+
+            if (selectedThemes.length > 0 && selectedThemes.length < allThemeIds.length && !selectedThemes.includes(themeId)) {
+                return;
+            }
+
+            if (!roadmapData[themeName]) {
+                roadmapData[themeName] = { 'Current Year': [], 'Next Year': [], 'Future': [] };
+            }
+            roadmapData[themeName][yearBucket].push(init);
+        });
+    });
+
+    return roadmapData;
+}
