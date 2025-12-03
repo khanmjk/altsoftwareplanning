@@ -1,0 +1,110 @@
+/* Pill Navigation Component Styles */
+
+/* Container */
+.pill-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 0;
+    margin: 0;
+}
+
+/* Individual Pill Button */
+.pill-nav__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border: 1px solid var(--color-gray-300);
+    border-radius: var(--radius-md);
+    background: var(--color-white);
+    color: var(--color-gray-700);
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.5;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    outline: none;
+}
+
+/* Icon within pill */
+.pill-nav__icon {
+    font-size: 0.875rem;
+    color: inherit;
+}
+
+/* Label within pill */
+.pill-nav__label {
+    color: inherit;
+}
+
+/* Hover state */
+.pill-nav__item:hover {
+    background: var(--color-gray-50);
+    border-color: var(--color-gray-400);
+    color: var(--color-gray-900);
+}
+
+/* Focus state (keyboard navigation) */
+.pill-nav__item:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-color: var(--color-primary);
+}
+
+/* Active state */
+.pill-nav__item--active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-white);
+    font-weight: 600;
+}
+
+.pill-nav__item--active:hover {
+    background: var(--color-primary-dark, var(--color-primary));
+    border-color: var(--color-primary-dark, var(--color-primary));
+    color: var(--color-white);
+}
+
+/* Active state focus */
+.pill-nav__item--active:focus {
+    outline: 2px solid var(--color-primary-dark, var(--color-primary));
+}
+
+/* Disabled state (if needed in future) */
+.pill-nav__item:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Responsive: Stack on small screens */
+@media (max-width: 640px) {
+    .pill-nav {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+    }
+
+    .pill-nav__item {
+        justify-content: center;
+        width: 100%;
+    }
+}
+
+/* Alternative: Scrollable on small screens (uncomment if preferred over stacking) */
+/*
+@media (max-width: 640px) {
+    .pill-nav {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+    }
+    
+    .pill-nav__item {
+        flex-shrink: 0;
+    }
+}
+*/

@@ -32,7 +32,8 @@ body {
 }
 
 #main-content-area {
-    padding: 0 20px 16px 20px;
+    padding: 0;
+    /* Removed global padding to allow full-bleed views. Padding is now handled by .workspace-view */
     overflow-y: auto;
     flex-grow: 1;
     position: relative;

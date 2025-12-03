@@ -1,10 +1,11 @@
 /**
  * NEW Function: Renders the SDM Forecasting View into the Workspace
  */
+/**
+ * NEW Function: Renders the SDM Forecasting View into the Workspace
+ */
 function renderSdmForecastingView(container) {
     console.log("Rendering SDM Resource Forecasting View...");
-    // Note: currentSystemData check is handled by the caller or within the logic if needed, 
-    // but forecasting is largely standalone or uses loaded data if available.
 
     if (!container) {
         container = document.getElementById('sdmForecastingView');
@@ -14,14 +15,76 @@ function renderSdmForecastingView(container) {
         return;
     }
 
-    // Generate the UI content for the forecasting tool
-    generateForecastingUI_SDM();
+    // 1. Set Workspace Metadata (Header)
+    if (window.workspaceComponent) {
+        window.workspaceComponent.setPageMetadata({
+            title: 'Resource Forecasting',
+            breadcrumbs: ['Planning', 'Resource Forecasting'],
+            actions: []
+        });
+    }
 
-    // Initial forecast generation on load (optional, or require button click)
-    // generateForecast_SDM(); // Uncomment this if you want it to run automatically on view load
+    // 2. Set Workspace Toolbar (Controls)
+    const toolbarControls = generateSdmToolbar();
+    if (window.workspaceComponent && toolbarControls) {
+        window.workspaceComponent.setToolbar(toolbarControls);
+    }
+
+    // 3. Render Content
+    generateForecastingUI_SDM();
 }
-// Make globally accessible
 window.renderSdmForecastingView = renderSdmForecastingView;
+
+/**
+ * Generates the toolbar controls for SDM Forecasting.
+ * Includes Team Selector and Generate Button.
+ */
+function generateSdmToolbar() {
+    const toolbar = document.createElement('div');
+    toolbar.className = 'sdm-toolbar';
+    toolbar.style.display = 'flex';
+    toolbar.style.alignItems = 'center';
+    toolbar.style.gap = '16px';
+    toolbar.style.width = '100%';
+
+    // Team Selector
+    const teamWrap = createLabeledControl('Select Team:', document.createElement('select'));
+    const teamSelect = teamWrap.querySelector('select');
+    teamSelect.id = 'sdmForecastTeamSelect';
+    teamSelect.className = 'form-select form-select-sm';
+    teamSelect.style.minWidth = '200px';
+    teamSelect.appendChild(new Option('-- Select a Team --', ''));
+
+    if (currentSystemData && currentSystemData.teams) {
+        currentSystemData.teams.forEach(team => {
+            const teamDisplayName = team.teamIdentity || team.teamName || team.teamId;
+            teamSelect.appendChild(new Option(teamDisplayName, team.teamId));
+        });
+    }
+    teamSelect.addEventListener('change', (event) => {
+        loadSdmForecastInputsForTeam(event.target.value);
+        clearSdmForecastOutputs();
+    });
+    toolbar.appendChild(teamWrap);
+
+    // Spacer
+    const spacer = document.createElement('div');
+    spacer.style.flexGrow = '1';
+    toolbar.appendChild(spacer);
+
+    // Generate Button
+    const generateBtn = document.createElement('button');
+    generateBtn.type = 'button';
+    generateBtn.className = 'btn btn-primary btn-sm';
+    generateBtn.id = 'generateForecastBtn_SDM';
+    generateBtn.textContent = 'Generate Forecast';
+    // Listener attached in generateForecastingUI_SDM or we can attach here
+    generateBtn.addEventListener('click', generateForecast_SDM);
+
+    toolbar.appendChild(generateBtn);
+
+    return toolbar;
+}
 
 /**
  * NEW Function (Phase 2b): Loads team data into forecast inputs.
@@ -120,36 +183,8 @@ function generateForecastingUI_SDM() {
     }
     container.innerHTML = ''; // Clear previous content
 
-    // --- Team Selection Dropdown ---
-    // (Code for team selection - unchanged from previous version)
-    const teamSelectionDiv = document.createElement('div');
-    teamSelectionDiv.style.marginBottom = '20px';
-    teamSelectionDiv.style.paddingBottom = '15px';
-    teamSelectionDiv.style.borderBottom = '1px solid #ccc';
-    const teamLabel = document.createElement('label');
-    teamLabel.htmlFor = 'sdmForecastTeamSelect';
-    teamLabel.textContent = 'Select Team to Forecast:';
-    teamLabel.style.fontWeight = 'bold';
-    teamLabel.style.marginRight = '10px';
-    const teamSelect = document.createElement('select');
-    teamSelect.id = 'sdmForecastTeamSelect';
-    teamSelect.style.padding = '5px';
-    teamSelect.style.minWidth = '200px';
-    teamSelect.appendChild(new Option('-- Select a Team --', ''));
-    if (currentSystemData && currentSystemData.teams) {
-        currentSystemData.teams.forEach(team => {
-            const teamDisplayName = team.teamIdentity || team.teamName || team.teamId;
-            teamSelect.appendChild(new Option(teamDisplayName, team.teamId));
-        });
-    }
-    teamSelect.addEventListener('change', (event) => {
-        loadSdmForecastInputsForTeam(event.target.value);
-        clearSdmForecastOutputs();
-    });
-    teamSelectionDiv.appendChild(teamLabel);
-    teamSelectionDiv.appendChild(teamSelect);
-    container.appendChild(teamSelectionDiv);
-    // --- End Team Selection ---
+    // Team Selection moved to Toolbar
+
 
 
     // --- Input Section ---
@@ -190,7 +225,8 @@ function generateForecastingUI_SDM() {
             <input id="closeGapWeek_SDM" type="number" value="26" />
             <div class="help-text">Target week (1-52) to reach the funded team size via hiring.</div>
         </div>
-        <button type="button" class="btn-primary" id="generateForecastBtn_SDM">Generate Forecast</button>
+        <!-- Generate Button moved to Toolbar -->
+
     `;
     container.appendChild(inputSection);
 

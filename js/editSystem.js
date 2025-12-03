@@ -1694,3 +1694,171 @@ async function saveAllChanges() {
 }
 
 window.showSystemEditForm = showSystemEditForm;
+// --- Edit System View Entry Point ---
+
+let currentEditMode = 'teams';
+
+/**
+ * NEW Function: Renders the Edit System View into the Workspace
+ */
+function renderSystemEditForm(container) {
+    console.log("Rendering Edit System View...");
+
+    if (!container) {
+        container = document.getElementById('systemEditForm');
+    }
+    if (!container) {
+        console.error("Edit System container not found.");
+        return;
+    }
+
+    // 1. Set Workspace Metadata
+    if (window.workspaceComponent) {
+        window.workspaceComponent.setPageMetadata({
+            title: 'Edit System Configuration',
+            breadcrumbs: ['System', 'Edit System'],
+            actions: []
+        });
+    }
+
+    // 2. Set Workspace Toolbar
+    const toolbar = generateEditSystemToolbar();
+    if (window.workspaceComponent && toolbar) {
+        window.workspaceComponent.setToolbar(toolbar);
+    }
+
+    // 3. Initial Render
+    switchEditMode(currentEditMode, container);
+}
+window.renderSystemEditForm = renderSystemEditForm;
+
+/**
+ * Generates the toolbar controls for Edit System
+ */
+function generateEditSystemToolbar() {
+    const toolbar = document.createElement('div');
+    toolbar.className = 'edit-system-toolbar';
+    toolbar.style.display = 'flex';
+    toolbar.style.alignItems = 'center';
+    toolbar.style.gap = '10px';
+    toolbar.id = 'editSystemGlobalToolbar';
+
+    const label = document.createElement('span');
+    label.textContent = 'Edit Mode:';
+    label.style.fontWeight = '600';
+    toolbar.appendChild(label);
+
+    const modes = [
+        { id: 'teams', label: 'Manage Teams' },
+        { id: 'services', label: 'Manage Services' },
+        { id: 'json', label: 'Raw JSON Editor' }
+    ];
+
+    modes.forEach(mode => {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-secondary btn-sm';
+        btn.textContent = mode.label;
+        btn.dataset.mode = mode.id;
+        btn.onclick = () => {
+            switchEditMode(mode.id);
+        };
+        toolbar.appendChild(btn);
+    });
+
+    return toolbar;
+}
+
+/**
+ * Switches the edit mode and renders the appropriate content
+ */
+function switchEditMode(modeId, container) {
+    currentEditMode = modeId;
+    if (!container) {
+        container = document.getElementById('main-content-area') || document.getElementById('systemEditForm');
+    }
+    if (!container) return;
+
+    // Update Toolbar State
+    const toolbar = document.getElementById('editSystemGlobalToolbar');
+    if (toolbar) {
+        toolbar.querySelectorAll('button').forEach(btn => {
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-secondary');
+        });
+        const activeBtn = toolbar.querySelector(`[data-mode="${modeId}"]`);
+        if (activeBtn) {
+            activeBtn.classList.add('btn-primary');
+            activeBtn.classList.remove('btn-secondary');
+        }
+    }
+
+    // Clear Container
+    container.innerHTML = '';
+    const contentWrapper = document.createElement('div');
+    contentWrapper.style.padding = '20px';
+    container.appendChild(contentWrapper);
+
+    if (!currentSystemData) {
+        contentWrapper.innerHTML = '<div class="alert alert-warning">Please load a system configuration first.</div>';
+        return;
+    }
+
+    switch (modeId) {
+        case 'teams':
+            contentWrapper.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <h3>Teams Management</h3>
+                    <button class="btn btn-primary btn-sm" onclick="addNewTeam()">+ Add New Team</button>
+                </div>
+                <div id="teamsManagement"></div>
+            `;
+            displayTeamsForEditing(currentSystemData.teams);
+            break;
+        case 'services':
+            contentWrapper.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <h3>Services Management</h3>
+                    <button class="btn btn-primary btn-sm" onclick="addNewService()">+ Add New Service</button>
+                </div>
+                <div id="editServicesManagement"></div>
+            `;
+            displayServicesForEditing(currentSystemData.services, 'editServicesManagement');
+            break;
+        case 'json':
+            contentWrapper.innerHTML = `
+                <h3>Raw JSON Editor</h3>
+                <div id="jsonEditorContainer"></div>
+            `;
+            renderJsonEditor(contentWrapper.querySelector('#jsonEditorContainer'));
+            break;
+    }
+}
+
+/**
+ * Renders the JSON Editor (Legacy Logic Adapted)
+ */
+function renderJsonEditor(container) {
+    const textarea = document.createElement('textarea');
+    textarea.style.width = '100%';
+    textarea.style.height = '600px';
+    textarea.style.fontFamily = 'monospace';
+    textarea.value = JSON.stringify(currentSystemData, null, 2);
+
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'btn btn-primary';
+    saveBtn.textContent = 'Save JSON Changes';
+    saveBtn.style.marginTop = '10px';
+    saveBtn.onclick = () => {
+        try {
+            const newData = JSON.parse(textarea.value);
+            currentSystemData = newData;
+            window.systemRepository.saveSystem(currentSystemData.systemName, currentSystemData);
+            window.notificationManager.showToast('System data updated from JSON.', 'success');
+        } catch (e) {
+            window.notificationManager.showToast('Invalid JSON: ' + e.message, 'error');
+        }
+    };
+
+    container.appendChild(textarea);
+    container.appendChild(saveBtn);
+}

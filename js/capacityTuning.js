@@ -20,24 +20,89 @@ function renderCapacityConfigView(container) {
         return;
     }
 
-    // Clear container (though WorkspaceComponent does this too)
-    // container.innerHTML = ''; 
+    // 1. Set Workspace Metadata (Header)
+    if (window.workspaceComponent) {
+        window.workspaceComponent.setPageMetadata({
+            title: 'Capacity Tuning',
+            breadcrumbs: ['Planning', 'Capacity Tuning'],
+            actions: []
+        });
+    }
 
-    // We need to ensure internal functions use this container or find their targets within it.
-    // For now, internal functions like generateGlobalConstraintsForm still look for ID 'capacityConfigView'.
-    // So we MUST ensure the container has that ID if we want to avoid refactoring everything.
-    // WorkspaceComponent assigns the ID, so we are good.
+    // 2. Set Workspace Toolbar (Controls)
+    const toolbarControls = generateCapacityToolbar();
+    if (window.workspaceComponent && toolbarControls) {
+        window.workspaceComponent.setToolbar(toolbarControls);
+    }
+
+    // 3. Clear Container & Render Content
+    container.innerHTML = '';
 
     generateGlobalConstraintsForm();
     generateTeamConstraintsForms();
-    // ---------------------------
 
-    // (Phase 5+)
+    // 4. Initial Calculation & Display
     updateCapacityCalculationsAndDisplay();
 
 }
-// Make it globally accessible
 window.renderCapacityConfigView = renderCapacityConfigView;
+
+/**
+ * Generates the toolbar controls for Capacity Tuning.
+ * Includes Scenario Selector and Save Button.
+ */
+function generateCapacityToolbar() {
+    const toolbar = document.createElement('div');
+    toolbar.className = 'capacity-toolbar';
+    toolbar.style.display = 'flex';
+    toolbar.style.alignItems = 'center';
+    toolbar.style.gap = '16px';
+    toolbar.style.width = '100%';
+    toolbar.style.justifyContent = 'space-between'; // Space between scenarios and save button
+
+    // Left Side: Scenario Selector
+    const leftGroup = document.createElement('div');
+    leftGroup.style.display = 'flex';
+    leftGroup.style.alignItems = 'center';
+    leftGroup.style.gap = '10px';
+
+    const label = document.createElement('span');
+    label.textContent = 'Scenario:';
+    label.style.fontWeight = '600';
+    label.style.fontSize = '0.9rem';
+    leftGroup.appendChild(label);
+
+    const btnGroup = document.createElement('div');
+    btnGroup.className = 'btn-group';
+    btnGroup.role = 'group';
+
+    ['EffectiveBIS', 'TeamBIS', 'FundedHC'].forEach(scenario => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `btn btn-sm ${currentCapacityScenario === scenario ? 'btn-primary' : 'btn-outline-secondary'}`;
+        btn.textContent = scenario === 'EffectiveBIS' ? 'Effective BIS' : (scenario === 'TeamBIS' ? 'Team BIS' : 'Funded HC');
+        btn.dataset.scenario = scenario;
+        btn.onclick = () => {
+            // Update active state visually
+            btnGroup.querySelectorAll('button').forEach(b => {
+                b.className = `btn btn-sm ${b.dataset.scenario === scenario ? 'btn-primary' : 'btn-outline-secondary'}`;
+            });
+            updateCapacityCalculationsAndDisplay(scenario);
+        };
+        btnGroup.appendChild(btn);
+    });
+    leftGroup.appendChild(btnGroup);
+    toolbar.appendChild(leftGroup);
+
+    // Right Side: Save Button
+    const saveBtn = document.createElement('button');
+    saveBtn.textContent = 'Save Configuration';
+    saveBtn.className = 'btn btn-primary btn-sm';
+    saveBtn.onclick = saveCapacityConfiguration;
+    toolbar.appendChild(saveBtn);
+
+    return toolbar;
+}
 
 /**
  * Generates the form elements for global capacity constraints.
@@ -511,33 +576,8 @@ function generateCapacitySummaryDisplay(calculatedMetrics, selectedScenario) {
     const summarySection = document.getElementById('capacitySummarySection');
     if (!summarySection) { console.error("Summary section not found."); return; }
 
-    let scenarioButtonsDiv = summarySection.querySelector('#capacityScenarioButtons');
-    if (!scenarioButtonsDiv) {
-        scenarioButtonsDiv = document.createElement('div');
-        scenarioButtonsDiv.id = 'capacityScenarioButtons';
-        scenarioButtonsDiv.style.marginBottom = '15px';
-        summarySection.insertBefore(scenarioButtonsDiv, summarySection.firstChild);
-    }
-    const baseButtonStyle = 'padding: 5px 10px; margin-right: 10px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; font-size: 0.9em;';
-    const activeButtonStyle = baseButtonStyle + ' background-color: #007bff; color: white; border-color: #0056b3; font-weight: bold;';
-    const inactiveButtonStyle = baseButtonStyle + ' background-color: #e9ecef; color: #495057;';
+    // Scenario buttons moved to Toolbar
 
-    scenarioButtonsDiv.innerHTML = `
-        <strong class="capacity-scenario-selector__label">Show Summary For:</strong>
-        <button type="button" class="capacity-scenario-button ${selectedScenario === 'EffectiveBIS' ? 'capacity-scenario-button--active' : ''}" data-scenario="EffectiveBIS">Effective BIS</button>
-        <button type="button" class="capacity-scenario-button ${selectedScenario === 'TeamBIS' ? 'capacity-scenario-button--active' : ''}" data-scenario="TeamBIS">Team BIS</button>
-        <button type="button" class="capacity-scenario-button ${selectedScenario === 'FundedHC' ? 'capacity-scenario-button--active' : ''}" data-scenario="FundedHC">Funded HC</button>
-    `;
-
-    // Event delegation for scenario buttons
-    scenarioButtonsDiv.querySelectorAll('.capacity-scenario-button').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const scenario = btn.getAttribute('data-scenario');
-            if (scenario && typeof updateCapacityCalculationsAndDisplay === 'function') {
-                updateCapacityCalculationsAndDisplay(scenario);
-            }
-        });
-    });
 
     let summaryTable = summarySection.querySelector('#capacitySummaryTable');
     if (!summaryTable) {
@@ -1415,21 +1455,8 @@ function generateTeamConstraintsForms() {
         if (table) table.style.display = 'none';
     }
 
-    let saveButtonContainer = document.getElementById('capacitySaveButtonContainer');
-    if (!saveButtonContainer) {
-        saveButtonContainer = document.createElement('div');
-        saveButtonContainer.id = 'capacitySaveButtonContainer';
-        saveButtonContainer.style.textAlign = 'center';
-        saveButtonContainer.style.marginTop = '25px';
-        const saveButton = document.createElement('button');
-        saveButton.id = 'saveCapacityConfigButton';
-        saveButton.textContent = 'Save All Capacity Configuration';
-        saveButton.className = 'btn-primary';
-        saveButton.style.cursor = 'pointer';
-        saveButton.onclick = saveCapacityConfiguration;
-        saveButtonContainer.appendChild(saveButton);
-        container.appendChild(saveButtonContainer);
-    }
+    // Save button moved to Toolbar
+
 
     console.log("Finished setting up Team Constraints structure (AI-Aware with Productivity Gain).");
 }

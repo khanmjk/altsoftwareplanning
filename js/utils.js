@@ -1,9 +1,6 @@
 // Global Constants
 const ALL_INITIATIVE_STATUSES = ['Backlog', 'Defined', 'Committed', 'Completed'];
 
-// Global Planning Year Variable (used by dashboard widgets)
-let dashboardPlanningYear = new Date().getFullYear();
-
 
 // --- Helper for Input Warnings (Phase 7a) ---
 const updateInputWarning = (inputElement, message) => {

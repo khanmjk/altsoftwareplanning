@@ -12,13 +12,13 @@ function initializeAccomplishmentsView() {
     }
 
     container.innerHTML = `
-        <div id="roadmapTableFiltersAccomplishments" class="widget-filter-bar">
-        </div>
         <div id="accomplishmentsContainer" class="accomplishments-container"></div>
     `;
 
-    generateRoadmapTableFilters('Accomplishments', renderAccomplishmentsView, { includeThemes: true });
+    // Initial render
     renderAccomplishmentsView();
+
+    return null; // No filters for this widget
 }
 
 /**
@@ -26,42 +26,13 @@ function initializeAccomplishmentsView() {
  * MODIFIED: Now gathers additional context like Goal, Themes, Ownership, and ROI.
  */
 function prepareAccomplishmentsData() {
-    const yearFilter = dashboardPlanningYear;
-    const orgFilter = document.getElementById('roadmapOrgFilterAccomplishments')?.value || 'all';
-    const teamFilter = document.getElementById('roadmapTeamFilterAccomplishments')?.value || 'all';
-    const themeCheckboxes = document.querySelectorAll('#theme-dropdown-panelAccomplishments input.theme-checkbox-item:checked');
-    const selectedThemes = Array.from(themeCheckboxes).map(cb => cb.value);
+    const yearFilter = window.dashboardPlanningYear;
 
     let completedInitiatives = (currentSystemData.yearlyInitiatives || []).filter(init => init.status === 'Completed');
 
     // --- Filter Initiatives ---
     if (yearFilter !== 'all') {
         completedInitiatives = completedInitiatives.filter(init => init.attributes.planningYear == yearFilter);
-    }
-
-    if (orgFilter !== 'all') {
-        const teamsInOrg = new Set();
-        (currentSystemData.sdms || []).forEach(sdm => {
-            if (sdm.seniorManagerId === orgFilter) {
-                (currentSystemData.teams || []).forEach(team => {
-                    if (team.sdmId === sdm.sdmId) teamsInOrg.add(team.teamId);
-                });
-            }
-        });
-        completedInitiatives = completedInitiatives.filter(init => (init.assignments || []).some(a => teamsInOrg.has(a.teamId)));
-    }
-
-    if (teamFilter !== 'all') {
-        completedInitiatives = completedInitiatives.filter(init => (init.assignments || []).some(a => a.teamId === teamFilter));
-    }
-
-    const allThemeIds = (currentSystemData.definedThemes || []).map(t => t.themeId);
-    if (selectedThemes.length > 0 && selectedThemes.length < allThemeIds.length) {
-        completedInitiatives = completedInitiatives.filter(init => {
-            const initThemes = init.themes || [];
-            if (initThemes.length === 0) return false;
-            return initThemes.some(themeId => selectedThemes.includes(themeId));
-        });
     }
 
     // Sort by completion date, most recent first

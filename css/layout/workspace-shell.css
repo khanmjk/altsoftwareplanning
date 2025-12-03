@@ -1,0 +1,129 @@
+/* Workspace Shell - The Canvas Architecture */
+
+/* 
+   The Shell consists of:
+   1. Canvas Header (Global Page Title & Primary Actions)
+   2. Canvas Toolbar (Optional View-specific controls, sticky)
+   3. Canvas Content (The View itself)
+*/
+
+/* --- 1. Canvas Header --- */
+.canvas-header {
+    background: var(--color-white);
+    border-bottom: 1px solid var(--color-gray-200);
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 64px;
+    /* Fixed height for consistency */
+    box-sizing: border-box;
+    flex-shrink: 0;
+    /* Never shrink */
+}
+
+.canvas-header__left {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.canvas-header__breadcrumbs {
+    font-size: 0.85rem;
+    color: var(--color-gray-500);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.canvas-header__breadcrumb-item:not(:last-child)::after {
+    content: '/';
+    margin-left: 6px;
+    color: var(--color-gray-400);
+}
+
+.canvas-header__title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-gray-900);
+    margin: 0;
+    line-height: 1.2;
+}
+
+.canvas-header__right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* --- 2. Canvas Toolbar (Sticky) --- */
+.canvas-toolbar {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--color-gray-200);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    /* Above content */
+    min-height: 56px;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+/* --- 3. Canvas Content --- */
+.canvas-content {
+    flex-grow: 1;
+    /* padding: 24px;  Moved to .workspace-view to allow full-bleed overrides */
+    overflow-y: auto;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Helper to ensure views take full height if needed */
+.canvas-content>* {
+    width: 100%;
+}
+
+/* --- Standardized Components for Views --- */
+
+/* Standard View Container */
+.workspace-view {
+    width: 100%;
+    padding: 24px;
+    /* Default padding for views */
+    box-sizing: border-box;
+}
+
+/* Workspace Card - A standard container for content blocks */
+.workspace-card {
+    background: var(--color-white);
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+/* Empty State Helper */
+.workspace-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--color-gray-500);
+}
+
+.workspace-empty-state i {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    color: var(--color-gray-300);
+}

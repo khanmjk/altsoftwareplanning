@@ -757,6 +757,9 @@ window.toggleCapacityConstraints = toggleCapacityConstraints;
  * REVISED - Generates the planning table, dynamically populating the year selector
  * based on initiative data and ensuring data consistency.
  */
+/**
+ * REVISED - Generates the planning table using the Workspace Shell.
+ */
 function renderPlanningView(container) {
     // console.log(`renderPlanningView: Rendering main planning view for year: ${currentPlanningYear}...`);
 
@@ -768,45 +771,75 @@ function renderPlanningView(container) {
         return;
     }
 
-    // [NEW] Dynamically create the layout if it doesn't exist
-    // We check for a key element (planningCapacitySummary) to decide if we need to inject the structure.
-    if (!document.getElementById('planningCapacitySummary')) {
-        // console.log("Injecting Planning View DOM structure...");
-        container.innerHTML = `
-            <div id="planningCapacitySummary" style="margin-bottom: 15px; font-weight: bold; padding: 8px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;"></div>
-
-            <div id="planningScenarioControl" style="margin-bottom: 15px; padding: 8px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;"></div>
-
-            <div id="teamLoadSummarySection" style="margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px;">
-                <h4 onclick="toggleCollapsibleSection('teamLoadSummaryContent', 'teamLoadSummaryToggle')" style="cursor: pointer; margin: 0; padding: 10px; background-color: #e9ecef; border-bottom: 1px solid #ccc;" title="Click to expand/collapse team load summary">
-                    <span id="teamLoadSummaryToggle" class="toggle-indicator">(+) </span> Team Load Summary (for ATL Initiatives)
-                </h4>
-                <div id="teamLoadSummaryContent" style="display: none; padding: 10px;">
-                    <p style="font-size: 0.9em; color: #555;">Shows team load based *only* on initiatives currently Above The Line (ATL) according to the selected scenario below.</p>
-                    <table id="teamLoadSummaryTable" style="margin: 0 auto; border-collapse: collapse; font-size: 0.9em;">
-                        <thead>
-                            <tr style="background-color: #f2f2f2;">
-                                <th style="border: 1px solid #ccc; padding: 5px;">Team Name</th>
-                                <th style="border: 1px solid #ccc; padding: 5px;" title="Finance Approved Budget">Funded HC</th>
-                                <th style="border: 1px solid #ccc; padding: 5px;" title="Actual Team Members">Team BIS</th>
-                                <th style="border: 1px solid #ccc; padding: 5px;" title="Borrowed/Away Members">Away BIS</th>
-                                <th style="border: 1px solid #ccc; padding: 5px;" title="Team BIS + Away BIS">Effective BIS</th>
-                                <th style="border: 1px solid #ccc; padding: 5px;" title="SDEs assigned to this team from ATL initiatives only">Assigned ATL SDEs</th>
-                                <th style="border: 1px solid #ccc; padding: 5px;" title="Team's capacity based on selected scenario button below">Scenario Capacity Limit</th>
-                                <th style="border: 1px solid #ccc; padding: 5px;" title="Scenario Capacity Limit - Assigned ATL SDEs">Remaining Capacity (ATL)</th>
-                                <th style="border: 1px solid #ccc; padding: 5px;" title="Load status for ATL work based on Scenario Capacity Limit">ATL Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="teamLoadSummaryTableBody"></tbody>
-                        <tfoot id="teamLoadSummaryTableFoot" style="font-weight: bold;"></tfoot>
-                    </table>
-                </div>
-            </div>
-
-            <div id="planningTableContainer"></div>
-        `;
+    // 1. Set Workspace Metadata (Header)
+    if (window.workspaceComponent) {
+        window.workspaceComponent.setPageMetadata({
+            title: 'Year Plan',
+            breadcrumbs: ['Planning', 'Year Plan'],
+            actions: [
+                {
+                    label: `Save Plan for ${currentPlanningYear}`,
+                    icon: 'fas fa-save',
+                    onClick: () => handleSavePlan(),
+                    className: 'btn btn-danger btn-sm' // Keeping red style for save
+                },
+                {
+                    label: 'Optimize Plan',
+                    icon: 'fas fa-robot',
+                    onClick: () => {
+                        if (window.aiAgentController && typeof window.aiAgentController.runPrebuiltAgent === 'function') {
+                            window.aiAgentController.runPrebuiltAgent('optimizePlan');
+                        } else {
+                            window.notificationManager.showToast("AI Controller is not available.", "error");
+                        }
+                    },
+                    className: 'btn btn-info btn-sm',
+                    hidden: !(window.globalSettings && window.globalSettings.ai && window.globalSettings.ai.isEnabled)
+                }
+            ]
+        });
     }
 
+    // 2. Set Workspace Toolbar (Controls)
+    const toolbarControls = generatePlanningToolbar();
+    if (window.workspaceComponent && toolbarControls) {
+        window.workspaceComponent.setToolbar(toolbarControls);
+    }
+
+    // 3. Create Content Layout
+    // We only need the summary section and the table container.
+    // The controls are now in the toolbar.
+    container.innerHTML = `
+        <div id="teamLoadSummarySection" style="margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px;">
+            <h4 onclick="toggleCollapsibleSection('teamLoadSummaryContent', 'teamLoadSummaryToggle')" style="cursor: pointer; margin: 0; padding: 10px; background-color: #e9ecef; border-bottom: 1px solid #ccc;" title="Click to expand/collapse team load summary">
+                <span id="teamLoadSummaryToggle" class="toggle-indicator">(+) </span> Team Load Summary (for ATL Initiatives)
+            </h4>
+            <div id="teamLoadSummaryContent" style="display: none; padding: 10px;">
+                <p style="font-size: 0.9em; color: #555;">Shows team load based *only* on initiatives currently Above The Line (ATL) according to the selected scenario below.</p>
+                <table id="teamLoadSummaryTable" style="margin: 0 auto; border-collapse: collapse; font-size: 0.9em;">
+                    <thead>
+                        <tr style="background-color: #f2f2f2;">
+                            <th style="border: 1px solid #ccc; padding: 5px;">Team Name</th>
+                            <th style="border: 1px solid #ccc; padding: 5px;" title="Finance Approved Budget">Funded HC</th>
+                            <th style="border: 1px solid #ccc; padding: 5px;" title="Actual Team Members">Team BIS</th>
+                            <th style="border: 1px solid #ccc; padding: 5px;" title="Borrowed/Away Members">Away BIS</th>
+                            <th style="border: 1px solid #ccc; padding: 5px;" title="Team BIS + Away BIS">Effective BIS</th>
+                            <th style="border: 1px solid #ccc; padding: 5px;" title="SDEs assigned to this team from ATL initiatives only">Assigned ATL SDEs</th>
+                            <th style="border: 1px solid #ccc; padding: 5px;" title="Team's capacity based on selected scenario button below">Scenario Capacity Limit</th>
+                            <th style="border: 1px solid #ccc; padding: 5px;" title="Scenario Capacity Limit - Assigned ATL SDEs">Remaining Capacity (ATL)</th>
+                            <th style="border: 1px solid #ccc; padding: 5px;" title="Load status for ATL work based on Scenario Capacity Limit">ATL Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teamLoadSummaryTableBody"></tbody>
+                    <tfoot id="teamLoadSummaryTableFoot" style="font-weight: bold;"></tfoot>
+                </table>
+            </div>
+        </div>
+
+        <div id="planningTableContainer"></div>
+    `;
+
+    // Ensure Data
     if (typeof ensureWorkPackagesForInitiatives === 'function') {
         ensureWorkPackagesForInitiatives(currentSystemData, currentPlanningYear);
         if (typeof syncInitiativeTotals === 'function') {
@@ -816,8 +849,6 @@ function renderPlanningView(container) {
         }
     }
 
-    const capacitySummaryDiv = document.getElementById('planningCapacitySummary');
-    const scenarioControlDiv = document.getElementById('planningScenarioControl');
     const tableContainer = document.getElementById('planningTableContainer');
 
     if (!currentSystemData || !currentSystemData.teams) {
@@ -825,12 +856,39 @@ function renderPlanningView(container) {
         return;
     }
 
+    // Ensure Planning Years
     if (typeof ensureInitiativePlanningYears === 'function') {
         ensureInitiativePlanningYears(currentSystemData.yearlyInitiatives);
-    } else {
-        console.warn("`ensureInitiativePlanningYears` function not found.");
     }
 
+    // Ensure Metrics
+    if (!currentSystemData.calculatedCapacityMetrics) {
+        currentSystemData.calculatedCapacityMetrics = calculateAllCapacityMetrics();
+    }
+
+    // Render Tables
+    currentYearPlanSummaryData = calculateTeamLoadSummaryData();
+    renderTeamLoadSummaryTable(currentYearPlanSummaryData);
+
+    currentYearPlanTableData = calculatePlanningTableData();
+    renderPlanningTable(currentYearPlanTableData);
+
+    console.log("Finished rendering planning view.");
+}
+
+/**
+ * Generates the toolbar controls for the Planning View.
+ * @returns {HTMLElement} The toolbar container
+ */
+function generatePlanningToolbar() {
+    const toolbar = document.createElement('div');
+    toolbar.className = 'planning-toolbar';
+    toolbar.style.display = 'flex';
+    toolbar.style.alignItems = 'center';
+    toolbar.style.gap = '20px';
+    toolbar.style.width = '100%';
+
+    // 1. Year Selector
     const calendarYear = new Date().getFullYear();
     let availableYears = [];
     if (currentSystemData.yearlyInitiatives && currentSystemData.yearlyInitiatives.length > 0) {
@@ -843,92 +901,99 @@ function renderPlanningView(container) {
     if (!availableYears.includes(currentPlanningYear)) {
         currentPlanningYear = availableYears.includes(calendarYear) ? calendarYear : availableYears[0];
     }
-    let yearOptionsHTML = availableYears.map(year =>
-        `<option value="${year}" ${year === currentPlanningYear ? 'selected' : ''}>${year}</option>`
-    ).join('');
-    const yearSelectorHTML = `
-        <label for="planningYearSelector" style="font-weight: bold; margin-left: 10px;">Planning Year:</label>
-        <select id="planningYearSelector" onchange="setPlanningYear(this.value)" style="padding: 5px; border-radius: 4px;">
-            ${yearOptionsHTML}
-        </select>
-    `;
-    if (capacitySummaryDiv) {
-        capacitySummaryDiv.innerHTML = `${yearSelectorHTML}`;
-    }
 
-    if (!currentSystemData.calculatedCapacityMetrics) {
-        console.warn("calculatedCapacityMetrics not found. Generating on the fly.");
-        currentSystemData.calculatedCapacityMetrics = calculateAllCapacityMetrics();
-    }
+    const yearGroup = document.createElement('div');
+    yearGroup.style.display = 'flex';
+    yearGroup.style.alignItems = 'center';
+    yearGroup.style.gap = '8px';
+
+    const yearLabel = document.createElement('strong');
+    yearLabel.textContent = 'Planning Year:';
+    yearGroup.appendChild(yearLabel);
+
+    const yearSelect = document.createElement('select');
+    yearSelect.className = 'form-select form-select-sm'; // Use standard classes if available
+    yearSelect.style.padding = '4px 8px';
+    yearSelect.style.borderRadius = '4px';
+    yearSelect.onchange = (e) => setPlanningYear(e.target.value);
+
+    availableYears.forEach(year => {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        if (year === currentPlanningYear) option.selected = true;
+        yearSelect.appendChild(option);
+    });
+    yearGroup.appendChild(yearSelect);
+    toolbar.appendChild(yearGroup);
+
+    // 2. Scenario Controls
     const calculatedMetrics = currentSystemData.calculatedCapacityMetrics;
-    if (!calculatedMetrics) {
-        console.error("Failed to get or calculate metrics. Cannot render planning view.");
-        return;
-    }
+    if (calculatedMetrics) {
+        const scenarioGroup = document.createElement('div');
+        scenarioGroup.style.display = 'flex';
+        scenarioGroup.style.alignItems = 'center';
+        scenarioGroup.style.gap = '8px';
 
-    if (scenarioControlDiv) {
-        const scenarioKey = planningCapacityScenario === 'funded' ? 'FundedHC' : (planningCapacityScenario === 'team_bis' ? 'TeamBIS' : 'EffectiveBIS');
-        const baseButtonStyle = 'padding: 5px 10px; margin-left: 10px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; font-size: 0.9em;';
-        const activeButtonStyle = baseButtonStyle + ' background-color: #007bff; color: white; border-color: #0056b3; font-weight: bold;';
-        const inactiveButtonStyle = baseButtonStyle + ' background-color: #e9ecef; color: #495057;';
-        const isAiEnabled = !!(window.globalSettings && window.globalSettings.ai && window.globalSettings.ai.isEnabled);
+        const label = document.createElement('strong');
+        label.textContent = 'Calculate ATL/BTL using:';
+        scenarioGroup.appendChild(label);
 
-        const effectiveButtonTitle = `Use Effective BIS. Gross: ${calculatedMetrics.totals.EffectiveBIS.grossYrs.toFixed(2)}, Net: ${calculatedMetrics.totals.EffectiveBIS.netYrs.toFixed(2)}`;
-        const teamBisButtonTitle = `Use Team BIS. Gross: ${calculatedMetrics.totals.TeamBIS.grossYrs.toFixed(2)}, Net: ${calculatedMetrics.totals.TeamBIS.netYrs.toFixed(2)}`;
-        const fundedHcButtonTitle = `Use Funded HC. Gross: ${calculatedMetrics.totals.FundedHC.grossYrs.toFixed(2)}, Net: ${calculatedMetrics.totals.FundedHC.netYrs.toFixed(2)}`;
+        const scenarios = [
+            { id: 'effective', label: 'Effective BIS', key: 'EffectiveBIS' },
+            { id: 'team_bis', label: 'Team BIS', key: 'TeamBIS' },
+            { id: 'funded', label: 'Funded HC', key: 'FundedHC' }
+        ];
 
-        const toggleTooltip = "Toggling this ON applies all configured capacity constraints (leave, overhead, etc.) AND adds any productivity gains from AI tooling to calculate the Net capacity.";
-        const toggleLabelText = "Apply Constraints & AI Gains (Net)";
-
-        scenarioControlDiv.innerHTML = `
-            <strong style="margin-right: 10px;">Calculate ATL/BTL using:</strong>
-            <button type="button" style="${planningCapacityScenario === 'effective' ? activeButtonStyle : inactiveButtonStyle}" title="${effectiveButtonTitle}" onclick="setPlanningScenario('effective')">Effective BIS</button>
-            <button type="button" style="${planningCapacityScenario === 'team_bis' ? activeButtonStyle : inactiveButtonStyle}" title="${teamBisButtonTitle}" onclick="setPlanningScenario('team_bis')">Team BIS</button>
-            <button type="button" style="${planningCapacityScenario === 'funded' ? activeButtonStyle : inactiveButtonStyle}" title="${fundedHcButtonTitle}" onclick="setPlanningScenario('funded')">Funded HC</button>
-            <label style="margin-left: 20px; font-size: 0.9em; cursor: pointer; vertical-align: middle;" title="${toggleTooltip}">
-                <input type="checkbox" id="applyConstraintsToggle" style="vertical-align: middle;" onchange="toggleCapacityConstraints(this.checked)" ${applyCapacityConstraintsToggle ? 'checked' : ''}>
-                ${toggleLabelText}
-            </label>
-            <button type="button" id="savePlanButton"
-                    style="${baseButtonStyle} background-color: #dc3545; color: white; border-color: #dc3545; margin-left: 25px;"
-                    title="Save the current plan for year ${currentPlanningYear}. This updates initiative statuses based on ATL/BTL.">
-                Save Plan for ${currentPlanningYear}
-            </button>
-            ${isAiEnabled ? `
-            <button type="button" id="optimizePlanButton"
-                    style="${baseButtonStyle} background-color: #17a2b8; color: white; border-color: #17a2b8; margin-left: 10px;"
-                    title="Use AI to analyze this plan and suggest optimizations">
-                🤖 Optimize This Plan
-            </button>` : ''}
-        `;
-        setTimeout(() => {
-            const savePlanButton = document.getElementById('savePlanButton');
-            if (savePlanButton) {
-                savePlanButton.addEventListener('click', handleSavePlan);
+        scenarios.forEach(sc => {
+            const btn = document.createElement('button');
+            btn.textContent = sc.label;
+            btn.className = `btn btn-sm ${planningCapacityScenario === sc.id ? 'btn-primary' : 'btn-light'}`;
+            btn.style.border = '1px solid #ccc'; // Fallback style
+            if (planningCapacityScenario === sc.id) {
+                btn.style.backgroundColor = '#007bff';
+                btn.style.color = 'white';
             }
 
-            // [NEW] ADD THIS LISTENER
-            const optimizePlanButton = document.getElementById('optimizePlanButton');
-            if (optimizePlanButton && isAiEnabled) {
-                optimizePlanButton.addEventListener('click', () => {
-                    if (window.aiAgentController && typeof window.aiAgentController.runPrebuiltAgent === 'function') {
-                        window.aiAgentController.runPrebuiltAgent('optimizePlan');
-                    } else {
-                        window.notificationManager.showToast("AI Controller is not available.", "error");
-                    }
-                });
+            // Tooltip
+            const metrics = calculatedMetrics.totals[sc.key];
+            if (metrics) {
+                btn.title = `Gross: ${metrics.grossYrs.toFixed(2)}, Net: ${metrics.netYrs.toFixed(2)}`;
             }
-            // [END NEW]
-        }, 0);
+
+            btn.onclick = () => setPlanningScenario(sc.id);
+            scenarioGroup.appendChild(btn);
+        });
+
+        toolbar.appendChild(scenarioGroup);
+
+        // 3. Constraints Toggle
+        const toggleGroup = document.createElement('div');
+        toggleGroup.style.display = 'flex';
+        toggleGroup.style.alignItems = 'center';
+        toggleGroup.style.gap = '6px';
+        toggleGroup.style.marginLeft = 'auto'; // Push to right if needed, or just gap
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = 'applyConstraintsToggleToolbar';
+        checkbox.checked = applyCapacityConstraintsToggle;
+        checkbox.style.cursor = 'pointer';
+        checkbox.onchange = (e) => toggleCapacityConstraints(e.target.checked);
+
+        const toggleLabel = document.createElement('label');
+        toggleLabel.htmlFor = 'applyConstraintsToggleToolbar';
+        toggleLabel.textContent = 'Apply Constraints & AI Gains (Net)';
+        toggleLabel.style.cursor = 'pointer';
+        toggleLabel.style.userSelect = 'none';
+        toggleLabel.title = "Toggling this ON applies all configured capacity constraints (leave, overhead, etc.) AND adds any productivity gains from AI tooling to calculate the Net capacity.";
+
+        toggleGroup.appendChild(checkbox);
+        toggleGroup.appendChild(toggleLabel);
+        toolbar.appendChild(toggleGroup);
     }
 
-    currentYearPlanSummaryData = calculateTeamLoadSummaryData();
-    renderTeamLoadSummaryTable(currentYearPlanSummaryData);
-
-    currentYearPlanTableData = calculatePlanningTableData();
-    renderPlanningTable(currentYearPlanTableData);
-
-    console.log("Finished rendering planning view.");
+    return toolbar;
 }
 if (typeof window !== 'undefined') {
     window.renderPlanningView = renderPlanningView;

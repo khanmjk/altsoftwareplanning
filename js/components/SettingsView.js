@@ -15,26 +15,26 @@ class SettingsView {
     render() {
         if (!this.container) return;
 
+        // 1. Set Workspace Metadata
+        if (window.workspaceComponent) {
+            window.workspaceComponent.setPageMetadata({
+                title: 'System Settings',
+                breadcrumbs: ['System', 'Settings'],
+                actions: []
+            });
+        }
+
+        // 2. Set Workspace Toolbar
+        const toolbar = this.generateSettingsToolbar();
+        if (window.workspaceComponent && toolbar) {
+            window.workspaceComponent.setToolbar(toolbar);
+        }
+
+        // 3. Render Content
         this.container.innerHTML = `
             <div class="settings-view-container">
-                <h1 class="settings-header">
-                    <i class="fas fa-cog"></i> Settings
-                </h1>
-
-                <div class="settings-layout">
-                    <!-- Sidebar Navigation -->
-                    <div class="settings-sidebar">
-                        <div class="settings-nav-item ${this.activeTab === 'general' ? 'active' : ''}" 
-                             data-tab="general">
-                            <i class="fas fa-sliders-h"></i> General
-                        </div>
-                        <div class="settings-nav-item ${this.activeTab === 'ai' ? 'active' : ''}" 
-                             data-tab="ai">
-                            <i class="fas fa-robot"></i> AI Assistant
-                        </div>
-                    </div>
-
-                    <!-- Content Area -->
+                <div class="settings-layout" style="grid-template-columns: 1fr;">
+                    <!-- Sidebar Removed, Content Only -->
                     <div class="settings-content">
                         ${this.renderActiveTab()}
                     </div>
@@ -47,14 +47,45 @@ class SettingsView {
     }
 
     /**
+     * Generates the toolbar controls for Settings View
+     */
+    generateSettingsToolbar() {
+        const toolbar = document.createElement('div');
+        toolbar.className = 'settings-toolbar-global';
+        toolbar.style.display = 'flex';
+        toolbar.style.alignItems = 'center';
+        toolbar.style.gap = '10px';
+        toolbar.id = 'settingsGlobalToolbar';
+
+        const tabs = [
+            { id: 'general', label: 'General', icon: 'fa-sliders-h' },
+            { id: 'ai', label: 'AI Assistant', icon: 'fa-robot' }
+        ];
+
+        tabs.forEach(tab => {
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-secondary btn-sm';
+            btn.innerHTML = `<i class="fas ${tab.icon}"></i> ${tab.label}`;
+            btn.dataset.tab = tab.id;
+            btn.onclick = () => this.switchTab(tab.id);
+            toolbar.appendChild(btn);
+        });
+
+        // Set active state
+        const activeBtn = toolbar.querySelector(`[data-tab="${this.activeTab}"]`);
+        if (activeBtn) {
+            activeBtn.classList.remove('btn-secondary');
+            activeBtn.classList.add('btn-primary');
+        }
+
+        return toolbar;
+    }
+
+    /**
      * Bind event listeners
      */
     bindEvents() {
-        // Tab switching via event delegation
-        const sidebar = this.container.querySelector('.settings-sidebar');
-        if (sidebar) {
-            sidebar.addEventListener('click', this.handleTabClick.bind(this));
-        }
+        // Tab switching handled by toolbar now
 
         // Form submission for AI settings
         const aiForm = document.getElementById('aiSettingsForm_view');
@@ -84,7 +115,12 @@ class SettingsView {
      * Handle tab click
      * @param {Event} event - Click event
      */
+    /**
+     * Handle tab click (Legacy)
+     * @param {Event} event - Click event
+     */
     handleTabClick(event) {
+        // Legacy handler
         const tabItem = event.target.closest('[data-tab]');
         if (!tabItem) return;
 

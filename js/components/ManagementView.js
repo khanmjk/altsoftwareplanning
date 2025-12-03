@@ -16,33 +16,26 @@ class ManagementView {
     render() {
         if (!this.container) return;
 
+        // 1. Set Workspace Metadata
+        if (window.workspaceComponent) {
+            window.workspaceComponent.setPageMetadata({
+                title: 'Product Management',
+                breadcrumbs: ['Product', 'Management'],
+                actions: []
+            });
+        }
+
+        // 2. Set Workspace Toolbar
+        const toolbar = this.generateManagementToolbar();
+        if (window.workspaceComponent && toolbar) {
+            window.workspaceComponent.setToolbar(toolbar);
+        }
+
+        // 3. Render Content
         this.container.innerHTML = `
             <div class="management-view-container">
-                <h1 class="management-header">
-                    <i class="fas fa-tasks"></i> Product Management
-                </h1>
-
-                <div class="management-layout">
-                    <!-- Sidebar Navigation -->
-                    <div class="management-sidebar">
-                        <div class="management-nav-item ${this.activeTab === 'themes' ? 'active' : ''}" 
-                             data-tab="themes">
-                            <div class="management-nav-icon"><i class="fas fa-swatchbook"></i></div>
-                            Themes
-                        </div>
-                        <div class="management-nav-item ${this.activeTab === 'initiatives' ? 'active' : ''}" 
-                             data-tab="initiatives">
-                            <div class="management-nav-icon"><i class="fas fa-list-ul"></i></div>
-                            Initiatives
-                        </div>
-                        <div class="management-nav-item ${this.activeTab === 'goals' ? 'active' : ''}" 
-                             data-tab="goals">
-                            <div class="management-nav-icon"><i class="fas fa-bullseye"></i></div>
-                            Goals
-                        </div>
-                    </div>
-
-                    <!-- Content Area -->
+                <div class="management-layout" style="grid-template-columns: 1fr;">
+                    <!-- Sidebar Removed, Content Only -->
                     <div class="management-content">
                         ${this.renderActiveTab()}
                     </div>
@@ -64,6 +57,42 @@ class ManagementView {
     }
 
     /**
+     * Generates the toolbar controls for Management View
+     */
+    generateManagementToolbar() {
+        const toolbar = document.createElement('div');
+        toolbar.className = 'management-toolbar-global';
+        toolbar.style.display = 'flex';
+        toolbar.style.alignItems = 'center';
+        toolbar.style.gap = '10px';
+        toolbar.id = 'managementGlobalToolbar';
+
+        const tabs = [
+            { id: 'themes', label: 'Themes', icon: 'fa-swatchbook' },
+            { id: 'initiatives', label: 'Initiatives', icon: 'fa-list-ul' },
+            { id: 'goals', label: 'Goals', icon: 'fa-bullseye' }
+        ];
+
+        tabs.forEach(tab => {
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-secondary btn-sm';
+            btn.innerHTML = `<i class="fas ${tab.icon}"></i> ${tab.label}`;
+            btn.dataset.tab = tab.id;
+            btn.onclick = () => this.switchTab(tab.id);
+            toolbar.appendChild(btn);
+        });
+
+        // Set active state
+        const activeBtn = toolbar.querySelector(`[data-tab="${this.activeTab}"]`);
+        if (activeBtn) {
+            activeBtn.classList.remove('btn-secondary');
+            activeBtn.classList.add('btn-primary');
+        }
+
+        return toolbar;
+    }
+
+    /**
      * Bind event listeners
      */
     bindEvents() {
@@ -79,6 +108,7 @@ class ManagementView {
      * Handle tab clicks
      */
     handleTabClick(event) {
+        // Legacy handler, no longer used with global toolbar but kept for safety
         const tabItem = event.target.closest('[data-tab]');
         if (!tabItem) return;
 

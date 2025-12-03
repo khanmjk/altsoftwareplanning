@@ -12,13 +12,13 @@ function initializeGoalsView() {
     }
 
     container.innerHTML = `
-        <div id="roadmapTableFiltersGoals" class="widget-filter-bar">
-        </div>
         <div id="goalCardsContainer" class="goal-cards-container"></div>
     `;
 
-    generateRoadmapTableFilters('Goals', renderGoalsView, { includeThemes: false });
+    // Initial render
     renderGoalsView();
+
+    return null; // No filters for this widget
 }
 
 /**
@@ -26,9 +26,7 @@ function initializeGoalsView() {
  * MODIFIED: Now calculates team-by-team SDE totals for tooltips.
  */
 function prepareGoalData() {
-    const yearFilter = dashboardPlanningYear;
-    const orgFilter = document.getElementById('roadmapOrgFilterGoals')?.value || 'all';
-    const teamFilter = document.getElementById('roadmapTeamFilterGoals')?.value || 'all';
+    const yearFilter = window.dashboardPlanningYear;
 
     let allGoals = JSON.parse(JSON.stringify(currentSystemData.goals || []));
 
@@ -50,42 +48,6 @@ function prepareGoalData() {
         initiativesForYear.forEach(init => {
             (init.assignments || []).forEach(a => contributingTeams.add(a.teamId));
         });
-
-        if (orgFilter !== 'all') {
-            const teamsInOrg = new Set();
-            (currentSystemData.sdms || []).forEach(sdm => {
-                if (sdm.seniorManagerId === orgFilter) {
-                    (currentSystemData.teams || []).forEach(team => {
-                        if (team.sdmId === sdm.sdmId) teamsInOrg.add(team.teamId);
-                    });
-                }
-            });
-            if (Array.from(contributingTeams).every(tid => !teamsInOrg.has(tid))) {
-                return null;
-            }
-        }
-
-        if (teamFilter !== 'all') {
-            if (!contributingTeams.has(teamFilter)) {
-                return null;
-            }
-        }
-
-        let finalContributingTeams = new Set(contributingTeams);
-        if (teamFilter !== 'all') {
-            if (!finalContributingTeams.has(teamFilter)) return null;
-        } else if (orgFilter !== 'all') {
-            const teamsInOrg = new Set();
-            (currentSystemData.sdms || []).forEach(sdm => {
-                if (sdm.seniorManagerId === orgFilter) {
-                    (currentSystemData.teams || []).forEach(team => {
-                        if (team.sdmId === sdm.sdmId) teamsInOrg.add(team.teamId);
-                    });
-                }
-            });
-            const intersection = new Set([...finalContributingTeams].filter(x => teamsInOrg.has(x)));
-            if (intersection.size === 0) return null;
-        }
 
         const totalSde = initiativesForYear.reduce((sum, init) => sum + (init.assignments || []).reduce((s, a) => s + (a.sdeYears || 0), 0), 0);
         const completedInitiatives = initiativesForYear.filter(init => init.status === 'Completed').length;
@@ -189,33 +151,6 @@ function renderGoalsView() {
             </div>
         `;
 
-        card.innerHTML = `
-            <div class="goal-card-header">
-                <h3>${goal.name}</h3>
-                <span class="goal-status" title="${goal.displayStatusReason}">${goal.displayStatus}</span>
-            </div>
-            <p class="goal-description"><em>${goal.description || 'No description provided.'}</em></p>
-            <div class="goal-metrics">
-                <div title="${sdeTooltipText}">
-                    <span class="metric-value">${goal.displayTotalSde.toFixed(2)}</span>
-                    <span class="metric-label">Total SDE-Years</span>
-                </div>
-                <div>
-                    <span class="metric-value">${goal.displayTotalInitiatives}</span>
-                    <span class="metric-label">Total Initiatives</span>
-                </div>
-                <div class="metric-progress">
-                    ${progressBarHTML}
-                    <span class="metric-label">Progress</span>
-                </div>
-            </div>
-            <div class="goal-ownership">...</div>
-            <div class="goal-teams">...</div>
-            <div class="goal-themes">...</div>
-            <div class="goal-initiatives-toggle">...</div>
-        `;
-        // For brevity, the static parts of innerHTML are omitted but should be the same as the previous version.
-        // Full replacement below:
         card.innerHTML = `
             <div class="goal-card-header">
                 <h3>${goal.name}</h3>

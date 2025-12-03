@@ -5,31 +5,25 @@
  * This is the main entry point called by the dashboard.
  * It now includes view modes for Initiative, Team, and Service.
  */
+/**
+ * Initializes the Enhanced Initiative Impact Visualization widget.
+ * This is the main entry point called by the dashboard.
+ * It now includes view modes for Initiative, Team, and Service.
+ * Returns the toolbar element for placement in the Global Header.
+ */
 function initializeImpactView() {
     const container = document.getElementById('initiativeImpactWidget');
     if (!container) {
         console.error("Initiative Impact Widget container not found.");
-        return;
+        return null;
     }
     container.innerHTML = ''; // Clear previous content
-
-    const controlsContainer = document.createElement('div');
-    controlsContainer.style.padding = '10px';
-    controlsContainer.style.borderBottom = '1px solid #eee';
-    controlsContainer.style.marginBottom = '10px';
-    controlsContainer.style.display = 'flex';
-    controlsContainer.style.justifyContent = 'center';
-    controlsContainer.style.alignItems = 'center';
-    controlsContainer.style.gap = '20px';
 
     const svgContainer = document.createElement('div');
     svgContainer.id = 'impact-graph-container';
     svgContainer.style.border = '1px solid #ddd'; // Make window visible
-
-    // Append controls first, then the SVG container
-    container.appendChild(controlsContainer);
     container.appendChild(svgContainer);
-    
+
     const svg = d3.select(svgContainer).append("svg")
         .attr("width", "100%")
         .attr("height", "850px"); // Make the window larger
@@ -43,20 +37,34 @@ function initializeImpactView() {
     summaryContainer.style.display = 'none'; // Initially hidden
     container.appendChild(summaryContainer);
 
+    // Create and return toolbar
+    return createImpactViewToolbar(svg);
+}
+
+/**
+ * Creates the toolbar controls for the Impact View.
+ */
+function createImpactViewToolbar(svg) {
+    const controlsContainer = document.createElement('div');
+    controlsContainer.style.display = 'flex';
+    controlsContainer.style.alignItems = 'center';
+    controlsContainer.style.gap = '15px';
 
     // --- Create UI Controls ---
     const modeLabel = document.createElement('label');
     modeLabel.textContent = "View By:";
-    modeLabel.style.fontWeight = 'bold';
+    modeLabel.style.fontWeight = '600';
+    modeLabel.style.marginBottom = '0';
 
     const modeSelect = document.createElement('select');
     modeSelect.id = 'impact-view-mode-selector';
+    modeSelect.className = 'form-select form-select-sm';
+    modeSelect.style.width = 'auto';
     modeSelect.innerHTML = `
         <option value="initiative">Initiative</option>
         <option value="team">Team</option>
         <option value="service">Service</option>
     `;
-    modeSelect.style.padding = '5px';
 
     const dynamicSelectContainer = document.createElement('div');
     dynamicSelectContainer.id = 'impact-dynamic-select-container';
@@ -66,24 +74,31 @@ function initializeImpactView() {
     controlsContainer.appendChild(dynamicSelectContainer);
 
     // --- Initial population and event listener ---
-    updateDynamicSelector(svg);
-    modeSelect.addEventListener('change', () => updateDynamicSelector(svg));
+    // FIXED: Pass elements directly instead of using getElementById
+    if (window.currentSystemData) {
+        updateDynamicSelector(svg, modeSelect, dynamicSelectContainer);
+        modeSelect.addEventListener('change', () => updateDynamicSelector(svg, modeSelect, dynamicSelectContainer));
+    }
+
+    return controlsContainer;
 }
 
 /**
  * Updates the second dropdown based on the selected view mode and triggers the graph render.
  * @param {d3.Selection} svg - The D3 selection for the SVG element.
+ * @param {HTMLElement} modeSelectEl - The mode selector element.
+ * @param {HTMLElement} containerEl - The dynamic select container element.
  */
-function updateDynamicSelector(svg) {
-    const mode = document.getElementById('impact-view-mode-selector').value;
-    const container = document.getElementById('impact-dynamic-select-container');
-    container.innerHTML = '';
+function updateDynamicSelector(svg, modeSelectEl, containerEl) {
+    // FIXED: Use passed elements instead of getElementById
+    const mode = modeSelectEl.value;
+    containerEl.innerHTML = '';
 
     const select = document.createElement('select');
     select.id = 'impact-item-selector';
-    select.style.padding = '5px';
-    select.style.minWidth = '300px';
-    container.appendChild(select);
+    select.className = 'form-select form-select-sm';
+    select.style.minWidth = '250px';
+    containerEl.appendChild(select);
 
     let items = [];
     let renderFunc;
@@ -97,14 +112,14 @@ function updateDynamicSelector(svg) {
             noItemsText = "No initiatives found.";
             break;
         case 'team':
-            items = (currentSystemData.teams || []).sort((a,b) => (a.teamIdentity || a.teamName).localeCompare(b.teamIdentity || b.teamName));
+            items = (currentSystemData.teams || []).sort((a, b) => (a.teamIdentity || a.teamName).localeCompare(b.teamIdentity || b.teamName));
             select.appendChild(new Option('All Teams', 'all'));
             items.forEach(item => select.appendChild(new Option(item.teamIdentity || item.teamName, item.teamId)));
             renderFunc = generateTeamImpactGraph;
             noItemsText = "No teams found.";
             break;
         case 'service':
-            items = (currentSystemData.services || []).sort((a,b) => a.serviceName.localeCompare(b.serviceName));
+            items = (currentSystemData.services || []).sort((a, b) => a.serviceName.localeCompare(b.serviceName));
             items.forEach(item => select.appendChild(new Option(item.serviceName, item.serviceName)));
             renderFunc = generateServiceImpactGraph;
             noItemsText = "No services found.";
@@ -152,7 +167,7 @@ function generateInitiativeImpactGraph(selectedInitiativeId, svg) {
 
         addNode({ id: service.serviceName, name: service.serviceName, type: 'Service', data: service });
         if (initiative.impactedServiceIds.includes(serviceName)) {
-             links.push({ source: initiative.initiativeId, target: service.serviceName, type: 'impact' });
+            links.push({ source: initiative.initiativeId, target: service.serviceName, type: 'impact' });
         }
 
         if (service.owningTeamId) {
@@ -165,7 +180,7 @@ function generateInitiativeImpactGraph(selectedInitiativeId, svg) {
 
         (service.serviceDependencies || []).forEach(depName => {
             const depService = currentSystemData.services.find(s => s.serviceName === depName);
-            if(depService) {
+            if (depService) {
                 addNode({ id: depName, name: depName, type: 'Service', data: depService });
                 links.push({ source: service.serviceName, target: depName, type: 'depends_on' });
                 if (!processedServices.has(depName)) {
@@ -193,7 +208,7 @@ function generateTeamImpactGraph(selectedTeamId, svg) {
 
     const nodes = [], links = [], nodeMap = new Map();
     const addNode = (node) => { if (!nodeMap.has(node.id)) { nodeMap.set(node.id, node); nodes.push(node); } };
-    
+
     addNode({ id: team.teamId, name: team.teamIdentity || team.teamName, type: 'Team', data: team });
 
     const assignedInitiatives = currentSystemData.yearlyInitiatives.filter(
@@ -208,7 +223,7 @@ function generateTeamImpactGraph(selectedTeamId, svg) {
         (initiative.assignments || []).forEach(ass => {
             if (ass.teamId !== selectedTeamId) {
                 const otherTeam = currentSystemData.teams.find(t => t.teamId === ass.teamId);
-                if(otherTeam) {
+                if (otherTeam) {
                     addNode({ id: otherTeam.teamId, name: otherTeam.teamIdentity || otherTeam.teamName, type: 'Team', data: otherTeam });
                     links.push({ source: initiative.initiativeId, target: otherTeam.teamId, type: 'assignment', sde: ass.sdeYears });
                 }
@@ -217,7 +232,7 @@ function generateTeamImpactGraph(selectedTeamId, svg) {
 
         (initiative.impactedServiceIds || []).forEach(serviceName => {
             const service = currentSystemData.services.find(s => s.serviceName === serviceName);
-            if(service) {
+            if (service) {
                 addNode({ id: service.serviceName, name: service.serviceName, type: 'Service', data: service });
                 links.push({ source: initiative.initiativeId, target: service.serviceName, type: 'impact' });
             }
@@ -305,7 +320,7 @@ function renderImpactGraph(svg, nodes, links, selectedId) {
     svg.selectAll("*").remove();
     const width = svg.node().getBoundingClientRect().width;
     const height = svg.node().getBoundingClientRect().height;
-    
+
     const tooltip = d3.select("body").selectAll(".tooltip").data([null]).join("div").attr("class", "tooltip").style("opacity", 0);
 
     const teamColors = d3.scaleOrdinal(d3.schemeCategory10).domain(currentSystemData.teams.map(t => t.teamId));
@@ -498,7 +513,7 @@ function generateInitiativeSummary(initiative) {
  * @param {number} width - The maximum width for the text.
  */
 function wrap(text, width) {
-    text.each(function() {
+    text.each(function () {
         var text = d3.select(this),
             words = text.text().split(/\s+/).reverse(),
             word,
@@ -507,7 +522,7 @@ function wrap(text, width) {
             lineHeight = 1.1, // ems
             dy = parseFloat(text.attr("dy") || 0),
             tspan = text.text(null).append("tspan").attr("x", 0).attr("dy", dy + "em");
-        
+
         while (word = words.pop()) {
             line.push(word);
             tspan.text(line.join(" "));

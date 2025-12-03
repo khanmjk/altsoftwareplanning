@@ -55,13 +55,7 @@ class NavigationManager {
             this.sidebar.setActive(viewId);
         }
 
-        // 2. Update Header Breadcrumbs
-        if (this.header) {
-            const systemName = window.currentSystemData ? window.currentSystemData.systemName : 'System';
-            this.header.update(viewId, systemName);
-        }
-
-        // 3. Render the View via WorkspaceComponent
+        // 2. Render the View via WorkspaceComponent
         if (window.workspaceComponent) {
             // Map viewId to render function
             if (viewId === 'planningView') {
@@ -89,7 +83,14 @@ class NavigationManager {
                     }
                 });
             } else if (viewId === 'visualizationCarousel') {
-                window.workspaceComponent.render(viewId, window.renderSystemOverviewView);
+                window.workspaceComponent.render(viewId, (container) => {
+                    if (!window.systemOverviewViewInstance) {
+                        window.systemOverviewViewInstance = new SystemOverviewView(container.id);
+                    } else {
+                        window.systemOverviewViewInstance.container = container;
+                    }
+                    window.systemOverviewViewInstance.render();
+                });
             } else if (viewId === 'organogramView') {
                 window.workspaceComponent.render(viewId, window.renderOrgView);
             } else if (viewId === 'systemEditForm') {
@@ -131,18 +132,76 @@ class NavigationManager {
             }
         }
 
-        // 4. Scroll to top
+        // 3. Update Header Breadcrumbs (AFTER render, so legacy views can set breadcrumbs)
+        if (this.header) {
+            const systemName = window.currentSystemData ? window.currentSystemData.systemName : 'System';
+            this.header.update(viewId, systemName);
+        }
+
+        // 4. Set Default Shell Metadata for Legacy Views
+        // (Refactored views like 'roadmapView' handle this themselves)
+        const selfManagedViews = ['roadmapView', 'managementView', 'dashboardView', 'settingsView', 'helpView'];
+        if (window.workspaceComponent && !selfManagedViews.includes(viewId)) {
+            const title = this.getViewTitle(viewId);
+
+            // Construct Breadcrumbs
+            let breadcrumbs = [];
+
+            // 1. Home/System Context
+            if (window.currentSystemData && window.currentSystemData.systemName) {
+                breadcrumbs.push(window.currentSystemData.systemName);
+            }
+
+            // 2. View Path (from HeaderComponent mapping)
+            if (this.header && typeof this.header.getViewPath === 'function') {
+                const path = this.header.getViewPath(viewId);
+                if (path && Array.isArray(path)) {
+                    path.forEach(step => breadcrumbs.push(step.label));
+                }
+            }
+
+            window.workspaceComponent.setPageMetadata({
+                title: title,
+                breadcrumbs: breadcrumbs,
+                actions: []      // Legacy actions handled by view templates
+            });
+        }
+
+        // 5. Scroll to top
         const mainContentArea = document.getElementById('main-content-area');
         if (mainContentArea) {
             mainContentArea.scrollTop = 0;
         }
 
-        // 5. Update Browser History
+        // 6. Update Browser History
         if (!isPopState) {
             const url = new URL(window.location);
             url.searchParams.set('view', viewId);
             window.history.pushState({ viewId: viewId }, '', url);
         }
+    }
+
+    /**
+     * Helper to get a display title for legacy views.
+     */
+    getViewTitle(viewId) {
+        const titles = {
+            'planningView': 'Year Plan',
+            'ganttPlanningView': 'Detailed Planning',
+            'capacityConfigView': 'Capacity Tuning',
+            'sdmForecastingView': 'Resource Forecast',
+            'roadmapView': 'Roadmap & Backlog',
+            'managementView': 'Management',
+            'visualizationCarousel': 'System Overview',
+            'organogramView': 'Org Design',
+            'systemEditForm': 'Edit System',
+            'dashboardView': 'Dashboard',
+            'helpView': 'How to Guide',
+            'settingsView': 'Settings',
+            'systemsView': 'My Systems',
+            'welcomeView': 'Welcome'
+        };
+        return titles[viewId] || 'Workspace';
     }
 
 

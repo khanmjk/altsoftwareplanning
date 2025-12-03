@@ -12,6 +12,9 @@ class RoadmapView {
     /**
      * Render the roadmap view
      */
+    /**
+     * Render the roadmap view
+     */
     render(container) {
         if (!container) {
             container = document.getElementById('roadmapView');
@@ -21,15 +24,41 @@ class RoadmapView {
             return;
         }
 
-        // Create layout
-        container.innerHTML = `
-            <div class="roadmap-view">
-                <div id="roadmapControlsContainer" class="roadmap-controls"></div>
-                <div id="roadmapTableContainer" class="roadmap-table-container"></div>
-            </div>
-        `;
+        // 1. Set Workspace Metadata (Header)
+        if (window.workspaceComponent) {
+            window.workspaceComponent.setPageMetadata({
+                title: 'Roadmap & Backlog',
+                breadcrumbs: ['Product', 'Roadmap'],
+                actions: [
+                    {
+                        label: 'Add Initiative',
+                        icon: 'fas fa-plus',
+                        onClick: () => this.openModalForAdd(),
+                        className: 'btn btn-primary btn-sm'
+                    },
+                    {
+                        label: 'Manage Themes',
+                        icon: 'fas fa-tags',
+                        onClick: () => {
+                            if (window.navigationManager) {
+                                window.navigationManager.navigateTo('managementView', { tab: 'themes' });
+                            }
+                        },
+                        className: 'btn btn-secondary btn-sm'
+                    }
+                ]
+            });
+        }
 
-        this.generateControls();
+        // 2. Set Workspace Toolbar (Filters)
+        const controls = this.generateControls();
+        if (window.workspaceComponent && controls) {
+            window.workspaceComponent.setToolbar(controls);
+        }
+
+        // 3. Create Table Container (Directly in Canvas)
+        container.innerHTML = `<div id="roadmapTableContainer" class="roadmap-table-container" style="height: 100%; width: 100%;"></div>`;
+
         this.renderTable();
 
         // Initialize modal if not already done
@@ -39,17 +68,23 @@ class RoadmapView {
     }
 
     /**
-     * Generate filter controls and action buttons
+     * Generate filter controls
+     * @returns {HTMLElement} The toolbar element
      */
     generateControls() {
-        const controlsContainer = document.getElementById('roadmapControlsContainer');
-        if (!controlsContainer) return;
-
-        controlsContainer.innerHTML = '';
+        const toolbarContainer = document.createElement('div');
+        toolbarContainer.className = 'roadmap-toolbar-content';
+        toolbarContainer.style.display = 'flex';
+        toolbarContainer.style.alignItems = 'center';
+        toolbarContainer.style.gap = '20px';
+        toolbarContainer.style.width = '100%';
 
         // Filter group
         const filterGroup = document.createElement('div');
         filterGroup.className = 'roadmap-filter-group';
+        filterGroup.style.display = 'flex';
+        filterGroup.style.alignItems = 'center';
+        filterGroup.style.gap = '10px';
 
         const statusLabel = document.createElement('strong');
         statusLabel.textContent = 'Filter by Status: ';
@@ -62,6 +97,9 @@ class RoadmapView {
             const checkboxId = `roadmapStatusFilter_${status.toLowerCase().replace(/\s+/g, '')}`;
             const wrapper = document.createElement('div');
             wrapper.className = 'roadmap-filter-checkbox-wrapper';
+            wrapper.style.display = 'flex';
+            wrapper.style.alignItems = 'center';
+            wrapper.style.gap = '4px';
 
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
@@ -80,51 +118,23 @@ class RoadmapView {
             label.htmlFor = checkboxId;
             label.textContent = status;
             label.className = 'roadmap-filter-checkbox-label';
+            label.style.cursor = 'pointer';
 
             wrapper.appendChild(checkbox);
             wrapper.appendChild(label);
             filterGroup.appendChild(wrapper);
         });
 
-        controlsContainer.appendChild(filterGroup);
-
-        // Actions
-        const actionsDiv = document.createElement('div');
-        actionsDiv.className = 'roadmap-actions';
-
-        const addButton = document.createElement('button');
-        addButton.textContent = 'Add New Initiative';
-        addButton.className = 'btn btn-primary';
-        addButton.dataset.action = 'add-initiative';
-        actionsDiv.appendChild(addButton);
-
-        const themesButton = document.createElement('button');
-        themesButton.textContent = 'Manage Themes';
-        themesButton.className = 'btn btn-secondary';
-        themesButton.dataset.action = 'manage-themes';
-        actionsDiv.appendChild(themesButton);
-
-        controlsContainer.appendChild(actionsDiv);
+        toolbarContainer.appendChild(filterGroup);
 
         // Event delegation
-        controlsContainer.addEventListener('change', (e) => {
+        toolbarContainer.addEventListener('change', (e) => {
             if (e.target.type === 'checkbox' && e.target.dataset.status) {
                 this.handleStatusFilterChange(e.target);
             }
         });
 
-        controlsContainer.addEventListener('click', (e) => {
-            const btn = e.target.closest('[data-action]');
-            if (!btn) return;
-
-            if (btn.dataset.action === 'add-initiative') {
-                this.openModalForAdd();
-            } else if (btn.dataset.action === 'manage-themes') {
-                if (window.navigationManager) {
-                    window.navigationManager.navigateTo('managementView', { tab: 'themes' });
-                }
-            }
-        });
+        return toolbarContainer;
     }
 
     /**

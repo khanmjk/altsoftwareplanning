@@ -20,6 +20,21 @@ class OrgView {
             return;
         }
 
+        // 1. Set Workspace Metadata
+        if (window.workspaceComponent) {
+            window.workspaceComponent.setPageMetadata({
+                title: 'Org Design',
+                breadcrumbs: ['System', 'Org Design'],
+                actions: []
+            });
+        }
+
+        // 2. Set Workspace Toolbar
+        const toolbar = this.generateOrgToolbar();
+        if (window.workspaceComponent && toolbar) {
+            window.workspaceComponent.setToolbar(toolbar);
+        }
+
         if (!window.currentSystemData) {
             this.container.innerHTML = '<div class="org-view"><p style="color: red;">No system data loaded</p></div>';
             return;
@@ -30,27 +45,57 @@ class OrgView {
     }
 
     /**
+     * Generates the toolbar controls for Org View
+     */
+    generateOrgToolbar() {
+        const toolbar = document.createElement('div');
+        toolbar.className = 'org-toolbar-global';
+        toolbar.style.display = 'flex';
+        toolbar.style.alignItems = 'center';
+        toolbar.style.gap = '10px';
+        toolbar.id = 'orgGlobalToolbar'; // ID for easy access to buttons
+
+        const label = document.createElement('span');
+        label.textContent = 'Chart Layout:';
+        label.style.fontWeight = '600';
+        toolbar.appendChild(label);
+
+        const modes = [
+            { id: 'd3', label: 'Block View' },
+            { id: 'list', label: 'List View' },
+            { id: 'table', label: 'Org Table' },
+            { id: 'engineerList', label: 'Engineer List' }
+        ];
+
+        modes.forEach(mode => {
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-secondary btn-sm';
+            btn.textContent = mode.label;
+            btn.dataset.mode = mode.id;
+            btn.onclick = () => {
+                this.currentMode = mode.id;
+                this.updateRenderer();
+            };
+            toolbar.appendChild(btn);
+        });
+
+        return toolbar;
+    }
+
+    /**
      * Generate the view layout
      */
     generateLayout() {
         this.container.innerHTML = `
             <div class="org-view">
-                <div id="organogramToolbar" class="org-toolbar">
-                    <span class="org-toolbar__label">Chart Layout:</span>
-                    <div class="org-toolbar__buttons">
-                        <button id="orgViewModeD3" class="btn btn-secondary" data-mode="d3">Block View</button>
-                        <button id="orgViewModeList" class="btn btn-secondary" data-mode="list">List View</button>
-                        <button id="orgViewModeTable" class="btn btn-secondary" data-mode="table">Org Table</button>
-                        <button id="orgViewModeEngineerList" class="btn btn-secondary" data-mode="engineerList">Engineer List</button>
-                    </div>
-                </div>
+                <!-- Toolbar moved to Global Header -->
                 <div id="organogramContent" class="org-content"></div>
                 <div id="teamBreakdown" class="org-view__team-breakdown"></div>
                 <div id="orgEngineerListView" class="org-view__engineer-list"></div>
             </div>
         `;
 
-        this.bindEvents();
+        // this.bindEvents(); // No longer needed as events are bound in generateOrgToolbar
     }
 
     /**
@@ -83,16 +128,22 @@ class OrgView {
         }
 
         // Update button states
-        document.querySelectorAll('#organogramToolbar button').forEach(btn => {
-            btn.classList.remove('btn-primary');
-            btn.classList.add('btn-secondary');
-        });
+        // Update button states in Global Toolbar
+        const toolbar = document.getElementById('orgGlobalToolbar');
+        if (toolbar) {
+            toolbar.querySelectorAll('button').forEach(btn => {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-secondary');
+            });
 
-        const activeBtn = document.querySelector(`[data-mode="${this.currentMode}"]`);
-        if (activeBtn) {
-            activeBtn.classList.add('btn-primary');
-            activeBtn.classList.remove('btn-secondary');
+            const activeBtn = toolbar.querySelector(`[data-mode="${this.currentMode}"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('btn-primary');
+                activeBtn.classList.remove('btn-secondary');
+            }
         }
+
+
 
         // Hide all containers
         chartContainer.style.display = 'none';
