@@ -149,48 +149,48 @@ class SystemOverviewView {
         switch (viewId) {
             case 'visualization':
                 section.innerHTML = `
-                    <button id="togglePlatformComponentsSystem" class="btn btn-sm" style="margin-bottom: 10px;">Hide Platforms</button>
-                    <svg id="systemSvg" style="width: 100%; height: 600px;"></svg>
+                    <button id="togglePlatformComponentsSystem" class="btn btn-sm system-overview-platform-toggle">Hide Platforms</button>
+                    <svg id="systemSvg" class="system-overview-svg"></svg>
                     <div id="legend" class="legend"></div>
                 `;
                 break;
 
             case 'teamVisualization':
                 section.innerHTML = `
-                    <svg id="teamSvg" style="width: 100%; height: 600px;"></svg>
+                    <svg id="teamSvg" class="system-overview-svg"></svg>
                     <div id="teamLegend" class="legend"></div>
                 `;
                 break;
 
             case 'serviceRelationshipsVisualization':
                 section.innerHTML = `
-                    <div style="margin-bottom: 10px;">
-                        <label for="serviceSelection" style="margin-right: 10px; font-weight: 500;">Select Service:</label>
-                        <select id="serviceSelection" class="form-select" style="display: inline-block; width: auto; min-width: 200px;"></select>
-                        <button id="togglePlatformComponentsService" class="btn btn-sm" style="margin-left: 10px;">Hide Platforms</button>
+                    <div class="system-overview-filter-controls">
+                        <label for="serviceSelection" class="system-overview-filter-label">Select Service:</label>
+                        <select id="serviceSelection" class="form-select system-overview-filter-select"></select>
+                        <button id="togglePlatformComponentsService" class="btn btn-sm system-overview-toggle-btn">Hide Platforms</button>
                     </div>
-                    <svg id="serviceSvg" style="width: 100%; height: 600px;"></svg>
+                    <svg id="serviceSvg" class="system-overview-svg"></svg>
                     <div id="serviceLegend" class="legend"></div>
                 `;
                 break;
 
             case 'dependencyVisualization':
                 section.innerHTML = `
-                    <div style="margin-bottom: 10px;">
-                        <label for="dependencyServiceSelection" style="margin-right: 10px; font-weight: 500;">Select Service:</label>
-                        <select id="dependencyServiceSelection" class="form-select" style="display: inline-block; width: auto; min-width: 200px;"></select>
-                        <button id="togglePlatformComponentsDependency" class="btn btn-sm" style="margin-left: 10px;">Hide Platforms</button>
+                    <div class="system-overview-filter-controls">
+                        <label for="dependencyServiceSelection" class="system-overview-filter-label">Select Service:</label>
+                        <select id="dependencyServiceSelection" class="form-select system-overview-filter-select"></select>
+                        <button id="togglePlatformComponentsDependency" class="btn btn-sm system-overview-toggle-btn">Hide Platforms</button>
                     </div>
-                    <svg id="dependencySvg" style="width: 100%; height: 600px;"></svg>
+                    <svg id="dependencySvg" class="system-overview-svg"></svg>
                     <div id="dependencyLegend" class="legend"></div>
                 `;
                 break;
 
             case 'serviceDependenciesTableSlide':
                 section.innerHTML = `
-                    <div id="serviceDependenciesTable" style="width: 100%; height: 100%;">
-                        <h2 style="margin-top: 0;">Service Dependencies Table</h2>
-                        <div id="serviceDependenciesTableHost" style="height: calc(100% - 50px);"></div>
+                    <div id="serviceDependenciesTable">
+                        <h2>Service Dependencies Table</h2>
+                        <div id="serviceDependenciesTableHost"></div>
                     </div>
                 `;
                 section.style.height = '100%';
@@ -198,17 +198,17 @@ class SystemOverviewView {
                 break;
 
             case 'mermaidVisualization':
-                section.innerHTML = `<div id="mermaidGraph" style="min-height: 600px;"></div>`;
+                section.innerHTML = `<div id="mermaidGraph" class="system-overview-mermaid-container"></div>`;
                 section.style.overflowY = 'auto';
                 break;
 
             case 'mermaidApiVisualization':
                 section.innerHTML = `
-                    <div style="margin-bottom: 10px;">
-                        <label for="apiServiceSelection" style="margin-right: 10px; font-weight: 500;">Select Service:</label>
-                        <select id="apiServiceSelection" class="form-select" style="display: inline-block; width: auto; min-width: 200px;"></select>
+                    <div class="system-overview-filter-controls">
+                        <label for="apiServiceSelection" class="system-overview-filter-label">Select Service:</label>
+                        <select id="apiServiceSelection" class="form-select system-overview-filter-select"></select>
                     </div>
-                    <div id="mermaidApiGraph" style="min-height: 600px;"></div>
+                    <div id="mermaidApiGraph" class="system-overview-mermaid-container"></div>
                 `;
                 section.style.overflowY = 'auto';
                 break;
