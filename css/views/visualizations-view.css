@@ -1,15 +1,19 @@
 /* Visualizations View Styles */
 
-/* Mermaid Graph Containers */
+/* Mermaid Graph Containers - blend with workspace canvas */
 #mermaidGraph,
 #mermaidApiGraph {
     display: block;
+    border: none;
+    background-color: transparent;
 }
 
 #mermaidGraph svg,
 #mermaidApiGraph svg {
     width: 100%;
     height: auto;
+    border: none;
+    background-color: transparent;
 }
 
 /* Mermaid Error/Info States */
