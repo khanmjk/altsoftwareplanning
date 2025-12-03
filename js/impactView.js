@@ -21,19 +21,15 @@ function initializeImpactView() {
 
     const svgContainer = document.createElement('div');
     svgContainer.id = 'impact-graph-container';
-    // No border - blend with workspace
     container.appendChild(svgContainer);
 
     const svg = d3.select(svgContainer).append("svg")
         .attr("width", "100%")
-        .attr("height", "650px"); // Reduced height for compactness
+        .attr("height", "650px");
 
     const summaryContainer = document.createElement('div');
     summaryContainer.id = 'impact-summary-container';
-    summaryContainer.style.padding = '10px 0'; // Minimal padding top/bottom, no sides
-    summaryContainer.style.marginTop = '10px';
-    // No border, no background - blend with workspace
-    summaryContainer.style.display = 'none'; // Initially hidden
+    summaryContainer.style.display = 'none'; // Initially hidden (behavior, not styling)
     container.appendChild(summaryContainer);
 
     // Create and return toolbar
@@ -496,15 +492,15 @@ function generateInitiativeSummary(initiative) {
     }).join(' • ');
 
     return `
-        <div style="line-height: 1.4; font-size: 14px;">
-            <h4 style="margin: 0 0 8px 0; font-size: 16px;">${initiative.title}</h4>
-            <div style="margin-bottom: 6px;">
+        <div class="initiative-summary">
+            <h4>${initiative.title}</h4>
+            <div class="initiative-summary-meta">
                 <strong>Owner:</strong> ${ownerName} • 
                 <strong>Status:</strong> ${initiative.status || 'N/A'} • 
                 <strong>Due:</strong> ${initiative.targetDueDate || 'N/A'}
             </div>
-            <div style="margin-bottom: 6px;"><strong>Description:</strong> ${initiative.description || 'No description provided.'}</div>
-            <div><strong>Teams & Estimates:</strong> ${teamsImpacted || 'None'}</div>
+            <div class="initiative-summary-description"><strong>Description:</strong> ${initiative.description || 'No description provided.'}</div>
+            <div class="initiative-summary-teams"><strong>Teams & Estimates:</strong> ${teamsImpacted || 'None'}</div>
         </div>
     `;
 }

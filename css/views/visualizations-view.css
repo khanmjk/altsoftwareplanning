@@ -55,6 +55,36 @@
     fill: var(--color-gray-900);
 }
 
+.legend-item text {
+    font-size: 11px;
+}
+
+/* Initiative Impact View Styles */
+/* impact-graph-container has no specific styles - blends with workspace */
+
+#impact-summary-container {
+    padding: 10px 0;
+    margin-top: 10px;
+    /* No border, no background - blend with workspace */
+}
+
+.initiative-summary {
+    line-height: 1.4;
+    font-size: 14px;
+}
+
+.initiative-summary h4 {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+}
+
+.initiative-summary-meta,
+.initiative-summary-description {
+    margin-bottom: 6px;
+}
+
+/* initiative-summary-teams uses inline layout from content */
+
 /* Legend Styles */
 .visualization-legend {
     font-family: Arial, sans-serif;
