@@ -24,8 +24,20 @@
     /* Force no shadow */
     padding: 0;
     /* Remove padding to maximize space */
+    padding: 0;
+    /* Remove padding to maximize space */
+}
+
+/* Specific overflow handling per view type */
+#organogramContent {
     overflow: hidden;
     /* Let D3 handle zoom/pan */
+}
+
+#teamBreakdown,
+#orgEngineerListView {
+    overflow: auto;
+    /* Allow scrolling for tables so footer isn't cut off */
 }
 
 .org-content-area svg {
@@ -170,6 +182,19 @@
 .org-view__team-breakdown.active,
 .org-view__engineer-list.active {
     display: block;
+}
+
+.org-engineer-narrative {
+    font-size: 1.1rem;
+    color: var(--color-gray-700);
+    margin-bottom: var(--space-md);
+    line-height: 1.6;
+    max-width: 900px;
+}
+
+.org-engineer-narrative strong {
+    color: var(--color-gray-900);
+    font-weight: 600;
 }
 
 /* Additional Engineer Table and Organogram Styles */

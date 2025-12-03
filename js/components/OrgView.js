@@ -692,7 +692,7 @@ class OrgView {
         }
 
         // Clear container and create structure
-        widgetContainer.innerHTML = '<h2 id="orgEngineerTableHeading" class="org-engineer-header"></h2>';
+        widgetContainer.innerHTML = '<p id="orgEngineerTableHeading" class="org-engineer-narrative"></p>';
         const tableDiv = document.createElement('div');
         tableDiv.id = 'orgEngineerTableWidgetContainer';
         widgetContainer.appendChild(tableDiv);
@@ -748,11 +748,22 @@ class OrgView {
 
         const stats = this.calculateEngineerStatistics();
 
-        heading.textContent = `Engineer Resource List (Funded: ${stats.funded} | Team BIS: ${stats.teamBIS} | Away BIS: ${stats.awayBIS} | Effective BIS: ${stats.effectiveBIS} | Hiring Gap: ${stats.hiringGap})`;
+        let gapText = "";
+        if (stats.hiringGap > 0) {
+            gapText = `There is currently a hiring gap of <strong>${stats.hiringGap}</strong> engineers.`;
+        } else if (stats.hiringGap < 0) {
+            gapText = `We are currently over-hired by <strong>${Math.abs(stats.hiringGap)}</strong> engineers.`;
+        } else {
+            gapText = `We are currently fully staffed against the funded headcount.`;
+        }
 
-        // Color code based on hiring gap
-        heading.style.color = stats.hiringGap < 0 ? 'blue' : (stats.hiringGap > 0 ? 'darkorange' : 'green');
-        heading.title = `Finance Approved Funding: ${stats.funded}\nActual Team Members (BIS): ${stats.teamBIS}\nAway-Team Members: ${stats.awayBIS}\nTotal Effective Capacity: ${stats.effectiveBIS}\nHiring Gap (Funded - Team BIS): ${stats.hiringGap}`;
+        heading.innerHTML = `The organization is currently funded for <strong>${stats.funded}</strong> headcount. 
+        We have <strong>${stats.teamBIS}</strong> engineers on team, with <strong>${stats.awayBIS}</strong> away on other assignments, 
+        resulting in an effective strength of <strong>${stats.effectiveBIS}</strong>. ${gapText}`;
+
+        // Remove old tooltip title as the text is now self-explanatory
+        heading.removeAttribute('title');
+        heading.style.color = ''; // Remove dynamic color coding
     }
 
     /**

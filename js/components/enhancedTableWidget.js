@@ -111,13 +111,48 @@ class EnhancedTableWidget {
                 },
                 // Spread any other Tabulator-specific options from this.options
                 // Be careful not to pass widget-specific options that Tabulator doesn't understand.
-                // It might be better to explicitly map known Tabulator options.
+
+                // Event callbacks for conditional pagination
+                dataLoaded: (data) => {
+                    this._updatePaginationVisibility();
+                    if (typeof this.options.dataLoaded === 'function') this.options.dataLoaded(data);
+                },
+                pageLoaded: (pageno) => {
+                    this._updatePaginationVisibility();
+                    if (typeof this.options.pageLoaded === 'function') this.options.pageLoaded(pageno);
+                },
+                tableBuilt: () => {
+                    this._updatePaginationVisibility();
+                    if (typeof this.options.tableBuilt === 'function') this.options.tableBuilt();
+                }
             });
         } catch (error) {
             console.error("EnhancedTableWidget: Error initializing Tabulator:", error);
             this.tabulatorHostDiv.textContent = "Error initializing table.";
         }
     }
+
+    /**
+     * Hides the pagination footer if data fits on a single page.
+     */
+    _updatePaginationVisibility() {
+        if (!this.tabulatorInstance) return;
+
+        const footer = this.tabulatorHostDiv.querySelector('.tabulator-footer');
+        if (!footer) return;
+
+        // Check if we have active pagination
+        const pageSize = this.tabulatorInstance.getPageSize();
+        // getDataCount("active") returns filtered data count
+        const totalRows = this.tabulatorInstance.getDataCount("active");
+
+        if (totalRows <= pageSize) {
+            footer.style.display = 'none';
+        } else {
+            footer.style.display = 'block';
+        }
+    }
+
 
     /**
      * Creates the controls area with gear and export icons.
@@ -128,7 +163,7 @@ class EnhancedTableWidget {
 
         if (this.options.showColumnToggle) {
             const gearButton = document.createElement('button');
-            gearButton.innerHTML = '⚙️'; // Gear emoji or use Font Awesome: <i class="fas fa-cog"></i>
+            gearButton.innerHTML = '<i class="fas fa-cog"></i>';
             gearButton.title = 'Show/Hide Columns';
             gearButton.className = 'etw-control-button etw-column-toggle-button';
             gearButton.type = 'button';
@@ -141,7 +176,7 @@ class EnhancedTableWidget {
 
         if (this.options.showExportMenu) {
             const exportButton = document.createElement('button');
-            exportButton.innerHTML = '💾'; // Export emoji or use Font Awesome: <i class="fas fa-download"></i>
+            exportButton.innerHTML = '<i class="fas fa-download"></i>';
             exportButton.title = 'Export Data';
             exportButton.className = 'etw-control-button etw-export-button';
             exportButton.type = 'button';
