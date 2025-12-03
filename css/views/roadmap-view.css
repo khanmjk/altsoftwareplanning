@@ -210,29 +210,77 @@
     border-right: none;
 }
 
-/* Quarter Header Colors */
+/* Column Colors (Quarterly) */
+.roadmap-quarter-cell.column-Q1 {
+    background-color: #f8fbff;
+}
+
+.roadmap-quarter-cell.column-Q2 {
+    background-color: #f6fff8;
+}
+
+.roadmap-quarter-cell.column-Q3 {
+    background-color: #fffbf6;
+}
+
+.roadmap-quarter-cell.column-Q4 {
+    background-color: #fdf6ff;
+}
+
+/* Header Colors (Quarterly) */
 .header-Q1 {
-    background: #e3f2fd;
-    color: #0d47a1;
-    border-bottom: 3px solid #1976d2;
+    border-top: 3px solid #2196f3;
+    color: #1565c0;
 }
 
 .header-Q2 {
-    background: #e8f5e9;
-    color: #1b5e20;
-    border-bottom: 3px solid #388e3c;
+    border-top: 3px solid #4caf50;
+    color: #2e7d32;
 }
 
 .header-Q3 {
-    background: #fff3e0;
-    color: #e65100;
-    border-bottom: 3px solid #f57c00;
+    border-top: 3px solid #ff9800;
+    color: #ef6c00;
 }
 
 .header-Q4 {
-    background: #f3e5f5;
-    color: #4a148c;
-    border-bottom: 3px solid #7b1fa2;
+    border-top: 3px solid #9c27b0;
+    color: #7b1fa2;
+}
+
+/* Column Colors (3YP) */
+.roadmap-quarter-cell.column-current-year {
+    background-color: #f8fbff;
+}
+
+/* Blue-ish (Same as Q1) */
+.roadmap-quarter-cell.column-next-year {
+    background-color: #f6fff8;
+}
+
+/* Green-ish (Same as Q2) */
+.roadmap-quarter-cell.column-future {
+    background-color: #fdf6ff;
+}
+
+/* Purple-ish (Same as Q4) */
+
+/* Purple-ish (Same as Q4) */
+
+/* Header Colors (3YP) */
+.header-current-year {
+    border-top: 3px solid #2196f3;
+    color: #1565c0;
+}
+
+.header-next-year {
+    border-top: 3px solid #4caf50;
+    color: #2e7d32;
+}
+
+.header-future {
+    border-top: 3px solid #9c27b0;
+    color: #7b1fa2;
 }
 
 /* Content Row (Single Row for Columns) */

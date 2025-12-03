@@ -244,12 +244,92 @@ class RoadmapComponent {
     }
 
     render3YPGrid(container, data) {
-        // Placeholder for 3YP implementation
-        if (typeof render3YPRoadmap === 'function') {
-            // Temporarily use legacy renderer for 3YP until we refactor it
-            container.innerHTML = '<div id="roadmap3YPContainer"></div>';
-            render3YPRoadmap();
-        }
+        const columns = ['Current Year', 'Next Year', 'Future'];
+        const currentYear = new Date().getFullYear();
+        const columnLabels = {
+            'Current Year': `${currentYear}`,
+            'Next Year': `${currentYear + 1}`,
+            'Future': `${currentYear + 2}+`
+        };
+
+        // Flatten data (similar to quarterly view)
+        const gridData = { 'Current Year': [], 'Next Year': [], 'Future': [] };
+        const processedIds = new Set();
+
+        Object.keys(data).forEach(theme => {
+            columns.forEach(col => {
+                if (data[theme][col]) {
+                    data[theme][col].forEach(init => {
+                        if (!processedIds.has(init.initiativeId)) {
+                            gridData[col].push(init);
+                            processedIds.add(init.initiativeId);
+                        }
+                    });
+                }
+            });
+        });
+
+        let html = `
+            <div class="roadmap-grid three-year-grid">
+                <div class="roadmap-header-row">
+                    ${columns.map(col => `<div class="roadmap-header-cell header-${col.replace(/\s+/g, '-').toLowerCase()}">${columnLabels[col]}</div>`).join('')}
+                </div>
+                <div class="roadmap-content-row">
+        `;
+
+        columns.forEach(col => {
+            const initiatives = gridData[col];
+            const colClass = col.replace(/\s+/g, '-').toLowerCase();
+
+            html += `
+                <div class="roadmap-quarter-cell column-${colClass}" 
+                     data-year-bucket="${col}"
+                     ondragover="event.preventDefault(); this.classList.add('drag-over');"
+                     ondragleave="this.classList.remove('drag-over');"
+                     ondrop="window.roadmapComponentInstance.handleDrop(event, '${col}')">
+            `;
+
+            initiatives.forEach(init => {
+                const statusClass = this.getStatusClass(init.status);
+
+                // Pills Logic (Reused)
+                const sdeTotal = (init.assignments || []).reduce((sum, a) => sum + (a.sdeYears || 0), 0).toFixed(1);
+                const themeNames = (init.themes || []).map(tid => {
+                    const t = window.currentSystemData.definedThemes.find(th => th.themeId === tid);
+                    return t ? t.name : 'Uncategorized';
+                }).join(', ') || 'Uncategorized';
+
+                const teams = [...new Set((init.assignments || []).map(a => {
+                    const t = window.currentSystemData.teams.find(tm => tm.teamId === a.teamId);
+                    return t ? (t.teamIdentity || t.teamName) : 'Unknown';
+                }))];
+                const teamPills = teams.map(t => `<span class="pill pill-team">${t}</span>`).join('');
+
+                html += `
+                    <div class="roadmap-card ${statusClass}" 
+                         draggable="true" 
+                         data-id="${init.initiativeId}"
+                         ondragstart="window.roadmapComponentInstance.handleDragStart(event, '${init.initiativeId}')"
+                         onclick="window.openRoadmapModalForEdit('${init.initiativeId}')">
+                        <div class="card-header">
+                            <span class="pill pill-theme">${themeNames}</span>
+                        </div>
+                        <div class="card-title">${init.title}</div>
+                        <div class="card-footer">
+                            <div class="card-pills">
+                                ${teamPills}
+                                <span class="pill pill-sde">${sdeTotal} SDE</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+        });
+
+        html += `</div></div>`;
+        container.innerHTML = html;
     }
 
     getStatusClass(status) {
@@ -272,47 +352,60 @@ class RoadmapComponent {
         event.target.classList.add('dragging');
     }
 
-    handleDrop(event, targetQuarter) {
+    handleDrop(event, target) {
         event.preventDefault();
-        // Remove drag-over from ALL cells to be safe
         document.querySelectorAll('.roadmap-quarter-cell').forEach(el => el.classList.remove('drag-over'));
 
         const initiativeId = this.draggedInitiativeId;
         if (!initiativeId) return;
 
-        this.updateInitiative(initiativeId, targetQuarter);
+        this.updateInitiative(initiativeId, target);
         this.draggedInitiativeId = null;
     }
 
-    updateInitiative(initiativeId, newQuarter) {
+    updateInitiative(initiativeId, target) {
         const initiativeIndex = window.currentSystemData.yearlyInitiatives.findIndex(i => i.initiativeId === initiativeId);
         if (initiativeIndex === -1) return;
 
         const initiative = window.currentSystemData.yearlyInitiatives[initiativeIndex];
-
-        // Capture old state for notification
-        const oldQuarter = initiative.targetQuarter || getQuarterFromDate(initiative.targetDueDate) || 'Backlog';
         const title = initiative.title;
 
-        // Update Data
-        initiative.targetQuarter = newQuarter;
+        if (this.viewType === 'quarterly') {
+            // Quarterly View Update
+            const newQuarter = target;
+            const oldQuarter = initiative.targetQuarter || getQuarterFromDate(initiative.targetDueDate) || 'Backlog';
 
-        // Sync targetDueDate to end of the quarter
-        // Use global dashboard year or fallback to initiative's year or current year
-        const year = window.dashboardPlanningYear && window.dashboardPlanningYear !== 'all'
-            ? parseInt(window.dashboardPlanningYear)
-            : (initiative.attributes.planningYear || new Date().getFullYear());
+            initiative.targetQuarter = newQuarter;
 
-        const newDueDate = getEndDateForQuarter(newQuarter, year);
-        if (newDueDate) {
-            initiative.targetDueDate = newDueDate;
+            const year = window.dashboardPlanningYear && window.dashboardPlanningYear !== 'all'
+                ? parseInt(window.dashboardPlanningYear)
+                : (initiative.attributes.planningYear || new Date().getFullYear());
+
+            const newDueDate = getEndDateForQuarter(newQuarter, year);
+            if (newDueDate) initiative.targetDueDate = newDueDate;
+
+            window.notificationManager.showToast(`Moved "${title}" from ${oldQuarter} to ${newQuarter}`, 'success');
+
+        } else if (this.viewType === '3yp') {
+            // 3YP View Update
+            const newBucket = target;
+            const currentYear = new Date().getFullYear();
+            let newYear;
+
+            if (newBucket === 'Current Year') newYear = currentYear;
+            else if (newBucket === 'Next Year') newYear = currentYear + 1;
+            else if (newBucket === 'Future') newYear = currentYear + 2;
+
+            const oldYear = initiative.attributes.planningYear || 'Unknown';
+            initiative.attributes.planningYear = newYear;
+
+            // Clear specific quarter/date when moving years to avoid confusion? 
+            // Or just let them persist? Let's keep them for now but maybe reset quarter if moving to future.
+
+            window.notificationManager.showToast(`Moved "${title}" to ${newYear}`, 'success');
         }
 
-        // Save & Refresh
         window.saveSystemChanges();
-        window.notificationManager.showToast(`Moved "${title}" from ${oldQuarter} to ${newQuarter}`, 'success');
-
-        // Force a re-render
         this.renderGrid();
     }
 
