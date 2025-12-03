@@ -191,6 +191,65 @@ async function saveSystemDetails() {
     }
 }
 
+/** Save All Changes (Main Save Handler) **/
+async function saveAllChanges() {
+    console.log("saveAllChanges called.");
+
+    // 1. Validate System Details
+    const systemNameInput = document.getElementById('systemNameInput');
+    const systemDescriptionTextarea = document.getElementById('systemDescriptionInput');
+    const newSystemName = systemNameInput ? systemNameInput.value.trim() : '';
+
+    if (!newSystemName) {
+        window.notificationManager.showToast('System name cannot be empty.', 'error');
+        return;
+    }
+
+    // 2. Update System Data from Inputs
+    currentSystemData.systemName = newSystemName;
+    if (systemDescriptionTextarea) {
+        currentSystemData.systemDescription = systemDescriptionTextarea.value.trim();
+    }
+
+    // 3. Validate Engineer Assignments
+    if (!validateEngineerAssignments()) {
+        return; // Validation failed, toast already shown
+    }
+
+    // 4. Save to Repository
+    try {
+        const saved = window.systemRepository.saveSystem(newSystemName, currentSystemData);
+        if (saved) {
+            window.notificationManager.showToast('All changes saved successfully!', 'success');
+
+            // 5. Exit Edit Mode
+            exitEditMode();
+        } else {
+            window.notificationManager.showToast('Failed to save system. Please try again.', 'error');
+        }
+    } catch (error) {
+        console.error("Error saving system:", error);
+        window.notificationManager.showToast('An error occurred while saving.', 'error');
+    }
+}
+window.saveAllChanges = saveAllChanges;
+
+/** Exit Edit Mode **/
+function exitEditMode() {
+    console.log("Exiting edit mode...");
+    // If we were creating a new system, return to home or load the new system
+    if (window.currentSystemData && window.currentSystemData.systemName) {
+        if (window.loadSavedSystem) {
+            window.loadSavedSystem(window.currentSystemData.systemName);
+        } else {
+            window.returnToHome();
+        }
+    } else {
+        window.returnToHome();
+    }
+}
+window.exitEditMode = exitEditMode;
+
 /** 
  * Helper to display Senior Manager Assignment UI within SDM section 
  * Kept global as it's used by TeamEditComponent
