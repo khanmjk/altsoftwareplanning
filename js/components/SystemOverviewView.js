@@ -150,14 +150,14 @@ class SystemOverviewView {
             case 'visualization':
                 section.innerHTML = `
                     <button id="togglePlatformComponentsSystem" class="btn btn-sm" style="margin-bottom: 10px;">Hide Platforms</button>
-                    <svg id="systemSvg" style="width: 100%; height: 600px; border: 1px solid var(--color-gray-300); background-color: var(--color-white);"></svg>
+                    <svg id="systemSvg" style="width: 100%; height: 600px;"></svg>
                     <div id="legend" class="legend"></div>
                 `;
                 break;
 
             case 'teamVisualization':
                 section.innerHTML = `
-                    <svg id="teamSvg" style="width: 100%; height: 600px; border: 1px solid var(--color-gray-300); background-color: var(--color-white);"></svg>
+                    <svg id="teamSvg" style="width: 100%; height: 600px;"></svg>
                     <div id="teamLegend" class="legend"></div>
                 `;
                 break;
@@ -169,7 +169,7 @@ class SystemOverviewView {
                         <select id="serviceSelection" class="form-select" style="display: inline-block; width: auto; min-width: 200px;"></select>
                         <button id="togglePlatformComponentsService" class="btn btn-sm" style="margin-left: 10px;">Hide Platforms</button>
                     </div>
-                    <svg id="serviceSvg" style="width: 100%; height: 600px; border: 1px solid var(--color-gray-300); background-color: var(--color-white);"></svg>
+                    <svg id="serviceSvg" style="width: 100%; height: 600px;"></svg>
                     <div id="serviceLegend" class="legend"></div>
                 `;
                 break;
@@ -181,7 +181,7 @@ class SystemOverviewView {
                         <select id="dependencyServiceSelection" class="form-select" style="display: inline-block; width: auto; min-width: 200px;"></select>
                         <button id="togglePlatformComponentsDependency" class="btn btn-sm" style="margin-left: 10px;">Hide Platforms</button>
                     </div>
-                    <svg id="dependencySvg" style="width: 100%; height: 600px; border: 1px solid var(--color-gray-300); background-color: var(--color-white);"></svg>
+                    <svg id="dependencySvg" style="width: 100%; height: 600px;"></svg>
                     <div id="dependencyLegend" class="legend"></div>
                 `;
                 break;
