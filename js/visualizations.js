@@ -21,33 +21,7 @@ const visualizationModes = [
 ];
 // ----------------------
 
-/**
- * NEW Function: Renders the System Overview into the Workspace
- */
-function renderVisualizationView(container) {
-    console.log("Rendering System Overview...");
 
-    if (!container) {
-        container = document.getElementById('visualizationView');
-    }
-    if (!container) {
-        console.error("Visualization container not found.");
-        return;
-    }
-
-    // 1. Set Workspace Metadata
-    if (window.workspaceComponent) {
-        window.workspaceComponent.setPageMetadata({
-            title: 'System Overview',
-            breadcrumbs: ['System', 'Overview'],
-            actions: []
-        });
-    }
-
-    // 2. Initial Render (Default Mode)
-    switchVisualizationMode('visualization');
-}
-window.renderVisualizationView = renderVisualizationView;
 
 /**
  * Switches the visualization mode, updates the toolbar, and renders the content.
@@ -1966,107 +1940,9 @@ function navigateVisualizations(direction) {
     showVisualization(newIndex);
 }
 
-function renderSystemOverviewView(container) {
-    if (!container) {
-        console.error("renderSystemOverviewView: No container provided.");
-        return;
-    }
-
-    container.style.display = 'flex';
-    container.style.flexDirection = 'column';
-    container.style.height = '100%';
-    container.style.width = '100%';
-    container.style.overflow = 'hidden'; // Prevent outer scroll
-
-    container.innerHTML = `
-        <div style="text-align: center; margin-bottom: 10px; flex-shrink: 0; padding-top: 10px;">
-            <button id="prevVizBtn" class="button">&lt; Previous</button>
-            <span id="visualizationTitle" style="margin: 0 15px; font-weight: bold; font-size: 1.1em;">System Visualization</span>
-            <button id="nextVizBtn" class="button">Next &gt;</button>
-        </div>
-
-        <div id="visualizationContent" style="flex-grow: 1; position: relative; overflow: hidden; padding: 10px;">
-            <div id="visualization" class="carousel-item" style="display: block; height: 100%;">
-                <button id="togglePlatformComponentsSystem" class="button" style="margin-bottom: 10px;">Hide Platforms</button>
-                <svg id="systemSvg" style="width: 100%; height: 90%; border: 1px solid #ccc;"></svg>
-                <div id="legend" class="legend"></div>
-            </div>
-
-            <div id="teamVisualization" class="carousel-item" style="display: none; height: 100%;">
-                <svg id="teamSvg" style="width: 100%; height: 100%; border: 1px solid #ccc;"></svg>
-                <div id="teamLegend" class="legend"></div>
-            </div>
-
-            <div id="serviceRelationshipsVisualization" class="carousel-item" style="display: none; height: 100%;">
-                <select id="serviceSelection" style="margin-bottom: 5px; display: block; margin-left: auto; margin-right: auto;"></select>
-                <button id="togglePlatformComponentsService" class="button" style="margin-bottom: 10px;">Hide Platforms</button>
-                <svg id="serviceSvg" style="width: 100%; height: 90%; border: 1px solid #ccc;"></svg>
-                <div id="serviceLegend" class="legend"></div>
-            </div>
-
-            <div id="dependencyVisualization" class="carousel-item" style="display: none; height: 100%;">
-                <select id="dependencyServiceSelection" style="margin-bottom: 5px; display: block; margin-left: auto; margin-right: auto;"></select>
-                <button id="togglePlatformComponentsDependency" class="button" style="margin-bottom: 10px;">Hide Platforms</button>
-                <svg id="dependencySvg" style="width: 100%; height: 90%; border: 1px solid #ccc;"></svg>
-                <div id="dependencyLegend" class="legend"></div>
-            </div>
-
-            <div id="serviceDependenciesTableSlide" class="carousel-item" style="display: none; height: 100%; overflow: auto;">
-                <div id="serviceDependenciesTable" style="max-width: 100%; margin: 8px auto 0 auto; height: 100%;">
-                    <h2>Service Dependencies Table</h2>
-                    <div id="serviceDependenciesTableHost" style="height: calc(100% - 40px);"></div>
-                </div>
-            </div>
-
-            <div id="mermaidVisualization" class="carousel-item" style="display: none; height: 100%; overflow: auto;">
-                <div id="mermaidGraph"></div>
-            </div>
-
-            <div id="mermaidApiVisualization" class="carousel-item" style="display: none; height: 100%; overflow: auto;">
-                <select id="apiServiceSelection" style="margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto;"></select>
-                <div id="mermaidApiGraph"></div>
-            </div>
-        </div>
-    `;
-
-    // Attach Event Listeners
-    container.querySelector('#prevVizBtn').addEventListener('click', () => navigateVisualizations(-1));
-    container.querySelector('#nextVizBtn').addEventListener('click', () => navigateVisualizations(1));
-
-    const serviceSelect = container.querySelector('#serviceSelection');
-    if (serviceSelect) serviceSelect.addEventListener('change', updateServiceVisualization);
-
-    const depServiceSelect = container.querySelector('#dependencyServiceSelection');
-    if (depServiceSelect) depServiceSelect.addEventListener('change', updateDependencyVisualization);
-
-    // apiServiceSelect listener removed - handled by populateApiServiceSelection()
-
-    // Setup Platform Toggles
-    const toggleSystem = container.querySelector('#togglePlatformComponentsSystem');
-    const toggleService = container.querySelector('#togglePlatformComponentsService');
-    const toggleDependency = container.querySelector('#togglePlatformComponentsDependency');
-
-    const handleToggle = () => {
-        showPlatformComponents = !showPlatformComponents;
-        rerenderCurrentVisualizationForPlatformToggle();
-        updateAllToggleButtonsText(showPlatformComponents);
-    };
-
-    if (toggleSystem) toggleSystem.addEventListener('click', handleToggle);
-    if (toggleService) toggleService.addEventListener('click', handleToggle);
-    if (toggleDependency) toggleDependency.addEventListener('click', handleToggle);
-
-    // Initialize View
-    setTimeout(() => {
-        showVisualization(currentVisualizationIndex);
-        updateAllToggleButtonsText(showPlatformComponents);
-        setupVisualizationResizeObserver();
-    }, 0);
-}
 
 if (typeof window !== 'undefined') {
     window.setupPlatformToggleButtons = setupPlatformToggleButtons;
-    window.renderSystemOverviewView = renderSystemOverviewView;
     window.navigateVisualizations = navigateVisualizations;
     window.showVisualization = showVisualization;
 }
