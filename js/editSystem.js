@@ -37,6 +37,11 @@ function showSystemEditForm(systemData, container) {
 const systemEditFormTemplate = `
         <div id="systemEditFormContent" class="system-edit-container">
             <!-- Header removed to avoid duplication -->
+            
+            <div class="system-edit-section-header">
+                <h3>System Details</h3>
+            </div>
+            
             <form id="editSystemForm">
                 <div class="system-edit-group">
                     <label for="systemNameInput">System Name:</label>
