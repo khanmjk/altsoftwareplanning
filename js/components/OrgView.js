@@ -29,10 +29,27 @@ class OrgView {
             });
         }
 
-        // 2. Set Workspace Toolbar
-        const toolbar = this.generateOrgToolbar();
-        if (window.workspaceComponent && toolbar) {
-            window.workspaceComponent.setToolbar(toolbar);
+        // 2. Setup Navigation Items
+        const navItems = [
+            { id: 'd3', label: 'Block View', icon: 'fas fa-sitemap' },
+            { id: 'list', label: 'List View', icon: 'fas fa-list' },
+            { id: 'table', label: 'Org Table', icon: 'fas fa-table' },
+            { id: 'engineerList', label: 'Engineer List', icon: 'fas fa-users' }
+        ];
+
+        // 3. Initialize Pill Navigation
+        this.pillNav = new PillNavigationComponent({
+            items: navItems,
+            activeItemId: this.currentMode,
+            onSwitch: (modeId) => {
+                this.currentMode = modeId;
+                this.updateRenderer();
+            }
+        });
+
+        // 4. Set Workspace Toolbar
+        if (window.workspaceComponent) {
+            window.workspaceComponent.setToolbar(this.pillNav.render());
         }
 
         if (!window.currentSystemData) {
@@ -45,73 +62,16 @@ class OrgView {
     }
 
     /**
-     * Generates the toolbar controls for Org View
-     */
-    generateOrgToolbar() {
-        const toolbar = document.createElement('div');
-        toolbar.className = 'org-toolbar-global';
-        toolbar.style.display = 'flex';
-        toolbar.style.alignItems = 'center';
-        toolbar.style.gap = '10px';
-        toolbar.id = 'orgGlobalToolbar'; // ID for easy access to buttons
-
-        const label = document.createElement('span');
-        label.textContent = 'Chart Layout:';
-        label.style.fontWeight = '600';
-        toolbar.appendChild(label);
-
-        const modes = [
-            { id: 'd3', label: 'Block View' },
-            { id: 'list', label: 'List View' },
-            { id: 'table', label: 'Org Table' },
-            { id: 'engineerList', label: 'Engineer List' }
-        ];
-
-        modes.forEach(mode => {
-            const btn = document.createElement('button');
-            btn.className = 'btn btn-secondary btn-sm';
-            btn.textContent = mode.label;
-            btn.dataset.mode = mode.id;
-            btn.onclick = () => {
-                this.currentMode = mode.id;
-                this.updateRenderer();
-            };
-            toolbar.appendChild(btn);
-        });
-
-        return toolbar;
-    }
-
-    /**
      * Generate the view layout
      */
     generateLayout() {
         this.container.innerHTML = `
             <div class="org-view">
-                <!-- Toolbar moved to Global Header -->
-                <div id="organogramContent" class="org-content"></div>
-                <div id="teamBreakdown" class="org-view__team-breakdown"></div>
-                <div id="orgEngineerListView" class="org-view__engineer-list"></div>
+                <div id="organogramContent" class="org-content-area"></div>
+                <div id="teamBreakdown" class="org-content-area" style="display: none;"></div>
+                <div id="orgEngineerListView" class="org-content-area" style="display: none;"></div>
             </div>
         `;
-
-        // this.bindEvents(); // No longer needed as events are bound in generateOrgToolbar
-    }
-
-    /**
-     * Bind event listeners
-     */
-    bindEvents() {
-        const toolbar = document.getElementById('organogramToolbar');
-        if (toolbar) {
-            toolbar.addEventListener('click', (e) => {
-                const btn = e.target.closest('[data-mode]');
-                if (!btn) return;
-
-                this.currentMode = btn.dataset.mode;
-                this.updateRenderer();
-            });
-        }
     }
 
     /**
@@ -127,28 +87,10 @@ class OrgView {
             return;
         }
 
-        // Update button states
-        // Update button states in Global Toolbar
-        const toolbar = document.getElementById('orgGlobalToolbar');
-        if (toolbar) {
-            toolbar.querySelectorAll('button').forEach(btn => {
-                btn.classList.remove('btn-primary');
-                btn.classList.add('btn-secondary');
-            });
-
-            const activeBtn = toolbar.querySelector(`[data-mode="${this.currentMode}"]`);
-            if (activeBtn) {
-                activeBtn.classList.add('btn-primary');
-                activeBtn.classList.remove('btn-secondary');
-            }
-        }
-
-
-
-        // Hide all containers
+        // Hide all containers first
         chartContainer.style.display = 'none';
-        tableContainer.classList.remove('active');
-        engineerListContainer.classList.remove('active');
+        tableContainer.style.display = 'none';
+        engineerListContainer.style.display = 'none';
 
         // Show appropriate view
         switch (this.currentMode) {
@@ -161,11 +103,11 @@ class OrgView {
                 this.renderHtmlOrgList(chartContainer);
                 break;
             case 'table':
-                tableContainer.classList.add('active');
+                tableContainer.style.display = 'block';
                 this.generateTeamTable();
                 break;
             case 'engineerList':
-                engineerListContainer.classList.add('active');
+                engineerListContainer.style.display = 'block';
                 this.generateEngineerTable();
                 break;
         }
