@@ -528,8 +528,8 @@ function generateVisualization(systemData) {
     // --- End Draw Elements ---
 
     // --- Tooltip ---
-    let tooltip = d3.select('body').selectAll('.tooltip').data([null]).join('div') // Reuse or create tooltip
-        .attr('class', 'tooltip')
+    let tooltip = d3.select('body').selectAll('.visualization-tooltip').data([null]).join('div') // Reuse or create tooltip
+        .attr('class', 'visualization-tooltip')
         .style('opacity', 0);
 
     node.on('mouseover', function (event, d) {
@@ -757,7 +757,7 @@ function generateTeamVisualization(systemData) {
 
     // Tooltip
     let tooltip = d3.select('body').append('div')
-        .attr('class', 'tooltip')
+        .attr('class', 'visualization-tooltip')
         .style('opacity', 0);
 
     node.on('mouseover', function (event, d) {
@@ -1022,7 +1022,7 @@ function generateServiceVisualization(services, selectedServiceName) {
 
     // Tooltip
     let tooltip = d3.select('body').append('div')
-        .attr('class', 'tooltip')
+        .attr('class', 'visualization-tooltip')
         .style('opacity', 0);
 
     node.on('mouseover', function (event, d) {
@@ -1317,7 +1317,7 @@ function generateDependencyForceVisualization(selectedServiceName) {
         console.error("generateDependencyForceVisualization: #dependencySvg element not found or is empty. Cannot generate visualization.");
         const containerDiv = document.getElementById('dependencyVisualization');
         if (containerDiv) {
-            containerDiv.innerHTML = '<p style="color: red; text-align: center;">Error: Could not load dependency visualization.</p>';
+            containerDiv.innerHTML = '<p class="visualization-error-message">Error: Could not load dependency visualization.</p>';
         }
         return;
     }
@@ -1422,8 +1422,8 @@ function generateDependencyForceVisualization(selectedServiceName) {
     // --- End Zoom Setup ---
 
     // Tooltip Element
-    const tooltip = d3.select('body').selectAll('.tooltip').data([null]).join('div')
-        .attr('class', 'tooltip')
+    const tooltip = d3.select('body').selectAll('.visualization-tooltip').data([null]).join('div')
+        .attr('class', 'visualization-tooltip')
         .style('opacity', 0);
 
     // Highlight State

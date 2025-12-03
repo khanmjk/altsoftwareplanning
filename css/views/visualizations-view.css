@@ -292,3 +292,22 @@
 .visualization-toolbar-service-select {
     min-width: 150px;
 }
+
+.visualization-tooltip {
+    position: absolute;
+    text-align: left;
+    padding: 8px;
+    font: 12px sans-serif;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    border-radius: 4px;
+    pointer-events: none;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.visualization-error-message {
+    color: red;
+    text-align: center;
+    padding: 20px;
+}
