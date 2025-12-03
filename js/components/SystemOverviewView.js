@@ -324,18 +324,7 @@ class SystemOverviewView {
                 }
                 break;
 
-            case 'mermaidApiVisualization':
-                // Must pass the selected service value as parameter
-                const apiServiceSelect = document.getElementById('apiServiceSelection');
-                if (apiServiceSelect) {
-                    apiServiceSelect.onchange = () => {
-                        const selectedService = apiServiceSelect.value;
-                        if (typeof renderMermaidApiDiagram === 'function') {
-                            renderMermaidApiDiagram(selectedService);
-                        }
-                    };
-                }
-                break;
+            // mermaidApiVisualization case removed - onchange handled by populateApiServiceSelection()
         }
     }
 
@@ -386,12 +375,15 @@ class SystemOverviewView {
     }
 
     renderMermaidApiDiagram() {
-        // Same pattern as renderServiceRelationships
-        if (typeof populateApiServiceSelection === 'function') {
+        // Populate dropdown first only if empty
+        const select = document.getElementById('apiServiceSelection');
+        if (select && select.options.length === 0 && typeof populateApiServiceSelection === 'function') {
             populateApiServiceSelection();
         }
+        // Render with current selection
         if (typeof renderMermaidApiDiagram === 'function') {
-            renderMermaidApiDiagram();
+            const selectedService = select ? select.value : 'all';
+            renderMermaidApiDiagram(selectedService);
         }
     }
 

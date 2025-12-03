@@ -295,13 +295,25 @@ function populateApiServiceSelection() {
         });
 
     select.onchange = () => {
-        if (typeof renderMermaidApiDiagram === 'function') renderMermaidApiDiagram();
+        if (typeof renderMermaidApiDiagram === 'function') {
+            renderMermaidApiDiagram(select.value);
+        }
     };
 }
 
-async function renderMermaidApiDiagram(selectedService = 'all') {
+async function renderMermaidApiDiagram(serviceParam) {
     const graphContainer = document.getElementById('mermaidApiGraph');
-    // const select = document.getElementById('apiServiceSelection'); // Controlled by param now
+
+    // Determine selected service: explicit param > dropdown value > 'all'
+    let selectedService = serviceParam;
+    if (!selectedService || selectedService === 'all') {
+        const select = document.getElementById('apiServiceSelection');
+        if (select && select.value) {
+            selectedService = select.value;
+        } else {
+            selectedService = 'all';
+        }
+    }
 
     if (!graphContainer) {
         console.error("renderMermaidApiDiagram: required elements not found.");
@@ -2102,8 +2114,7 @@ function renderSystemOverviewView(container) {
     const depServiceSelect = container.querySelector('#dependencyServiceSelection');
     if (depServiceSelect) depServiceSelect.addEventListener('change', updateDependencyVisualization);
 
-    const apiServiceSelect = container.querySelector('#apiServiceSelection');
-    if (apiServiceSelect) apiServiceSelect.addEventListener('change', renderMermaidApiDiagram);
+    // apiServiceSelect listener removed - handled by populateApiServiceSelection()
 
     // Setup Platform Toggles
     const toggleSystem = container.querySelector('#togglePlatformComponentsSystem');
