@@ -93,12 +93,12 @@ class ServiceEditComponent {
         actionsDiv.style.marginTop = '15px';
 
         const saveBtn = document.createElement('button');
-        saveBtn.className = 'service-edit-btn service-edit-btn-primary';
+        saveBtn.className = 'btn btn-primary';
         saveBtn.innerText = 'Save Service Changes';
         saveBtn.onclick = () => this._saveServiceChanges(index);
 
         const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'service-edit-btn service-edit-btn-danger';
+        deleteBtn.className = 'btn btn-danger';
         deleteBtn.innerText = 'Delete Service';
         deleteBtn.style.marginLeft = '10px';
         deleteBtn.onclick = () => this._deleteService(index);
@@ -289,7 +289,7 @@ class ServiceEditComponent {
         });
 
         const addBtn = document.createElement('button');
-        addBtn.className = 'service-edit-btn service-edit-btn-secondary';
+        addBtn.className = 'btn btn-secondary';
         addBtn.innerText = 'Add New API';
         addBtn.onclick = () => this._addNewApi(index);
         container.appendChild(addBtn);
@@ -338,7 +338,7 @@ class ServiceEditComponent {
 
         // Delete API Button
         const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'service-edit-btn service-edit-btn-danger';
+        deleteBtn.className = 'btn btn-danger';
         deleteBtn.innerText = 'Delete API';
         deleteBtn.style.marginTop = '10px';
         deleteBtn.onclick = () => this._deleteApi(serviceIndex, apiIndex);

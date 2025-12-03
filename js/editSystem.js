@@ -56,7 +56,7 @@ const systemEditFormTemplate = `
             </div>
             <div id="editServicesManagement"></div>
             <div class="system-edit-actions">
-                <button type="button" class="btn btn-secondary" onclick="addNewService()">Add New Service</button>
+                <button type="button" class="btn btn-primary" onclick="addNewService()">Add New Service</button>
             </div>
 
             <div class="system-edit-section-header">
@@ -64,7 +64,7 @@ const systemEditFormTemplate = `
             </div>
             <div id="teamsManagement"></div>
             <div class="system-edit-actions">
-                <button id="addNewTeamButton" type="button" class="btn btn-secondary" onclick="addNewTeam()">Add New Team</button>
+                <button id="addNewTeamButton" type="button" class="btn btn-primary" onclick="addNewTeam()">Add New Team</button>
             </div>
 
             <div class="system-edit-footer-actions">

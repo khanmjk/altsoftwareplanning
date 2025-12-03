@@ -115,12 +115,12 @@ class TeamEditComponent {
         actionsDiv.className = 'team-edit-actions';
 
         const saveBtn = document.createElement('button');
-        saveBtn.className = 'team-edit-btn team-edit-btn-primary';
+        saveBtn.className = 'btn btn-primary';
         saveBtn.innerText = 'Save Team Changes';
         saveBtn.onclick = () => this._saveTeamChanges(index);
 
         const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'team-edit-btn team-edit-btn-danger';
+        deleteBtn.className = 'btn btn-danger';
         deleteBtn.innerText = 'Delete Team';
         deleteBtn.style.marginLeft = '10px';
         deleteBtn.onclick = () => this._deleteTeam(index);
@@ -454,7 +454,7 @@ class TeamEditComponent {
                 info.textContent = `${member.name} (L${member.level}) - ${member.sourceTeam}`;
 
                 const removeBtn = document.createElement('button');
-                removeBtn.className = 'team-edit-btn team-edit-btn-danger';
+                removeBtn.className = 'btn btn-danger';
                 removeBtn.textContent = 'Remove';
                 removeBtn.onclick = () => this._removeAwayMember(index, memberIndex);
 
@@ -486,7 +486,7 @@ class TeamEditComponent {
                 <label class="team-edit-label">Source</label>
                 <input type="text" id="newAwaySource_${index}" class="team-edit-input" placeholder="Source Team">
             </div>
-            <button type="button" id="addAwayBtn_${index}" class="team-edit-btn team-edit-btn-secondary">Add</button>
+            <button type="button" id="addAwayBtn_${index}" class="btn btn-secondary">Add</button>
         `;
         section.appendChild(form);
 
