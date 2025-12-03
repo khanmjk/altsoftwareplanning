@@ -21,19 +21,18 @@ function initializeImpactView() {
 
     const svgContainer = document.createElement('div');
     svgContainer.id = 'impact-graph-container';
-    svgContainer.style.border = '1px solid #ddd'; // Make window visible
+    // No border - blend with workspace
     container.appendChild(svgContainer);
 
     const svg = d3.select(svgContainer).append("svg")
         .attr("width", "100%")
-        .attr("height", "850px"); // Make the window larger
+        .attr("height", "650px"); // Reduced height for compactness
 
     const summaryContainer = document.createElement('div');
     summaryContainer.id = 'impact-summary-container';
-    summaryContainer.style.padding = '15px';
+    summaryContainer.style.padding = '10px 0'; // Minimal padding top/bottom, no sides
     summaryContainer.style.marginTop = '10px';
-    summaryContainer.style.border = '1px solid #ddd';
-    summaryContainer.style.backgroundColor = '#f9f9f9';
+    // No border, no background - blend with workspace
     summaryContainer.style.display = 'none'; // Initially hidden
     container.appendChild(summaryContainer);
 
@@ -493,17 +492,20 @@ function generateInitiativeSummary(initiative) {
     const ownerName = initiative.owner.name || 'N/A';
     const teamsImpacted = (initiative.assignments || []).map(a => {
         const team = currentSystemData.teams.find(t => t.teamId === a.teamId);
-        return `<li>${team?.teamIdentity || a.teamId}: ${a.sdeYears} SDE-Years</li>`;
-    }).join('');
+        return `${team?.teamIdentity || a.teamId}: ${a.sdeYears} SDE-Years`;
+    }).join(' • ');
 
     return `
-        <h3>${initiative.title}</h3>
-        <p><strong>Owner:</strong> ${ownerName}</p>
-        <p><strong>Status:</strong> ${initiative.status || 'N/A'}</p>
-        <p><strong>Due Date:</strong> ${initiative.targetDueDate || 'N/A'}</p>
-        <p><strong>Description:</strong> ${initiative.description || 'No description provided.'}</p>
-        <h4>Impacted Teams & Estimates:</h4>
-        <ul>${teamsImpacted}</ul>
+        <div style="line-height: 1.4; font-size: 14px;">
+            <h4 style="margin: 0 0 8px 0; font-size: 16px;">${initiative.title}</h4>
+            <div style="margin-bottom: 6px;">
+                <strong>Owner:</strong> ${ownerName} • 
+                <strong>Status:</strong> ${initiative.status || 'N/A'} • 
+                <strong>Due:</strong> ${initiative.targetDueDate || 'N/A'}
+            </div>
+            <div style="margin-bottom: 6px;"><strong>Description:</strong> ${initiative.description || 'No description provided.'}</div>
+            <div><strong>Teams & Estimates:</strong> ${teamsImpacted || 'None'}</div>
+        </div>
     `;
 }
 
