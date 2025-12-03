@@ -6,7 +6,13 @@
 class SettingsView {
     constructor(containerId) {
         this.container = document.getElementById(containerId);
+        this.pillNav = null;
         this.activeTab = 'general';
+
+        this.tabs = [
+            { id: 'general', label: 'General', icon: 'fas fa-sliders-h' },
+            { id: 'ai', label: 'AI Assistant', icon: 'fas fa-robot' }
+        ];
     }
 
     /**
@@ -24,69 +30,59 @@ class SettingsView {
             });
         }
 
-        // 2. Set Workspace Toolbar
-        const toolbar = this.generateSettingsToolbar();
-        if (window.workspaceComponent && toolbar) {
-            window.workspaceComponent.setToolbar(toolbar);
+        // 2. Set Workspace Toolbar (Pill Navigation)
+        this.pillNav = new PillNavigationComponent({
+            items: this.tabs,
+            onSwitch: (tabId) => this.switchTab(tabId)
+        });
+
+        if (window.workspaceComponent) {
+            window.workspaceComponent.setToolbar(this.pillNav.render());
         }
 
-        // 3. Render Content
+        // 3. Render Content Structure
         this.container.innerHTML = `
-            <div class="settings-view-container">
-                <div class="settings-layout" style="grid-template-columns: 1fr;">
-                    <!-- Sidebar Removed, Content Only -->
-                    <div class="settings-content">
-                        ${this.renderActiveTab()}
-                    </div>
+            <div class="settings-view-container workspace-view">
+                <div id="general" class="settings-tab-content" style="display: none;">
+                    ${this.renderGeneralTab()}
+                </div>
+                <div id="ai" class="settings-tab-content" style="display: none;">
+                    ${this.renderAiTab()}
                 </div>
             </div>
         `;
 
-        // Bind events after rendering
+        // 4. Show Active Tab
+        this.switchTab(this.activeTab);
+
+        // 5. Bind Events
         this.bindEvents();
     }
 
     /**
-     * Generates the toolbar controls for Settings View
+     * Switch to a different tab
+     * @param {string} tabId - Tab identifier ('general' or 'ai')
      */
-    generateSettingsToolbar() {
-        const toolbar = document.createElement('div');
-        toolbar.className = 'settings-toolbar-global';
-        toolbar.style.display = 'flex';
-        toolbar.style.alignItems = 'center';
-        toolbar.style.gap = '10px';
-        toolbar.id = 'settingsGlobalToolbar';
+    switchTab(tabId) {
+        // Hide all tabs
+        const allTabs = this.container.querySelectorAll('.settings-tab-content');
+        allTabs.forEach(tab => tab.style.display = 'none');
 
-        const tabs = [
-            { id: 'general', label: 'General', icon: 'fa-sliders-h' },
-            { id: 'ai', label: 'AI Assistant', icon: 'fa-robot' }
-        ];
-
-        tabs.forEach(tab => {
-            const btn = document.createElement('button');
-            btn.className = 'btn btn-secondary btn-sm';
-            btn.innerHTML = `<i class="fas ${tab.icon}"></i> ${tab.label}`;
-            btn.dataset.tab = tab.id;
-            btn.onclick = () => this.switchTab(tab.id);
-            toolbar.appendChild(btn);
-        });
-
-        // Set active state
-        const activeBtn = toolbar.querySelector(`[data-tab="${this.activeTab}"]`);
-        if (activeBtn) {
-            activeBtn.classList.remove('btn-secondary');
-            activeBtn.classList.add('btn-primary');
+        // Show active tab
+        const activeContent = this.container.querySelector(`#${tabId}`);
+        if (activeContent) {
+            activeContent.style.display = 'block';
+            this.activeTab = tabId;
+            if (this.pillNav) {
+                this.pillNav.setActive(tabId);
+            }
         }
-
-        return toolbar;
     }
 
     /**
      * Bind event listeners
      */
     bindEvents() {
-        // Tab switching handled by toolbar now
-
         // Form submission for AI settings
         const aiForm = document.getElementById('aiSettingsForm_view');
         if (aiForm) {
@@ -112,47 +108,6 @@ class SettingsView {
     }
 
     /**
-     * Handle tab click
-     * @param {Event} event - Click event
-     */
-    /**
-     * Handle tab click (Legacy)
-     * @param {Event} event - Click event
-     */
-    handleTabClick(event) {
-        // Legacy handler
-        const tabItem = event.target.closest('[data-tab]');
-        if (!tabItem) return;
-
-        const tabName = tabItem.dataset.tab;
-        this.switchTab(tabName);
-    }
-
-    /**
-     * Switch to a different tab
-     * @param {string} tabName - Tab identifier ('general' or 'ai')
-     */
-    switchTab(tabName) {
-        this.activeTab = tabName;
-        this.render();
-    }
-
-    /**
-     * Render the currently active tab
-     * @returns {string} HTML for active tab
-     */
-    renderActiveTab() {
-        switch (this.activeTab) {
-            case 'general':
-                return this.renderGeneralTab();
-            case 'ai':
-                return this.renderAiTab();
-            default:
-                return this.renderGeneralTab();
-        }
-    }
-
-    /**
      * Render General settings tab
      * @returns {string} HTML for general tab
      */
@@ -172,30 +127,34 @@ class SettingsView {
         }
 
         return `
-            <div class="settings-card">
-                <h3 class="settings-card-title">Application Data</h3>
+            <div class="settings-section">
+                <h3 class="settings-section-title">Application Data</h3>
                 
-                <div class="settings-row border-bottom">
-                    <div>
-                        <h4 class="settings-item-title">Reset to Defaults</h4>
-                        <p class="settings-item-desc">Clear all local data and restore the sample dataset.</p>
+                <div class="settings-item-card">
+                    <div class="settings-row">
+                        <div>
+                            <h4 class="settings-item-title">Reset to Defaults</h4>
+                            <p class="settings-item-desc">Clear all local data and restore the sample dataset.</p>
+                        </div>
+                        <button class="btn btn-secondary" data-action="reset">
+                            <i class="fas fa-undo"></i> Reset
+                        </button>
                     </div>
-                    <button class="btn btn-secondary" data-action="reset">
-                        <i class="fas fa-undo"></i> Reset
-                    </button>
                 </div>
 
-                <div class="settings-row">
-                    <div>
-                        <h4 class="settings-item-title danger">Delete Current System</h4>
-                        <p class="settings-item-desc">${deleteButtonTitle}</p>
+                <div class="settings-item-card">
+                    <div class="settings-row">
+                        <div>
+                            <h4 class="settings-item-title danger">Delete Current System</h4>
+                            <p class="settings-item-desc">${deleteButtonTitle}</p>
+                        </div>
+                        <button class="btn btn-danger ${canDelete ? 'enabled' : ''}" 
+                                data-action="delete"
+                                ${!canDelete ? 'disabled' : ''}
+                                title="${deleteButtonTitle}">
+                            <i class="fas fa-trash-alt"></i> Delete
+                        </button>
                     </div>
-                    <button class="btn btn-danger ${canDelete ? 'enabled' : ''}" 
-                            data-action="delete"
-                            ${!canDelete ? 'disabled' : ''}
-                            title="${deleteButtonTitle}">
-                        <i class="fas fa-trash-alt"></i> Delete
-                    </button>
                 </div>
             </div>
         `;
@@ -211,51 +170,55 @@ class SettingsView {
         const apiKey = window.globalSettings?.ai?.apiKey || '';
 
         return `
-            <div class="settings-card">
-                <h3 class="settings-card-title">AI Assistant Configuration</h3>
+            <div class="settings-section">
+                <h3 class="settings-section-title">AI Assistant Configuration</h3>
                 
                 <form id="aiSettingsForm_view">
-                    <div class="settings-form-group">
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="aiModeEnabled_view" ${isEnabled ? 'checked' : ''}>
-                            <span class="toggle-label">Enable AI Assistant</span>
-                        </label>
+                    <div class="settings-item-card">
+                        <div class="settings-form-group" style="margin-bottom: 0;">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="aiModeEnabled_view" ${isEnabled ? 'checked' : ''}>
+                                <span class="toggle-label">Enable AI Assistant</span>
+                            </label>
+                        </div>
                     </div>
 
-                    <div id="aiConfigInputs_view" class="settings-sub-section ${isEnabled ? '' : 'hidden'}">
-                        <div class="settings-form-group">
-                            <label class="settings-label">LLM Provider</label>
-                            <select id="aiProviderSelect_view" class="settings-select">
-                                <option value="google-gemini" ${provider === 'google-gemini' ? 'selected' : ''}>Google (Gemini Pro)</option>
-                                <option value="openai-gpt4o" disabled>OpenAI (GPT-4o) - Coming Soon</option>
-                                <option value="anthropic-claude35" disabled>Anthropic (Claude 3.5 Sonnet) - Coming Soon</option>
-                            </select>
-                        </div>
-
-                        <div class="settings-form-group">
-                            <label class="settings-label">API Key</label>
-                            <div class="settings-input-wrapper">
-                                <input type="password" 
-                                       id="aiApiKeyInput_view" 
-                                       value="${apiKey}" 
-                                       placeholder="Paste your API key here" 
-                                       class="settings-input">
+                    <div id="aiConfigInputs_view" class="settings-sub-section-wrapper ${isEnabled ? '' : 'hidden'}">
+                        <div class="settings-item-card">
+                            <div class="settings-form-group">
+                                <label class="settings-label">LLM Provider</label>
+                                <select id="aiProviderSelect_view" class="settings-select">
+                                    <option value="google-gemini" ${provider === 'google-gemini' ? 'selected' : ''}>Google (Gemini Pro)</option>
+                                    <option value="openai-gpt4o" disabled>OpenAI (GPT-4o) - Coming Soon</option>
+                                    <option value="anthropic-claude35" disabled>Anthropic (Claude 3.5 Sonnet) - Coming Soon</option>
+                                </select>
                             </div>
-                            <p class="settings-helper-text">
-                                Your key is stored locally in your browser. Get a free key from <a href="https://aistudio.google.com/app/apikey" target="_blank" class="settings-link">Google AI Studio</a>.
-                            </p>
-                        </div>
 
-                        <div class="settings-alert">
-                            <p>
-                                <i class="fas fa-exclamation-triangle"></i>
-                                <strong>Note:</strong> Free-tier keys have rate limits. If you see "503 Model Overloaded", please wait a moment.
-                            </p>
-                        </div>
-                    </div>
+                            <div class="settings-form-group">
+                                <label class="settings-label">API Key</label>
+                                <div class="settings-input-wrapper">
+                                    <input type="password" 
+                                           id="aiApiKeyInput_view" 
+                                           value="${apiKey}" 
+                                           placeholder="Paste your API key here" 
+                                           class="settings-input">
+                                </div>
+                                <p class="settings-helper-text">
+                                    Your key is stored locally in your browser. Get a free key from <a href="https://aistudio.google.com/app/apikey" target="_blank" class="settings-link">Google AI Studio</a>.
+                                </p>
+                            </div>
 
-                    <div class="settings-actions">
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                            <div class="settings-alert">
+                                <p>
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <strong>Note:</strong> Free-tier keys have rate limits. If you see "503 Model Overloaded", please wait a moment.
+                                </p>
+                            </div>
+
+                            <div class="settings-actions">
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>
