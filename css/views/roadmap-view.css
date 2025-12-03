@@ -405,7 +405,8 @@
 .roadmap-toolbar-content {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 24px;
+    /* Increased gap for better separation */
     width: 100%;
     flex-wrap: wrap;
     /* Allow wrapping on small screens */
@@ -414,7 +415,7 @@
 .roadmap-filter-group {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     /* Tighter gap */
 }
 
@@ -422,4 +423,18 @@
     margin-bottom: 0;
     /* Remove default margin */
     white-space: nowrap;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    line-height: 1;
+    /* Ensure line-height doesn't offset alignment */
+}
+
+.roadmap-filter-group select {
+    margin-bottom: 0;
+    /* Override any default margin */
+    height: 32px;
+    /* Fixed height for consistency */
+    padding-top: 2px;
+    padding-bottom: 2px;
 }

@@ -52,9 +52,14 @@ class RoadmapComponent {
 
         // 1. Year Filter (Crucial for 3YP context)
         const currentYear = new Date().getFullYear();
+        // Default to current year if not set or 'all'
+        if (!window.dashboardPlanningYear || window.dashboardPlanningYear === 'all') {
+            window.dashboardPlanningYear = currentYear;
+        }
+
         const years = [currentYear - 1, currentYear, currentYear + 1, currentYear + 2];
-        const yearOptions = `<option value="all">All Years</option>` +
-            years.map(y => `<option value="${y}" ${y === window.dashboardPlanningYear ? 'selected' : ''}>${y}</option>`).join('');
+        // Removed "All Years" option as requested
+        const yearOptions = years.map(y => `<option value="${y}" ${y == window.dashboardPlanningYear ? 'selected' : ''}>${y}</option>`).join('');
 
         filtersContainer.appendChild(createFilter('roadmapYearFilter', 'Year:', yearOptions, (e) => {
             window.dashboardPlanningYear = e.target.value; // Sync with global
@@ -153,11 +158,14 @@ class RoadmapComponent {
     }
 
     renderQuarterlyGrid(container, data) {
-        // Flatten data: We no longer group by theme rows.
-        // We just need lists for Q1, Q2, Q3, Q4.
         const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
         const quarterData = { Q1: [], Q2: [], Q3: [], Q4: [] };
         const processedIds = new Set(); // Track unique IDs to prevent duplicates
+
+        // Format Headers: Q1 '25
+        const planningYear = window.dashboardPlanningYear || new Date().getFullYear();
+        const shortYear = planningYear.toString().slice(-2);
+        const headerLabels = quarters.map(q => `${q} '${shortYear}`);
 
         // Iterate through the theme-grouped data to flatten it
         Object.keys(data).forEach(theme => {
@@ -176,7 +184,7 @@ class RoadmapComponent {
         let html = `
             <div class="roadmap-grid quarterly-grid">
                 <div class="roadmap-header-row">
-                    ${quarters.map(q => `<div class="roadmap-header-cell quarter-header header-${q}">${q}</div>`).join('')}
+                    ${quarters.map((q, i) => `<div class="roadmap-header-cell quarter-header header-${q}">${headerLabels[i]}</div>`).join('')}
                 </div>
                 <div class="roadmap-content-row">
         `;
