@@ -1,0 +1,135 @@
+/* Theme Edit Component Styles */
+
+/* Container */
+.theme-edit-list {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+/* Theme Item Card */
+.theme-edit-item {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    margin-bottom: 0;
+    box-shadow: none;
+    overflow: visible;
+    transition: background-color 0.2s ease;
+    border-bottom: 1px solid var(--color-gray-100);
+}
+
+.theme-edit-item:last-child {
+    border-bottom: none;
+}
+
+/* Header */
+.theme-edit-header {
+    margin: 0;
+    padding: 4px 0;
+    background-color: transparent;
+    border-bottom: none;
+    cursor: pointer;
+    user-select: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--color-gray-700);
+    display: flex;
+    align-items: center;
+    transition: background-color 0.1s ease, color 0.1s ease;
+    border-radius: var(--radius-sm);
+}
+
+.theme-edit-header:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+    color: var(--color-gray-900);
+    padding-left: 4px;
+}
+
+.theme-edit-indicator {
+    margin-right: 4px;
+    color: var(--color-gray-400);
+    font-weight: normal;
+    font-family: monospace;
+    font-size: 1em;
+    width: 12px;
+    display: inline-block;
+    text-align: center;
+}
+
+.theme-edit-title {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--color-gray-700);
+}
+
+.theme-edit-header:hover .theme-edit-title {
+    color: var(--color-gray-900);
+}
+
+/* Details Area */
+.theme-edit-details {
+    padding: var(--space-md) 0;
+    background-color: transparent;
+    display: none;
+    margin-top: 4px;
+    margin-bottom: var(--space-md);
+    /* No border-left or indent to match System Edit "flat" look */
+}
+
+.theme-edit-details.expanded {
+    display: block;
+}
+
+/* Form Elements */
+.theme-edit-form-group {
+    margin-bottom: var(--space-md);
+}
+
+.theme-edit-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--color-gray-600);
+    margin-bottom: 4px;
+    margin-top: var(--space-sm);
+}
+
+.theme-edit-input,
+.theme-edit-textarea {
+    width: 100%;
+    padding: 6px 10px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: var(--color-gray-900);
+    background-color: #fff;
+    border: 1px solid var(--color-gray-300);
+    border-radius: var(--radius-sm);
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.theme-edit-input:focus,
+.theme-edit-textarea:focus {
+    border-color: var(--color-primary);
+    outline: 0;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.theme-edit-textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+/* Actions */
+.theme-edit-actions {
+    margin-top: var(--space-md);
+    display: flex;
+    gap: var(--space-md);
+}
+
+/* Empty State */
+.theme-edit-list-empty {
+    color: var(--color-gray-500);
+    font-style: italic;
+    padding: var(--space-md) 0;
+}

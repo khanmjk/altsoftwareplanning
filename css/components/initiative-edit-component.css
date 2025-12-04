@@ -1,0 +1,250 @@
+/* Initiative Edit Component Styles */
+
+/* Container */
+.initiative-edit-list {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+/* Item Card */
+.initiative-edit-item {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    margin-bottom: 0;
+    box-shadow: none;
+    overflow: visible;
+    transition: background-color 0.2s ease;
+    border-bottom: 1px solid var(--color-gray-100);
+}
+
+.initiative-edit-item:last-child {
+    border-bottom: none;
+}
+
+/* Header */
+.initiative-edit-header {
+    margin: 0;
+    padding: 8px 0;
+    background-color: transparent;
+    border-bottom: none;
+    cursor: pointer;
+    user-select: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--color-gray-700);
+    display: flex;
+    align-items: center;
+    transition: background-color 0.1s ease, color 0.1s ease;
+    border-radius: var(--radius-sm);
+}
+
+.initiative-edit-header:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+    color: var(--color-gray-900);
+    padding-left: 4px;
+}
+
+.initiative-edit-indicator {
+    margin-right: 4px;
+    color: var(--color-gray-400);
+    font-weight: normal;
+    font-family: monospace;
+    font-size: 1em;
+    width: 12px;
+    display: inline-block;
+    text-align: center;
+}
+
+.initiative-edit-title {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--color-gray-700);
+    flex-grow: 1;
+}
+
+.initiative-edit-header:hover .initiative-edit-title {
+    color: var(--color-gray-900);
+}
+
+/* Details Area */
+.initiative-edit-details {
+    padding: var(--space-md) 0;
+    background-color: transparent;
+    display: none;
+    margin-top: 4px;
+    margin-bottom: var(--space-md);
+}
+
+.initiative-edit-details.expanded {
+    display: block;
+}
+
+/* Form Layout */
+.initiative-edit-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-md);
+    margin-bottom: var(--space-md);
+}
+
+.initiative-edit-form-group {
+    margin-bottom: var(--space-md);
+}
+
+.initiative-edit-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--color-gray-600);
+    margin-bottom: 4px;
+    margin-top: var(--space-sm);
+}
+
+.initiative-edit-input,
+.initiative-edit-textarea,
+.initiative-edit-select {
+    width: 100%;
+    padding: 6px 10px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: var(--color-gray-900);
+    background-color: #fff;
+    border: 1px solid var(--color-gray-300);
+    border-radius: var(--radius-sm);
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.initiative-edit-input:focus,
+.initiative-edit-textarea:focus,
+.initiative-edit-select:focus {
+    border-color: var(--color-primary);
+    outline: 0;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.initiative-edit-textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+/* Collapsible Sections (ROI, etc) */
+.initiative-edit-section {
+    margin-top: var(--space-md);
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-sm);
+    background-color: rgba(255, 255, 255, 0.5);
+    overflow: hidden;
+}
+
+.initiative-edit-section-header {
+    padding: 8px 12px;
+    background-color: rgba(0, 0, 0, 0.02);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    user-select: none;
+    transition: background-color 0.1s ease;
+}
+
+.initiative-edit-section-header:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+}
+
+.initiative-edit-section-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-gray-600);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0;
+}
+
+.initiative-edit-section-content {
+    display: none;
+    padding: var(--space-md);
+    border-top: 1px solid var(--color-gray-200);
+}
+
+.initiative-edit-section-content.expanded {
+    display: block;
+}
+
+/* Assignments List */
+.initiative-assignments-list {
+    margin-bottom: var(--space-sm);
+}
+
+.initiative-assignment-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+    background: #fff;
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-sm);
+    margin-bottom: 4px;
+    font-size: 0.9rem;
+}
+
+.initiative-assignment-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* Actions */
+.initiative-edit-actions {
+    margin-top: var(--space-md);
+    display: flex;
+    gap: var(--space-md);
+}
+
+/* Empty State */
+.initiative-edit-list-empty {
+    color: var(--color-gray-500);
+    font-style: italic;
+    padding: var(--space-md) 0;
+}
+
+/* Status Pill */
+.initiative-status-pill {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-left: 12px;
+    border: 1px solid transparent;
+}
+
+.status-backlog {
+    background-color: #f1f5f9;
+    color: #475569;
+    border-color: #cbd5e1;
+}
+
+.status-defined {
+    background-color: #e0f2fe;
+    color: #0284c7;
+    border-color: #bae6fd;
+}
+
+.status-committed {
+    background-color: #dcfce7;
+    color: #16a34a;
+    border-color: #86efac;
+}
+
+.status-in-progress {
+    background-color: #fef9c3;
+    color: #ca8a04;
+    border-color: #fde047;
+}
+
+.status-completed {
+    background-color: #d1fae5;
+    color: #059669;
+    border-color: #6ee7b7;
+}
