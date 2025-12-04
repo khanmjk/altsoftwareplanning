@@ -1130,6 +1130,17 @@ function validateGeneratedSystem(systemData) {
         }
     });
 
+    // Check Goals
+    console.log(`[AI-VALIDATE] ... checking ${systemData.goals.length} Goals...`);
+    systemData.goals.forEach(goal => {
+        if (!goal.goalId) errors.push('A goal is missing its "goalId".');
+        if (!goal.name) errors.push(`Goal "${goal.goalId}" is missing "name".`);
+
+        if (!goal.dueDate) {
+            warnings.push(`Goal "${goal.name || goal.goalId}" is missing "dueDate".`);
+        }
+    });
+
     // Check Initiatives
     console.log(`[AI-VALIDATE] ... checking ${systemData.yearlyInitiatives.length} Initiatives (Goals, Themes, Personnel, Work Packages)...`);
     systemData.yearlyInitiatives.forEach(init => {

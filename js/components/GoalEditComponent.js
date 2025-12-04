@@ -26,7 +26,8 @@ class GoalEditComponent {
             projectManager: null,
             technicalPOC: null,
             initiativeIds: [],
-            attributes: {}
+            attributes: {},
+            dueDate: null
         };
 
         this.expandedIndex = 'draft'; // Special index for draft
@@ -120,6 +121,7 @@ class GoalEditComponent {
         details.appendChild(this._createFormGroup('Goal Name', 'input', 'name', goal.name, index));
         details.appendChild(this._createFormGroup('Description', 'textarea', 'description', goal.description, index));
         details.appendChild(this._createFormGroup('Strategy Link (URL)', 'url', 'strategyLink', goal.strategyLink, index));
+        details.appendChild(this._createFormGroup('Due Date', 'date', 'dueDate', goal.dueDate, index));
 
         // 2. People
         const grid = document.createElement('div');

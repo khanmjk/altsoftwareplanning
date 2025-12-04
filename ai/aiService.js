@@ -335,7 +335,7 @@ function _getSystemGenerationPrompt() {
             }
         ],
         "goals": [
-            { "goalId": "goal-example", "name": "Example Goal 2025", "description": "...", "initiativeIds": ["init-example-001"], "attributes": {} }
+            { "goalId": "goal-example", "name": "Example Goal 2025", "description": "...", "initiativeIds": ["init-example-001"], "attributes": {}, "dueDate": "2025-12-31" }
         ],
         "definedThemes": [
             { "themeId": "theme-example", "name": "Example Theme", "description": "...", "relatedGoalIds": ["goal-example"], "attributes": {} }
