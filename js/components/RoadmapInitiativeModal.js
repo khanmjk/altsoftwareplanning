@@ -224,7 +224,7 @@ class RoadmapInitiativeModal {
         // Goals
         const goalSelect = document.getElementById('roadmapModalGoalSelect');
         const goals = [
-            ...(window.currentSystemData.strategicGoals || []),
+            ...(window.currentSystemData.goals || []),
             ...(window.currentSystemData.subGoals || [])
         ];
         goalSelect.innerHTML = '<option value="">-- None --</option>' +

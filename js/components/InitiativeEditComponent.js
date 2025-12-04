@@ -140,7 +140,7 @@ class InitiativeEditComponent {
         const themesOptions = (this.systemData.definedThemes || []).map(t => ({ value: t.themeId, text: t.name }));
         details.appendChild(this._createMultiSelectGroup('Themes', 'themes', init.themes || [], themesOptions, index));
 
-        const goalsOptions = [...(this.systemData.strategicGoals || []), ...(this.systemData.subGoals || [])]
+        const goalsOptions = [...(this.systemData.goals || []), ...(this.systemData.subGoals || [])]
             .map(g => ({ value: g.goalId, text: g.name || g.goalId }));
         details.appendChild(this._createSelectGroup('Primary Goal', 'primaryGoalId', init.primaryGoalId, goalsOptions, index, true));
 

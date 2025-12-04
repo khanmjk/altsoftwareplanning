@@ -245,8 +245,8 @@ class ManagementView {
 
     populateGoalsList() {
         const listContainer = document.getElementById('goalsList_mgmt');
-        if (listContainer && window.currentSystemData && window.currentSystemData.strategicGoals) {
-            const goals = window.currentSystemData.strategicGoals;
+        if (listContainer && window.currentSystemData && window.currentSystemData.goals) {
+            const goals = window.currentSystemData.goals;
             if (goals.length > 0) {
                 listContainer.innerHTML = goals.map(g => `
             < div class="management-item" >
