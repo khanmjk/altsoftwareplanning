@@ -11,6 +11,7 @@ class ManagementView {
         this.pillNav = null;
         this.themeEditComponent = null;
         this.initiativeEditComponent = null;
+        this.goalEditComponent = null;
 
         // Bind events
         this._boundContainerClick = this.handleContainerClick.bind(this);
@@ -119,6 +120,8 @@ class ManagementView {
             this.editInitiative(initiativeId);
         } else if (action === 'delete-initiative' && initiativeId) {
             this.deleteInitiative(initiativeId);
+        } else if (action === 'add-goal') {
+            this.addNewGoal();
         }
     }
 
@@ -230,33 +233,60 @@ class ManagementView {
     // --- GOALS TAB ---
     renderGoalsTab() {
         return `
-            < div class="management-section-header" >
+            <div class="management-section-header">
                 <h3>Strategic Goals</h3>
-            </div >
-            <div class="settings-alert" style="margin-bottom: 20px; background-color: #e3f2fd; color: #0d47a1; padding: 12px; border-radius: 4px; border: 1px solid #bbdefb;">
-                <p style="margin: 0;"><i class="fas fa-info-circle"></i> Goal management is coming soon in a future update.</p>
             </div>
-            
-            <div id="goalsList_mgmt" class="management-list-container">
-                <p class="management-list-empty">No goals defined.</p>
+            <div id="goalsListContainer">
+                <!-- Goals will be rendered here by GoalEditComponent -->
+            </div>
+            <div class="management-list-actions">
+                <button class="btn btn-primary" data-action="add-goal">
+                    <i class="fas fa-plus"></i> Add Goal
+                </button>
             </div>
         `;
     }
 
     populateGoalsList() {
-        const listContainer = document.getElementById('goalsList_mgmt');
-        if (listContainer && window.currentSystemData && window.currentSystemData.goals) {
-            const goals = window.currentSystemData.goals;
-            if (goals.length > 0) {
-                listContainer.innerHTML = goals.map(g => `
-            < div class="management-item" >
-                <div class="management-item-header" style="cursor: default;">
-                    <span class="management-item-indicator" style="visibility: hidden;">-</span>
-                    <span class="management-item-title">${g.name || 'Unnamed Goal'}</span>
-                </div>
-                    </div >
-            `).join('');
-            }
+        if (!window.currentSystemData) return;
+
+        // Initialize GoalEditComponent
+        if (!this.goalEditComponent) {
+            this.goalEditComponent = new GoalEditComponent('goalsListContainer', window.currentSystemData);
+        } else {
+            this.goalEditComponent.systemData = window.currentSystemData;
+            this.goalEditComponent.containerId = 'goalsListContainer';
+        }
+        this.goalEditComponent.render();
+    }
+
+    addNewGoal() {
+        if (!window.currentSystemData.goals) {
+            window.currentSystemData.goals = [];
+        }
+
+        window.currentSystemData.goals.push({
+            goalId: 'goal-' + Date.now(),
+            name: 'New Strategic Goal',
+            description: '',
+            strategyLink: '',
+            owner: null,
+            projectManager: null,
+            technicalPOC: null,
+            initiativeIds: [],
+            attributes: {}
+        });
+
+        // Refresh Component
+        if (this.goalEditComponent) {
+            this.goalEditComponent.expandedIndex = window.currentSystemData.goals.length - 1; // Expand new
+            this.goalEditComponent.render();
+
+            // Scroll to bottom
+            setTimeout(() => {
+                const container = document.getElementById('goalsListContainer');
+                if (container) container.scrollTop = container.scrollHeight;
+            }, 100);
         }
     }
 }
