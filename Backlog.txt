@@ -182,10 +182,39 @@ IN PROGRESS
 
 - [TECH DEBT] - Enhance the codebase to be more modular, portable, separate concerns
 -- [TD UX] - Enhance the workspace UX feature, move away from antiquated form views and caroussels - the page needs to be seen as an integrated part of the workspace view
+[Feature] - Goals tracking and management. 
+Goals should have statuses (rules should be configurable on app settings): 
+[Green] Not Started - Ok, 
+[Amber] Not Started - At Risk, 
+[Green] In Progress - OK, 
+[Amber] In Progress - At Risk, 
+[Red] In Progress - Slipping,
+[Red] In Progress - Slipped Original Due Date, New Due Date Set
+[Green] In Progress - On Track [New Due Date],
+[Red] Slipped - Did Not Meet [regardless of original date or new due date]
+[Green] Completed [Within orginal due date]
+[Green with warning exclamation] Completed Late
+[Red] No Due Date Set [assumes no deadline, inherit end date of last initiative]
+[Red] No initiatives linked - a goal should not have empty initiatives
+
+
+Logic needs to be linked to initiative delivery dates, and initiative due dates linked to WP delivery dates
+A goals planned end date inherits the last initative's end date
+Status rules trigger a call to action when there is a conflict with the last initiative's end date exceeding the due date for the goal
+A goal therefore needs to have additional attributes in its data structure - code already supports extensible attributes
+The goals dashboard cards status must align with the product management view pages for goals management
+
+[Goals Management] Show pills on goals list just like the initiative lists that shows status of the initiative
+
+[Feature] Add a feedback workflow to the app, similar to antivgravity "Provide Feedback" in side panel. Feedback must push to
+the gitgub issues tracker to keep track of user feedback requests
+
 
 ------
 TO DO
 ------  
+- [Feature] More integrated planning tuning using capacity tuning feature - account for team member leave calendars
+- [Feature] More intelligent scheduling in gantt table planning, assign resources and calculate end dates automatically
 - [AI] Tune the system prompt so the AI created systems include rich planning metadata for goals, initiatives, work packages, tasks, start date, end date, etc.
 - [AI] - Ability to export the year plan, showing ATL/BTL logic, etc. to Excel - the excel model must be generated using LLM so that formulaes in the code are applied to the excel generation
 - Now that we have a goals dashboard view, we need to think about introducing an interface to manage the lifecycle of goals
