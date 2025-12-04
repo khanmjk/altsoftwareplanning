@@ -156,9 +156,9 @@ class InitiativeEditComponent {
         const currentOwnerVal = init.owner ? `${init.owner.type}:${init.owner.id}` : '';
         grid2.appendChild(this._createSelectGroup('Owner', 'owner', currentOwnerVal, owners, index, true));
 
-        const tpms = (this.systemData.tpms || []).map(p => ({ value: `tpm:${p.tpmId}`, text: `${p.tpmName} (TPM)` }));
+        const pms = (this.systemData.projectManagers || []).map(p => ({ value: `projectManager:${p.pmId}`, text: `${p.pmName} (PgM)` }));
         const currentPmVal = init.projectManager ? `${init.projectManager.type}:${init.projectManager.id}` : '';
-        grid2.appendChild(this._createSelectGroup('Project Manager', 'projectManager', currentPmVal, tpms, index, true));
+        grid2.appendChild(this._createSelectGroup('Project Manager', 'projectManager', currentPmVal, pms, index, true));
 
         details.appendChild(grid2);
 
