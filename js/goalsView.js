@@ -172,6 +172,7 @@ function renderGoalsView() {
                 </div>
             </div>
             <div class="goal-ownership">
+                <strong>Due Date:</strong> ${goal.dueDate || 'N/A'}<br>
                 <strong>Owner:</strong> ${goal.owner?.name || 'N/A'}<br>
                 <strong>Project Manager:</strong> ${goal.projectManager?.name || 'N/A'}<br>
                 <strong>Technical POC:</strong> ${goal.technicalPOC?.name || 'N/A'}
