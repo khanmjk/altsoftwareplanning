@@ -261,32 +261,10 @@ class ManagementView {
     }
 
     addNewGoal() {
-        if (!window.currentSystemData.goals) {
-            window.currentSystemData.goals = [];
-        }
-
-        window.currentSystemData.goals.push({
-            goalId: 'goal-' + Date.now(),
-            name: 'New Strategic Goal',
-            description: '',
-            strategyLink: '',
-            owner: null,
-            projectManager: null,
-            technicalPOC: null,
-            initiativeIds: [],
-            attributes: {}
-        });
-
-        // Refresh Component
         if (this.goalEditComponent) {
-            this.goalEditComponent.expandedIndex = window.currentSystemData.goals.length - 1; // Expand new
-            this.goalEditComponent.render();
-
-            // Scroll to bottom
-            setTimeout(() => {
-                const container = document.getElementById('goalsListContainer');
-                if (container) container.scrollTop = container.scrollHeight;
-            }, 100);
+            this.goalEditComponent.startNewGoal();
+        } else {
+            console.error('GoalEditComponent not initialized');
         }
     }
 }

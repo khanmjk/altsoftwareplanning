@@ -8,6 +8,35 @@ class GoalEditComponent {
         this.containerId = containerId;
         this.systemData = systemData;
         this.expandedIndex = -1;
+        this.draftGoal = null; // New property for draft mode
+    }
+
+    startNewGoal() {
+        if (this.draftGoal) {
+            window.notificationManager.showToast('You already have an unsaved goal.', 'warning');
+            return;
+        }
+
+        this.draftGoal = {
+            goalId: 'goal-' + Date.now(),
+            name: 'New Strategic Goal',
+            description: '',
+            strategyLink: '',
+            owner: null,
+            projectManager: null,
+            technicalPOC: null,
+            initiativeIds: [],
+            attributes: {}
+        };
+
+        this.expandedIndex = 'draft'; // Special index for draft
+        this.render();
+
+        // Scroll to bottom
+        setTimeout(() => {
+            const container = document.getElementById(this.containerId);
+            if (container) container.scrollTop = container.scrollHeight;
+        }, 100);
     }
 
     render() {
@@ -17,45 +46,56 @@ class GoalEditComponent {
             return;
         }
         container.innerHTML = '';
-        container.className = 'goal-edit-list';
+        container.className = 'inline-edit-list';
 
         if (!this.systemData.goals) {
             this.systemData.goals = [];
         }
 
-        if (this.systemData.goals.length === 0) {
-            container.innerHTML = '<p class="goal-edit-list-empty">No strategic goals defined. Click "Add Goal" to create one.</p>';
+        const hasItems = this.systemData.goals.length > 0;
+        const hasDraft = !!this.draftGoal;
+
+        if (!hasItems && !hasDraft) {
+            container.innerHTML = '<p class="inline-edit-list-empty">No strategic goals defined. Click "Add Goal" to create one.</p>';
             return;
         }
 
+        // Render existing items
         this.systemData.goals.forEach((goal, index) => {
             container.appendChild(this._createGoalItem(goal, index));
         });
+
+        // Render draft item if exists
+        if (this.draftGoal) {
+            container.appendChild(this._createGoalItem(this.draftGoal, 'draft'));
+        }
     }
 
     _createGoalItem(goal, index) {
+        const isDraft = index === 'draft';
         const itemDiv = document.createElement('div');
-        itemDiv.className = 'goal-edit-item';
+        itemDiv.className = 'inline-edit-item';
         itemDiv.setAttribute('data-goal-index', index);
 
         // Header
         const header = document.createElement('div');
-        header.className = 'goal-edit-header';
+        header.className = 'inline-edit-header';
 
         const indicator = document.createElement('span');
-        indicator.className = 'goal-edit-indicator';
+        indicator.className = 'inline-edit-indicator';
         indicator.innerText = (index === this.expandedIndex) ? '- ' : '+ ';
 
         const titleText = document.createElement('span');
-        titleText.className = 'goal-edit-title';
+        titleText.className = 'inline-edit-title';
         titleText.innerText = goal.name || 'New Goal';
+        if (isDraft) titleText.innerText += ' (Unsaved)';
 
         header.appendChild(indicator);
         header.appendChild(titleText);
 
         // Details Container
         const details = document.createElement('div');
-        details.className = 'goal-edit-details';
+        details.className = 'inline-edit-details';
         if (index === this.expandedIndex) {
             details.classList.add('expanded');
         }
@@ -83,11 +123,12 @@ class GoalEditComponent {
 
         // 2. People
         const grid = document.createElement('div');
-        grid.className = 'goal-edit-grid';
+        grid.className = 'inline-edit-grid';
 
         const owners = [
             ...(this.systemData.seniorManagers || []).map(p => ({ value: `seniorManager:${p.seniorManagerId}`, text: `${p.seniorManagerName} (Sr Mgr)` })),
-            ...(this.systemData.sdms || []).map(p => ({ value: `sdm:${p.sdmId}`, text: `${p.sdmName} (SDM)` }))
+            ...(this.systemData.sdms || []).map(p => ({ value: `sdm:${p.sdmId}`, text: `${p.sdmName} (SDM)` })),
+            ...(this.systemData.pmts || []).map(p => ({ value: `pmt:${p.pmtId}`, text: `${p.pmtName} (PMT)` }))
         ];
         const currentOwnerVal = goal.owner ? `${goal.owner.type}:${goal.owner.id}` : '';
         grid.appendChild(this._createSelectGroup('Owner', 'owner', currentOwnerVal, owners, index, true));
@@ -102,7 +143,60 @@ class GoalEditComponent {
 
         details.appendChild(grid);
 
-        // 3. Linked Initiatives
+        // 3. Strategic Context (Themes & ROI)
+        const contextGrid = document.createElement('div');
+        contextGrid.className = 'inline-edit-grid';
+
+        // Related Themes (Dynamic - Derived from Linked Initiatives)
+        // Logic: Find all linked initiatives -> collect their themes -> unique list
+        const linkedInitiatives = (this.systemData.yearlyInitiatives || []).filter(i => (goal.initiativeIds || []).includes(i.initiativeId));
+
+        const uniqueThemeIds = new Set();
+        linkedInitiatives.forEach(init => {
+            if (init.themes && Array.isArray(init.themes)) {
+                init.themes.forEach(tId => uniqueThemeIds.add(tId));
+            }
+        });
+
+        const relatedThemes = (this.systemData.definedThemes || []).filter(t => uniqueThemeIds.has(t.themeId));
+
+        const themesList = relatedThemes.length > 0
+            ? relatedThemes.map(t => `<span class="goal-theme-tag">${t.name}</span>`).join('')
+            : '<span class="text-muted">No themes linked via initiatives.</span>';
+
+        const themesDiv = document.createElement('div');
+        themesDiv.className = 'inline-edit-form-group';
+        themesDiv.innerHTML = `<label class="inline-edit-label">Related Themes (via Initiatives)</label><div class="inline-edit-static-value">${themesList}</div>`;
+        contextGrid.appendChild(themesDiv);
+
+        // Aggregated ROI (Read-Only)
+        let roiSummary = 'No linked initiatives.';
+
+        if (linkedInitiatives.length > 0) {
+            const roiMap = {};
+            linkedInitiatives.forEach(init => {
+                if (init.roi && init.roi.category) {
+                    if (!roiMap[init.roi.category]) roiMap[init.roi.category] = 0;
+                    roiMap[init.roi.category]++;
+                }
+            });
+
+            const roiParts = Object.entries(roiMap).map(([cat, count]) => `${count} ${cat}`);
+            if (roiParts.length > 0) {
+                roiSummary = roiParts.join(', ');
+            } else {
+                roiSummary = `${linkedInitiatives.length} initiatives (No ROI data)`;
+            }
+        }
+
+        const roiDiv = document.createElement('div');
+        roiDiv.className = 'inline-edit-form-group';
+        roiDiv.innerHTML = `<label class="inline-edit-label">Aggregated ROI Impact</label><div class="inline-edit-static-value"><strong>${roiSummary}</strong></div>`;
+        contextGrid.appendChild(roiDiv);
+
+        details.appendChild(contextGrid);
+
+        // 4. Linked Initiatives
         const initiativesOptions = (this.systemData.yearlyInitiatives || [])
             .map(i => ({ value: i.initiativeId, text: i.title || 'Untitled Initiative' }));
 
@@ -113,16 +207,16 @@ class GoalEditComponent {
 
         // Action Buttons
         const actionsDiv = document.createElement('div');
-        actionsDiv.className = 'goal-edit-actions';
+        actionsDiv.className = 'inline-edit-actions';
 
         const saveBtn = document.createElement('button');
         saveBtn.className = 'btn btn-primary';
-        saveBtn.innerText = 'Save Changes';
+        saveBtn.innerText = isDraft ? 'Create Goal' : 'Save Changes';
         saveBtn.onclick = () => this._saveGoal(index);
 
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'btn btn-danger';
-        deleteBtn.innerText = 'Delete Goal';
+        deleteBtn.innerText = isDraft ? 'Cancel' : 'Delete Goal';
         deleteBtn.style.marginLeft = '10px';
         deleteBtn.onclick = () => this._deleteGoal(index);
 
@@ -138,20 +232,20 @@ class GoalEditComponent {
 
     _createFormGroup(labelText, inputType, fieldName, value, index) {
         const group = document.createElement('div');
-        group.className = 'goal-edit-form-group';
+        group.className = 'inline-edit-form-group';
 
         const label = document.createElement('label');
-        label.className = 'goal-edit-label';
+        label.className = 'inline-edit-label';
         label.innerText = labelText;
 
         let input;
         if (inputType === 'textarea') {
             input = document.createElement('textarea');
-            input.className = 'goal-edit-textarea';
+            input.className = 'inline-edit-textarea';
             input.rows = 3;
         } else {
             input = document.createElement('input');
-            input.className = 'goal-edit-input';
+            input.className = 'inline-edit-input';
             input.type = inputType;
         }
 
@@ -168,14 +262,14 @@ class GoalEditComponent {
 
     _createSelectGroup(labelText, fieldName, selectedValue, options, index, hasNoneOption = false) {
         const group = document.createElement('div');
-        group.className = 'goal-edit-form-group';
+        group.className = 'inline-edit-form-group';
 
         const label = document.createElement('label');
-        label.className = 'goal-edit-label';
+        label.className = 'inline-edit-label';
         label.innerText = labelText;
 
         const select = document.createElement('select');
-        select.className = 'goal-edit-select';
+        select.className = 'inline-edit-select';
 
         if (hasNoneOption) {
             select.appendChild(new Option('-- None --', ''));
@@ -196,6 +290,9 @@ class GoalEditComponent {
                 if (val) {
                     const [type, id] = val.split(':');
                     val = { type, id };
+
+                    // Special case for PMT to match data model expectations if needed
+                    // But 'pmt' type is standard in our systemData
                 } else {
                     val = null;
                 }
@@ -210,14 +307,14 @@ class GoalEditComponent {
 
     _createMultiSelectGroup(labelText, fieldName, selectedValues, options, index) {
         const group = document.createElement('div');
-        group.className = 'goal-edit-form-group';
+        group.className = 'inline-edit-form-group';
 
         const label = document.createElement('label');
-        label.className = 'goal-edit-label';
+        label.className = 'inline-edit-label';
         label.innerText = labelText;
 
         const select = document.createElement('select');
-        select.className = 'goal-edit-select';
+        select.className = 'inline-edit-select';
         select.multiple = true;
         select.size = 6; // Slightly larger for better visibility
 
@@ -245,7 +342,13 @@ class GoalEditComponent {
     }
 
     _updateField(index, fieldName, value) {
-        const goal = this.systemData.goals[index];
+        let goal;
+        if (index === 'draft') {
+            goal = this.draftGoal;
+        } else {
+            goal = this.systemData.goals[index];
+        }
+
         if (!goal) return;
 
         if (fieldName === 'initiativeIds') {
@@ -275,20 +378,35 @@ class GoalEditComponent {
             });
 
             goal.initiativeIds = newIds;
+
+            // Re-render to update Derived Themes and ROI
+            // We need to save the expanded state or just re-render the item content?
+            // For simplicity, let's re-render the whole list but keep expanded index
+            this.render();
+
         } else {
             goal[fieldName] = value;
         }
 
         // Update Header if Name changed
         if (fieldName === 'name') {
-            const item = document.querySelector(`.goal-edit-item[data-goal-index="${index}"]`);
+            const item = document.querySelector(`.inline-edit-item[data-goal-index="${index}"]`);
             if (item) {
-                item.querySelector('.goal-edit-title').innerText = value || 'New Goal';
+                let title = value || 'New Goal';
+                if (index === 'draft') title += ' (Unsaved)';
+                item.querySelector('.inline-edit-title').innerText = title;
             }
         }
     }
 
     async _deleteGoal(index) {
+        if (index === 'draft') {
+            this.draftGoal = null;
+            this.expandedIndex = -1;
+            this.render();
+            return;
+        }
+
         if (await window.notificationManager.confirm('Are you sure you want to delete this goal?', 'Delete Goal', { confirmStyle: 'danger' })) {
             const goal = this.systemData.goals[index];
 
@@ -310,13 +428,29 @@ class GoalEditComponent {
     }
 
     _saveGoal(index) {
-        const goal = this.systemData.goals[index];
+        let goal;
+        if (index === 'draft') {
+            goal = this.draftGoal;
+        } else {
+            goal = this.systemData.goals[index];
+        }
+
         if (!goal.name || goal.name.trim() === '') {
             window.notificationManager.showToast('Goal Name is required.', 'warning');
             return;
         }
 
-        window.notificationManager.showToast('Goal saved successfully.', 'success');
+        if (index === 'draft') {
+            // Commit draft
+            this.systemData.goals.push(goal);
+            this.draftGoal = null;
+            this.expandedIndex = -1;
+            window.notificationManager.showToast('Goal created successfully.', 'success');
+            this.render();
+        } else {
+            window.notificationManager.showToast('Goal saved successfully.', 'success');
+        }
+
         if (window.saveSystemData) window.saveSystemData();
     }
 }
