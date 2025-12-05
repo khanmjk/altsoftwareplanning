@@ -863,7 +863,8 @@ function renderPlanningView(container) {
 
     // Ensure Metrics
     if (!currentSystemData.calculatedCapacityMetrics) {
-        currentSystemData.calculatedCapacityMetrics = calculateAllCapacityMetrics();
+        const capacityEngine = new CapacityEngine(currentSystemData);
+        currentSystemData.calculatedCapacityMetrics = capacityEngine.calculateAllMetrics();
     }
 
     // Render Tables

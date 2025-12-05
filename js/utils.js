@@ -2,34 +2,7 @@
 const ALL_INITIATIVE_STATUSES = ['Backlog', 'Defined', 'Committed', 'Completed'];
 
 
-// --- Helper for Input Warnings (Phase 7a) ---
-const updateInputWarning = (inputElement, message) => {
-    let warningSpan = inputElement.nextElementSibling;
-    // Check if the next sibling is ALREADY the warning span we created
-    if (warningSpan && warningSpan.classList.contains('input-warning')) {
-        // Update existing warning
-        warningSpan.textContent = message ? ' ⚠️' : ''; // Show icon only if there's a message
-        warningSpan.title = message || ''; // Set tooltip message
-        warningSpan.style.display = message ? 'inline' : 'none'; // Hide span if no message
-    } else if (message) {
-        // Create NEW warning span if there's a message and no span exists
-        warningSpan = document.createElement('span');
-        warningSpan.className = 'input-warning';
-        warningSpan.textContent = ' ⚠️';
-        warningSpan.title = message;
-        warningSpan.style.color = 'orange';
-        warningSpan.style.cursor = 'help';
-        warningSpan.style.marginLeft = '3px'; // Add a little space
-        warningSpan.style.display = 'inline'; // Ensure it's visible
-        // Insert the span immediately after the input element
-        inputElement.parentNode.insertBefore(warningSpan, inputElement.nextSibling);
-    }
-    // Update the input's own title to include the warning (if any)
-    // Ensure original title exists before appending
-    const originalTitle = inputElement.dataset.originalTitle || '';
-    inputElement.title = originalTitle + (message ? `\nWarning: ${message}` : '');
-};
-// --- End Helper ---
+
 
 /**
  * Helper: Calculates total standard leave days per SDE for a team.
@@ -124,57 +97,7 @@ function getTeamNameById(teamId) {
     return team ? (team.teamIdentity || team.teamName) : teamId;
 }
 
-/** Helper to create Label + Input pairs (Revised for BIS display update) */
-function createInputLabelPair(id, labelText, value, type = 'text', index, field, isReadOnly = false, tooltip = null) {
-    let div = document.createElement('div');
-    div.style.marginBottom = '10px';
-    let label = document.createElement('label');
-    label.htmlFor = id;
-    label.innerText = labelText;
-    label.style.display = 'block';
-    if (tooltip) {
-        label.title = tooltip; // Add tooltip to label if provided
-    }
 
-    let inputElement; // Could be input, textarea, or span
-
-    if (isReadOnly) {
-        inputElement = document.createElement('span');
-        inputElement.id = id;
-        inputElement.textContent = value;
-        inputElement.style.fontWeight = 'bold'; // Make read-only values stand out
-        if (tooltip) {
-            inputElement.title = tooltip; // Add tooltip to value span as well
-        }
-    } else if (type === 'textarea') {
-        inputElement = document.createElement('textarea');
-        inputElement.rows = 2;
-        inputElement.style.width = '90%';
-        inputElement.id = id;
-        inputElement.value = value;
-        inputElement.setAttribute('data-team-index', index);
-        inputElement.setAttribute('data-field', field);
-        inputElement.addEventListener('change', handleTeamInputChange); // Use generic handler
-    } else { // Default to input
-        inputElement = document.createElement('input');
-        inputElement.type = type;
-        if (type === 'number') {
-            inputElement.min = 0;
-            // Add step=1 for integer headcount fields if needed
-            if (field === 'fundedHeadcount') inputElement.step = 1;
-        }
-        inputElement.style.width = '90%';
-        inputElement.id = id;
-        inputElement.value = value;
-        inputElement.setAttribute('data-team-index', index);
-        inputElement.setAttribute('data-field', field);
-        inputElement.addEventListener('change', handleTeamInputChange); // Use generic handler
-    }
-
-    div.appendChild(label);
-    div.appendChild(inputElement);
-    return div;
-}
 
 /** Helper to create Dual List Selectors */
 function createDualListContainer(contextIndex, leftLabel, rightLabel, currentOptions, availableOptions, leftField, rightField, moveCallback, multiSelectLeft = true, allowAddNew = false, addNewPlaceholder = '', addNewCallback = null) {

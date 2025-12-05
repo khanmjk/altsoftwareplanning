@@ -1,0 +1,285 @@
+/**
+ * CapacityDashboardView.js
+ * 
+ * Dashboard component for analyzing capacity.
+ * Features KPI cards, Waterfall Chart, and detailed Summary Table.
+ */
+class CapacityDashboardView {
+    constructor() {
+        this.container = null;
+        this.capacityEngine = new CapacityEngine(window.currentSystemData);
+        this.currentScenario = 'EffectiveBIS'; // Default
+        this.currentChartTeamId = '__ORG_VIEW__';
+    }
+
+    render(container) {
+        this.container = container;
+        this.container.innerHTML = '';
+
+        // Update Data
+        this.capacityEngine.updateSystemData(window.currentSystemData);
+        const metrics = this.capacityEngine.calculateAllMetrics();
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'capacity-dashboard-view';
+
+        // 1. Controls Row (Scenario Selector)
+        this._renderControls(wrapper);
+
+        // 2. KPI Cards
+        this._renderKPICards(wrapper, metrics);
+
+        // 3. Chart Section
+        this._renderChartSection(wrapper, metrics);
+
+        // 4. Summary Table
+        this._renderSummaryTable(wrapper, metrics);
+
+        this.container.appendChild(wrapper);
+    }
+
+    _renderControls(parent) {
+        const row = document.createElement('div');
+        row.className = 'capacity-dashboard-controls';
+
+        const label = document.createElement('span');
+        label.textContent = 'Analysis Scenario:';
+        label.className = 'capacity-dashboard-controls__label';
+        row.appendChild(label);
+
+        const select = document.createElement('select');
+        select.className = 'form-control capacity-dashboard-controls__select';
+
+        const options = [
+            { val: 'EffectiveBIS', text: 'Effective BIS (Actual + Borrowed)' },
+            { val: 'TeamBIS', text: 'Team BIS (Actual Only)' },
+            { val: 'FundedHC', text: 'Funded Headcount (Budget)' }
+        ];
+
+        options.forEach(opt => {
+            const o = document.createElement('option');
+            o.value = opt.val;
+            o.textContent = opt.text;
+            if (opt.val === this.currentScenario) o.selected = true;
+            select.appendChild(o);
+        });
+
+        select.onchange = (e) => {
+            this.currentScenario = e.target.value;
+            this.render(this.container); // Re-render entire dashboard
+        };
+
+        row.appendChild(select);
+        parent.appendChild(row);
+    }
+
+    _renderKPICards(parent, metrics) {
+        const totals = metrics.totals[this.currentScenario];
+        const row = document.createElement('div');
+        row.className = 'capacity-kpi-row';
+
+        const createCard = (title, value, subtext, colorClass) => {
+            const card = document.createElement('div');
+            card.className = `card text-white bg-${colorClass} capacity-kpi-card`;
+
+            const h5 = document.createElement('h5');
+            h5.className = 'card-title capacity-kpi-card__title';
+            h5.textContent = title;
+            card.appendChild(h5);
+
+            const h2 = document.createElement('h2');
+            h2.className = 'card-text capacity-kpi-card__value';
+            h2.textContent = value;
+            card.appendChild(h2);
+
+            const p = document.createElement('p');
+            p.className = 'card-text capacity-kpi-card__subtext';
+            p.textContent = subtext;
+            card.appendChild(p);
+
+            return card;
+        };
+
+        // Gross
+        row.appendChild(createCard('Gross Capacity', totals.grossYrs.toFixed(1), 'Total SDE Years (Raw)', 'secondary'));
+
+        // Deductions
+        row.appendChild(createCard('Total Deductions', `-${totals.deductYrs.toFixed(1)}`, 'Leave, Holidays, Overhead', 'danger'));
+
+        // AI Gain
+        const aiGain = totals.deductionsBreakdown.aiProductivityGainYrs || 0;
+        row.appendChild(createCard('AI Productivity Gain', `+${aiGain.toFixed(1)}`, 'Efficiency Uplift', 'success'));
+
+        // Net
+        row.appendChild(createCard('Net Project Capacity', totals.netYrs.toFixed(1), 'Available for Roadmap', 'primary'));
+
+        parent.appendChild(row);
+    }
+
+    _renderChartSection(parent, metrics) {
+        const section = document.createElement('div');
+        section.className = 'card capacity-chart-section';
+
+        const header = document.createElement('div');
+        header.className = 'capacity-chart-header';
+
+        const title = document.createElement('h4');
+        title.textContent = 'Capacity Waterfall Analysis';
+        header.appendChild(title);
+
+        // Team Filter for Chart
+        const filter = document.createElement('select');
+        filter.className = 'form-control form-control-sm capacity-chart-filter';
+
+        const orgOpt = document.createElement('option');
+        orgOpt.value = '__ORG_VIEW__';
+        orgOpt.textContent = 'Entire Organization';
+        filter.appendChild(orgOpt);
+
+        (window.currentSystemData.teams || []).forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t.teamId;
+            opt.textContent = t.teamIdentity || t.teamName;
+            if (t.teamId === this.currentChartTeamId) opt.selected = true;
+            filter.appendChild(opt);
+        });
+
+        filter.onchange = (e) => {
+            this.currentChartTeamId = e.target.value;
+            this._drawChart(canvas, metrics);
+        };
+        header.appendChild(filter);
+        section.appendChild(header);
+
+        const canvasContainer = document.createElement('div');
+        canvasContainer.className = 'capacity-chart-container';
+
+        const canvas = document.createElement('canvas');
+        canvasContainer.appendChild(canvas);
+        section.appendChild(canvasContainer);
+
+        parent.appendChild(section);
+
+        // Draw Chart (defer slightly to ensure DOM is ready)
+        setTimeout(() => this._drawChart(canvas, metrics), 0);
+    }
+
+    _drawChart(canvas, metrics) {
+        if (this.chartInstance) {
+            this.chartInstance.destroy();
+        }
+
+        let data;
+        if (this.currentChartTeamId === '__ORG_VIEW__') {
+            data = metrics.totals[this.currentScenario];
+        } else {
+            data = metrics[this.currentChartTeamId]?.[this.currentScenario];
+        }
+
+        if (!data) return;
+
+        const bd = data.deductionsBreakdown;
+
+        const labels = ['Gross Capacity', 'Std Leave', 'Var Leave', 'Holidays', 'Org Events', 'Team Activities', 'Overhead', 'AI Gain', 'Net Capacity'];
+
+        const values = [
+            data.grossYrs,
+            -bd.stdLeaveYrs,
+            -bd.varLeaveYrs,
+            -bd.holidayYrs,
+            -bd.orgEventYrs,
+            -bd.teamActivityYrs,
+            -bd.overheadYrs,
+            bd.aiProductivityGainYrs,
+            data.netYrs
+        ];
+
+        const bgColors = [
+            '#6c757d', // Gross (Grey)
+            '#dc3545', '#dc3545', '#dc3545', '#dc3545', '#dc3545', '#dc3545', // Deductions (Red)
+            '#28a745', // AI Gain (Green)
+            '#007bff'  // Net (Blue)
+        ];
+
+        this.chartInstance = new Chart(canvas, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'SDE Years',
+                    data: values,
+                    backgroundColor: bgColors
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => `${ctx.raw.toFixed(2)} SDE Years`
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'SDE Years' }
+                    }
+                }
+            }
+        });
+    }
+
+    _renderSummaryTable(parent, metrics) {
+        const section = document.createElement('div');
+        section.className = 'capacity-summary-table';
+
+        const title = document.createElement('h4');
+        title.textContent = 'Detailed Team Breakdown';
+        section.appendChild(title);
+
+        const table = document.createElement('table');
+        table.className = 'table table-striped table-hover';
+
+        const thead = table.createTHead();
+        const headerRow = thead.insertRow();
+        ['Team', 'Headcount', 'Gross', 'Deductions', 'AI Gain', 'Net Capacity'].forEach(text => {
+            const th = document.createElement('th');
+            th.textContent = text;
+            headerRow.appendChild(th);
+        });
+
+        const tbody = table.createTBody();
+        const teams = window.currentSystemData.teams || [];
+
+        teams.forEach(team => {
+            const m = metrics[team.teamId]?.[this.currentScenario];
+            if (!m) return;
+
+            const row = tbody.insertRow();
+            row.insertCell().textContent = team.teamIdentity || team.teamName;
+            row.insertCell().textContent = m.totalHeadcount.toFixed(1);
+            row.insertCell().textContent = m.grossYrs.toFixed(2);
+
+            const dedCell = row.insertCell();
+            dedCell.textContent = `-${m.deductYrs.toFixed(2)}`;
+            dedCell.className = 'capacity-summary-deduction';
+
+            const aiCell = row.insertCell();
+            aiCell.textContent = `+${(m.deductionsBreakdown.aiProductivityGainYrs || 0).toFixed(2)}`;
+            aiCell.className = 'capacity-summary-gain';
+
+            const netCell = row.insertCell();
+            netCell.textContent = m.netYrs.toFixed(2);
+            netCell.className = 'capacity-summary-net';
+            if (m.netYrs <= 0) netCell.classList.add('capacity-summary-net--negative');
+        });
+
+        section.appendChild(table);
+        parent.appendChild(section);
+    }
+}
+
+window.CapacityDashboardView = CapacityDashboardView;
