@@ -1027,6 +1027,8 @@ class OrgView {
         if (engineer) {
             engineer.level = newLevel;
             if (window.saveSystemChanges) window.saveSystemChanges();
+            // [SYNC FIX] Update global capacity metrics
+            if (window.updateCapacityCalculationsAndDisplay) window.updateCapacityCalculationsAndDisplay();
             console.log(`Updated ${engineerName} to L${newLevel}`);
         } else {
             console.error(`Engineer ${engineerName} not found`);

@@ -363,6 +363,12 @@ function moveEngineerToTeam(engineerName, newTeamId) {
     }
 
     console.log(`moveEngineerToTeam: Moved ${engineerName} to ${normalizedNewTeamId || 'Unassigned'}.`);
+
+    // [SYNC FIX] Update global capacity metrics immediately after checking logic
+    if (typeof window.updateCapacityCalculationsAndDisplay === 'function') {
+        window.updateCapacityCalculationsAndDisplay();
+    }
+
     return engineer;
 }
 
