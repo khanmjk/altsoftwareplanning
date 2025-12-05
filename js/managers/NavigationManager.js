@@ -65,7 +65,12 @@ class NavigationManager {
             } else if (viewId === 'capacityConfigView') {
                 window.workspaceComponent.render(viewId, window.renderCapacityConfigView);
             } else if (viewId === 'sdmForecastingView') {
-                window.workspaceComponent.render(viewId, window.renderSdmForecastingView);
+                window.workspaceComponent.render(viewId, (container) => {
+                    if (!window.resourceForecastViewInstance) {
+                        window.resourceForecastViewInstance = new ResourceForecastView();
+                    }
+                    window.resourceForecastViewInstance.render(container);
+                });
             } else if (viewId === 'roadmapView') {
                 window.workspaceComponent.render(viewId, window.renderRoadmapView);
             } else if (viewId === 'managementView') {
@@ -140,7 +145,7 @@ class NavigationManager {
 
         // 4. Set Default Shell Metadata for Legacy Views
         // (Refactored views like 'roadmapView' handle this themselves)
-        const selfManagedViews = ['roadmapView', 'managementView', 'dashboardView', 'settingsView', 'helpView'];
+        const selfManagedViews = ['roadmapView', 'managementView', 'dashboardView', 'settingsView', 'helpView', 'sdmForecastingView'];
         if (window.workspaceComponent && !selfManagedViews.includes(viewId)) {
             let title = this.getViewTitle(viewId);
             let breadcrumbs = [];
