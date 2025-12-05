@@ -24,21 +24,50 @@
     padding: 20px;
 }
 
+.capacity-dashboard-controls-container {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    border: 1px solid #e9ecef;
+}
+
 .capacity-dashboard-controls {
     display: flex;
-    justify-content: flex-end;
-    margin-bottom: 20px;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 30px;
+    margin-bottom: 10px;
+}
+
+.capacity-control-group {
+    display: flex;
     align-items: center;
     gap: 10px;
 }
 
 .capacity-dashboard-controls__label {
-    font-weight: bold;
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.95rem;
 }
 
 .capacity-dashboard-controls__select {
     width: auto;
     display: inline-block;
+    min-width: 200px;
+}
+
+.capacity-dashboard-context-heading {
+    font-size: 1.1rem;
+    color: #343a40;
+    padding-top: 10px;
+    border-top: 1px solid #dee2e6;
+    margin-top: 5px;
+}
+
+.capacity-dashboard-context-heading strong {
+    color: var(--primary-color);
 }
 
 .capacity-kpi-row {

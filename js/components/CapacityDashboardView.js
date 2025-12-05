@@ -39,42 +39,106 @@ class CapacityDashboardView {
     }
 
     _renderControls(parent) {
+        const container = document.createElement('div');
+        container.className = 'capacity-dashboard-controls-container';
+
+        // 1. Controls Row
         const row = document.createElement('div');
         row.className = 'capacity-dashboard-controls';
 
-        const label = document.createElement('span');
-        label.textContent = 'Analysis Scenario:';
-        label.className = 'capacity-dashboard-controls__label';
-        row.appendChild(label);
+        // Scenario Selector
+        const scenGroup = document.createElement('div');
+        scenGroup.className = 'capacity-control-group';
+        const scenLabel = document.createElement('span');
+        scenLabel.textContent = 'Analysis Scenario:';
+        scenLabel.className = 'capacity-dashboard-controls__label';
+        scenGroup.appendChild(scenLabel);
 
-        const select = document.createElement('select');
-        select.className = 'form-control capacity-dashboard-controls__select';
-
-        const options = [
+        const scenSelect = document.createElement('select');
+        scenSelect.className = 'form-control capacity-dashboard-controls__select';
+        [
             { val: 'EffectiveBIS', text: 'Effective BIS (Actual + Borrowed)' },
             { val: 'TeamBIS', text: 'Team BIS (Actual Only)' },
             { val: 'FundedHC', text: 'Funded Headcount (Budget)' }
-        ];
-
-        options.forEach(opt => {
+        ].forEach(opt => {
             const o = document.createElement('option');
             o.value = opt.val;
             o.textContent = opt.text;
             if (opt.val === this.currentScenario) o.selected = true;
-            select.appendChild(o);
+            scenSelect.appendChild(o);
+        });
+        scenSelect.onchange = (e) => {
+            this.currentScenario = e.target.value;
+            this.render(this.container);
+        };
+        scenGroup.appendChild(scenSelect);
+        row.appendChild(scenGroup);
+
+        // Team Filter (Moved from Chart)
+        const teamGroup = document.createElement('div');
+        teamGroup.className = 'capacity-control-group';
+        const teamLabel = document.createElement('span');
+        teamLabel.textContent = 'View For:';
+        teamLabel.className = 'capacity-dashboard-controls__label';
+        teamGroup.appendChild(teamLabel);
+
+        const teamSelect = document.createElement('select');
+        teamSelect.className = 'form-control capacity-dashboard-controls__select';
+
+        const orgOpt = document.createElement('option');
+        orgOpt.value = '__ORG_VIEW__';
+        orgOpt.textContent = 'Entire Organization';
+        if (this.currentChartTeamId === '__ORG_VIEW__') orgOpt.selected = true;
+        teamSelect.appendChild(orgOpt);
+
+        (window.currentSystemData.teams || []).forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t.teamId;
+            opt.textContent = t.teamIdentity || t.teamName;
+            if (t.teamId === this.currentChartTeamId) opt.selected = true;
+            teamSelect.appendChild(opt);
         });
 
-        select.onchange = (e) => {
-            this.currentScenario = e.target.value;
-            this.render(this.container); // Re-render entire dashboard
+        teamSelect.onchange = (e) => {
+            this.currentChartTeamId = e.target.value;
+            this.render(this.container); // Re-render to update KPIs and Chart
         };
+        teamGroup.appendChild(teamSelect);
+        row.appendChild(teamGroup);
 
-        row.appendChild(select);
-        parent.appendChild(row);
+        container.appendChild(row);
+
+        // 2. Dynamic Heading
+        const heading = document.createElement('div');
+        heading.className = 'capacity-dashboard-context-heading';
+
+        const scenarioText = scenSelect.options[scenSelect.selectedIndex].text;
+        const teamText = teamSelect.options[teamSelect.selectedIndex].text;
+
+        heading.innerHTML = `Views reflect <strong>${scenarioText}</strong> for <strong>${teamText}</strong>`;
+        container.appendChild(heading);
+
+        parent.appendChild(container);
     }
 
     _renderKPICards(parent, metrics) {
-        const totals = metrics.totals[this.currentScenario];
+        // Determine data source based on selection
+        let data;
+        if (this.currentChartTeamId === '__ORG_VIEW__') {
+            data = metrics.totals[this.currentScenario];
+        } else {
+            data = metrics[this.currentChartTeamId]?.[this.currentScenario];
+        }
+
+        if (!data) {
+            // Handle edge case where team data might be missing
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-warning';
+            alert.textContent = 'No data available for this selection.';
+            parent.appendChild(alert);
+            return;
+        }
+
         const row = document.createElement('div');
         row.className = 'capacity-kpi-row';
 
@@ -101,17 +165,17 @@ class CapacityDashboardView {
         };
 
         // Gross
-        row.appendChild(createCard('Gross Capacity', totals.grossYrs.toFixed(1), 'Total SDE Years (Raw)', 'secondary'));
+        row.appendChild(createCard('Gross Capacity', data.grossYrs.toFixed(1), 'Total SDE Years (Raw)', 'secondary'));
 
         // Deductions
-        row.appendChild(createCard('Total Deductions', `-${totals.deductYrs.toFixed(1)}`, 'Leave, Holidays, Overhead', 'danger'));
+        row.appendChild(createCard('Total Deductions', `-${data.deductYrs.toFixed(1)}`, 'Leave, Holidays, Overhead', 'danger'));
 
         // AI Gain
-        const aiGain = totals.deductionsBreakdown.aiProductivityGainYrs || 0;
+        const aiGain = data.deductionsBreakdown.aiProductivityGainYrs || 0;
         row.appendChild(createCard('AI Productivity Gain', `+${aiGain.toFixed(1)}`, 'Efficiency Uplift', 'success'));
 
         // Net
-        row.appendChild(createCard('Net Project Capacity', totals.netYrs.toFixed(1), 'Available for Roadmap', 'primary'));
+        row.appendChild(createCard('Net Project Capacity', data.netYrs.toFixed(1), 'Available for Roadmap', 'primary'));
 
         parent.appendChild(row);
     }
@@ -127,28 +191,8 @@ class CapacityDashboardView {
         title.textContent = 'Capacity Waterfall Analysis';
         header.appendChild(title);
 
-        // Team Filter for Chart
-        const filter = document.createElement('select');
-        filter.className = 'form-control form-control-sm capacity-chart-filter';
+        // Removed local filter, now global
 
-        const orgOpt = document.createElement('option');
-        orgOpt.value = '__ORG_VIEW__';
-        orgOpt.textContent = 'Entire Organization';
-        filter.appendChild(orgOpt);
-
-        (window.currentSystemData.teams || []).forEach(t => {
-            const opt = document.createElement('option');
-            opt.value = t.teamId;
-            opt.textContent = t.teamIdentity || t.teamName;
-            if (t.teamId === this.currentChartTeamId) opt.selected = true;
-            filter.appendChild(opt);
-        });
-
-        filter.onchange = (e) => {
-            this.currentChartTeamId = e.target.value;
-            this._drawChart(canvas, metrics);
-        };
-        header.appendChild(filter);
         section.appendChild(header);
 
         const canvasContainer = document.createElement('div');
