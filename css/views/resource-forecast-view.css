@@ -248,24 +248,70 @@
 /* --- Markdown FAQ Styles --- */
 /* These styles target the content rendered from sdmResourceForecastingFAQ.md */
 
-#rf-faq-container h1,
-#rf-faq-container h2 {
-    font-size: 1.4rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-top: var(--spacing-xxl);
-    margin-bottom: var(--spacing-md);
+#rf-faq-container details {
+    margin-bottom: 0;
     border-bottom: 1px solid var(--border-color);
-    padding-bottom: var(--spacing-sm);
 }
 
-#rf-faq-container h3 {
-    font-size: 1.1rem;
+#rf-faq-container details:last-child {
+    border-bottom: none;
+}
+
+#rf-faq-container summary {
+    padding: 8px 0;
+    /* Reduced from 12px by ~33-40% */
+    cursor: pointer;
     font-weight: 600;
+    font-size: 1rem;
     color: var(--text-primary);
-    margin-top: var(--spacing-xl);
-    /* Reasonable gap between questions */
-    margin-bottom: var(--spacing-sm);
+    list-style: none;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s ease;
+}
+
+#rf-faq-container summary:hover {
+    color: var(--primary-color);
+}
+
+/* Custom marker */
+#rf-faq-container summary::before {
+    content: '+';
+    margin-right: 8px;
+    color: var(--text-tertiary);
+    font-family: monospace;
+    font-size: 1.2em;
+    width: 16px;
+    display: inline-block;
+    text-align: center;
+    font-weight: normal;
+}
+
+#rf-faq-container details[open] summary::before {
+    content: '-';
+}
+
+/* Hide default marker in WebKit */
+#rf-faq-container summary::-webkit-details-marker {
+    display: none;
+}
+
+/* Content within the details tag */
+#rf-faq-container details>*:not(summary) {
+    padding-left: 24px;
+    /* Indent content to align with text */
+    padding-bottom: var(--spacing-md);
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 #rf-faq-container p {
@@ -273,18 +319,36 @@
     color: var(--text-secondary);
     line-height: 1.6;
     margin-bottom: var(--spacing-md);
+    margin-top: 0;
 }
 
 #rf-faq-container ul {
-    padding-left: var(--spacing-lg);
+    padding-left: 20px;
+    /* Standard indentation */
     margin-bottom: var(--spacing-md);
+    margin-top: 0;
+    list-style-type: disc;
+    /* Level 1: Filled circle */
+}
+
+#rf-faq-container ul ul {
+    margin-top: 4px;
+    margin-bottom: 4px;
+    list-style-type: circle;
+    /* Level 2: Hollow circle */
 }
 
 #rf-faq-container li {
     font-size: var(--font-size-sm);
     color: var(--text-secondary);
     line-height: 1.6;
-    margin-bottom: 4px;
+    margin-bottom: 8px;
+    /* Slightly more space between items */
+}
+
+#rf-faq-container li>ul {
+    margin-bottom: 0;
+    /* Remove bottom margin for nested list wrapper */
 }
 
 #rf-faq-container strong {
