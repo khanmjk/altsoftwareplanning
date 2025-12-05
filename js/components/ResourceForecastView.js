@@ -441,7 +441,8 @@ class ResourceForecastView {
                         borderColor: '#8b5cf6', // Purple
                         backgroundColor: 'rgba(139, 92, 246, 0.1)',
                         fill: false,
-                        tension: 0.1
+                        tension: 0.1,
+                        yAxisID: 'y'
                     },
                     {
                         label: 'Ramped Up Engineers',
@@ -449,7 +450,8 @@ class ResourceForecastView {
                         borderColor: '#10b981', // Green
                         borderDash: [5, 5],
                         fill: false,
-                        tension: 0.1
+                        tension: 0.1,
+                        yAxisID: 'y'
                     },
                     {
                         label: 'Effective Engineers (Capacity)',
@@ -457,7 +459,17 @@ class ResourceForecastView {
                         borderColor: '#3b82f6', // Blue
                         backgroundColor: 'rgba(59, 130, 246, 0.2)',
                         fill: true,
-                        tension: 0.1
+                        tension: 0.1,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Cumulative Attrition',
+                        data: results.cumulativeAttritionArray,
+                        borderColor: '#f59e0b', // Orange
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        fill: false,
+                        tension: 0.1,
+                        yAxisID: 'y1'
                     },
                     {
                         label: 'Funded Target',
@@ -465,20 +477,57 @@ class ResourceForecastView {
                         borderColor: '#ef4444', // Red
                         borderWidth: 1,
                         pointRadius: 0,
-                        fill: false
+                        borderDash: [5, 5], // Dashed to match original
+                        fill: false,
+                        yAxisID: 'y'
                     }
                 ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
                 plugins: {
                     title: { display: true, text: '52-Week Resource Forecast' },
-                    tooltip: { mode: 'index', intersect: false }
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y.toFixed(2);
+                                }
+                                return label;
+                            }
+                        }
+                    }
                 },
                 scales: {
-                    x: { title: { display: true, text: 'Week' } },
-                    y: { title: { display: true, text: 'Engineers' }, min: 0 }
+                    x: {
+                        title: { display: true, text: 'Week' }
+                    },
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: { display: true, text: 'Engineers' },
+                        min: 0
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: { display: true, text: 'Cumulative Attrition' },
+                        min: 0,
+                        grid: {
+                            drawOnChartArea: false // only want the grid lines for one axis to show up
+                        }
+                    }
                 }
             }
         });
