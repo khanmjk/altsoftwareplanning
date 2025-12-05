@@ -1113,7 +1113,48 @@ function saveSystemChanges() {
 
 
 
+/**
+ * Centralized function to recalculate capacity metrics and refresh relevant views.
+ * Should be called whenever capacity inputs (config, team structure, forecasts) change.
+ */
+function updateCapacityCalculationsAndDisplay() {
+    console.log("[Capacity] Recalculating metrics...");
+    if (!currentSystemData) return;
 
+    // 1. Recalculate
+    const capacityEngine = new CapacityEngine(currentSystemData);
+    const metrics = capacityEngine.calculateAllMetrics();
+    currentSystemData.calculatedCapacityMetrics = metrics;
+
+    // 2. Refresh UI based on current view
+    // If we are in the Capacity Planning View (which contains Dashboard & Config)
+    if (window.workspaceComponent && window.workspaceComponent.currentViewId === 'capacityConfigView') {
+        // If the active component is the Dashboard, re-render it
+        // We can access the view instance if it's stored globally or via the container
+        // For now, we'll rely on the fact that CapacityPlanningView manages its own state.
+        // If we are strictly in the Dashboard sub-view, we might want to trigger a re-render.
+        // However, CapacityPlanningView.switchView('dashboard') does a fresh render.
+
+        // If we are just refreshing the data, we might need to find the active dashboard instance.
+        // A simpler approach for this legacy/hybrid codebase is to check if the dashboard container exists.
+        const dashboardContainer = document.querySelector('.capacity-dashboard-view');
+        if (dashboardContainer) {
+            // Re-instantiate dashboard to refresh data
+            const dashboard = new CapacityDashboardView();
+            // We need to find the container to render into. 
+            // The dashboard is usually inside #capacityPlanningContent
+            const contentContainer = document.getElementById('capacityPlanningContent');
+            if (contentContainer) {
+                dashboard.render(contentContainer);
+            }
+        }
+    } else if (currentViewId === 'planningView' && typeof renderPlanningView === 'function') {
+        renderPlanningView();
+    }
+
+    console.log("[Capacity] Metrics updated and UI refreshed.");
+}
+window.updateCapacityCalculationsAndDisplay = updateCapacityCalculationsAndDisplay;
 function refreshCurrentView() {
     // Prefer NavigationManager so views render through WorkspaceComponent (consistent with refactor)
     if (window.navigationManager && typeof window.navigationManager.navigateTo === 'function' && currentViewId) {

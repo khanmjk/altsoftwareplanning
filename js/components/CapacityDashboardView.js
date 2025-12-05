@@ -8,7 +8,7 @@ class CapacityDashboardView {
     constructor() {
         this.container = null;
         this.capacityEngine = new CapacityEngine(window.currentSystemData);
-        this.currentScenario = 'EffectiveBIS'; // Default
+        this.currentScenario = 'FundedHC'; // Default to Funded Headcount (Budget)
         this.currentChartTeamId = '__ORG_VIEW__';
     }
 

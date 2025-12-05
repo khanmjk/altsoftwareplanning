@@ -756,16 +756,28 @@ window.toggleCapacityConstraints = toggleCapacityConstraints;
 /**
  * REVISED - Generates the planning table, dynamically populating the year selector
  * based on initiative data and ensuring data consistency.
+ * Main render function for the Planning View.
  */
-/**
- * REVISED - Generates the planning table using the Workspace Shell.
- */
-function renderPlanningView(container) {
-    // console.log(`renderPlanningView: Rendering main planning view for year: ${currentPlanningYear}...`);
+function renderPlanningView() {
+    // [SYNC FIX] Ensure capacity metrics are fresh before rendering
+    // We check if the function exists to avoid errors during initial load if main.js isn't fully ready
+    if (typeof window.updateCapacityCalculationsAndDisplay === 'function') {
+        // Note: updateCapacityCalculationsAndDisplay calls renderPlanningView if currentViewId is planningView.
+        // To avoid infinite recursion, we should only call it if we are NOT already inside a recursive call triggered by it.
+        // However, updateCapacityCalculationsAndDisplay updates the data and THEN calls render.
+        // If we call it here, we might loop.
+        // BETTER APPROACH: Just recalculate the metrics HERE directly or call a non-rendering update helper.
+        // OR: Trust that updateCapacityCalculationsAndDisplay is called by the triggers (save, switch view).
+        // BUT: If user navigates directly to Planning View, we want fresh data.
 
-    if (!container) {
-        container = document.getElementById('planningView');
+        // SAFE FIX: Recalculate metrics directly here without triggering a full app refresh loop.
+        if (currentSystemData) {
+            const capacityEngine = new CapacityEngine(currentSystemData);
+            currentSystemData.calculatedCapacityMetrics = capacityEngine.calculateAllMetrics();
+        }
     }
+
+    const container = document.getElementById('planningView');
     if (!container) {
         console.error("Planning container #planningView not found.");
         return;

@@ -333,7 +333,21 @@ class ResourceForecastView {
             if (team) {
                 if (!team.attributes) team.attributes = {};
                 team.attributes.newHireProductiveCapacityGain = results.newHireCapacityGainSdeYears || 0;
-                console.log(`Updated team ${team.teamId} newHireProductiveCapacityGain: ${team.attributes.newHireProductiveCapacityGain.toFixed(2)} SDE Years`);
+                console.log(`Stored newHireProductiveCapacityGain for team ${team.teamId}: ${team.attributes.newHireProductiveCapacityGain}`);
+
+                // [PERSISTENCE FIX] Save changes to SystemRepository
+                if (window.saveSystemChanges) {
+                    window.saveSystemChanges();
+                    // Optional: Suppress toast or show a specific "Forecast Saved" toast if desired.
+                    // For now, relying on saveSystemChanges' internal logging/toast (if any, though main.js saveSystemChanges doesn't always toast on success, only error, unless called by UI button).
+                    // Actually main.js saveSystemChanges returns boolean and logs. It doesn't show success toast.
+                    window.notificationManager.showToast('Forecast capacity gain saved to system.', 'success');
+                }
+
+                // [SYNC FIX] Update global capacity metrics immediately
+                if (window.updateCapacityCalculationsAndDisplay) {
+                    window.updateCapacityCalculationsAndDisplay();
+                }
             }
         }
 
