@@ -13,6 +13,12 @@
     gap: 16px;
 }
 
+.capacity-planning-toolbar__left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
 /* --- Dashboard --- */
 .capacity-dashboard-view {
     padding: 20px;
@@ -116,11 +122,71 @@
 
 .capacity-section-title {
     color: var(--primary-color);
+    margin: 0;
+    font-size: 1.2rem;
 }
 
 .capacity-section-desc {
     color: #666;
+    margin-bottom: 0;
+    font-size: 0.9rem;
+    margin-top: 5px;
+}
+
+/* Collapsible Main Sections */
+.capacity-collapsible-section {
     margin-bottom: 20px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    overflow: hidden;
+    background-color: #fff;
+}
+
+.capacity-collapsible-header {
+    padding: 15px 20px;
+    background-color: #f8f9fa;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid transparent;
+    transition: background-color 0.2s;
+}
+
+.capacity-collapsible-header:hover {
+    background-color: #f1f3f5;
+}
+
+.capacity-collapsible-header--active {
+    border-bottom-color: #e0e0e0;
+    background-color: #fff;
+}
+
+.capacity-collapsible-body {
+    display: none;
+    padding: 20px;
+}
+
+.capacity-collapsible-body--visible {
+    display: block;
+}
+
+.capacity-collapsible-icon {
+    color: #adb5bd;
+    transition: transform 0.2s;
+}
+
+.capacity-collapsible-header--active .capacity-collapsible-icon {
+    transform: rotate(180deg);
+}
+
+.capacity-subsection-title {
+    font-size: 1rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #555;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
 }
 
 .capacity-config-grid {
@@ -136,6 +202,7 @@
 .capacity-form-label {
     font-weight: bold;
     display: block;
+    margin-bottom: 5px;
 }
 
 .capacity-org-events-table th:nth-child(2) {
@@ -146,51 +213,153 @@
     width: 100px;
 }
 
-.capacity-team-card {
-    margin-bottom: 10px;
-    border: 1px solid #ddd;
+/* Accordion Styling (Minimalist) */
+.capacity-accordion {
+    border-top: 1px solid #eee;
+}
+
+.capacity-team-item {
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.2s;
+}
+
+.capacity-team-item:hover {
+    background-color: #fcfcfc;
+}
+
+.capacity-team-item--active {
+    background-color: #f8f9fa;
 }
 
 .capacity-team-header {
-    padding: 10px 15px;
-    background-color: #f8f9fa;
+    padding: 15px 10px;
     cursor: pointer;
     display: flex;
     justify-content: space-between;
+    align-items: center;
+}
+
+.capacity-team-title {
+    font-weight: 600;
+    font-size: 1.05rem;
+}
+
+.capacity-team-icon {
+    color: #999;
+    transition: transform 0.2s;
 }
 
 .capacity-team-body {
     display: none;
-    padding: 15px;
-    border-top: 1px solid #ddd;
-}
-
-.capacity-team-body--visible {
-    display: block;
+    padding: 20px;
+    background-color: #fff;
+    /* Keep body white */
+    border-top: 1px solid #f0f0f0;
 }
 
 .capacity-team-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    gap: 30px;
+}
+
+/* Variable Leave Section */
+.capacity-variable-leave-grid {
+    display: grid;
+    grid-template-columns: 120px 1fr 1fr;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.capacity-variable-leave-header {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 5px;
 }
 
 .capacity-variable-leave-row {
-    display: flex;
-    align-items: center;
-    margin-bottom: 5px;
-    font-size: 0.9em;
+    display: contents;
+    /* Allows children to participate in the grid */
 }
 
 .capacity-variable-leave-label {
-    width: 100px;
+    font-weight: 500;
+    color: #495057;
     text-transform: capitalize;
 }
 
-.capacity-input-sm {
-    width: 60px;
+.capacity-input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
 }
 
-.capacity-input-md {
-    width: 70px;
+.capacity-input-suffix {
+    position: absolute;
+    right: 10px;
+    color: #adb5bd;
+    font-size: 0.8rem;
+    pointer-events: none;
+}
+
+.capacity-input-with-suffix {
+    padding-right: 40px;
+    /* Space for suffix */
+}
+
+/* Engineer Leave Plans */
+.capacity-engineer-leave-container {
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    background-color: #fff;
+}
+
+.capacity-engineer-leave-header {
+    display: grid;
+    grid-template-columns: 1fr 100px;
+    padding: 6px 15px;
+    /* Reduced from 10px */
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #6c757d;
+    position: sticky;
+    top: 0;
+}
+
+.capacity-engineer-row {
+    display: grid;
+    grid-template-columns: 1fr 100px;
+    padding: 5px 15px;
+    /* Reduced from 8px */
+    align-items: center;
+    border-bottom: 1px solid #f1f3f5;
+}
+
+.capacity-engineer-row:last-child {
+    border-bottom: none;
+}
+
+.capacity-engineer-row:hover {
+    background-color: #f8f9fa;
+}
+
+.capacity-engineer-name {
+    font-size: 0.9rem;
+    color: #212529;
+}
+
+.capacity-separator {
+    border: 0;
+    border-top: 1px solid #eee;
+    margin: 30px 0;
 }

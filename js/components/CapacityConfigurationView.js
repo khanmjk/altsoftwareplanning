@@ -22,43 +22,83 @@ class CapacityConfigurationView {
         header.className = 'capacity-config-header';
         wrapper.appendChild(header);
 
-        // 1. Global Constraints
-        this._renderGlobalConstraints(wrapper);
+        // 1. Company Policy Leave (Organizational Defaults)
+        this._createCollapsibleSection(
+            '1. Company Policy Leave',
+            'Set the baseline working days and standard leave types.',
+            (content) => this._renderCompanyPolicy(content),
+            wrapper
+        );
 
-        // Separator
-        const hr = document.createElement('hr');
-        hr.style.margin = '30px 0'; // Utility style allowed? Or move to CSS.
-        // Let's keep minimal inline for HR or use a class.
-        hr.className = 'capacity-separator';
-        wrapper.appendChild(hr);
+        // 2. Divisional Events (Global Events)
+        this._createCollapsibleSection(
+            '2. Divisional Events',
+            'Manage organization-wide events that affect all teams.',
+            (content) => this._renderDivisionalEvents(content),
+            wrapper
+        );
 
-        // 2. Team Constraints
-        this._renderTeamConstraints(wrapper);
+        // 3. Team-Specific Adjustments
+        this._createCollapsibleSection(
+            '3. Team-Specific Adjustments',
+            'Fine-tune capacity for individual teams based on their specific context.',
+            (content) => this._renderTeamConstraints(content),
+            wrapper
+        );
 
         this.container.appendChild(wrapper);
     }
 
-    _renderGlobalConstraints(parentContainer) {
+    _createCollapsibleSection(titleText, descText, contentRenderer, parent) {
         const section = document.createElement('div');
-        section.id = 'globalConstraintsSection';
+        section.className = 'capacity-collapsible-section';
+
+        const header = document.createElement('div');
+        header.className = 'capacity-collapsible-header';
+
+        const titleGroup = document.createElement('div');
 
         const title = document.createElement('h3');
-        title.textContent = '1. Organizational Defaults & Global Events';
         title.className = 'capacity-section-title';
-        section.appendChild(title);
+        title.textContent = titleText;
+        titleGroup.appendChild(title);
 
-        const desc = document.createElement('p');
-        desc.textContent = 'Set the baseline working days and organization-wide events that affect all teams.';
-        desc.className = 'capacity-section-desc';
-        section.appendChild(desc);
+        if (descText) {
+            const desc = document.createElement('p');
+            desc.className = 'capacity-section-desc';
+            desc.textContent = descText;
+            titleGroup.appendChild(desc);
+        }
+        header.appendChild(titleGroup);
 
+        const icon = document.createElement('i');
+        icon.className = 'fas fa-chevron-down capacity-collapsible-icon';
+        header.appendChild(icon);
+
+        const body = document.createElement('div');
+        body.className = 'capacity-collapsible-body';
+
+        header.onclick = () => {
+            const isHidden = body.style.display === 'none' || body.style.display === '';
+            body.style.display = isHidden ? 'block' : 'none';
+            header.classList.toggle('capacity-collapsible-header--active', isHidden);
+        };
+
+        section.appendChild(header);
+        section.appendChild(body);
+        parent.appendChild(section);
+
+        // Render content immediately (or could be lazy loaded)
+        contentRenderer(body);
+    }
+
+    _renderCompanyPolicy(container) {
         const config = window.currentSystemData.capacityConfiguration;
         if (!config) {
             const alert = document.createElement('div');
             alert.className = 'alert alert-danger';
             alert.textContent = 'Missing capacityConfiguration';
-            section.appendChild(alert);
-            parentContainer.appendChild(section);
+            container.appendChild(alert);
             return;
         }
 
@@ -87,6 +127,7 @@ class CapacityConfigurationView {
         const rightCol = document.createElement('div');
         const leaveTitle = document.createElement('h4');
         leaveTitle.textContent = 'Standard Leave Types';
+        leaveTitle.className = 'capacity-subsection-title';
         rightCol.appendChild(leaveTitle);
 
         const leaveTable = document.createElement('table');
@@ -107,13 +148,11 @@ class CapacityConfigurationView {
         this._renderLeaveTypesRows(tbody);
 
         grid.appendChild(rightCol);
-        section.appendChild(grid);
+        container.appendChild(grid);
+    }
 
-        // Org Events (Full Width)
-        const eventsTitle = document.createElement('h4');
-        eventsTitle.textContent = 'Organization-Wide Events';
-        eventsTitle.style.marginTop = '20px'; // Move to CSS
-        section.appendChild(eventsTitle);
+    _renderDivisionalEvents(container) {
+        const config = window.currentSystemData.capacityConfiguration;
 
         const orgEventsTable = document.createElement('table');
         orgEventsTable.className = 'table table-striped capacity-org-events-table';
@@ -130,7 +169,7 @@ class CapacityConfigurationView {
 
         const orgEventsTbody = document.createElement('tbody');
         orgEventsTable.appendChild(orgEventsTbody);
-        section.appendChild(orgEventsTable);
+        container.appendChild(orgEventsTable);
 
         this._renderOrgEventsRows(orgEventsTbody);
 
@@ -148,9 +187,7 @@ class CapacityConfigurationView {
             config.globalConstraints.orgEvents.push({ name: 'New Event', estimatedDaysPerSDE: 0 });
             this._renderOrgEventsRows(orgEventsTbody);
         };
-        section.appendChild(addEventBtn);
-
-        parentContainer.appendChild(section);
+        container.appendChild(addEventBtn);
     }
 
     _createInputGroup(label, type, value, onChange, placeholder = '') {
@@ -224,42 +261,28 @@ class CapacityConfigurationView {
     }
 
     _renderTeamConstraints(parentContainer) {
-        const section = document.createElement('div');
-        section.id = 'teamConstraintsSection';
-
-        const title = document.createElement('h3');
-        title.textContent = '2. Team-Specific Adjustments';
-        title.className = 'capacity-section-title';
-        section.appendChild(title);
-
-        const desc = document.createElement('p');
-        desc.textContent = 'Fine-tune capacity for individual teams based on their specific context (e.g., high overhead, specific leave patterns).';
-        desc.className = 'capacity-section-desc';
-        section.appendChild(desc);
-
         const teams = window.currentSystemData.teams || [];
 
         // Accordion container
         const accordion = document.createElement('div');
-        accordion.className = 'accordion';
-        accordion.id = 'teamConstraintsAccordion';
+        accordion.className = 'capacity-accordion';
 
         teams.forEach((team, index) => {
             const item = document.createElement('div');
-            item.className = 'capacity-team-card';
+            item.className = 'capacity-team-item';
 
             // Header
             const header = document.createElement('div');
             header.className = 'capacity-team-header';
 
-            const titleSpan = document.createElement('strong');
+            const titleSpan = document.createElement('span');
+            titleSpan.className = 'capacity-team-title';
             titleSpan.textContent = team.teamIdentity || team.teamName;
             header.appendChild(titleSpan);
 
-            const toggleSpan = document.createElement('span');
-            toggleSpan.className = 'text-muted';
-            toggleSpan.textContent = 'Click to expand';
-            header.appendChild(toggleSpan);
+            const icon = document.createElement('i');
+            icon.className = 'fas fa-chevron-down capacity-team-icon';
+            header.appendChild(icon);
 
             const body = document.createElement('div');
             body.className = 'capacity-team-body';
@@ -267,7 +290,8 @@ class CapacityConfigurationView {
             header.onclick = () => {
                 const isHidden = body.style.display === 'none' || body.style.display === '';
                 body.style.display = isHidden ? 'block' : 'none';
-                toggleSpan.textContent = isHidden ? 'Click to collapse' : 'Click to expand';
+                icon.className = isHidden ? 'fas fa-chevron-up capacity-team-icon' : 'fas fa-chevron-down capacity-team-icon';
+                item.classList.toggle('capacity-team-item--active', isHidden);
             };
 
             item.appendChild(header);
@@ -277,8 +301,7 @@ class CapacityConfigurationView {
             this._renderTeamDetails(body, team);
         });
 
-        section.appendChild(accordion);
-        parentContainer.appendChild(section);
+        parentContainer.appendChild(accordion);
     }
 
     _renderTeamDetails(container, team) {
@@ -288,14 +311,18 @@ class CapacityConfigurationView {
                 leaveUptakeEstimates: [],
                 variableLeaveImpact: {},
                 teamActivities: [],
-                aiProductivityGainPercent: 0
+                aiProductivityGainPercent: 0,
+                engineerLeavePlans: {} // New Feature
             };
+        }
+        if (!team.teamCapacityAdjustments.engineerLeavePlans) {
+            team.teamCapacityAdjustments.engineerLeavePlans = {};
         }
 
         const grid = document.createElement('div');
         grid.className = 'capacity-team-grid';
 
-        // Left: Leave & Overhead
+        // Left Column: Leave & Overhead
         const left = document.createElement('div');
 
         // Overhead
@@ -311,48 +338,108 @@ class CapacityConfigurationView {
         // Variable Leave
         const varTitle = document.createElement('h5');
         varTitle.textContent = 'Variable Leave (Maternity, etc.)';
-        varTitle.style.marginTop = '15px';
+        varTitle.className = 'capacity-subsection-title';
         left.appendChild(varTitle);
+
+        const varGrid = document.createElement('div');
+        varGrid.className = 'capacity-variable-leave-grid';
+
+        // Headers
+        ['Category', 'Affected SDEs', 'Avg Days/SDE'].forEach(text => {
+            const h = document.createElement('div');
+            h.className = 'capacity-variable-leave-header';
+            h.textContent = text;
+            varGrid.appendChild(h);
+        });
 
         ['maternity', 'paternity', 'familyResp', 'medical'].forEach(key => {
             if (!team.teamCapacityAdjustments.variableLeaveImpact[key]) {
                 team.teamCapacityAdjustments.variableLeaveImpact[key] = { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 };
             }
             const data = team.teamCapacityAdjustments.variableLeaveImpact[key];
-            const row = document.createElement('div');
-            row.className = 'capacity-variable-leave-row';
 
-            const label = document.createElement('span');
+            // Label
+            const label = document.createElement('div');
             label.className = 'capacity-variable-leave-label';
-            label.textContent = `${key}:`;
-            row.appendChild(label);
+            label.textContent = key;
+            varGrid.appendChild(label);
 
-            const sdeInput = document.createElement('input');
-            sdeInput.type = 'number';
-            sdeInput.className = 'form-control form-control-sm capacity-input-sm';
-            sdeInput.value = data.affectedSDEs;
-            sdeInput.onchange = (e) => data.affectedSDEs = parseInt(e.target.value);
+            // SDE Input
+            const sdeGroup = this._createInputWithSuffix('number', data.affectedSDEs, 'SDEs', (val) => data.affectedSDEs = parseInt(val));
+            varGrid.appendChild(sdeGroup);
 
-            const daysInput = document.createElement('input');
-            daysInput.type = 'number';
-            daysInput.className = 'form-control form-control-sm capacity-input-sm';
-            daysInput.style.marginLeft = '5px';
-            daysInput.value = data.avgDaysPerAffectedSDE;
-            daysInput.onchange = (e) => data.avgDaysPerAffectedSDE = parseInt(e.target.value);
-
-            row.appendChild(sdeInput);
-            row.appendChild(document.createTextNode(' SDEs x '));
-            row.appendChild(daysInput);
-            row.appendChild(document.createTextNode(' Days'));
-            left.appendChild(row);
+            // Days Input
+            const daysGroup = this._createInputWithSuffix('number', data.avgDaysPerAffectedSDE, 'Days', (val) => data.avgDaysPerAffectedSDE = parseInt(val));
+            varGrid.appendChild(daysGroup);
         });
 
+        left.appendChild(varGrid);
         grid.appendChild(left);
 
-        // Right: Team Activities
+        // Right Column: Team Activities & Engineer Leave
         const right = document.createElement('div');
+
+        // --- Engineer Leave Plans ---
+        const engLeaveTitle = document.createElement('h5');
+        engLeaveTitle.textContent = 'Engineer Leave Plans';
+        engLeaveTitle.className = 'capacity-subsection-title';
+        right.appendChild(engLeaveTitle);
+
+        const engLeaveContainer = document.createElement('div');
+        engLeaveContainer.className = 'capacity-engineer-leave-container';
+
+        // Header
+        const engHeader = document.createElement('div');
+        engHeader.className = 'capacity-engineer-leave-header';
+        const h1 = document.createElement('span'); h1.textContent = 'Engineer Name';
+        const h2 = document.createElement('span'); h2.textContent = 'Planned Days';
+        engHeader.appendChild(h1);
+        engHeader.appendChild(h2);
+        engLeaveContainer.appendChild(engHeader);
+
+        const engineers = team.engineers || [];
+        if (engineers.length === 0) {
+            const noEng = document.createElement('div');
+            noEng.textContent = 'No engineers assigned to this team.';
+            noEng.style.padding = '15px';
+            noEng.style.color = '#999';
+            noEng.style.fontStyle = 'italic';
+            engLeaveContainer.appendChild(noEng);
+        } else {
+            engineers.forEach(engName => {
+                const row = document.createElement('div');
+                row.className = 'capacity-engineer-row';
+
+                const nameLabel = document.createElement('span');
+                nameLabel.className = 'capacity-engineer-name';
+                nameLabel.textContent = engName;
+                row.appendChild(nameLabel);
+
+                const daysInput = document.createElement('input');
+                daysInput.type = 'number';
+                daysInput.className = 'form-control form-control-sm';
+                daysInput.placeholder = '0';
+                daysInput.value = team.teamCapacityAdjustments.engineerLeavePlans[engName] || '';
+                daysInput.onchange = (e) => {
+                    const val = parseFloat(e.target.value);
+                    if (isNaN(val) || val === 0) {
+                        delete team.teamCapacityAdjustments.engineerLeavePlans[engName];
+                    } else {
+                        team.teamCapacityAdjustments.engineerLeavePlans[engName] = val;
+                    }
+                };
+                row.appendChild(daysInput);
+
+                engLeaveContainer.appendChild(row);
+            });
+        }
+        right.appendChild(engLeaveContainer);
+
+        // Team Activities
         const actTitle = document.createElement('h5');
         actTitle.textContent = 'Team Activities';
+        actTitle.className = 'capacity-subsection-title';
+        actTitle.style.marginTop = '20px';
         right.appendChild(actTitle);
 
         const actTable = document.createElement('table');
@@ -402,7 +489,7 @@ class CapacityConfigurationView {
 
                 const delBtn = document.createElement('button');
                 delBtn.className = 'btn btn-danger btn-sm';
-                delBtn.innerHTML = '&times;'; // Allowed entity
+                delBtn.innerHTML = '&times;';
                 delBtn.onclick = () => {
                     team.teamCapacityAdjustments.teamActivities.splice(idx, 1);
                     renderActs();
@@ -425,6 +512,25 @@ class CapacityConfigurationView {
 
         grid.appendChild(right);
         container.appendChild(grid);
+    }
+
+    _createInputWithSuffix(type, value, suffix, onChange) {
+        const group = document.createElement('div');
+        group.className = 'capacity-input-group';
+
+        const input = document.createElement('input');
+        input.type = type;
+        input.className = 'form-control form-control-sm capacity-input-with-suffix';
+        input.value = value;
+        input.onchange = (e) => onChange(e.target.value);
+        group.appendChild(input);
+
+        const suffixSpan = document.createElement('span');
+        suffixSpan.className = 'capacity-input-suffix';
+        suffixSpan.textContent = suffix;
+        group.appendChild(suffixSpan);
+
+        return group;
     }
 }
 

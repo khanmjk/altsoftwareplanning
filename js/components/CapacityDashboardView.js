@@ -180,12 +180,13 @@ class CapacityDashboardView {
 
         const bd = data.deductionsBreakdown;
 
-        const labels = ['Gross Capacity', 'Std Leave', 'Var Leave', 'Holidays', 'Org Events', 'Team Activities', 'Overhead', 'AI Gain', 'Net Capacity'];
+        const labels = ['Gross Capacity', 'Std Leave', 'Var Leave', 'Specific Leave', 'Holidays', 'Org Events', 'Team Activities', 'Overhead', 'AI Gain', 'Net Capacity'];
 
         const values = [
             data.grossYrs,
             -bd.stdLeaveYrs,
             -bd.varLeaveYrs,
+            -bd.specificLeaveYrs, // New
             -bd.holidayYrs,
             -bd.orgEventYrs,
             -bd.teamActivityYrs,
@@ -196,7 +197,7 @@ class CapacityDashboardView {
 
         const bgColors = [
             '#6c757d', // Gross (Grey)
-            '#dc3545', '#dc3545', '#dc3545', '#dc3545', '#dc3545', '#dc3545', // Deductions (Red)
+            '#dc3545', '#dc3545', '#dc3545', '#d63384', '#dc3545', '#dc3545', '#dc3545', '#dc3545', // Deductions (Red, Specific Leave Pink)
             '#28a745', // AI Gain (Green)
             '#007bff'  // Net (Blue)
         ];

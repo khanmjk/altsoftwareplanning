@@ -25,7 +25,7 @@ class CapacityEngine {
             console.error("CapacityEngine: Missing core data (config or teams).");
             const zeroMetric = {
                 totalHeadcount: 0, humanHeadcount: 0, grossYrs: 0, deductYrs: 0, netYrs: 0,
-                deductionsBreakdown: { stdLeaveYrs: 0, varLeaveYrs: 0, holidayYrs: 0, orgEventYrs: 0, teamActivityYrs: 0, overheadYrs: 0, aiProductivityGainYrs: 0 }
+                deductionsBreakdown: { stdLeaveYrs: 0, varLeaveYrs: 0, holidayYrs: 0, orgEventYrs: 0, teamActivityYrs: 0, overheadYrs: 0, aiProductivityGainYrs: 0, specificLeaveYrs: 0 }
             };
             return {
                 totals: {
@@ -117,8 +117,23 @@ class CapacityEngine {
                     orgEventYrs: (orgEvents_days_per_sde / workingDays) * humanHeadcount,
                     teamActivityYrs: (teamActivityImpacts.daysPerSDE / workingDays) * humanHeadcount + (teamActivityImpacts.totalTeamDaysDuration / workingDays),
                     overheadYrs: (overhead_days_per_sde / workingDays) * humanHeadcount,
-                    aiProductivityGainYrs: 0 // Initialize gain
+                    aiProductivityGainYrs: 0, // Initialize gain
+                    specificLeaveYrs: 0 // New Feature: Specific Engineer Leave
                 };
+
+                // --- Calculate Specific Engineer Leave ---
+                const engineerLeavePlans = team.teamCapacityAdjustments?.engineerLeavePlans || {};
+                let totalSpecificLeaveDays = 0;
+                Object.keys(engineerLeavePlans).forEach(engName => {
+                    // Only count if engineer is in the current scenario (human and present)
+                    // Simplified: If they are a human engineer on the team, we count it.
+                    // We assume the plan is for the year.
+                    const isHuman = humanEngineersOnTeamList.includes(engName) || (team.awayTeamMembers || []).some(m => m.name === engName && !m.attributes?.isAISWE);
+                    if (isHuman) {
+                        totalSpecificLeaveDays += (engineerLeavePlans[engName] || 0);
+                    }
+                });
+                deductionsBreakdown.specificLeaveYrs = totalSpecificLeaveDays / workingDays;
 
                 const totalDeductYrs = Object.values(deductionsBreakdown).reduce((sum, val) => sum + (val || 0), 0);
 
