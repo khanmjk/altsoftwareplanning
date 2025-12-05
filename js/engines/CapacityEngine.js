@@ -92,6 +92,7 @@ class CapacityEngine {
             ['TeamBIS', 'EffectiveBIS', 'FundedHC'].forEach(scenario => {
                 let totalHeadcount = 0;
                 let humanHeadcount = 0;
+                let newHireGainYrs = 0;
 
                 switch (scenario) {
                     case 'TeamBIS':
@@ -103,8 +104,17 @@ class CapacityEngine {
                         humanHeadcount = teamHumanBIS + awayHumanMembers;
                         break;
                     case 'FundedHC':
-                        humanHeadcount = team.fundedHeadcount || 0;
-                        totalHeadcount = humanHeadcount + teamAIBIS + awayAIMembers;
+                        const storedGain = team.attributes?.newHireProductiveCapacityGain || 0;
+                        if (storedGain > 0) {
+                            // If forecast exists, start with Current Headcount and add the Gain
+                            humanHeadcount = teamHumanBIS;
+                            totalHeadcount = humanHeadcount + teamAIBIS + awayAIMembers;
+                            newHireGainYrs = storedGain;
+                        } else {
+                            // Default to Full Funded Headcount (Idealized)
+                            humanHeadcount = team.fundedHeadcount || 0;
+                            totalHeadcount = humanHeadcount + teamAIBIS + awayAIMembers;
+                        }
                         break;
                 }
 
@@ -118,6 +128,7 @@ class CapacityEngine {
                     teamActivityYrs: (teamActivityImpacts.daysPerSDE / workingDays) * humanHeadcount + (teamActivityImpacts.totalTeamDaysDuration / workingDays),
                     overheadYrs: (overhead_days_per_sde / workingDays) * humanHeadcount,
                     aiProductivityGainYrs: 0, // Initialize gain
+                    newHireGainYrs: newHireGainYrs, // New Feature: New Hire Gain
                     specificLeaveYrs: 0 // New Feature: Specific Engineer Leave
                 };
 
@@ -136,23 +147,42 @@ class CapacityEngine {
                 deductionsBreakdown.specificLeaveYrs = totalSpecificLeaveDays / workingDays;
 
                 const totalDeductYrs = Object.values(deductionsBreakdown).reduce((sum, val) => sum + (val || 0), 0);
+                // Note: newHireGainYrs is a GAIN (positive), but it's in the deductions object. 
+                // We must subtract it from totalDeductYrs calculation or handle it separately.
+                // Current logic: totalDeductYrs sums EVERYTHING. 
+                // So if newHireGainYrs is positive, it INCREASES totalDeductYrs. 
+                // Then netYrs = gross - totalDeductYrs. This would SUBTRACT the gain. WRONG.
+
+                // Correction: Exclude gains from totalDeductYrs sum, or subtract them.
+                // Better: Sum only actual deductions.
+                const actualDeductions =
+                    deductionsBreakdown.stdLeaveYrs +
+                    deductionsBreakdown.varLeaveYrs +
+                    deductionsBreakdown.holidayYrs +
+                    deductionsBreakdown.orgEventYrs +
+                    deductionsBreakdown.teamActivityYrs +
+                    deductionsBreakdown.overheadYrs +
+                    deductionsBreakdown.specificLeaveYrs;
 
                 // --- Calculate and apply AI Productivity Gain ---
                 const aiProductivityGainPercent = team.teamCapacityAdjustments?.aiProductivityGainPercent || 0;
                 const humanGrossYrs = humanHeadcount * sdesPerSdeYear;
-                // All deductions are already based on human headcount
-                const humanNetWorkYrs_BeforeGain = humanGrossYrs - totalDeductYrs;
-                const aiGainInSdeYears = humanNetWorkYrs_BeforeGain * (aiProductivityGainPercent / 100);
+
+                // Base for AI Gain: (Human Gross - Deductions) + New Hire Capacity
+                // We assume New Hires also get the AI boost.
+                const humanNetWorkYrs_BeforeAIGain = (humanGrossYrs - actualDeductions) + newHireGainYrs;
+                const aiGainInSdeYears = humanNetWorkYrs_BeforeAIGain * (aiProductivityGainPercent / 100);
 
                 deductionsBreakdown.aiProductivityGainYrs = aiGainInSdeYears;
 
-                const netYrs = (grossYrs - totalDeductYrs) + aiGainInSdeYears;
+                // Final Net Calculation
+                const netYrs = (grossYrs - actualDeductions) + aiGainInSdeYears + newHireGainYrs;
 
                 teamMetrics[team.teamId][scenario] = {
                     totalHeadcount: totalHeadcount,
                     humanHeadcount: humanHeadcount,
                     grossYrs: grossYrs,
-                    deductYrs: totalDeductYrs,
+                    deductYrs: actualDeductions, // Store actual deductions
                     netYrs: netYrs,
                     deductionsBreakdown: deductionsBreakdown
                 };
@@ -160,7 +190,7 @@ class CapacityEngine {
                 totals[scenario].totalHeadcount += totalHeadcount;
                 totals[scenario].humanHeadcount += humanHeadcount;
                 totals[scenario].grossYrs += grossYrs;
-                totals[scenario].deductYrs += totalDeductYrs;
+                totals[scenario].deductYrs += actualDeductions;
                 totals[scenario].netYrs += netYrs;
 
                 Object.keys(deductionsBreakdown).forEach(key => {

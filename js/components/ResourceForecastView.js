@@ -327,6 +327,16 @@ class ResourceForecastView {
             return;
         }
 
+        // Store Capacity Gain in Team Attributes (if team selected)
+        if (this.currentTeamId && window.currentSystemData && window.currentSystemData.teams) {
+            const team = window.currentSystemData.teams.find(t => t.teamId === this.currentTeamId);
+            if (team) {
+                if (!team.attributes) team.attributes = {};
+                team.attributes.newHireProductiveCapacityGain = results.newHireCapacityGainSdeYears || 0;
+                console.log(`Updated team ${team.teamId} newHireProductiveCapacityGain: ${team.attributes.newHireProductiveCapacityGain.toFixed(2)} SDE Years`);
+            }
+        }
+
         // Calculate detailed hires needed
         const hiresNeededStats = this.engine.calculateEstimatedHiresNeeded(fundedSize, currentEng, hiringRate, attrition / 100, targetWeek);
 

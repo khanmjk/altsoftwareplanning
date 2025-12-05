@@ -224,27 +224,34 @@ class CapacityDashboardView {
 
         const bd = data.deductionsBreakdown;
 
-        const labels = ['Gross Capacity', 'Std Leave', 'Var Leave', 'Specific Leave', 'Holidays', 'Org Events', 'Team Activities', 'Overhead', 'AI Gain', 'Net Capacity'];
-
+        const labels = ['Gross Capacity', 'Std Leave', 'Var Leave', 'Specific Leave', 'Holidays', 'Org Events', 'Team Activities', 'Overhead', 'AI Gain'];
         const values = [
             data.grossYrs,
             -bd.stdLeaveYrs,
             -bd.varLeaveYrs,
-            -bd.specificLeaveYrs, // New
+            -bd.specificLeaveYrs,
             -bd.holidayYrs,
             -bd.orgEventYrs,
             -bd.teamActivityYrs,
             -bd.overheadYrs,
-            bd.aiProductivityGainYrs,
-            data.netYrs
+            bd.aiProductivityGainYrs
         ];
-
         const bgColors = [
             '#6c757d', // Gross (Grey)
-            '#dc3545', '#dc3545', '#dc3545', '#d63384', '#dc3545', '#dc3545', '#dc3545', '#dc3545', // Deductions (Red, Specific Leave Pink)
-            '#28a745', // AI Gain (Green)
-            '#007bff'  // Net (Blue)
+            '#dc3545', '#dc3545', '#dc3545', '#d63384', '#dc3545', '#dc3545', '#dc3545', '#dc3545', // Deductions
+            '#28a745' // AI Gain (Green)
         ];
+
+        // Conditional New Hire Gain (Only for FundedHC)
+        if (this.currentScenario === 'FundedHC') {
+            labels.push('New Hires');
+            values.push(bd.newHireGainYrs || 0);
+            bgColors.push('#20c997'); // Teal for New Hires
+        }
+
+        labels.push('Net Capacity');
+        values.push(data.netYrs);
+        bgColors.push('#007bff'); // Net (Blue)
 
         // Custom Plugin for Data Labels
         const dataLabelsPlugin = {
@@ -333,8 +340,13 @@ class CapacityDashboardView {
                 const headerRow = thead.insertRow();
 
                 const hcColumnName = `Headcount (${scenarioName})`;
+                const showNewHireCol = this.currentScenario === 'FundedHC';
 
-                ['Team', hcColumnName, 'Gross', 'Deductions', 'AI Gain', 'Net Capacity'].forEach(text => {
+                const headers = ['Team', hcColumnName, 'Gross', 'Deductions', 'AI Gain'];
+                if (showNewHireCol) headers.push('New Hires');
+                headers.push('Net Capacity');
+
+                headers.forEach(text => {
                     const th = document.createElement('th');
                     th.textContent = text;
                     headerRow.appendChild(th);
@@ -359,6 +371,13 @@ class CapacityDashboardView {
                     const aiCell = row.insertCell();
                     aiCell.textContent = `+${(m.deductionsBreakdown.aiProductivityGainYrs || 0).toFixed(2)}`;
                     aiCell.className = 'capacity-summary-gain';
+
+                    if (showNewHireCol) {
+                        const nhCell = row.insertCell();
+                        nhCell.textContent = `+${(m.deductionsBreakdown.newHireGainYrs || 0).toFixed(2)}`;
+                        nhCell.className = 'capacity-summary-gain';
+                        nhCell.style.color = '#20c997'; // Teal
+                    }
 
                     const netCell = row.insertCell();
                     netCell.textContent = m.netYrs.toFixed(2);
@@ -412,8 +431,16 @@ class CapacityDashboardView {
                 p3.innerHTML = `After accounting for those deductions, a productivity dividend is applied. The use of AI tooling provides a calculated gain of <strong>${aiGain.toFixed(2)} SDE Years</strong> across the organization. This gain is applied back to the available human capacity.`;
                 wrapper.appendChild(p3);
 
+                // New Hire Narrative
+                const newHireGain = totals.deductionsBreakdown.newHireGainYrs || 0;
+                if (this.currentScenario === 'FundedHC' && newHireGain > 0) {
+                    const pNH = document.createElement('p');
+                    pNH.innerHTML = `Additionally, based on the latest Resource Forecasting simulation, we project a <strong>New Hire Capacity Gain of ${newHireGain.toFixed(2)} SDE Years</strong>. This represents the productive capacity contributed by new hires ramping up during the forecast period.`;
+                    wrapper.appendChild(pNH);
+                }
+
                 const p4 = document.createElement('p');
-                p4.innerHTML = `Therefore, after subtracting the sinks from the gross capacity and adding back the AI productivity gains, the final estimated <strong>Net Project Capacity is ${totals.netYrs.toFixed(2)} SDE Years</strong> for the organization.`;
+                p4.innerHTML = `Therefore, after subtracting the sinks from the gross capacity and adding back the AI productivity gains${newHireGain > 0 ? ' and new hire capacity' : ''}, the final estimated <strong>Net Project Capacity is ${totals.netYrs.toFixed(2)} SDE Years</strong> for the organization.`;
                 wrapper.appendChild(p4);
 
                 // 2. Team Breakdown
@@ -435,9 +462,16 @@ class CapacityDashboardView {
                     if (!m) return;
 
                     const tGain = m.deductionsBreakdown.aiProductivityGainYrs || 0;
+                    const tNHGain = m.deductionsBreakdown.newHireGainYrs || 0;
+
+                    let nhText = '';
+                    if (this.currentScenario === 'FundedHC' && tNHGain > 0) {
+                        nhText = ` We also project a <strong>${tNHGain.toFixed(2)} SDE Years</strong> gain from new hires.`;
+                    }
+
                     const pTeam = document.createElement('p');
                     pTeam.style.marginBottom = '10px';
-                    pTeam.innerHTML = `<strong>${team.teamIdentity || team.teamName}</strong>: Starts with a Gross Capacity of <strong>${m.grossYrs.toFixed(2)} SDE Years</strong>. From this, <strong>${m.deductYrs.toFixed(2)} SDE Years</strong> are deducted for human-centric sinks (leave, overhead, etc.). An estimated <strong>${tGain.toFixed(2)} SDE Years</strong> are then regained through AI tooling productivity enhancements, resulting in a final Net Project Capacity of <strong>${m.netYrs.toFixed(2)} SDE Years</strong> for this team.`;
+                    pTeam.innerHTML = `<strong>${team.teamIdentity || team.teamName}</strong>: Starts with a Gross Capacity of <strong>${m.grossYrs.toFixed(2)} SDE Years</strong>. From this, <strong>${m.deductYrs.toFixed(2)} SDE Years</strong> are deducted for human-centric sinks (leave, overhead, etc.). An estimated <strong>${tGain.toFixed(2)} SDE Years</strong> are then regained through AI tooling productivity enhancements.${nhText} This results in a final Net Project Capacity of <strong>${m.netYrs.toFixed(2)} SDE Years</strong> for this team.`;
                     wrapper.appendChild(pTeam);
                 });
 

@@ -159,24 +159,15 @@ class ForecastingEngine {
         let attritionCounter = 0;
         const weeklyAttritionRate = attritionRate / 52;
 
+        // New Hire Tracking
+        let newHiresRampedUpCount = 0;
+        let totalNewHireSdeWeeks = 0;
+
         // Week to Month Mapping (Standard 52 week year)
-        // Simple approximation: 4.33 weeks per month, or just mapping index to month 0-11
-        // Reusing the global mapping if available, or generating a simple one.
-        const weekToMonth = [];
-        let currentMonth = 1;
-        for (let w = 1; w <= 52; w++) {
-            weekToMonth.push(currentMonth);
-            if (w % 4 === 0 && w < 48) currentMonth++; // Simple 4-week blocks for simplicity or use Luxon if needed
-            // Better: use the global weekToMonth_SDM if it exists, otherwise simple logic
-        }
-        // Actually, let's use a standard distribution for robustness
-        // 1-4: Jan, 5-8: Feb, 9-13: Mar, etc.
-        // For this engine, let's just use a simple array for now.
         const simpleWeekToMonth = [
             1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 6,
             7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9, 9, 10, 10, 10, 10, 11, 11, 11, 11, 12, 12, 12, 12, 12
         ];
-
 
         for (let week = 1; week <= weeks; week++) {
             // 1. Attrition
@@ -187,11 +178,21 @@ class ForecastingEngine {
             if (attritionThisWeek > 0) {
                 totalHeadcount -= attritionThisWeek;
                 let preAttritionHC = totalHeadcount + attritionThisWeek;
+
+                // Proportion of attrition applied to ramped up engineers
                 let rampedProportion = (preAttritionHC > 0) ? totalRampedUpEngineers / preAttritionHC : 0;
                 let attritionFromRamped = Math.round(attritionThisWeek * rampedProportion);
-                let attritionFromRamping = attritionThisWeek - attritionFromRamped;
+
+                // Proportion of attrition applied specifically to NEW HIRES who are ramped up
+                // (Assuming new hires attrite at same rate as existing ramped engineers for simplicity)
+                let newHireRampedProportion = (totalRampedUpEngineers > 0) ? newHiresRampedUpCount / totalRampedUpEngineers : 0;
+                let attritionFromNewHiresRamped = Math.round(attritionFromRamped * newHireRampedProportion);
 
                 totalRampedUpEngineers -= attritionFromRamped;
+                newHiresRampedUpCount -= attritionFromNewHiresRamped;
+                newHiresRampedUpCount = Math.max(0, newHiresRampedUpCount); // Safety
+
+                let attritionFromRamping = attritionThisWeek - attritionFromRamped;
 
                 let removedFromRamping = 0;
                 for (let i = rampingEngineers.length - 1; i >= 0 && removedFromRamping < attritionFromRamping; i--) {
@@ -234,6 +235,7 @@ class ForecastingEngine {
                 rampingEngineers[i].weeksLeft--;
                 if (rampingEngineers[i].weeksLeft <= 0) {
                     totalRampedUpEngineers += rampingEngineers[i].count;
+                    newHiresRampedUpCount += rampingEngineers[i].count; // Track new hires becoming productive
                     rampingEngineers.splice(i, 1);
                 }
             }
@@ -243,13 +245,20 @@ class ForecastingEngine {
                 let overflow = totalHeadcount - fundedSize;
                 if (overflow > 0) {
                     totalHeadcount = fundedSize;
+                    // If we reduce headcount, we must reduce ramped/new hires too
+                    // Simplified: just cap them proportionally if needed, but for now assuming overflow is rare/small
                     totalRampedUpEngineers = Math.min(totalRampedUpEngineers, totalHeadcount);
+                    newHiresRampedUpCount = Math.min(newHiresRampedUpCount, totalRampedUpEngineers);
                 }
             }
 
             // 5. Calculate Effective Engineers
             const weeklyAvailabilityMultiplier = netAvailableDaysPerWeekPerSDE / 5;
             const effectiveEngineers = totalRampedUpEngineers * weeklyAvailabilityMultiplier;
+
+            // Calculate New Hire Specific Capacity
+            const newHireEffectiveCapacity = newHiresRampedUpCount * weeklyAvailabilityMultiplier;
+            totalNewHireSdeWeeks += newHireEffectiveCapacity;
 
             // 6. Store Results
             productiveEngineersLocal.push(effectiveEngineers);
@@ -266,8 +275,6 @@ class ForecastingEngine {
                 monthlyDataLocal.sdeWeeks[monthIndex] = 0;
                 monthlyDataLocal.sdeDays[monthIndex] = 0;
             }
-            // Use the last week's headcount as the month's headcount (snapshot) or average?
-            // Existing logic seemed to overwrite, effectively taking the last week.
             monthlyDataLocal.headcount[monthIndex] = totalHeadcount;
             monthlyDataLocal.sdeWeeks[monthIndex] += effectiveEngineers;
             monthlyDataLocal.sdeDays[monthIndex] += effectiveEngineers * netAvailableDaysPerWeekPerSDE;
@@ -286,7 +293,8 @@ class ForecastingEngine {
             totalHeadcountArray: totalHeadcountArrayLocal,
             cumulativeAttritionArray: cumulativeAttritionArrayLocal,
             monthlyData: monthlyDataLocal,
-            calculatedNetAvailableDaysPerWeek: netAvailableDaysPerWeekPerSDE
+            calculatedNetAvailableDaysPerWeek: netAvailableDaysPerWeekPerSDE,
+            newHireCapacityGainSdeYears: totalNewHireSdeWeeks / 52 // Return Gain in Years
         };
     }
 }
