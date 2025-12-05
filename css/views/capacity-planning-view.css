@@ -140,7 +140,8 @@
 .capacity-configuration-view {
     padding: 20px;
     max-width: 1200px;
-    margin: 0 auto;
+    margin: 0;
+    /* Shift left (was 0 auto) */
 }
 
 .capacity-config-header {
@@ -165,35 +166,42 @@
 /* Collapsible Main Sections */
 .capacity-collapsible-section {
     margin-bottom: 20px;
-    border: 1px solid #e0e0e0;
+    border: none;
+    /* Remove border to blend in */
     border-radius: 6px;
     overflow: hidden;
-    background-color: #fff;
+    background-color: transparent;
+    /* Remove white bg */
 }
 
 .capacity-collapsible-header {
-    padding: 15px 20px;
-    background-color: #f8f9fa;
+    padding: 15px 0;
+    /* Remove horizontal padding to align with text */
+    background-color: transparent;
+    /* Remove header bg */
     cursor: pointer;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid transparent;
-    transition: background-color 0.2s;
+    border-bottom: 1px solid #e0e0e0;
+    /* Keep separator */
+    transition: opacity 0.2s;
 }
 
 .capacity-collapsible-header:hover {
-    background-color: #f1f3f5;
+    opacity: 0.8;
+    background-color: transparent;
 }
 
 .capacity-collapsible-header--active {
     border-bottom-color: #e0e0e0;
-    background-color: #fff;
+    background-color: transparent;
 }
 
 .capacity-collapsible-body {
     display: none;
-    padding: 20px;
+    padding: 20px 0;
+    /* Remove horizontal padding */
 }
 
 .capacity-collapsible-body--visible {
@@ -253,15 +261,17 @@
 }
 
 .capacity-team-item:hover {
-    background-color: #fcfcfc;
+    background-color: rgba(0, 0, 0, 0.02);
+    /* Subtle hover */
 }
 
 .capacity-team-item--active {
-    background-color: #f8f9fa;
+    background-color: transparent;
 }
 
 .capacity-team-header {
-    padding: 15px 10px;
+    padding: 15px 0;
+    /* Align left */
     cursor: pointer;
     display: flex;
     justify-content: space-between;
@@ -280,9 +290,10 @@
 
 .capacity-team-body {
     display: none;
-    padding: 20px;
-    background-color: #fff;
-    /* Keep body white */
+    padding: 20px 0;
+    /* Align left */
+    background-color: transparent;
+    /* Remove white bg */
     border-top: 1px solid #f0f0f0;
 }
 
