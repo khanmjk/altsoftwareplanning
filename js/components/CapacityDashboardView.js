@@ -246,6 +246,43 @@ class CapacityDashboardView {
             '#007bff'  // Net (Blue)
         ];
 
+        // Custom Plugin for Data Labels
+        const dataLabelsPlugin = {
+            id: 'customDataLabels',
+            afterDatasetsDraw: (chart) => {
+                const ctx = chart.ctx;
+                chart.data.datasets.forEach((dataset, i) => {
+                    const meta = chart.getDatasetMeta(i);
+                    if (!meta.hidden) {
+                        meta.data.forEach((element, index) => {
+                            // Get value
+                            const value = dataset.data[index];
+                            if (value === 0) return; // Skip zero values
+
+                            const valueText = value.toFixed(1);
+
+                            // Font settings
+                            ctx.font = 'bold 11px "Inter", sans-serif';
+                            ctx.fillStyle = '#495057';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'bottom';
+
+                            // Position
+                            const position = element.tooltipPosition();
+                            let yPos = position.y - 5; // Default above
+
+                            // Adjust for negative values to be below
+                            if (value < 0) {
+                                yPos = position.y + 15;
+                            }
+
+                            ctx.fillText(valueText, position.x, yPos);
+                        });
+                    }
+                });
+            }
+        };
+
         this.chartInstance = new Chart(canvas, {
             type: 'bar',
             data: {
@@ -270,27 +307,66 @@ class CapacityDashboardView {
                 scales: {
                     y: {
                         beginAtZero: true,
-                        title: { display: true, text: 'SDE Years' }
+                        title: { display: true, text: 'SDE Years' },
+                        grace: '10%' // Add space for labels
                     }
                 }
-            }
+            },
+            plugins: [dataLabelsPlugin]
         });
     }
 
     _renderSummaryTable(parent, metrics) {
         const section = document.createElement('div');
-        section.className = 'capacity-summary-table';
+        section.className = 'capacity-collapsible-section';
+        section.style.marginTop = '20px';
 
+        // Header
+        const header = document.createElement('div');
+        header.className = 'capacity-collapsible-header';
+
+        const titleGroup = document.createElement('div');
         const title = document.createElement('h4');
-        title.textContent = 'Detailed Team Breakdown';
-        section.appendChild(title);
+        title.className = 'capacity-section-title';
 
+        // Dynamic Title
+        const scenarioName = {
+            'EffectiveBIS': 'Effective BIS',
+            'TeamBIS': 'Team BIS',
+            'FundedHC': 'Funded Headcount'
+        }[this.currentScenario] || this.currentScenario;
+
+        title.textContent = `Detailed Team Breakdown (${scenarioName})`;
+        titleGroup.appendChild(title);
+        header.appendChild(titleGroup);
+
+        const icon = document.createElement('i');
+        icon.className = 'fas fa-chevron-down capacity-collapsible-icon';
+        header.appendChild(icon);
+
+        // Body (Collapsed by default)
+        const body = document.createElement('div');
+        body.className = 'capacity-collapsible-body';
+        body.style.display = 'none';
+
+        header.onclick = () => {
+            const isHidden = body.style.display === 'none' || body.style.display === '';
+            body.style.display = isHidden ? 'block' : 'none';
+            header.classList.toggle('capacity-collapsible-header--active', isHidden);
+        };
+
+        section.appendChild(header);
+
+        // Table Content
         const table = document.createElement('table');
         table.className = 'table table-striped table-hover';
 
         const thead = table.createTHead();
         const headerRow = thead.insertRow();
-        ['Team', 'Headcount', 'Gross', 'Deductions', 'AI Gain', 'Net Capacity'].forEach(text => {
+
+        const hcColumnName = `Headcount (${scenarioName})`;
+
+        ['Team', hcColumnName, 'Gross', 'Deductions', 'AI Gain', 'Net Capacity'].forEach(text => {
             const th = document.createElement('th');
             th.textContent = text;
             headerRow.appendChild(th);
@@ -322,7 +398,8 @@ class CapacityDashboardView {
             if (m.netYrs <= 0) netCell.classList.add('capacity-summary-net--negative');
         });
 
-        section.appendChild(table);
+        body.appendChild(table);
+        section.appendChild(body);
         parent.appendChild(section);
     }
 }
