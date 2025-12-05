@@ -119,3 +119,13 @@ Based on the current model's limitations and standard industry practices, potent
 - **Enhanced Visualizations:** Offering different chart types for analysis.
 - **Project Linking:** Connecting forecasted capacity to planned project demands (a major integration).
 </details>
+
+<details>
+<summary>9. What is 'Playground Mode' and what assumptions does it use?</summary>
+
+'Playground Mode' is activated when you leave the team selector on "-- Select a Team --".
+
+-   **Functionality:** It unlocks the 'Funded Team Size' and 'Current Engineers' fields, allowing you to manually enter values and run independent "what-if" simulations without affecting any actual team data.
+-   **Capacity Assumption:** Unlike team-specific forecasts which use your configured Capacity Constraints (holidays, leave, overhead), Playground Mode assumes a **perfect 5-day productive week (5.0 Net Available Days per SDE)**.
+-   **Implication:** The 'Effective Engineers' (Blue line) will typically be higher in Playground Mode than for a real team, as it does not account for any non-project time (meetings, holidays, leave). Use this mode to establish a theoretical "maximum velocity" baseline.
+</details>

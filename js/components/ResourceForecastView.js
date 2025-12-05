@@ -149,8 +149,8 @@ class ResourceForecastView {
             return group;
         };
 
-        inputSection.appendChild(createInput('Funded Team Size', 'rf-funded-size', null, 'Total headcount budget (from Team data).', true));
-        inputSection.appendChild(createInput('Current Engineers', 'rf-current-eng', null, 'Currently assigned engineers (from Team data).', true));
+        inputSection.appendChild(createInput('Funded Team Size', 'rf-funded-size', null, 'Total headcount budget.'));
+        inputSection.appendChild(createInput('Current Engineers', 'rf-current-eng', null, 'Currently assigned engineers.'));
         inputSection.appendChild(createInput('Avg Hiring Time (weeks)', 'rf-hiring-time', '12', 'Time from req open to start date.'));
         inputSection.appendChild(createInput('Ramp-up Time (weeks)', 'rf-ramp-up', '10', 'Time to reach full productivity.'));
         inputSection.appendChild(createInput('Annual Attrition (%)', 'rf-attrition', '10', 'Expected annual turnover rate.'));
@@ -267,10 +267,21 @@ class ResourceForecastView {
         this._clearOutputs();
 
         if (!teamId) {
+            // Playground Mode: Enable inputs
+            fundedInput.readOnly = false;
+            currentInput.readOnly = false;
             fundedInput.value = '';
             currentInput.value = '';
+            fundedInput.placeholder = 'Enter size';
+            currentInput.placeholder = 'Enter count';
             return;
         }
+
+        // Team Selected Mode: Read-only inputs
+        fundedInput.readOnly = true;
+        currentInput.readOnly = true;
+        fundedInput.placeholder = '-';
+        currentInput.placeholder = '-';
 
         const team = window.currentSystemData.teams.find(t => t.teamId === teamId);
         if (team) {
@@ -293,11 +304,6 @@ class ResourceForecastView {
     }
 
     _generateForecast() {
-        if (!this.currentTeamId) {
-            window.notificationManager.showToast('Please select a team first.', 'warning');
-            return;
-        }
-
         // Gather inputs
         const fundedSize = parseInt(document.getElementById('rf-funded-size').value) || 0;
         const currentEng = parseInt(document.getElementById('rf-current-eng').value) || 0;
@@ -336,9 +342,14 @@ class ResourceForecastView {
         box.style.display = 'block';
         box.innerHTML = '';
 
-        const team = window.currentSystemData.teams.find(t => t.teamId === this.currentTeamId);
-        let teamDisplayName = 'the team';
-        let simpleTeamName = 'the team';
+        let team = null;
+        if (this.currentTeamId && window.currentSystemData && window.currentSystemData.teams) {
+            team = window.currentSystemData.teams.find(t => t.teamId === this.currentTeamId);
+        }
+
+        let teamDisplayName = 'Playground Scenario';
+        let simpleTeamName = 'this scenario';
+        let capacityContext = 'Standard 5-day week capacity (Playground Mode)';
 
         if (team) {
             const identity = team.teamIdentity;
@@ -350,6 +361,7 @@ class ResourceForecastView {
             } else {
                 teamDisplayName = identity || name || 'the team';
             }
+            capacityContext = `Capacity Configuration data for ${simpleTeamName} (including leave, holidays, overhead, etc.)`;
         }
 
         // 1. Headline
@@ -374,9 +386,9 @@ class ResourceForecastView {
         ul.style.paddingLeft = '24px';
 
         const params = [
-            `Avg.Hiring Time: ${hiringTime} weeks`,
-            `Avg.Ramp - up Time: ${rampUp} weeks`,
-            `Annual Attrition Rate: ${attrition}% `
+            `Avg. Hiring Time: ${hiringTime} weeks`,
+            `Avg. Ramp-up Time: ${rampUp} weeks`,
+            `Annual Attrition Rate: ${attrition}%`
         ];
 
         params.forEach(text => {
@@ -395,7 +407,7 @@ class ResourceForecastView {
         boldText.textContent = "The 'Effective Engineers' shown reflect the ramped-up engineers adjusted for their actual productive time. ";
         explanation.appendChild(boldText);
 
-        const normalText = document.createTextNode(`Based on the Capacity Configuration data for ${simpleTeamName}(including leave, holidays, overhead, etc.), the calculated average net available days per SDE per week is approximately ${netAvailableDays.toFixed(2)} (out of 5).`);
+        const normalText = document.createTextNode(`Based on the ${capacityContext}, the calculated average net available days per SDE per week is approximately ${netAvailableDays.toFixed(2)} (out of 5).`);
         explanation.appendChild(normalText);
 
         box.appendChild(explanation);
