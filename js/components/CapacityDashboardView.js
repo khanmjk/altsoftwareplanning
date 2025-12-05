@@ -317,88 +317,169 @@ class CapacityDashboardView {
     }
 
     _renderSummaryTable(parent, metrics) {
-        const section = document.createElement('div');
-        section.className = 'capacity-collapsible-section';
-        section.style.marginTop = '20px';
-
-        // Header
-        const header = document.createElement('div');
-        header.className = 'capacity-collapsible-header';
-
-        const titleGroup = document.createElement('div');
-        const title = document.createElement('h4');
-        title.className = 'capacity-section-title';
-
-        // Dynamic Title
         const scenarioName = {
             'EffectiveBIS': 'Effective BIS',
             'TeamBIS': 'Team BIS',
             'FundedHC': 'Funded Headcount'
         }[this.currentScenario] || this.currentScenario;
 
-        title.textContent = `Detailed Team Breakdown (${scenarioName})`;
+        this._createCollapsibleSection(
+            `Detailed Team Breakdown (${scenarioName})`,
+            (container) => {
+                const table = document.createElement('table');
+                table.className = 'table table-striped table-hover';
+
+                const thead = table.createTHead();
+                const headerRow = thead.insertRow();
+
+                const hcColumnName = `Headcount (${scenarioName})`;
+
+                ['Team', hcColumnName, 'Gross', 'Deductions', 'AI Gain', 'Net Capacity'].forEach(text => {
+                    const th = document.createElement('th');
+                    th.textContent = text;
+                    headerRow.appendChild(th);
+                });
+
+                const tbody = table.createTBody();
+                const teams = window.currentSystemData.teams || [];
+
+                teams.forEach(team => {
+                    const m = metrics[team.teamId]?.[this.currentScenario];
+                    if (!m) return;
+
+                    const row = tbody.insertRow();
+                    row.insertCell().textContent = team.teamIdentity || team.teamName;
+                    row.insertCell().textContent = m.totalHeadcount.toFixed(1);
+                    row.insertCell().textContent = m.grossYrs.toFixed(2);
+
+                    const dedCell = row.insertCell();
+                    dedCell.textContent = `-${m.deductYrs.toFixed(2)}`;
+                    dedCell.className = 'capacity-summary-deduction';
+
+                    const aiCell = row.insertCell();
+                    aiCell.textContent = `+${(m.deductionsBreakdown.aiProductivityGainYrs || 0).toFixed(2)}`;
+                    aiCell.className = 'capacity-summary-gain';
+
+                    const netCell = row.insertCell();
+                    netCell.textContent = m.netYrs.toFixed(2);
+                    netCell.className = 'capacity-summary-net';
+                    if (m.netYrs <= 0) netCell.classList.add('capacity-summary-net--negative');
+                });
+
+                container.appendChild(table);
+            },
+            parent,
+            true // collapsed by default
+        );
+
+        // Render Narrative Section below table
+        this._renderNarrativeSection(parent, metrics);
+    }
+
+    _renderNarrativeSection(parent, metrics) {
+        this._createCollapsibleSection(
+            'Capacity Narrative',
+            (container) => {
+                const totals = metrics.totals[this.currentScenario];
+                const scenarioName = this.currentScenario;
+                const aiHC = totals.totalHeadcount - totals.humanHeadcount;
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'capacity-narrative-content';
+                wrapper.style.padding = '20px';
+                wrapper.style.lineHeight = '1.6';
+                wrapper.style.color = '#333';
+
+                // 1. Overall Summary
+                const h4 = document.createElement('h4');
+                h4.textContent = `Overall Capacity Summary (${scenarioName})`;
+                h4.style.marginTop = '0';
+                h4.style.marginBottom = '15px';
+                h4.style.fontSize = '1.1rem';
+                h4.style.fontWeight = '600';
+                wrapper.appendChild(h4);
+
+                const p1 = document.createElement('p');
+                p1.innerHTML = `For this scenario, the organization's <strong>Gross Capacity is ${totals.grossYrs.toFixed(2)} SDE Years</strong>. This initial figure is derived from a total headcount of <strong>${totals.totalHeadcount.toFixed(1)}</strong>, which is composed of <strong>${totals.humanHeadcount.toFixed(1)} Human Engineers</strong> and <strong>${aiHC.toFixed(1)} AI Engineers</strong>.`;
+                wrapper.appendChild(p1);
+
+                const p2 = document.createElement('p');
+                p2.innerHTML = `To determine realistic project availability, we first subtract time for operational overheads. These "capacity sinks"—such as leave, public holidays, recurring meetings, and organizational events—amount to a total deduction of <strong>${totals.deductYrs.toFixed(2)} SDE Years</strong>. It's important to note that these sinks are calculated based on the <em>human headcount only</em>, as AI engineers do not take vacation or attend most team meetings.`;
+                wrapper.appendChild(p2);
+
+                const aiGain = totals.deductionsBreakdown.aiProductivityGainYrs || 0;
+                const p3 = document.createElement('p');
+                p3.innerHTML = `After accounting for those deductions, a productivity dividend is applied. The use of AI tooling provides a calculated gain of <strong>${aiGain.toFixed(2)} SDE Years</strong> across the organization. This gain is applied back to the available human capacity.`;
+                wrapper.appendChild(p3);
+
+                const p4 = document.createElement('p');
+                p4.innerHTML = `Therefore, after subtracting the sinks from the gross capacity and adding back the AI productivity gains, the final estimated <strong>Net Project Capacity is ${totals.netYrs.toFixed(2)} SDE Years</strong> for the organization.`;
+                wrapper.appendChild(p4);
+
+                // 2. Team Breakdown
+                const hr = document.createElement('hr');
+                hr.style.margin = '25px 0';
+                hr.style.borderTop = '1px solid #eee';
+                wrapper.appendChild(hr);
+
+                const h4Team = document.createElement('h4');
+                h4Team.textContent = `Team-Specific Breakdown (${scenarioName} Scenario)`;
+                h4Team.style.marginBottom = '15px';
+                h4Team.style.fontSize = '1.1rem';
+                h4Team.style.fontWeight = '600';
+                wrapper.appendChild(h4Team);
+
+                const teams = window.currentSystemData.teams || [];
+                teams.forEach(team => {
+                    const m = metrics[team.teamId]?.[this.currentScenario];
+                    if (!m) return;
+
+                    const tGain = m.deductionsBreakdown.aiProductivityGainYrs || 0;
+                    const pTeam = document.createElement('p');
+                    pTeam.style.marginBottom = '10px';
+                    pTeam.innerHTML = `<strong>${team.teamIdentity || team.teamName}</strong>: Starts with a Gross Capacity of <strong>${m.grossYrs.toFixed(2)} SDE Years</strong>. From this, <strong>${m.deductYrs.toFixed(2)} SDE Years</strong> are deducted for human-centric sinks (leave, overhead, etc.). An estimated <strong>${tGain.toFixed(2)} SDE Years</strong> are then regained through AI tooling productivity enhancements, resulting in a final Net Project Capacity of <strong>${m.netYrs.toFixed(2)} SDE Years</strong> for this team.`;
+                    wrapper.appendChild(pTeam);
+                });
+
+                container.appendChild(wrapper);
+            },
+            parent,
+            true // collapsed by default
+        );
+    }
+
+    _createCollapsibleSection(titleText, contentRenderer, parent, isCollapsed = true) {
+        const section = document.createElement('div');
+        section.className = 'capacity-collapsible-section';
+        // Removed inline margin-top to rely on CSS classes
+
+        const header = document.createElement('div');
+        header.className = 'capacity-collapsible-header';
+
+        const titleGroup = document.createElement('div');
+        const title = document.createElement('h4');
+        title.className = 'capacity-section-title';
+        title.textContent = titleText;
         titleGroup.appendChild(title);
         header.appendChild(titleGroup);
 
         const icon = document.createElement('i');
-        icon.className = 'fas fa-chevron-down capacity-collapsible-icon';
+        icon.className = `fas fa-chevron-${isCollapsed ? 'down' : 'up'} capacity-collapsible-icon`;
         header.appendChild(icon);
 
-        // Body (Collapsed by default)
         const body = document.createElement('div');
         body.className = 'capacity-collapsible-body';
-        body.style.display = 'none';
+        body.style.display = isCollapsed ? 'none' : 'block';
 
         header.onclick = () => {
             const isHidden = body.style.display === 'none' || body.style.display === '';
             body.style.display = isHidden ? 'block' : 'none';
+            icon.className = `fas fa-chevron-${isHidden ? 'up' : 'down'} capacity-collapsible-icon`;
             header.classList.toggle('capacity-collapsible-header--active', isHidden);
         };
 
         section.appendChild(header);
-
-        // Table Content
-        const table = document.createElement('table');
-        table.className = 'table table-striped table-hover';
-
-        const thead = table.createTHead();
-        const headerRow = thead.insertRow();
-
-        const hcColumnName = `Headcount (${scenarioName})`;
-
-        ['Team', hcColumnName, 'Gross', 'Deductions', 'AI Gain', 'Net Capacity'].forEach(text => {
-            const th = document.createElement('th');
-            th.textContent = text;
-            headerRow.appendChild(th);
-        });
-
-        const tbody = table.createTBody();
-        const teams = window.currentSystemData.teams || [];
-
-        teams.forEach(team => {
-            const m = metrics[team.teamId]?.[this.currentScenario];
-            if (!m) return;
-
-            const row = tbody.insertRow();
-            row.insertCell().textContent = team.teamIdentity || team.teamName;
-            row.insertCell().textContent = m.totalHeadcount.toFixed(1);
-            row.insertCell().textContent = m.grossYrs.toFixed(2);
-
-            const dedCell = row.insertCell();
-            dedCell.textContent = `-${m.deductYrs.toFixed(2)}`;
-            dedCell.className = 'capacity-summary-deduction';
-
-            const aiCell = row.insertCell();
-            aiCell.textContent = `+${(m.deductionsBreakdown.aiProductivityGainYrs || 0).toFixed(2)}`;
-            aiCell.className = 'capacity-summary-gain';
-
-            const netCell = row.insertCell();
-            netCell.textContent = m.netYrs.toFixed(2);
-            netCell.className = 'capacity-summary-net';
-            if (m.netYrs <= 0) netCell.classList.add('capacity-summary-net--negative');
-        });
-
-        body.appendChild(table);
+        contentRenderer(body);
         section.appendChild(body);
         parent.appendChild(section);
     }
