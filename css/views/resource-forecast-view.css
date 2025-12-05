@@ -244,3 +244,54 @@
     color: var(--text-secondary);
     font-style: italic;
 }
+
+/* --- Markdown FAQ Styles --- */
+/* These styles target the content rendered from sdmResourceForecastingFAQ.md */
+
+#rf-faq-container h1,
+#rf-faq-container h2 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-top: var(--spacing-xxl);
+    margin-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: var(--spacing-sm);
+}
+
+#rf-faq-container h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-top: var(--spacing-xl);
+    /* Reasonable gap between questions */
+    margin-bottom: var(--spacing-sm);
+}
+
+#rf-faq-container p {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: var(--spacing-md);
+}
+
+#rf-faq-container ul {
+    padding-left: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+}
+
+#rf-faq-container li {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 4px;
+}
+
+#rf-faq-container strong {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+#rf-faq-container em {
+    font-style: italic;
+}
