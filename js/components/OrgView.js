@@ -14,6 +14,9 @@ class OrgView {
     /**
      * Render the organization view
      */
+    /**
+     * Render the organization view
+     */
     render() {
         if (!this.container) {
             console.error('OrgView: Container not found');
@@ -52,8 +55,14 @@ class OrgView {
             window.workspaceComponent.setToolbar(this.pillNav.render());
         }
 
+        this.container.innerHTML = ''; // Clear container cleanly
+
         if (!window.currentSystemData) {
-            this.container.innerHTML = '<div class="org-view"><p style="color: red;">No system data loaded</p></div>';
+            const errorMsg = document.createElement('div');
+            errorMsg.className = 'workspace-empty-state';
+            errorMsg.textContent = 'No system data loaded';
+            errorMsg.style.color = 'red'; // Keep simple inline for critical error fallback
+            this.container.appendChild(errorMsg);
             return;
         }
 
@@ -63,15 +72,30 @@ class OrgView {
 
     /**
      * Generate the view layout
+     * REFACTORED: Strict DOM creation
      */
     generateLayout() {
-        this.container.innerHTML = `
-            <div class="org-view">
-                <div id="organogramContent" class="org-content-area"></div>
-                <div id="teamBreakdown" class="org-content-area" style="display: none;"></div>
-                <div id="orgEngineerListView" class="org-content-area" style="display: none;"></div>
-            </div>
-        `;
+        const wrapper = document.createElement('div');
+        wrapper.className = 'org-view';
+
+        const chartContainer = document.createElement('div');
+        chartContainer.id = 'organogramContent';
+        chartContainer.className = 'org-content-area';
+        wrapper.appendChild(chartContainer);
+
+        const tableContainer = document.createElement('div');
+        tableContainer.id = 'teamBreakdown';
+        tableContainer.className = 'org-content-area';
+        tableContainer.style.display = 'none';
+        wrapper.appendChild(tableContainer);
+
+        const engineerListContainer = document.createElement('div');
+        engineerListContainer.id = 'orgEngineerListView';
+        engineerListContainer.className = 'org-content-area';
+        engineerListContainer.style.display = 'none';
+        wrapper.appendChild(engineerListContainer);
+
+        this.container.appendChild(wrapper);
     }
 
     /**
@@ -207,72 +231,108 @@ class OrgView {
 
     /**
      * Render HTML list view
+     * REFACTORED: Recursive DOM creation (No innerHTML)
      */
     renderHtmlOrgList(container) {
         const hierarchicalData = this.buildHierarchyData();
 
-        if (!hierarchicalData || !container) {
+        container.innerHTML = ''; // Clear previous content
+
+        if (!hierarchicalData) {
             console.error('No data for HTML org list');
-            if (container) container.innerHTML = '<p style="color: red;">Could not generate organogram data.</p>';
+            const error = document.createElement('p');
+            error.className = 'org-error-message';
+            error.textContent = 'Could not generate organogram data.';
+            container.appendChild(error);
             return;
         }
 
-        container.innerHTML = '';
-        container.style.fontFamily = 'Arial, sans-serif';
+        this.buildLevelDOM(hierarchicalData, 0, container);
+    }
 
-        const buildLevel = (node, level) => {
-            if (!node) return '';
+    /**
+     * Recursive helper to build DOM for Org List
+     */
+    buildLevelDOM(node, level, parentContainer) {
+        if (!node) return;
 
-            let html = `<div class="org-level-${level}" style="margin-left: ${level * 25}px; margin-bottom: 5px; padding: 3px 5px; border-left: 2px solid #eee; position: relative;">`;
-            let nodeContent = '';
-            let nodeStyle = '';
+        const nodeDiv = document.createElement('div');
+        nodeDiv.className = `org-list-node org-level-${level}`;
 
-            switch (node.type) {
-                case 'root':
-                    nodeContent = `<strong>System: ${node.name || 'N/A'}</strong>`;
-                    nodeStyle = 'font-size: 1.2em; color: #333;';
-                    break;
-                case 'srMgr':
-                    nodeContent = `<strong>Sr. Manager: ${node.seniorManagerName || node.name || 'N/A'}</strong>`;
-                    nodeStyle = 'font-size: 1.1em; color: #0056b3;';
-                    break;
-                case 'sdm':
-                    nodeContent = `<strong>SDM: ${node.sdmName || node.name || 'N/A'}</strong>`;
-                    nodeStyle = 'color: #007bff;';
-                    break;
-                case 'team':
-                    nodeContent = `<span style="color: #17a2b8;">Team: ${node.name || 'N/A'}</span> <span style="font-size: 0.8em; color: #555;">(${node.details || ''})</span>`;
-                    if (node.awayTeamCount > 0) {
-                        nodeContent += ` <span style="color: #dc3545; font-style: italic; font-size: 0.9em;">(+${node.awayTeamCount} Away)</span>`;
-                    }
-                    if (node.children && node.children.length > 0) {
-                        nodeContent += '<ul style="list-style: none; padding-left: 15px; margin-top: 3px;">';
-                        node.children.forEach(eng => {
-                            if (eng.type === 'engineer') {
-                                nodeContent += `<li style="font-size:0.85em;">${eng.name}</li>`;
-                            }
-                        });
-                        nodeContent += '</ul>';
-                    }
-                    break;
-                default:
-                    nodeContent = `<strong>${node.name || 'Group'}</strong>`;
-                    nodeStyle = 'color: #6c757d;';
-            }
+        // Create Content Span
+        const contentSpan = document.createElement('span');
 
-            html += `<span style="${nodeStyle}">${nodeContent}</span>`;
+        // Define text and style based on type
+        // Using classes from org-view.css instead of inline styles
+        let textClass = 'org-text-default';
+        let mainText = node.name || 'Group';
+        let detailsText = '';
 
-            if (node.children && node.children.length > 0 && node.type !== 'team' && node.type !== 'engineer') {
-                node.children.forEach(child => {
-                    html += buildLevel(child, level + 1);
-                });
-            }
+        switch (node.type) {
+            case 'root':
+                textClass = 'org-text-root';
+                mainText = `System: ${node.name || 'N/A'}`;
+                break;
+            case 'srMgr':
+                textClass = 'org-text-srmgr';
+                mainText = `Sr. Manager: ${node.seniorManagerName || node.name || 'N/A'}`;
+                break;
+            case 'sdm':
+                textClass = 'org-text-sdm';
+                mainText = `SDM: ${node.sdmName || node.name || 'N/A'}`;
+                break;
+            case 'team':
+                textClass = 'org-text-team';
+                mainText = `Team: ${node.name || 'N/A'}`;
+                detailsText = `(${node.details || ''})`;
+                break;
+        }
 
-            html += `</div>`;
-            return html;
-        };
+        const mainTextEl = document.createElement('strong');
+        mainTextEl.className = textClass;
+        mainTextEl.textContent = mainText;
+        contentSpan.appendChild(mainTextEl);
 
-        container.innerHTML = buildLevel(hierarchicalData, 0);
+        if (detailsText) {
+            const detailsEl = document.createElement('span');
+            detailsEl.className = 'org-details';
+            detailsEl.textContent = detailsText;
+            contentSpan.appendChild(detailsEl);
+        }
+
+        if (node.awayTeamCount > 0) {
+            const awayEl = document.createElement('span');
+            awayEl.className = 'org-away-tag';
+            awayEl.textContent = `(+${node.awayTeamCount} Away)`;
+            contentSpan.appendChild(awayEl);
+        }
+
+        nodeDiv.appendChild(contentSpan);
+
+        // Engineer List (for teams)
+        if (node.type === 'team' && node.children && node.children.length > 0) {
+            const engList = document.createElement('ul');
+            engList.className = 'org-engineer-list';
+
+            node.children.forEach(eng => {
+                if (eng.type === 'engineer') {
+                    const engItem = document.createElement('li');
+                    engItem.className = 'org-engineer-item';
+                    engItem.textContent = eng.name;
+                    engList.appendChild(engItem);
+                }
+            });
+            nodeDiv.appendChild(engList);
+        }
+
+        parentContainer.appendChild(nodeDiv);
+
+        // Recursive children (excluding engineers/team children handled above)
+        if (node.children && node.children.length > 0 && node.type !== 'team' && node.type !== 'engineer') {
+            node.children.forEach(child => {
+                this.buildLevelDOM(child, level + 1, parentContainer);
+            });
+        }
     }
 
     /**
@@ -284,7 +344,14 @@ class OrgView {
 
         if (!hierarchicalData || !container) {
             console.error('D3 Org Chart container or data not found');
-            if (container) container.innerHTML = '<p style="color: red;">Could not generate D3 organogram data.</p>';
+            // Strict DOM replacement for error
+            if (container) {
+                container.innerHTML = '';
+                const p = document.createElement('p');
+                p.style.color = 'red';
+                p.textContent = 'Could not generate D3 organogram data.';
+                container.appendChild(p);
+            }
             return;
         }
 
@@ -312,8 +379,9 @@ class OrgView {
                 .attr("viewBox", [0, 0, width, height])
                 .style("overflow", "auto");
 
+            // Use d3-org-tooltip class for style compliance
             const tooltip = d3.select("body").selectAll(".tooltip").data([null]).join("div")
-                .attr("class", "tooltip")
+                .attr("class", "d3-org-tooltip")
                 .style("opacity", 0);
 
             const g = svg.append("g");
@@ -522,19 +590,19 @@ class OrgView {
 
     /**
      * Generate team table using EnhancedTableWidget
-     * IMPORTANT: AI agent integration point
      */
     generateTeamTable() {
+        // ... (Logic remains mostly same, just checking container interactions) ... 
+        const widgetContainer = document.getElementById('teamBreakdown');
+        if (!widgetContainer) return;
+
+        widgetContainer.innerHTML = ''; // Clean slate
+
+        // ... (Rest of existing logic is fine as EnhancedTableWidget handles its DOM internally safely) ...
+        // Re-injecting the original logic cleanly:
+
         const tableData = this.prepareTeamDataForTabulator();
         const columnDefs = this.defineTeamTableColumns();
-        const widgetContainer = document.getElementById('teamBreakdown');
-
-        if (!widgetContainer) {
-            console.error('Team table container not found');
-            return;
-        }
-
-        widgetContainer.innerHTML = '';
 
         if (this.teamTableWidgetInstance) {
             this.teamTableWidgetInstance.destroy();
@@ -557,7 +625,10 @@ class OrgView {
             });
         } catch (error) {
             console.error('Error creating team table widget:', error);
-            widgetContainer.innerHTML = "<p style='color:red;'>Error initializing team table widget</p>";
+            const errEl = document.createElement('p');
+            errEl.className = 'org-error-message';
+            errEl.textContent = 'Error initializing team table widget';
+            widgetContainer.appendChild(errEl);
         }
     }
 
@@ -682,7 +753,7 @@ class OrgView {
 
     /**
      * Generate engineer table with statistics header and full editing capabilities
-     * REFACTORED: Clean OOP implementation following Phase 2 principles
+     * REFACTORED: Strict DOM creation
      */
     generateEngineerTable() {
         const widgetContainer = document.getElementById('orgEngineerListView');
@@ -691,8 +762,14 @@ class OrgView {
             return;
         }
 
-        // Clear container and create structure
-        widgetContainer.innerHTML = '<p id="orgEngineerTableHeading" class="org-engineer-narrative"></p>';
+        widgetContainer.innerHTML = ''; // Start clean
+
+        // Create narrative paragraph using DOM
+        const narrativeP = document.createElement('p');
+        narrativeP.id = 'orgEngineerTableHeading';
+        narrativeP.className = 'org-engineer-narrative';
+        widgetContainer.appendChild(narrativeP);
+
         const tableDiv = document.createElement('div');
         tableDiv.id = 'orgEngineerTableWidgetContainer';
         widgetContainer.appendChild(tableDiv);
@@ -734,13 +811,16 @@ class OrgView {
             }, 100);
         } catch (error) {
             console.error('Error creating engineer table widget:', error);
-            widgetContainer.innerHTML = "<p style='color:red;'>Error initializing engineer table. Check console.</p>";
+            const errEl = document.createElement('p');
+            errEl.className = 'org-error-message';
+            errEl.textContent = 'Error initializing engineer table. Check console.';
+            widgetContainer.appendChild(errEl);
         }
     }
 
     /**
      * Calculate and update engineer table statistics header
-     * EXTRACTED: Clean helper for statistics calculation
+     * REFACTORED: Strict DOM creation for inner text and elements
      */
     updateEngineerTableStatistics() {
         const heading = document.getElementById('orgEngineerTableHeading');
@@ -748,22 +828,43 @@ class OrgView {
 
         const stats = this.calculateEngineerStatistics();
 
-        let gapText = "";
-        if (stats.hiringGap > 0) {
-            gapText = `There is currently a hiring gap of <strong>${stats.hiringGap}</strong> engineers.`;
-        } else if (stats.hiringGap < 0) {
-            gapText = `We are currently over-hired by <strong>${Math.abs(stats.hiringGap)}</strong> engineers.`;
-        } else {
-            gapText = `We are currently fully staffed against the funded headcount.`;
-        }
+        // Clear existing content
+        heading.innerHTML = ''; // Safe clear as we're rebuilding children
 
-        heading.innerHTML = `The organization is currently funded for <strong>${stats.funded}</strong> headcount. 
-        We have <strong>${stats.teamBIS}</strong> engineers on team, with <strong>${stats.awayBIS}</strong> away on other assignments, 
-        resulting in an effective strength of <strong>${stats.effectiveBIS}</strong>. ${gapText}`;
+        // Helper to create bold text
+        const createBold = (text) => {
+            const b = document.createElement('strong');
+            b.textContent = text;
+            return b;
+        };
+
+        // Construct the sentence: "The organization is currently funded for [X] headcount."
+        heading.appendChild(document.createTextNode('The organization is currently funded for '));
+        heading.appendChild(createBold(stats.funded));
+        heading.appendChild(document.createTextNode(' headcount. We have '));
+        heading.appendChild(createBold(stats.teamBIS));
+        heading.appendChild(document.createTextNode(' engineers on team, with '));
+        heading.appendChild(createBold(stats.awayBIS));
+        heading.appendChild(document.createTextNode(' away-team members borrowed to help, resulting in an effective strength of '));
+        heading.appendChild(createBold(stats.effectiveBIS));
+        heading.appendChild(document.createTextNode('. '));
+
+        // Gap Text
+        if (stats.hiringGap > 0) {
+            heading.appendChild(document.createTextNode('There is currently a hiring gap of '));
+            heading.appendChild(createBold(stats.hiringGap));
+            heading.appendChild(document.createTextNode(' engineers.'));
+        } else if (stats.hiringGap < 0) {
+            heading.appendChild(document.createTextNode('We are currently over-hired by '));
+            heading.appendChild(createBold(Math.abs(stats.hiringGap)));
+            heading.appendChild(document.createTextNode(' engineers.'));
+        } else {
+            heading.appendChild(document.createTextNode('We are currently fully staffed against the funded headcount.'));
+        }
 
         // Remove old tooltip title as the text is now self-explanatory
         heading.removeAttribute('title');
-        heading.style.color = ''; // Remove dynamic color coding
+        heading.style.color = '';
     }
 
     /**

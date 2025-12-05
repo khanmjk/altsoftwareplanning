@@ -212,6 +212,7 @@ the gitgub issues tracker to keep track of user feedback requests
 [TODO] Add goals drop down filter to quarterly roadmap and 3YP
 [TODO] Add backlog status filter to initiatives in quarterly roadmap and 3YP
 [TODO] Fix ROI fields in initiatives management view
+[TODO] Capacity Tuning - Show Hiring Gap as a KPI card in dashboard AND ensure capacity sink calculation does not include full bench strength for teams with an open hiring gap
 
 ------
 TO DO
