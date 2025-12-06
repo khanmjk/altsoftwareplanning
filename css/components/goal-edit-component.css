@@ -1,0 +1,23 @@
+/* Goal Edit Component Styles */
+/* Most styles are now inherited from shared-inline-edit.css */
+
+/* Theme Tags */
+.goal-theme-tag {
+    display: inline-block;
+    padding: 4px 10px;
+    margin-right: 8px;
+    margin-bottom: 4px;
+    background-color: #e0f2fe;
+    /* Light blue */
+    color: #0369a1;
+    /* Dark blue */
+    border-radius: 16px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border: 1px solid #bae6fd;
+}
+
+.text-muted {
+    color: var(--text-secondary);
+    font-style: italic;
+}

@@ -83,7 +83,7 @@ const sampleAllKnownEngineersShopSphere = tempShopSphereEngineers.map(eng => ({
         skills: eng.skills || [],
         yearsOfExperience: eng.yearsOfExperience || 0
     }
-})).concat([ 
+})).concat([
     { name: 'AI-Search-Ranker (ShopSphere)', level: 5, currentTeamId: 'teamSS2', attributes: { isAISWE: true, aiAgentType: "Search Relevance ML", skills: ["Vector Search", "Learning to Rank", "NLP"], yearsOfExperience: null } },
     { name: 'AI-Fraud-Detector (ShopSphere)', level: 4, currentTeamId: 'teamSS5', attributes: { isAISWE: true, aiAgentType: "Fraud Detection ML", skills: ["Anomaly Detection", "Real-time Scoring", "TensorFlow"], yearsOfExperience: null } },
     { name: 'AI-Reco-Bot (ShopSphere)', level: 4, currentTeamId: 'teamSS3', attributes: { isAISWE: true, aiAgentType: "Collaborative Filtering", skills: ["ML", "Cold Start", "Personalization"], yearsOfExperience: null } },
@@ -96,7 +96,7 @@ const shopSphereTeamsData = [
     { teamId: 'teamSS3', teamName: 'Discovery Crew', teamIdentity: 'Discovery Crew', fundedHeadcount: 4, engineers: ['Hannah Davis', 'Ivan Petrov', 'Julia Romano', 'AI-Reco-Bot (ShopSphere)'], awayTeamMembers: [], sdmId: 'sdmSS2', pmtId: 'pmtSS2', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: {}, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 5, aiProductivityGainPercent: 25 }, attributes: {} },
     { teamId: 'teamSS4', teamName: 'Checkout Kings', teamIdentity: 'Checkout Kings', fundedHeadcount: 5, engineers: ['Kenji Watanabe', 'Leo Martinez', 'Mona Amini', 'Nate Jacobs'], awayTeamMembers: [], sdmId: 'sdmSS3', pmtId: 'pmtSS3', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: {}, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 7, aiProductivityGainPercent: 10 }, attributes: {} },
     { teamId: 'teamSS5', teamName: 'Financial Operations', teamIdentity: 'FinOps', fundedHeadcount: 4, engineers: ['Oscar Wilde', 'Patel Kumar', 'Quincy Jones', 'AI-Fraud-Detector (ShopSphere)'], awayTeamMembers: [], sdmId: 'sdmSS3', pmtId: 'pmtSS3', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: {}, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 8, aiProductivityGainPercent: 15 }, attributes: {} },
-    { teamId: 'teamSS6', teamName: 'UI Engineering Wizards', teamIdentity: 'UIE Wizards', fundedHeadcount: 6, engineers: ['Emily White', 'Rachel Green', 'Samwise Gamgee', 'Tina Fey', 'Umar Rashid'], awayTeamMembers: [ { name: 'UXContractor-01', level: 3, sourceTeam: 'External Agency', attributes:{} } ], sdmId: 'sdmSS4', pmtId: 'pmtSS4', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: {}, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 5, aiProductivityGainPercent: 15 }, attributes: {} },
+    { teamId: 'teamSS6', teamName: 'UI Engineering Wizards', teamIdentity: 'UIE Wizards', fundedHeadcount: 6, engineers: ['Emily White', 'Rachel Green', 'Samwise Gamgee', 'Tina Fey', 'Umar Rashid'], awayTeamMembers: [{ name: 'UXContractor-01', level: 3, sourceTeam: 'External Agency', attributes: {} }], sdmId: 'sdmSS4', pmtId: 'pmtSS4', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: {}, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 5, aiProductivityGainPercent: 15 }, attributes: {} },
     { teamId: 'teamSS7', teamName: 'Merchant Guild', teamIdentity: 'Merchant Guild', fundedHeadcount: 5, engineers: ['James Brown', 'Vera Chen', 'Will Turner', 'Xena Warrior'], awayTeamMembers: [], sdmId: 'sdmSS5', pmtId: 'pmtSS5', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: {}, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 4, aiProductivityGainPercent: 5 }, attributes: {} },
     { teamId: 'teamSS8', teamName: 'Data Dragoons', teamIdentity: 'Data Dragoons', fundedHeadcount: 4, engineers: ['Li Wang', 'Yasmin Al-Jamil', 'Zane Miller', 'AI-Support-Analyst (ShopSphere)'], awayTeamMembers: [], sdmId: 'sdmSS6', pmtId: 'pmtSS6', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: {}, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 5, aiProductivityGainPercent: 20 }, attributes: {} }
 ];
@@ -106,7 +106,7 @@ const sampleServicesDataShopSphere = [
         serviceName: 'UserService',
         serviceDescription: 'Manages user accounts, authentication, profiles, and addresses.',
         owningTeamId: 'teamSS1',
-        apis: [ { apiName: 'AuthAPI', apiDescription: 'Handles user login and registration.', dependentApis: [], attributes: {} }, { apiName: 'ProfileAPI', apiDescription: 'Manages user profile data.', dependentApis: [], attributes: {} } ],
+        apis: [{ apiName: 'AuthAPI', apiDescription: 'Handles user login and registration.', dependentApis: [], attributes: {} }, { apiName: 'ProfileAPI', apiDescription: 'Manages user profile data.', dependentApis: [], attributes: {} }],
         serviceDependencies: [],
         platformDependencies: ['AWS Cognito', 'AWS DynamoDB'],
         attributes: {}
@@ -115,7 +115,7 @@ const sampleServicesDataShopSphere = [
         serviceName: 'ProductCatalogService',
         serviceDescription: 'Manages all product information, categories, and pricing.',
         owningTeamId: 'teamSS7',
-        apis: [ { apiName: 'ProductAPI', apiDescription: 'Get product details by SKU or ID.', dependentApis: [], attributes: {} }, { apiName: 'CategoryAPI', apiDescription: 'Get products by category.', dependentApis: ['SearchService:SearchAPI'], attributes: {} } ],
+        apis: [{ apiName: 'ProductAPI', apiDescription: 'Get product details by SKU or ID.', dependentApis: [], attributes: {} }, { apiName: 'CategoryAPI', apiDescription: 'Get products by category.', dependentApis: ['SearchService:SearchAPI'], attributes: {} }],
         serviceDependencies: ['SellerPortalService'],
         platformDependencies: ['AWS S3', 'PostgreSQL'],
         attributes: {}
@@ -124,7 +124,7 @@ const sampleServicesDataShopSphere = [
         serviceName: 'SearchService',
         serviceDescription: 'Provides product search, faceting, and typeahead.',
         owningTeamId: 'teamSS2',
-        apis: [ { apiName: 'SearchAPI', apiDescription: 'Main search query API.', dependentApis: [], attributes: {} }, { apiName: 'TypeaheadAPI', apiDescription: 'Provides search suggestions.', dependentApis: [], attributes: {} } ],
+        apis: [{ apiName: 'SearchAPI', apiDescription: 'Main search query API.', dependentApis: [], attributes: {} }, { apiName: 'TypeaheadAPI', apiDescription: 'Provides search suggestions.', dependentApis: [], attributes: {} }],
         serviceDependencies: ['ProductCatalogService', 'IndexingService'],
         platformDependencies: ['Elasticsearch', 'Redis'],
         attributes: {}
@@ -133,7 +133,7 @@ const sampleServicesDataShopSphere = [
         serviceName: 'IndexingService',
         serviceDescription: 'Consumes product updates and indexes them into the search engine.',
         owningTeamId: 'teamSS2',
-        apis: [ { apiName: 'UpdateIndexAPI', apiDescription: 'Receives updates to index.', dependentApis: [], attributes: {} } ],
+        apis: [{ apiName: 'UpdateIndexAPI', apiDescription: 'Receives updates to index.', dependentApis: [], attributes: {} }],
         serviceDependencies: ['ProductCatalogService'],
         platformDependencies: ['Kafka', 'Elasticsearch'],
         attributes: {}
@@ -142,7 +142,7 @@ const sampleServicesDataShopSphere = [
         serviceName: 'RecommendationService',
         serviceDescription: 'Generates personalized product recommendations.',
         owningTeamId: 'teamSS3',
-        apis: [ { apiName: 'RecommendationsAPI', apiDescription: 'Get recommendations for a user or product.', dependentApis: ['ProductCatalogService:ProductAPI', 'UserService:ProfileAPI'], attributes: {} } ],
+        apis: [{ apiName: 'RecommendationsAPI', apiDescription: 'Get recommendations for a user or product.', dependentApis: ['ProductCatalogService:ProductAPI', 'UserService:ProfileAPI'], attributes: {} }],
         serviceDependencies: ['ProductCatalogService', 'UserService', 'AnalyticsPipelineService'],
         platformDependencies: ['AWS Sagemaker', 'Spark', 'S3'],
         attributes: {}
@@ -151,7 +151,7 @@ const sampleServicesDataShopSphere = [
         serviceName: 'ShoppingCartService',
         serviceDescription: 'Manages user shopping carts.',
         owningTeamId: 'teamSS4',
-        apis: [ { apiName: 'CartAPI', apiDescription: 'Add, remove, and view cart items.', dependentApis: ['ProductCatalogService:ProductAPI'], attributes: {} } ],
+        apis: [{ apiName: 'CartAPI', apiDescription: 'Add, remove, and view cart items.', dependentApis: ['ProductCatalogService:ProductAPI'], attributes: {} }],
         serviceDependencies: ['ProductCatalogService', 'UserService'],
         platformDependencies: ['Redis', 'DynamoDB'],
         attributes: {}
@@ -160,7 +160,7 @@ const sampleServicesDataShopSphere = [
         serviceName: 'OrderService',
         serviceDescription: 'Manages the order lifecycle from creation to fulfillment.',
         owningTeamId: 'teamSS4',
-        apis: [ { apiName: 'CreateOrderAPI', apiDescription: 'Creates a new order.', dependentApis: ['ShoppingCartService:CartAPI', 'PaymentService:ChargeAPI', 'InventoryService:ReserveAPI'], attributes: {} }, { apiName: 'GetOrderAPI', apiDescription: 'Retrieves order status and details.', dependentApis: [], attributes: {} } ],
+        apis: [{ apiName: 'CreateOrderAPI', apiDescription: 'Creates a new order.', dependentApis: ['ShoppingCartService:CartAPI', 'PaymentService:ChargeAPI', 'InventoryService:ReserveAPI'], attributes: {} }, { apiName: 'GetOrderAPI', apiDescription: 'Retrieves order status and details.', dependentApis: [], attributes: {} }],
         serviceDependencies: ['ShoppingCartService', 'PaymentService', 'InventoryService', 'NotificationService'],
         platformDependencies: ['PostgreSQL', 'Kafka'],
         attributes: {}
@@ -169,7 +169,7 @@ const sampleServicesDataShopSphere = [
         serviceName: 'PaymentService',
         serviceDescription: 'Handles all payment processing and fraud detection.',
         owningTeamId: 'teamSS5',
-        apis: [ { apiName: 'ChargeAPI', apiDescription: 'Processes a payment charge.', dependentApis: ['FraudDetectionService:AssessRiskAPI'], attributes: {} }, { apiName: 'RefundAPI', apiDescription: 'Processes a refund.', dependentApis: [], attributes: {} } ],
+        apis: [{ apiName: 'ChargeAPI', apiDescription: 'Processes a payment charge.', dependentApis: ['FraudDetectionService:AssessRiskAPI'], attributes: {} }, { apiName: 'RefundAPI', apiDescription: 'Processes a refund.', dependentApis: [], attributes: {} }],
         serviceDependencies: ['FraudDetectionService', 'UserService'],
         platformDependencies: ['Stripe Gateway', 'Adyen Gateway', 'AWS KMS'],
         attributes: {}
@@ -178,7 +178,7 @@ const sampleServicesDataShopSphere = [
         serviceName: 'FraudDetectionService',
         serviceDescription: 'Provides real-time risk assessment for transactions.',
         owningTeamId: 'teamSS5',
-        apis: [ { apiName: 'AssessRiskAPI', apiDescription: 'Returns a risk score for a transaction.', dependentApis: [], attributes: {} } ],
+        apis: [{ apiName: 'AssessRiskAPI', apiDescription: 'Returns a risk score for a transaction.', dependentApis: [], attributes: {} }],
         serviceDependencies: ['AnalyticsPipelineService'],
         platformDependencies: ['Internal ML Platform', 'Redis'],
         attributes: {}
@@ -187,7 +187,7 @@ const sampleServicesDataShopSphere = [
         serviceName: 'SellerPortalService',
         serviceDescription: 'Frontend and backend for seller-facing tools.',
         owningTeamId: 'teamSS7',
-        apis: [ { apiName: 'ListingAPI', apiDescription: 'Allows sellers to create/update listings.', dependentApis: ['ProductCatalogService:ProductAPI'], attributes: {} } ],
+        apis: [{ apiName: 'ListingAPI', apiDescription: 'Allows sellers to create/update listings.', dependentApis: ['ProductCatalogService:ProductAPI'], attributes: {} }],
         serviceDependencies: ['ProductCatalogService', 'AnalyticsPipelineService'],
         platformDependencies: ['React', 'Node.js', 'PostgreSQL'],
         attributes: {}
@@ -196,7 +196,7 @@ const sampleServicesDataShopSphere = [
         serviceName: 'InventoryService',
         serviceDescription: 'Manages stock levels for all products. (Mock, owned by external Fulfillment org)',
         owningTeamId: null, // No internal owner
-        apis: [ { apiName: 'ReserveAPI', apiDescription: 'Reserves stock for an order.', dependentApis: [], attributes: {} } ],
+        apis: [{ apiName: 'ReserveAPI', apiDescription: 'Reserves stock for an order.', dependentApis: [], attributes: {} }],
         serviceDependencies: [],
         platformDependencies: ['Oracle Fusion'],
         attributes: {}
@@ -205,7 +205,7 @@ const sampleServicesDataShopSphere = [
         serviceName: 'NotificationService',
         serviceDescription: 'Sends emails, push, and SMS notifications. (Mock, owned by Core Platform)',
         owningTeamId: 'teamSS1', // Owned by Platform Infra
-        apis: [ { apiName: 'SendEmailAPI', apiDescription: 'Sends transactional emails.', dependentApis: [], attributes: {} } ],
+        apis: [{ apiName: 'SendEmailAPI', apiDescription: 'Sends transactional emails.', dependentApis: [], attributes: {} }],
         serviceDependencies: ['UserService'],
         platformDependencies: ['AWS SES', 'AWS SNS'],
         attributes: {}
@@ -214,7 +214,7 @@ const sampleServicesDataShopSphere = [
         serviceName: 'AnalyticsPipelineService',
         serviceDescription: 'Collects and processes user and system events.',
         owningTeamId: 'teamSS8',
-        apis: [ { apiName: 'EventIngestAPI', apiDescription: 'Receives tracking events.', dependentApis: [], attributes: {} } ],
+        apis: [{ apiName: 'EventIngestAPI', apiDescription: 'Receives tracking events.', dependentApis: [], attributes: {} }],
         serviceDependencies: [],
         platformDependencies: ['Kafka', 'Spark', 'Snowflake'],
         attributes: {}
@@ -223,7 +223,7 @@ const sampleServicesDataShopSphere = [
         serviceName: 'WebGatewayService',
         serviceDescription: 'The main BFF (Backend-for-Frontend) for the ShopSphere website.',
         owningTeamId: 'teamSS6',
-        apis: [ { apiName: 'GraphQL API', apiDescription: 'Aggregates data for the web/mobile clients.', dependentApis: ['ProductCatalogService:ProductAPI', 'SearchService:SearchAPI', 'RecommendationService:RecommendationsAPI', 'ShoppingCartService:CartAPI'], attributes: {} } ],
+        apis: [{ apiName: 'GraphQL API', apiDescription: 'Aggregates data for the web/mobile clients.', dependentApis: ['ProductCatalogService:ProductAPI', 'SearchService:SearchAPI', 'RecommendationService:RecommendationsAPI', 'ShoppingCartService:CartAPI'], attributes: {} }],
         serviceDependencies: ['ProductCatalogService', 'SearchService', 'RecommendationService', 'ShoppingCartService', 'UserService'],
         platformDependencies: ['Node.js', 'Apollo Server', 'Kubernetes'],
         attributes: {}
@@ -234,7 +234,7 @@ const sampleYearlyInitiativesShopSphere = [
     // --- 2025 PROTECTED ---
     {
         initiativeId: 'init-ss-ktlo', title: 'KTLO / Operational Excellence', description: 'Ongoing bug fixes, security patches, library updates, performance tuning.', isProtected: true,
-        assignments: [ { teamId: 'teamSS1', sdeYears: 1.0 }, { teamId: 'teamSS2', sdeYears: 0.75 }, { teamId: 'teamSS3', sdeYears: 0.5 }, { teamId: 'teamSS4', sdeYears: 1.0 }, { teamId: 'teamSS5', sdeYears: 1.0 }, { teamId: 'teamSS6', sdeYears: 1.25 }, { teamId: 'teamSS7', sdeYears: 0.75 }, { teamId: 'teamSS8', sdeYears: 0.5 } ],
+        assignments: [{ teamId: 'teamSS1', sdeYears: 1.0 }, { teamId: 'teamSS2', sdeYears: 0.75 }, { teamId: 'teamSS3', sdeYears: 0.5 }, { teamId: 'teamSS4', sdeYears: 1.0 }, { teamId: 'teamSS5', sdeYears: 1.0 }, { teamId: 'teamSS6', sdeYears: 1.25 }, { teamId: 'teamSS7', sdeYears: 0.75 }, { teamId: 'teamSS8', sdeYears: 0.5 }],
         impactedServiceIds: [], roi: { category: 'Tech Debt', valueType: 'QualitativeScore', estimatedValue: 'Critical' }, targetDueDate: "2025-12-31", actualCompletionDate: null, status: 'Committed',
         themes: ['theme-ss-platform-resilience'], primaryGoalId: 'goal-ss-stability-2025',
         projectManager: null, owner: { type: 'seniorManager', id: 'srMgrSS1', name: 'Sarah Chen' }, technicalPOC: { type: 'sdm', id: 'sdmSS1', name: 'Anil Gupta' },
@@ -242,7 +242,7 @@ const sampleYearlyInitiativesShopSphere = [
     },
     {
         initiativeId: 'init-ss-oncall', title: 'On-Call / Production Support', description: 'Dedicated capacity for handling live site issues and production incidents.', isProtected: true,
-        assignments: [ { teamId: 'teamSS1', sdeYears: 1.0 }, { teamId: 'teamSS2', sdeYears: 0.5 }, { teamId: 'teamSS3', sdeYears: 0.5 }, { teamId: 'teamSS4', sdeYears: 1.0 }, { teamId: 'teamSS5', sdeYears: 0.75 }, { teamId: 'teamSS6', sdeYears: 1.0 }, { teamId: 'teamSS7', sdeYears: 0.5 }, { teamId: 'teamSS8', sdeYears: 0.5 } ],
+        assignments: [{ teamId: 'teamSS1', sdeYears: 1.0 }, { teamId: 'teamSS2', sdeYears: 0.5 }, { teamId: 'teamSS3', sdeYears: 0.5 }, { teamId: 'teamSS4', sdeYears: 1.0 }, { teamId: 'teamSS5', sdeYears: 0.75 }, { teamId: 'teamSS6', sdeYears: 1.0 }, { teamId: 'teamSS7', sdeYears: 0.5 }, { teamId: 'teamSS8', sdeYears: 0.5 }],
         impactedServiceIds: [], roi: { category: 'Ops Stability', valueType: 'QualitativeScore', estimatedValue: 'Critical' }, targetDueDate: "2025-12-31", actualCompletionDate: null, status: 'Committed',
         themes: ['theme-ss-platform-resilience'], primaryGoalId: 'goal-ss-stability-2025',
         projectManager: null, owner: { type: 'seniorManager', id: 'srMgrSS1', name: 'Sarah Chen' }, technicalPOC: { type: 'sdm', id: 'sdmSS1', name: 'Anil Gupta' },
@@ -250,7 +250,7 @@ const sampleYearlyInitiativesShopSphere = [
     },
     {
         initiativeId: 'init-ss-pci', title: 'PCI-DSS 4.0 Compliance Audit & Remediation', description: 'Mandatory work to achieve and pass PCI-DSS 4.0 compliance.', isProtected: true,
-        assignments: [ { teamId: 'teamSS5', sdeYears: 1.5 }, { teamId: 'teamSS4', sdeYears: 0.5 }, { teamId: 'teamSS1', sdeYears: 0.5 } ],
+        assignments: [{ teamId: 'teamSS5', sdeYears: 1.5 }, { teamId: 'teamSS4', sdeYears: 0.5 }, { teamId: 'teamSS1', sdeYears: 0.5 }],
         impactedServiceIds: ['PaymentService', 'OrderService', 'UserService'], roi: { category: 'Compliance', valueType: 'QualitativeScore', estimatedValue: 'Mandatory' }, targetDueDate: "2025-09-30", actualCompletionDate: null, status: 'Committed',
         themes: ['theme-ss-security-compliance'], primaryGoalId: 'goal-ss-security-2025',
         projectManager: { type: 'projectManager', id: 'pmSS002', name: 'Chloe Scope' }, owner: { type: 'sdm', id: 'sdmSS3', name: 'Kenji Watanabe' }, technicalPOC: { type: 'engineer', id: 'engOscarWilde_teamSS5_ss', name: 'Oscar Wilde' },
@@ -259,7 +259,7 @@ const sampleYearlyInitiativesShopSphere = [
     // --- 2025 COMMITTED (ATL) ---
     {
         initiativeId: 'init-ss-001', title: 'AI-Powered Search (Vector Search POC)', description: 'POC to integrate vector-based search for image and semantic search.', isProtected: false,
-        assignments: [ { teamId: 'teamSS2', sdeYears: 1.5 }, { teamId: 'teamSS3', sdeYears: 0.5 } ],
+        assignments: [{ teamId: 'teamSS2', sdeYears: 1.5 }, { teamId: 'teamSS3', sdeYears: 0.5 }],
         impactedServiceIds: ['SearchService', 'IndexingService', 'RecommendationService'], roi: { category: 'Innovation', valueType: 'MetricImprovement', estimatedValue: 'Explore new search revenue' }, targetDueDate: "2025-07-31", actualCompletionDate: null, status: 'Committed',
         themes: ['theme-ss-ai-ml', 'theme-ss-conversion'], primaryGoalId: 'goal-ss-search-2025',
         projectManager: { type: 'projectManager', id: 'pmSS001', name: 'Marcus Timeline' }, owner: { type: 'pmt', id: 'pmtSS2', name: 'Ben Carter' }, technicalPOC: { type: 'sdm', id: 'sdmSS2', name: 'Maria Rodriguez' },
@@ -267,7 +267,7 @@ const sampleYearlyInitiativesShopSphere = [
     },
     {
         initiativeId: 'init-ss-002', title: 'Implement "Buy Now, Pay Later" (BNPL) Integration', description: 'Integrate a third-party BNPL provider (e.g., Klarna, Affirm) into checkout.', isProtected: false,
-        assignments: [ { teamId: 'teamSS5', sdeYears: 1.0 }, { teamId: 'teamSS4', sdeYears: 0.5 } ],
+        assignments: [{ teamId: 'teamSS5', sdeYears: 1.0 }, { teamId: 'teamSS4', sdeYears: 0.5 }],
         impactedServiceIds: ['PaymentService', 'OrderService', 'WebGatewayService'], roi: { category: 'Revenue Generation', valueType: 'MetricImprovement', estimatedValue: 'Est. +2% Conversion' }, targetDueDate: "2025-06-30", actualCompletionDate: null, status: 'Committed',
         themes: ['theme-ss-conversion', 'theme-ss-feature'], primaryGoalId: 'goal-ss-conversion-2025',
         projectManager: { type: 'projectManager', id: 'pmSS002', name: 'Chloe Scope' }, owner: { type: 'pmt', id: 'pmtSS3', name: 'Priya Singh' }, technicalPOC: { type: 'sdm', id: 'sdmSS3', name: 'Kenji Watanabe' },
@@ -275,7 +275,7 @@ const sampleYearlyInitiativesShopSphere = [
     },
     {
         initiativeId: 'init-ss-003', title: 'Mobile App Performance Overhaul (React Native)', description: 'Refactor core app screens to improve TTI and reduce crashes by 50%.', isProtected: false,
-        assignments: [ { teamId: 'teamSS6', sdeYears: 2.0 } ],
+        assignments: [{ teamId: 'teamSS6', sdeYears: 2.0 }],
         impactedServiceIds: ['WebGatewayService'], roi: { category: 'User Experience', valueType: 'MetricImprovement', estimatedValue: '-50% Crash Rate' }, targetDueDate: "2025-10-31", actualCompletionDate: null, status: 'Committed',
         themes: ['theme-ss-ux-perf', 'theme-ss-platform-resilience'], primaryGoalId: 'goal-ss-conversion-2025',
         projectManager: { type: 'projectManager', id: 'pmSS001', name: 'Marcus Timeline' }, owner: { type: 'pmt', id: 'pmtSS4', name: 'Alex Johnson' }, technicalPOC: { type: 'sdm', id: 'sdmSS4', name: 'Emily White' },
@@ -283,7 +283,7 @@ const sampleYearlyInitiativesShopSphere = [
     },
     {
         initiativeId: 'init-ss-004', title: 'Seller Self-Service Ad Platform (v1)', description: 'Allow sellers to purchase and manage sponsored product placements.', isProtected: false,
-        assignments: [ { teamId: 'teamSS7', sdeYears: 1.5 }, { teamId: 'teamSS8', sdeYears: 0.5 } ],
+        assignments: [{ teamId: 'teamSS7', sdeYears: 1.5 }, { teamId: 'teamSS8', sdeYears: 0.5 }],
         impactedServiceIds: ['SellerPortalService', 'AnalyticsPipelineService', 'SearchService'], roi: { category: 'Revenue Generation', valueType: 'Monetary', estimatedValue: '5M New Revenue' }, targetDueDate: "2025-11-30", actualCompletionDate: null, status: 'Committed',
         themes: ['theme-ss-seller-success', 'theme-ss-revenue'], primaryGoalId: 'goal-ss-seller-2025',
         projectManager: { type: 'projectManager', id: 'pmSS003', name: 'Kenji Velocity' }, owner: { type: 'pmt', id: 'pmtSS5', name: 'Zoe Kim' }, technicalPOC: { type: 'sdm', id: 'sdmSS5', name: 'James Brown' },
@@ -291,7 +291,7 @@ const sampleYearlyInitiativesShopSphere = [
     },
     {
         initiativeId: 'init-ss-005', title: 'Kubernetes Platform Migration (Phase 1)', description: 'Migrate legacy VM-based services (UserService, OrderService) to EKS.', isProtected: false,
-        assignments: [ { teamId: 'teamSS1', sdeYears: 1.5 }, { teamId: 'teamSS4', sdeYears: 0.5 } ],
+        assignments: [{ teamId: 'teamSS1', sdeYears: 1.5 }, { teamId: 'teamSS4', sdeYears: 0.5 }],
         impactedServiceIds: ['UserService', 'OrderService'], roi: { category: 'Tech Debt', valueType: 'CostReduction', estimatedValue: 'Reduce compute cost 20%' }, targetDueDate: "2025-12-31", actualCompletionDate: null, status: 'Committed',
         themes: ['theme-ss-platform-resilience', 'theme-ss-cost'], primaryGoalId: 'goal-ss-stability-2025',
         projectManager: null, owner: { type: 'sdm', id: 'sdmSS1', name: 'Anil Gupta' }, technicalPOC: { type: 'engineer', id: 'engBethanySmith_teamSS1_ss', name: 'Bethany Smith' },
@@ -300,7 +300,7 @@ const sampleYearlyInitiativesShopSphere = [
     // --- 2025 BACKLOG (BTL) ---
     {
         initiativeId: 'init-ss-006', title: 'Real-time Inventory Check', description: 'Move from 15-min batch inventory updates to real-time checks at Add-to-Cart.', isProtected: false,
-        assignments: [ { teamId: 'teamSS4', sdeYears: 1.0 }, { teamId: 'teamSS1', sdeYears: 0.5 } ],
+        assignments: [{ teamId: 'teamSS4', sdeYears: 1.0 }, { teamId: 'teamSS1', sdeYears: 0.5 }],
         impactedServiceIds: ['ShoppingCartService', 'InventoryService', 'OrderService'], roi: { category: 'User Experience', valueType: 'MetricImprovement', estimatedValue: 'Reduce oversell incidents' }, targetDueDate: "2025-11-15", actualCompletionDate: null, status: 'Backlog',
         themes: ['theme-ss-ux-perf', 'theme-ss-platform-resilience'], primaryGoalId: 'goal-ss-conversion-2025',
         projectManager: null, owner: { type: 'pmt', id: 'pmtSS3', name: 'Priya Singh' }, technicalPOC: { type: 'sdm', id: 'sdmSS3', name: 'Kenji Watanabe' },
@@ -308,7 +308,7 @@ const sampleYearlyInitiativesShopSphere = [
     },
     {
         initiativeId: 'init-ss-007', title: 'Automated Seller Payouts', description: 'Build automated daily payouts for sellers instead of manual monthly wire transfers.', isProtected: false,
-        assignments: [ { teamId: 'teamSS7', sdeYears: 1.0 }, { teamId: 'teamSS5', sdeYears: 0.5 } ],
+        assignments: [{ teamId: 'teamSS7', sdeYears: 1.0 }, { teamId: 'teamSS5', sdeYears: 0.5 }],
         impactedServiceIds: ['SellerPortalService', 'PaymentService'], roi: { category: 'Seller Success', valueType: 'QualitativeScore', estimatedValue: 'High Seller SAT' }, targetDueDate: "2025-10-31", actualCompletionDate: null, status: 'Backlog',
         themes: ['theme-ss-seller-success'], primaryGoalId: 'goal-ss-seller-2025',
         projectManager: null, owner: { type: 'pmt', id: 'pmtSS5', name: 'Zoe Kim' }, technicalPOC: { type: 'sdm', id: 'sdmSS5', name: 'James Brown' },
@@ -317,15 +317,15 @@ const sampleYearlyInitiativesShopSphere = [
     // --- 2026 (3YP / BACKLOG) ---
     {
         initiativeId: 'init-ss-008', title: 'Expand to EU Market (GDPR & Payments)', description: 'Launch ShopSphere in Germany/France, requiring GDPR compliance and EU payment methods.', isProtected: false,
-        assignments: [ { teamId: 'teamSS1', sdeYears: 1.5 }, { teamId: 'teamSS5', sdeYears: 1.0 }, { teamId: 'teamSS4', sdeYears: 1.0 }, { teamId: 'teamSS6', sdeYears: 0.5 } ],
+        assignments: [{ teamId: 'teamSS1', sdeYears: 1.5 }, { teamId: 'teamSS5', sdeYears: 1.0 }, { teamId: 'teamSS4', sdeYears: 1.0 }, { teamId: 'teamSS6', sdeYears: 0.5 }],
         impactedServiceIds: ['UserService', 'PaymentService', 'OrderService', 'WebGatewayService'], roi: { category: 'Strategic', valueType: 'MarketExpansion', estimatedValue: 'EU Market Entry' }, targetDueDate: "2026-06-30", actualCompletionDate: null, status: 'Backlog',
         themes: ['theme-ss-revenue', 'theme-ss-security-compliance'], primaryGoalId: 'goal-ss-expansion-2026',
         projectManager: { type: 'projectManager', id: 'pmSS002', name: 'Chloe Scope' }, owner: { type: 'seniorManager', id: 'srMgrSS2', name: 'David Lee' }, technicalPOC: { type: 'sdm', id: 'sdmSS1', name: 'Anil Gupta' },
         workPackageIds: [], attributes: { pmCapacityNotes: "Major strategic push for 2026.", planningYear: 2026 }
     },
     {
-        initiativeId: 'init-ss-009', title: 'Live Video Shopping (POC)', description: 'POC for influencers to host live video streams to sell products.', isProtected: false, 
-        assignments: [ { teamId: 'teamSS6', sdeYears: 1.0 }, { teamId: 'teamSS7', sdeYears: 0.5 } ],
+        initiativeId: 'init-ss-009', title: 'Live Video Shopping (POC)', description: 'POC for influencers to host live video streams to sell products.', isProtected: false,
+        assignments: [{ teamId: 'teamSS6', sdeYears: 1.0 }, { teamId: 'teamSS7', sdeYears: 0.5 }],
         impactedServiceIds: ['WebGatewayService', 'SellerPortalService'], roi: { category: 'Innovation', valueType: 'Narrative', estimatedValue: 'Explore new shopping paradigm' }, targetDueDate: "2026-03-31", actualCompletionDate: null, status: 'Backlog',
         themes: ['theme-ss-feature', 'theme-ss-ai-ml'], primaryGoalId: 'goal-ss-conversion-2025',
         projectManager: null, owner: { type: 'pmt', id: 'pmtSS4', name: 'Alex Johnson' }, technicalPOC: { type: 'sdm', id: 'sdmSS4', name: 'Emily White' },
@@ -333,7 +333,7 @@ const sampleYearlyInitiativesShopSphere = [
     },
     {
         initiativeId: 'init-ss-010', title: 'Carbon-Neutral Fulfillment Pipeline', description: 'Track and offset carbon emissions for all orders.', isProtected: false,
-        assignments: [ { teamId: 'teamSS8', sdeYears: 1.0 }, { teamId: 'teamSS4', sdeYears: 0.5 } ],
+        assignments: [{ teamId: 'teamSS8', sdeYears: 1.0 }, { teamId: 'teamSS4', sdeYears: 0.5 }],
         impactedServiceIds: ['AnalyticsPipelineService', 'OrderService'], roi: { category: 'Strategic', valueType: 'QualitativeScore', estimatedValue: 'ESG Goal' }, targetDueDate: "2026-12-31", actualCompletionDate: null, status: 'Backlog',
         themes: ['theme-ss-platform-resilience'], primaryGoalId: 'goal-ss-esg-2026',
         projectManager: { type: 'projectManager', id: 'pmSS003', name: 'Kenji Velocity' }, owner: { type: 'sdm', id: 'sdmSS6', name: 'Li Wang' }, technicalPOC: { type: 'sdm', id: 'sdmSS6', name: 'Li Wang' },
@@ -341,7 +341,7 @@ const sampleYearlyInitiativesShopSphere = [
     },
     {
         initiativeId: 'init-ss-011', title: 'Warehouse Automation Integration (POC)', description: 'POC to integrate with fulfillment center robotics for real-time stock and order status.', isProtected: false,
-        assignments: [ { teamId: 'teamSS1', sdeYears: 1.0 }, { teamId: 'teamSS7', sdeYears: 0.5 } ],
+        assignments: [{ teamId: 'teamSS1', sdeYears: 1.0 }, { teamId: 'teamSS7', sdeYears: 0.5 }],
         impactedServiceIds: ['InventoryService', 'OrderService', 'SellerPortalService'], roi: { category: 'Innovation', valueType: 'CostReduction', estimatedValue: 'Future fulfillment efficiency' }, targetDueDate: "2026-09-30", actualCompletionDate: null, status: 'Backlog',
         themes: ['theme-ss-cost', 'theme-ss-ai-ml'], primaryGoalId: 'goal-ss-stability-2025',
         projectManager: null, owner: { type: 'sdm', id: 'sdmSS1', name: 'Anil Gupta' }, technicalPOC: { type: 'engineer', id: 'engBethanySmith_teamSS1_ss', name: 'Bethany Smith' },
@@ -349,7 +349,7 @@ const sampleYearlyInitiativesShopSphere = [
     },
     {
         initiativeId: 'init-ss-012', title: 'ShopSphere Prime (v1)', description: 'Design and launch a "Prime" subscription for free shipping and exclusive benefits.', isProtected: false,
-        assignments: [ { teamId: 'teamSS4', sdeYears: 1.5 }, { teamId: 'teamSS5', sdeYears: 1.0 }, { teamId: 'teamSS6', sdeYears: 1.0 }, { teamId: 'teamSS1', sdeYears: 0.5 } ],
+        assignments: [{ teamId: 'teamSS4', sdeYears: 1.5 }, { teamId: 'teamSS5', sdeYears: 1.0 }, { teamId: 'teamSS6', sdeYears: 1.0 }, { teamId: 'teamSS1', sdeYears: 0.5 }],
         impactedServiceIds: ['OrderService', 'PaymentService', 'WebGatewayService', 'UserService'], roi: { category: 'Revenue Generation', valueType: 'Monetary', estimatedValue: '20M New ARR' }, targetDueDate: "2026-11-30", actualCompletionDate: null, status: 'Backlog',
         themes: ['theme-ss-revenue', 'theme-ss-feature'], primaryGoalId: 'goal-ss-revenue-2026',
         projectManager: { type: 'projectManager', id: 'pmSS002', name: 'Chloe Scope' }, owner: { type: 'seniorManager', id: 'srMgrSS2', name: 'David Lee' }, technicalPOC: { type: 'sdm', id: 'sdmSS3', name: 'Kenji Watanabe' },
@@ -358,7 +358,7 @@ const sampleYearlyInitiativesShopSphere = [
     // --- 2027 (3YP / FUTURE) ---
     {
         initiativeId: 'init-ss-013', title: 'Headless Commerce Platform (Phase 1)', description: 'Begin migrating to a fully headless architecture, decoupling all frontends.', isProtected: false,
-        assignments: [ { teamId: 'teamSS1', sdeYears: 2.0 }, { teamId: 'teamSS6', sdeYears: 1.5 }, { teamId: 'teamSS2', sdeYears: 0.5 } ],
+        assignments: [{ teamId: 'teamSS1', sdeYears: 2.0 }, { teamId: 'teamSS6', sdeYears: 1.5 }, { teamId: 'teamSS2', sdeYears: 0.5 }],
         impactedServiceIds: ['WebGatewayService', 'SearchService', 'ProductCatalogService'], roi: { category: 'Tech Debt', valueType: 'Productivity/Efficiency', estimatedValue: 'Enable faster feature dev' }, targetDueDate: "2027-12-31", actualCompletionDate: null, status: 'Backlog',
         themes: ['theme-ss-platform-resilience', 'theme-ss-ux-perf'], primaryGoalId: 'goal-ss-platform-2027',
         projectManager: { type: 'projectManager', id: 'pmSS001', name: 'Marcus Timeline' }, owner: { type: 'seniorManager', id: 'srMgrSS1', name: 'Sarah Chen' }, technicalPOC: { type: 'sdm', id: 'sdmSS4', name: 'Emily White' },
@@ -366,7 +366,7 @@ const sampleYearlyInitiativesShopSphere = [
     },
     {
         initiativeId: 'init-ss-014', title: 'Hyper-Personalization Engine (v2)', description: 'Move beyond recommendations to a fully personalized DOM and user journey.', isProtected: false,
-        assignments: [ { teamId: 'teamSS3', sdeYears: 2.0 }, { teamId: 'teamSS8', sdeYears: 1.0 }, { teamId: 'teamSS6', sdeYears: 1.0 } ],
+        assignments: [{ teamId: 'teamSS3', sdeYears: 2.0 }, { teamId: 'teamSS8', sdeYears: 1.0 }, { teamId: 'teamSS6', sdeYears: 1.0 }],
         impactedServiceIds: ['RecommendationService', 'AnalyticsPipelineService', 'WebGatewayService'], roi: { category: 'Innovation', valueType: 'MetricImprovement', estimatedValue: 'NPS +10 points' }, targetDueDate: "2027-09-30", actualCompletionDate: null, status: 'Backlog',
         themes: ['theme-ss-ai-ml', 'theme-ss-conversion'], primaryGoalId: 'goal-ss-search-2025',
         projectManager: null, owner: { type: 'pmt', id: 'pmtSS2', name: 'Ben Carter' }, technicalPOC: { type: 'engineer', id: 'engHannahDavis_teamSS3_ss', name: 'Hannah Davis' },
@@ -374,7 +374,7 @@ const sampleYearlyInitiativesShopSphere = [
     },
     {
         initiativeId: 'init-ss-015', title: 'Expand to LATAM Market', description: 'Launch ShopSphere in Brazil and Mexico.', isProtected: false,
-        assignments: [ { teamId: 'teamSS1', sdeYears: 1.0 }, { teamId: 'teamSS5', sdeYears: 1.5 } ],
+        assignments: [{ teamId: 'teamSS1', sdeYears: 1.0 }, { teamId: 'teamSS5', sdeYears: 1.5 }],
         impactedServiceIds: ['UserService', 'PaymentService', 'OrderService'], roi: { category: 'Strategic', valueType: 'MarketExpansion', estimatedValue: 'LATAM Market Entry' }, targetDueDate: "2027-12-31", actualCompletionDate: null, status: 'Backlog',
         themes: ['theme-ss-revenue'], primaryGoalId: 'goal-ss-expansion-2027',
         projectManager: { type: 'projectManager', id: 'pmSS002', name: 'Chloe Scope' }, owner: { type: 'seniorManager', id: 'srMgrSS2', name: 'David Lee' }, technicalPOC: { type: 'sdm', id: 'sdmSS3', name: 'Kenji Watanabe' },
@@ -382,7 +382,7 @@ const sampleYearlyInitiativesShopSphere = [
     },
     {
         initiativeId: 'init-ss-016', title: 'Service Mesh Implementation', description: 'Roll out a full service mesh (e.g., Istio) for all microservices.', isProtected: false,
-        assignments: [ { teamId: 'teamSS1', sdeYears: 2.0 } ],
+        assignments: [{ teamId: 'teamSS1', sdeYears: 2.0 }],
         impactedServiceIds: [], roi: { category: 'Tech Debt', valueType: 'Productivity/Efficiency', estimatedValue: 'Standardize observability' }, targetDueDate: "2027-06-30", actualCompletionDate: null, status: 'Backlog',
         themes: ['theme-ss-platform-resilience'], primaryGoalId: 'goal-ss-platform-2027',
         projectManager: null, owner: { type: 'sdm', id: 'sdmSS1', name: 'Anil Gupta' }, technicalPOC: { type: 'engineer', id: 'engBethanySmith_teamSS1_ss', name: 'Bethany Smith' },
@@ -400,7 +400,7 @@ const sampleSystemDataShopSphere = {
     pmts: shopSpherePMTsData,
     projectManagers: sampleProjectManagersDataShopSphere,
     services: sampleServicesDataShopSphere,
-    platformDependencies: [], 
+    platformDependencies: [],
     capacityConfiguration: {
         workingDaysPerYear: 261,
         standardHoursPerDay: 8,
@@ -419,57 +419,67 @@ const sampleSystemDataShopSphere = {
         ],
         attributes: {}
     },
-    yearlyInitiatives: sampleYearlyInitiativesShopSphere, 
+    yearlyInitiatives: sampleYearlyInitiativesShopSphere,
     goals: [
         {
             goalId: 'goal-ss-stability-2025', name: 'Platform Resilience & Stability 2025', description: 'Ensure 99.99% uptime for critical services (Checkout, Payments) and reduce tech debt.', strategyLink: null,
             owner: { type: 'seniorManager', id: 'srMgrSS1', name: 'Sarah Chen' }, projectManager: { type: 'projectManager', id: 'pmSS001', name: 'Marcus Timeline' }, technicalPOC: { type: 'sdm', id: 'sdmSS1', name: 'Anil Gupta' },
-            initiativeIds: ['init-ss-ktlo', 'init-ss-oncall', 'init-ss-005', 'init-ss-010', 'init-ss-011'], attributes: {}
+            initiativeIds: ['init-ss-ktlo', 'init-ss-oncall', 'init-ss-005', 'init-ss-010', 'init-ss-011'], attributes: {},
+            dueDate: '2025-12-31'
         },
         {
             goalId: 'goal-ss-security-2025', name: 'Achieve Security & Compliance Goals 2025', description: 'Pass all mandatory compliance audits (PCI 4.0) and remediate critical vulnerabilities.', strategyLink: null,
             owner: { type: 'seniorManager', id: 'srMgrSS1', name: 'Sarah Chen' }, projectManager: { type: 'projectManager', id: 'pmSS002', name: 'Chloe Scope' }, technicalPOC: { type: 'sdm', id: 'sdmSS3', name: 'Kenji Watanabe' },
-            initiativeIds: ['init-ss-pci', 'init-ss-008'], attributes: {}
+            initiativeIds: ['init-ss-pci', 'init-ss-008'], attributes: {},
+            dueDate: null
         },
         {
             goalId: 'goal-ss-conversion-2025', name: 'Increase Checkout Conversion by 5% 2025', description: 'Improve the user experience from discovery to payment to increase conversion rate.', strategyLink: null,
             owner: { type: 'seniorManager', id: 'srMgrSS2', name: 'David Lee' }, projectManager: { type: 'projectManager', id: 'pmSS001', name: 'Marcus Timeline' }, technicalPOC: { type: 'sdm', id: 'sdmSS4', name: 'Emily White' },
-            initiativeIds: ['init-ss-002', 'init-ss-003', 'init-ss-006', 'init-ss-009', 'init-ss-013'], attributes: {}
+            initiativeIds: ['init-ss-002', 'init-ss-003', 'init-ss-006', 'init-ss-009', 'init-ss-013'], attributes: {},
+            dueDate: null
         },
         {
             goalId: 'goal-ss-search-2025', name: 'Improve Search & Discovery 2025', description: 'Leverage AI/ML to improve search relevance and product discovery.', strategyLink: null,
             owner: { type: 'pmt', id: 'pmtSS2', name: 'Ben Carter' }, projectManager: null, technicalPOC: { type: 'sdm', id: 'sdmSS2', name: 'Maria Rodriguez' },
-            initiativeIds: ['init-ss-001', 'init-ss-014'], attributes: {}
+            initiativeIds: ['init-ss-001', 'init-ss-014'], attributes: {},
+            dueDate: null
         },
         {
             goalId: 'goal-ss-seller-2025', name: 'Grow Seller Platform Adoption by 20% 2025', description: 'Enhance seller tools to attract and retain more merchants.', strategyLink: null,
             owner: { type: 'pmt', id: 'pmtSS5', name: 'Zoe Kim' }, projectManager: { type: 'projectManager', id: 'pmSS003', name: 'Kenji Velocity' }, technicalPOC: { type: 'sdm', id: 'sdmSS5', name: 'James Brown' },
-            initiativeIds: ['init-ss-004', 'init-ss-007'], attributes: {}
+            initiativeIds: ['init-ss-004', 'init-ss-007'], attributes: {},
+            dueDate: null
         },
         {
             goalId: 'goal-ss-expansion-2026', name: 'Launch in EU Market 2026', description: 'Strategic goal to launch ShopSphere in Germany and France by end of 2026.', strategyLink: null,
             owner: { type: 'seniorManager', id: 'srMgrSS2', name: 'David Lee' }, projectManager: { type: 'projectManager', id: 'pmSS002', name: 'Chloe Scope' }, technicalPOC: { type: 'sdm', id: 'sdmSS1', name: 'Anil Gupta' },
-            initiativeIds: ['init-ss-008'], attributes: {}
+            initiativeIds: ['init-ss-008'], attributes: {},
+            dueDate: null
         },
         {
             goalId: 'goal-ss-revenue-2026', name: 'Launch New Revenue Streams 2026', description: 'Launch ShopSphere Prime subscription program.', strategyLink: null,
             owner: { type: 'seniorManager', id: 'srMgrSS2', name: 'David Lee' }, projectManager: { type: 'projectManager', id: 'pmSS002', name: 'Chloe Scope' }, technicalPOC: { type: 'sdm', id: 'sdmSS3', name: 'Kenji Watanabe' },
-            initiativeIds: ['init-ss-012'], attributes: {}
+            initiativeIds: ['init-ss-012'], attributes: {},
+            dueDate: null
         },
         {
             goalId: 'goal-ss-esg-2026', name: 'Meet ESG Commitments 2026', description: 'Fulfill company-wide Environmental, Social, and Governance commitments.', strategyLink: null,
             owner: { type: 'seniorManager', id: 'srMgrSS1', name: 'Sarah Chen' }, projectManager: { type: 'projectManager', id: 'pmSS003', name: 'Kenji Velocity' }, technicalPOC: { type: 'sdm', id: 'sdmSS6', name: 'Li Wang' },
-            initiativeIds: ['init-ss-010'], attributes: {}
+            initiativeIds: ['init-ss-010'], attributes: {},
+            dueDate: null
         },
         {
             goalId: 'goal-ss-platform-2027', name: 'Evolve to Headless Platform 2027', description: 'Decouple frontend experiences from backend services to increase dev velocity.', strategyLink: null,
             owner: { type: 'seniorManager', id: 'srMgrSS1', name: 'Sarah Chen' }, projectManager: { type: 'projectManager', id: 'pmSS001', name: 'Marcus Timeline' }, technicalPOC: { type: 'sdm', id: 'sdmSS4', name: 'Emily White' },
-            initiativeIds: ['init-ss-013', 'init-ss-016'], attributes: {}
+            initiativeIds: ['init-ss-013', 'init-ss-016'], attributes: {},
+            dueDate: null
         },
         {
             goalId: 'goal-ss-expansion-2027', name: 'Expand to LATAM Market 2027', description: 'Launch ShopSphere in Brazil and Mexico.', strategyLink: null,
             owner: { type: 'seniorManager', id: 'srMgrSS2', name: 'David Lee' }, projectManager: { type: 'projectManager', id: 'pmSS002', name: 'Chloe Scope' }, technicalPOC: { type: 'sdm', id: 'sdmSS3', name: 'Kenji Watanabe' },
-            initiativeIds: ['init-ss-015'], attributes: {}
+            initiativeIds: ['init-ss-015'], attributes: {},
+            dueDate: null
         }
     ],
     definedThemes: [
@@ -484,8 +494,8 @@ const sampleSystemDataShopSphere = {
         { themeId: 'theme-ss-cost', name: 'Cost Reduction', description: 'Initiatives focused on reducing infrastructure or operational costs.', relatedGoalIds: ['goal-ss-stability-2025'], attributes: {} }
     ],
     archivedYearlyPlans: [],
-    workPackages: [], 
+    workPackages: [],
     calculatedCapacityMetrics: null,
-    allKnownEngineers: sampleAllKnownEngineersShopSphere, 
-    attributes: {} 
+    allKnownEngineers: sampleAllKnownEngineersShopSphere,
+    attributes: {}
 };

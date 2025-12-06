@@ -710,6 +710,17 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
         contextData.systemName = currentSystemData.systemName;
         contextData.systemDescription = currentSystemData.systemDescription;
 
+        // [NEW] Try class-based view context first via AI_VIEW_REGISTRY
+        if (window.getAIContextForView && currentView) {
+            const classContext = window.getAIContextForView(currentView);
+            if (classContext && classContext.source === 'class') {
+                console.log(`[AI CHAT] Using class-based context from ${currentView}`);
+                contextData.data = classContext;
+                return JSON.stringify(contextData, null, 2);
+            }
+        }
+
+        // Legacy fallback: switch on view ID
         try {
             switch (currentView) {
                 case 'planningView':

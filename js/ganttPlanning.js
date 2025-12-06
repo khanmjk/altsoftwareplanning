@@ -140,11 +140,27 @@ function renderGanttPlanningView(container) {
         ensureWorkPackagesForInitiatives(currentSystemData, currentGanttYear);
     }
 
+    // 1. Set Workspace Metadata (Header)
+    if (window.workspaceComponent) {
+        window.workspaceComponent.setPageMetadata({
+            title: 'Detailed Planning (Gantt)',
+            breadcrumbs: ['Planning', 'Detailed Planning'],
+            actions: [] // No global actions for now, maybe "Export" later
+        });
+    }
+
+    // 2. Set Workspace Toolbar (Controls)
+    const toolbarControls = generateGanttToolbar();
+    if (window.workspaceComponent && toolbarControls) {
+        window.workspaceComponent.setToolbar(toolbarControls);
+    }
+
+    // 3. Create Content Layout
     // Only create layout if it doesn't exist
     if (!document.getElementById('ganttSplitPane')) {
         ganttChartInstance = null;
+        // Note: Removed #ganttPlanningControls as it's now in the toolbar
         container.innerHTML = `
-            <div id="ganttPlanningControls" class="gantt-filter-bar"></div>
             <div id="ganttSplitPane" class="gantt-split">
                 <div id="ganttPlanningTableContainer" class="gantt-panel"></div>
                 <div id="ganttSplitResizer" class="gantt-resizer" title="Drag to resize panels"></div>
@@ -157,28 +173,35 @@ function renderGanttPlanningView(container) {
         applyGanttSplitWidth();
     }
 
-    renderGanttControls();
+    // 4. Initialize Filters & Render Views
+    // These functions attach listeners to the elements we just put in the toolbar
+    renderDynamicGroupFilter();
+    renderStatusFilter();
+    setupGanttRendererToggle();
+
     renderGanttTable();
     renderGanttChart();
 }
 
-function renderGanttControls() {
-    const controls = document.getElementById('ganttPlanningControls');
-    if (!controls) return;
-    controls.innerHTML = '';
-
-    const row = document.createElement('div');
-    row.style.display = 'flex';
-    row.style.justifyContent = 'space-between';
-    row.style.gap = '10px';
-    row.style.alignItems = 'center';
-
-    const filtersWrapper = document.createElement('div');
-    filtersWrapper.className = 'widget-filter-bar gantt-filter-row';
+/**
+ * Generates the toolbar controls for the Gantt View.
+ * @returns {HTMLElement} The toolbar container
+ */
+function generateGanttToolbar() {
+    const toolbar = document.createElement('div');
+    toolbar.className = 'gantt-toolbar';
+    toolbar.style.display = 'flex';
+    toolbar.style.alignItems = 'center';
+    toolbar.style.gap = '16px';
+    toolbar.style.width = '100%';
+    toolbar.style.flexWrap = 'wrap';
 
     // Year selector
-    const yearSelect = document.createElement('select');
+    const yearWrap = createLabeledControl('Year:', document.createElement('select'));
+    const yearSelect = yearWrap.querySelector('select');
     yearSelect.id = 'ganttYearFilter';
+    yearSelect.className = 'form-select form-select-sm';
+
     const years = Array.from(new Set(
         (currentSystemData?.yearlyInitiatives || [])
             .map(init => init.attributes?.planningYear)
@@ -199,10 +222,13 @@ function renderGanttControls() {
         renderGanttTable();
         renderGanttChart();
     };
+    toolbar.appendChild(yearWrap);
 
     // View By selector
-    const groupSelect = document.createElement('select');
+    const groupWrap = createLabeledControl('View By:', document.createElement('select'));
+    const groupSelect = groupWrap.querySelector('select');
     groupSelect.id = 'ganttGroupBy';
+    groupSelect.className = 'form-select form-select-sm';
     ['All Initiatives', 'Team'].forEach(val => {
         const opt = document.createElement('option');
         opt.value = val;
@@ -217,47 +243,49 @@ function renderGanttControls() {
         renderGanttChart();
         renderGanttTable();
     };
+    toolbar.appendChild(groupWrap);
 
-    filtersWrapper.appendChild(createLabeledControl('Year:', yearSelect));
-    filtersWrapper.appendChild(createLabeledControl('View By:', groupSelect));
+    // Dynamic Filter Placeholder
     const dynamicFilterWrap = document.createElement('div');
     dynamicFilterWrap.id = 'ganttDynamicFilter';
     dynamicFilterWrap.className = 'filter-item';
-    filtersWrapper.appendChild(dynamicFilterWrap);
+    toolbar.appendChild(dynamicFilterWrap);
+
+    // Status Filter Placeholder
     const statusFilterWrap = document.createElement('div');
     statusFilterWrap.id = 'ganttStatusFilter';
     statusFilterWrap.className = 'filter-item';
-    filtersWrapper.appendChild(statusFilterWrap);
+    toolbar.appendChild(statusFilterWrap);
+
+    // Refresh Button
     const refreshBtn = document.createElement('button');
     refreshBtn.textContent = 'Refresh';
-    refreshBtn.className = 'btn-primary';
+    refreshBtn.className = 'btn btn-primary btn-sm';
     refreshBtn.onclick = () => {
         renderGanttTable();
         renderGanttChart();
     };
-    filtersWrapper.appendChild(refreshBtn);
+    toolbar.appendChild(refreshBtn);
 
+    // Renderer Toggle
     const rendererWrap = document.createElement('div');
     rendererWrap.style.display = 'flex';
     rendererWrap.style.alignItems = 'center';
     const rendererBtn = document.createElement('button');
     rendererBtn.id = 'ganttRendererToggle';
     rendererBtn.type = 'button';
-    rendererBtn.className = 'btn-secondary';
+    rendererBtn.className = 'btn btn-secondary btn-sm';
     rendererBtn.title = 'Switch between Mermaid and Frappe Gantt renderers';
     rendererBtn.textContent = getRendererButtonLabel();
     rendererWrap.appendChild(rendererBtn);
+    toolbar.appendChild(rendererWrap);
 
-    row.appendChild(filtersWrapper);
-    row.appendChild(rendererWrap);
-    controls.appendChild(row);
-
-    // RESTORED: Add the Legend here (View Mode buttons removed per user request)
-    // CONDITIONAL: Only show for Frappe renderer
+    // Legend (Frappe only)
     const legendDiv = document.createElement('div');
     legendDiv.id = 'ganttLegendContainer';
     legendDiv.className = 'gantt-legend';
-    // Check current renderer for initial visibility
+    legendDiv.style.marginLeft = 'auto'; // Push to right
+
     const currentRenderer = (typeof FeatureFlags !== 'undefined' && typeof FeatureFlags.getRenderer === 'function')
         ? FeatureFlags.getRenderer()
         : 'mermaid';
@@ -268,12 +296,9 @@ function renderGanttControls() {
         <div class="gantt-legend__item"><span class="gantt-legend__color-box gantt-legend__color-box--work-package"></span> Work Package</div>
         <div class="gantt-legend__item"><span class="gantt-legend__color-box gantt-legend__color-box--assignment"></span> Assignment</div>
     `;
-    controls.appendChild(legendDiv);
+    toolbar.appendChild(legendDiv);
 
-    // Build filters
-    renderDynamicGroupFilter();
-    renderStatusFilter();
-    setupGanttRendererToggle();
+    return toolbar;
 }
 
 

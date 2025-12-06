@@ -1,78 +1,73 @@
 /* Settings View Component Styles */
 
 .settings-view-container {
-    padding: var(--space-2xl);
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-.settings-header {
-    font-size: var(--font-size-3xl);
-    color: var(--color-gray-900);
-    margin-bottom: var(--space-2xl);
-}
-
-.settings-header i {
-    margin-right: var(--space-sm);
-    color: var(--color-gray-600);
+    padding: var(--space-xl);
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
 }
 
 /* Settings Layout */
 .settings-layout {
     display: flex;
+    flex-direction: column;
     gap: var(--space-xl);
-}
-
-/* Sidebar Navigation */
-.settings-sidebar {
-    min-width: 200px;
-    flex-shrink: 0;
-}
-
-.settings-nav-item {
-    padding: var(--space-md);
-    margin-bottom: var(--space-xs);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: all var(--transition-base);
-    color: var(--color-gray-700);
-    font-weight: 500;
-}
-
-.settings-nav-item i {
-    margin-right: var(--space-sm);
-    width: 20px;
-    display: inline-block;
-}
-
-.settings-nav-item:hover {
-    background: var(--color-gray-100);
-}
-
-.settings-nav-item.active {
-    background: var(--color-primary);
-    color: var(--color-white);
+    width: 100%;
+    max-width: 1400px;
+    /* Match Dashboard View */
+    margin: 0 auto;
 }
 
 /* Content Area */
 .settings-content {
     flex: 1;
+    width: 100%;
 }
 
-.settings-card {
-    background: var(--color-white);
-    border-radius: var(--radius-lg);
-    padding: var(--space-xl);
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--color-gray-300);
-}
-
-.settings-card-title {
-    font-size: var(--font-size-xl);
+.settings-section-title {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
     color: var(--color-gray-900);
-    margin: 0 0 var(--space-xl) 0;
-    border-bottom: 2px solid var(--color-gray-200);
-    padding-bottom: var(--space-md);
+    margin: var(--space-xl) 0 var(--space-md) 0;
+    padding-left: 0;
+    /* Align with content */
+}
+
+/* Remove card styling to blend with canvas */
+.settings-item-card {
+    background: transparent;
+    border-radius: 0;
+    padding: var(--space-md) 0;
+    box-shadow: none;
+    border: none;
+    margin-bottom: 0;
+}
+
+.settings-item-card:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* Add separation between rows */
+.settings-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-lg) 0;
+    border-bottom: 1px solid var(--color-gray-300);
+}
+
+/* Remove the last border in a section if needed, or keep for consistency */
+.settings-item-card:last-child .settings-row {
+    border-bottom: none;
+}
+
+.settings-sub-section-wrapper {
+    margin-top: var(--space-md);
+}
+
+.settings-sub-section-wrapper.hidden {
+    display: none;
 }
 
 /* Settings Rows */
@@ -84,7 +79,7 @@
 }
 
 .settings-row.border-bottom {
-    border-bottom: 1px solid var(--color-gray-200);
+    border-bottom: 1px solid var(--color-gray-100);
 }
 
 .settings-item-title {
@@ -111,26 +106,28 @@
 
 .settings-label {
     display: block;
-    font-weight: 600;
-    color: var(--color-gray-900);
-    margin-bottom: var(--space-sm);
+    font-weight: 500;
+    color: var(--color-gray-700);
+    margin-bottom: var(--space-xs);
+    font-size: var(--font-size-sm);
 }
 
 .settings-input,
 .settings-select {
     width: 100%;
     padding: var(--space-sm) var(--space-md);
-    border: 1px solid var(--color-gray-400);
-    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-gray-300);
+    border-radius: var(--radius-md);
     font-size: var(--font-size-base);
-    transition: border-color var(--transition-fast);
+    transition: all var(--transition-fast);
+    background-color: var(--color-white);
 }
 
 .settings-input:focus,
 .settings-select:focus {
     outline: none;
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 
 .settings-input-wrapper {
@@ -143,17 +140,19 @@
     align-items: center;
     cursor: pointer;
     user-select: none;
+    padding: var(--space-sm) 0;
 }
 
 .toggle-switch input[type="checkbox"] {
     margin-right: var(--space-md);
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     cursor: pointer;
+    accent-color: var(--color-primary);
 }
 
 .toggle-label {
-    font-weight: 600;
+    font-weight: 500;
     color: var(--color-gray-900);
 }
 
@@ -161,7 +160,8 @@
 .settings-sub-section {
     margin-top: var(--space-lg);
     padding-left: var(--space-lg);
-    border-left: 3px solid var(--color-gray-300);
+    border-left: 2px solid var(--color-gray-200);
+    margin-left: var(--space-xs);
 }
 
 .settings-sub-section.hidden {
@@ -170,14 +170,15 @@
 
 /* Helper Text */
 .settings-helper-text {
-    font-size: var(--font-size-sm);
-    color: var(--color-gray-600);
+    font-size: var(--font-size-xs);
+    color: var(--color-gray-500);
     margin-top: var(--space-xs);
 }
 
 .settings-link {
     color: var(--color-primary);
     text-decoration: none;
+    font-weight: 500;
 }
 
 .settings-link:hover {
@@ -186,22 +187,26 @@
 
 /* Alert */
 .settings-alert {
-    background: #fef3c7;
-    border: 1px solid #fbbf24;
-    border-radius: var(--radius-sm);
+    background: #fffbeb;
+    border: 1px solid #fcd34d;
+    border-radius: var(--radius-md);
     padding: var(--space-md);
-    margin-top: var(--space-md);
+    margin-top: var(--space-lg);
+    display: flex;
+    align-items: flex-start;
 }
 
 .settings-alert i {
-    margin-right: var(--space-xs);
+    margin-right: var(--space-sm);
     color: #f59e0b;
+    margin-top: 2px;
 }
 
 .settings-alert p {
     margin: 0;
-    color: #78350f;
+    color: #92400e;
     font-size: var(--font-size-sm);
+    line-height: 1.5;
 }
 
 /* Actions */
@@ -209,14 +214,17 @@
     margin-top: var(--space-xl);
     padding-top: var(--space-lg);
     border-top: 1px solid var(--color-gray-200);
+    display: flex;
+    justify-content: flex-end;
 }
 
 /* Button States */
 .btn-danger:disabled {
     background-color: var(--color-gray-100);
-    color: var(--color-gray-500);
-    border-color: var(--color-gray-400);
+    color: var(--color-gray-400);
+    border-color: var(--color-gray-200);
     cursor: not-allowed;
+    opacity: 0.7;
 }
 
 .btn-danger.enabled {

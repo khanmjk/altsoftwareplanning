@@ -1,15 +1,18 @@
 /* js/components/enhancedTableWidget.css or append to css/style.css */
 
 .enhanced-table-widget {
-    position: relative; /* For absolute positioning of dropdowns */
+    position: relative;
+    /* For absolute positioning of dropdowns */
     /* Add any other overall widget container styles if needed */
 }
 
 .etw-controls-area {
     display: flex;
-    justify-content: flex-end; /* Aligns icons to the right */
+    justify-content: flex-end;
+    /* Aligns icons to the right */
     align-items: center;
-    padding: 2px 0; /* Minimal padding */
+    padding: 2px 0;
+    /* Minimal padding */
     margin-bottom: 3px;
     /* border-bottom: 1px solid #efefef; /* Optional separator */
 }
@@ -17,38 +20,53 @@
 .etw-control-button {
     background: none;
     border: none;
-    font-size: 1.1em; /* Adjust icon size - can be overridden by specific icon library if used */
-    padding: 5px 7px; /* Small padding for clickable area */
-    margin-left: 6px;
+    font-size: 1rem;
+    /* Standard icon size */
+    padding: 6px 8px;
+    /* Comfortable touch target */
+    margin-left: 4px;
     cursor: pointer;
-    color: #4a4a4a; /* Default icon color */
-    border-radius: 4px; /* Soften edges */
-    line-height: 1; /* Helps with vertical alignment */
-    transition: background-color 0.2s ease, color 0.2s ease;
+    color: var(--color-gray-500);
+    /* Subtle default color */
+    border-radius: 4px;
+    /* Soften edges */
+    line-height: 1;
+    /* Helps with vertical alignment */
+    transition: all 0.2s ease;
 }
 
 .etw-control-button:hover {
-    color: #007bff; /* Standard hover color */
-    background-color: #e9ecef; /* Light background on hover */
+    color: var(--color-primary);
+    /* Brand color on hover */
+    background-color: var(--color-gray-100);
+    /* Light background on hover */
 }
 
 .etw-dropdown {
-    display: none; /* Hidden by default */
+    display: none;
+    /* Hidden by default */
     position: absolute;
-    top: 100%; /* Position below the button by default - JS will adjust based on button */
-    right: 0;  /* Align to the right of the button container */
+    top: 100%;
+    /* Position below the button by default - JS will adjust based on button */
+    right: 0;
+    /* Align to the right of the button container */
     background-color: #ffffff;
     border: 1px solid #d1d1d1;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    z-index: 1060; /* Ensure it's above Tabulator header/content */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1060;
+    /* Ensure it's above Tabulator header/content */
     padding: 8px;
-    min-width: 200px; /* Good width for column lists */
-    max-height: 300px; /* Prevent excessively long dropdowns */
-    overflow-y: auto;   /* Add scroll if content exceeds max-height */
+    min-width: 200px;
+    /* Good width for column lists */
+    max-height: 300px;
+    /* Prevent excessively long dropdowns */
+    overflow-y: auto;
+    /* Add scroll if content exceeds max-height */
     border-radius: 4px;
 }
 
-.etw-dropdown label { /* For column visibility checkboxes */
+.etw-dropdown label {
+    /* For column visibility checkboxes */
     display: block;
     padding: 6px 8px;
     font-size: 0.9em;
@@ -56,23 +74,29 @@
     white-space: nowrap;
     border-radius: 3px;
 }
+
 .etw-dropdown label:hover {
-    background-color: #f0f8ff; /* Light blue hover */
+    background-color: #f0f8ff;
+    /* Light blue hover */
 }
+
 .etw-dropdown label input[type="checkbox"] {
     margin-right: 8px;
     vertical-align: middle;
 }
 
-.etw-export-dropdown div { /* For export menu items */
+.etw-export-dropdown div {
+    /* For export menu items */
     padding: 8px 12px;
     font-size: 0.9em;
     cursor: pointer;
     white-space: nowrap;
     border-radius: 3px;
 }
+
 .etw-export-dropdown div:hover {
-    background-color: #f0f8ff; /* Light blue hover */
+    background-color: #f0f8ff;
+    /* Light blue hover */
 }
 
 /* Ensure Tabulator instance container takes up space */
@@ -80,17 +104,124 @@
     width: 100%;
 }
 
-/* Optional: Add some styling to Tabulator itself if not using a prebuilt theme fully,
-   or to override parts of a theme to match your app's style.
-   For example, to make Tabulator headers align with your app's look:
-*/
-/*
+/* ==========================================================================
+   Tabulator Modern Overrides (Workspace Canvas Contract)
+   ========================================================================== */
+
+/* 1. Reset & Transparency */
+.tabulator {
+    background-color: transparent !important;
+    border: none !important;
+    font-family: 'Inter', sans-serif !important;
+}
+
+/* 2. Header Styling */
 .tabulator .tabulator-header {
-    background-color: #f8f9fa;
-    border-bottom: 2px solid #dee2e6;
+    background-color: transparent !important;
+    border-bottom: 2px solid var(--color-gray-300) !important;
+    border-top: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    color: var(--color-gray-700) !important;
+    font-weight: 600 !important;
 }
-.tabulator .tabulator-header .tabulator-col .tabulator-col-content .tabulator-col-title {
-    font-weight: 600;
-    color: #212529;
+
+.tabulator .tabulator-header .tabulator-col {
+    background-color: transparent !important;
+    border-right: none !important;
+    /* Remove vertical separators */
 }
-*/
+
+.tabulator .tabulator-header .tabulator-col .tabulator-col-content {
+    padding: 12px 8px !important;
+}
+
+/* 3. Row Styling */
+.tabulator .tabulator-tableholder .tabulator-table {
+    background-color: transparent !important;
+}
+
+.tabulator-row {
+    background-color: transparent !important;
+    border-bottom: 1px solid var(--color-gray-200) !important;
+    color: var(--color-gray-800) !important;
+}
+
+.tabulator-row:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.3) !important;
+    /* Very subtle stripe */
+}
+
+.tabulator-row:hover {
+    background-color: rgba(255, 255, 255, 0.6) !important;
+    /* Subtle hover effect */
+    cursor: pointer;
+}
+
+.tabulator-row.tabulator-selected {
+    background-color: rgba(59, 130, 246, 0.1) !important;
+    /* Light blue selection */
+}
+
+/* 4. Cell Styling */
+.tabulator-row .tabulator-cell {
+    border-right: none !important;
+    /* Remove vertical separators */
+    padding: 10px 8px !important;
+    height: auto !important;
+    /* Allow wrapping if needed */
+    align-content: center;
+}
+
+/* 5. Footer/Pagination Styling */
+.tabulator .tabulator-footer {
+    background-color: transparent !important;
+    border-top: 1px solid var(--color-gray-300) !important;
+    padding: 10px 0 !important;
+}
+
+.tabulator .tabulator-footer .tabulator-page {
+    background: transparent !important;
+    border: 1px solid var(--color-gray-300) !important;
+    color: var(--color-gray-600) !important;
+    border-radius: 4px !important;
+    margin: 0 2px !important;
+}
+
+.tabulator .tabulator-footer .tabulator-page.active {
+    background: var(--color-primary) !important;
+    color: white !important;
+    border-color: var(--color-primary) !important;
+}
+
+.tabulator .tabulator-footer .tabulator-page:hover {
+    background: var(--color-gray-100) !important;
+    color: var(--color-gray-900) !important;
+}
+
+/* 6. Remove "90s" Bevels/Shadows */
+.tabulator-header-filter input {
+    border: 1px solid var(--color-gray-300) !important;
+    border-radius: 4px !important;
+    padding: 4px 8px !important;
+    background: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* 7. Scrollbars (Optional polish) */
+.tabulator-tableholder::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.tabulator-tableholder::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.tabulator-tableholder::-webkit-scrollbar-thumb {
+    background: var(--color-gray-300);
+    border-radius: 4px;
+}
+
+.tabulator-tableholder::-webkit-scrollbar-thumb:hover {
+    background: var(--color-gray-400);
+}

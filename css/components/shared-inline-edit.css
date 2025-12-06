@@ -1,0 +1,196 @@
+/* Shared Inline Edit Component Styles */
+
+/* Container */
+.inline-edit-list {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+/* Item Card */
+.inline-edit-item {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    margin-bottom: 0;
+    box-shadow: none;
+    overflow: visible;
+    transition: background-color 0.2s ease;
+    border-bottom: 1px solid var(--color-gray-100);
+}
+
+.inline-edit-item:last-child {
+    border-bottom: none;
+}
+
+/* Header */
+.inline-edit-header {
+    margin: 0;
+    padding: 8px 0;
+    background-color: transparent;
+    border-bottom: none;
+    cursor: pointer;
+    user-select: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--color-gray-700);
+    display: flex;
+    align-items: center;
+    transition: background-color 0.1s ease, color 0.1s ease;
+    border-radius: var(--radius-sm);
+}
+
+.inline-edit-header:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+    color: var(--color-gray-900);
+    padding-left: 4px;
+}
+
+.inline-edit-indicator {
+    margin-right: 4px;
+    color: var(--color-gray-400);
+    font-weight: normal;
+    font-family: monospace;
+    font-size: 1em;
+    width: 12px;
+    display: inline-block;
+    text-align: center;
+}
+
+.inline-edit-title {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--color-gray-700);
+    flex-grow: 1;
+}
+
+.inline-edit-header:hover .inline-edit-title {
+    color: var(--color-gray-900);
+}
+
+/* Details Area */
+.inline-edit-details {
+    padding: var(--space-md) 0;
+    background-color: transparent;
+    display: none;
+    margin-top: 4px;
+    margin-bottom: var(--space-md);
+}
+
+.inline-edit-details.expanded {
+    display: block;
+}
+
+/* Form Layout */
+.inline-edit-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-md);
+    margin-bottom: var(--space-md);
+}
+
+.inline-edit-form-group {
+    margin-bottom: var(--space-md);
+}
+
+.inline-edit-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--color-gray-600);
+    margin-bottom: 4px;
+    margin-top: var(--space-sm);
+}
+
+.inline-edit-input,
+.inline-edit-textarea,
+.inline-edit-select {
+    width: 100%;
+    padding: 6px 10px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: var(--color-gray-900);
+    background-color: #fff;
+    border: 1px solid var(--color-gray-300);
+    border-radius: var(--radius-sm);
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.inline-edit-input:focus,
+.inline-edit-textarea:focus,
+.inline-edit-select:focus {
+    border-color: var(--color-primary);
+    outline: 0;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.inline-edit-textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+/* Collapsible Sections */
+.inline-edit-section {
+    margin-top: var(--space-md);
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-sm);
+    background-color: rgba(255, 255, 255, 0.5);
+    overflow: hidden;
+}
+
+.inline-edit-section-header {
+    padding: 8px 12px;
+    background-color: rgba(0, 0, 0, 0.02);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    user-select: none;
+    transition: background-color 0.1s ease;
+}
+
+.inline-edit-section-header:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+}
+
+.inline-edit-section-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-gray-600);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0;
+}
+
+.inline-edit-section-content {
+    display: none;
+    padding: var(--space-md);
+    border-top: 1px solid var(--color-gray-200);
+}
+
+.inline-edit-section-content.expanded {
+    display: block;
+}
+
+/* Actions */
+.inline-edit-actions {
+    margin-top: var(--space-md);
+    display: flex;
+    gap: var(--space-md);
+}
+
+/* Empty State */
+.inline-edit-list-empty {
+    color: var(--color-gray-500);
+    font-style: italic;
+    padding: var(--space-md) 0;
+}
+
+/* Static Value (Read-Only) */
+.inline-edit-static-value {
+    padding: 6px 10px;
+    background: var(--color-gray-50);
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-sm);
+    color: var(--color-gray-700);
+    font-size: 0.9rem;
+}

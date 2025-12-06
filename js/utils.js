@@ -1,38 +1,8 @@
 // Global Constants
 const ALL_INITIATIVE_STATUSES = ['Backlog', 'Defined', 'Committed', 'Completed'];
 
-// Global Planning Year Variable (used by dashboard widgets)
-let dashboardPlanningYear = new Date().getFullYear();
 
 
-// --- Helper for Input Warnings (Phase 7a) ---
-const updateInputWarning = (inputElement, message) => {
-    let warningSpan = inputElement.nextElementSibling;
-    // Check if the next sibling is ALREADY the warning span we created
-    if (warningSpan && warningSpan.classList.contains('input-warning')) {
-        // Update existing warning
-        warningSpan.textContent = message ? ' ⚠️' : ''; // Show icon only if there's a message
-        warningSpan.title = message || ''; // Set tooltip message
-        warningSpan.style.display = message ? 'inline' : 'none'; // Hide span if no message
-    } else if (message) {
-        // Create NEW warning span if there's a message and no span exists
-        warningSpan = document.createElement('span');
-        warningSpan.className = 'input-warning';
-        warningSpan.textContent = ' ⚠️';
-        warningSpan.title = message;
-        warningSpan.style.color = 'orange';
-        warningSpan.style.cursor = 'help';
-        warningSpan.style.marginLeft = '3px'; // Add a little space
-        warningSpan.style.display = 'inline'; // Ensure it's visible
-        // Insert the span immediately after the input element
-        inputElement.parentNode.insertBefore(warningSpan, inputElement.nextSibling);
-    }
-    // Update the input's own title to include the warning (if any)
-    // Ensure original title exists before appending
-    const originalTitle = inputElement.dataset.originalTitle || '';
-    inputElement.title = originalTitle + (message ? `\nWarning: ${message}` : '');
-};
-// --- End Helper ---
 
 /**
  * Helper: Calculates total standard leave days per SDE for a team.
@@ -127,57 +97,7 @@ function getTeamNameById(teamId) {
     return team ? (team.teamIdentity || team.teamName) : teamId;
 }
 
-/** Helper to create Label + Input pairs (Revised for BIS display update) */
-function createInputLabelPair(id, labelText, value, type = 'text', index, field, isReadOnly = false, tooltip = null) {
-    let div = document.createElement('div');
-    div.style.marginBottom = '10px';
-    let label = document.createElement('label');
-    label.htmlFor = id;
-    label.innerText = labelText;
-    label.style.display = 'block';
-    if (tooltip) {
-        label.title = tooltip; // Add tooltip to label if provided
-    }
 
-    let inputElement; // Could be input, textarea, or span
-
-    if (isReadOnly) {
-        inputElement = document.createElement('span');
-        inputElement.id = id;
-        inputElement.textContent = value;
-        inputElement.style.fontWeight = 'bold'; // Make read-only values stand out
-        if (tooltip) {
-            inputElement.title = tooltip; // Add tooltip to value span as well
-        }
-    } else if (type === 'textarea') {
-        inputElement = document.createElement('textarea');
-        inputElement.rows = 2;
-        inputElement.style.width = '90%';
-        inputElement.id = id;
-        inputElement.value = value;
-        inputElement.setAttribute('data-team-index', index);
-        inputElement.setAttribute('data-field', field);
-        inputElement.addEventListener('change', handleTeamInputChange); // Use generic handler
-    } else { // Default to input
-        inputElement = document.createElement('input');
-        inputElement.type = type;
-        if (type === 'number') {
-            inputElement.min = 0;
-            // Add step=1 for integer headcount fields if needed
-            if (field === 'fundedHeadcount') inputElement.step = 1;
-        }
-        inputElement.style.width = '90%';
-        inputElement.id = id;
-        inputElement.value = value;
-        inputElement.setAttribute('data-team-index', index);
-        inputElement.setAttribute('data-field', field);
-        inputElement.addEventListener('change', handleTeamInputChange); // Use generic handler
-    }
-
-    div.appendChild(label);
-    div.appendChild(inputElement);
-    return div;
-}
 
 /** Helper to create Dual List Selectors */
 function createDualListContainer(contextIndex, leftLabel, rightLabel, currentOptions, availableOptions, leftField, rightField, moveCallback, multiSelectLeft = true, allowAddNew = false, addNewPlaceholder = '', addNewCallback = null) {
@@ -443,6 +363,12 @@ function moveEngineerToTeam(engineerName, newTeamId) {
     }
 
     console.log(`moveEngineerToTeam: Moved ${engineerName} to ${normalizedNewTeamId || 'Unassigned'}.`);
+
+    // [SYNC FIX] Update global capacity metrics immediately after checking logic
+    if (typeof window.updateCapacityCalculationsAndDisplay === 'function') {
+        window.updateCapacityCalculationsAndDisplay();
+    }
+
     return engineer;
 }
 
@@ -1133,6 +1059,17 @@ function validateGeneratedSystem(systemData) {
         }
     });
 
+    // Check Goals
+    console.log(`[AI-VALIDATE] ... checking ${systemData.goals.length} Goals...`);
+    systemData.goals.forEach(goal => {
+        if (!goal.goalId) errors.push('A goal is missing its "goalId".');
+        if (!goal.name) errors.push(`Goal "${goal.goalId}" is missing "name".`);
+
+        if (!goal.dueDate) {
+            warnings.push(`Goal "${goal.name || goal.goalId}" is missing "dueDate".`);
+        }
+    });
+
     // Check Initiatives
     console.log(`[AI-VALIDATE] ... checking ${systemData.yearlyInitiatives.length} Initiatives (Goals, Themes, Personnel, Work Packages)...`);
     systemData.yearlyInitiatives.forEach(init => {
@@ -1235,3 +1172,179 @@ function validateGeneratedSystem(systemData) {
 }
 
 
+
+// =================================================================
+// ROADMAP DATA UTILITIES
+// =================================================================
+
+/**
+ * Helper: Determines the quarter (Q1-Q4) from a date string (YYYY-MM-DD).
+ */
+function getQuarterFromDate(dateString) {
+    if (!dateString) return null;
+    try {
+        const month = parseInt(dateString.substring(5, 7), 10);
+        if (month >= 1 && month <= 3) return 'Q1';
+        if (month >= 4 && month <= 6) return 'Q2';
+        if (month >= 7 && month <= 9) return 'Q3';
+        if (month >= 10 && month <= 12) return 'Q4';
+        return null;
+    } catch (e) { return null; }
+}
+
+/**
+ * Helper: Returns the last date of the quarter for a given year.
+ * @param {string} quarter - 'Q1', 'Q2', 'Q3', 'Q4'
+ * @param {number} year - The year (e.g., 2025)
+ * @returns {string} Date string 'YYYY-MM-DD'
+ */
+function getEndDateForQuarter(quarter, year) {
+    if (!quarter || !year) return null;
+    switch (quarter) {
+        case 'Q1': return `${year}-03-31`;
+        case 'Q2': return `${year}-06-30`;
+        case 'Q3': return `${year}-09-30`;
+        case 'Q4': return `${year}-12-31`;
+        default: return null;
+    }
+}
+
+/**
+ * Extracts and structures data for the Quarterly Roadmap view.
+ * @param {Object} filters - { year, orgId, teamId, themeIds }
+ * @returns {Object} Structured data { ThemeName: { Q1: [], Q2: [], Q3: [], Q4: [] } }
+ */
+function getQuarterlyRoadmapData({ year, orgId, teamId, themeIds }) {
+    let initiatives = currentSystemData.yearlyInitiatives || [];
+
+    // 1. Filter by Year
+    if (year && year !== 'all') {
+        initiatives = initiatives.filter(init => init.attributes.planningYear == year);
+    }
+
+    // 2. Filter by Organization
+    if (orgId && orgId !== 'all') {
+        const teamsInOrg = new Set();
+        (currentSystemData.sdms || []).forEach(sdm => {
+            if (sdm.seniorManagerId === orgId) {
+                (currentSystemData.teams || []).forEach(team => {
+                    if (team.sdmId === sdm.sdmId) teamsInOrg.add(team.teamId);
+                });
+            }
+        });
+        initiatives = initiatives.filter(init => (init.assignments || []).some(a => teamsInOrg.has(a.teamId)));
+    }
+
+    // 3. Filter by Team
+    if (teamId && teamId !== 'all') {
+        initiatives = initiatives.filter(init => (init.assignments || []).some(a => a.teamId === teamId));
+    }
+
+    // 4. Filter by Themes
+    const allThemeIds = (currentSystemData.definedThemes || []).map(t => t.themeId);
+    const selectedThemes = themeIds || [];
+    if (selectedThemes.length > 0 && selectedThemes.length < allThemeIds.length) {
+        initiatives = initiatives.filter(init => {
+            const initThemes = init.themes || [];
+            if (initThemes.length === 0) return false;
+            return initThemes.some(themeId => selectedThemes.includes(themeId));
+        });
+    }
+
+    // 5. Structure Data
+    const roadmapData = {};
+    const themeMap = new Map((currentSystemData.definedThemes || []).map(t => [t.themeId, t.name]));
+
+    initiatives.forEach(init => {
+        // Prioritize explicit targetQuarter (from drag-and-drop), otherwise derive from date
+        const quarter = init.targetQuarter || getQuarterFromDate(init.targetDueDate);
+        if (!quarter) return;
+
+        const assignedThemes = init.themes && init.themes.length > 0 ? init.themes : ['uncategorized'];
+
+        assignedThemes.forEach(themeId => {
+            const themeName = themeMap.get(themeId) || "Uncategorized";
+
+            if (selectedThemes.length > 0 && selectedThemes.length < allThemeIds.length && !selectedThemes.includes(themeId)) {
+                return;
+            }
+
+            if (!roadmapData[themeName]) {
+                roadmapData[themeName] = { Q1: [], Q2: [], Q3: [], Q4: [] };
+            }
+            roadmapData[themeName][quarter].push(init);
+        });
+    });
+
+    return roadmapData;
+}
+
+/**
+ * Extracts and structures data for the 3-Year Plan view.
+ * @param {Object} filters - { orgId, teamId, themeIds }
+ * @returns {Object} Structured data { ThemeName: { 'Current Year': [], 'Next Year': [], 'Future': [] } }
+ */
+function get3YearPlanData({ orgId, teamId, themeIds }) {
+    let initiatives = currentSystemData.yearlyInitiatives || [];
+
+    // 1. Filter by Organization
+    if (orgId && orgId !== 'all') {
+        const teamsInOrg = new Set();
+        (currentSystemData.sdms || []).forEach(sdm => {
+            if (sdm.seniorManagerId === orgId) {
+                (currentSystemData.teams || []).forEach(team => {
+                    if (team.sdmId === sdm.sdmId) teamsInOrg.add(team.teamId);
+                });
+            }
+        });
+        initiatives = initiatives.filter(init => (init.assignments || []).some(a => teamsInOrg.has(a.teamId)));
+    }
+
+    // 2. Filter by Team
+    if (teamId && teamId !== 'all') {
+        initiatives = initiatives.filter(init => (init.assignments || []).some(a => a.teamId === teamId));
+    }
+
+    // 3. Filter by Themes
+    const allThemeIds = (currentSystemData.definedThemes || []).map(t => t.themeId);
+    const selectedThemes = themeIds || [];
+    if (selectedThemes.length > 0 && selectedThemes.length < allThemeIds.length) {
+        initiatives = initiatives.filter(init => {
+            const initThemes = init.themes || [];
+            if (initThemes.length === 0) return false;
+            return initThemes.some(themeId => selectedThemes.includes(themeId));
+        });
+    }
+
+    // 4. Structure Data
+    const roadmapData = {};
+    const themeMap = new Map((currentSystemData.definedThemes || []).map(t => [t.themeId, t.name]));
+    const currentYear = new Date().getFullYear();
+
+    initiatives.forEach(init => {
+        const planningYear = init.attributes.planningYear;
+        if (!planningYear) return;
+
+        let yearBucket;
+        if (planningYear === currentYear) { yearBucket = 'Current Year'; }
+        else if (planningYear === currentYear + 1) { yearBucket = 'Next Year'; }
+        else if (planningYear > currentYear + 1) { yearBucket = 'Future'; }
+        else { return; }
+
+        const assignedThemes = init.themes && init.themes.length > 0 ? init.themes : ['uncategorized'];
+        assignedThemes.forEach(themeId => {
+            const themeName = themeMap.get(themeId) || "Uncategorized";
+
+            if (selectedThemes.length > 0 && selectedThemes.length < allThemeIds.length && !selectedThemes.includes(themeId)) {
+                return;
+            }
+
+            if (!roadmapData[themeName]) {
+                roadmapData[themeName] = { 'Current Year': [], 'Next Year': [], 'Future': [] };
+            }
+            roadmapData[themeName][yearBucket].push(init);
+        });
+    });
+
+    return roadmapData;
+}

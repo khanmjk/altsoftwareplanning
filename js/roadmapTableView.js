@@ -8,8 +8,19 @@ let roadmapTimelineTable = null; // To hold the Tabulator instance for this spec
 function initializeRoadmapTableView() {
     const container = document.getElementById('roadmapTimelineWidget');
     if (!container) { return; }
-    container.innerHTML = `<div id="roadmapTableFilters" class="widget-filter-bar"></div><div id="quarterlyRoadmapContainer" class="quarterly-roadmap-container"></div>`;
+
+    // Create filter container HTML
+    container.innerHTML = `
+        <div id="roadmapTableFilters" style="margin-bottom: 15px;"></div>
+        <div id="quarterlyRoadmapContainer" class="quarterly-roadmap-container"></div>
+    `;
+
+    // Inject filters into container (original pattern)
     generateRoadmapTableFilters('', renderQuarterlyRoadmap);
+
+    // CRITICAL: Populate team dropdown after filters are in DOM
+    updateTeamFilterOptions('');
+
     renderQuarterlyRoadmap();
 }
 
@@ -19,13 +30,28 @@ function initializeRoadmapTableView() {
 function initialize3YPRoadmapView() {
     const container = document.getElementById('threeYearPlanWidget');
     if (!container) { return; }
-    container.innerHTML = `<div id="roadmapTableFilters3YP" class="widget-filter-bar"></div><div id="threeYearPlanContainer" class="three-year-plan-container"></div>`;
+
+    // Create filter container HTML
+    container.innerHTML = `
+        <div id="roadmapTableFilters3YP" style="margin-bottom: 15px;"></div>
+        <div id="threeYearPlanContainer" class="three-year-plan-container"></div>
+    `;
+
+    // Inject filters into container (original pattern)
     generateRoadmapTableFilters('3YP', render3YPRoadmap);
+
+    // CRITICAL: Populate team dropdown after filters are in DOM
+    updateTeamFilterOptions('3YP');
+
     render3YPRoadmap();
 }
 
 /**
  * Generates the interactive filter dropdowns, including a custom multi-select for themes.
+ */
+/**
+ * Generates the interactive filter dropdowns, including a custom multi-select for themes.
+ * Legacy wrapper that injects into a container.
  */
 function generateRoadmapTableFilters(idSuffix = '', renderCallback, options = { includeThemes: true }) {
     const containerId = 'roadmapTableFilters' + idSuffix;
@@ -33,16 +59,38 @@ function generateRoadmapTableFilters(idSuffix = '', renderCallback, options = { 
     if (!filtersContainer) { return; }
 
     filtersContainer.innerHTML = '';
+    const controls = createRoadmapFilterElements(idSuffix, renderCallback, options);
+    filtersContainer.appendChild(controls);
+}
 
-    const createDropdownFilter = (id, labelText, options) => {
+/**
+ * Creates and returns the filter elements for the roadmap view.
+ * Used by DashboardView to inject filters into the Global Toolbar.
+ */
+function createRoadmapFilterElements(idSuffix = '', renderCallback, options = { includeThemes: true }) {
+    const container = document.createElement('div');
+    container.style.display = 'flex';
+    container.style.gap = '15px';
+    container.style.alignItems = 'center';
+
+    const createDropdownFilter = (id, labelText, optionsHTML) => {
         const div = document.createElement('div');
         div.className = 'filter-item';
+        div.style.display = 'flex';
+        div.style.alignItems = 'center';
+        div.style.gap = '5px';
+
         const label = document.createElement('label');
         label.htmlFor = id;
         label.textContent = labelText;
+        label.style.fontWeight = '600';
+        label.style.marginBottom = '0'; // Reset default margin
+
         const select = document.createElement('select');
         select.id = id;
-        select.innerHTML = options;
+        select.className = 'form-select form-select-sm'; // Bootstrap style
+        select.innerHTML = optionsHTML;
+
         div.appendChild(label);
         div.appendChild(select);
         return div;
@@ -53,37 +101,47 @@ function generateRoadmapTableFilters(idSuffix = '', renderCallback, options = { 
     (currentSystemData.seniorManagers || []).forEach(sm => {
         orgOptions += `<option value="${sm.seniorManagerId}">${sm.seniorManagerName}</option>`;
     });
-    const orgFilter = createDropdownFilter('roadmapOrgFilter' + idSuffix, 'Filter by Organization:', orgOptions);
+    const orgFilter = createDropdownFilter('roadmapOrgFilter' + idSuffix, 'Org:', orgOptions);
     orgFilter.querySelector('select').onchange = () => {
         updateTeamFilterOptions(idSuffix);
         renderCallback();
     };
-    filtersContainer.appendChild(orgFilter);
+    container.appendChild(orgFilter);
 
     // --- Team Filter ---
-    const teamFilter = createDropdownFilter('roadmapTeamFilter' + idSuffix, 'Filter by Team:', '<option value="all">All Teams</option>');
+    const teamFilter = createDropdownFilter('roadmapTeamFilter' + idSuffix, 'Team:', '<option value="all">All Teams</option>');
     teamFilter.querySelector('select').onchange = renderCallback;
-    filtersContainer.appendChild(teamFilter);
+    container.appendChild(teamFilter);
 
     // --- Conditional Theme Filter ---
     if (options.includeThemes) {
         const themeFilterWrapper = document.createElement('div');
         themeFilterWrapper.className = 'filter-item';
+        themeFilterWrapper.style.display = 'flex';
+        themeFilterWrapper.style.alignItems = 'center';
+        themeFilterWrapper.style.gap = '5px';
+
         const themeLabel = document.createElement('label');
-        themeLabel.textContent = 'Filter by Theme:';
+        themeLabel.textContent = 'Theme:';
+        themeLabel.style.fontWeight = '600';
+        themeLabel.style.marginBottom = '0';
         themeFilterWrapper.appendChild(themeLabel);
 
         const dropdownContainer = document.createElement('div');
         dropdownContainer.className = 'custom-multiselect-dropdown';
+        dropdownContainer.style.position = 'relative'; // Ensure positioning context
 
         const dropdownButton = document.createElement('button');
         dropdownButton.id = 'theme-dropdown-button' + idSuffix;
-        dropdownButton.className = 'dropdown-button';
+        dropdownButton.className = 'dropdown-button btn btn-outline-secondary btn-sm'; // Bootstrap style
         dropdownButton.type = 'button';
+        dropdownButton.style.minWidth = '150px';
+        dropdownButton.style.textAlign = 'left';
 
         const dropdownPanel = document.createElement('div');
         dropdownPanel.id = 'theme-dropdown-panel' + idSuffix;
         dropdownPanel.className = 'dropdown-panel';
+        dropdownPanel.style.zIndex = '1000'; // Ensure it sits on top
 
         const selectAllContainer = document.createElement('div');
         selectAllContainer.className = 'select-all-container';
@@ -119,7 +177,7 @@ function generateRoadmapTableFilters(idSuffix = '', renderCallback, options = { 
         dropdownContainer.appendChild(dropdownButton);
         dropdownContainer.appendChild(dropdownPanel);
         themeFilterWrapper.appendChild(dropdownContainer);
-        filtersContainer.appendChild(themeFilterWrapper);
+        container.appendChild(themeFilterWrapper);
 
         const updateButtonText = () => {
             const checkboxes = dropdownPanel.querySelectorAll('.theme-checkbox-item:checked');
@@ -157,7 +215,18 @@ function generateRoadmapTableFilters(idSuffix = '', renderCallback, options = { 
         updateButtonText();
     }
 
-    updateTeamFilterOptions(idSuffix);
+    // Initial population of team filter
+    // We need to delay this slightly or call it manually because the element isn't in DOM yet? 
+    // Actually, updateTeamFilterOptions looks for ID in document. 
+    // Since we are creating elements in memory, we need to pass the container or element directly.
+    // BUT updateTeamFilterOptions is defined globally and looks up by ID.
+    // So we must ensure these elements are attached to DOM before calling updateTeamFilterOptions.
+    // OR we modify updateTeamFilterOptions to accept the select element.
+
+    // For now, we'll return the container. The caller (DashboardView) will attach it.
+    // We can trigger updateTeamFilterOptions AFTER attachment.
+
+    return container;
 }
 
 
@@ -203,7 +272,8 @@ function prepareDataForQuarterlyRoadmap() {
     const teamFilter = document.getElementById('roadmapTeamFilter')?.value || 'all';
     const themeCheckboxes = document.querySelectorAll('#theme-dropdown-panel input.theme-checkbox-item:checked');
     const selectedThemes = Array.from(themeCheckboxes).map(cb => cb.value);
-    const yearFilter = dashboardPlanningYear; // Use the global variable from dashboard.js
+    const yearFilter = window.dashboardPlanningYear; // Read from window property
+    console.log('[DEBUG] prepareDataForQuarterlyRoadmap - yearFilter:', yearFilter, 'window.dashboardPlanningYear:', window.dashboardPlanningYear);
 
     let initiatives = currentSystemData.yearlyInitiatives || [];
 

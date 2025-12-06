@@ -9,30 +9,43 @@
 <link rel="stylesheet" href="css/0-settings/variables.css">
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/layout/main-layout.css">
+<link rel="stylesheet" href="css/layout/workspace-shell.css">
 <link rel="stylesheet" href="css/layout/sidebar.css">
 <link rel="stylesheet" href="css/components/sidebar-enhanced.css">
 <link rel="stylesheet" href="css/components/header.css">
+<link rel="stylesheet" href="css/components/pill-navigation.css">
 <link rel="stylesheet" href="css/components/enhancedTableWidget.css">
 <link rel="stylesheet" href="css/components/aiChatPanel.css">
 <link rel="stylesheet" href="css/components/ganttChart.css">
 <link rel="stylesheet" href="css/components/workspace.css">
-<link rel="stylesheet" href="css/components/settings.css">
-<link rel="stylesheet" href="css/components/management.css">
+
+<!-- <link rel="stylesheet" href="css/components/management.css"> -->
 <link rel="stylesheet" href="css/components/roadmapModal.css">
 <link rel="stylesheet" href="css/ai-chat.css">
 <link rel="stylesheet" href="css/views/welcome-view.css">
+<link rel="stylesheet" href="css/views/visualizations-view.css">
 <link rel="stylesheet" href="css/views/dashboard-view.css">
-<link rel="stylesheet" href="css/views/org-view.css">
+<link rel="stylesheet" href="css/views/system-edit-view.css">
+<link rel="stylesheet" href="css/views/roadmap-view.css">
+<link rel="stylesheet" href="css/components/service-edit-component.css">
+<link rel="stylesheet" href="css/components/team-edit-component.css?v=1">
+<link rel="stylesheet" href="css/components/theme-edit-component.css?v=1">
+<link rel="stylesheet" href="css/components/initiative-edit-component.css?v=1">
+<link rel="stylesheet" href="css/components/goal-edit-component.css?v=1">
+<link rel="stylesheet" href="css/components/shared-inline-edit.css?v=1">
 <link rel="stylesheet" href="css/views/roadmap-view.css">
 <link rel="stylesheet" href="css/views/gantt-planning-view.css">
 <link rel="stylesheet" href="css/views/accomplishments-view.css">
 <link rel="stylesheet" href="css/views/goals-view.css">
 <link rel="stylesheet" href="css/views/roadmap-table-view.css">
 <link rel="stylesheet" href="css/views/capacity-tuning-view.css">
+<link rel="stylesheet" href="css/views/capacity-planning-view.css">
+<link rel="stylesheet" href="css/views/resource-forecast-view.css">
 <link rel="stylesheet" href="css/views/visualizations-view.css">
 <link rel="stylesheet" href="css/components/systems-view.css">
-<link rel="stylesheet" href="css/components/settings-view.css">
-<link rel="stylesheet" href="css/components/management-view.css">
+<link rel="stylesheet" href="css/components/settings-view.css?v=2">
+<link rel="stylesheet" href="css/views/management-view.css?v=2">
+<link rel="stylesheet" href="css/views/documentation-view.css">
 <link rel="stylesheet" href="css/components/Modal.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css">
 
@@ -145,13 +158,20 @@
         </div>
 
         <div id="main-content-wrapper">
-            <header id="main-header">
-                <div class="breadcrumbs"></div>
-                <div class="header-actions">
-                    <button id="header-ai-btn" class="header-btn" title="AI Assistant"><i
-                            class="fas fa-robot"></i></button>
+            <!-- 1. Canvas Header (Global) -->
+            <header id="workspace-header" class="canvas-header">
+                <div class="canvas-header__left">
+                    <div id="workspace-breadcrumbs" class="canvas-header__breadcrumbs">
+                        <!-- Breadcrumbs injected by JS -->
+                    </div>
+                    <h1 id="workspace-title" class="canvas-header__title">Welcome</h1>
+                </div>
+                <div class="canvas-header__right">
+                    <div id="workspace-actions">
+                        <!-- Global Actions injected by JS -->
+                    </div>
 
-                    <!-- Notification Dropdown -->
+                    <!-- Notification Dropdown (Existing) -->
                     <div class="notification-wrapper" style="position: relative;">
                         <button id="header-notifications-btn" class="header-btn" title="Notifications">
                             <i class="fas fa-bell"></i>
@@ -163,16 +183,27 @@
                             <div class="dropdown-header"
                                 style="padding: 12px 15px; font-weight: 600; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
                                 <span>Notifications</span>
-                                <span id="notifications-mark-read" style="font-size: 0.75rem; color: #64748b; cursor: pointer;">Mark all read</span>
+                                <span id="notifications-mark-read"
+                                    style="font-size: 0.75rem; color: #64748b; cursor: pointer;">Mark all read</span>
                             </div>
-                            <div id="notifications-list" class="dropdown-content" style="max-height: 300px; overflow-y: auto;">
+                            <div id="notifications-list" class="dropdown-content"
+                                style="max-height: 300px; overflow-y: auto;">
                             </div>
                         </div>
                     </div>
+
+                    <button id="header-ai-btn" class="header-btn" title="AI Assistant"><i
+                            class="fas fa-robot"></i></button>
                 </div>
             </header>
 
-            <div id="main-content-area">
+            <!-- 2. Canvas Toolbar (Optional, Sticky) -->
+            <div id="workspace-toolbar" class="canvas-toolbar" style="display: none;">
+                <!-- Toolbar content injected by JS -->
+            </div>
+
+            <!-- 3. Canvas Content (The View) -->
+            <div id="main-content-area" class="canvas-content">
 
 
                 <div id="welcomeViewContent" class="template-hidden">
@@ -323,20 +354,35 @@
     <script src="js/sampleData/sampleInsightAI.js"></script>
     <script src="js/sampleData/sampleFinSecure.js"></script>
 
-    <script src="js/components/enhancedTableWidget.js"></script>
+    <script src="js/components/enhancedTableWidget.js?v=3"></script>
+    <script src="js/components/PillNavigationComponent.js"></script>
     <script src="js/documentation.js"></script>
-    <script src="js/sdmForecasting.js?v=2"></script>
+    <script src="js/engines/ForecastingEngine.js"></script>
+    <script src="js/components/ResourceForecastView.js"></script>
     <script src="js/mermaidGenerator.js"></script>
     <script src="js/visualizations.js?v=2"></script>
-    <script src="js/editSystem.js"></script>
-    <script src="js/components/OrgView.js"></script>
-    <script src="js/yearPlanning.js?v=3"></script>
-    <script src="js/capacityTuning.js?v=2"></script>
+    <script src="js/components/SettingsView.js?v=2"></script>
+    <script src="js/components/ServiceEditComponent.js?v=1"></script>
+    <script src="js/components/TeamEditComponent.js?v=1"></script>
+    <script src="js/components/ThemeEditComponent.js?v=1"></script>
+    <script src="js/components/InitiativeEditComponent.js"></script>
+    <script src="js/components/GoalEditComponent.js"></script>
+    <script src="js/editSystem.js?v=1"></script>
+    <script src="js/components/OrgView.js?v=3"></script>
+    <script src="js/services/PlanningService.js?v=1"></script>
+    <script src="js/yearPlanning.js?v=5"></script>
+    <script src="js/components/YearPlanningView.js?v=1"></script>
+    <script src="js/engines/CapacityEngine.js"></script>
+    <script src="js/components/CapacityConfigurationView.js"></script>
+    <script src="js/components/CapacityDashboardView.js"></script>
+    <script src="js/components/CapacityPlanningView.js"></script>
+    <script src="js/components/BacklogComponent.js"></script>
+    <script src="js/components/RoadmapComponent.js"></script>
     <script src="js/components/RoadmapView.js"></script>
     <script src="js/roadmapTableView.js"></script>
-    <script src="js/goalsView.js"></script>
-    <script src="js/accomplishmentsView.js"></script>
-    <script src="js/impactView.js"></script>
+    <script src="js/components/widgets/GoalsWidget.js"></script>
+    <script src="js/components/widgets/AccomplishmentsWidget.js"></script>
+    <script src="js/components/widgets/ImpactWidget.js"></script>
     <script src="js/components/DashboardView.js"></script>
     <script src="js/featureFlags.js"></script>
     <script src="js/components/gantt/GanttRenderer.js"></script>
@@ -350,11 +396,13 @@
     <script src="ai/aiChatAssistant.js"></script>
     <script src="ai/aiAgentToolset.js"></script>
     <script src="ai/aiPlanOptimizationAgent.js"></script>
+    <script src="js/ai/aiViewRegistry.js"></script>
     <script src="ai/aiAgentController.js"></script>
 
     <script src="js/components/SidebarComponent.js"></script>
     <script src="js/components/HeaderComponent.js"></script>
-    <script src="js/components/SettingsView.js"></script>
+    <script src="js/components/SystemOverviewView.js"></script>
+
     <script src="js/components/ManagementView.js"></script>
     <script src="js/components/SystemsView.js"></script>
     <script src="js/components/RoadmapInitiativeModal.js"></script>

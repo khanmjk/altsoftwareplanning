@@ -1,71 +1,218 @@
-/* System Editing View Styles - EXACT original from style-legacy.css */
+/* System Editing View Styles - Enterprise UX Refactor */
 
-/* Service Edit Sections */
-.service-edit {
-    margin-bottom: 15px;
-    border: 1px solid #ccc;
-    padding: 10px;
-    background-color: #f9f9f9;
-}
-
-.service-edit h4 {
+/* 1. Container & Layout */
+.system-edit-container {
+    padding: var(--space-lg);
+    width: 100%;
+    /* Full width */
     margin: 0;
-    padding: 10px;
-    background-color: #e6f7ff;
-    cursor: pointer;
-    user-select: none;
+    /* Left align */
+    font-family: 'Inter', sans-serif;
+    color: var(--color-gray-800);
 }
 
-/* API Edit Sections */
-.api-edit {
-    margin: 5px 0;
-    padding: 10px;
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
+#editSystemForm {
+    margin-bottom: var(--space-xl);
+    max-width: 800px;
+    /* Limit form width for readability but keep left aligned */
 }
 
-.api-edit button {
-    padding: 4px 8px;
-    font-size: 0.85em;
+.system-edit-group {
+    margin-bottom: var(--space-md);
 }
 
-/* Team Edit Sections */
+.system-edit-actions {
+    margin-top: var(--space-md);
+    margin-bottom: var(--space-lg);
+}
+
+.system-edit-section-header {
+    margin-top: var(--space-xl);
+    margin-bottom: var(--space-md);
+    border-bottom: 2px solid var(--color-gray-200);
+    padding-bottom: var(--space-sm);
+}
+
+.system-edit-section-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: var(--color-gray-800);
+    font-weight: 600;
+}
+
+.system-edit-footer-actions {
+    margin-top: var(--space-xl);
+    padding-top: var(--space-lg);
+    border-top: 1px solid var(--color-gray-200);
+    display: flex;
+    gap: var(--space-md);
+}
+
+/* 2. Section Cards (Service & Team Edit) */
+.service-edit,
 .team-edit {
-    margin-bottom: 15px;
-    border: 1px solid #ccc;
-    padding: 10px;
-    background-color: #f9f9f9;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    margin-bottom: 0;
+    /* No gap between items */
+    box-shadow: none;
+    overflow: visible;
+    transition: background-color 0.2s ease;
+    border-bottom: 1px solid var(--color-gray-100);
+    /* Separator between items */
 }
 
+.service-edit:last-child,
+.team-edit:last-child {
+    border-bottom: none;
+}
+
+/* 3. Accordion Headers */
+.service-edit h4,
 .team-edit h4 {
     margin: 0;
-    padding: 10px;
-    background-color: #e6f7ff;
+    padding: 4px 0;
+    /* Minimal padding, removed left padding to fix indent */
+    background-color: transparent;
+    border-bottom: 1px solid var(--color-gray-100);
+    /* Keep separator */
     cursor: pointer;
     user-select: none;
+    font-size: 0.9rem;
+    /* Compact font size */
+    font-weight: 500;
+    color: var(--color-gray-700);
+    display: flex;
+    align-items: center;
+    transition: background-color 0.1s ease, color 0.1s ease;
+    border-radius: var(--radius-sm);
 }
 
-.team-details {
-    padding: 10px;
-    display: none;
+.service-edit h4:hover,
+.team-edit h4:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+    color: var(--color-gray-900);
+    padding-left: 4px;
+    /* Add slight padding on hover for visual feedback */
 }
 
-/* System Edit Form */
-#editSystemForm {
-    max-width: 1000px;
-    margin: 20px auto;
-}
-
-/* New Initiative SDE Years Input */
-#newInitiativeSdeYears {
-    width: 80px;
+.service-edit h4 span,
+.team-edit h4 span {
+    margin-right: 4px;
+    /* Tighter icon spacing */
+    color: var(--color-gray-400);
+    font-weight: normal;
+    font-family: monospace;
+    font-size: 1em;
+    width: 12px;
+    /* Fixed width for alignment */
     display: inline-block;
+    text-align: center;
 }
 
-/* Hover effects for collapsible headers */
-#systemEditForm .service-edit>h4:hover,
-#systemEditForm .team-edit>h4:hover {
-    background-color: #dce9f5;
-    color: #004a99;
-    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+/* 4. Details Content Area */
+.service-details,
+.team-details {
+    padding: var(--space-md) 0;
+    /* Removed left padding/indent */
+    /* Indented content */
+    background-color: transparent;
+    /* Keep transparent */
+    display: none;
+    /* Toggled by JS */
+    margin-top: 4px;
+    margin-bottom: var(--space-md);
+    /* Removed border-left and margin-left to fix "everything is indented" issue */
+}
+
+/* 5. Form Elements (Enterprise Style) */
+label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--color-gray-600);
+    margin-bottom: 4px;
+    margin-top: var(--space-sm);
+}
+
+input[type="text"],
+input[type="number"],
+textarea,
+select,
+.form-control {
+    width: 100%;
+    padding: 6px 10px;
+    /* Compact inputs */
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: var(--color-gray-900);
+    background-color: #fff;
+    /* Inputs stay white */
+    border: 1px solid var(--color-gray-300);
+    border-radius: var(--radius-sm);
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+textarea:focus,
+select:focus,
+.form-control:focus {
+    border-color: var(--color-primary);
+    outline: 0;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+/* 6. API Edit Sections (Nested Cards) */
+.apis-container {
+    margin-top: var(--space-md);
+    padding-top: var(--space-sm);
+    border-top: 1px dashed var(--color-gray-200);
+    /* Lighter separation */
+}
+
+.apis-container h5 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-gray-500);
+    margin-bottom: var(--space-sm);
+}
+
+.api-edit {
+    background-color: rgba(255, 255, 255, 0.5);
+    /* Semi-transparent white */
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-sm);
+    padding: var(--space-md);
+    margin-bottom: var(--space-sm);
+}
+
+/* 7. Dual List Containers */
+.dual-list-container {
+    margin-top: var(--space-sm);
+}
+
+/* 8. Action Buttons - Inherit from global buttons.css */
+/* Removed local overrides to ensure standard styling */
+
+/* 9. SDM Section Styling */
+[id^="sdmSection_"] {
+    background-color: rgba(0, 0, 0, 0.02);
+    /* Very subtle background */
+    border: 1px solid var(--color-gray-200) !important;
+    border-radius: var(--radius-sm);
+    padding: var(--space-md) !important;
+}
+
+[id^="sdmSection_"] h5 {
+    margin-top: 0;
+    color: var(--color-gray-700);
+    font-size: 0.85rem;
 }

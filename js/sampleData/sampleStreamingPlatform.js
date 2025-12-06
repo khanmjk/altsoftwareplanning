@@ -479,17 +479,20 @@ const sampleSystemDataStreamView = {
         {
             goalId: 'goal-stability-sv-2025', name: 'Maintain Platform Stability & Reliability 2025', description: 'Ensure StreamView platform meets 99.99% uptime and key performance indicators.', strategyLink: null,
             owner: { type: 'seniorManager', id: 'srMgr1', name: 'Director Dave' }, projectManager: null, technicalPOC: { type: 'sdm', id: 'sdm1', name: 'Alice Johnson' },
-            initiativeIds: ['init-sv-ktlo', 'init-sv-oncall', 'init-sv-008', 'init-sv-012'], attributes: {}
+            initiativeIds: ['init-sv-ktlo', 'init-sv-oncall', 'init-sv-008', 'init-sv-012'], attributes: {},
+            dueDate: '2025-12-31'
         },
         {
             goalId: 'goal-security-compliance-sv-2025', name: 'Achieve Full Security Compliance 2025', description: 'Meet all SOC2, GDPR, and internal security policy requirements.', strategyLink: null,
             owner: { type: 'seniorManager', id: 'srMgr2', name: 'VP Victoria' }, projectManager: { type: 'projectManager', id: 'pmSV001', name: 'Eleanor Planwell' }, technicalPOC: { type: 'sdm', id: 'sdm5', name: 'Ian Turner' },
-            initiativeIds: ['init-sv-security', 'init-sv-009', 'init-sv-015', 'init-sv-019'], attributes: {}
+            initiativeIds: ['init-sv-security', 'init-sv-009', 'init-sv-015', 'init-sv-019'], attributes: {},
+            dueDate: null
         },
         {
             goalId: 'goal-ux-enhancement-sv-2025', name: 'Enhance User Experience Q3/Q4 2025', description: 'Deliver key features and improvements to increase user engagement and satisfaction.', strategyLink: null,
             owner: { type: 'pmt', id: 'pmt1', name: 'Bob Smith' }, projectManager: { type: 'projectManager', id: 'pmSV001', name: 'Eleanor Planwell' }, technicalPOC: { type: 'sdm', id: 'sdm4', name: 'Grace Lee' },
-            initiativeIds: ['init-sv-001', 'init-sv-003', 'init-sv-005', 'init-sv-006', 'init-sv-007', 'init-sv-010', 'init-sv-013', 'init-sv-016', 'init-sv-017', 'init-sv-020', 'init-sv-022'], attributes: {}
+            initiativeIds: ['init-sv-001', 'init-sv-003', 'init-sv-005', 'init-sv-006', 'init-sv-007', 'init-sv-010', 'init-sv-013', 'init-sv-016', 'init-sv-017', 'init-sv-020', 'init-sv-022'], attributes: {},
+            dueDate: null
         },
         {
             goalId: 'goal-revenue-sv-2025', name: 'Grow Subscription Revenue by 15% in 2025', description: 'Launch new products and features to drive revenue growth.', strategyLink: null,

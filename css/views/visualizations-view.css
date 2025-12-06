@@ -1,15 +1,19 @@
 /* Visualizations View Styles */
 
-/* Mermaid Graph Containers */
+/* Mermaid Graph Containers - blend with workspace canvas */
 #mermaidGraph,
 #mermaidApiGraph {
     display: block;
+    border: none;
+    background-color: transparent;
 }
 
 #mermaidGraph svg,
 #mermaidApiGraph svg {
     width: 100%;
     height: auto;
+    border: none;
+    background-color: transparent;
 }
 
 /* Mermaid Error/Info States */
@@ -21,13 +25,13 @@
     color: #666;
 }
 
-/* Visualization Containers */
+/* Visualization Containers - blend with workspace canvas */
 #visualization svg,
 #teamVisualization svg,
 #serviceRelationshipsVisualization svg,
 #dependencyVisualization svg {
-    border: 1px solid var(--color-gray-300);
-    background-color: var(--color-white);
+    border: none;
+    background-color: transparent;
 }
 
 /* D3 Visualization Common Styles */
@@ -55,6 +59,40 @@
     fill: var(--color-gray-900);
 }
 
+.legend-item text {
+    font-size: 11px;
+}
+
+/* Initiative Impact View Styles */
+/* Impact View Styles */
+#impact-graph-container svg {
+    border: none !important;
+    background-color: transparent !important;
+}
+
+#impact-summary-container {
+    padding: 10px 0;
+    margin-top: 10px;
+    /* No border, no background - blend with workspace */
+}
+
+.initiative-summary {
+    line-height: 1.4;
+    font-size: 14px;
+}
+
+.initiative-summary h4 {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+}
+
+.initiative-summary-meta,
+.initiative-summary-description {
+    margin-bottom: 6px;
+}
+
+/* initiative-summary-teams uses inline layout from content */
+
 /* Legend Styles */
 .visualization-legend {
     font-family: Arial, sans-serif;
@@ -74,29 +112,23 @@
     fill: var(--color-gray-900);
 }
 
-/* Carousel Navigation */
-.visualization-carousel {
-    position: relative;
-}
-
-.visualization-carousel__nav {
+/* View Container Styles */
+.system-overview-view {
+    height: 100%;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--space-md);
-    background: var(--color-gray-100);
-    border-bottom: 1px solid var(--color-gray-300);
+    flex-direction: column;
 }
 
-.visualization-carousel__title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--color-gray-900);
+/* View Section Base */
+.system-overview-view .workspace-view__section {
+    display: none;
+    padding: 20px;
+    height: 100%;
+    overflow-y: auto;
 }
 
-.visualization-carousel__counter {
-    font-size: 0.9rem;
-    color: var(--color-gray-600);
+.system-overview-view .workspace-view__section.active {
+    display: block;
 }
 
 /* Service Dependencies Table */
@@ -151,32 +183,7 @@
     width: 100%;
     height: 100%;
 }
-/* Visualization Carousel */
-#visualizationCarousel .carousel-item {
-    width: 100%;
-    margin-top: 0;
-    padding: 4px 8px;
-    box-sizing: border-box;
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-}
 
-#visualizationCarousel .carousel-item.active {
-    display: block;
-}
-
-#visualizationTitle {
-    display: inline-block;
-    min-width: 250px;
-    text-align: center;
-}
-
-#visualizationCarousel button {
-    padding: 5px 10px;
-    cursor: pointer;
-}
 
 /* Mermaid Diagram Containers */
 #mermaidVisualization {
@@ -236,4 +243,71 @@
 
 #serviceDependenciesTable tr:hover {
     background-color: #e9e9e9;
+}
+
+/* Refactored Visualization Styles */
+
+.visualization-container-wrapper {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.visualization-view-container {
+    width: 100%;
+    height: 600px;
+}
+
+.visualization-view-padding {
+    padding: 20px;
+}
+
+.visualization-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+}
+
+.visualization-toolbar-select {
+    min-width: 200px;
+}
+
+.visualization-toolbar-label {
+    font-weight: 600;
+}
+
+.visualization-toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.visualization-toolbar-separator {
+    width: 1px;
+    height: 20px;
+    background-color: #ccc;
+}
+
+.visualization-toolbar-service-select {
+    min-width: 150px;
+}
+
+.visualization-tooltip {
+    position: absolute;
+    text-align: left;
+    padding: 8px;
+    font: 12px sans-serif;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    border-radius: 4px;
+    pointer-events: none;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.visualization-error-message {
+    color: red;
+    text-align: center;
+    padding: 20px;
 }

@@ -55,3 +55,64 @@
     background-color: #f8f9fa;
     font-weight: 600;
 }
+
+/* ============================================
+   PHASE 4: Structural Layout Classes
+   (Extracted from inline styles - DO NOT MODIFY TABLE STYLING)
+   ============================================ */
+
+/* Planning Toolbar (extracted from inline) */
+.planning-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+}
+
+/* Team Load Summary Section (collapsible) */
+#teamLoadSummarySection {
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#teamLoadSummarySection h4 {
+    cursor: pointer;
+    margin: 0;
+    padding: 10px;
+    background-color: #e9ecef;
+    border-bottom: 1px solid #ccc;
+}
+
+#teamLoadSummaryContent {
+    padding: 10px;
+}
+
+#teamLoadSummaryContent>p {
+    font-size: 0.9em;
+    color: #555;
+    margin-top: 0;
+}
+
+/* Summary Table Layout (NOT styling - that's in the table rules above) */
+#teamLoadSummaryTable {
+    margin: 0 auto;
+    border-collapse: collapse;
+}
+
+/* ============================================
+   Drag & Drop Visual Feedback
+   ============================================ */
+
+/* Row being dragged */
+#planningTableBody tr.dragging {
+    opacity: 0.5;
+    border: 2px dashed #6c757d;
+    background-color: #f8f9fa;
+}
+
+/* Drop zone indicator - shows where the row will be placed */
+#planningTableBody tr.drag-over {
+    border-top: 3px solid #007bff;
+    box-shadow: 0 -2px 4px rgba(0, 123, 255, 0.3);
+}

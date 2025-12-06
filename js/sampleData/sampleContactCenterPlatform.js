@@ -75,20 +75,20 @@ const sampleAllKnownEngineersContactCenter = tempContactCenterEngineers.map(eng 
         skills: eng.skills || [],
         yearsOfExperience: eng.yearsOfExperience || 0
     }
-})).concat([ 
+})).concat([
     { name: 'AI-Router-Alpha (ConnectPro)', level: 4, currentTeamId: 'team3', attributes: { isAISWE: true, aiAgentType: "Intelligent Routing", skills: ["Machine Learning", "Optimization Algorithms", "Real-time Decisioning"], yearsOfExperience: null } },
     { name: 'AI-SupportBot-Omega (ConnectPro)', level: 3, currentTeamId: 'team1', attributes: { isAISWE: true, aiAgentType: "Automated Support Response", skills: ["NLP", "DialogFlow", "Knowledge Base Integration"], yearsOfExperience: null } }
 ]);
 
 const contactCenterTeamsData = [
-    { teamId: 'team1', teamName: 'Customer Experience Team', teamIdentity: 'CX Warriors', fundedHeadcount: 6, engineers: ['Alex Johnson', 'Emily Smith', 'David Lee', 'Sarah Brown', 'Michael Wilson', 'AI-SupportBot-Omega (ConnectPro)'], awayTeamMembers: [], sdmId: 'sdm1', pmtId: 'pmt1', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }}, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 5, aiProductivityGainPercent: 10 }, attributes: {} },
-    { teamId: 'team2', teamName: 'Case Management Team', teamIdentity: 'Case Titans', fundedHeadcount: 5, engineers: ['Jessica Taylor', 'Daniel Moore', 'Amy Anderson', 'James Thomas'], awayTeamMembers: [], sdmId: 'sdm1', pmtId: 'pmt2', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }}, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 6, aiProductivityGainPercent: 15 }, attributes: {} },
-    { teamId: 'team3', teamName: 'Routing and Agent Tools Team', teamIdentity: 'Routing Rangers', fundedHeadcount: 5, engineers: ['Matthew Jackson', 'Ashley White', 'Joshua Harris', 'Andrew Garcia', 'AI-Router-Alpha (ConnectPro)'], awayTeamMembers: [ { name: 'Helping Hannah', level: 2, sourceTeam: 'AI Research Division', attributes:{} } ], sdmId: 'sdm2', pmtId: 'pmt2', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }}, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 5 }, attributes: {} },
-    { teamId: 'team4', teamName: 'Agent Tools Team', teamIdentity: 'Agent Aces', fundedHeadcount: 4, engineers: ['Megan Clark', 'Steven Lewis', 'Nicole Young'], awayTeamMembers: [], sdmId: 'sdm2', pmtId: 'pmt3', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }}, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 4 }, attributes: {} },
-    { teamId: 'team5', teamName: 'Communication Channels Team', teamIdentity: 'Comm Mandalorians', fundedHeadcount: 6, engineers: ['Ryan King', 'Samantha Wright', 'Brandon Lopez', 'Rachel Hill', 'Justin Scott'], awayTeamMembers: [ { name: 'Support Sam', level: 3, sourceTeam: 'Sister Company Ops', attributes:{} } ], sdmId: 'sdm3', pmtId: 'pmt3', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }}, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 7 }, attributes: {} },
-    { teamId: 'team6', teamName: 'Skills Management Team', teamIdentity: 'Skill Masters', fundedHeadcount: 3, engineers: ['Kimberly Adams', 'Jonathan Baker'], awayTeamMembers: [], sdmId: 'sdm3', pmtId: 'pmt2', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }}, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 3 }, attributes: {} },
-    { teamId: 'team7', teamName: 'Analytics and Configuration Team', teamIdentity: 'Data Wizards', fundedHeadcount: 4, engineers: ['Jason Carter', 'Melissa Mitchell', 'Kevin Perez'], awayTeamMembers: [], sdmId: 'sdm4', pmtId: 'pmt4', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }}, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 5, aiProductivityGainPercent: 5 }, attributes: {} },
-    { teamId: 'team8', teamName: 'Configuration Team', teamIdentity: 'Config Ninjas', fundedHeadcount: 3, engineers: ['Laura Turner', 'Eric Phillips'], awayTeamMembers: [], sdmId: 'sdm4', pmtId: 'pmt1', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }}, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 4 }, attributes: {} }
+    { teamId: 'team1', teamName: 'Customer Experience Team', teamIdentity: 'CX Warriors', fundedHeadcount: 6, engineers: ['Alex Johnson', 'Emily Smith', 'David Lee', 'Sarah Brown', 'Michael Wilson', 'AI-SupportBot-Omega (ConnectPro)'], awayTeamMembers: [], sdmId: 'sdm1', pmtId: 'pmt1', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 } }, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 5, aiProductivityGainPercent: 10 }, attributes: {} },
+    { teamId: 'team2', teamName: 'Case Management Team', teamIdentity: 'Case Titans', fundedHeadcount: 5, engineers: ['Jessica Taylor', 'Daniel Moore', 'Amy Anderson', 'James Thomas'], awayTeamMembers: [], sdmId: 'sdm1', pmtId: 'pmt2', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 } }, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 6, aiProductivityGainPercent: 15 }, attributes: {} },
+    { teamId: 'team3', teamName: 'Routing and Agent Tools Team', teamIdentity: 'Routing Rangers', fundedHeadcount: 5, engineers: ['Matthew Jackson', 'Ashley White', 'Joshua Harris', 'Andrew Garcia', 'AI-Router-Alpha (ConnectPro)'], awayTeamMembers: [{ name: 'Helping Hannah', level: 2, sourceTeam: 'AI Research Division', attributes: {} }], sdmId: 'sdm2', pmtId: 'pmt2', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 } }, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 5 }, attributes: {} },
+    { teamId: 'team4', teamName: 'Agent Tools Team', teamIdentity: 'Agent Aces', fundedHeadcount: 4, engineers: ['Megan Clark', 'Steven Lewis', 'Nicole Young'], awayTeamMembers: [], sdmId: 'sdm2', pmtId: 'pmt3', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 } }, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 4 }, attributes: {} },
+    { teamId: 'team5', teamName: 'Communication Channels Team', teamIdentity: 'Comm Mandalorians', fundedHeadcount: 6, engineers: ['Ryan King', 'Samantha Wright', 'Brandon Lopez', 'Rachel Hill', 'Justin Scott'], awayTeamMembers: [{ name: 'Support Sam', level: 3, sourceTeam: 'Sister Company Ops', attributes: {} }], sdmId: 'sdm3', pmtId: 'pmt3', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 } }, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 7 }, attributes: {} },
+    { teamId: 'team6', teamName: 'Skills Management Team', teamIdentity: 'Skill Masters', fundedHeadcount: 3, engineers: ['Kimberly Adams', 'Jonathan Baker'], awayTeamMembers: [], sdmId: 'sdm3', pmtId: 'pmt2', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 } }, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 3 }, attributes: {} },
+    { teamId: 'team7', teamName: 'Analytics and Configuration Team', teamIdentity: 'Data Wizards', fundedHeadcount: 4, engineers: ['Jason Carter', 'Melissa Mitchell', 'Kevin Perez'], awayTeamMembers: [], sdmId: 'sdm4', pmtId: 'pmt4', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 } }, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 5, aiProductivityGainPercent: 5 }, attributes: {} },
+    { teamId: 'team8', teamName: 'Configuration Team', teamIdentity: 'Config Ninjas', fundedHeadcount: 3, engineers: ['Laura Turner', 'Eric Phillips'], awayTeamMembers: [], sdmId: 'sdm4', pmtId: 'pmt1', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 } }, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 4 }, attributes: {} }
 ];
 
 const sampleServicesDataConnectPro = [
@@ -96,7 +96,7 @@ const sampleServicesDataConnectPro = [
         serviceName: 'Customer Portal Service',
         serviceDescription: 'Allows customers to raise support tickets and track their status.',
         owningTeamId: 'team1',
-        apis: [ { apiName: 'Ticket Submission API', apiDescription: 'Enables customers to submit support tickets.', dependentApis: [], attributes: {} }, { apiName: 'Ticket Tracking API', apiDescription: 'Allows customers to check the status of their tickets.', dependentApis: [], attributes: {} } ],
+        apis: [{ apiName: 'Ticket Submission API', apiDescription: 'Enables customers to submit support tickets.', dependentApis: [], attributes: {} }, { apiName: 'Ticket Tracking API', apiDescription: 'Allows customers to check the status of their tickets.', dependentApis: [], attributes: {} }],
         serviceDependencies: [],
         platformDependencies: ['AWS Cognito', 'AWS S3'],
         attributes: {}
@@ -105,7 +105,7 @@ const sampleServicesDataConnectPro = [
         serviceName: 'Case Management Service',
         serviceDescription: 'Manages the lifecycle of support tickets within the system.',
         owningTeamId: 'team2',
-        apis: [ { apiName: 'Case Creation API', apiDescription: 'Creates a new case in the system.', dependentApis: [], attributes: {} }, { apiName: 'Case Update API', apiDescription: 'Updates case details and status.', dependentApis: [], attributes: {} }, { apiName: 'Case Assignment API', apiDescription: 'Assigns cases to agents based on skills and availability.', dependentApis: ['Skills Assignment API'], attributes: {} } ],
+        apis: [{ apiName: 'Case Creation API', apiDescription: 'Creates a new case in the system.', dependentApis: [], attributes: {} }, { apiName: 'Case Update API', apiDescription: 'Updates case details and status.', dependentApis: [], attributes: {} }, { apiName: 'Case Assignment API', apiDescription: 'Assigns cases to agents based on skills and availability.', dependentApis: ['Skills Assignment API'], attributes: {} }],
         serviceDependencies: ['Customer Portal Service', 'Agent Desktop Service'],
         platformDependencies: ['AWS DynamoDB'],
         attributes: {}
@@ -114,7 +114,7 @@ const sampleServicesDataConnectPro = [
         serviceName: 'Routing Service',
         serviceDescription: 'Routes incoming interactions to appropriate agents.',
         owningTeamId: 'team3',
-        apis: [ { apiName: 'Interaction Routing API', apiDescription: 'Routes voice, email, and chat interactions.', dependentApis: ['Skill Matching API', 'Agent Login API'], attributes: {} }, { apiName: 'Skill Matching API', apiDescription: 'Matches interactions to agents based on skills.', dependentApis: ['Skills Evaluation API'], attributes: {} } ],
+        apis: [{ apiName: 'Interaction Routing API', apiDescription: 'Routes voice, email, and chat interactions.', dependentApis: ['Skill Matching API', 'Agent Login API'], attributes: {} }, { apiName: 'Skill Matching API', apiDescription: 'Matches interactions to agents based on skills.', dependentApis: ['Skills Evaluation API'], attributes: {} }],
         serviceDependencies: ['Communication Channels Service', 'Skills Management Service', 'Agent Desktop Service'],
         platformDependencies: ['AWS Lambda'],
         attributes: {}
@@ -123,7 +123,7 @@ const sampleServicesDataConnectPro = [
         serviceName: 'Agent Desktop Service',
         serviceDescription: 'Provides agents with tools to handle customer interactions.',
         owningTeamId: 'team4',
-        apis: [ { apiName: 'Agent Login API', apiDescription: 'Authenticates agents and starts their session.', dependentApis: [], attributes: {} }, { apiName: 'Interaction Handling API', apiDescription: 'Manages ongoing interactions with customers.', dependentApis: ['Case Retrieval API'], attributes: {} }, { apiName: 'Case Retrieval API', apiDescription: 'Retrieves case details for agents.', dependentApis: [], attributes: {} } ],
+        apis: [{ apiName: 'Agent Login API', apiDescription: 'Authenticates agents and starts their session.', dependentApis: [], attributes: {} }, { apiName: 'Interaction Handling API', apiDescription: 'Manages ongoing interactions with customers.', dependentApis: ['Case Retrieval API'], attributes: {} }, { apiName: 'Case Retrieval API', apiDescription: 'Retrieves case details for agents.', dependentApis: [], attributes: {} }],
         serviceDependencies: ['Case Management Service', 'Routing Service'],
         platformDependencies: ['AWS AppSync'],
         attributes: {}
@@ -132,7 +132,7 @@ const sampleServicesDataConnectPro = [
         serviceName: 'Communication Channels Service',
         serviceDescription: 'Handles voice calls, emails, and chat messages.',
         owningTeamId: 'team5',
-        apis: [ { apiName: 'Voice Call API', apiDescription: 'Manages voice call connections.', dependentApis: [], attributes: {} }, { apiName: 'Email Processing API', apiDescription: 'Processes incoming and outgoing emails.', dependentApis: [], attributes: {} }, { apiName: 'Chat Messaging API', apiDescription: 'Manages live chat sessions.', dependentApis: [], attributes: {} } ],
+        apis: [{ apiName: 'Voice Call API', apiDescription: 'Manages voice call connections.', dependentApis: [], attributes: {} }, { apiName: 'Email Processing API', apiDescription: 'Processes incoming and outgoing emails.', dependentApis: [], attributes: {} }, { apiName: 'Chat Messaging API', apiDescription: 'Manages live chat sessions.', dependentApis: [], attributes: {} }],
         serviceDependencies: ['Routing Service', 'Agent Desktop Service'],
         platformDependencies: ['Amazon Connect', 'AWS SES', 'Amazon Lex'],
         attributes: {}
@@ -141,7 +141,7 @@ const sampleServicesDataConnectPro = [
         serviceName: 'Skills Management Service',
         serviceDescription: 'Manages agent skills and competencies.',
         owningTeamId: 'team6',
-        apis: [ { apiName: 'Skills Assignment API', apiDescription: 'Assigns skills to agents.', dependentApis: [], attributes: {} }, { apiName: 'Skills Evaluation API', apiDescription: 'Evaluates agent performance in skills.', dependentApis: [], attributes: {} } ],
+        apis: [{ apiName: 'Skills Assignment API', apiDescription: 'Assigns skills to agents.', dependentApis: [], attributes: {} }, { apiName: 'Skills Evaluation API', apiDescription: 'Evaluates agent performance in skills.', dependentApis: [], attributes: {} }],
         serviceDependencies: [],
         platformDependencies: ['AWS Machine Learning'],
         attributes: {}
@@ -150,7 +150,7 @@ const sampleServicesDataConnectPro = [
         serviceName: 'Reporting and Analytics Service',
         serviceDescription: 'Provides reports on contact center performance.',
         owningTeamId: 'team7',
-        apis: [ { apiName: 'Performance Metrics API', apiDescription: 'Retrieves metrics on agent and center performance.', dependentApis: [], attributes: {} }, { apiName: 'Historical Data API', apiDescription: 'Accesses historical interaction data.', dependentApis: [], attributes: {} } ],
+        apis: [{ apiName: 'Performance Metrics API', apiDescription: 'Retrieves metrics on agent and center performance.', dependentApis: [], attributes: {} }, { apiName: 'Historical Data API', apiDescription: 'Accesses historical interaction data.', dependentApis: [], attributes: {} }],
         serviceDependencies: ['Case Management Service', 'Routing Service', 'Agent Desktop Service'],
         platformDependencies: ['AWS Redshift', 'Amazon QuickSight'],
         attributes: {}
@@ -159,7 +159,7 @@ const sampleServicesDataConnectPro = [
         serviceName: 'Business Configuration Service',
         serviceDescription: 'Allows administrators to configure business rules and settings.',
         owningTeamId: 'team8',
-        apis: [ { apiName: 'Settings API', apiDescription: 'Manages system-wide settings.', dependentApis: [], attributes: {} }, { apiName: 'Rules Engine API', apiDescription: 'Defines routing and assignment rules.', dependentApis: [], attributes: {} } ],
+        apis: [{ apiName: 'Settings API', apiDescription: 'Manages system-wide settings.', dependentApis: [], attributes: {} }, { apiName: 'Rules Engine API', apiDescription: 'Defines routing and assignment rules.', dependentApis: [], attributes: {} }],
         serviceDependencies: ['Case Management Service', 'Routing Service', 'Agent Desktop Service', 'Communication Channels Service', 'Skills Management Service'],
         platformDependencies: ['AWS CloudFormation'],
         attributes: {}
@@ -169,7 +169,7 @@ const sampleServicesDataConnectPro = [
 const sampleYearlyInitiativesConnectPro = [
     {
         initiativeId: 'init-cc-ktlo', title: 'KTLO / Operational Excellence', description: 'Ongoing bug fixes, refactoring, library updates, minor enhancements.', isProtected: true,
-        assignments: [ { teamId: 'team1', sdeYears: 1.0 }, { teamId: 'team2', sdeYears: 1.0 }, { teamId: 'team3', sdeYears: 0.75 }, { teamId: 'team4', sdeYears: 0.75 }, { teamId: 'team5', sdeYears: 1.25 }, { teamId: 'team6', sdeYears: 0.5 }, { teamId: 'team7', sdeYears: 1.0 }, { teamId: 'team8', sdeYears: 0.5 } ],
+        assignments: [{ teamId: 'team1', sdeYears: 1.0 }, { teamId: 'team2', sdeYears: 1.0 }, { teamId: 'team3', sdeYears: 0.75 }, { teamId: 'team4', sdeYears: 0.75 }, { teamId: 'team5', sdeYears: 1.25 }, { teamId: 'team6', sdeYears: 0.5 }, { teamId: 'team7', sdeYears: 1.0 }, { teamId: 'team8', sdeYears: 0.5 }],
         impactedServiceIds: [],
         roi: { category: 'Tech Debt', valueType: 'QualitativeScore', estimatedValue: 'Critical', currency: null, timeHorizonMonths: 12, confidenceLevel: 'High', calculationMethodology: 'Essential for system stability and performance.', businessCaseLink: null, overrideJustification: 'KTLO is mandatory for ConnectPro operations.' },
         targetDueDate: null, actualCompletionDate: null, status: 'Committed', themes: ['theme-eng-excellence-cc', 'theme-ops-stability-cc'], primaryGoalId: 'goal-ops-stability-cc-2025',
@@ -178,7 +178,7 @@ const sampleYearlyInitiativesConnectPro = [
     },
     {
         initiativeId: 'init-cc-oncall', title: 'On-Call / Production Support', description: 'Dedicated capacity for handling live site issues and production incidents.', isProtected: true,
-        assignments: [ { teamId: 'team1', sdeYears: 1.0 }, { teamId: 'team2', sdeYears: 1.0 }, { teamId: 'team3', sdeYears: 1.0 }, { teamId: 'team4', sdeYears: 1.0 }, { teamId: 'team5', sdeYears: 1.0 }, { teamId: 'team6', sdeYears: 1.0 }, { teamId: 'team7', sdeYears: 1.0 }, { teamId: 'team8', sdeYears: 1.0 } ],
+        assignments: [{ teamId: 'team1', sdeYears: 1.0 }, { teamId: 'team2', sdeYears: 1.0 }, { teamId: 'team3', sdeYears: 1.0 }, { teamId: 'team4', sdeYears: 1.0 }, { teamId: 'team5', sdeYears: 1.0 }, { teamId: 'team6', sdeYears: 1.0 }, { teamId: 'team7', sdeYears: 1.0 }, { teamId: 'team8', sdeYears: 1.0 }],
         impactedServiceIds: [],
         roi: { category: 'Risk Mitigation', valueType: 'QualitativeScore', estimatedValue: 'Critical', currency: null, timeHorizonMonths: 12, confidenceLevel: 'High', calculationMethodology: 'Prevents service disruption.', businessCaseLink: null, overrideJustification: 'Essential for operational stability.' },
         targetDueDate: null, actualCompletionDate: null, status: 'Committed', themes: ['theme-ops-stability-cc'], primaryGoalId: 'goal-ops-stability-cc-2025',
@@ -187,7 +187,7 @@ const sampleYearlyInitiativesConnectPro = [
     },
     {
         initiativeId: 'init-cc-security', title: 'Mandatory Security Audit & Remediation', description: 'Address findings from annual security audit and maintain compliance.', isProtected: true,
-        assignments: [ { teamId: 'team1', sdeYears: 0.5 }, { teamId: 'team4', sdeYears: 0.75 }, { teamId: 'team5', sdeYears: 0.5 }, { teamId: 'team8', sdeYears: 0.5 } ],
+        assignments: [{ teamId: 'team1', sdeYears: 0.5 }, { teamId: 'team4', sdeYears: 0.75 }, { teamId: 'team5', sdeYears: 0.5 }, { teamId: 'team8', sdeYears: 0.5 }],
         impactedServiceIds: ['Customer Portal Service', 'Agent Desktop Service', 'Communication Channels Service', 'Business Configuration Service'],
         roi: { category: 'Compliance', valueType: 'QualitativeScore', estimatedValue: 'Mandatory', currency: null, timeHorizonMonths: 12, confidenceLevel: 'High', calculationMethodology: 'Required to pass security audits.', businessCaseLink: null, overrideJustification: 'Compliance is non-negotiable.' },
         targetDueDate: "2025-07-31", actualCompletionDate: null, status: 'Committed', themes: ['theme-security-cc', 'theme-compliance-cc'], primaryGoalId: 'goal-security-compliance-cc-2025',
@@ -289,7 +289,7 @@ const sampleYearlyInitiativesConnectPro = [
         assignments: [{ teamId: 'team2', sdeYears: 1.5 }, { teamId: 'team7', sdeYears: 0.5 }],
         impactedServiceIds: ['Case Management Service', 'Reporting and Analytics Service'],
         roi: { category: 'Operational Efficiency', valueType: 'MetricImprovement', estimatedValue: 'Improved SLA Adherence', currency: null, timeHorizonMonths: 9, confidenceLevel: 'Medium', calculationMethodology: 'Ensures critical cases are handled promptly.', businessCaseLink: null, overrideJustification: null },
-        targetDueDate: "2026-01-31", actualCompletionDate: null, status: 'Backlog', themes: ['theme-ops-efficiency-cc', 'theme-innovation-cc'], primaryGoalId: 'goal-agent-efficiency-cc-2025', 
+        targetDueDate: "2026-01-31", actualCompletionDate: null, status: 'Backlog', themes: ['theme-ops-efficiency-cc', 'theme-innovation-cc'], primaryGoalId: 'goal-agent-efficiency-cc-2025',
         projectManager: null, owner: { type: 'pmt', id: 'pmt2', name: 'Patricia Thompson' }, technicalPOC: { type: 'sdm', id: 'sdm1', name: 'Alex Johnson' },
         workPackageIds: [], attributes: { pmCapacityNotes: "", planningYear: 2026 }
     },
@@ -349,7 +349,7 @@ const sampleYearlyInitiativesConnectPro = [
     },
     {
         initiativeId: 'init-cc-018', title: 'Knowledge Base Article Versioning', description: 'Track changes and history for KB articles.', isProtected: false,
-        assignments: [{ teamId: 'team1', sdeYears: 0.5 }], 
+        assignments: [{ teamId: 'team1', sdeYears: 0.5 }],
         impactedServiceIds: ['Customer Portal Service'],
         roi: { category: 'Engineering Excellence', valueType: 'QualitativeScore', estimatedValue: 'Medium', currency: null, timeHorizonMonths: 5, confidenceLevel: 'High', calculationMethodology: 'Improves content management and auditability for KB.', businessCaseLink: null, overrideJustification: null },
         targetDueDate: "2025-07-31", actualCompletionDate: null, status: 'Committed', themes: ['theme-eng-excellence-cc', 'theme-ops-efficiency-cc'], primaryGoalId: 'goal-platform-enhancement-cc-2025',
@@ -404,7 +404,7 @@ const sampleSystemDataContactCenter = {
     pmts: contactCenterPMTsData, // Defined above
     projectManagers: sampleProjectManagersDataContactCenter, // Defined above
     services: sampleServicesDataConnectPro, // Defined above
-    platformDependencies: [], 
+    platformDependencies: [],
     capacityConfiguration: {
         workingDaysPerYear: 261,
         standardHoursPerDay: 8,
@@ -428,27 +428,32 @@ const sampleSystemDataContactCenter = {
         {
             goalId: 'goal-ops-stability-cc-2025', name: 'Ensure ConnectPro Operational Stability 2025', description: 'Maintain high availability and performance for all ConnectPro services.', strategyLink: null,
             owner: { type: 'seniorManager', id: 'srMgrCC1', name: 'Senior Sam' }, projectManager: { type: 'projectManager', id: 'pmCC002', name: 'Ricardo Deliver' }, technicalPOC: { type: 'sdm', id: 'sdm2', name: 'Matthew Jackson' },
-            initiativeIds: ['init-cc-ktlo', 'init-cc-oncall', 'init-cc-010', 'init-cc-012', 'init-cc-019'], attributes: {}
+            initiativeIds: ['init-cc-ktlo', 'init-cc-oncall', 'init-cc-010', 'init-cc-012', 'init-cc-019'], attributes: {},
+            dueDate: '2025-12-31'
         },
         {
             goalId: 'goal-security-compliance-cc-2025', name: 'Achieve ConnectPro Security & Compliance 2025', description: 'Meet all relevant industry security standards and compliance mandates.', strategyLink: null,
             owner: { type: 'seniorManager', id: 'srMgrCC1', name: 'Senior Sam' }, projectManager: { type: 'projectManager', id: 'pmCC001', name: 'Valerie Timeline' }, technicalPOC: { type: 'sdm', id: 'sdm4', name: 'Laura Turner' },
-            initiativeIds: ['init-cc-security', 'init-cc-010', 'init-cc-012', 'init-cc-022'], attributes: {}
+            initiativeIds: ['init-cc-security', 'init-cc-010', 'init-cc-012', 'init-cc-022'], attributes: {},
+            dueDate: null
         },
         {
             goalId: 'goal-csat-increase-cc-2025', name: 'Increase Customer Satisfaction by 10% in 2025', description: 'Improve agent tools and customer interaction channels.', strategyLink: null,
             owner: { type: 'pmt', id: 'pmt1', name: 'Karen Davis' }, projectManager: { type: 'projectManager', id: 'pmCC001', name: 'Valerie Timeline' }, technicalPOC: { type: 'sdm', id: 'sdm1', name: 'Alex Johnson' },
-            initiativeIds: ['init-cc-001', 'init-cc-005', 'init-cc-008', 'init-cc-009', 'init-cc-014', 'init-cc-016'], attributes: {}
+            initiativeIds: ['init-cc-001', 'init-cc-005', 'init-cc-008', 'init-cc-009', 'init-cc-014', 'init-cc-016'], attributes: {},
+            dueDate: null
         },
         {
             goalId: 'goal-agent-efficiency-cc-2025', name: 'Improve Agent Efficiency by 15%', description: 'Streamline workflows and provide better tools for agents.', strategyLink: null,
             owner: { type: 'pmt', id: 'pmt2', name: 'Patricia Thompson' }, projectManager: { type: 'projectManager', id: 'pmCC002', name: 'Ricardo Deliver' }, technicalPOC: { type: 'sdm', id: 'sdm2', name: 'Matthew Jackson' },
-            initiativeIds: ['init-cc-002', 'init-cc-004', 'init-cc-006', 'init-cc-007', 'init-cc-011', 'init-cc-013', 'init-cc-015', 'init-cc-017', 'init-cc-020'], attributes: {}
+            initiativeIds: ['init-cc-002', 'init-cc-004', 'init-cc-006', 'init-cc-007', 'init-cc-011', 'init-cc-013', 'init-cc-015', 'init-cc-017', 'init-cc-020'], attributes: {},
+            dueDate: null
         },
         {
             goalId: 'goal-platform-enhancement-cc-2025', name: 'Enhance Core Platform Capabilities', description: 'Upgrade foundational components for future growth and operational efficiency.', strategyLink: null,
             owner: { type: 'seniorManager', id: 'srMgrCC1', name: 'Senior Sam' }, projectManager: { type: 'projectManager', id: 'pmCC002', name: 'Ricardo Deliver' }, technicalPOC: { type: 'sdm', id: 'sdm4', name: 'Laura Turner' },
-            initiativeIds: ['init-cc-003', 'init-cc-018', 'init-cc-021'], attributes: {}
+            initiativeIds: ['init-cc-003', 'init-cc-018', 'init-cc-021'], attributes: {},
+            dueDate: null
         }
     ],
     definedThemes: [
@@ -466,8 +471,8 @@ const sampleSystemDataContactCenter = {
         { themeId: 'theme-quality-assurance-cc', name: 'Quality Assurance', description: 'Improving service quality and agent performance monitoring.', relatedGoalIds: ['goal-agent-efficiency-cc-2025'], attributes: {} }
     ],
     archivedYearlyPlans: [],
-    workPackages: [], 
+    workPackages: [],
     calculatedCapacityMetrics: null,
-    allKnownEngineers: sampleAllKnownEngineersContactCenter, 
-    attributes: {} 
+    allKnownEngineers: sampleAllKnownEngineersContactCenter,
+    attributes: {}
 };

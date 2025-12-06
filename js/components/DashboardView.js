@@ -13,18 +13,25 @@ class DashboardView {
 
         // State
         this.currentWidgetIndex = 0;
-        this.planningYear = 'all';
+
+        // Initialize year filter - DashboardView owns this state
+        if (typeof window.dashboardPlanningYear === 'undefined') {
+            window.dashboardPlanningYear = new Date().getFullYear();
+        }
+        this.planningYear = window.dashboardPlanningYear;
+
+        this.pillNav = null; // NEW: Pill navigation component
 
         // Widget definitions
         this.widgets = [
-            { id: 'strategicGoalsWidget', title: 'Strategic Goals Dashboard', generator: () => this.initializeGoalsWidget() },
-            { id: 'accomplishmentsWidget', title: 'Accomplishments', generator: () => this.initializeAccomplishmentsWidget() },
-            { id: 'investmentDistributionWidget', title: 'Investment Distribution by Theme', generator: () => this.generateInvestmentDistributionChart() },
-            { id: 'investmentTrendWidget', title: 'Investment Trend Over Time', generator: () => this.generateInvestmentTrendChart() },
-            { id: 'teamDemandWidget', title: 'Team Demand by Quarter', generator: () => this.initializeTeamDemandWidget() },
-            { id: 'roadmapTimelineWidget', title: 'Roadmap by Quarter', generator: () => this.initializeRoadmapTableWidget() },
-            { id: 'threeYearPlanWidget', title: '3-Year Plan (3YP)', generator: () => this.initialize3YPWidget() },
-            { id: 'initiativeImpactWidget', title: 'Initiative Impact', generator: () => this.initializeImpactWidget() }
+            { id: 'strategicGoalsWidget', title: 'Strategic Goals Dashboard', label: 'Strategic Goals', icon: 'fas fa-bullseye', generator: () => this.initializeGoalsWidget() },
+            { id: 'accomplishmentsWidget', title: 'Accomplishments', label: 'Accomplishments', icon: 'fas fa-trophy', generator: () => this.initializeAccomplishmentsWidget() },
+            { id: 'investmentDistributionWidget', title: 'Investment Distribution by Theme', label: 'Investment Distribution', icon: 'fas fa-chart-pie', generator: () => this.generateInvestmentDistributionChart() },
+            { id: 'investmentTrendWidget', title: 'Investment Trend Over Time', label: 'Investment Trend', icon: 'fas fa-chart-line', generator: () => this.generateInvestmentTrendChart() },
+            { id: 'teamDemandWidget', title: 'Team Demand by Quarter', label: 'Team Demand', icon: 'fas fa-users-cog', generator: () => this.initializeTeamDemandWidget() },
+            { id: 'roadmapTimelineWidget', title: 'Roadmap by Quarter', label: 'Roadmap Timeline', icon: 'fas fa-calendar-alt', generator: () => this.initializeRoadmapTableWidget() },
+            { id: 'threeYearPlanWidget', title: '3-Year Plan (3YP)', label: '3-Year Plan', icon: 'fas fa-sitemap', generator: () => this.initialize3YPWidget() },
+            { id: 'initiativeImpactWidget', title: 'Initiative Impact', label: 'Initiative Impact', icon: 'fas fa-chart-bar', generator: () => this.initializeImpactWidget() }
         ];
     }
 
@@ -37,81 +44,126 @@ class DashboardView {
             return;
         }
 
+        // 1. Set Workspace Metadata
+        if (window.workspaceComponent) {
+            window.workspaceComponent.setPageMetadata({
+                title: 'Executive Dashboard',
+                breadcrumbs: ['Insights', 'Dashboard'],
+                actions: []
+            });
+        }
+
+        // 2. Set Workspace Toolbar
+        const toolbar = this.generateDashboardToolbar();
+        if (window.workspaceComponent && toolbar) {
+            window.workspaceComponent.setToolbar(toolbar);
+        }
+
         if (!window.currentSystemData) {
             this.container.innerHTML = '<div class="dashboard-empty-state"><i class="fas fa-chart-line dashboard-empty-state__icon"></i><p class="dashboard-empty-state__message">No system data loaded</p></div>';
             return;
         }
 
-        // Only generate layout if it doesn't exist
-        if (!this.container.querySelector('.dashboard-carousel')) {
-            this.generateLayout();
-        }
+        // 3. Render Content Container
+        this.container.innerHTML = `
+            <div class="dashboard-view">
+                <div id="dashboardContent" class="dashboard-content"></div>
+            </div>
+        `;
 
         // Show current widget
         this.showWidget(this.currentWidgetIndex);
     }
 
     /**
-     * Generate the dashboard layout
+     * Generates the toolbar controls for Dashboard View
      */
-    generateLayout() {
-        const yearOptions = this.generateYearOptions();
+    generateDashboardToolbar() {
+        const toolbar = document.createElement('div');
+        toolbar.className = 'dashboard-toolbar-global';
+        toolbar.style.display = 'flex';
+        toolbar.style.flexDirection = 'column';
+        toolbar.style.gap = '12px';
+        toolbar.id = 'dashboardGlobalToolbar';
 
-        this.container.innerHTML = `
-            <div class="dashboard-view">
-                <div class="dashboard-filter-bar">
-                    <label for="dashboardYearSelector" class="dashboard-filter-label">Filter by Year:</label>
-                    <select id="dashboardYearSelector" class="dashboard-filter-select">
-                        ${yearOptions}
-                    </select>
-                </div>
+        // First row: Widget pills
+        const pillRow = document.createElement('div');
+        pillRow.style.display = 'flex';
+        pillRow.style.alignItems = 'center';
+        pillRow.style.gap = '8px';
+        pillRow.style.flexWrap = 'wrap';
 
-                <div class="dashboard-carousel">
-                    <div class="dashboard-carousel__nav">
-                        <button class="dashboard-carousel__btn dashboard-carousel__btn--prev" data-action="prev">Previous</button>
-                        <h2 class="dashboard-carousel__title" id="dashboardTitle"></h2>
-                        <button class="dashboard-carousel__btn dashboard-carousel__btn--next" data-action="next">Next</button>
-                    </div>
+        this.pillNav = new PillNavigationComponent({
+            items: this.widgets.map(w => ({
+                id: w.id,
+                label: w.label || w.title,
+                icon: w.icon
+            })),
+            onSwitch: (widgetId) => {
+                const index = this.widgets.findIndex(w => w.id === widgetId);
+                if (index !== -1) this.showWidget(index);
+            },
+            initialActive: this.widgets[this.currentWidgetIndex].id
+        });
 
-                    ${this.widgets.map(widget => `
-                        <div id="${widget.id}" class="dashboard-carousel-item"></div>
-                    `).join('')}
-                </div>
-            </div>
-        `;
+        pillRow.appendChild(this.pillNav.render());
+        toolbar.appendChild(pillRow);
 
-        // Bind events
-        this.bindEvents();
+        // Second row: Year filter (conditionally visible)
+        const filterRow = document.createElement('div');
+        filterRow.id = 'dashboardYearFilterRow';
+        filterRow.style.display = 'flex';
+        filterRow.style.alignItems = 'center';
+        filterRow.style.gap = '10px';
+
+        const yearLabel = document.createElement('span');
+        yearLabel.textContent = 'Year:';
+        yearLabel.style.fontWeight = '600';
+        filterRow.appendChild(yearLabel);
+
+        const yearSelect = document.createElement('select');
+        yearSelect.id = 'dashboardYearSelector';
+        yearSelect.className = 'form-select form-select-sm';
+        yearSelect.style.width = '120px';
+        yearSelect.innerHTML = this.generateYearOptions();
+        yearSelect.onchange = (e) => this.handleYearChange(e.target.value);
+        filterRow.appendChild(yearSelect);
+
+        // Contextual toolbar for widget-specific controls
+        const contextToolbar = document.createElement('div');
+        contextToolbar.id = 'dashboardContextToolbar';
+        contextToolbar.style.display = 'flex';
+        contextToolbar.style.alignItems = 'center';
+        contextToolbar.style.gap = '15px';
+        contextToolbar.style.marginLeft = '20px';
+        contextToolbar.style.paddingLeft = '20px';
+        contextToolbar.style.borderLeft = '1px solid var(--color-gray-300)';
+        filterRow.appendChild(contextToolbar);
+
+        toolbar.appendChild(filterRow);
+
+        return toolbar;
     }
 
     /**
      * Bind event listeners
      */
+    /**
+     * Bind event listeners (Legacy - mostly handled in toolbar now)
+     */
     bindEvents() {
-        // Year selector
-        const yearSelector = document.getElementById('dashboardYearSelector');
-        if (yearSelector) {
-            yearSelector.addEventListener('change', (e) => this.handleYearChange(e.target.value));
-        }
-
-        // Carousel navigation
-        const carousel = this.container.querySelector('.dashboard-carousel');
-        if (carousel) {
-            carousel.addEventListener('click', (e) => {
-                const btn = e.target.closest('[data-action]');
-                if (!btn) return;
-
-                const action = btn.dataset.action;
-                if (action === 'prev') this.navigateWidget(-1);
-                else if (action === 'next') this.navigateWidget(1);
-            });
-        }
+        // No internal events needed for now
     }
 
     /**
      * Generate year filter options
      */
     generateYearOptions() {
+        // Safety check for data
+        if (!window.currentSystemData || !window.currentSystemData.yearlyInitiatives) {
+            return '<option value="all">All Years</option>';
+        }
+
         const allYears = [...new Set(
             (window.currentSystemData.yearlyInitiatives || [])
                 .map(init => init.attributes?.planningYear)
@@ -138,7 +190,11 @@ class DashboardView {
      * Handle year filter change
      */
     handleYearChange(year) {
+        console.log('[DEBUG] handleYearChange called with year:', year);
         this.planningYear = year;
+        // CRITICAL: Set global variable for roadmap widgets that expect it
+        window.dashboardPlanningYear = year;
+        console.log('[DEBUG] Global dashboardPlanningYear set to:', window.dashboardPlanningYear);
         this.showWidget(this.currentWidgetIndex); // Refresh current widget
     }
 
@@ -153,48 +209,53 @@ class DashboardView {
     /**
      * Show specific widget
      */
+    /**
+     * Show specific widget
+     */
     showWidget(index) {
         this.currentWidgetIndex = index;
-
-        // Hide all widgets
-        document.querySelectorAll('.dashboard-carousel-item').forEach(item => {
-            item.classList.remove('active');
-        });
-
         const widget = this.widgets[index];
+        const contentContainer = document.getElementById('dashboardContent');
 
-        // Update title
-        const titleEl = document.getElementById('dashboardTitle');
-        if (titleEl) {
-            titleEl.textContent = widget.title;
-        }
+        if (!contentContainer) return;
 
-        // Show year filter only for applicable widgets
-        const yearFilterBar = this.container.querySelector('.dashboard-filter-bar');
-        if (yearFilterBar) {
-            const filterApplicable = [
-                'strategicGoalsWidget',
-                'accomplishmentsWidget',
-                'investmentDistributionWidget',
-                'investmentTrendWidget',
-                'roadmapTimelineWidget',
-                'teamDemandWidget'
-            ].includes(widget.id);
-            yearFilterBar.style.display = filterApplicable ? 'flex' : 'none';
-        }
+        // Clear container
+        contentContainer.innerHTML = '';
 
-        // Show and initialize widget
-        const widgetEl = document.getElementById(widget.id);
-        if (widgetEl) {
-            widgetEl.classList.add('active');
+        // Create widget container
+        const widgetEl = document.createElement('div');
+        widgetEl.id = widget.id;
+        widgetEl.className = 'dashboard-widget-active'; // New class for active widget
+        contentContainer.appendChild(widgetEl);
 
-            // Initialize widget content if empty
-            if (widgetEl.innerHTML === '') {
-                this.initializeWidgetContent(widget);
+        // Initialize widget content
+        this.initializeWidgetContent(widget);
+
+        // Run widget generator and handle returned toolbar controls
+        const returnedToolbar = widget.generator();
+        console.log('[DEBUG] showWidget - widget:', widget.id, 'returned toolbar:', returnedToolbar);
+
+        // Some widgets (like Initiative Impact) return toolbar controls to be placed in contextual area
+        // Others (like Roadmap) inject their own filters and return nothing
+        const contextToolbarContainer = document.getElementById('dashboardContextToolbar');
+        console.log('[DEBUG] contextToolbarContainer found:', !!contextToolbarContainer);
+        if (contextToolbarContainer) {
+            contextToolbarContainer.innerHTML = ''; // Clear previous
+            if (returnedToolbar instanceof HTMLElement) {
+                console.log('[DEBUG] Attaching toolbar to contextual area');
+                contextToolbarContainer.appendChild(returnedToolbar);
             }
+        }
 
-            // Run widget generator
-            widget.generator();
+        // Update year filter visibility (hide for 3-Year Plan)
+        const yearFilterRow = document.getElementById('dashboardYearFilterRow');
+        if (yearFilterRow) {
+            yearFilterRow.style.display = widget.id === 'threeYearPlanWidget' ? 'none' : 'flex';
+        }
+
+        // Update Pill Navigation State
+        if (this.pillNav) {
+            this.pillNav.setActive(widget.id);
         }
     }
 
@@ -376,6 +437,10 @@ class DashboardView {
     initializeTeamDemandWidget() {
         if (window.generateRoadmapTableFilters) {
             window.generateRoadmapTableFilters('Demand', () => this.renderTeamDemandChart(), { includeThemes: false });
+            // CRITICAL: Populate team dropdown after filters are in DOM
+            if (window.updateTeamFilterOptions) {
+                window.updateTeamFilterOptions('Demand');
+            }
         }
         this.renderTeamDemandChart();
     }
@@ -589,11 +654,19 @@ class DashboardView {
 
     // Widget placeholders that delegate to global functions
     initializeGoalsWidget() {
-        if (window.initializeGoalsView) window.initializeGoalsView();
+        // Use new GoalsWidget class (refactored from goalsView.js)
+        if (!this.goalsWidget) {
+            this.goalsWidget = new GoalsWidget('strategicGoalsWidget');
+        }
+        this.goalsWidget.render();
     }
 
     initializeAccomplishmentsWidget() {
-        if (window.initializeAccomplishmentsView) window.initializeAccomplishmentsView();
+        // Use new AccomplishmentsWidget class (refactored from accomplishmentsView.js)
+        if (!this.accomplishmentsWidget) {
+            this.accomplishmentsWidget = new AccomplishmentsWidget('accomplishmentsWidget');
+        }
+        this.accomplishmentsWidget.render();
     }
 
     initializeRoadmapTableWidget() {
@@ -605,7 +678,30 @@ class DashboardView {
     }
 
     initializeImpactWidget() {
-        if (window.initializeImpactView) window.initializeImpactView();
+        // Use new ImpactWidget class (refactored from impactView.js)
+        if (!this.impactWidget) {
+            this.impactWidget = new ImpactWidget('initiativeImpactWidget');
+        }
+        return this.impactWidget.render(); // CRITICAL: Return toolbar controls
+    }
+
+    /**
+     * Returns structured context data for AI Chat Panel integration
+     * Implements the AI_VIEW_REGISTRY contract
+     * @returns {Object} Context object with view-specific data
+     */
+    getAIContext() {
+        const currentWidget = this.widgets[this.currentWidgetIndex];
+        return {
+            viewTitle: 'Executive Dashboard',
+            currentWidget: currentWidget ? {
+                id: currentWidget.id,
+                title: currentWidget.title
+            } : null,
+            widgetCount: this.widgets.length,
+            yearFilter: this.planningYear,
+            availableWidgets: this.widgets.map(w => ({ id: w.id, title: w.title }))
+        };
     }
 }
 

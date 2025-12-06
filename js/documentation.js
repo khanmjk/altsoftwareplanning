@@ -10,16 +10,37 @@ function renderHelpView(container) {
         return;
     }
 
+    // Set Workspace Metadata
+    if (window.workspaceComponent) {
+        window.workspaceComponent.setPageMetadata({
+            title: 'Documentation',
+            breadcrumbs: ['Help', 'Documentation'],
+            actions: []
+        });
+        // Clear toolbar
+        window.workspaceComponent.setToolbar(null);
+    }
+
     // Create the content wrapper if it doesn't exist
     // This wrapper allows us to control scrolling and padding independent of the main container
-    container.innerHTML = `
-        <div id="documentationContent" style="padding: 30px; max-width: 1000px; margin: 0 auto; background-color: #fff; min-height: 100%;">
-            <p><em>Loading documentation...</em></p>
-        </div>
-    `;
+    // Load template
+    if (window.templateLoader) {
+        window.templateLoader.load('html/views/documentation-view.html')
+            .then(html => {
+                container.innerHTML = html;
+                loadAndDisplayDocumentation();
+            })
+            .catch(err => {
+                console.error('Failed to load documentation template:', err);
+                container.innerHTML = '<div class="error-state">Failed to load documentation template.</div>';
+            });
+    } else {
+        console.error('TemplateLoader not available.');
+        container.innerHTML = '<div class="error-state">TemplateLoader not initialized.</div>';
+    }
 
-    // Trigger the load
-    loadAndDisplayDocumentation();
+    // Trigger the load - moved to inside template load callback
+    // loadAndDisplayDocumentation();
 }
 window.renderHelpView = renderHelpView;
 
@@ -68,8 +89,17 @@ async function loadAndDisplayDocumentation() {
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status} while fetching README.`);
         }
-        const markdownText = await response.text();
+        let markdownText = await response.text();
         console.log("LAD_SLUGIFY: Successfully fetched README.md");
+
+        // Remove the first H1 (# Title) as it is redundant with the Workspace Header
+        // and causes layout/spacing issues.
+        // Regex explanation:
+        // ^\s*      -> Start of string, optional whitespace
+        // #\s+      -> Hash and space (H1)
+        // [^\n]+    -> The title text (until newline)
+        // (\n|\r\n)* -> Any following newlines
+        markdownText = markdownText.replace(/^\s*#\s+[^\n]+(\n|\r\n)*/, '');
 
         const htmlContent = md.render(markdownText);
         contentDiv.innerHTML = htmlContent;

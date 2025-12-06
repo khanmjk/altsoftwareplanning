@@ -4,7 +4,7 @@
  */
 class SystemRepository {
     constructor() {
-        const DEFAULT_STORAGE_KEY = 'architectureVisualization_systems_v10';
+        const DEFAULT_STORAGE_KEY = 'architectureVisualization_systems_v11';
         const mode = (typeof window !== 'undefined' && window.APP_STORAGE_MODE) || 'local';
         this.storageMode = mode;
         this.storageKey = (typeof window !== 'undefined' && window.LOCAL_STORAGE_KEY) || DEFAULT_STORAGE_KEY;

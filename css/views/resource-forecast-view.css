@@ -1,0 +1,361 @@
+/* css/views/resource-forecast-view.css */
+
+.resource-forecast-container {
+    /* Inherit padding/layout from .workspace-view */
+    /* Only add view-specific overrides if absolutely necessary */
+    /* Left align like System Edit */
+    color: var(--text-primary);
+}
+
+/* --- Input Section --- */
+.forecast-input-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-md);
+    background-color: var(--bg-secondary);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    margin-bottom: var(--spacing-xl);
+    max-width: 1200px;
+    /* Optional: keep grid from getting too wide on huge screens */
+}
+
+.forecast-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.forecast-input-group label {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.forecast-input-group input {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-md);
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: border-color 0.2s;
+}
+
+.forecast-input-group input:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+.forecast-input-group input[readonly] {
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
+    cursor: not-allowed;
+}
+
+.forecast-help-text {
+    font-size: var(--font-size-xs);
+    color: var(--text-tertiary);
+    line-height: 1.4;
+}
+
+/* --- Output Section --- */
+.forecast-output-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+    max-width: 1200px;
+    /* Match input grid width */
+}
+
+.forecast-chart-container {
+    background-color: var(--bg-primary);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    height: 450px;
+    position: relative;
+}
+
+.forecast-summary-box {
+    background-color: var(--bg-secondary);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    border-left: 4px solid var(--primary-color);
+}
+
+.forecast-summary-text {
+    font-size: var(--font-size-md);
+    line-height: 1.5;
+}
+
+.forecast-tables-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-lg);
+}
+
+@media (max-width: 1024px) {
+    .forecast-tables-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* --- Tables --- */
+.forecast-table-wrapper {
+    background-color: var(--bg-primary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+.forecast-table-header {
+    background-color: var(--bg-secondary);
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-weight: 600;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.forecast-data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--font-size-sm);
+}
+
+.forecast-data-table th,
+.forecast-data-table td {
+    padding: var(--spacing-sm) var(--spacing-md);
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.forecast-data-table th {
+    background-color: var(--bg-tertiary);
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.forecast-data-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* --- FAQ Section (System Edit Style) --- */
+.forecast-faq-section {
+    margin-top: var(--spacing-xxl);
+    border-top: 2px solid var(--border-color);
+    /* Thicker divider like System Edit */
+    padding-top: var(--spacing-md);
+    max-width: 1200px;
+}
+
+.forecast-faq-section h3 {
+    margin: 0 0 var(--spacing-md) 0;
+    font-size: 1.2rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.forecast-faq-item {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 0;
+    border-radius: 0;
+}
+
+.forecast-faq-item:last-child {
+    border-bottom: none;
+}
+
+.forecast-faq-item summary {
+    padding: 4px 0;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    /* Gray 700 equivalent */
+    list-style: none;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.1s ease, color 0.1s ease;
+}
+
+.forecast-faq-item summary:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+    color: var(--text-primary);
+    padding-left: 4px;
+}
+
+/* Custom marker matching System Edit span */
+.forecast-faq-item summary::before {
+    content: '+';
+    margin-right: 4px;
+    color: var(--text-tertiary);
+    /* Gray 400 equivalent */
+    font-family: monospace;
+    font-size: 1em;
+    width: 12px;
+    display: inline-block;
+    text-align: center;
+    font-weight: normal;
+}
+
+.forecast-faq-item[open] summary::before {
+    content: '-';
+}
+
+/* Hide default marker in WebKit */
+.forecast-faq-item summary::-webkit-details-marker {
+    display: none;
+}
+
+.forecast-faq-content {
+    padding: var(--spacing-md) 0;
+    background-color: transparent;
+    border: none;
+}
+
+.forecast-faq-content p,
+.forecast-faq-content ul {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-top: 0;
+    margin-bottom: var(--spacing-sm);
+}
+
+.forecast-faq-content ul {
+    padding-left: var(--spacing-lg);
+}
+
+.forecast-faq-content li {
+    margin-bottom: 4px;
+}
+
+/* --- Toolbar Specifics --- */
+.forecast-toolbar-gap {
+    flex-grow: 1;
+}
+
+.forecast-empty-state {
+    text-align: center;
+    padding: var(--spacing-xl);
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+/* --- Markdown FAQ Styles --- */
+/* These styles target the content rendered from sdmResourceForecastingFAQ.md */
+
+#rf-faq-container details {
+    margin-bottom: 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+#rf-faq-container details:last-child {
+    border-bottom: none;
+}
+
+#rf-faq-container summary {
+    padding: 8px 0;
+    /* Reduced from 12px by ~33-40% */
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text-primary);
+    list-style: none;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s ease;
+}
+
+#rf-faq-container summary:hover {
+    color: var(--primary-color);
+}
+
+/* Custom marker */
+#rf-faq-container summary::before {
+    content: '+';
+    margin-right: 8px;
+    color: var(--text-tertiary);
+    font-family: monospace;
+    font-size: 1.2em;
+    width: 16px;
+    display: inline-block;
+    text-align: center;
+    font-weight: normal;
+}
+
+#rf-faq-container details[open] summary::before {
+    content: '-';
+}
+
+/* Hide default marker in WebKit */
+#rf-faq-container summary::-webkit-details-marker {
+    display: none;
+}
+
+/* Content within the details tag */
+#rf-faq-container details>*:not(summary) {
+    padding-left: 24px;
+    /* Indent content to align with text */
+    padding-bottom: var(--spacing-md);
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+#rf-faq-container p {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: var(--spacing-md);
+    margin-top: 0;
+}
+
+#rf-faq-container ul {
+    padding-left: 20px;
+    /* Standard indentation */
+    margin-bottom: var(--spacing-md);
+    margin-top: 0;
+    list-style-type: disc;
+    /* Level 1: Filled circle */
+}
+
+#rf-faq-container ul ul {
+    margin-top: 4px;
+    margin-bottom: 4px;
+    list-style-type: circle;
+    /* Level 2: Hollow circle */
+}
+
+#rf-faq-container li {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 8px;
+    /* Slightly more space between items */
+}
+
+#rf-faq-container li>ul {
+    margin-bottom: 0;
+    /* Remove bottom margin for nested list wrapper */
+}
+
+#rf-faq-container strong {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+#rf-faq-container em {
+    font-style: italic;
+}

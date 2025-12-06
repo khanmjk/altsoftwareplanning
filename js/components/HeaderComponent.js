@@ -4,15 +4,21 @@
  */
 class HeaderComponent {
     constructor(containerId) {
-        this.container = document.getElementById(containerId);
-        this.breadcrumbsContainer = this.container ? this.container.querySelector('.breadcrumbs') : null;
+        // Updated to use the new Workspace Header ID
+        this.container = document.getElementById('workspace-header');
+        // Fallback for legacy or if ID not found (though it should be there)
+        if (!this.container) {
+            this.container = document.getElementById(containerId);
+        }
+
+        this.breadcrumbsContainer = document.getElementById('workspace-breadcrumbs');
         this.pageTitleElement = document.getElementById('page-title-display'); // In main content
         this.pageDescElement = document.getElementById('page-desc-display');   // In main content
     }
 
     init() {
         if (!this.container) {
-            console.error('Header container not found');
+            console.error('HeaderComponent: Header container not found');
             return;
         }
         this.attachEventListeners();
@@ -172,20 +178,26 @@ class HeaderComponent {
     updateBreadcrumbs(viewId, systemName) {
         if (!this.breadcrumbsContainer) return;
 
+        // SKIP for refactored views that handle their own metadata
+        const refactoredViews = ['roadmapView'];
+        if (refactoredViews.includes(viewId)) {
+            return;
+        }
+
         const homeIcon = '<span style="color: #64748b;"><i class="fas fa-home"></i></span>';
-        const separator = '<span class="separator"><i class="fas fa-chevron-right"></i></span>';
+        const separator = '<span class="canvas-header__breadcrumb-item"></span>'; // Use new separator style if possible, or just text
 
         let html = `${homeIcon}`;
 
         if (systemName) {
-            html += `${separator} <span>${systemName}</span>`;
+            html += ` <span class="canvas-header__breadcrumb-item">${systemName}</span>`;
         }
 
         // Map viewId to Breadcrumb path
         const path = this.getViewPath(viewId);
         if (path) {
             path.forEach(step => {
-                html += `${separator} <span class="${step.isLast ? 'current-page' : ''}">${step.label}</span>`;
+                html += ` <span class="canvas-header__breadcrumb-item ${step.isLast ? 'current-page' : ''}">${step.label}</span>`;
             });
         }
 

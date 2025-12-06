@@ -8,18 +8,183 @@ let visualizationResizeObserver = null;
 let resizeDebounceHandle = null;
 
 
-// --- Carousel State ---
-let currentVisualizationIndex = 0;
-const visualizationItems = [
+// --- Visualization State ---
+let currentVisualizationMode = 'visualization';
+const visualizationModes = [
     { id: 'visualization', title: 'System Visualization' },
-    { id: 'teamVisualization', title: 'Team Relationships Visualization' },
-    { id: 'serviceRelationshipsVisualization', title: 'Service Relationships Visualization' },
-    { id: 'dependencyVisualization', title: 'Service Dependency Visualization' },
-    { id: 'serviceDependenciesTableSlide', title: 'Service Dependency Table' },
-    { id: 'mermaidVisualization', title: 'System Architecture (Mermaid)' },
-    { id: 'mermaidApiVisualization', title: 'Service API Interactions (Mermaid)' }
+    { id: 'teamVisualization', title: 'Team Relationships' },
+    { id: 'serviceRelationshipsVisualization', title: 'Service Relationships' },
+    { id: 'dependencyVisualization', title: 'Service Dependency' },
+    { id: 'serviceDependenciesTableSlide', title: 'Dependency Table' },
+    { id: 'mermaidVisualization', title: 'Architecture (Mermaid)' },
+    { id: 'mermaidApiVisualization', title: 'API Interactions (Mermaid)' }
 ];
 // ----------------------
+
+
+
+/**
+ * Switches the visualization mode, updates the toolbar, and renders the content.
+ */
+function switchVisualizationMode(modeId) {
+    currentVisualizationMode = modeId;
+    const container = document.getElementById('main-content-area') || document.getElementById('visualizationView');
+    if (!container) return;
+
+    // 1. Update Toolbar
+    updateVisualizationToolbar(modeId);
+
+    // 2. Clear & Prepare Container
+    container.innerHTML = '';
+    const contentWrapper = document.createElement('div');
+    contentWrapper.id = 'visualizationContainer';
+    contentWrapper.className = 'visualization-container-wrapper';
+    container.appendChild(contentWrapper);
+
+    // 3. Render Specific View
+    if (!currentSystemData) {
+        contentWrapper.innerHTML = '<div class="alert alert-warning">Please load a system configuration first.</div>';
+        return;
+    }
+
+    switch (modeId) {
+        case 'visualization':
+            contentWrapper.innerHTML = '<div id="visualization" class="visualization-view-container"><svg id="systemSvg" width="100%" height="100%"></svg><div id="legend"></div></div>';
+            generateVisualization(currentSystemData);
+            break;
+        case 'teamVisualization':
+            contentWrapper.innerHTML = '<div id="teamVisualization" class="visualization-view-container"><svg id="teamSvg" width="100%" height="100%"></svg><div id="teamLegend"></div></div>';
+            generateTeamVisualization(currentSystemData);
+            break;
+        case 'serviceRelationshipsVisualization':
+            contentWrapper.innerHTML = '<div id="serviceRelationshipsVisualization" class="visualization-view-container"><svg id="serviceSvg" width="100%" height="100%"></svg></div>';
+            // Note: The toolbar now handles the dropdown, so we need to trigger the initial render
+            // We might need to pass the default 'all' or handle it in the update function
+            updateServiceVisualization('all');
+            break;
+        case 'dependencyVisualization':
+            contentWrapper.innerHTML = '<div id="dependencyVisualization" class="visualization-view-container"><svg id="dependencySvg" width="100%" height="100%"></svg></div>';
+            // Similar to above, trigger initial update
+            updateDependencyVisualization();
+            break;
+        case 'serviceDependenciesTableSlide':
+            contentWrapper.innerHTML = '<div id="serviceDependenciesTableSlide" class="visualization-view-padding"><h3>Service Dependencies</h3><div id="serviceDependenciesTableWidget"></div></div>';
+            renderServiceDependenciesTable();
+            break;
+        case 'mermaidVisualization':
+            contentWrapper.innerHTML = '<div id="mermaidVisualization" class="visualization-view-padding"><div id="mermaidGraph"></div></div>';
+            renderMermaidDiagram();
+            break;
+        case 'mermaidApiVisualization':
+            contentWrapper.innerHTML = '<div id="mermaidApiVisualization" class="visualization-view-padding"><div id="mermaidApiGraph"></div></div>';
+            // Toolbar handles the selection, trigger initial
+            renderMermaidApiDiagram('all');
+            break;
+    }
+}
+
+/**
+ * Updates the Workspace Toolbar based on the selected mode.
+ */
+function updateVisualizationToolbar(activeModeId) {
+    if (!window.workspaceComponent) return;
+
+    const toolbar = document.createElement('div');
+    toolbar.className = 'visualization-toolbar';
+
+    // View Selector
+    const viewSelect = document.createElement('select');
+    viewSelect.className = 'form-select form-select-sm visualization-toolbar-select';
+    visualizationModes.forEach(mode => {
+        const opt = document.createElement('option');
+        opt.value = mode.id;
+        opt.textContent = mode.title;
+        if (mode.id === activeModeId) opt.selected = true;
+        viewSelect.appendChild(opt);
+    });
+    viewSelect.onchange = (e) => switchVisualizationMode(e.target.value);
+
+    const label = document.createElement('span');
+    label.textContent = 'View:';
+    label.className = 'visualization-toolbar-label';
+
+    const leftGroup = document.createElement('div');
+    leftGroup.className = 'visualization-toolbar-group';
+    leftGroup.appendChild(label);
+    leftGroup.appendChild(viewSelect);
+    toolbar.appendChild(leftGroup);
+
+    // Contextual Controls
+    if (activeModeId === 'serviceRelationshipsVisualization') {
+        const serviceSelect = document.createElement('select');
+        serviceSelect.id = 'serviceSelection'; // Keep ID for compatibility if needed, or pass directly
+        serviceSelect.className = 'form-select form-select-sm visualization-toolbar-service-select';
+
+        // Populate options
+        const allOpt = document.createElement('option');
+        allOpt.value = 'all';
+        allOpt.textContent = 'All Services';
+        serviceSelect.appendChild(allOpt);
+
+        if (currentSystemData && currentSystemData.services) {
+            currentSystemData.services.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.serviceName;
+                opt.textContent = s.serviceName;
+                serviceSelect.appendChild(opt);
+            });
+        }
+
+        serviceSelect.onchange = (e) => updateServiceVisualization(e.target.value);
+
+        const sep = document.createElement('div');
+        sep.style.width = '1px';
+        sep.style.height = '20px';
+        sep.style.backgroundColor = '#ccc';
+        toolbar.appendChild(sep);
+
+        const svcLabel = document.createElement('span');
+        svcLabel.textContent = 'Focus Service:';
+        svcLabel.className = 'visualization-toolbar-label';
+        toolbar.appendChild(svcLabel);
+        toolbar.appendChild(serviceSelect);
+    } else if (activeModeId === 'mermaidApiVisualization') {
+        const apiSelect = document.createElement('select');
+        apiSelect.id = 'apiServiceSelection';
+        apiSelect.className = 'form-select form-select-sm visualization-toolbar-service-select';
+
+        const allOpt = document.createElement('option');
+        allOpt.value = 'all';
+        allOpt.textContent = 'All Services';
+        apiSelect.appendChild(allOpt);
+
+        if (currentSystemData && currentSystemData.services) {
+            currentSystemData.services
+                .slice()
+                .sort((a, b) => (a.serviceName || '').localeCompare(b.serviceName || ''))
+                .forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s.serviceName;
+                    opt.textContent = s.serviceName;
+                    apiSelect.appendChild(opt);
+                });
+        }
+
+        apiSelect.onchange = (e) => renderMermaidApiDiagram(e.target.value);
+
+        const sep = document.createElement('div');
+        sep.className = 'visualization-toolbar-separator';
+        toolbar.appendChild(sep);
+
+        const apiLabel = document.createElement('span');
+        apiLabel.textContent = 'Filter API Interactions:';
+        apiLabel.className = 'visualization-toolbar-label';
+        toolbar.appendChild(apiLabel);
+        toolbar.appendChild(apiSelect);
+    }
+
+    window.workspaceComponent.setToolbar(toolbar);
+}
 
 async function renderMermaidDiagram() {
     const graphContainer = document.getElementById('mermaidGraph');
@@ -53,11 +218,7 @@ async function renderMermaidDiagram() {
         graphContainer.innerHTML = '';
         const result = await mermaid.render(renderId, definition, graphContainer);
         graphContainer.innerHTML = result.svg;
-        const svg = graphContainer.querySelector('svg');
-        if (svg) {
-            svg.style.width = '100%';
-            svg.style.height = 'auto';
-        }
+        // SVG styling handled by CSS
         graphContainer.style.display = 'block';
     } catch (error) {
         console.error("Failed to render Mermaid diagram:", error);
@@ -91,55 +252,62 @@ function populateApiServiceSelection() {
         });
 
     select.onchange = () => {
-        if (typeof renderMermaidApiDiagram === 'function') renderMermaidApiDiagram();
+        if (typeof renderMermaidApiDiagram === 'function') {
+            renderMermaidApiDiagram(select.value);
+        }
     };
 }
 
-async function renderMermaidApiDiagram() {
+async function renderMermaidApiDiagram(serviceParam) {
     const graphContainer = document.getElementById('mermaidApiGraph');
-    const select = document.getElementById('apiServiceSelection');
-    if (!graphContainer || !select) {
+
+    // Determine selected service: explicit param > dropdown value > 'all'
+    let selectedService = serviceParam;
+    if (!selectedService || selectedService === 'all') {
+        const select = document.getElementById('apiServiceSelection');
+        if (select && select.value) {
+            selectedService = select.value;
+        } else {
+            selectedService = 'all';
+        }
+    }
+
+    if (!graphContainer) {
         console.error("renderMermaidApiDiagram: required elements not found.");
         return;
     }
     if (!currentSystemData) {
-        graphContainer.innerHTML = '<p style="color: #666;">Load a system to see API interactions.</p>';
+        graphContainer.innerHTML = '<p class="mermaid-info">Load a system to see API interactions.</p>';
         return;
     }
     if (typeof mermaid === 'undefined' || typeof mermaid.render !== 'function') {
-        graphContainer.innerHTML = '<p style="color: red;">Mermaid is not loaded.</p>';
+        graphContainer.innerHTML = '<p class="mermaid-error">Mermaid is not loaded.</p>';
         return;
     }
     if (typeof generateMermaidApiSyntax !== 'function') {
-        graphContainer.innerHTML = '<p style="color: red;">API mermaid generator missing.</p>';
+        graphContainer.innerHTML = '<p class="mermaid-error">API mermaid generator missing.</p>';
         return;
     }
 
     let definition = '';
     try {
-        const selectedService = select.value || 'all';
+        // const selectedService = select.value || 'all';
         definition = generateMermaidApiSyntax(currentSystemData, { selectedService });
         const renderId = 'mermaid-api-interactions';
+        // Check if element exists and clear it, or mermaid might error on re-render with same ID if not careful
+        const existingSvg = document.getElementById(renderId);
+        if (existingSvg) existingSvg.remove();
+
         if (typeof mermaid.parse === 'function') {
             mermaid.parse(definition);
         }
         graphContainer.innerHTML = '';
         const result = await mermaid.render(renderId, definition, graphContainer);
         graphContainer.innerHTML = result.svg;
-        const svg = graphContainer.querySelector('svg');
-        if (svg) {
-            svg.style.width = '100%';
-            svg.style.height = 'auto';
-        }
+        // SVG styling handled by CSS
     } catch (error) {
         console.error("Failed to render Mermaid API diagram:", error);
-        if (error && error.hash && error.hash.line) {
-            console.error("Mermaid parse error at line", error.hash.line, "col", error.hash.loc?.last_column, ":", error.hash.text);
-        }
-        if (definition) {
-            console.error("Mermaid API definition:\n", definition);
-        }
-        graphContainer.innerHTML = '<p style="color: red;">Unable to render API interactions diagram. Check console for details.</p>';
+        graphContainer.innerHTML = '<p class="mermaid-error">Unable to render API interactions diagram. Check console for details.</p>';
     }
 }
 
@@ -165,60 +333,7 @@ function debounceResize(callback, delay = 200) {
     };
 }
 
-function setupVisualizationResizeObserver() {
-    // Only run if we are in the visualization view
-    // This prevents it from interfering with other views like Org Chart
-    const carouselContainer = document.getElementById('visualizationCarousel');
-    if (!carouselContainer || carouselContainer.offsetParent === null) {
-        // Container is not visible or doesn't exist
-        if (visualizationResizeObserver) {
-            visualizationResizeObserver.disconnect();
-            visualizationResizeObserver = null;
-        }
-        return;
-    }
-
-    if (visualizationResizeObserver) {
-        visualizationResizeObserver.disconnect(); // Clear existing
-    }
-
-    const debouncedRender = debounceResize(() => {
-        // Double check visibility inside the callback
-        if (document.getElementById('visualizationCarousel')?.offsetParent === null) {
-            return;
-        }
-        if (!currentSystemData) return;
-        const activeId = getActiveVisualizationId();
-        switch (activeId) {
-            case 'visualization':
-                if (typeof generateVisualization === 'function') generateVisualization(currentSystemData);
-                break;
-            case 'teamVisualization':
-                if (typeof generateTeamVisualization === 'function') generateTeamVisualization(currentSystemData);
-                break;
-            case 'serviceRelationshipsVisualization':
-                if (typeof updateServiceVisualization === 'function') updateServiceVisualization();
-                break;
-            case 'dependencyVisualization':
-                if (typeof updateDependencyVisualization === 'function') updateDependencyVisualization();
-                break;
-            case 'mermaidVisualization':
-                if (typeof renderMermaidDiagram === 'function') renderMermaidDiagram();
-                break;
-            case 'mermaidApiVisualization':
-                if (typeof renderMermaidApiDiagram === 'function') renderMermaidApiDiagram();
-                break;
-            default:
-                break;
-        }
-    }, 200);
-    visualizationResizeObserver = new ResizeObserver(debouncedRender);
-    visualizationResizeObserver.observe(carouselContainer);
-}
-
-if (typeof window !== 'undefined') {
-    window.setupVisualizationResizeObserver = setupVisualizationResizeObserver;
-}
+// setupVisualizationResizeObserver removed - workspace canvas handles scrolling
 
 /**
  * REVISED (v2) - Generates the main system visualization (Services, APIs, Platforms).
@@ -387,8 +502,8 @@ function generateVisualization(systemData) {
     // --- End Draw Elements ---
 
     // --- Tooltip ---
-    let tooltip = d3.select('body').selectAll('.tooltip').data([null]).join('div') // Reuse or create tooltip
-        .attr('class', 'tooltip')
+    let tooltip = d3.select('body').selectAll('.visualization-tooltip').data([null]).join('div') // Reuse or create tooltip
+        .attr('class', 'visualization-tooltip')
         .style('opacity', 0);
 
     node.on('mouseover', function (event, d) {
@@ -616,7 +731,7 @@ function generateTeamVisualization(systemData) {
 
     // Tooltip
     let tooltip = d3.select('body').append('div')
-        .attr('class', 'tooltip')
+        .attr('class', 'visualization-tooltip')
         .style('opacity', 0);
 
     node.on('mouseover', function (event, d) {
@@ -738,19 +853,24 @@ function getServiceDependencies(service, collectedServices = {}, visitedServices
     return Object.values(collectedServices);
 }
 
-function updateServiceVisualization() {
-    const selectedService = document.getElementById('serviceSelection').value;
-
-    // populateServiceSelection(); // <--- REMOVE THIS LINE
+function updateServiceVisualization(selectedService) {
+    // If called without arg (e.g. from resize observer), try to find the dropdown or default to all
+    if (selectedService === undefined) {
+        const dropdown = document.getElementById('serviceSelection');
+        selectedService = dropdown ? dropdown.value : 'all';
+    }
 
     if (selectedService === 'all') {
         generateServiceVisualization(currentSystemData.services, null); // No service is selected
     } else {
         // Find the selected service and its dependencies
         const selectedServiceData = currentSystemData.services.find(service => service.serviceName === selectedService);
-        const relatedServices = getServiceDependencies(selectedServiceData);
-
-        generateServiceVisualization(relatedServices, selectedService);
+        if (selectedServiceData) {
+            const relatedServices = getServiceDependencies(selectedServiceData);
+            generateServiceVisualization(relatedServices, selectedService);
+        } else {
+            generateServiceVisualization([], null);
+        }
     }
 }
 
@@ -876,7 +996,7 @@ function generateServiceVisualization(services, selectedServiceName) {
 
     // Tooltip
     let tooltip = d3.select('body').append('div')
-        .attr('class', 'tooltip')
+        .attr('class', 'visualization-tooltip')
         .style('opacity', 0);
 
     node.on('mouseover', function (event, d) {
@@ -1171,7 +1291,7 @@ function generateDependencyForceVisualization(selectedServiceName) {
         console.error("generateDependencyForceVisualization: #dependencySvg element not found or is empty. Cannot generate visualization.");
         const containerDiv = document.getElementById('dependencyVisualization');
         if (containerDiv) {
-            containerDiv.innerHTML = '<p style="color: red; text-align: center;">Error: Could not load dependency visualization.</p>';
+            containerDiv.innerHTML = '<p class="visualization-error-message">Error: Could not load dependency visualization.</p>';
         }
         return;
     }
@@ -1276,8 +1396,8 @@ function generateDependencyForceVisualization(selectedServiceName) {
     // --- End Zoom Setup ---
 
     // Tooltip Element
-    const tooltip = d3.select('body').selectAll('.tooltip').data([null]).join('div')
-        .attr('class', 'tooltip')
+    const tooltip = d3.select('body').selectAll('.visualization-tooltip').data([null]).join('div')
+        .attr('class', 'visualization-tooltip')
         .style('opacity', 0);
 
     // Highlight State
@@ -1732,9 +1852,8 @@ function showVisualization(index) {
         return;
     }
 
-    if (typeof setupVisualizationResizeObserver === 'function') {
-        setupVisualizationResizeObserver();
-    }
+    // setupVisualizationResizeObserver call removed
+
 
     const items = carouselContainer.querySelectorAll('.carousel-item');
     const titleElement = document.getElementById('visualizationTitle');
@@ -1821,108 +1940,9 @@ function navigateVisualizations(direction) {
     showVisualization(newIndex);
 }
 
-function renderSystemOverviewView(container) {
-    if (!container) {
-        console.error("renderSystemOverviewView: No container provided.");
-        return;
-    }
-
-    container.style.display = 'flex';
-    container.style.flexDirection = 'column';
-    container.style.height = '100%';
-    container.style.width = '100%';
-    container.style.overflow = 'hidden'; // Prevent outer scroll
-
-    container.innerHTML = `
-        <div style="text-align: center; margin-bottom: 10px; flex-shrink: 0; padding-top: 10px;">
-            <button id="prevVizBtn" class="button">&lt; Previous</button>
-            <span id="visualizationTitle" style="margin: 0 15px; font-weight: bold; font-size: 1.1em;">System Visualization</span>
-            <button id="nextVizBtn" class="button">Next &gt;</button>
-        </div>
-
-        <div id="visualizationContent" style="flex-grow: 1; position: relative; overflow: hidden; padding: 10px;">
-            <div id="visualization" class="carousel-item" style="display: block; height: 100%;">
-                <button id="togglePlatformComponentsSystem" class="button" style="margin-bottom: 10px;">Hide Platforms</button>
-                <svg id="systemSvg" style="width: 100%; height: 90%; border: 1px solid #ccc;"></svg>
-                <div id="legend" class="legend"></div>
-            </div>
-
-            <div id="teamVisualization" class="carousel-item" style="display: none; height: 100%;">
-                <svg id="teamSvg" style="width: 100%; height: 100%; border: 1px solid #ccc;"></svg>
-                <div id="teamLegend" class="legend"></div>
-            </div>
-
-            <div id="serviceRelationshipsVisualization" class="carousel-item" style="display: none; height: 100%;">
-                <select id="serviceSelection" style="margin-bottom: 5px; display: block; margin-left: auto; margin-right: auto;"></select>
-                <button id="togglePlatformComponentsService" class="button" style="margin-bottom: 10px;">Hide Platforms</button>
-                <svg id="serviceSvg" style="width: 100%; height: 90%; border: 1px solid #ccc;"></svg>
-                <div id="serviceLegend" class="legend"></div>
-            </div>
-
-            <div id="dependencyVisualization" class="carousel-item" style="display: none; height: 100%;">
-                <select id="dependencyServiceSelection" style="margin-bottom: 5px; display: block; margin-left: auto; margin-right: auto;"></select>
-                <button id="togglePlatformComponentsDependency" class="button" style="margin-bottom: 10px;">Hide Platforms</button>
-                <svg id="dependencySvg" style="width: 100%; height: 90%; border: 1px solid #ccc;"></svg>
-                <div id="dependencyLegend" class="legend"></div>
-            </div>
-
-            <div id="serviceDependenciesTableSlide" class="carousel-item" style="display: none; height: 100%; overflow: auto;">
-                <div id="serviceDependenciesTable" style="max-width: 100%; margin: 8px auto 0 auto; height: 100%;">
-                    <h2>Service Dependencies Table</h2>
-                    <div id="serviceDependenciesTableHost" style="height: calc(100% - 40px);"></div>
-                </div>
-            </div>
-
-            <div id="mermaidVisualization" class="carousel-item" style="display: none; height: 100%; overflow: auto;">
-                <div id="mermaidGraph"></div>
-            </div>
-
-            <div id="mermaidApiVisualization" class="carousel-item" style="display: none; height: 100%; overflow: auto;">
-                <select id="apiServiceSelection" style="margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto;"></select>
-                <div id="mermaidApiGraph"></div>
-            </div>
-        </div>
-    `;
-
-    // Attach Event Listeners
-    container.querySelector('#prevVizBtn').addEventListener('click', () => navigateVisualizations(-1));
-    container.querySelector('#nextVizBtn').addEventListener('click', () => navigateVisualizations(1));
-
-    const serviceSelect = container.querySelector('#serviceSelection');
-    if (serviceSelect) serviceSelect.addEventListener('change', updateServiceVisualization);
-
-    const depServiceSelect = container.querySelector('#dependencyServiceSelection');
-    if (depServiceSelect) depServiceSelect.addEventListener('change', updateDependencyVisualization);
-
-    const apiServiceSelect = container.querySelector('#apiServiceSelection');
-    if (apiServiceSelect) apiServiceSelect.addEventListener('change', renderMermaidApiDiagram);
-
-    // Setup Platform Toggles
-    const toggleSystem = container.querySelector('#togglePlatformComponentsSystem');
-    const toggleService = container.querySelector('#togglePlatformComponentsService');
-    const toggleDependency = container.querySelector('#togglePlatformComponentsDependency');
-
-    const handleToggle = () => {
-        showPlatformComponents = !showPlatformComponents;
-        rerenderCurrentVisualizationForPlatformToggle();
-        updateAllToggleButtonsText(showPlatformComponents);
-    };
-
-    if (toggleSystem) toggleSystem.addEventListener('click', handleToggle);
-    if (toggleService) toggleService.addEventListener('click', handleToggle);
-    if (toggleDependency) toggleDependency.addEventListener('click', handleToggle);
-
-    // Initialize View
-    setTimeout(() => {
-        showVisualization(currentVisualizationIndex);
-        updateAllToggleButtonsText(showPlatformComponents);
-        setupVisualizationResizeObserver();
-    }, 0);
-}
 
 if (typeof window !== 'undefined') {
     window.setupPlatformToggleButtons = setupPlatformToggleButtons;
-    window.renderSystemOverviewView = renderSystemOverviewView;
     window.navigateVisualizations = navigateVisualizations;
     window.showVisualization = showVisualization;
 }

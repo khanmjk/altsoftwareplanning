@@ -1,49 +1,43 @@
 /**
  * ManagementView
  * Handles product management settings like Themes, Initiatives, and Goals.
+ * Refactored to use Workspace Canvas and PillNavigationComponent.
+ * Updated to match System Edit "immersed" list style using ThemeEditComponent.
  */
 class ManagementView {
     constructor(containerId) {
         this.container = document.getElementById(containerId);
         this.activeTab = 'themes'; // Default tab
-        // Bind once to avoid duplicate listeners on re-render
-        this._boundTabClick = this.handleTabClick.bind(this);
-        this._boundButtonClick = this.handleButtonClick.bind(this);
-        this._boundSubmit = this.handleThemeFormSubmit.bind(this);
+        this.pillNav = null;
+        this.themeEditComponent = null;
+        this.initiativeEditComponent = null;
+        this.goalEditComponent = null;
+
+        // Bind events
+        this._boundContainerClick = this.handleContainerClick.bind(this);
         this._eventsBound = false;
     }
 
     render() {
         if (!this.container) return;
 
+        // 1. Set Workspace Metadata
+        if (window.workspaceComponent) {
+            window.workspaceComponent.setPageMetadata({
+                title: 'Product Management',
+                breadcrumbs: ['Product', 'Management'],
+                actions: []
+            });
+        }
+
+        // 2. Set Workspace Toolbar (Pill Navigation)
+        this.renderToolbar();
+
+        // 3. Render Content Container
         this.container.innerHTML = `
             <div class="management-view-container">
-                <h1 class="management-header">
-                    <i class="fas fa-tasks"></i> Product Management
-                </h1>
-
                 <div class="management-layout">
-                    <!-- Sidebar Navigation -->
-                    <div class="management-sidebar">
-                        <div class="management-nav-item ${this.activeTab === 'themes' ? 'active' : ''}" 
-                             data-tab="themes">
-                            <div class="management-nav-icon"><i class="fas fa-swatchbook"></i></div>
-                            Themes
-                        </div>
-                        <div class="management-nav-item ${this.activeTab === 'initiatives' ? 'active' : ''}" 
-                             data-tab="initiatives">
-                            <div class="management-nav-icon"><i class="fas fa-list-ul"></i></div>
-                            Initiatives
-                        </div>
-                        <div class="management-nav-item ${this.activeTab === 'goals' ? 'active' : ''}" 
-                             data-tab="goals">
-                            <div class="management-nav-icon"><i class="fas fa-bullseye"></i></div>
-                            Goals
-                        </div>
-                    </div>
-
-                    <!-- Content Area -->
-                    <div class="management-content">
+                    <div id="managementContent" class="management-content">
                         ${this.renderActiveTab()}
                     </div>
                 </div>
@@ -53,9 +47,45 @@ class ManagementView {
         // Bind events
         this.bindEvents();
 
-        // Post-render actions (populate lists)
+        // Post-render actions
+        this.postRender();
+    }
+
+    renderToolbar() {
+        if (!window.workspaceComponent) return;
+
+        const items = [
+            { id: 'themes', label: 'Themes', icon: 'fas fa-swatchbook' },
+            { id: 'initiatives', label: 'Initiatives', icon: 'fas fa-list-ul' },
+            { id: 'goals', label: 'Goals', icon: 'fas fa-bullseye' }
+        ];
+
+        // Create or update PillNavigation
+        if (!this.pillNav) {
+            this.pillNav = new PillNavigationComponent({
+                items: items,
+                activeId: this.activeTab,
+                onSwitch: (id) => this.switchTab(id)
+            });
+        } else {
+            this.pillNav.setActive(this.activeTab);
+        }
+
+        window.workspaceComponent.setToolbar(this.pillNav.render());
+    }
+
+    switchTab(tabId) {
+        this.activeTab = tabId;
+        const contentContainer = document.getElementById('managementContent');
+        if (contentContainer) {
+            contentContainer.innerHTML = this.renderActiveTab();
+            this.postRender();
+        }
+    }
+
+    postRender() {
         if (this.activeTab === 'themes') {
-            this.populateThemesList();
+            this.renderThemesList();
         } else if (this.activeTab === 'initiatives') {
             this.populateInitiativesList();
         } else if (this.activeTab === 'goals') {
@@ -63,304 +93,210 @@ class ManagementView {
         }
     }
 
-    /**
-     * Bind event listeners
-     */
     bindEvents() {
         if (this._eventsBound) return;
-        // Delegated handlers so we only bind once regardless of re-render
-        this.container.addEventListener('click', this._boundTabClick);
-        this.container.addEventListener('click', this._boundButtonClick);
-        this.container.addEventListener('submit', this._boundSubmit);
+        this.container.addEventListener('click', this._boundContainerClick);
         this._eventsBound = true;
     }
 
-    /**
-     * Handle tab clicks
-     */
-    handleTabClick(event) {
-        const tabItem = event.target.closest('[data-tab]');
-        if (!tabItem) return;
-
-        const tabName = tabItem.dataset.tab;
-        this.switchTab(tabName);
+    handleContainerClick(event) {
+        // 1. Handle Button Clicks
+        const button = event.target.closest('button[data-action]');
+        if (button) {
+            this.handleButtonClick(button);
+            return;
+        }
     }
 
-    /**
-     * Handle button clicks via delegation
-     */
-    handleButtonClick(event) {
-        const button = event.target.closest('button[data-action]');
-        if (!button) return;
-
+    handleButtonClick(button) {
         const action = button.dataset.action;
-        const index = button.dataset.index;
         const initiativeId = button.dataset.initiativeId;
 
-        if (action === 'delete-theme' && index !== undefined) {
-            this.deleteTheme(parseInt(index));
+        if (action === 'add-theme') {
+            this.addNewTheme();
         } else if (action === 'add-initiative') {
             this.openAddInitiativeModal();
         } else if (action === 'edit-initiative' && initiativeId) {
             this.editInitiative(initiativeId);
         } else if (action === 'delete-initiative' && initiativeId) {
             this.deleteInitiative(initiativeId);
+        } else if (action === 'add-goal') {
+            this.addNewGoal();
         }
-    }
-
-    /**
-     * Handle theme form submission
-     */
-    handleThemeFormSubmit(event) {
-        if (!event || event.target?.id !== 'addNewThemeForm_mgmt') return;
-        event.preventDefault();
-        this.saveNewTheme();
-    }
-
-    switchTab(tabName) {
-        this.activeTab = tabName;
-        this.render();
     }
 
     renderActiveTab() {
         switch (this.activeTab) {
-            case 'themes':
-                return this.renderThemesTab();
-            case 'initiatives':
-                return this.renderInitiativesTab();
-            case 'goals':
-                return this.renderGoalsTab();
-            default:
-                return this.renderThemesTab();
+            case 'themes': return this.renderThemesTab();
+            case 'initiatives': return this.renderInitiativesTab();
+            case 'goals': return this.renderGoalsTab();
+            default: return this.renderThemesTab();
         }
     }
 
     // --- THEMES TAB ---
     renderThemesTab() {
         return `
-            <div class="management-card">
-                <h3 class="management-card-title">Theme Management</h3>
-                
-                <div class="management-grid">
-                    <div>
-                        <h4 class="management-section-title">Create New Theme</h4>
-                        <form id="addNewThemeForm_mgmt">
-                            <div class="management-form-group">
-                                <label class="management-label">Theme Name</label>
-                                <input type="text" id="newThemeName_mgmt" required class="management-input" placeholder="e.g. User Experience">
-                            </div>
-                            <div class="management-form-group">
-                                <label class="management-label">Description</label>
-                                <textarea id="newThemeDescription_mgmt" rows="3" class="management-textarea" placeholder="Brief description of the theme..."></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-secondary">
-                                <i class="fas fa-plus"></i> Add Theme
-                            </button>
-                        </form>
-                    </div>
-
-                    <div>
-                        <h4 class="management-section-title">Available Themes</h4>
-                        <div id="existingThemesList_mgmt" class="management-list-container">
-                            <p class="management-list-empty">Loading themes...</p>
-                        </div>
-                    </div>
-                </div>
+            <div class="management-section-header">
+                <h3>Themes</h3>
+            </div>
+            <div id="themesListContainer">
+                <!-- Themes will be rendered here by ThemeEditComponent -->
+            </div>
+            <div class="management-list-actions">
+                <button class="btn btn-primary" data-action="add-theme">
+                    <i class="fas fa-plus"></i> Add Theme
+                </button>
             </div>
         `;
     }
 
-    populateThemesList() {
-        const listContainer = document.getElementById('existingThemesList_mgmt');
-        if (!listContainer || !window.currentSystemData) return;
+    renderThemesList() {
+        if (!window.currentSystemData) return;
 
-        const themes = window.currentSystemData.definedThemes || [];
-
-        if (themes.length === 0) {
-            listContainer.innerHTML = '<p class="management-list-empty">No themes defined yet.</p>';
-            return;
+        // Initialize ThemeEditComponent
+        if (!this.themeEditComponent) {
+            this.themeEditComponent = new ThemeEditComponent('themesListContainer', window.currentSystemData);
+        } else {
+            this.themeEditComponent.systemData = window.currentSystemData;
+            this.themeEditComponent.containerId = 'themesListContainer'; // Ensure container ID is set if re-using
         }
 
-        listContainer.innerHTML = themes.map((theme, index) => `
-            <div class="management-list-item">
-                <div class="management-item-content">
-                    <div class="management-item-title">${theme.name}</div>
-                    <div class="management-item-desc">${theme.description || 'No description'}</div>
-                </div>
-                <button class="btn-icon btn-icon--danger" 
-                        data-action="delete-theme" 
-                        data-index="${index}" 
-                        title="Delete Theme">
-                    <i class="fas fa-trash-alt"></i>
-                </button>
-            </div>
-        `).join('');
+        this.themeEditComponent.render();
     }
 
-    saveNewTheme() {
-        const name = document.getElementById('newThemeName_mgmt').value;
-        const desc = document.getElementById('newThemeDescription_mgmt').value;
-
-        if (!name) return;
-
+    addNewTheme() {
         if (!window.currentSystemData.definedThemes) {
             window.currentSystemData.definedThemes = [];
         }
 
         window.currentSystemData.definedThemes.push({
-            name: name,
-            description: desc,
+            name: 'New Theme',
+            description: '',
             themeId: 'theme_' + Date.now()
         });
 
-        if (window.saveSystemData) window.saveSystemData();
-        this.populateThemesList();
-        document.getElementById('addNewThemeForm_mgmt').reset();
-    }
-
-    async deleteTheme(index) {
-        if (!await window.notificationManager.confirm('Are you sure you want to delete this theme?', 'Delete Theme', { confirmStyle: 'danger' })) return;
-        if (window.currentSystemData && window.currentSystemData.definedThemes) {
-            window.currentSystemData.definedThemes.splice(index, 1);
-            if (window.saveSystemData) window.saveSystemData();
-            this.populateThemesList();
+        // Refresh Component
+        if (this.themeEditComponent) {
+            this.themeEditComponent.expandedIndex = window.currentSystemData.definedThemes.length - 1; // Expand new
+            this.themeEditComponent.render();
         }
     }
 
     // --- INITIATIVES TAB ---
     renderInitiativesTab() {
         return `
-            <div class="management-card">
-                <div class="management-header-actions">
-                    <h3 class="management-card-title management-card-title--no-border">Initiatives Overview</h3>
-                    <button class="btn btn-primary" data-action="add-initiative">
-                        <i class="fas fa-plus"></i> Add Initiative
-                    </button>
-                </div>
-                
-                <div id="initiativesList_mgmt" class="management-list-container management-list-container--tall">
-                    <p class="management-list-empty">Loading initiatives...</p>
-                </div>
+            <div class="management-section-header">
+                <h3>Initiatives Overview</h3>
+            </div>
+            
+            <div id="initiativesListContainer">
+                <!-- Initiatives will be rendered here by InitiativeEditComponent -->
+            </div>
+
+            <div class="management-list-actions">
+                <button class="btn btn-primary" data-action="add-initiative">
+                    <i class="fas fa-plus"></i> Add Initiative
+                </button>
             </div>
         `;
     }
 
     populateInitiativesList() {
-        const listContainer = document.getElementById('initiativesList_mgmt');
-        if (!listContainer || !window.currentSystemData) return;
+        if (!window.currentSystemData) return;
 
-        const initiatives = window.currentSystemData.yearlyInitiatives || [];
-
-        if (initiatives.length === 0) {
-            listContainer.innerHTML = '<p class="management-list-empty">No initiatives found. Click "Add Initiative" to create one.</p>';
-            return;
+        // Initialize InitiativeEditComponent
+        if (!this.initiativeEditComponent) {
+            this.initiativeEditComponent = new InitiativeEditComponent('initiativesListContainer', window.currentSystemData);
+        } else {
+            this.initiativeEditComponent.systemData = window.currentSystemData;
+            this.initiativeEditComponent.containerId = 'initiativesListContainer';
         }
-
-        listContainer.innerHTML = initiatives.map(init => `
-            <div class="management-list-item">
-                <div class="management-item-content">
-                    <div class="management-item-title">${init.title}</div>
-                    <div class="management-item-desc">
-                        <span class="badge badge-${init.status ? init.status.toLowerCase().replace(' ', '-') : 'backlog'}">${init.status || 'Backlog'}</span>
-                        <span style="margin-left: 10px;">Due: ${init.targetDueDate || 'N/A'}</span>
-                    </div>
-                </div>
-                <div class="management-item-actions">
-                    <button class="btn-icon" 
-                            data-action="edit-initiative" 
-                            data-initiative-id="${init.initiativeId}" 
-                            title="Edit Initiative">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn-icon btn-icon--danger" 
-                            data-action="delete-initiative" 
-                            data-initiative-id="${init.initiativeId}" 
-                            title="Delete Initiative">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </div>
-            </div>
-        `).join('');
+        this.initiativeEditComponent.render();
     }
 
     openAddInitiativeModal() {
-        if (window.roadmapInitiativeModal) {
-            window.roadmapInitiativeModal.onSave = (data, isEdit) => this.handleSaveInitiative(data, isEdit);
-            window.roadmapInitiativeModal.open();
+        // Use the component's draft mode for adding new initiatives
+        if (this.initiativeEditComponent) {
+            this.initiativeEditComponent.startNewInitiative();
         } else {
-            console.error('RoadmapInitiativeModal not initialized');
+            // Fallback if component not ready (shouldn't happen if rendered)
+            console.error('InitiativeEditComponent not initialized');
         }
     }
 
-    editInitiative(initiativeId) {
-        if (window.roadmapInitiativeModal) {
-            window.roadmapInitiativeModal.onSave = (data, isEdit) => this.handleSaveInitiative(data, isEdit);
-            window.roadmapInitiativeModal.open(initiativeId);
-        }
-    }
-
-    handleSaveInitiative(data, isEdit) {
-        if (!window.currentSystemData.yearlyInitiatives) {
-            window.currentSystemData.yearlyInitiatives = [];
-        }
-
-        if (isEdit) {
-            const index = window.currentSystemData.yearlyInitiatives.findIndex(i => i.initiativeId === data.initiativeId);
-            if (index > -1) {
-                window.currentSystemData.yearlyInitiatives[index] = data;
-            }
-        } else {
-            window.currentSystemData.yearlyInitiatives.push(data);
-        }
-
-        if (window.saveSystemData) window.saveSystemData();
-        this.populateInitiativesList();
-    }
-
-    async deleteInitiative(initiativeId) {
-        if (!await window.notificationManager.confirm('Are you sure you want to delete this initiative?', 'Delete Initiative', { confirmStyle: 'danger' })) return;
-
-        if (window.currentSystemData && window.currentSystemData.yearlyInitiatives) {
-            const index = window.currentSystemData.yearlyInitiatives.findIndex(i => i.initiativeId === initiativeId);
-            if (index > -1) {
-                window.currentSystemData.yearlyInitiatives.splice(index, 1);
-                if (window.saveSystemData) window.saveSystemData();
-                this.populateInitiativesList();
-            }
-        }
-    }
+    // Legacy methods removed as they are now handled by the component
+    editInitiative(initiativeId) { }
+    handleSaveInitiative(data, isEdit) { }
+    async deleteInitiative(initiativeId) { }
 
     // --- GOALS TAB ---
     renderGoalsTab() {
         return `
-            <div class="management-card">
-                <h3 class="management-card-title">Strategic Goals</h3>
-                <div class="settings-alert" style="margin-bottom: 20px;">
-                    <p><i class="fas fa-info-circle"></i> Goal management is coming soon in a future update.</p>
-                </div>
-                
-                <div id="goalsList_mgmt" class="management-list-container">
-                    <p class="management-list-empty">No goals defined.</p>
-                </div>
+            <div class="management-section-header">
+                <h3>Strategic Goals</h3>
+            </div>
+            <div id="goalsListContainer">
+                <!-- Goals will be rendered here by GoalEditComponent -->
+            </div>
+            <div class="management-list-actions">
+                <button class="btn btn-primary" data-action="add-goal">
+                    <i class="fas fa-plus"></i> Add Goal
+                </button>
             </div>
         `;
     }
 
     populateGoalsList() {
-        // Placeholder for future implementation
-        const listContainer = document.getElementById('goalsList_mgmt');
-        if (listContainer && window.currentSystemData && window.currentSystemData.strategicGoals) {
-            const goals = window.currentSystemData.strategicGoals;
-            if (goals.length > 0) {
-                listContainer.innerHTML = goals.map(g => `
-                    <div class="management-list-item">
-                        <div class="management-item-content">
-                            <div class="management-item-title">${g.name || 'Unnamed Goal'}</div>
-                        </div>
-                    </div>
-                 `).join('');
-            }
+        if (!window.currentSystemData) return;
+
+        // Initialize GoalEditComponent
+        if (!this.goalEditComponent) {
+            this.goalEditComponent = new GoalEditComponent('goalsListContainer', window.currentSystemData);
+        } else {
+            this.goalEditComponent.systemData = window.currentSystemData;
+            this.goalEditComponent.containerId = 'goalsListContainer';
         }
+        this.goalEditComponent.render();
+    }
+
+    addNewGoal() {
+        if (this.goalEditComponent) {
+            this.goalEditComponent.startNewGoal();
+        } else {
+            console.error('GoalEditComponent not initialized');
+        }
+    }
+
+    /**
+     * Returns structured context data for AI Chat Panel integration
+     * Implements the AI_VIEW_REGISTRY contract
+     * @returns {Object} Context object with view-specific data
+     */
+    getAIContext() {
+        const themes = window.currentSystemData?.definedThemes || [];
+        const initiatives = window.currentSystemData?.yearlyInitiatives || [];
+        const goals = window.currentSystemData?.goals || [];
+
+        return {
+            viewTitle: 'Product Management',
+            currentTab: this.activeTab,
+            themes: themes.map(t => ({ themeId: t.themeId, name: t.name })),
+            themeCount: themes.length,
+            initiativeCount: initiatives.length,
+            goalCount: goals.length,
+            initiatives: initiatives.map(i => ({
+                id: i.initiativeId,
+                title: i.title,
+                themeId: i.attributes?.themeId,
+                status: i.status
+            })),
+            goals: goals.map(g => ({
+                id: g.goalId,
+                name: g.name,
+                status: g.status
+            }))
+        };
     }
 }
 

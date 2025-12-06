@@ -510,6 +510,11 @@ function toggleCollapsibleSection(contentId, indicatorId, handleId = null) {
     indicatorSpan.textContent = isHidden ? '(-)' : '(+)';
     if (handleDiv) handleDiv.style.display = isHidden ? 'block' : 'none';
 
+    // [PATCH] Track summary table expanded state for Year Planning
+    if (contentId === 'teamLoadSummaryContent' && typeof window.isSummaryTableExpanded !== 'undefined') {
+        window.isSummaryTableExpanded = isHidden; // isHidden before toggle means it's now visible
+    }
+
     if (document.getElementById('planningView').style.display !== 'none' &&
         (contentId === 'teamLoadSummaryContent' || contentId === 'addInitiativeContent') &&
         typeof adjustPlanningTableHeight === 'function') {
@@ -889,7 +894,13 @@ function createNewSystem() {
     window.currentSystemData = currentSystemData;
     console.log("Initialized new currentSystemData:", JSON.parse(JSON.stringify(currentSystemData)));
 
-    switchView('systemEditForm');
+    // Use NavigationManager if available to ensure proper routing and metadata updates
+    if (window.navigationManager) {
+        window.navigationManager.navigateTo('systemEditForm', { createMode: true });
+    } else {
+        // Fallback (shouldn't happen)
+        switchView('systemEditForm');
+    }
 }
 window.createNewSystem = createNewSystem;
 
@@ -1107,7 +1118,48 @@ function saveSystemChanges() {
 
 
 
+/**
+ * Centralized function to recalculate capacity metrics and refresh relevant views.
+ * Should be called whenever capacity inputs (config, team structure, forecasts) change.
+ */
+function updateCapacityCalculationsAndDisplay() {
+    console.log("[Capacity] Recalculating metrics...");
+    if (!currentSystemData) return;
 
+    // 1. Recalculate
+    const capacityEngine = new CapacityEngine(currentSystemData);
+    const metrics = capacityEngine.calculateAllMetrics();
+    currentSystemData.calculatedCapacityMetrics = metrics;
+
+    // 2. Refresh UI based on current view
+    // If we are in the Capacity Planning View (which contains Dashboard & Config)
+    if (window.workspaceComponent && window.workspaceComponent.currentViewId === 'capacityConfigView') {
+        // If the active component is the Dashboard, re-render it
+        // We can access the view instance if it's stored globally or via the container
+        // For now, we'll rely on the fact that CapacityPlanningView manages its own state.
+        // If we are strictly in the Dashboard sub-view, we might want to trigger a re-render.
+        // However, CapacityPlanningView.switchView('dashboard') does a fresh render.
+
+        // If we are just refreshing the data, we might need to find the active dashboard instance.
+        // A simpler approach for this legacy/hybrid codebase is to check if the dashboard container exists.
+        const dashboardContainer = document.querySelector('.capacity-dashboard-view');
+        if (dashboardContainer) {
+            // Re-instantiate dashboard to refresh data
+            const dashboard = new CapacityDashboardView();
+            // We need to find the container to render into. 
+            // The dashboard is usually inside #capacityPlanningContent
+            const contentContainer = document.getElementById('capacityPlanningContent');
+            if (contentContainer) {
+                dashboard.render(contentContainer);
+            }
+        }
+    } else if (currentViewId === 'planningView' && typeof renderPlanningView === 'function') {
+        renderPlanningView();
+    }
+
+    console.log("[Capacity] Metrics updated and UI refreshed.");
+}
+window.updateCapacityCalculationsAndDisplay = updateCapacityCalculationsAndDisplay;
 function refreshCurrentView() {
     // Prefer NavigationManager so views render through WorkspaceComponent (consistent with refactor)
     if (window.navigationManager && typeof window.navigationManager.navigateTo === 'function' && currentViewId) {
@@ -1117,28 +1169,28 @@ function refreshCurrentView() {
     }
 
     switch (currentViewId) {
-    case 'planningView':
-        if (typeof renderPlanningView === 'function') renderPlanningView();
-        break;
-    case 'organogramView':
-        // Use switchView to ensure proper rendering via WorkspaceComponent
-        switchView('organogramView');
-        break;
+        case 'planningView':
+            if (typeof renderPlanningView === 'function') renderPlanningView();
+            break;
+        case 'organogramView':
+            // Use switchView to ensure proper rendering via WorkspaceComponent
+            switchView('organogramView');
+            break;
 
-    case 'capacityConfigView':
-        if (typeof updateCapacityCalculationsAndDisplay === 'function') updateCapacityCalculationsAndDisplay();
-        break;
-    case 'visualizationCarousel':
-        if (typeof showVisualization === 'function') showVisualization(currentVisualizationIndex || 0);
-        break;
-    case 'systemEditForm':
-        if (typeof showSystemEditForm === 'function') {
-            showSystemEditForm(currentSystemData);
-        }
-        break;
-    default:
-        console.log(`[REFRESH] No specific refresh handler for view: ${currentViewId}`);
-        break;
+        case 'capacityConfigView':
+            if (typeof updateCapacityCalculationsAndDisplay === 'function') updateCapacityCalculationsAndDisplay();
+            break;
+        case 'visualizationCarousel':
+            if (typeof showVisualization === 'function') showVisualization(currentVisualizationIndex || 0);
+            break;
+        case 'systemEditForm':
+            if (typeof showSystemEditForm === 'function') {
+                showSystemEditForm(currentSystemData);
+            }
+            break;
+        default:
+            console.log(`[REFRESH] No specific refresh handler for view: ${currentViewId}`);
+            break;
     }
 }
 
