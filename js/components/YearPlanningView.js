@@ -458,26 +458,348 @@ class YearPlanningView {
     }
 
     /**
-     * Render summary table - passes scenario options to avoid global variables
+     * Render the Team Load Summary table
+     * REFACTORED: Moved from yearPlanning.js into class for proper encapsulation
      */
     renderSummaryTable(summaryData) {
-        if (typeof renderTeamLoadSummaryTable === 'function') {
-            renderTeamLoadSummaryTable(summaryData, {
-                scenario: this.scenario,
-                applyConstraints: this.applyConstraints
-            });
+        const summaryContainer = document.getElementById('teamLoadSummarySection');
+        if (!summaryContainer) { return; }
+
+        const summaryTable = summaryContainer.querySelector('#teamLoadSummaryTable');
+        const summaryTableBody = summaryTable?.querySelector('#teamLoadSummaryTableBody');
+        const summaryTableFoot = summaryTable?.querySelector('#teamLoadSummaryTableFoot');
+        let summaryTableHead = summaryTable?.querySelector('thead');
+
+        if (!summaryTable || !summaryTableBody || !summaryTableFoot || !summaryTableHead) {
+            console.error("YearPlanningView: Missing Team Load Summary table structure.");
+            return;
         }
+
+        // Clear existing content
+        summaryTableHead.innerHTML = '';
+        summaryTableBody.innerHTML = '';
+        summaryTableFoot.innerHTML = '';
+
+        // Use class properties instead of global variables
+        const scenarioKey = this.scenario === 'funded' ? 'FundedHC' :
+            (this.scenario === 'team_bis' ? 'TeamBIS' : 'EffectiveBIS');
+        const isNetCapacityUsed = this.applyConstraints;
+        const scenarioNameForTitle = `${isNetCapacityUsed ? 'Net' : 'Gross'} ${scenarioKey.replace('BIS', ' BIS')}`;
+
+        // Update title
+        const summaryTitleHeader = summaryContainer.querySelector('h4');
+        if (summaryTitleHeader) {
+            const toggleSpan = summaryTitleHeader.querySelector('span.toggle-indicator');
+            summaryTitleHeader.textContent = ` Team Load Summary (for ATL Initiatives - Scenario: ${scenarioNameForTitle})`;
+            if (toggleSpan) {
+                summaryTitleHeader.insertBefore(toggleSpan, summaryTitleHeader.firstChild);
+            }
+        }
+
+        // Build header row
+        const headerRow = summaryTableHead.insertRow();
+        const scenarioDisplayName = scenarioKey.replace('BIS', ' BIS');
+        const stateDisplayName = isNetCapacityUsed ? 'Net' : 'Gross';
+        const dynamicHeaderText = `${scenarioDisplayName} Capacity (${stateDisplayName})`;
+
+        const headersData = [
+            { text: 'Team', title: 'Team Name' },
+            { text: 'Funded HC (Humans)', title: 'Budgeted headcount for human engineers.' },
+            { text: 'Team BIS (Humans)', title: 'Actual human engineers on the team.' },
+            { text: 'Away BIS (Humans)', title: 'Borrowed human engineers.' },
+            { text: 'AI Engineers', title: 'Count of AI Software Engineers contributing to the team.' },
+            { text: '(-) Sinks (SDE/Yrs)', title: 'Total deductions from leave, overhead, etc.' },
+            { text: '(+) AI Productivity Gain', title: 'The effective SDE/Year capacity gained from AI tooling.' },
+            { text: 'AI Gain %', title: 'The configured productivity gain percentage for the team.' },
+            { text: dynamicHeaderText, title: 'The total planning capacity under selected scenario.' },
+            { text: 'Assigned ATL SDEs', title: 'SDEs assigned from ATL initiatives.' },
+            { text: 'Remaining Capacity (ATL)', title: 'Scenario Capacity minus Assigned ATL SDEs.' },
+            { text: 'ATL Status', title: 'Indicates if team is overloaded.' }
+        ];
+
+        headersData.forEach(h => {
+            const th = document.createElement('th');
+            th.textContent = h.text;
+            th.title = h.title;
+            headerRow.appendChild(th);
+        });
+
+        // Build data rows
+        (summaryData.rows || []).forEach(rowData => {
+            const row = summaryTableBody.insertRow();
+            row.insertCell().textContent = rowData.teamName;
+            row.insertCell().textContent = rowData.fundedHC.toFixed(2);
+            row.insertCell().textContent = rowData.teamBISHumans.toFixed(2);
+            row.insertCell().textContent = rowData.awayBISHumans.toFixed(2);
+            row.insertCell().textContent = rowData.aiEngineers.toFixed(2);
+
+            const sinksCell = row.insertCell();
+            sinksCell.textContent = isNetCapacityUsed ? `-${rowData.sinks.toFixed(2)}` : '—';
+            sinksCell.style.color = isNetCapacityUsed ? '#dc3545' : '#6c757d';
+
+            row.insertCell().textContent = `+${rowData.productivityGain.toFixed(2)}`;
+            row.insertCell().textContent = `${rowData.productivityPercent.toFixed(0)}%`;
+            row.insertCell().textContent = rowData.scenarioCapacity.toFixed(2);
+            row.insertCell().textContent = rowData.assignedAtlSde.toFixed(2);
+
+            const remainingCell = row.insertCell();
+            remainingCell.textContent = rowData.remainingCapacity.toFixed(2);
+            remainingCell.style.color = rowData.remainingCapacity < 0 ? 'red' : 'green';
+
+            const statusCell = row.insertCell();
+            statusCell.textContent = rowData.status;
+            statusCell.style.color = rowData.status === '🛑 Overloaded' ? 'red' :
+                (rowData.status === '⚠️ Near Limit' ? 'darkorange' : 'green');
+            statusCell.style.fontWeight = 'bold';
+
+            Array.from(row.cells).forEach((cell, index) => {
+                cell.style.textAlign = index === 0 ? 'left' : 'center';
+            });
+        });
+
+        // Build footer row
+        const totals = summaryData.totals || {};
+        const footerRow = summaryTableFoot.insertRow();
+        footerRow.insertCell().textContent = 'Totals';
+        footerRow.insertCell().textContent = (totals.fundedHCGross ?? 0).toFixed(2);
+        footerRow.insertCell().textContent = (totals.teamBISHumans ?? 0).toFixed(2);
+        footerRow.insertCell().textContent = (totals.awayBISHumans ?? 0).toFixed(2);
+        footerRow.insertCell().textContent = (totals.aiEngineers ?? 0).toFixed(2);
+        footerRow.insertCell().textContent = isNetCapacityUsed ? `-${(totals.sinks ?? 0).toFixed(2)}` : '—';
+        footerRow.insertCell().textContent = `+${(totals.productivityGain ?? 0).toFixed(2)}`;
+        footerRow.insertCell().textContent = '';
+        footerRow.insertCell().textContent = (totals.scenarioCapacity ?? 0).toFixed(2);
+        footerRow.insertCell().textContent = (totals.assignedAtlSde ?? 0).toFixed(2);
+
+        const totalRemainingCell = footerRow.insertCell();
+        totalRemainingCell.textContent = (totals.remainingCapacity ?? 0).toFixed(2);
+        totalRemainingCell.style.color = (totals.remainingCapacity ?? 0) < 0 ? 'red' : 'green';
+        footerRow.insertCell().textContent = '';
+
+        Array.from(footerRow.cells).forEach((cell, index) => {
+            cell.style.textAlign = index === 0 ? 'left' : 'center';
+        });
     }
 
     /**
-     * Render planning table - passes scenario options to avoid global variables
+     * Render the main Planning Table
+     * REFACTORED: Moved from yearPlanning.js into class for proper encapsulation
+     * NOTE: Event handlers (drag/drop, estimate change, protected change) still reference
+     * legacy functions in yearPlanning.js - those can be migrated in a follow-up cleanup
      */
     renderPlanningTable(tableData) {
-        if (typeof renderPlanningTable === 'function') {
-            renderPlanningTable(tableData, {
-                scenario: this.scenario,
-                applyConstraints: this.applyConstraints
+        const tableContainer = document.getElementById('planningTableContainer');
+        if (!tableContainer) { return; }
+
+        tableContainer.innerHTML = '';
+
+        const tableWrapper = document.createElement('div');
+        tableWrapper.id = 'planningTableWrapper';
+
+        const table = document.createElement('table');
+        table.style.width = '100%';
+        table.style.borderCollapse = 'collapse';
+        table.id = 'planningTable';
+
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+
+        // Fixed headers
+        const fixedHeaders = ['Protected', 'Title', 'ID', 'Description', 'Total SDE Years', 'Cumulative SDE Years', 'Capacity Status', 'ATL/BTL'];
+        fixedHeaders.forEach(text => {
+            const th = document.createElement('th');
+            th.textContent = text;
+            th.style.border = '1px solid #ccc';
+            th.style.padding = '8px';
+            th.style.textAlign = 'left';
+            th.style.whiteSpace = 'nowrap';
+            headerRow.appendChild(th);
+        });
+
+        // Team columns
+        const teams = window.currentSystemData?.teams || [];
+        const calculatedMetrics = window.currentSystemData?.calculatedCapacityMetrics || {};
+        const teamHeaderMap = new Map();
+
+        teams.forEach((team, index) => {
+            const th = document.createElement('th');
+            const teamDisplayIdentity = team.teamIdentity || team.teamId || 'Unknown';
+            const teamFullName = team.teamName || teamDisplayIdentity;
+            const teamMetrics = calculatedMetrics[team.teamId];
+            const teamTitle = `Team: ${teamFullName}\nIdentity: ${teamDisplayIdentity}\nFunded HC: ${teamMetrics?.FundedHC?.humanHeadcount?.toFixed?.(2) || '0.00'}\nTeam BIS: ${teamMetrics?.TeamBIS?.totalHeadcount?.toFixed?.(2) || '0.00'}\nEff. BIS: ${teamMetrics?.EffectiveBIS?.totalHeadcount?.toFixed?.(2) || '0.00'}`;
+            th.textContent = teamDisplayIdentity;
+            th.title = teamTitle;
+            th.setAttribute('data-team-id', team.teamId);
+            Object.assign(th.style, {
+                border: '1px solid #ccc', padding: '8px', textAlign: 'center', writingMode: 'vertical-lr',
+                textOrientation: 'mixed', whiteSpace: 'nowrap', minWidth: '35px', maxWidth: '35px'
             });
+            headerRow.appendChild(th);
+            teamHeaderMap.set(fixedHeaders.length + index, team.teamId);
+        });
+
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        const tbody = document.createElement('tbody');
+        tbody.id = 'planningTableBody';
+
+        // Cumulative tracking per team
+        let teamCumulativeSde = {};
+        teams.forEach(team => { teamCumulativeSde[team.teamId] = 0; });
+
+        // Use class properties instead of global variables
+        const scenarioKey = this.scenario === 'funded' ? 'FundedHC' :
+            (this.scenario === 'team_bis' ? 'TeamBIS' : 'EffectiveBIS');
+        const isNetCapacityUsed = this.applyConstraints;
+
+        // Build rows
+        tableData.forEach((initiative) => {
+            const row = tbody.insertRow();
+            row.setAttribute('data-initiative-id', initiative.initiativeId);
+            row.style.borderBottom = '1px solid #eee';
+            row.style.padding = '2px 0';
+            row.setAttribute('draggable', !initiative.isProtected);
+
+            // Legacy drag handlers (still in yearPlanning.js)
+            row.addEventListener('dragover', handleDragOver);
+            row.addEventListener('dragleave', handleDragLeave);
+            row.addEventListener('drop', handleDrop);
+            row.addEventListener('dragend', handleDragEnd);
+            if (!initiative.isProtected) {
+                row.addEventListener('dragstart', handleDragStart);
+                row.style.cursor = 'move';
+            } else {
+                row.style.cursor = 'default';
+            }
+
+            // Protected checkbox cell
+            const protectedCell = row.insertCell();
+            const protectedCheckbox = document.createElement('input');
+            protectedCheckbox.type = 'checkbox';
+            protectedCheckbox.checked = initiative.isProtected;
+            protectedCheckbox.setAttribute('data-initiative-id', initiative.initiativeId);
+            protectedCheckbox.style.cursor = 'pointer';
+            protectedCheckbox.onchange = handleProtectedChange; // Legacy handler
+            protectedCell.appendChild(protectedCheckbox);
+            protectedCell.style.textAlign = 'center';
+
+            // Title cell
+            const titleCell = row.insertCell();
+            titleCell.textContent = initiative.title || 'No Title';
+            titleCell.style.fontWeight = initiative.isProtected ? 'bold' : 'normal';
+
+            // ID cell
+            const idCell = row.insertCell();
+            idCell.textContent = initiative.initiativeId;
+            idCell.style.fontSize = '0.8em';
+            idCell.style.color = '#555';
+
+            // Description cell
+            const descCell = row.insertCell();
+            const descText = initiative.description || '';
+            descCell.textContent = descText.length > 50 ? descText.substring(0, 47) + '...' : descText;
+            descCell.title = descText;
+
+            // Total SDE cell
+            const totalSdeCell = row.insertCell();
+            totalSdeCell.style.textAlign = 'right';
+            totalSdeCell.textContent = initiative.calculatedInitiativeTotalSde.toFixed(2);
+
+            // Cumulative SDE cell
+            const cumSdeCell = row.insertCell();
+            cumSdeCell.style.textAlign = 'right';
+            cumSdeCell.textContent = initiative.calculatedCumulativeSde.toFixed(2);
+
+            // Capacity Status cell
+            const statusCell = row.insertCell();
+            statusCell.style.textAlign = 'center';
+            const totalTeamBIS = calculatedMetrics.totals?.TeamBIS?.totalHeadcount || 0;
+            const totalFundedHC = calculatedMetrics.totals?.FundedHC?.humanHeadcount || 0;
+
+            if (initiative.calculatedCumulativeSde <= totalTeamBIS) {
+                statusCell.textContent = '✅';
+                statusCell.title = `Within Team BIS (${totalTeamBIS.toFixed(2)})`;
+                statusCell.style.backgroundColor = '#d4edda';
+            } else if (initiative.calculatedCumulativeSde <= totalFundedHC) {
+                statusCell.textContent = '⚠️';
+                statusCell.title = `Exceeds Team BIS, Within Funded HC (${totalFundedHC.toFixed(2)})`;
+                statusCell.style.backgroundColor = '#fff3cd';
+            } else {
+                statusCell.textContent = '🛑';
+                statusCell.title = `Exceeds Funded HC (${totalFundedHC.toFixed(2)})`;
+                statusCell.style.backgroundColor = '#f8d7da';
+            }
+
+            // ATL/BTL cell
+            const atlBtlCell = row.insertCell();
+            atlBtlCell.style.fontWeight = 'bold';
+            atlBtlCell.style.textAlign = 'center';
+            if (!initiative.isBTL) {
+                atlBtlCell.textContent = 'ATL';
+                atlBtlCell.style.color = 'green';
+            } else {
+                atlBtlCell.textContent = 'BTL';
+                atlBtlCell.style.color = 'red';
+            }
+
+            // Team estimate cells
+            const assignmentsMap = new Map((initiative.assignments || []).map(a => [a.teamId, a.sdeYears]));
+            teamHeaderMap.forEach((teamId) => {
+                const teamCell = row.insertCell();
+                const currentEstimate = assignmentsMap.get(teamId) || 0;
+                if (!initiative.isBTL) {
+                    teamCumulativeSde[teamId] += currentEstimate;
+                }
+
+                const estimateInput = document.createElement('input');
+                estimateInput.type = 'number';
+                estimateInput.min = '0';
+                estimateInput.step = '0.25';
+                estimateInput.value = currentEstimate > 0 ? currentEstimate.toFixed(2) : '';
+                estimateInput.setAttribute('data-initiative-id', initiative.initiativeId);
+                estimateInput.setAttribute('data-team-id', teamId);
+                Object.assign(estimateInput.style, {
+                    width: '60px', textAlign: 'right', border: 'none', backgroundColor: 'transparent'
+                });
+                estimateInput.addEventListener('change', handleEstimateChange); // Legacy handler
+                teamCell.appendChild(estimateInput);
+                teamCell.style.textAlign = 'center';
+
+                // Color code based on capacity
+                let teamLimit = isNetCapacityUsed
+                    ? calculatedMetrics[teamId]?.[scenarioKey]?.netYrs ?? 0
+                    : calculatedMetrics[teamId]?.[scenarioKey]?.grossYrs ?? 0;
+
+                const currentTeamCumulative = teamCumulativeSde[teamId];
+                if (currentTeamCumulative <= teamLimit) {
+                    teamCell.style.backgroundColor = '#d4edda';
+                    teamCell.title = `Cumulative: ${currentTeamCumulative.toFixed(2)} / Limit: ${teamLimit.toFixed(2)} - OK`;
+                } else {
+                    teamCell.style.backgroundColor = '#f8d7da';
+                    teamCell.title = `Cumulative: ${currentTeamCumulative.toFixed(2)} / Limit: ${teamLimit.toFixed(2)} - Overloaded`;
+                }
+            });
+
+            // Apply row styling based on status
+            row.querySelectorAll('td').forEach((cell, idx) => {
+                if (idx < fixedHeaders.length) {
+                    if (initiative.isProtected) {
+                        cell.style.backgroundColor = '#f8f9fa';
+                    } else if (initiative.isBTL) {
+                        cell.style.backgroundColor = '#ffeeee';
+                    }
+                }
+            });
+        });
+
+        table.appendChild(tbody);
+        tableWrapper.appendChild(table);
+        tableContainer.appendChild(tableWrapper);
+
+        // Adjust height (legacy helper)
+        if (typeof adjustPlanningTableHeight === 'function') {
+            adjustPlanningTableHeight();
         }
     }
 
