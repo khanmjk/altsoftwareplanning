@@ -79,15 +79,13 @@ class CapacityEngine {
             const awayTotalMembers = (team.awayTeamMembers || []).length;
 
 
-            // Pre-calculate per-SDE values and total team days using helpers
-            // Note: Assuming global helper functions are available. 
-            // If strict modularity is required, these should be static methods or imported.
-            const stdLeave_days_per_sde = calculateTotalStandardLeaveDaysPerSDE(team, globalLeaveTypes, capacityConfig);
+            // Pre-calculate per-SDE values and total team days using CapacityService
+            const stdLeave_days_per_sde = CapacityService.calculateTotalStandardLeaveDaysPerSDE(team, globalLeaveTypes, capacityConfig);
             const holidays_days_per_sde = capacityConfig.globalConstraints?.publicHolidays || 0;
-            const orgEvents_days_per_sde = calculateOrgEventDaysPerSDE(capacityConfig);
-            const overhead_days_per_sde = calculateOverheadDaysPerSDE(team, workingDaysPerYear);
-            const variable_leave_total_team_days = calculateTotalVariableLeaveDays(team);
-            const teamActivityImpacts = calculateTeamActivityImpacts(team);
+            const orgEvents_days_per_sde = CapacityService.calculateOrgEventDaysPerSDE(capacityConfig);
+            const overhead_days_per_sde = CapacityService.calculateOverheadDaysPerSDE(team, workingDaysPerYear);
+            const variable_leave_total_team_days = CapacityService.calculateTotalVariableLeaveDays(team);
+            const teamActivityImpacts = CapacityService.calculateTeamActivityImpacts(team);
 
             ['TeamBIS', 'EffectiveBIS', 'FundedHC'].forEach(scenario => {
                 let totalHeadcount = 0;

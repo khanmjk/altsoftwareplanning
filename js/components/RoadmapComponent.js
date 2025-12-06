@@ -139,19 +139,33 @@ class RoadmapComponent {
         const themeFilter = document.getElementById('roadmapThemeFilter')?.value || 'all';
         const selectedThemes = themeFilter !== 'all' ? [themeFilter] : [];
 
-        // Use new utility functions from utils.js
+        // Use RoadmapService for data retrieval
+        const systemData = window.currentSystemData;
         if (this.viewType === 'quarterly') {
-            return getQuarterlyRoadmapData({
-                year: yearFilter,
-                orgId: orgFilter,
-                teamId: teamFilter,
-                themeIds: selectedThemes
+            return RoadmapService.getQuarterlyRoadmapData({
+                initiatives: systemData.yearlyInitiatives || [],
+                sdms: systemData.sdms || [],
+                teams: systemData.teams || [],
+                definedThemes: systemData.definedThemes || [],
+                filters: {
+                    year: yearFilter,
+                    orgId: orgFilter,
+                    teamId: teamFilter,
+                    themeIds: selectedThemes
+                }
             });
         } else if (this.viewType === '3yp') {
-            return get3YearPlanData({
-                orgId: orgFilter,
-                teamId: teamFilter,
-                themeIds: selectedThemes
+            return RoadmapService.get3YearPlanData({
+                initiatives: systemData.yearlyInitiatives || [],
+                sdms: systemData.sdms || [],
+                teams: systemData.teams || [],
+                definedThemes: systemData.definedThemes || [],
+                currentYear: new Date().getFullYear(),
+                filters: {
+                    orgId: orgFilter,
+                    teamId: teamFilter,
+                    themeIds: selectedThemes
+                }
             });
         }
         return null;
@@ -422,7 +436,7 @@ class RoadmapComponent {
         if (this.viewType === 'quarterly') {
             // Quarterly View Update
             const newQuarter = target;
-            const oldQuarter = initiative.targetQuarter || getQuarterFromDate(initiative.targetDueDate) || 'Backlog';
+            const oldQuarter = initiative.targetQuarter || RoadmapService.getQuarterFromDate(initiative.targetDueDate) || 'Backlog';
 
             initiative.targetQuarter = newQuarter;
 
@@ -430,7 +444,7 @@ class RoadmapComponent {
                 ? parseInt(window.dashboardPlanningYear)
                 : (initiative.attributes.planningYear || new Date().getFullYear());
 
-            const newDueDate = getEndDateForQuarter(newQuarter, year);
+            const newDueDate = RoadmapService.getEndDateForQuarter(newQuarter, year);
             if (newDueDate) initiative.targetDueDate = newDueDate;
 
             window.notificationManager.showToast(`Moved "${title}" from ${oldQuarter} to ${newQuarter}`, 'success');

@@ -630,16 +630,16 @@ function simulateTeamSize_SDM(
             return null;
         }
 
-        // --- Calculate Net Available Days per Week per SDE using helpers ---
+        // --- Calculate Net Available Days per Week per SDE using CapacityService ---
         const workingDaysPerYear = capacityConfig.workingDaysPerYear;
         const globalLeaveTypes = capacityConfig.leaveTypes || [];
 
-        // *** ADDED Logging for individual components ***
-        const stdLeave_days_per_sde = calculateTotalStandardLeaveDaysPerSDE(team, globalLeaveTypes, capacityConfig);
+        // Calculate capacity deductions using service
+        const stdLeave_days_per_sde = CapacityService.calculateTotalStandardLeaveDaysPerSDE(team, globalLeaveTypes, capacityConfig);
         const holidays_days_per_sde = capacityConfig.globalConstraints?.publicHolidays || 0;
-        const orgEvents_days_per_sde = calculateOrgEventDaysPerSDE(capacityConfig);
-        const overhead_days_per_sde = calculateOverheadDaysPerSDE(team, workingDaysPerYear);
-        const teamActivityImpacts = calculateTeamActivityImpacts(team);
+        const orgEvents_days_per_sde = CapacityService.calculateOrgEventDaysPerSDE(capacityConfig);
+        const overhead_days_per_sde = CapacityService.calculateOverheadDaysPerSDE(team, workingDaysPerYear);
+        const teamActivityImpacts = CapacityService.calculateTeamActivityImpacts(team);
         const teamActivity_days_per_sde = teamActivityImpacts.daysPerSDE; // Only use the perSDE part
 
         console.log(`  Capacity Calculation Details for Team: ${teamNameForLog}`);

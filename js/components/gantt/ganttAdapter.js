@@ -3,6 +3,10 @@
  * Keeps Mermaid-agnostic transformation separate from rendering logic.
  */
 (function () {
+    // Use GanttService methods
+    const sanitizeId = (id) => GanttService.normalizeGanttId(id);
+    const computeSdeEstimate = (init, filterTeamId) => GanttService.computeSdeEstimate(init, filterTeamId);
+
     function buildTasksFromInitiatives({ initiatives = [], workPackages = [], viewBy = 'All Initiatives', filters = {}, year, selectedTeam, expandedInitiativeIds = new Set(), expandedWorkPackageIds = new Set() }) {
         if (typeof ensureWorkPackagesForInitiatives === 'function' && typeof currentSystemData !== 'undefined') {
             ensureWorkPackagesForInitiatives(currentSystemData, year);
@@ -154,11 +158,9 @@
 
     function buildInitiativeLabel(init, endDate) {
         const title = init.title || 'Initiative';
-        const rawSde = (typeof computeSdeEstimate === 'function')
-            ? parseFloat(computeSdeEstimate(init))
-            : null;
+        const rawSde = computeSdeEstimate(init);
         const hasSde = Number.isFinite(rawSde);
-        const sdeText = hasSde ? String(rawSde) : '';
+        const sdeText = hasSde ? String(rawSde.toFixed(2)) : '';
         const dateText = formatShortDate(endDate);
 
         if (sdeText) {
@@ -316,14 +318,7 @@
         return rounded.toString();
     }
 
-    function sanitizeId(id) {
-        return (id || '')
-            .toString()
-            .trim()
-            .toLowerCase()
-            .replace(/[^a-z0-9_-]+/g, '-')
-            .replace(/^-+|-+$/g, '');
-    }
+    // sanitizeId is now provided via GanttService alias at top
 
     function truncateText(text, maxLength) {
         if (!text) return '';

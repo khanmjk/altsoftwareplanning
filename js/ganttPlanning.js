@@ -16,6 +16,15 @@ let lastGanttFocusTaskId = null;
 let lastGanttFocusTaskType = null;
 let lastGanttFocusInitiativeId = null;
 
+// Use GanttService methods via local aliases for cleaner internal usage
+const normalizeGanttId = (value) => GanttService.normalizeGanttId(value);
+const buildAssignmentTaskId = (wpId, teamId) => GanttService.buildAssignmentTaskId(wpId, teamId);
+const truncateLabel = (text, maxLen) => GanttService.truncateLabel(text, maxLen);
+const getEarliestAssignmentStart = (wp) => GanttService.getEarliestAssignmentStart(wp);
+const getLatestAssignmentEnd = (wp) => GanttService.getLatestAssignmentEnd(wp);
+const wouldCreateDependencyCycle = (fromWpId, toWpId, workPackages) => GanttService.wouldCreateDependencyCycle(fromWpId, toWpId, workPackages);
+const wouldCreateAssignmentCycle = (fromId, toId, assignments) => GanttService.wouldCreateAssignmentCycle(fromId, toId, assignments);
+
 function getGanttFocusContext() {
     return {
         taskId: lastGanttFocusTaskId ? normalizeGanttId(lastGanttFocusTaskId) : null,
@@ -24,26 +33,13 @@ function getGanttFocusContext() {
     };
 }
 
-function normalizeGanttId(value) {
-    return (value || '')
-        .toString()
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9_-]+/g, '-')
-        .replace(/^-+|-+$/g, '');
-}
-
-function buildAssignmentTaskId(wpId, teamId) {
-    if (!wpId || !teamId) return null;
-    return normalizeGanttId(`${wpId}-${teamId}`);
-}
-
 function setLastGanttFocus({ taskId, taskType, initiativeId }) {
     if (!taskId) return;
     lastGanttFocusTaskId = normalizeGanttId(taskId);
     lastGanttFocusTaskType = taskType || null;
     lastGanttFocusInitiativeId = initiativeId ? normalizeGanttId(initiativeId) : null;
 }
+
 
 function captureGanttFocusFromTarget(target) {
     if (!target || !target.dataset) return;
@@ -966,31 +962,9 @@ function hasWorkPackagesForInitiative(initiativeId) {
     return (currentSystemData.workPackages || []).some(wp => wp.initiativeId === initiativeId);
 }
 
-function getEarliestAssignmentStart(wp) {
-    let earliest = wp.startDate || null;
-    (wp.impactedTeamAssignments || []).forEach(assign => {
-        if (assign.startDate && (!earliest || assign.startDate < earliest)) {
-            earliest = assign.startDate;
-        }
-    });
-    return earliest;
-}
+// getEarliestAssignmentStart and getLatestAssignmentEnd are now provided via GanttService aliases at top of file
 
-function getLatestAssignmentEnd(wp) {
-    let latest = wp.endDate || null;
-    (wp.impactedTeamAssignments || []).forEach(assign => {
-        if (assign.endDate && (!latest || assign.endDate > latest)) {
-            latest = assign.endDate;
-        }
-    });
-    return latest;
-}
-
-function truncateLabel(text, maxLen) {
-    const t = text || '';
-    if (t.length <= maxLen) return t;
-    return t.slice(0, maxLen - 3).trim() + '...';
-}
+// truncateLabel is now provided via GanttService alias at top of file
 
 function renderPredecessorSelector(allWorkPackages, wp) {
     const options = (allWorkPackages || []).filter(other => other.workPackageId !== wp.workPackageId);
@@ -1391,62 +1365,7 @@ function syncInitiativeDependenciesFromWorkPackages(initiativeId) {
     initiative.dependencies = Array.from(deps);
 }
 
-function wouldCreateDependencyCycle(fromWpId, toWpId, workPackages) {
-    if (!fromWpId || !toWpId) return false;
-    const graph = new Map();
-    (workPackages || []).forEach(wp => {
-        graph.set(wp.workPackageId, new Set(wp.dependencies || []));
-    });
-    if (!graph.has(fromWpId)) graph.set(fromWpId, new Set());
-    graph.get(fromWpId).add(toWpId);
-
-    const visited = new Set();
-    const stack = [toWpId];
-    while (stack.length) {
-        const current = stack.pop();
-        if (current === fromWpId) return true;
-        if (visited.has(current)) continue;
-        visited.add(current);
-        const neighbors = graph.get(current);
-        if (neighbors) {
-            neighbors.forEach(n => stack.push(n));
-        }
-    }
-    return false;
-}
-
-function wouldCreateAssignmentCycle(wp, fromAssignId, toAssignId) {
-    if (!wp || !fromAssignId || !toAssignId) return false;
-    const from = normalizeGanttId(fromAssignId);
-    const to = normalizeGanttId(toAssignId);
-    if (!from || !to) return false;
-
-    const graph = new Map();
-    (wp.impactedTeamAssignments || []).forEach(assign => {
-        const id = buildAssignmentTaskId(wp.workPackageId, assign.teamId);
-        const normId = normalizeGanttId(id);
-        if (!normId) return;
-        const deps = (Array.isArray(assign.dependencies) ? assign.dependencies : []).map(normalizeGanttId).filter(Boolean);
-        graph.set(normId, new Set(deps));
-    });
-
-    if (!graph.has(from)) graph.set(from, new Set());
-    graph.get(from).add(to);
-
-    const visited = new Set();
-    const stack = [to];
-    while (stack.length) {
-        const current = stack.pop();
-        if (current === from) return true;
-        if (visited.has(current)) continue;
-        visited.add(current);
-        const neighbors = graph.get(current);
-        if (neighbors) {
-            neighbors.forEach(n => stack.push(n));
-        }
-    }
-    return false;
-}
+// wouldCreateDependencyCycle and wouldCreateAssignmentCycle are now provided via GanttService aliases at top of file
 
 async function renderGanttChart() {
     const container = document.getElementById('ganttChartContainer');

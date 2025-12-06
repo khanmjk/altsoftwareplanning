@@ -1,93 +1,16 @@
 // Global Constants
 const ALL_INITIATIVE_STATUSES = ['Backlog', 'Defined', 'Committed', 'Completed'];
 
-
-
-
-/**
- * Helper: Calculates total standard leave days per SDE for a team.
- */
-function calculateTotalStandardLeaveDaysPerSDE(team, globalLeaveTypes, capacityConfig) {
-    if (!team || !globalLeaveTypes || !capacityConfig || !capacityConfig.leaveTypes) return 0;
-    let totalEffectiveDays = 0;
-    const teamUptakeEstimates = team.teamCapacityAdjustments?.leaveUptakeEstimates || [];
-
-    globalLeaveTypes.forEach(leaveType => {
-        if (!leaveType || !leaveType.id) return;
-        const currentGlobalDefaultObj = capacityConfig.leaveTypes.find(lt => lt.id === leaveType.id);
-        const globalDefault = currentGlobalDefaultObj ? (currentGlobalDefaultObj.defaultEstimatedDays || 0) : 0;
-        const teamUptake = teamUptakeEstimates.find(est => est.leaveTypeId === leaveType.id);
-        const uptakePercent = teamUptake ? (teamUptake.estimatedUptakePercent ?? 100) : 100;
-        totalEffectiveDays += globalDefault * (uptakePercent / 100);
-    });
-    return totalEffectiveDays;
-}
-
-/**
- * Helper: Calculates total variable leave impact in TOTAL TEAM DAYS.
- */
-function calculateTotalVariableLeaveDays(team) {
-    if (!team || !team.teamCapacityAdjustments?.variableLeaveImpact) return 0;
-    let totalTeamVariableDays = 0;
-    const varLeaveImpacts = team.teamCapacityAdjustments.variableLeaveImpact;
-
-    for (const leaveKey in varLeaveImpacts) {
-        if (varLeaveImpacts.hasOwnProperty(leaveKey)) {
-            const impact = varLeaveImpacts[leaveKey];
-            totalTeamVariableDays += (impact?.affectedSDEs || 0) * (impact?.avgDaysPerAffectedSDE || 0);
-        }
-    }
-    return totalTeamVariableDays;
-}
-
-/**
- * Helper: Calculates total org event days per SDE.
- */
-function calculateOrgEventDaysPerSDE(capacityConfig) {
-    let totalDays = 0;
-    const orgEvents = capacityConfig?.globalConstraints?.orgEvents || [];
-    orgEvents.forEach(event => {
-        totalDays += event.estimatedDaysPerSDE || 0;
-    });
-    return totalDays;
-}
-
-/**
- * Helper: Calculates team activity impacts.
- * Returns an object: { daysPerSDE: total_days_from_perSDE_inputs, totalTeamDaysDuration: duration_from_total_inputs }
- * Note: Renamed totalTeamDays to totalTeamDaysDuration to better reflect user interpretation.
- */
-function calculateTeamActivityImpacts(team) {
-    const result = { daysPerSDE: 0, totalTeamDaysDuration: 0 }; // Renamed second property
-    if (!team || !team.teamCapacityAdjustments?.teamActivities) return result;
-
-    const teamActivities = team.teamCapacityAdjustments.teamActivities;
-    teamActivities.forEach(activity => {
-        const value = activity.value || 0;
-        if (activity.estimateType === 'perSDE') {
-            result.daysPerSDE += value;
-        } else { // Default to 'total' if not 'perSDE'
-            result.totalTeamDaysDuration += value; // Accumulate the duration specified
-        }
-    });
-    return result;
-}
-
-/**
- * Helper (CORRECTED): Calculates overhead days per SDE.
- */
-function calculateOverheadDaysPerSDE(team, workingDaysPerYear) {
-    if (!team || !team.teamCapacityAdjustments || !workingDaysPerYear || workingDaysPerYear === 0) {
-        return 0;
-    }
-    const hoursPerWeek = team.teamCapacityAdjustments.avgOverheadHoursPerWeekPerSDE || 0;
-    if (hoursPerWeek === 0) return 0;
-    const standardHoursPerDay = 8;
-    const totalAnnualOverheadHours = hoursPerWeek * (workingDaysPerYear / 5);
-    const totalOverheadDays = totalAnnualOverheadHours / standardHoursPerDay;
-    return totalOverheadDays;
-}
-
+// =================================================================
+// DEPRECATED: Capacity calculation functions moved to CapacityService.js
+// The following functions are now available via CapacityService:
+//   - CapacityService.calculateTotalStandardLeaveDaysPerSDE()
+//   - CapacityService.calculateTotalVariableLeaveDays()
+//   - CapacityService.calculateOrgEventDaysPerSDE()
+//   - CapacityService.calculateTeamActivityImpacts()
+//   - CapacityService.calculateOverheadDaysPerSDE()
+//   - CapacityService.calculateNetCapacity()
+// =================================================================
 
 
 // Helper to get team name (you might already have this or similar)
@@ -1171,180 +1094,17 @@ function validateGeneratedSystem(systemData) {
     };
 }
 
-
-
 // =================================================================
-// ROADMAP DATA UTILITIES
+// DEPRECATED: Roadmap utility functions moved to RoadmapService.js
+// The following functions are now available via RoadmapService:
+//   - RoadmapService.getQuarterFromDate()
+//   - RoadmapService.getEndDateForQuarter()
+//   - RoadmapService.getStartDateForQuarter()
+//   - RoadmapService.getYearBucket()
+//   - RoadmapService.filterByOrganization()
+//   - RoadmapService.filterByTeam()
+//   - RoadmapService.filterByThemes()
+//   - RoadmapService.filterByYear()
+//   - RoadmapService.getQuarterlyRoadmapData()
+//   - RoadmapService.get3YearPlanData()
 // =================================================================
-
-/**
- * Helper: Determines the quarter (Q1-Q4) from a date string (YYYY-MM-DD).
- */
-function getQuarterFromDate(dateString) {
-    if (!dateString) return null;
-    try {
-        const month = parseInt(dateString.substring(5, 7), 10);
-        if (month >= 1 && month <= 3) return 'Q1';
-        if (month >= 4 && month <= 6) return 'Q2';
-        if (month >= 7 && month <= 9) return 'Q3';
-        if (month >= 10 && month <= 12) return 'Q4';
-        return null;
-    } catch (e) { return null; }
-}
-
-/**
- * Helper: Returns the last date of the quarter for a given year.
- * @param {string} quarter - 'Q1', 'Q2', 'Q3', 'Q4'
- * @param {number} year - The year (e.g., 2025)
- * @returns {string} Date string 'YYYY-MM-DD'
- */
-function getEndDateForQuarter(quarter, year) {
-    if (!quarter || !year) return null;
-    switch (quarter) {
-        case 'Q1': return `${year}-03-31`;
-        case 'Q2': return `${year}-06-30`;
-        case 'Q3': return `${year}-09-30`;
-        case 'Q4': return `${year}-12-31`;
-        default: return null;
-    }
-}
-
-/**
- * Extracts and structures data for the Quarterly Roadmap view.
- * @param {Object} filters - { year, orgId, teamId, themeIds }
- * @returns {Object} Structured data { ThemeName: { Q1: [], Q2: [], Q3: [], Q4: [] } }
- */
-function getQuarterlyRoadmapData({ year, orgId, teamId, themeIds }) {
-    let initiatives = currentSystemData.yearlyInitiatives || [];
-
-    // 1. Filter by Year
-    if (year && year !== 'all') {
-        initiatives = initiatives.filter(init => init.attributes.planningYear == year);
-    }
-
-    // 2. Filter by Organization
-    if (orgId && orgId !== 'all') {
-        const teamsInOrg = new Set();
-        (currentSystemData.sdms || []).forEach(sdm => {
-            if (sdm.seniorManagerId === orgId) {
-                (currentSystemData.teams || []).forEach(team => {
-                    if (team.sdmId === sdm.sdmId) teamsInOrg.add(team.teamId);
-                });
-            }
-        });
-        initiatives = initiatives.filter(init => (init.assignments || []).some(a => teamsInOrg.has(a.teamId)));
-    }
-
-    // 3. Filter by Team
-    if (teamId && teamId !== 'all') {
-        initiatives = initiatives.filter(init => (init.assignments || []).some(a => a.teamId === teamId));
-    }
-
-    // 4. Filter by Themes
-    const allThemeIds = (currentSystemData.definedThemes || []).map(t => t.themeId);
-    const selectedThemes = themeIds || [];
-    if (selectedThemes.length > 0 && selectedThemes.length < allThemeIds.length) {
-        initiatives = initiatives.filter(init => {
-            const initThemes = init.themes || [];
-            if (initThemes.length === 0) return false;
-            return initThemes.some(themeId => selectedThemes.includes(themeId));
-        });
-    }
-
-    // 5. Structure Data
-    const roadmapData = {};
-    const themeMap = new Map((currentSystemData.definedThemes || []).map(t => [t.themeId, t.name]));
-
-    initiatives.forEach(init => {
-        // Prioritize explicit targetQuarter (from drag-and-drop), otherwise derive from date
-        const quarter = init.targetQuarter || getQuarterFromDate(init.targetDueDate);
-        if (!quarter) return;
-
-        const assignedThemes = init.themes && init.themes.length > 0 ? init.themes : ['uncategorized'];
-
-        assignedThemes.forEach(themeId => {
-            const themeName = themeMap.get(themeId) || "Uncategorized";
-
-            if (selectedThemes.length > 0 && selectedThemes.length < allThemeIds.length && !selectedThemes.includes(themeId)) {
-                return;
-            }
-
-            if (!roadmapData[themeName]) {
-                roadmapData[themeName] = { Q1: [], Q2: [], Q3: [], Q4: [] };
-            }
-            roadmapData[themeName][quarter].push(init);
-        });
-    });
-
-    return roadmapData;
-}
-
-/**
- * Extracts and structures data for the 3-Year Plan view.
- * @param {Object} filters - { orgId, teamId, themeIds }
- * @returns {Object} Structured data { ThemeName: { 'Current Year': [], 'Next Year': [], 'Future': [] } }
- */
-function get3YearPlanData({ orgId, teamId, themeIds }) {
-    let initiatives = currentSystemData.yearlyInitiatives || [];
-
-    // 1. Filter by Organization
-    if (orgId && orgId !== 'all') {
-        const teamsInOrg = new Set();
-        (currentSystemData.sdms || []).forEach(sdm => {
-            if (sdm.seniorManagerId === orgId) {
-                (currentSystemData.teams || []).forEach(team => {
-                    if (team.sdmId === sdm.sdmId) teamsInOrg.add(team.teamId);
-                });
-            }
-        });
-        initiatives = initiatives.filter(init => (init.assignments || []).some(a => teamsInOrg.has(a.teamId)));
-    }
-
-    // 2. Filter by Team
-    if (teamId && teamId !== 'all') {
-        initiatives = initiatives.filter(init => (init.assignments || []).some(a => a.teamId === teamId));
-    }
-
-    // 3. Filter by Themes
-    const allThemeIds = (currentSystemData.definedThemes || []).map(t => t.themeId);
-    const selectedThemes = themeIds || [];
-    if (selectedThemes.length > 0 && selectedThemes.length < allThemeIds.length) {
-        initiatives = initiatives.filter(init => {
-            const initThemes = init.themes || [];
-            if (initThemes.length === 0) return false;
-            return initThemes.some(themeId => selectedThemes.includes(themeId));
-        });
-    }
-
-    // 4. Structure Data
-    const roadmapData = {};
-    const themeMap = new Map((currentSystemData.definedThemes || []).map(t => [t.themeId, t.name]));
-    const currentYear = new Date().getFullYear();
-
-    initiatives.forEach(init => {
-        const planningYear = init.attributes.planningYear;
-        if (!planningYear) return;
-
-        let yearBucket;
-        if (planningYear === currentYear) { yearBucket = 'Current Year'; }
-        else if (planningYear === currentYear + 1) { yearBucket = 'Next Year'; }
-        else if (planningYear > currentYear + 1) { yearBucket = 'Future'; }
-        else { return; }
-
-        const assignedThemes = init.themes && init.themes.length > 0 ? init.themes : ['uncategorized'];
-        assignedThemes.forEach(themeId => {
-            const themeName = themeMap.get(themeId) || "Uncategorized";
-
-            if (selectedThemes.length > 0 && selectedThemes.length < allThemeIds.length && !selectedThemes.includes(themeId)) {
-                return;
-            }
-
-            if (!roadmapData[themeName]) {
-                roadmapData[themeName] = { 'Current Year': [], 'Next Year': [], 'Future': [] };
-            }
-            roadmapData[themeName][yearBucket].push(init);
-        });
-    });
-
-    return roadmapData;
-}
