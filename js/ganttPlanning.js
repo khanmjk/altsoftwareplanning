@@ -155,20 +155,47 @@ function renderGanttPlanningView(container) {
         window.workspaceComponent.setToolbar(toolbarControls);
     }
 
-    // 3. Create Content Layout
+    // 3. Create Content Layout using DOM creation
     // Only create layout if it doesn't exist
     if (!document.getElementById('ganttSplitPane')) {
         ganttChartInstance = null;
-        // Note: Removed #ganttPlanningControls as it's now in the toolbar
-        container.innerHTML = `
-            <div id="ganttSplitPane" class="gantt-split">
-                <div id="ganttPlanningTableContainer" class="gantt-panel"></div>
-                <div id="ganttSplitResizer" class="gantt-resizer" title="Drag to resize panels"></div>
-                <div id="ganttChartWrapper" class="gantt-panel">
-                    <div id="ganttChartContainer" class="mermaid gantt-chart-box"></div>
-                </div>
-            </div>
-        `;
+
+        // Clear container
+        while (container.firstChild) {
+            container.removeChild(container.firstChild);
+        }
+
+        // Create split pane
+        const splitPane = document.createElement('div');
+        splitPane.id = 'ganttSplitPane';
+        splitPane.className = 'gantt-split';
+
+        // Table container
+        const tableContainer = document.createElement('div');
+        tableContainer.id = 'ganttPlanningTableContainer';
+        tableContainer.className = 'gantt-panel';
+        splitPane.appendChild(tableContainer);
+
+        // Resizer
+        const resizer = document.createElement('div');
+        resizer.id = 'ganttSplitResizer';
+        resizer.className = 'gantt-resizer';
+        resizer.title = 'Drag to resize panels';
+        splitPane.appendChild(resizer);
+
+        // Chart wrapper and container
+        const chartWrapper = document.createElement('div');
+        chartWrapper.id = 'ganttChartWrapper';
+        chartWrapper.className = 'gantt-panel';
+
+        const chartContainer = document.createElement('div');
+        chartContainer.id = 'ganttChartContainer';
+        chartContainer.className = 'mermaid gantt-chart-box';
+        chartWrapper.appendChild(chartContainer);
+
+        splitPane.appendChild(chartWrapper);
+        container.appendChild(splitPane);
+
         setupGanttResizer();
         applyGanttSplitWidth();
     }
@@ -291,11 +318,26 @@ function generateGanttToolbar() {
         : 'mermaid';
 
     legendDiv.style.display = currentRenderer === 'frappe' ? 'flex' : 'none';
-    legendDiv.innerHTML = `
-        <div class="gantt-legend__item"><span class="gantt-legend__color-box gantt-legend__color-box--initiative"></span> Initiative</div>
-        <div class="gantt-legend__item"><span class="gantt-legend__color-box gantt-legend__color-box--work-package"></span> Work Package</div>
-        <div class="gantt-legend__item"><span class="gantt-legend__color-box gantt-legend__color-box--assignment"></span> Assignment</div>
-    `;
+
+    // Create legend items using DOM creation
+    const legendItems = [
+        { className: 'gantt-legend__color-box--initiative', label: 'Initiative' },
+        { className: 'gantt-legend__color-box--work-package', label: 'Work Package' },
+        { className: 'gantt-legend__color-box--assignment', label: 'Assignment' }
+    ];
+
+    legendItems.forEach(item => {
+        const legendItem = document.createElement('div');
+        legendItem.className = 'gantt-legend__item';
+
+        const colorBox = document.createElement('span');
+        colorBox.className = `gantt-legend__color-box ${item.className}`;
+
+        legendItem.appendChild(colorBox);
+        legendItem.appendChild(document.createTextNode(` ${item.label}`));
+        legendDiv.appendChild(legendItem);
+    });
+
     toolbar.appendChild(legendDiv);
 
     return toolbar;
@@ -356,28 +398,56 @@ function renderGanttTable() {
         initiativeMap.set(init.initiativeId, item);
         return item;
     });
-    container.innerHTML = `
-        <div class="gantt-table-wrapper">
-        <table class="gantt-table gantt-hierarchy">
-            <thead>
-                <tr>
-                    <th class="gantt-table__header-cell">Initiative / Work Package</th>
-                    ${showManagerTeams ? '<th class="gantt-table__header-cell">Teams</th>' : ''}
-                    <th class="gantt-table__header-cell">Start</th>
-                    <th class="gantt-table__header-cell">Target</th>
-                    <th class="gantt-table__header-cell">SDEs</th>
-                    <th class="gantt-table__header-cell">Dependencies</th>
-                    <th class="gantt-table__header-cell">Actions</th>
-                </tr>
-            </thead>
-            <tbody id="ganttTableBody"></tbody>
-        </table>
-        </div>
-    `;
-    const tbody = document.getElementById('ganttTableBody');
+
+    // Build table structure using DOM creation
+    while (container.firstChild) {
+        container.removeChild(container.firstChild);
+    }
+
+    const tableWrapper = document.createElement('div');
+    tableWrapper.className = 'gantt-table-wrapper';
+
+    const table = document.createElement('table');
+    table.className = 'gantt-table gantt-hierarchy';
+
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+
+    // Define header columns (conditionally include Teams column)
+    const headerColumns = [
+        'Initiative / Work Package',
+        ...(showManagerTeams ? ['Teams'] : []),
+        'Start',
+        'Target',
+        'SDEs',
+        'Dependencies',
+        'Actions'
+    ];
+
+    headerColumns.forEach(colText => {
+        const th = document.createElement('th');
+        th.className = 'gantt-table__header-cell';
+        th.textContent = colText;
+        headerRow.appendChild(th);
+    });
+
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    tbody.id = 'ganttTableBody';
+    table.appendChild(tbody);
+
+    tableWrapper.appendChild(table);
+    container.appendChild(tableWrapper);
+
     if (data.length === 0) {
         const emptyRow = document.createElement('tr');
-        emptyRow.innerHTML = `<td colspan="${showManagerTeams ? '7' : '6'}" class="gantt-table__empty">No initiatives match the filters.</td>`;
+        const emptyCell = document.createElement('td');
+        emptyCell.colSpan = showManagerTeams ? 7 : 6;
+        emptyCell.className = 'gantt-table__empty';
+        emptyCell.textContent = 'No initiatives match the filters.';
+        emptyRow.appendChild(emptyCell);
         tbody.appendChild(emptyRow);
         return;
     }
@@ -426,7 +496,11 @@ function renderGanttTable() {
             if (!wpList.length) {
                 const emptyWp = document.createElement('tr');
                 emptyWp.className = 'gantt-wp-row';
-                emptyWp.innerHTML = `<td colspan="${showManagerTeams ? '7' : '6'}" class="gantt-table__empty-wp">No work packages yet. Click "Add WP" to create one.</td>`;
+                const emptyWpCell = document.createElement('td');
+                emptyWpCell.colSpan = showManagerTeams ? 7 : 6;
+                emptyWpCell.className = 'gantt-table__empty-wp';
+                emptyWpCell.textContent = 'No work packages yet. Click "Add WP" to create one.';
+                emptyWp.appendChild(emptyWpCell);
                 tbody.appendChild(emptyWp);
             } else {
                 wpList.forEach(wp => {
@@ -1631,7 +1705,10 @@ function renderDynamicGroupFilter() {
     if (currentGanttGroupBy === 'Team') {
         const select = document.createElement('select');
         select.id = 'ganttGroupValue';
-        select.innerHTML = '<option value="all">All Teams</option>';
+        const defaultOption = document.createElement('option');
+        defaultOption.value = 'all';
+        defaultOption.textContent = 'All Teams';
+        select.appendChild(defaultOption);
         (currentSystemData.teams || [])
             .slice()
             .sort((a, b) => (a.teamIdentity || a.teamName).localeCompare(b.teamIdentity || b.teamName))

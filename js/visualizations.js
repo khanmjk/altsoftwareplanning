@@ -25,6 +25,7 @@ const visualizationModes = [
 
 /**
  * Switches the visualization mode, updates the toolbar, and renders the content.
+ * Refactored to use DOM creation instead of innerHTML.
  */
 function switchVisualizationMode(modeId) {
     currentVisualizationMode = modeId;
@@ -34,50 +35,95 @@ function switchVisualizationMode(modeId) {
     // 1. Update Toolbar
     updateVisualizationToolbar(modeId);
 
-    // 2. Clear & Prepare Container
-    container.innerHTML = '';
+    // 2. Clear container using DOM methods
+    while (container.firstChild) {
+        container.removeChild(container.firstChild);
+    }
+
+    // 3. Create wrapper
     const contentWrapper = document.createElement('div');
     contentWrapper.id = 'visualizationContainer';
     contentWrapper.className = 'visualization-container-wrapper';
     container.appendChild(contentWrapper);
 
-    // 3. Render Specific View
+    // 4. Render Specific View
     if (!currentSystemData) {
-        contentWrapper.innerHTML = '<div class="alert alert-warning">Please load a system configuration first.</div>';
+        const alert = document.createElement('div');
+        alert.className = 'alert alert-warning';
+        alert.textContent = 'Please load a system configuration first.';
+        contentWrapper.appendChild(alert);
         return;
     }
 
+    // Helper to create visualization container with SVG
+    const createVisualizationContainer = (id, svgId, legendId = null) => {
+        const vizDiv = document.createElement('div');
+        vizDiv.id = id;
+        vizDiv.className = 'visualization-view-container';
+
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.id = svgId;
+        svg.setAttribute('width', '100%');
+        svg.setAttribute('height', '100%');
+        vizDiv.appendChild(svg);
+
+        if (legendId) {
+            const legend = document.createElement('div');
+            legend.id = legendId;
+            vizDiv.appendChild(legend);
+        }
+
+        return vizDiv;
+    };
+
+    // Helper to create padded container
+    const createPaddedContainer = (id, title = null, childId = null) => {
+        const div = document.createElement('div');
+        div.id = id;
+        div.className = 'visualization-view-padding';
+
+        if (title) {
+            const h3 = document.createElement('h3');
+            h3.textContent = title;
+            div.appendChild(h3);
+        }
+
+        if (childId) {
+            const child = document.createElement('div');
+            child.id = childId;
+            div.appendChild(child);
+        }
+
+        return div;
+    };
+
     switch (modeId) {
         case 'visualization':
-            contentWrapper.innerHTML = '<div id="visualization" class="visualization-view-container"><svg id="systemSvg" width="100%" height="100%"></svg><div id="legend"></div></div>';
+            contentWrapper.appendChild(createVisualizationContainer('visualization', 'systemSvg', 'legend'));
             generateVisualization(currentSystemData);
             break;
         case 'teamVisualization':
-            contentWrapper.innerHTML = '<div id="teamVisualization" class="visualization-view-container"><svg id="teamSvg" width="100%" height="100%"></svg><div id="teamLegend"></div></div>';
+            contentWrapper.appendChild(createVisualizationContainer('teamVisualization', 'teamSvg', 'teamLegend'));
             generateTeamVisualization(currentSystemData);
             break;
         case 'serviceRelationshipsVisualization':
-            contentWrapper.innerHTML = '<div id="serviceRelationshipsVisualization" class="visualization-view-container"><svg id="serviceSvg" width="100%" height="100%"></svg></div>';
-            // Note: The toolbar now handles the dropdown, so we need to trigger the initial render
-            // We might need to pass the default 'all' or handle it in the update function
+            contentWrapper.appendChild(createVisualizationContainer('serviceRelationshipsVisualization', 'serviceSvg'));
             updateServiceVisualization('all');
             break;
         case 'dependencyVisualization':
-            contentWrapper.innerHTML = '<div id="dependencyVisualization" class="visualization-view-container"><svg id="dependencySvg" width="100%" height="100%"></svg></div>';
-            // Similar to above, trigger initial update
+            contentWrapper.appendChild(createVisualizationContainer('dependencyVisualization', 'dependencySvg'));
             updateDependencyVisualization();
             break;
         case 'serviceDependenciesTableSlide':
-            contentWrapper.innerHTML = '<div id="serviceDependenciesTableSlide" class="visualization-view-padding"><h3>Service Dependencies</h3><div id="serviceDependenciesTableWidget"></div></div>';
+            contentWrapper.appendChild(createPaddedContainer('serviceDependenciesTableSlide', 'Service Dependencies', 'serviceDependenciesTableWidget'));
             renderServiceDependenciesTable();
             break;
         case 'mermaidVisualization':
-            contentWrapper.innerHTML = '<div id="mermaidVisualization" class="visualization-view-padding"><div id="mermaidGraph"></div></div>';
+            contentWrapper.appendChild(createPaddedContainer('mermaidVisualization', null, 'mermaidGraph'));
             renderMermaidDiagram();
             break;
         case 'mermaidApiVisualization':
-            contentWrapper.innerHTML = '<div id="mermaidApiVisualization" class="visualization-view-padding"><div id="mermaidApiGraph"></div></div>';
-            // Toolbar handles the selection, trigger initial
+            contentWrapper.appendChild(createPaddedContainer('mermaidApiVisualization', null, 'mermaidApiGraph'));
             renderMermaidApiDiagram('all');
             break;
     }
@@ -192,19 +238,31 @@ async function renderMermaidDiagram() {
         console.error("renderMermaidDiagram: #mermaidGraph not found.");
         return;
     }
+
+    // Helper to show message
+    const showMessage = (text, className) => {
+        while (graphContainer.firstChild) {
+            graphContainer.removeChild(graphContainer.firstChild);
+        }
+        const p = document.createElement('p');
+        p.className = className;
+        p.textContent = text;
+        graphContainer.appendChild(p);
+    };
+
     if (!currentSystemData) {
         console.warn("renderMermaidDiagram: No system data available.");
-        graphContainer.innerHTML = '<p class="mermaid-info">Load a system to see the architecture diagram.</p>';
+        showMessage('Load a system to see the architecture diagram.', 'mermaid-info');
         return;
     }
     if (typeof mermaid === 'undefined' || typeof mermaid.render !== 'function') {
         console.error("renderMermaidDiagram: Mermaid library is unavailable.");
-        graphContainer.innerHTML = '<p class="mermaid-error">Mermaid is not loaded. Please check your connection.</p>';
+        showMessage('Mermaid is not loaded. Please check your connection.', 'mermaid-error');
         return;
     }
     if (typeof generateMermaidSyntax !== 'function') {
         console.error("renderMermaidDiagram: generateMermaidSyntax is not defined.");
-        graphContainer.innerHTML = '<p class="mermaid-error">Mermaid generator missing. Check script loading order.</p>';
+        showMessage('Mermaid generator missing. Check script loading order.', 'mermaid-error');
         return;
     }
 
@@ -215,10 +273,13 @@ async function renderMermaidDiagram() {
         if (typeof mermaid.parse === 'function') {
             mermaid.parse(definition);
         }
-        graphContainer.innerHTML = '';
+        // Clear container
+        while (graphContainer.firstChild) {
+            graphContainer.removeChild(graphContainer.firstChild);
+        }
         const result = await mermaid.render(renderId, definition, graphContainer);
+        // NOTE: Mermaid returns SVG as string, must use innerHTML for SVG injection
         graphContainer.innerHTML = result.svg;
-        // SVG styling handled by CSS
         graphContainer.style.display = 'block';
     } catch (error) {
         console.error("Failed to render Mermaid diagram:", error);
@@ -228,7 +289,7 @@ async function renderMermaidDiagram() {
         if (definition) {
             console.error("Mermaid definition used for rendering:\n", definition);
         }
-        graphContainer.innerHTML = '<p class="mermaid-error">Unable to render Mermaid diagram. Check console for details.</p>';
+        showMessage('Unable to render Mermaid diagram. Check console for details.', 'mermaid-error');
     }
 }
 
@@ -272,42 +333,54 @@ async function renderMermaidApiDiagram(serviceParam) {
         }
     }
 
+    // Helper to show message
+    const showMessage = (text, className) => {
+        while (graphContainer.firstChild) {
+            graphContainer.removeChild(graphContainer.firstChild);
+        }
+        const p = document.createElement('p');
+        p.className = className;
+        p.textContent = text;
+        graphContainer.appendChild(p);
+    };
+
     if (!graphContainer) {
         console.error("renderMermaidApiDiagram: required elements not found.");
         return;
     }
     if (!currentSystemData) {
-        graphContainer.innerHTML = '<p class="mermaid-info">Load a system to see API interactions.</p>';
+        showMessage('Load a system to see API interactions.', 'mermaid-info');
         return;
     }
     if (typeof mermaid === 'undefined' || typeof mermaid.render !== 'function') {
-        graphContainer.innerHTML = '<p class="mermaid-error">Mermaid is not loaded.</p>';
+        showMessage('Mermaid is not loaded.', 'mermaid-error');
         return;
     }
     if (typeof generateMermaidApiSyntax !== 'function') {
-        graphContainer.innerHTML = '<p class="mermaid-error">API mermaid generator missing.</p>';
+        showMessage('API mermaid generator missing.', 'mermaid-error');
         return;
     }
 
     let definition = '';
     try {
-        // const selectedService = select.value || 'all';
         definition = generateMermaidApiSyntax(currentSystemData, { selectedService });
         const renderId = 'mermaid-api-interactions';
-        // Check if element exists and clear it, or mermaid might error on re-render with same ID if not careful
         const existingSvg = document.getElementById(renderId);
         if (existingSvg) existingSvg.remove();
 
         if (typeof mermaid.parse === 'function') {
             mermaid.parse(definition);
         }
-        graphContainer.innerHTML = '';
+        // Clear container
+        while (graphContainer.firstChild) {
+            graphContainer.removeChild(graphContainer.firstChild);
+        }
         const result = await mermaid.render(renderId, definition, graphContainer);
+        // NOTE: Mermaid returns SVG as string, must use innerHTML for SVG injection
         graphContainer.innerHTML = result.svg;
-        // SVG styling handled by CSS
     } catch (error) {
         console.error("Failed to render Mermaid API diagram:", error);
-        graphContainer.innerHTML = '<p class="mermaid-error">Unable to render API interactions diagram. Check console for details.</p>';
+        showMessage('Unable to render API interactions diagram. Check console for details.', 'mermaid-error');
     }
 }
 
@@ -1291,7 +1364,13 @@ function generateDependencyForceVisualization(selectedServiceName) {
         console.error("generateDependencyForceVisualization: #dependencySvg element not found or is empty. Cannot generate visualization.");
         const containerDiv = document.getElementById('dependencyVisualization');
         if (containerDiv) {
-            containerDiv.innerHTML = '<p class="visualization-error-message">Error: Could not load dependency visualization.</p>';
+            while (containerDiv.firstChild) {
+                containerDiv.removeChild(containerDiv.firstChild);
+            }
+            const errorMsg = document.createElement('p');
+            errorMsg.className = 'visualization-error-message';
+            errorMsg.textContent = 'Error: Could not load dependency visualization.';
+            containerDiv.appendChild(errorMsg);
         }
         return;
     }

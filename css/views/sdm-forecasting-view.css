@@ -127,6 +127,7 @@
     color: #0056b3;
     transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
 }
+
 /* Additional SDM CSS from base sections */
 #sdmForecastingView h3 {
     font-size: 1.15rem;
@@ -170,4 +171,15 @@
 
 #sdmForecastingView td {
     padding: 6px;
+}
+
+/* Error and highlight text styles (replacing inline styles) */
+.sdm-error-text {
+    color: #dc3545;
+    font-weight: 500;
+}
+
+.sdm-highlight-text {
+    color: #0d6efd;
+    font-weight: 600;
 }
