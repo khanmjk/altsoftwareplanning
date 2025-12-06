@@ -272,48 +272,105 @@ class YearPlanningView {
     }
 
     /**
-     * Render the main layout structure
-     * NOTE: Uses innerHTML for layout but will be converted in Phase 3
+     * Render the main layout structure using DOM creation
+     * PHASE 3: Converted from innerHTML to document.createElement
      */
     renderLayout() {
         // Capture current expanded state before re-rendering
-        const summaryContent = document.getElementById('teamLoadSummaryContent');
-        if (summaryContent) {
-            this.isSummaryExpanded = summaryContent.style.display !== 'none';
+        const existingSummaryContent = document.getElementById('teamLoadSummaryContent');
+        if (existingSummaryContent) {
+            this.isSummaryExpanded = existingSummaryContent.style.display !== 'none';
             window.isSummaryTableExpanded = this.isSummaryExpanded;
         }
 
         const isExpanded = this.isSummaryExpanded;
 
-        // TODO: Phase 3 - Convert to DOM creation
-        this.container.innerHTML = `
-            <div id="teamLoadSummarySection" style="margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px;">
-                <h4 onclick="toggleCollapsibleSection('teamLoadSummaryContent', 'teamLoadSummaryToggle')" style="cursor: pointer; margin: 0; padding: 10px; background-color: #e9ecef; border-bottom: 1px solid #ccc;" title="Click to expand/collapse team load summary">
-                    <span id="teamLoadSummaryToggle" class="toggle-indicator">${isExpanded ? '(-)' : '(+)'} </span> Team Load Summary (for ATL Initiatives)
-                </h4>
-                <div id="teamLoadSummaryContent" style="display: ${isExpanded ? 'block' : 'none'}; padding: 10px;">
-                    <p style="font-size: 0.9em; color: #555;">Shows team load based *only* on initiatives currently Above The Line (ATL) according to the selected scenario below.</p>
-                    <table id="teamLoadSummaryTable" style="margin: 0 auto; border-collapse: collapse; font-size: 0.9em;">
-                        <thead>
-                            <tr style="background-color: #f2f2f2;">
-                                <th style="border: 1px solid #ccc; padding: 5px;">Team Name</th>
-                                <th style="border: 1px solid #ccc; padding: 5px;" title="Finance Approved Budget">Funded HC</th>
-                                <th style="border: 1px solid #ccc; padding: 5px;" title="Actual Team Members">Team BIS</th>
-                                <th style="border: 1px solid #ccc; padding: 5px;" title="Borrowed/Away Members">Away BIS</th>
-                                <th style="border: 1px solid #ccc; padding: 5px;" title="Team BIS + Away BIS">Effective BIS</th>
-                                <th style="border: 1px solid #ccc; padding: 5px;" title="SDEs assigned to this team from ATL initiatives only">Assigned ATL SDEs</th>
-                                <th style="border: 1px solid #ccc; padding: 5px;" title="Team's capacity based on selected scenario button below">Scenario Capacity Limit</th>
-                                <th style="border: 1px solid #ccc; padding: 5px;" title="Scenario Capacity Limit - Assigned ATL SDEs">Remaining Capacity (ATL)</th>
-                                <th style="border: 1px solid #ccc; padding: 5px;" title="Load status for ATL work based on Scenario Capacity Limit">ATL Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="teamLoadSummaryTableBody"></tbody>
-                        <tfoot id="teamLoadSummaryTableFoot" style="font-weight: bold;"></tfoot>
-                    </table>
-                </div>
-            </div>
-            <div id="planningTableContainer"></div>
-        `;
+        // Clear container
+        this.container.innerHTML = '';
+
+        // === Team Load Summary Section ===
+        // Styling now in year-planning-view.css
+        const summarySection = document.createElement('div');
+        summarySection.id = 'teamLoadSummarySection';
+
+        // Summary Header (collapsible) - styling in CSS
+        const summaryHeader = document.createElement('h4');
+        summaryHeader.title = 'Click to expand/collapse team load summary';
+        summaryHeader.addEventListener('click', () => {
+            toggleCollapsibleSection('teamLoadSummaryContent', 'teamLoadSummaryToggle');
+        });
+
+        const toggleIndicator = document.createElement('span');
+        toggleIndicator.id = 'teamLoadSummaryToggle';
+        toggleIndicator.className = 'toggle-indicator';
+        toggleIndicator.textContent = isExpanded ? '(-) ' : '(+) ';
+        summaryHeader.appendChild(toggleIndicator);
+
+        summaryHeader.appendChild(document.createTextNode('Team Load Summary (for ATL Initiatives)'));
+        summarySection.appendChild(summaryHeader);
+
+        // Summary Content (collapsible content) - styling in CSS
+        const summaryContent = document.createElement('div');
+        summaryContent.id = 'teamLoadSummaryContent';
+        // Dynamic display state (not in CSS)
+        summaryContent.style.display = isExpanded ? 'block' : 'none';
+
+        // Note paragraph - styling in CSS
+        const summaryNote = document.createElement('p');
+        summaryNote.textContent = 'Shows team load based *only* on initiatives currently Above The Line (ATL) according to the selected scenario below.';
+        summaryContent.appendChild(summaryNote);
+
+        // Summary Table - styling in CSS
+        const summaryTable = document.createElement('table');
+        summaryTable.id = 'teamLoadSummaryTable';
+
+        // Table Header
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+        headerRow.style.backgroundColor = '#f2f2f2';
+
+        const headers = [
+            { text: 'Team Name', title: '' },
+            { text: 'Funded HC', title: 'Finance Approved Budget' },
+            { text: 'Team BIS', title: 'Actual Team Members' },
+            { text: 'Away BIS', title: 'Borrowed/Away Members' },
+            { text: 'Effective BIS', title: 'Team BIS + Away BIS' },
+            { text: 'Assigned ATL SDEs', title: 'SDEs assigned to this team from ATL initiatives only' },
+            { text: 'Scenario Capacity Limit', title: "Team's capacity based on selected scenario button below" },
+            { text: 'Remaining Capacity (ATL)', title: 'Scenario Capacity Limit - Assigned ATL SDEs' },
+            { text: 'ATL Status', title: 'Load status for ATL work based on Scenario Capacity Limit' }
+        ];
+
+        headers.forEach(h => {
+            const th = document.createElement('th');
+            th.style.border = '1px solid #ccc';
+            th.style.padding = '5px';
+            th.textContent = h.text;
+            if (h.title) th.title = h.title;
+            headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+        summaryTable.appendChild(thead);
+
+        // Table Body
+        const tbody = document.createElement('tbody');
+        tbody.id = 'teamLoadSummaryTableBody';
+        summaryTable.appendChild(tbody);
+
+        // Table Footer
+        const tfoot = document.createElement('tfoot');
+        tfoot.id = 'teamLoadSummaryTableFoot';
+        tfoot.style.fontWeight = 'bold';
+        summaryTable.appendChild(tfoot);
+
+        summaryContent.appendChild(summaryTable);
+        summarySection.appendChild(summaryContent);
+        this.container.appendChild(summarySection);
+
+        // === Planning Table Container ===
+        const planningTableContainer = document.createElement('div');
+        planningTableContainer.id = 'planningTableContainer';
+        this.container.appendChild(planningTableContainer);
     }
 
     /**

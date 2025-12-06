@@ -783,7 +783,13 @@ function renderPlanningView() {
     const tableContainer = document.getElementById('planningTableContainer');
 
     if (!currentSystemData || !currentSystemData.teams) {
-        if (tableContainer) tableContainer.innerHTML = '<p style="color: orange;">No planning data loaded or no teams found.</p>';
+        if (tableContainer) {
+            tableContainer.innerHTML = '';
+            const errorMsg = document.createElement('p');
+            errorMsg.style.color = 'orange';
+            errorMsg.textContent = 'No planning data loaded or no teams found.';
+            tableContainer.appendChild(errorMsg);
+        }
         return;
     }
 
