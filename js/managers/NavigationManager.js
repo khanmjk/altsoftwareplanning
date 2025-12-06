@@ -59,7 +59,14 @@ class NavigationManager {
         if (window.workspaceComponent) {
             // Map viewId to render function
             if (viewId === 'planningView') {
-                window.workspaceComponent.render(viewId, window.renderPlanningView);
+                window.workspaceComponent.render(viewId, (container) => {
+                    if (!window.yearPlanningView) {
+                        window.yearPlanningView = new YearPlanningView(container.id);
+                    } else {
+                        window.yearPlanningView.container = container;
+                    }
+                    window.yearPlanningView.render();
+                });
             } else if (viewId === 'ganttPlanningView') {
                 window.workspaceComponent.render(viewId, window.renderGanttPlanningView);
             } else if (viewId === 'capacityConfigView') {

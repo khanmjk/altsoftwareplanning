@@ -1,0 +1,555 @@
+/**
+ * YearPlanningView.js
+ * 
+ * Class-based Year Planning view for the Workspace Canvas.
+ * Compliant with docs/workspace-canvas-contract.md v2.0
+ * 
+ * Features:
+ * - Drag-drop initiative reordering
+ * - Real-time ATL/BTL calculation
+ * - Team Load Summary synchronization
+ * - AI optimizer integration
+ */
+
+class YearPlanningView {
+    constructor(containerId) {
+        this.container = document.getElementById(containerId);
+        this.currentYear = new Date().getFullYear();
+        this.scenario = 'effective'; // 'funded' | 'team_bis' | 'effective'
+        this.applyConstraints = false;
+
+        // Cached calculated data
+        this.summaryData = null;
+        this.tableData = null;
+
+        // Drag state
+        this.draggedInitiativeId = null;
+        this.draggedRowElement = null;
+
+        // UI state
+        this.isSummaryExpanded = window.isSummaryTableExpanded || false;
+    }
+
+    /**
+     * Main render function - called by NavigationManager
+     */
+    render() {
+        if (!this.container) {
+            console.error("YearPlanningView: Container not found");
+            return;
+        }
+
+        // Ensure capacity metrics are fresh
+        this.refreshCapacityMetrics();
+
+        // 1. Set Workspace Metadata
+        this.setPageMetadata();
+
+        // 2. Set Toolbar
+        this.setToolbar();
+
+        // 3. Render Content
+        this.renderLayout();
+
+        // 4. Ensure data consistency
+        this.ensureDataConsistency();
+
+        // 5. Calculate and render tables
+        this.summaryData = this.calculateSummaryData();
+        this.renderSummaryTable(this.summaryData);
+
+        this.tableData = this.calculateTableData();
+        this.renderPlanningTable(this.tableData);
+
+        console.log("YearPlanningView: Render complete");
+    }
+
+    /**
+     * Refresh capacity metrics before rendering
+     */
+    refreshCapacityMetrics() {
+        if (window.currentSystemData) {
+            const capacityEngine = new CapacityEngine(window.currentSystemData);
+            window.currentSystemData.calculatedCapacityMetrics = capacityEngine.calculateAllMetrics();
+        }
+    }
+
+    /**
+     * Set workspace page metadata (header)
+     */
+    setPageMetadata() {
+        if (!window.workspaceComponent) return;
+
+        window.workspaceComponent.setPageMetadata({
+            title: 'Year Plan',
+            breadcrumbs: ['Planning', 'Year Plan'],
+            actions: [
+                {
+                    label: `Save Plan for ${this.currentYear}`,
+                    icon: 'fas fa-save',
+                    onClick: () => this.handleSavePlan(),
+                    className: 'btn btn-danger btn-sm'
+                },
+                {
+                    label: 'Optimize Plan',
+                    icon: 'fas fa-robot',
+                    onClick: () => this.runOptimizer(),
+                    className: 'btn btn-info btn-sm',
+                    hidden: !(window.globalSettings?.ai?.isEnabled)
+                }
+            ]
+        });
+    }
+
+    /**
+     * Set workspace toolbar
+     */
+    setToolbar() {
+        if (!window.workspaceComponent) return;
+        const toolbar = this.generateToolbar();
+        window.workspaceComponent.setToolbar(toolbar);
+    }
+
+    /**
+     * Generate toolbar controls
+     * @returns {HTMLElement}
+     */
+    generateToolbar() {
+        const toolbar = document.createElement('div');
+        toolbar.className = 'planning-toolbar';
+        toolbar.style.display = 'flex';
+        toolbar.style.alignItems = 'center';
+        toolbar.style.gap = '20px';
+        toolbar.style.width = '100%';
+
+        // Year Selector
+        toolbar.appendChild(this.createYearSelector());
+
+        // Scenario Controls
+        const scenarioGroup = this.createScenarioControls();
+        if (scenarioGroup) toolbar.appendChild(scenarioGroup);
+
+        // Constraints Toggle
+        const toggleGroup = this.createConstraintsToggle();
+        if (toggleGroup) toolbar.appendChild(toggleGroup);
+
+        return toolbar;
+    }
+
+    /**
+     * Create year selector dropdown
+     */
+    createYearSelector() {
+        const calendarYear = new Date().getFullYear();
+        let availableYears = this.getAvailableYears();
+
+        const yearGroup = document.createElement('div');
+        yearGroup.style.display = 'flex';
+        yearGroup.style.alignItems = 'center';
+        yearGroup.style.gap = '8px';
+
+        const yearLabel = document.createElement('strong');
+        yearLabel.textContent = 'Planning Year:';
+        yearGroup.appendChild(yearLabel);
+
+        const yearSelect = document.createElement('select');
+        yearSelect.className = 'form-select form-select-sm';
+        yearSelect.style.padding = '4px 8px';
+        yearSelect.style.borderRadius = '4px';
+        yearSelect.addEventListener('change', (e) => this.setYear(parseInt(e.target.value)));
+
+        availableYears.forEach(year => {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year;
+            if (year === this.currentYear) option.selected = true;
+            yearSelect.appendChild(option);
+        });
+
+        yearGroup.appendChild(yearSelect);
+        return yearGroup;
+    }
+
+    /**
+     * Get available planning years from initiatives
+     */
+    getAvailableYears() {
+        const calendarYear = new Date().getFullYear();
+        let availableYears = [];
+
+        const initiatives = window.currentSystemData?.yearlyInitiatives || [];
+        if (initiatives.length > 0) {
+            const yearsFromData = new Set(
+                initiatives.map(init => init.attributes?.planningYear).filter(Boolean)
+            );
+            availableYears = Array.from(yearsFromData);
+        }
+
+        if (!availableYears.includes(calendarYear)) availableYears.push(calendarYear);
+        availableYears.sort((a, b) => a - b);
+
+        if (!availableYears.includes(this.currentYear)) {
+            this.currentYear = availableYears.includes(calendarYear) ? calendarYear : availableYears[0];
+        }
+
+        return availableYears;
+    }
+
+    /**
+     * Create scenario toggle buttons
+     */
+    createScenarioControls() {
+        const metrics = window.currentSystemData?.calculatedCapacityMetrics;
+        if (!metrics) return null;
+
+        const scenarioGroup = document.createElement('div');
+        scenarioGroup.style.display = 'flex';
+        scenarioGroup.style.alignItems = 'center';
+        scenarioGroup.style.gap = '8px';
+
+        const label = document.createElement('strong');
+        label.textContent = 'Calculate ATL/BTL using:';
+        scenarioGroup.appendChild(label);
+
+        const scenarios = [
+            { id: 'effective', label: 'Effective BIS', key: 'EffectiveBIS' },
+            { id: 'team_bis', label: 'Team BIS', key: 'TeamBIS' },
+            { id: 'funded', label: 'Funded HC', key: 'FundedHC' }
+        ];
+
+        scenarios.forEach(sc => {
+            const btn = document.createElement('button');
+            btn.textContent = sc.label;
+            btn.className = `btn btn-sm ${this.scenario === sc.id ? 'btn-primary' : 'btn-light'}`;
+            btn.style.border = '1px solid #ccc';
+            if (this.scenario === sc.id) {
+                btn.style.backgroundColor = '#007bff';
+                btn.style.color = 'white';
+            }
+
+            const scMetrics = metrics.totals?.[sc.key];
+            if (scMetrics) {
+                btn.title = `Gross: ${scMetrics.grossYrs.toFixed(2)}, Net: ${scMetrics.netYrs.toFixed(2)}`;
+            }
+
+            btn.addEventListener('click', () => this.setScenario(sc.id));
+            scenarioGroup.appendChild(btn);
+        });
+
+        return scenarioGroup;
+    }
+
+    /**
+     * Create constraints toggle checkbox
+     */
+    createConstraintsToggle() {
+        const metrics = window.currentSystemData?.calculatedCapacityMetrics;
+        if (!metrics) return null;
+
+        const toggleGroup = document.createElement('div');
+        toggleGroup.style.display = 'flex';
+        toggleGroup.style.alignItems = 'center';
+        toggleGroup.style.gap = '6px';
+        toggleGroup.style.marginLeft = 'auto';
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = 'applyConstraintsToggle';
+        checkbox.checked = this.applyConstraints;
+        checkbox.style.cursor = 'pointer';
+        checkbox.addEventListener('change', (e) => this.setApplyConstraints(e.target.checked));
+
+        const toggleLabel = document.createElement('label');
+        toggleLabel.htmlFor = 'applyConstraintsToggle';
+        toggleLabel.textContent = 'Apply Constraints & AI Gains (Net)';
+        toggleLabel.style.cursor = 'pointer';
+        toggleLabel.style.userSelect = 'none';
+        toggleLabel.title = "Toggling this ON applies all configured capacity constraints.";
+
+        toggleGroup.appendChild(checkbox);
+        toggleGroup.appendChild(toggleLabel);
+        return toggleGroup;
+    }
+
+    /**
+     * Render the main layout structure
+     * NOTE: Uses innerHTML for layout but will be converted in Phase 3
+     */
+    renderLayout() {
+        // Capture current expanded state before re-rendering
+        const summaryContent = document.getElementById('teamLoadSummaryContent');
+        if (summaryContent) {
+            this.isSummaryExpanded = summaryContent.style.display !== 'none';
+            window.isSummaryTableExpanded = this.isSummaryExpanded;
+        }
+
+        const isExpanded = this.isSummaryExpanded;
+
+        // TODO: Phase 3 - Convert to DOM creation
+        this.container.innerHTML = `
+            <div id="teamLoadSummarySection" style="margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px;">
+                <h4 onclick="toggleCollapsibleSection('teamLoadSummaryContent', 'teamLoadSummaryToggle')" style="cursor: pointer; margin: 0; padding: 10px; background-color: #e9ecef; border-bottom: 1px solid #ccc;" title="Click to expand/collapse team load summary">
+                    <span id="teamLoadSummaryToggle" class="toggle-indicator">${isExpanded ? '(-)' : '(+)'} </span> Team Load Summary (for ATL Initiatives)
+                </h4>
+                <div id="teamLoadSummaryContent" style="display: ${isExpanded ? 'block' : 'none'}; padding: 10px;">
+                    <p style="font-size: 0.9em; color: #555;">Shows team load based *only* on initiatives currently Above The Line (ATL) according to the selected scenario below.</p>
+                    <table id="teamLoadSummaryTable" style="margin: 0 auto; border-collapse: collapse; font-size: 0.9em;">
+                        <thead>
+                            <tr style="background-color: #f2f2f2;">
+                                <th style="border: 1px solid #ccc; padding: 5px;">Team Name</th>
+                                <th style="border: 1px solid #ccc; padding: 5px;" title="Finance Approved Budget">Funded HC</th>
+                                <th style="border: 1px solid #ccc; padding: 5px;" title="Actual Team Members">Team BIS</th>
+                                <th style="border: 1px solid #ccc; padding: 5px;" title="Borrowed/Away Members">Away BIS</th>
+                                <th style="border: 1px solid #ccc; padding: 5px;" title="Team BIS + Away BIS">Effective BIS</th>
+                                <th style="border: 1px solid #ccc; padding: 5px;" title="SDEs assigned to this team from ATL initiatives only">Assigned ATL SDEs</th>
+                                <th style="border: 1px solid #ccc; padding: 5px;" title="Team's capacity based on selected scenario button below">Scenario Capacity Limit</th>
+                                <th style="border: 1px solid #ccc; padding: 5px;" title="Scenario Capacity Limit - Assigned ATL SDEs">Remaining Capacity (ATL)</th>
+                                <th style="border: 1px solid #ccc; padding: 5px;" title="Load status for ATL work based on Scenario Capacity Limit">ATL Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teamLoadSummaryTableBody"></tbody>
+                        <tfoot id="teamLoadSummaryTableFoot" style="font-weight: bold;"></tfoot>
+                    </table>
+                </div>
+            </div>
+            <div id="planningTableContainer"></div>
+        `;
+    }
+
+    /**
+     * Ensure data consistency before rendering
+     */
+    ensureDataConsistency() {
+        if (typeof ensureWorkPackagesForInitiatives === 'function') {
+            ensureWorkPackagesForInitiatives(window.currentSystemData, this.currentYear);
+            const initiatives = window.currentSystemData?.yearlyInitiatives || [];
+            initiatives
+                .filter(init => init.attributes?.planningYear == this.currentYear)
+                .forEach(init => {
+                    if (typeof syncInitiativeTotals === 'function') {
+                        syncInitiativeTotals(init.initiativeId, window.currentSystemData);
+                    }
+                });
+        }
+    }
+
+    /**
+     * Calculate summary data using PlanningService
+     */
+    calculateSummaryData() {
+        if (!window.currentSystemData?.calculatedCapacityMetrics || !window.currentSystemData?.teams) {
+            return { rows: [], totals: {} };
+        }
+
+        const initiativesForYear = (window.currentSystemData.yearlyInitiatives || [])
+            .filter(init => init.attributes?.planningYear == this.currentYear && init.status !== 'Completed');
+
+        return PlanningService.calculateTeamLoadSummary({
+            teams: window.currentSystemData.teams,
+            initiatives: initiativesForYear,
+            calculatedMetrics: window.currentSystemData.calculatedCapacityMetrics,
+            scenario: this.scenario,
+            applyConstraints: this.applyConstraints,
+            allKnownEngineers: window.currentSystemData.allKnownEngineers || []
+        });
+    }
+
+    /**
+     * Calculate table data using PlanningService
+     */
+    calculateTableData() {
+        if (!window.currentSystemData?.calculatedCapacityMetrics || !window.currentSystemData?.teams) {
+            return [];
+        }
+
+        const initiativesForYear = (window.currentSystemData.yearlyInitiatives || [])
+            .filter(init => init.attributes?.planningYear == this.currentYear && init.status !== 'Completed');
+
+        const calculatedData = PlanningService.calculatePlanningTableData({
+            initiatives: initiativesForYear,
+            calculatedMetrics: window.currentSystemData.calculatedCapacityMetrics,
+            scenario: this.scenario,
+            applyConstraints: this.applyConstraints
+        });
+
+        // Update original initiative objects for persistence
+        calculatedData.forEach(calcInit => {
+            const originalInit = (window.currentSystemData.yearlyInitiatives || [])
+                .find(i => i.initiativeId === calcInit.initiativeId);
+            if (originalInit) {
+                originalInit.attributes.planningStatusFundedHc = calcInit.calculatedAtlBtlStatus;
+            }
+        });
+
+        return calculatedData;
+    }
+
+    /**
+     * Render summary table (delegates to existing function for now)
+     * TODO: Phase 3 - Refactor to DOM creation
+     */
+    renderSummaryTable(summaryData) {
+        // Use existing render function for now
+        if (typeof renderTeamLoadSummaryTable === 'function') {
+            renderTeamLoadSummaryTable(summaryData);
+        }
+    }
+
+    /**
+     * Render planning table (delegates to existing function for now)
+     * TODO: Phase 3 - Refactor to DOM creation
+     */
+    renderPlanningTable(tableData) {
+        // Use existing render function for now
+        if (typeof renderPlanningTable === 'function') {
+            renderPlanningTable(tableData);
+        }
+    }
+
+    // ==================== State Setters ====================
+
+    setYear(year) {
+        this.currentYear = parseInt(year);
+        console.log(`YearPlanningView: Year changed to ${this.currentYear}`);
+        this.render();
+    }
+
+    setScenario(scenario) {
+        this.scenario = scenario;
+        console.log(`YearPlanningView: Scenario changed to ${this.scenario}`);
+        this.render();
+    }
+
+    setApplyConstraints(value) {
+        this.applyConstraints = value;
+        console.log(`YearPlanningView: Apply constraints = ${this.applyConstraints}`);
+        this.render();
+    }
+
+    // ==================== Actions ====================
+
+    handleSavePlan() {
+        console.log(`Saving plan for year ${this.currentYear}...`);
+
+        if (!window.currentSystemData?.systemName) {
+            window.notificationManager?.showToast("Cannot save: No system data loaded.", "error");
+            return;
+        }
+
+        const initiativesForYear = (window.currentSystemData.yearlyInitiatives || [])
+            .filter(init => init.attributes?.planningYear == this.currentYear);
+
+        initiativesForYear.forEach(initiative => {
+            const planningStatus = initiative.attributes?.planningStatusFundedHc;
+
+            if (initiative.status === "Completed") return;
+
+            if (planningStatus === 'ATL') {
+                if (initiative.status === "Backlog" || initiative.status === "Defined") {
+                    initiative.status = "Committed";
+                }
+            } else if (planningStatus === 'BTL') {
+                if (initiative.status === "Committed" || initiative.status === "In Progress") {
+                    initiative.status = "Backlog";
+                }
+            }
+        });
+
+        try {
+            if (typeof ensureWorkPackagesForInitiatives === 'function') {
+                ensureWorkPackagesForInitiatives(window.currentSystemData, this.currentYear);
+                initiativesForYear.forEach(init => {
+                    if (typeof syncWorkPackagesFromInitiative === 'function') {
+                        syncWorkPackagesFromInitiative(init, window.currentSystemData);
+                    }
+                    if (typeof syncInitiativeTotals === 'function') {
+                        syncInitiativeTotals(init.initiativeId, window.currentSystemData);
+                    }
+                });
+            }
+            saveSystemChanges();
+            window.notificationManager?.showToast(`Plan for ${this.currentYear} saved successfully.`, "success");
+            this.render();
+        } catch (error) {
+            console.error("Error saving plan:", error);
+            window.notificationManager?.showToast("Error saving plan. Check console.", "error");
+        }
+    }
+
+    runOptimizer() {
+        if (window.aiAgentController?.runPrebuiltAgent) {
+            window.aiAgentController.runPrebuiltAgent('optimizePlan');
+        } else {
+            window.notificationManager?.showToast("AI Controller not available.", "error");
+        }
+    }
+
+    // ==================== AI Integration ====================
+
+    /**
+     * Get context for AI chat panel
+     */
+    getContext() {
+        return {
+            viewName: 'Year Planning',
+            currentYear: this.currentYear,
+            scenario: this.scenario,
+            applyConstraints: this.applyConstraints,
+            atlInitiatives: PlanningService.getATLInitiatives(this.tableData || []),
+            btlInitiatives: PlanningService.getBTLInitiatives(this.tableData || []),
+            totalCapacity: PlanningService.getTotalCapacity(
+                window.currentSystemData?.calculatedCapacityMetrics,
+                this.scenario,
+                this.applyConstraints
+            ),
+            summaryTotals: this.summaryData?.totals || {}
+        };
+    }
+}
+
+// ==================== Global Instance & Compatibility ====================
+
+// Global instance
+window.yearPlanningView = null;
+
+// Compatibility layer - delegates to instance or uses legacy functions
+window.renderPlanningView = function () {
+    // Use new class if instance exists, otherwise fall back to legacy
+    if (window.yearPlanningView) {
+        window.yearPlanningView.render();
+    } else {
+        // Legacy fallback - will be removed after full migration
+        console.warn("YearPlanningView: Using legacy renderPlanningView");
+    }
+};
+
+window.setPlanningYear = function (year) {
+    if (window.yearPlanningView) {
+        window.yearPlanningView.setYear(year);
+    } else {
+        currentPlanningYear = parseInt(year);
+        renderPlanningView();
+    }
+};
+
+window.setPlanningScenario = function (scenario) {
+    if (window.yearPlanningView) {
+        window.yearPlanningView.setScenario(scenario);
+    } else {
+        planningCapacityScenario = scenario;
+        renderPlanningView();
+    }
+};
+
+// AI context function
+window.getYearPlanningContext = function () {
+    if (window.yearPlanningView) {
+        return window.yearPlanningView.getContext();
+    }
+    return { viewName: 'Year Planning', error: 'View not initialized' };
+};
+
+// Export for modules
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = YearPlanningView;
+}
