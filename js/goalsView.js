@@ -1,7 +1,12 @@
 // js/goalsView.js
+// 
+// @deprecated This file is deprecated. Use GoalsWidget class from
+// js/components/widgets/GoalsWidget.js instead.
+// This file is kept for backward compatibility only.
 
 /**
  * Initializes the entire Strategic Goals View widget.
+ * @deprecated Use new GoalsWidget(containerId).render() instead
  */
 function initializeGoalsView() {
     console.log("Initializing Strategic Goals Dashboard widget...");

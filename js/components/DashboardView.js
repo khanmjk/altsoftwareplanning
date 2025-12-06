@@ -654,7 +654,11 @@ class DashboardView {
 
     // Widget placeholders that delegate to global functions
     initializeGoalsWidget() {
-        if (window.initializeGoalsView) window.initializeGoalsView();
+        // Use new GoalsWidget class (refactored from goalsView.js)
+        if (!this.goalsWidget) {
+            this.goalsWidget = new GoalsWidget('strategicGoalsWidget');
+        }
+        this.goalsWidget.render();
     }
 
     initializeAccomplishmentsWidget() {
