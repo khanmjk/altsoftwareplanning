@@ -911,19 +911,7 @@ function populateServiceSelection() {
 }
 
 function getServiceDependencies(service, collectedServices = {}, visitedServices = {}) {
-    if (!service || visitedServices[service.serviceName]) {
-        return [];
-    }
-    visitedServices[service.serviceName] = true;
-    collectedServices[service.serviceName] = service;
-
-    // Recursively collect dependencies
-    service.serviceDependencies.forEach(depName => {
-        const depService = currentSystemData.services.find(s => s.serviceName === depName);
-        getServiceDependencies(depService, collectedServices, visitedServices);
-    });
-
-    return Object.values(collectedServices);
+    return VisualizationService.getServiceDependencies(currentSystemData, service, collectedServices, visitedServices);
 }
 
 function updateServiceVisualization(selectedService) {
@@ -1187,165 +1175,12 @@ function populateDependencyServiceSelection() {
 //We build nodes and links without duplicating nodes.
 //Ensure the edges are defined in the correct direction (from upstream to downstream).
 function buildDependencyGraph(serviceName) {
-    const nodes = [];
-    const links = [];
-    const nodeMap = {};
-
-    const serviceMap = {};
-    currentSystemData.services.forEach(service => {
-        serviceMap[service.serviceName] = service;
-    });
-
-    const queue = [];
-    const visited = new Set();
-
-    queue.push(serviceName);
-    visited.add(serviceName);
-
-    while (queue.length > 0) {
-        const currentServiceName = queue.shift();
-        const currentService = serviceMap[currentServiceName];
-
-        if (!nodeMap[currentServiceName]) {
-            nodes.push({ id: currentServiceName, type: 'service' });
-            nodeMap[currentServiceName] = true;
-        }
-
-        // Process upstream dependencies
-        currentService.serviceDependencies.forEach(depName => {
-            if (!nodeMap[depName]) {
-                nodes.push({ id: depName, type: 'service' });
-                nodeMap[depName] = true;
-            }
-            // Edge from dependency to current service
-            links.push({
-                source: depName,
-                target: currentServiceName,
-                type: 'service-dependency',
-            });
-            if (!visited.has(depName)) {
-                visited.add(depName);
-                queue.push(depName);
-            }
-        });
-
-        // Process platform dependencies
-        if (showPlatformComponents) {
-            if (currentService.platformDependencies) {
-                currentService.platformDependencies.forEach(platform => {
-                    if (!nodeMap[platform]) {
-                        nodes.push({ id: platform, type: 'platform' });
-                        nodeMap[platform] = true;
-                    }
-                    // Edge from platform to current service
-                    links.push({
-                        source: platform,
-                        target: currentServiceName,
-                        type: 'platform-dependency',
-                    });
-                });
-            }
-        }
-
-        // Process downstream dependents
-        currentSystemData.services.forEach(service => {
-            if (service.serviceDependencies.includes(currentServiceName)) {
-                const dependentName = service.serviceName;
-                if (!nodeMap[dependentName]) {
-                    nodes.push({ id: dependentName, type: 'service' });
-                    nodeMap[dependentName] = true;
-                }
-                // Edge from current service to dependent
-                links.push({
-                    source: currentServiceName,
-                    target: dependentName,
-                    type: 'service-dependency',
-                });
-                if (!visited.has(dependentName)) {
-                    visited.add(dependentName);
-                    queue.push(dependentName);
-                }
-            }
-        });
-    }
-
-    return { nodes, links };
+    return VisualizationService.buildDependencyGraph(currentSystemData, serviceName, { showPlatformComponents });
 }
 
 //Create functions to build the data structure representing upstream and downstream dependencies.
 function buildDependencyTree(serviceName) {
-    const serviceMap = {};
-    currentSystemData.services.forEach(service => {
-        serviceMap[service.serviceName] = service;
-    });
-
-    // Recursive function to get upstream dependencies
-    function getUpstream(service, visited = new Set()) {
-        if (!service || visited.has(service.serviceName)) return null;
-        visited.add(service.serviceName);
-
-        let dependencies = [];
-        service.serviceDependencies.forEach(depName => {
-            const depService = serviceMap[depName];
-            const upstreamNode = getUpstream(depService, visited);
-            if (upstreamNode) {
-                dependencies.push(upstreamNode);
-            } else if (depService) {
-                dependencies.push({ name: depService.serviceName, children: [] });
-            }
-        });
-
-        return { name: service.serviceName, children: dependencies };
-    }
-
-    // Recursive function to get downstream dependencies
-    function getDownstream(service, visited = new Set()) {
-        if (!service || visited.has(service.serviceName)) return null;
-        visited.add(service.serviceName);
-
-        let dependents = [];
-        currentSystemData.services.forEach(otherService => {
-            if (otherService.serviceDependencies.includes(service.serviceName)) {
-                const downstreamNode = getDownstream(otherService, visited);
-                if (downstreamNode) {
-                    dependents.push(downstreamNode);
-                } else {
-                    dependents.push({ name: otherService.serviceName, children: [] });
-                }
-            }
-        });
-
-        return { name: service.serviceName, children: dependents };
-    }
-
-    const rootService = serviceMap[serviceName];
-
-    const upstreamTree = getUpstream(rootService);
-    const downstreamTree = getDownstream(rootService);
-
-    // Combine upstream and downstream trees
-    const treeData = {
-        name: rootService.serviceName,
-        children: []
-    };
-
-    if (upstreamTree && upstreamTree.children.length > 0) {
-        treeData.children.push({
-            name: 'Upstream Dependencies',
-            direction: 'upstream',
-            children: upstreamTree.children
-        });
-    }
-
-    if (downstreamTree && downstreamTree.children.length > 0) {
-        treeData.children.push({
-            name: 'Downstream Dependencies',
-            direction: 'downstream',
-            children: downstreamTree.children
-        });
-    }
-
-    return treeData;
+    return VisualizationService.buildDependencyTree(currentSystemData, serviceName);
 }
 
 /**
@@ -1706,34 +1541,7 @@ function addDependencyLegend(svg) {
 }
 
 function prepareServiceDependenciesTableData() {
-    if (!currentSystemData || !Array.isArray(currentSystemData.services)) {
-        return [];
-    }
-
-    const services = currentSystemData.services || [];
-    const teams = currentSystemData.teams || [];
-
-    return services.map(service => {
-        const team = teams.find(t => t.teamId === service.owningTeamId);
-        const upstreamServices = service.serviceDependencies || [];
-        const platformDependencies = service.platformDependencies || [];
-        const downstreamServices = services
-            .filter(s => (s.serviceDependencies || []).includes(service.serviceName))
-            .map(s => s.serviceName);
-
-        return {
-            id: service.serviceName,
-            serviceName: service.serviceName,
-            description: service.serviceDescription || '',
-            owningTeam: team ? (team.teamIdentity || team.teamName || team.teamId) : 'Unassigned',
-            upstreamDependencies: upstreamServices,
-            platformDependencies: platformDependencies,
-            downstreamDependencies: downstreamServices,
-            upstreamDependenciesText: upstreamServices.length > 0 ? upstreamServices.join(', ') : 'None',
-            platformDependenciesText: platformDependencies.length > 0 ? platformDependencies.join(', ') : 'None',
-            downstreamDependenciesText: downstreamServices.length > 0 ? downstreamServices.join(', ') : 'None'
-        };
-    });
+    return VisualizationService.prepareServiceDependenciesTableData(currentSystemData);
 }
 
 function generateServiceDependenciesTable() {
