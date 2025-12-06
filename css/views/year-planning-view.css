@@ -99,3 +99,20 @@
     margin: 0 auto;
     border-collapse: collapse;
 }
+
+/* ============================================
+   Drag & Drop Visual Feedback
+   ============================================ */
+
+/* Row being dragged */
+#planningTableBody tr.dragging {
+    opacity: 0.5;
+    border: 2px dashed #6c757d;
+    background-color: #f8f9fa;
+}
+
+/* Drop zone indicator - shows where the row will be placed */
+#planningTableBody tr.drag-over {
+    border-top: 3px solid #007bff;
+    box-shadow: 0 -2px 4px rgba(0, 123, 255, 0.3);
+}
