@@ -662,7 +662,11 @@ class DashboardView {
     }
 
     initializeAccomplishmentsWidget() {
-        if (window.initializeAccomplishmentsView) window.initializeAccomplishmentsView();
+        // Use new AccomplishmentsWidget class (refactored from accomplishmentsView.js)
+        if (!this.accomplishmentsWidget) {
+            this.accomplishmentsWidget = new AccomplishmentsWidget('accomplishmentsWidget');
+        }
+        this.accomplishmentsWidget.render();
     }
 
     initializeRoadmapTableWidget() {
@@ -674,9 +678,11 @@ class DashboardView {
     }
 
     initializeImpactWidget() {
-        if (window.initializeImpactView) {
-            return window.initializeImpactView(); // CRITICAL: Return toolbar controls
+        // Use new ImpactWidget class (refactored from impactView.js)
+        if (!this.impactWidget) {
+            this.impactWidget = new ImpactWidget('initiativeImpactWidget');
         }
+        return this.impactWidget.render(); // CRITICAL: Return toolbar controls
     }
 
     /**
