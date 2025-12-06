@@ -458,8 +458,8 @@ class YearPlanningView {
     }
 
     /**
-     * Render the Team Load Summary table
-     * REFACTORED: Moved from yearPlanning.js into class for proper encapsulation
+     * Render the Team Load Summary table with context-aware columns
+     * Columns adapt based on selected scenario and constraints toggle
      */
     renderSummaryTable(summaryData) {
         const summaryContainer = document.getElementById('teamLoadSummarySection');
@@ -480,7 +480,7 @@ class YearPlanningView {
         summaryTableBody.innerHTML = '';
         summaryTableFoot.innerHTML = '';
 
-        // Use class properties instead of global variables
+        // Scenario and state configuration
         const scenarioKey = this.scenario === 'funded' ? 'FundedHC' :
             (this.scenario === 'team_bis' ? 'TeamBIS' : 'EffectiveBIS');
         const isNetCapacityUsed = this.applyConstraints;
@@ -496,89 +496,176 @@ class YearPlanningView {
             }
         }
 
+        // Build context-aware column configuration
+        const columns = this._buildSummaryColumns(scenarioKey, isNetCapacityUsed);
+
         // Build header row
         const headerRow = summaryTableHead.insertRow();
-        const scenarioDisplayName = scenarioKey.replace('BIS', ' BIS');
-        const stateDisplayName = isNetCapacityUsed ? 'Net' : 'Gross';
-        const dynamicHeaderText = `${scenarioDisplayName} Capacity (${stateDisplayName})`;
-
-        const headersData = [
-            { text: 'Team', title: 'Team Name' },
-            { text: 'Funded HC (Humans)', title: 'Budgeted headcount for human engineers.' },
-            { text: 'Team BIS (Humans)', title: 'Actual human engineers on the team.' },
-            { text: 'Away BIS (Humans)', title: 'Borrowed human engineers.' },
-            { text: 'AI Engineers', title: 'Count of AI Software Engineers contributing to the team.' },
-            { text: '(-) Sinks (SDE/Yrs)', title: 'Total deductions from leave, overhead, etc.' },
-            { text: '(+) AI Productivity Gain', title: 'The effective SDE/Year capacity gained from AI tooling.' },
-            { text: 'AI Gain %', title: 'The configured productivity gain percentage for the team.' },
-            { text: dynamicHeaderText, title: 'The total planning capacity under selected scenario.' },
-            { text: 'Assigned ATL SDEs', title: 'SDEs assigned from ATL initiatives.' },
-            { text: 'Remaining Capacity (ATL)', title: 'Scenario Capacity minus Assigned ATL SDEs.' },
-            { text: 'ATL Status', title: 'Indicates if team is overloaded.' }
-        ];
-
-        headersData.forEach(h => {
+        columns.forEach(col => {
             const th = document.createElement('th');
-            th.textContent = h.text;
-            th.title = h.title;
+            th.textContent = col.header;
+            th.title = col.title;
+            th.style.textAlign = 'center';
             headerRow.appendChild(th);
         });
 
         // Build data rows
         (summaryData.rows || []).forEach(rowData => {
             const row = summaryTableBody.insertRow();
-            row.insertCell().textContent = rowData.teamName;
-            row.insertCell().textContent = rowData.fundedHC.toFixed(2);
-            row.insertCell().textContent = rowData.teamBISHumans.toFixed(2);
-            row.insertCell().textContent = rowData.awayBISHumans.toFixed(2);
-            row.insertCell().textContent = rowData.aiEngineers.toFixed(2);
+            columns.forEach(col => {
+                const cell = row.insertCell();
+                const value = col.getValue(rowData, isNetCapacityUsed);
+                cell.textContent = value;
 
-            const sinksCell = row.insertCell();
-            sinksCell.textContent = isNetCapacityUsed ? `-${rowData.sinks.toFixed(2)}` : '—';
-            sinksCell.style.color = isNetCapacityUsed ? '#dc3545' : '#6c757d';
-
-            row.insertCell().textContent = `+${rowData.productivityGain.toFixed(2)}`;
-            row.insertCell().textContent = `${rowData.productivityPercent.toFixed(0)}%`;
-            row.insertCell().textContent = rowData.scenarioCapacity.toFixed(2);
-            row.insertCell().textContent = rowData.assignedAtlSde.toFixed(2);
-
-            const remainingCell = row.insertCell();
-            remainingCell.textContent = rowData.remainingCapacity.toFixed(2);
-            remainingCell.style.color = rowData.remainingCapacity < 0 ? 'red' : 'green';
-
-            const statusCell = row.insertCell();
-            statusCell.textContent = rowData.status;
-            statusCell.style.color = rowData.status === '🛑 Overloaded' ? 'red' :
-                (rowData.status === '⚠️ Near Limit' ? 'darkorange' : 'green');
-            statusCell.style.fontWeight = 'bold';
-
-            Array.from(row.cells).forEach((cell, index) => {
-                cell.style.textAlign = index === 0 ? 'left' : 'center';
+                // Apply styling
+                if (col.getStyle) {
+                    const style = col.getStyle(rowData, isNetCapacityUsed);
+                    Object.assign(cell.style, style);
+                }
+                cell.style.textAlign = col.align || 'center';
             });
         });
 
         // Build footer row
         const totals = summaryData.totals || {};
         const footerRow = summaryTableFoot.insertRow();
-        footerRow.insertCell().textContent = 'Totals';
-        footerRow.insertCell().textContent = (totals.fundedHCGross ?? 0).toFixed(2);
-        footerRow.insertCell().textContent = (totals.teamBISHumans ?? 0).toFixed(2);
-        footerRow.insertCell().textContent = (totals.awayBISHumans ?? 0).toFixed(2);
-        footerRow.insertCell().textContent = (totals.aiEngineers ?? 0).toFixed(2);
-        footerRow.insertCell().textContent = isNetCapacityUsed ? `-${(totals.sinks ?? 0).toFixed(2)}` : '—';
-        footerRow.insertCell().textContent = `+${(totals.productivityGain ?? 0).toFixed(2)}`;
-        footerRow.insertCell().textContent = '';
-        footerRow.insertCell().textContent = (totals.scenarioCapacity ?? 0).toFixed(2);
-        footerRow.insertCell().textContent = (totals.assignedAtlSde ?? 0).toFixed(2);
+        columns.forEach(col => {
+            const cell = footerRow.insertCell();
+            const value = col.getTotal ? col.getTotal(totals, isNetCapacityUsed) : '';
+            cell.textContent = value;
 
-        const totalRemainingCell = footerRow.insertCell();
-        totalRemainingCell.textContent = (totals.remainingCapacity ?? 0).toFixed(2);
-        totalRemainingCell.style.color = (totals.remainingCapacity ?? 0) < 0 ? 'red' : 'green';
-        footerRow.insertCell().textContent = '';
-
-        Array.from(footerRow.cells).forEach((cell, index) => {
-            cell.style.textAlign = index === 0 ? 'left' : 'center';
+            // Apply styling
+            if (col.getTotalStyle) {
+                const style = col.getTotalStyle(totals, isNetCapacityUsed);
+                Object.assign(cell.style, style);
+            }
+            cell.style.textAlign = col.align || 'center';
         });
+    }
+
+    /**
+     * Build column configuration based on scenario and constraints
+     * @private
+     */
+    _buildSummaryColumns(scenarioKey, isNetCapacityUsed) {
+        const columns = [];
+        const stateDisplayName = isNetCapacityUsed ? 'Net' : 'Gross';
+
+        // 1. Team Name (always)
+        columns.push({
+            header: 'Team',
+            title: 'Team Name',
+            align: 'left',
+            getValue: (row) => row.teamName,
+            getTotal: () => 'Totals'
+        });
+
+        // 2. Scenario-specific base capacity column(s)
+        if (this.scenario === 'funded') {
+            columns.push({
+                header: 'Funded HC (Humans)',
+                title: 'Budgeted headcount for human engineers.',
+                getValue: (row) => row.fundedHC.toFixed(2),
+                getTotal: (totals) => (totals.fundedHCGross ?? 0).toFixed(2)
+            });
+        } else if (this.scenario === 'team_bis') {
+            columns.push({
+                header: 'Team BIS (Humans)',
+                title: 'Actual human engineers on the team.',
+                getValue: (row) => row.teamBISHumans.toFixed(2),
+                getTotal: (totals) => (totals.teamBISHumans ?? 0).toFixed(2)
+            });
+        } else {
+            // Effective BIS - show Team BIS + Away BIS
+            columns.push({
+                header: 'Team BIS (Humans)',
+                title: 'Actual human engineers on the team.',
+                getValue: (row) => row.teamBISHumans.toFixed(2),
+                getTotal: (totals) => (totals.teamBISHumans ?? 0).toFixed(2)
+            });
+            columns.push({
+                header: 'Away BIS (Humans)',
+                title: 'Borrowed human engineers from other teams.',
+                getValue: (row) => row.awayBISHumans.toFixed(2),
+                getTotal: (totals) => (totals.awayBISHumans ?? 0).toFixed(2)
+            });
+        }
+
+        // 3. AI Engineers (always - important distinction)
+        columns.push({
+            header: 'AI Engineers',
+            title: 'Count of AI Software Engineers contributing to the team.',
+            getValue: (row) => row.aiEngineers.toFixed(2),
+            getTotal: (totals) => (totals.aiEngineers ?? 0).toFixed(2)
+        });
+
+        // 4. Adjustment columns (only when constraints ON)
+        if (isNetCapacityUsed) {
+            columns.push({
+                header: '(-) Sinks (SDE/Yrs)',
+                title: 'Total deductions from leave, overhead, etc.',
+                getValue: (row) => `-${row.sinks.toFixed(2)}`,
+                getTotal: (totals) => `-${(totals.sinks ?? 0).toFixed(2)}`,
+                getStyle: () => ({ color: '#dc3545' }),
+                getTotalStyle: () => ({ color: '#dc3545' })
+            });
+            columns.push({
+                header: '(+) AI Productivity Gain',
+                title: 'The effective SDE/Year capacity gained from AI tooling.',
+                getValue: (row) => `+${row.productivityGain.toFixed(2)}`,
+                getTotal: (totals) => `+${(totals.productivityGain ?? 0).toFixed(2)}`,
+                getStyle: () => ({ color: '#28a745' }),
+                getTotalStyle: () => ({ color: '#28a745' })
+            });
+            columns.push({
+                header: 'AI Gain %',
+                title: 'The configured productivity gain percentage for the team.',
+                getValue: (row) => `${row.productivityPercent.toFixed(0)}%`,
+                getTotal: () => ''
+            });
+        }
+
+        // 5. Final Capacity (always)
+        const scenarioDisplayName = scenarioKey.replace('BIS', ' BIS');
+        columns.push({
+            header: `${scenarioDisplayName} Capacity (${stateDisplayName})`,
+            title: `The total planning capacity under ${scenarioDisplayName} scenario.`,
+            getValue: (row) => row.scenarioCapacity.toFixed(2),
+            getTotal: (totals) => (totals.scenarioCapacity ?? 0).toFixed(2)
+        });
+
+        // 6. Assigned ATL SDEs (always)
+        columns.push({
+            header: 'Assigned ATL SDEs',
+            title: 'SDEs assigned from ATL initiatives.',
+            getValue: (row) => row.assignedAtlSde.toFixed(2),
+            getTotal: (totals) => (totals.assignedAtlSde ?? 0).toFixed(2)
+        });
+
+        // 7. Remaining Capacity (always)
+        columns.push({
+            header: 'Remaining Capacity (ATL)',
+            title: 'Scenario Capacity minus Assigned ATL SDEs.',
+            getValue: (row) => row.remainingCapacity.toFixed(2),
+            getTotal: (totals) => (totals.remainingCapacity ?? 0).toFixed(2),
+            getStyle: (row) => ({ color: row.remainingCapacity < 0 ? 'red' : 'green' }),
+            getTotalStyle: (totals) => ({ color: (totals.remainingCapacity ?? 0) < 0 ? 'red' : 'green' })
+        });
+
+        // 8. ATL Status (always)
+        columns.push({
+            header: 'ATL Status',
+            title: 'Indicates if team is overloaded based on ATL work.',
+            getValue: (row) => row.status,
+            getTotal: () => '',
+            getStyle: (row) => ({
+                color: row.status === '🛑 Overloaded' ? 'red' :
+                    (row.status === '⚠️ Near Limit' ? 'darkorange' : 'green'),
+                fontWeight: 'bold'
+            })
+        });
+
+        return columns;
     }
 
     /**
