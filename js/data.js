@@ -1,10 +1,5 @@
 // js/data.js
 
-/** Define a unique key for local storage (internal to repository) **/
-const LOCAL_STORAGE_KEY = 'architectureVisualization_systems_v11';
-const APP_SETTINGS_KEY = 'architectureVisualization_appSettings_v1';
-
-
 
 const Modes = {
     NAVIGATION: 'navigation',

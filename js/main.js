@@ -9,28 +9,17 @@ let currentCapacityScenario = 'EffectiveBIS'; // Default scenario for capacity s
 let currentChartTeamId = '__ORG_VIEW__'; // To track which team's chart is displayed
 let capacityChartInstance = null; // To hold the Chart.js instance
 let applyCapacityConstraintsToggle = false; // Default to OFF
-let lastAiGenerationStats = null; // Cache the latest AI stats for the modal
+let lastAiGenerationStats = null; // Delegated to AIService
 // currentViewId is now managed globally on window by NavigationManager
 if (typeof window !== 'undefined' && !window.currentViewId) window.currentViewId = null;
 
 // --- Global App Settings ---
-const defaultSettings = {
-    ai: {
-        isEnabled: false,
-        provider: 'google-gemini',
-        apiKey: null
-    },
-    // We can add more settings here later, e.g.:
-    // theme: 'default',
-    // autoSave: false
-};
-let globalSettings = JSON.parse(JSON.stringify(defaultSettings)); // Our live settings object
-function syncGlobalSettingsToWindow() {
-    if (typeof window !== 'undefined') {
-        window.globalSettings = globalSettings;
-    }
-}
-syncGlobalSettingsToWindow();
+// --- Global App Settings ---
+// Delegated to SettingsService
+let globalSettings = SettingsService.init();
+// Sync maintained by SettingsService internally, but we assign here for local scope access if needed
+// or rely on window.globalSettings being updated by the service.
+console.log("main.js: Initialized globalSettings via SettingsService.");
 
 if (typeof mermaid !== 'undefined' && typeof mermaid.initialize === 'function') {
     mermaid.initialize({ startOnLoad: false, theme: 'default' });
@@ -39,38 +28,7 @@ if (typeof mermaid !== 'undefined' && typeof mermaid.initialize === 'function') 
 }
 
 function updateAiDependentUI(options = {}) {
-    const { skipPlanningRender = false } = options;
-    const aiEnabled = !!(globalSettings?.ai?.isEnabled);
-
-    // Toggle the new "Create with AI" card in the welcome view
-    const createWithAiCard = document.getElementById('createWithAiCard');
-    if (createWithAiCard) {
-        createWithAiCard.style.display = aiEnabled ? 'block' : 'none';
-    }
-
-
-
-    const chatContainer = document.getElementById('aiChatPanelContainer');
-    const chatHandle = document.getElementById('chatResizeHandle');
-    if (chatContainer) {
-        if (aiEnabled) {
-            chatContainer.style.display = 'block';
-            if (!(window.aiChatAssistant && typeof window.aiChatAssistant.isAiChatPanelOpen === 'function' && window.aiChatAssistant.isAiChatPanelOpen())) {
-                chatContainer.style.width = chatContainer.style.width || '0';
-                if (chatHandle) chatHandle.style.display = 'none';
-            }
-        } else {
-            if (window.aiChatAssistant && typeof window.aiChatAssistant.closeAiChatPanel === 'function') {
-                window.aiChatAssistant.closeAiChatPanel();
-            }
-            chatContainer.style.display = 'none';
-            if (chatHandle) chatHandle.style.display = 'none';
-        }
-    }
-
-    if (!skipPlanningRender && currentViewId === 'planningView' && typeof renderPlanningView === 'function') {
-        renderPlanningView();
-    }
+    AIService.updateAiDependentUI(SettingsService.get(), options);
 }
 // --- End Global App Settings ---
 
@@ -202,94 +160,39 @@ async function loadHtmlComponent(url, targetId) {
 /**
  * Loads all app settings from localStorage into the globalSettings object.
  */
+/**
+ * Loads all app settings from localStorage into the globalSettings object.
+ */
 function loadGlobalSettings() {
-    const settingsString = localStorage.getItem(APP_SETTINGS_KEY);
-    if (settingsString) {
-        try {
-            const loadedSettings = JSON.parse(settingsString);
-            // Merge loaded settings with defaults to ensure all keys exist
-            globalSettings = { ...defaultSettings, ...loadedSettings };
-            syncGlobalSettingsToWindow();
-            // Deep merge for nested objects like 'ai'
-            if (loadedSettings.ai) {
-                globalSettings.ai = { ...defaultSettings.ai, ...loadedSettings.ai };
-            }
-            console.log("Loaded global settings from localStorage:", {
-                aiEnabled: globalSettings.ai.isEnabled,
-                aiProvider: globalSettings.ai.provider,
-                apiKeyExists: !!globalSettings.ai.apiKey
-            });
-        } catch (e) {
-            console.error("Error parsing global settings from localStorage:", e);
-            globalSettings = JSON.parse(JSON.stringify(defaultSettings)); // Reset to defaults
-            syncGlobalSettingsToWindow();
-        }
-    } else {
-        // No settings saved yet, use defaults
-        globalSettings = JSON.parse(JSON.stringify(defaultSettings));
-        syncGlobalSettingsToWindow();
-        console.log("No global settings found, using defaults.");
-    }
-
-    // Update the UI based on loaded settings
+    globalSettings = SettingsService.load();
     updateAiDependentUI();
 }
 
 /**
  * Formats AI generation stats into a readable block of text.
  */
+/**
+ * Formats AI generation stats into a readable block of text.
+ */
 function formatAiStats(stats) {
-    if (!stats) return "No statistics were provided.";
-    const {
-        inputChars = 0,
-        outputChars = 0,
-        outputTokens = 0,
-        totalTokens = 0,
-        systemPromptSummary = ''
-    } = stats;
-
-    return `Input Characters: ${inputChars.toLocaleString()}
-Output Characters: ${outputChars.toLocaleString()}
-Output Tokens: ${outputTokens.toLocaleString()}
-Total Tokens (est.): ${totalTokens.toLocaleString()}
-
-System Prompt Summary:
-${systemPromptSummary}`.trim();
+    return AIService.formatAiStats(stats);
 }
 
 /**
  * Shows the AI stats modal with the latest metrics.
  */
+/**
+ * Shows the AI stats modal with the latest metrics.
+ */
 function showAiStatsModal(stats) {
-    const modal = document.getElementById('aiGenerationStatsModal');
-    const content = document.getElementById('aiGenerationStatsContent');
-
-    if (!modal || !content) {
-        console.warn("AI Stats modal elements not found.");
-        return;
-    }
-
-    if (stats) {
-        lastAiGenerationStats = stats;
-    }
-
-    if (!lastAiGenerationStats) {
-        console.warn("No AI stats available to display.");
-        return;
-    }
-
-    content.textContent = formatAiStats(lastAiGenerationStats);
-    modal.style.display = 'block';
+    AIService.showStatsModal(stats);
 }
 
 /**
  * Hides the AI stats modal.
  */
 function closeAiStatsModal() {
-    const modal = document.getElementById('aiGenerationStatsModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
+    AIService.closeStatsModal();
 }
 
 /**

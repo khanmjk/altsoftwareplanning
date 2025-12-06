@@ -138,32 +138,9 @@ function generateUniqueId(prefix = 'id') {
  * @returns {object|null} The added initiative with an ID, or null if failed.
  */
 function addInitiative(initiativeData) {
-    if (!currentSystemData || !initiativeData || !initiativeData.title) {
-        console.error("addInitiative: Missing currentSystemData or initiative data/title.");
-        return null;
-    }
-    if (!currentSystemData.yearlyInitiatives) {
-        currentSystemData.yearlyInitiatives = [];
-    }
-    const newInitiative = {
-        initiativeId: generateUniqueId('init'), // Ensure generateUniqueId can take a prefix
-        isProtected: false,
-        assignments: [],
-        roi: { category: null, valueType: null, estimatedValue: null, currency: null, timeHorizonMonths: null, confidenceLevel: null, calculationMethodology: null, businessCaseLink: null, overrideJustification: null, attributes: {} },
-        status: 'Backlog', // Default status
-        themes: [],
-        primaryGoalId: null,
-        projectManager: null,
-        owner: null,
-        technicalPOC: null,
-        impactedServiceIds: [],
-        workPackageIds: [],
-        attributes: { pmCapacityNotes: "" }, // Initialize new field
-        ...initiativeData // Spread provided data, allowing overrides of defaults
-    };
-    currentSystemData.yearlyInitiatives.push(newInitiative);
-    console.log("Added initiative:", newInitiative);
-    return newInitiative;
+    const result = InitiativeService.addInitiative(currentSystemData, initiativeData);
+    if (result) console.log("Added initiative:", result);
+    return result;
 }
 
 /**
@@ -261,25 +238,9 @@ function deleteSeniorManager(seniorManagerId, reassignToSeniorManagerId = null) 
  * @returns {object|null} The updated initiative, or null if not found or failed.
  */
 function updateInitiative(initiativeId, updates) {
-    if (!currentSystemData || !currentSystemData.yearlyInitiatives || !initiativeId || !updates) {
-        console.error("updateInitiative: Missing currentSystemData, initiatives, initiativeId, or updates.");
-        return null;
-    }
-    const initiativeIndex = currentSystemData.yearlyInitiatives.findIndex(init => init.initiativeId === initiativeId);
-    if (initiativeIndex === -1) {
-        console.error(`updateInitiative: Initiative with ID ${initiativeId} not found.`);
-        return null;
-    }
-    // Deep merge for nested objects like 'roi' and 'attributes' could be complex.
-    // For now, a simple spread will overwrite 'roi' and 'attributes' if they are in 'updates'.
-    // A more robust merge would be needed for partial updates to nested objects.
-    // Let's assume 'updates' provides the full new 'roi' or 'attributes' object if they are being changed.
-    currentSystemData.yearlyInitiatives[initiativeIndex] = {
-        ...currentSystemData.yearlyInitiatives[initiativeIndex],
-        ...updates
-    };
-    console.log(`Updated initiative ${initiativeId}:`, currentSystemData.yearlyInitiatives[initiativeIndex]);
-    return currentSystemData.yearlyInitiatives[initiativeIndex];
+    const result = InitiativeService.updateInitiative(currentSystemData, initiativeId, updates);
+    if (result) console.log(`Updated initiative ${initiativeId}:`, result);
+    return result;
 }
 
 /**
@@ -288,18 +249,9 @@ function updateInitiative(initiativeId, updates) {
  * @returns {boolean} True if deletion was successful, false otherwise.
  */
 function deleteInitiative(initiativeId) {
-    if (!currentSystemData || !currentSystemData.yearlyInitiatives || !initiativeId) {
-        console.error("deleteInitiative: Missing currentSystemData, initiatives, or initiativeId.");
-        return false;
-    }
-    const initialLength = currentSystemData.yearlyInitiatives.length;
-    currentSystemData.yearlyInitiatives = currentSystemData.yearlyInitiatives.filter(init => init.initiativeId !== initiativeId);
-    if (currentSystemData.yearlyInitiatives.length < initialLength) {
-        console.log(`Deleted initiative ${initiativeId}.`);
-        return true;
-    }
-    console.warn(`deleteInitiative: Initiative with ID ${initiativeId} not found for deletion.`);
-    return false;
+    const result = InitiativeService.deleteInitiative(currentSystemData, initiativeId);
+    if (result) console.log(`Deleted initiative ${initiativeId}.`);
+    return result;
 }
 
 /**
