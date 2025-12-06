@@ -301,6 +301,26 @@ class SystemsView {
             }
         }
     }
+
+    /**
+     * Returns structured context data for AI Chat Panel integration
+     * Implements the AI_VIEW_REGISTRY contract
+     * @returns {Object} Context object with view-specific data
+     */
+    getAIContext() {
+        const userSystems = this.repository?.getUserSystems() || [];
+        const sampleSystems = this.repository?.getSampleSystems() || [];
+
+        return {
+            viewTitle: 'Systems',
+            userSystemCount: userSystems.length,
+            sampleSystemCount: sampleSystems.length,
+            userSystems: userSystems.map(s => ({ id: s.id, name: s.name })),
+            sampleSystems: sampleSystems.map(s => ({ id: s.id, name: s.name })),
+            currentSystemLoaded: !!window.currentSystemData,
+            currentSystemName: window.currentSystemData?.systemName || null
+        };
+    }
 }
 
 // Expose to window

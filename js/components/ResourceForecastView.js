@@ -556,4 +556,27 @@ class ResourceForecastView {
             }
         });
     }
+
+    /**
+     * Returns structured context data for AI Chat Panel integration
+     * Implements the AI_VIEW_REGISTRY contract
+     * @returns {Object} Context object with view-specific data
+     */
+    getAIContext() {
+        const teams = window.currentSystemData?.teams || [];
+
+        return {
+            viewTitle: 'Resource Forecasting',
+            selectedTeamId: document.getElementById('sdmForecastingTeamSelector')?.value || null,
+            teamCount: teams.length,
+            hasEngine: !!window.forecastingEngine,
+            // Current input values if available
+            inputs: {
+                targetWeek: document.getElementById('targetWeekInput')?.value || null,
+                hiringTime: document.getElementById('hiringTimeInput')?.value || null,
+                rampUp: document.getElementById('rampUpInput')?.value || null,
+                attrition: document.getElementById('attritionInput')?.value || null
+            }
+        };
+    }
 }
