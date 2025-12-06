@@ -76,6 +76,7 @@ class YearPlanningView {
 
     /**
      * Set workspace page metadata (header)
+     * NOTE: Actions moved to toolbar per Workspace Canvas UX pattern
      */
     setPageMetadata() {
         if (!window.workspaceComponent) return;
@@ -83,21 +84,7 @@ class YearPlanningView {
         window.workspaceComponent.setPageMetadata({
             title: 'Year Plan',
             breadcrumbs: ['Planning', 'Year Plan'],
-            actions: [
-                {
-                    label: `Save Plan for ${this.currentYear}`,
-                    icon: 'fas fa-save',
-                    onClick: () => this.handleSavePlan(),
-                    className: 'btn btn-danger btn-sm'
-                },
-                {
-                    label: 'Optimize Plan',
-                    icon: 'fas fa-robot',
-                    onClick: () => this.runOptimizer(),
-                    className: 'btn btn-info btn-sm',
-                    hidden: !(window.globalSettings?.ai?.isEnabled)
-                }
-            ]
+            actions: [] // Actions in toolbar, not header
         });
     }
 
@@ -117,21 +104,50 @@ class YearPlanningView {
     generateToolbar() {
         const toolbar = document.createElement('div');
         toolbar.className = 'planning-toolbar';
-        toolbar.style.display = 'flex';
-        toolbar.style.alignItems = 'center';
-        toolbar.style.gap = '20px';
-        toolbar.style.width = '100%';
+
+        // Left side - controls
+        const leftGroup = document.createElement('div');
+        leftGroup.style.display = 'flex';
+        leftGroup.style.alignItems = 'center';
+        leftGroup.style.gap = '20px';
 
         // Year Selector
-        toolbar.appendChild(this.createYearSelector());
+        leftGroup.appendChild(this.createYearSelector());
 
         // Scenario Controls
         const scenarioGroup = this.createScenarioControls();
-        if (scenarioGroup) toolbar.appendChild(scenarioGroup);
+        if (scenarioGroup) leftGroup.appendChild(scenarioGroup);
+
+        toolbar.appendChild(leftGroup);
+
+        // Right side - actions
+        const rightGroup = document.createElement('div');
+        rightGroup.style.display = 'flex';
+        rightGroup.style.alignItems = 'center';
+        rightGroup.style.gap = '10px';
+        rightGroup.style.marginLeft = 'auto';
 
         // Constraints Toggle
         const toggleGroup = this.createConstraintsToggle();
-        if (toggleGroup) toolbar.appendChild(toggleGroup);
+        if (toggleGroup) rightGroup.appendChild(toggleGroup);
+
+        // Save Plan Button
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'btn btn-danger btn-sm';
+        saveBtn.innerHTML = `<i class="fas fa-save"></i> Save Plan for ${this.currentYear}`;
+        saveBtn.addEventListener('click', () => this.handleSavePlan());
+        rightGroup.appendChild(saveBtn);
+
+        // Optimize Button (AI-enabled only)
+        if (window.globalSettings?.ai?.isEnabled) {
+            const optimizeBtn = document.createElement('button');
+            optimizeBtn.className = 'btn btn-info btn-sm';
+            optimizeBtn.innerHTML = '<i class="fas fa-robot"></i> Optimize Plan';
+            optimizeBtn.addEventListener('click', () => this.runOptimizer());
+            rightGroup.appendChild(optimizeBtn);
+        }
+
+        toolbar.appendChild(rightGroup);
 
         return toolbar;
     }
@@ -442,24 +458,26 @@ class YearPlanningView {
     }
 
     /**
-     * Render summary table (delegates to existing function for now)
-     * TODO: Phase 3 - Refactor to DOM creation
+     * Render summary table - passes scenario options to avoid global variables
      */
     renderSummaryTable(summaryData) {
-        // Use existing render function for now
         if (typeof renderTeamLoadSummaryTable === 'function') {
-            renderTeamLoadSummaryTable(summaryData);
+            renderTeamLoadSummaryTable(summaryData, {
+                scenario: this.scenario,
+                applyConstraints: this.applyConstraints
+            });
         }
     }
 
     /**
-     * Render planning table (delegates to existing function for now)
-     * TODO: Phase 3 - Refactor to DOM creation
+     * Render planning table - passes scenario options to avoid global variables
      */
     renderPlanningTable(tableData) {
-        // Use existing render function for now
         if (typeof renderPlanningTable === 'function') {
-            renderPlanningTable(tableData);
+            renderPlanningTable(tableData, {
+                scenario: this.scenario,
+                applyConstraints: this.applyConstraints
+            });
         }
     }
 

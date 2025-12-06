@@ -294,12 +294,14 @@ function setPlanningScenario(scenario) {
 window.setPlanningScenario = setPlanningScenario;
 
 /**
- * REVISED (v12 - Final Polish) - Generates the Team Load Summary table.
+ * REVISED (v13 - No Global Variables) - Generates the Team Load Summary table.
+ * - Now accepts options parameter instead of reading global variables.
  * - Adds a "(-) Sinks" column that is only visible when constraints are applied.
  * - This provides a full, transparent view of the capacity calculation: Gross -> Sinks -> Gains -> Net.
- * - Retains all previous enhancements like dynamic headers and correct data sourcing.
+ * @param {Object} summaryData - The calculated summary data from PlanningService.
+ * @param {Object} options - { scenario: 'funded'|'team_bis'|'effective', applyConstraints: boolean }
  */
-function renderTeamLoadSummaryTable(summaryData) {
+function renderTeamLoadSummaryTable(summaryData, options = {}) {
     // console.log("Rendering Team Load Summary Table from calculated data...");
     const summaryContainer = document.getElementById('teamLoadSummarySection');
     if (!summaryContainer) { return; }
@@ -315,8 +317,10 @@ function renderTeamLoadSummaryTable(summaryData) {
     summaryTableBody.innerHTML = '';
     summaryTableFoot.innerHTML = '';
 
-    const scenarioKey = planningCapacityScenario === 'funded' ? 'FundedHC' : (planningCapacityScenario === 'team_bis' ? 'TeamBIS' : 'EffectiveBIS');
-    const isNetCapacityUsed = applyCapacityConstraintsToggle;
+    // Use options instead of global variables
+    const scenario = options.scenario || 'effective';
+    const isNetCapacityUsed = options.applyConstraints || false;
+    const scenarioKey = scenario === 'funded' ? 'FundedHC' : (scenario === 'team_bis' ? 'TeamBIS' : 'EffectiveBIS');
     const scenarioNameForTitle = `${isNetCapacityUsed ? 'Net' : 'Gross'} ${scenarioKey.replace('BIS', ' BIS')}`;
 
     const summaryTitleHeader = summaryContainer.querySelector('h4');
@@ -462,10 +466,11 @@ function calculatePlanningTableData() {
 }
 
 /**
- * [NEW] Renders the main planning table from pre-calculated data.
+ * [REVISED v2 - No Global Variables] Renders the main planning table from pre-calculated data.
  * @param {Array<object>} planningData - The array from calculatePlanningTableData().
+ * @param {Object} options - { scenario: 'funded'|'team_bis'|'effective', applyConstraints: boolean }
  */
-function renderPlanningTable(planningData) {
+function renderPlanningTable(planningData, options = {}) {
     // console.log("Rendering main planning table from calculated data...");
     const tableContainer = document.getElementById('planningTableContainer');
     if (!tableContainer) { return; }
@@ -520,8 +525,10 @@ function renderPlanningTable(planningData) {
 
     let teamCumulativeSde = {};
     teams.forEach(team => { teamCumulativeSde[team.teamId] = 0; });
-    const scenarioKey = planningCapacityScenario === 'funded' ? 'FundedHC' : (planningCapacityScenario === 'team_bis' ? 'TeamBIS' : 'EffectiveBIS');
-    const isNetCapacityUsed = applyCapacityConstraintsToggle;
+    // Use options instead of global variables
+    const scenario = options.scenario || 'effective';
+    const scenarioKey = scenario === 'funded' ? 'FundedHC' : (scenario === 'team_bis' ? 'TeamBIS' : 'EffectiveBIS');
+    const isNetCapacityUsed = options.applyConstraints || false;
 
     planningData.forEach((initiative) => {
         const row = tbody.insertRow();
