@@ -59,14 +59,32 @@ class NotificationManager {
                 break;
         }
 
-        toast.innerHTML = `
-            <div class="toast-icon"><i class="fas ${iconClass}"></i></div>
-            <div class="toast-content">
-                <div class="toast-title">${title}</div>
-                <div class="toast-message">${message}</div>
-            </div>
-            <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
-        `;
+        // Build toast using DOM creation instead of innerHTML
+        const toastIcon = document.createElement('div');
+        toastIcon.className = 'toast-icon';
+        const icon = document.createElement('i');
+        icon.className = `fas ${iconClass}`;
+        toastIcon.appendChild(icon);
+
+        const toastContent = document.createElement('div');
+        toastContent.className = 'toast-content';
+        const toastTitle = document.createElement('div');
+        toastTitle.className = 'toast-title';
+        toastTitle.textContent = title;
+        const toastMessage = document.createElement('div');
+        toastMessage.className = 'toast-message';
+        toastMessage.textContent = message;
+        toastContent.appendChild(toastTitle);
+        toastContent.appendChild(toastMessage);
+
+        const closeButton = document.createElement('button');
+        closeButton.className = 'toast-close';
+        closeButton.textContent = '×';
+        closeButton.addEventListener('click', () => toast.remove());
+
+        toast.appendChild(toastIcon);
+        toast.appendChild(toastContent);
+        toast.appendChild(closeButton);
 
         this.toastContainer.appendChild(toast);
 
@@ -114,7 +132,7 @@ class NotificationManager {
      * @returns {function} unsubscribe
      */
     addListener(cb) {
-        if (typeof cb !== 'function') return () => {};
+        if (typeof cb !== 'function') return () => { };
         this.listeners.add(cb);
         // push initial state
         cb(this.getNotifications());

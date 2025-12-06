@@ -193,10 +193,7 @@ class RoadmapComponent {
             const initiatives = quarterData[quarter];
             html += `
                 <div class="roadmap-quarter-cell column-${quarter}" 
-                     data-quarter="${quarter}"
-                     ondragover="event.preventDefault(); this.classList.add('drag-over');"
-                     ondragleave="this.classList.remove('drag-over');"
-                     ondrop="window.roadmapComponentInstance.handleDrop(event, '${quarter}')">
+                     data-quarter="${quarter}">
             `;
 
             initiatives.forEach(init => {
@@ -219,9 +216,7 @@ class RoadmapComponent {
                 html += `
                     <div class="roadmap-card ${statusClass}" 
                          draggable="true" 
-                         data-id="${init.initiativeId}"
-                         ondragstart="window.roadmapComponentInstance.handleDragStart(event, '${init.initiativeId}')"
-                         onclick="window.openRoadmapModalForEdit('${init.initiativeId}')">
+                         data-id="${init.initiativeId}">
                         <div class="card-header">
                             <span class="pill pill-theme">${themeNames}</span>
                         </div>
@@ -241,6 +236,8 @@ class RoadmapComponent {
 
         html += `</div></div>`; // End content row and grid
         container.innerHTML = html;
+        this.attachCardEventListeners(container);
+        this.attachDragEventListeners(container);
     }
 
     render3YPGrid(container, data) {
@@ -283,10 +280,7 @@ class RoadmapComponent {
 
             html += `
                 <div class="roadmap-quarter-cell column-${colClass}" 
-                     data-year-bucket="${col}"
-                     ondragover="event.preventDefault(); this.classList.add('drag-over');"
-                     ondragleave="this.classList.remove('drag-over');"
-                     ondrop="window.roadmapComponentInstance.handleDrop(event, '${col}')">
+                     data-year-bucket="${col}">
             `;
 
             initiatives.forEach(init => {
@@ -308,9 +302,7 @@ class RoadmapComponent {
                 html += `
                     <div class="roadmap-card ${statusClass}" 
                          draggable="true" 
-                         data-id="${init.initiativeId}"
-                         ondragstart="window.roadmapComponentInstance.handleDragStart(event, '${init.initiativeId}')"
-                         onclick="window.openRoadmapModalForEdit('${init.initiativeId}')">
+                         data-id="${init.initiativeId}">
                         <div class="card-header">
                             <span class="pill pill-theme">${themeNames}</span>
                         </div>
@@ -330,6 +322,63 @@ class RoadmapComponent {
 
         html += `</div></div>`;
         container.innerHTML = html;
+        this.attachCardEventListeners(container);
+        this.attachDragEventListeners(container);
+    }
+
+    /**
+     * Attach click event listener using event delegation for roadmap cards
+     */
+    attachCardEventListeners(container) {
+        container.addEventListener('click', (e) => {
+            const card = e.target.closest('.roadmap-card');
+            if (card) {
+                const initiativeId = card.dataset.id;
+                if (initiativeId && window.openRoadmapModalForEdit) {
+                    window.openRoadmapModalForEdit(initiativeId);
+                }
+            }
+        });
+    }
+
+    /**
+     * Attach drag event listeners using event delegation
+     */
+    attachDragEventListeners(container) {
+        // Handle dragstart on cards
+        container.addEventListener('dragstart', (e) => {
+            const card = e.target.closest('.roadmap-card');
+            if (card) {
+                const initiativeId = card.dataset.id;
+                this.handleDragStart(e, initiativeId);
+            }
+        });
+
+        // Handle dragover on quarter cells
+        container.addEventListener('dragover', (e) => {
+            const cell = e.target.closest('.roadmap-quarter-cell');
+            if (cell) {
+                e.preventDefault();
+                cell.classList.add('drag-over');
+            }
+        });
+
+        // Handle dragleave on quarter cells
+        container.addEventListener('dragleave', (e) => {
+            const cell = e.target.closest('.roadmap-quarter-cell');
+            if (cell && !cell.contains(e.relatedTarget)) {
+                cell.classList.remove('drag-over');
+            }
+        });
+
+        // Handle drop on quarter cells
+        container.addEventListener('drop', (e) => {
+            const cell = e.target.closest('.roadmap-quarter-cell');
+            if (cell) {
+                const target = cell.dataset.quarter || cell.dataset.yearBucket;
+                this.handleDrop(e, target);
+            }
+        });
     }
 
     getStatusClass(status) {

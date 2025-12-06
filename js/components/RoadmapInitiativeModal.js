@@ -20,7 +20,7 @@ class RoadmapInitiativeModal {
                 <div class="roadmap-modal-content">
                     <div class="roadmap-modal-header">
                         <h2 id="roadmapModalTitle" class="roadmap-modal-title">Add New Initiative</h2>
-                        <button class="roadmap-modal-close" onclick="window.roadmapInitiativeModal.close()">&times;</button>
+                        <button class="roadmap-modal-close" data-action="close">&times;</button>
                     </div>
                     <div class="roadmap-modal-body">
                         <form id="roadmapInitiativeForm">
@@ -105,7 +105,7 @@ class RoadmapInitiativeModal {
                                     <div style="width: 120px;">
                                         <input type="number" id="roadmapModalSdeYears" class="roadmap-input" placeholder="SDE Years" step="0.1" min="0">
                                     </div>
-                                    <button type="button" class="btn-secondary btn-sm" onclick="window.roadmapInitiativeModal.addAssignment()">Add</button>
+                                    <button type="button" class="btn-secondary btn-sm" data-action="add-assignment">Add</button>
                                 </div>
                             </div>
 
@@ -172,14 +172,49 @@ class RoadmapInitiativeModal {
                         </form>
                     </div>
                     <div class="roadmap-modal-footer">
-                        <button class="btn-secondary" onclick="window.roadmapInitiativeModal.close()">Cancel</button>
-                        <button class="btn-primary" onclick="window.roadmapInitiativeModal.save()">Save Initiative</button>
+                        <button class="btn-secondary" data-action="close">Cancel</button>
+                        <button class="btn-primary" data-action="save">Save Initiative</button>
                     </div>
                 </div>
             </div>
         `;
 
         document.body.insertAdjacentHTML('beforeend', modalHtml);
+        this.attachEventListeners();
+    }
+
+    /**
+     * Attach event listeners using event delegation
+     */
+    attachEventListeners() {
+        const modal = document.getElementById(this.modalId);
+        if (!modal) return;
+
+        modal.addEventListener('click', (e) => {
+            const action = e.target.dataset.action;
+            if (!action) return;
+
+            switch (action) {
+                case 'close':
+                    this.close();
+                    break;
+                case 'save':
+                    this.save();
+                    break;
+                case 'add-assignment':
+                    this.addAssignment();
+                    break;
+                case 'remove-assignment':
+                    const index = parseInt(e.target.dataset.index, 10);
+                    if (!isNaN(index)) this.removeAssignment(index);
+                    break;
+            }
+        });
+
+        // Close modal on overlay click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) this.close();
+        });
     }
 
     open(initiativeId = null) {
@@ -344,7 +379,7 @@ class RoadmapInitiativeModal {
             return `
                 <div class="assignment-item">
                     <span><strong>${teamName}</strong>: ${a.sdeYears} SDE Years</span>
-                    <button class="btn-danger btn-sm" onclick="window.roadmapInitiativeModal.removeAssignment(${index})">Remove</button>
+                    <button class="btn-danger btn-sm" data-action="remove-assignment" data-index="${index}">Remove</button>
                 </div>
             `;
         }).join('');
