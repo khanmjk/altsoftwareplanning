@@ -124,6 +124,21 @@ class CapacityPlanningView {
             console.error("saveSystemChanges not found");
         }
     }
+
+    /**
+     * Returns structured context data for AI Chat Panel integration
+     * Implements the AI_VIEW_REGISTRY contract
+     * @returns {Object} Context object with view-specific data
+     */
+    getAIContext() {
+        return {
+            viewTitle: 'Capacity Tuning',
+            currentView: this.currentView, // 'dashboard' or 'configuration'
+            metrics: window.currentSystemData?.calculatedCapacityMetrics,
+            config: window.currentSystemData?.capacityConfiguration,
+            teamCount: window.currentSystemData?.teams?.length || 0
+        };
+    }
 }
 
 // Export

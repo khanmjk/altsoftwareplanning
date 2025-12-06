@@ -1157,6 +1157,40 @@ class OrgView {
             cell.restoreOldValue();
         }
     }
+
+    /**
+     * Returns structured context data for AI Chat Panel integration
+     * Implements the AI_VIEW_REGISTRY contract
+     * @returns {Object} Context object with view-specific data
+     */
+    getAIContext() {
+        const engineers = window.currentSystemData?.allKnownEngineers || [];
+        const teams = window.currentSystemData?.teams || [];
+        const aiEngineers = engineers.filter(e => e.attributes?.isAISWE);
+
+        return {
+            viewTitle: 'Org Design',
+            currentMode: this.currentMode,
+            seniorManagers: window.currentSystemData?.seniorManagers?.map(sm => ({
+                id: sm.id,
+                name: sm.name
+            })),
+            sdms: window.currentSystemData?.sdms?.map(sdm => ({
+                id: sdm.id,
+                name: sdm.name,
+                reportsToSeniorManagerId: sdm.reportsToSeniorManagerId
+            })),
+            teams: teams.map(t => ({
+                teamId: t.teamId,
+                teamName: t.teamName || t.teamIdentity,
+                engineerCount: t.engineers?.length || 0
+            })),
+            teamCount: teams.length,
+            engineerCount: engineers.length,
+            aiEngineerCount: aiEngineers.length,
+            humanEngineerCount: engineers.length - aiEngineers.length
+        };
+    }
 }
 
 // Export and backwards compatibility

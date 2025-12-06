@@ -674,6 +674,25 @@ class DashboardView {
             return window.initializeImpactView(); // CRITICAL: Return toolbar controls
         }
     }
+
+    /**
+     * Returns structured context data for AI Chat Panel integration
+     * Implements the AI_VIEW_REGISTRY contract
+     * @returns {Object} Context object with view-specific data
+     */
+    getAIContext() {
+        const currentWidget = this.widgets[this.currentWidgetIndex];
+        return {
+            viewTitle: 'Executive Dashboard',
+            currentWidget: currentWidget ? {
+                id: currentWidget.id,
+                title: currentWidget.title
+            } : null,
+            widgetCount: this.widgets.length,
+            yearFilter: this.planningYear,
+            availableWidgets: this.widgets.map(w => ({ id: w.id, title: w.title }))
+        };
+    }
 }
 
 // Export

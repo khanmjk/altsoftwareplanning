@@ -65,6 +65,29 @@ class YearPlanningView {
     }
 
     /**
+     * Returns structured context data for AI Chat Panel integration
+     * Implements the AI_VIEW_REGISTRY contract
+     * @returns {Object} Context object with view-specific data
+     */
+    getAIContext() {
+        const atlInitiatives = (this.tableData || []).filter(i => !i.isBTL);
+        const btlInitiatives = (this.tableData || []).filter(i => i.isBTL);
+
+        return {
+            viewTitle: 'Year Plan',
+            planningYear: this.currentYear,
+            scenario: this.scenario,
+            constraintsEnabled: this.applyConstraints,
+            teamLoadSummary: this.summaryData,
+            planningTable: this.tableData,
+            // Summary metrics for quick AI access
+            atlInitiativeCount: atlInitiatives.length,
+            btlInitiativeCount: btlInitiatives.length,
+            totalSdeYears: atlInitiatives.reduce((sum, i) => sum + (i.calculatedInitiativeTotalSde || 0), 0)
+        };
+    }
+
+    /**
      * Refresh capacity metrics before rendering
      */
     refreshCapacityMetrics() {

@@ -307,6 +307,22 @@ class SettingsView {
             }
         }
     }
+
+    /**
+     * Returns structured context data for AI Chat Panel integration
+     * Implements the AI_VIEW_REGISTRY contract
+     * @returns {Object} Context object with view-specific data
+     */
+    getAIContext() {
+        return {
+            viewTitle: 'Settings',
+            currentTab: this.activeTab,
+            aiEnabled: window.globalSettings?.ai?.isEnabled || false,
+            aiProvider: window.globalSettings?.ai?.provider || 'google-gemini',
+            hasApiKey: !!window.globalSettings?.ai?.apiKey,
+            hasSystemLoaded: !!window.currentSystemData
+        };
+    }
 }
 
 // Expose to window

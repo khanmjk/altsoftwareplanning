@@ -267,6 +267,37 @@ class ManagementView {
             console.error('GoalEditComponent not initialized');
         }
     }
+
+    /**
+     * Returns structured context data for AI Chat Panel integration
+     * Implements the AI_VIEW_REGISTRY contract
+     * @returns {Object} Context object with view-specific data
+     */
+    getAIContext() {
+        const themes = window.currentSystemData?.definedThemes || [];
+        const initiatives = window.currentSystemData?.yearlyInitiatives || [];
+        const goals = window.currentSystemData?.goals || [];
+
+        return {
+            viewTitle: 'Product Management',
+            currentTab: this.activeTab,
+            themes: themes.map(t => ({ themeId: t.themeId, name: t.name })),
+            themeCount: themes.length,
+            initiativeCount: initiatives.length,
+            goalCount: goals.length,
+            initiatives: initiatives.map(i => ({
+                id: i.initiativeId,
+                title: i.title,
+                themeId: i.attributes?.themeId,
+                status: i.status
+            })),
+            goals: goals.map(g => ({
+                id: g.goalId,
+                name: g.name,
+                status: g.status
+            }))
+        };
+    }
 }
 
 // Expose to window

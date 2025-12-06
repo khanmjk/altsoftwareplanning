@@ -185,6 +185,32 @@ class RoadmapView {
             else this.activeComponent.render();
         }
     }
+
+    /**
+     * Returns structured context data for AI Chat Panel integration
+     * Implements the AI_VIEW_REGISTRY contract
+     * @returns {Object} Context object with view-specific data
+     */
+    getAIContext() {
+        const initiatives = window.currentSystemData?.yearlyInitiatives || [];
+        const goals = window.currentSystemData?.goals || [];
+        const themes = window.currentSystemData?.definedThemes || [];
+
+        return {
+            viewTitle: 'Roadmap',
+            currentView: this.currentView, // 'backlog', 'quarterly', or '3yearplan'
+            initiatives: initiatives.map(i => ({
+                id: i.initiativeId,
+                title: i.title,
+                status: i.status,
+                planningYear: i.attributes?.planningYear
+            })),
+            initiativeCount: initiatives.length,
+            goalCount: goals.length,
+            themeCount: themes.length,
+            quarterlyRoadmap: initiatives.filter(i => i.status === 'Committed' || i.status === 'In Progress').length
+        };
+    }
 }
 
 // Export and backwards compatibility

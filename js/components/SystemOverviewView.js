@@ -398,6 +398,26 @@ class SystemOverviewView {
             this.container.innerHTML = '';
         }
     }
+
+    /**
+     * Returns structured context data for AI Chat Panel integration
+     * Implements the AI_VIEW_REGISTRY contract
+     * @returns {Object} Context object with view-specific data
+     */
+    getAIContext() {
+        return {
+            viewTitle: 'System Overview',
+            currentVisualization: this.currentView,
+            availableViews: this.viewConfigs.map(v => ({ id: v.id, label: v.label })),
+            services: window.currentSystemData?.services?.map(s => ({
+                serviceName: s.serviceName,
+                owningTeamId: s.owningTeamId
+            })),
+            serviceCount: window.currentSystemData?.services?.length || 0,
+            dependencies: window.currentSystemData?.serviceDependencies,
+            platformDependencies: window.currentSystemData?.platformDependencies
+        };
+    }
 }
 
 // Export for global usage
