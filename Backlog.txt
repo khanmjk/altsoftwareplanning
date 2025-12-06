@@ -171,7 +171,7 @@ bar graph per quarter to see team load/demand impact
 [Done] - [UX] Description: Mermaid is read-only. To enable "Drag and Drop" planning on the chart itself, replace ganttChart.js with a library like frappe-gantt or dhtmlx-gantt.
 [Done] - [UX] Value: Allows users to drag bars to reschedule, which is the expected behavior for detailed planning tools.
 [Done] - [UX] - [MAJOR UX REFACTOR] - Upgrade the menu navigation layout - it's growing with each new feature - need a new cleaner menu navigation model  
-
+[Done] - [UX] - [MAJOR UX REFACTOR]- [TD UX] - Enhance the workspace UX feature, move away from antiquated form views and caroussels - the page needs to be seen as an integrated part of the workspace view
 
 ------------
 IN PROGRESS
@@ -181,7 +181,7 @@ IN PROGRESS
 - [AI Feature] Create an AI agent that can perform actions on the system with access to the code
 
 - [TECH DEBT] - Enhance the codebase to be more modular, portable, separate concerns
--- [TD UX] - Enhance the workspace UX feature, move away from antiquated form views and caroussels - the page needs to be seen as an integrated part of the workspace view
+
 [Feature] - Goals tracking and management. 
 Goals should have statuses (rules should be configurable on app settings): 
 [Green] Not Started - Ok, 
@@ -213,6 +213,7 @@ the gitgub issues tracker to keep track of user feedback requests
 [TODO] Add backlog status filter to initiatives in quarterly roadmap and 3YP
 [TODO] Fix ROI fields in initiatives management view
 [TODO] Capacity Tuning - Show Hiring Gap as a KPI card in dashboard AND ensure capacity sink calculation does not include full bench strength for teams with an open hiring gap
+[TODO] Fix org chart visual - enhance it to display by depth
 
 ------
 TO DO

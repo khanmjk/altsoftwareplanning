@@ -510,6 +510,11 @@ function toggleCollapsibleSection(contentId, indicatorId, handleId = null) {
     indicatorSpan.textContent = isHidden ? '(-)' : '(+)';
     if (handleDiv) handleDiv.style.display = isHidden ? 'block' : 'none';
 
+    // [PATCH] Track summary table expanded state for Year Planning
+    if (contentId === 'teamLoadSummaryContent' && typeof window.isSummaryTableExpanded !== 'undefined') {
+        window.isSummaryTableExpanded = isHidden; // isHidden before toggle means it's now visible
+    }
+
     if (document.getElementById('planningView').style.display !== 'none' &&
         (contentId === 'teamLoadSummaryContent' || contentId === 'addInitiativeContent') &&
         typeof adjustPlanningTableHeight === 'function') {

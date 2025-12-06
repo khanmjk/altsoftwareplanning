@@ -314,30 +314,40 @@ render(container) {
 
 Before submitting a new view or refactoring an existing one, verify:
 
+**Workspace Integration**:
 - [ ] Uses `workspaceComponent.setPageMetadata()` for title/breadcrumbs
 - [ ] Uses `workspaceComponent.setToolbar()` for controls (if multi-view)
-- [ ] No inline HTML strings (use DOM creation)
-- [ ] No inline CSS (use view-specific CSS file)
-- [ ] View CSS file in `css/views/[view-name]-view.css`
 - [ ] Container uses `.workspace-view` class
 - [ ] Multi-view pages use `PillNavigationComponent`
 - [ ] No carousel prev/next buttons
 - [ ] Scrolling works correctly (canvas-level or view-level)
 - [ ] Registered in `NavigationManager.navigateTo()`
-- [ ] Sidebar navigation mapping updated (if new page)
+
+**Code Quality (Migration Readiness)**:
+- [ ] No inline HTML strings (use DOM creation)
+- [ ] No inline CSS (use view-specific CSS file in `css/views/`)
+- [ ] No inline `onclick` attributes (use `addEventListener`)
+- [ ] Business logic extracted to Service module (see Section 10)
+- [ ] Global functions exposed on `window` for AI integration
+
+**AI Integration**:
+- [ ] Page context function implemented for chat panel (see Section 11)
+- [ ] Optimizer hooks documented (if applicable)
 
 ---
 
 ## 8. Reference Implementations
 
-**Good Examples**:
-- ✅ `js/yearPlanning.js` - Clean workspace integration
-- ✅ `js/components/RoadmapView.js` - Class-based pattern
-- ✅ Welcome View - Canonical workspace canvas usage
+**Canonical Examples**:
+- ✅ `js/components/OrgView.js` - Class-based, strict DOM creation, AI integration
+- ✅ `js/components/ManagementView.js` - Component composition, pill nav
+- ✅ `js/components/RoadmapView.js` - Clean class pattern
+- ✅ `js/components/CapacityDashboardView.js` - Service layer pattern
 
-**To Be Refactored** (Anti-patterns):
-- ⚠️ `js/visualizations.js` - Inline HTML, carousel navigation
-- ⚠️ `js/components/DashboardView.js` - Carousel widgets
+**To Be Refactored**:
+- ⚠️ `js/yearPlanning.js` - Inline HTML, mixed concerns
+- ⚠️ `js/ganttPlanning.js` - Complex, needs service extraction
+- ⚠️ `js/visualizations.js` - Inline HTML, no pill nav
 
 ---
 
@@ -351,6 +361,128 @@ If you need clarification on the workspace canvas contract:
 
 ---
 
-**Last Updated**: 2025-12-03  
-**Version**: 1.0  
+## 10. Service Layer Architecture (Migration Readiness)
+
+### 10.1 Purpose
+
+To enable future migration to modern frameworks (React, Next.js, Rails), all views must separate concerns into three layers:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  View (Presentation)         js/components/[View].js        │
+│  └─ DOM creation, event binding, user interaction           │
+├─────────────────────────────────────────────────────────────┤
+│  Service (Business Logic)    js/services/[Domain]Service.js │
+│  └─ Calculations, transformations, pure functions           │
+├─────────────────────────────────────────────────────────────┤
+│  Repository (Data Access)    js/repositories/[Entity]Repository.js │
+│  └─ LocalStorage, API calls, data persistence               │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 10.2 Service Layer Rules
+
+**Must**:
+- Export pure functions (no DOM access)
+- Accept data as parameters, return transformed data
+- Be testable in isolation
+- Be reusable across views
+
+**Must Not**:
+- Access `document` or `window.innerWidth` etc.
+- Modify global state directly (return values instead)
+- Contain presentation logic (colors, labels for display)
+
+### 10.3 Example Pattern
+
+```javascript
+// js/services/PlanningService.js
+export function calculateTeamLoadSummary(teams, initiatives, scenario) {
+    // Pure calculation logic
+    return { rows: [...], totals: {...} };
+}
+
+export function getATLInitiatives(initiatives, teamCapacity) {
+    // Returns initiatives above the line
+    return initiatives.filter(i => i.cumulativeLoad <= teamCapacity);
+}
+
+// js/components/YearPlanningView.js
+import { calculateTeamLoadSummary } from '../services/PlanningService.js';
+
+class YearPlanningView {
+    renderSummary() {
+        const data = calculateTeamLoadSummary(teams, initiatives, this.scenario);
+        this.buildSummaryTable(data); // DOM creation only
+    }
+}
+```
+
+### 10.4 Migration Benefits
+
+| Layer | React Migration | Rails Backend |
+|-------|-----------------|---------------|
+| View | Becomes React component | Frontend-only |
+| Service | Stays as-is or becomes React hook | Moves to Rails controller/service |
+| Repository | Becomes API client | Becomes Rails model |
+
+---
+
+## 11. AI Integration Contract
+
+### 11.1 AI Chat Panel Context
+
+Every view should expose a context function for the AI chat panel:
+
+```javascript
+// Pattern: window.get[ViewName]Context()
+window.getYearPlanningContext = function() {
+    return {
+        viewName: 'Year Planning',
+        currentYear: currentPlanningYear,
+        scenario: currentScenario,
+        initiatives: window.currentSystemData.initiatives,
+        teamCapacity: calculateTotalCapacity(),
+        // ... relevant page state
+    };
+};
+```
+
+### 11.2 AI Optimizer Integration
+
+Views with AI optimization capabilities must:
+
+1. **Expose optimization trigger**: `window.runOptimizer(options)`
+2. **Accept result callback**: Update UI after optimization completes
+3. **Preserve undo capability**: Store pre-optimization state
+
+```javascript
+// Example: Year Planning optimizer hook
+window.runYearPlanOptimizer = async function(options) {
+    const preState = JSON.parse(JSON.stringify(currentPlanData));
+    const result = await AIOptimizerAgent.optimize(options);
+    
+    // Update data
+    applyOptimizationResult(result);
+    
+    // Refresh UI
+    renderPlanningView();
+    
+    return { success: true, undoState: preState };
+};
+```
+
+### 11.3 Page Scraping for AI
+
+The AI chat controller scrapes page context via:
+- `window.get[ViewName]Context()` — structured data
+- DOM inspection for visible elements
+
+Ensure critical data is exposed programmatically, not just visually.
+
+---
+
+**Last Updated**: 2025-12-06  
+**Version**: 2.0  
 **Owner**: SMT Platform Engineering Team
+

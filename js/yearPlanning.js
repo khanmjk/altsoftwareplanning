@@ -6,6 +6,10 @@ let currentPlanningYear = new Date().getFullYear();
 let currentYearPlanSummaryData = null; // [NEW]
 let currentYearPlanTableData = null; // [NEW]
 
+// [PATCH] Remember summary table expanded state across re-renders
+// Using window to ensure consistency with main.js toggle function
+window.isSummaryTableExpanded = window.isSummaryTableExpanded || false;
+
 /** Handles changes to the 'Protected' checkbox in the planning table */
 function handleProtectedChange(event) {
     const checkbox = event.target;
@@ -398,7 +402,8 @@ function renderTeamLoadSummaryTable(summaryData) {
 
 
 /**
- * [NEW] Performs all calculations for the team load summary.
+ * [REFACTORED] Performs all calculations for the team load summary.
+ * Now delegates to PlanningService for pure business logic.
  * @returns {object} An object { rows: [], totals: {} } with the calculated data.
  */
 function calculateTeamLoadSummaryData() {
@@ -407,102 +412,24 @@ function calculateTeamLoadSummaryData() {
         return { rows: [], totals: {} };
     }
 
-    const calculatedMetrics = currentSystemData.calculatedCapacityMetrics;
-    const teams = currentSystemData.teams || [];
-    const scenarioKey = planningCapacityScenario === 'funded' ? 'FundedHC' : (planningCapacityScenario === 'team_bis' ? 'TeamBIS' : 'EffectiveBIS');
-    const isNetCapacityUsed = applyCapacityConstraintsToggle;
-    const summaryAtlBtlLimit = isNetCapacityUsed ? calculatedMetrics.totals[scenarioKey].netYrs : calculatedMetrics.totals[scenarioKey].grossYrs;
-
+    // Filter initiatives for current planning year (excluding completed)
     const initiativesForYear = (currentSystemData.yearlyInitiatives || [])
         .filter(init => init.attributes.planningYear == currentPlanningYear && init.status !== 'Completed');
 
-    const sortedInitiatives = [...initiativesForYear].sort((a, b) => {
-        if (a.isProtected && !b.isProtected) return -1;
-        if (!a.isProtected && b.isProtected) return 1;
-        return 0;
+    // Delegate to PlanningService
+    return PlanningService.calculateTeamLoadSummary({
+        teams: currentSystemData.teams,
+        initiatives: initiativesForYear,
+        calculatedMetrics: currentSystemData.calculatedCapacityMetrics,
+        scenario: planningCapacityScenario,
+        applyConstraints: applyCapacityConstraintsToggle,
+        allKnownEngineers: currentSystemData.allKnownEngineers || []
     });
-
-    let overallCumulativeSde = 0;
-    const teamAtlSdeAssigned = teams.reduce((acc, team) => { acc[team.teamId] = 0; return acc; }, {});
-
-    for (const initiative of sortedInitiatives) {
-        const initiativeTotalSde = (initiative.assignments || []).reduce((sum, a) => sum + a.sdeYears, 0);
-        if (overallCumulativeSde + initiativeTotalSde <= summaryAtlBtlLimit) {
-            overallCumulativeSde += initiativeTotalSde;
-            (initiative.assignments || []).forEach(assignment => {
-                if (teamAtlSdeAssigned.hasOwnProperty(assignment.teamId)) {
-                    teamAtlSdeAssigned[assignment.teamId] += assignment.sdeYears;
-                }
-            });
-        } else {
-            break;
-        }
-    }
-
-    let summaryRows = [];
-    let totals = {
-        fundedHCGross: 0, teamBISHumans: 0, awayBISHumans: 0, aiEngineers: 0,
-        sinks: 0, productivityGain: 0, scenarioCapacity: 0, assignedAtlSde: 0
-    };
-
-    teams.sort((a, b) => (a?.teamName || '').localeCompare(b?.teamName || '')).forEach(team => {
-        if (!team || !team.teamId) return;
-
-        const teamId = team.teamId;
-        const teamMetrics = calculatedMetrics[teamId];
-        if (!teamMetrics) { return; }
-
-        const teamAIBIS = (team.engineers || []).filter(name => currentSystemData.allKnownEngineers.find(e => e.name === name)?.attributes?.isAISWE).length;
-        const awayAIBIS = (team.awayTeamMembers || []).filter(m => m.attributes?.isAISWE).length;
-        const aiEngineers = teamAIBIS + awayAIBIS;
-
-        const teamBISHumans = teamMetrics.TeamBIS.humanHeadcount;
-        const effectiveBISHumans = teamMetrics.EffectiveBIS.humanHeadcount;
-        const awayBISHumans = effectiveBISHumans - teamBISHumans;
-        const sinks = isNetCapacityUsed ? (teamMetrics[scenarioKey].deductYrs || 0) : 0;
-        const productivityGain = teamMetrics[scenarioKey].deductionsBreakdown.aiProductivityGainYrs || 0;
-        const productivityPercent = team.teamCapacityAdjustments?.aiProductivityGainPercent || 0;
-        const scenarioCapacity = isNetCapacityUsed ? teamMetrics[scenarioKey].netYrs : teamMetrics[scenarioKey].grossYrs;
-        const assignedAtlSde = teamAtlSdeAssigned[teamId] || 0;
-        const remainingCapacity = scenarioCapacity - assignedAtlSde;
-
-        let statusText = '✅ OK';
-        if (remainingCapacity < 0) { statusText = '🛑 Overloaded'; }
-        else if (remainingCapacity < 0.5 && scenarioCapacity > 0) { statusText = '⚠️ Near Limit'; }
-
-        summaryRows.push({
-            teamId: team.teamId,
-            teamName: team.teamIdentity || team.teamName || teamId,
-            fundedHC: teamMetrics.FundedHC.humanHeadcount,
-            teamBISHumans: teamBISHumans,
-            awayBISHumans: awayBISHumans,
-            aiEngineers: aiEngineers,
-            sinks: sinks,
-            productivityGain: productivityGain,
-            productivityPercent: productivityPercent,
-            scenarioCapacity: scenarioCapacity,
-            assignedAtlSde: assignedAtlSde,
-            remainingCapacity: remainingCapacity,
-            status: statusText
-        });
-
-        totals.fundedHCGross += teamMetrics.FundedHC.humanHeadcount;
-        totals.teamBISHumans += teamBISHumans;
-        totals.awayBISHumans += awayBISHumans;
-        totals.aiEngineers += aiEngineers;
-        totals.sinks += sinks;
-        totals.productivityGain += productivityGain;
-        totals.scenarioCapacity += scenarioCapacity;
-        totals.assignedAtlSde += assignedAtlSde;
-    });
-
-    totals.remainingCapacity = totals.scenarioCapacity - totals.assignedAtlSde;
-
-    return { rows: summaryRows, totals: totals };
 }
 
 /**
- * [NEW] Calculates the main planning table data, including sorting and ATL/BTL status.
+ * [REFACTORED] Calculates the main planning table data, including sorting and ATL/BTL status.
+ * Now delegates to PlanningService for pure business logic.
  * @returns {Array<object>} A new array of initiative objects with calculated fields added.
  */
 function calculatePlanningTableData() {
@@ -511,42 +438,26 @@ function calculatePlanningTableData() {
         return [];
     }
 
-    const calculatedMetrics = currentSystemData.calculatedCapacityMetrics;
-    const scenarioKey = planningCapacityScenario === 'funded' ? 'FundedHC' : (planningCapacityScenario === 'team_bis' ? 'TeamBIS' : 'EffectiveBIS');
-    const isNetCapacityUsed = applyCapacityConstraintsToggle;
-    const atlBtlCapacityLimit = isNetCapacityUsed ? calculatedMetrics.totals[scenarioKey].netYrs : calculatedMetrics.totals[scenarioKey].grossYrs;
-
+    // Filter initiatives for current planning year (excluding completed)
     const initiativesForYear = (currentSystemData.yearlyInitiatives || [])
         .filter(init => init.attributes.planningYear == currentPlanningYear && init.status !== 'Completed');
 
-    const sortedInitiatives = [...initiativesForYear].sort((a, b) => {
-        if (a.isProtected && !b.isProtected) return -1;
-        if (!a.isProtected && b.isProtected) return 1;
-        return 0;
+    // Delegate to PlanningService
+    const calculatedData = PlanningService.calculatePlanningTableData({
+        initiatives: initiativesForYear,
+        calculatedMetrics: currentSystemData.calculatedCapacityMetrics,
+        scenario: planningCapacityScenario,
+        applyConstraints: applyCapacityConstraintsToggle
     });
 
-    let cumulativeSdeTotal = 0;
-    const calculatedData = [];
+    // Update the planningStatusFundedHc on the original initiative objects for persistence
+    calculatedData.forEach(calcInit => {
+        const originalInit = (currentSystemData.yearlyInitiatives || []).find(i => i.initiativeId === calcInit.initiativeId);
+        if (originalInit) {
+            originalInit.attributes.planningStatusFundedHc = calcInit.calculatedAtlBtlStatus;
+        }
+    });
 
-    for (const initiative of sortedInitiatives) {
-        let initiativeTotalSde = 0;
-        (initiative.assignments || []).forEach(assignment => {
-            initiativeTotalSde += (assignment.sdeYears || 0);
-        });
-
-        cumulativeSdeTotal += initiativeTotalSde;
-        const isBTL = cumulativeSdeTotal > atlBtlCapacityLimit;
-        const atlBtlStatus = isBTL ? 'BTL' : 'ATL';
-        initiative.attributes.planningStatusFundedHc = atlBtlStatus;
-
-        calculatedData.push({
-            ...initiative,
-            calculatedInitiativeTotalSde: initiativeTotalSde,
-            calculatedCumulativeSde: cumulativeSdeTotal,
-            calculatedAtlBtlStatus: atlBtlStatus,
-            isBTL: isBTL
-        });
-    }
     return calculatedData;
 }
 
@@ -821,12 +732,20 @@ function renderPlanningView() {
     // 3. Create Content Layout
     // We only need the summary section and the table container.
     // The controls are now in the toolbar.
+
+    // [PATCH] Capture current expanded state from DOM before re-rendering
+    const summaryContent = document.getElementById('teamLoadSummaryContent');
+    if (summaryContent) {
+        window.isSummaryTableExpanded = summaryContent.style.display !== 'none';
+    }
+    const isExpanded = window.isSummaryTableExpanded;
+
     container.innerHTML = `
         <div id="teamLoadSummarySection" style="margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px;">
             <h4 onclick="toggleCollapsibleSection('teamLoadSummaryContent', 'teamLoadSummaryToggle')" style="cursor: pointer; margin: 0; padding: 10px; background-color: #e9ecef; border-bottom: 1px solid #ccc;" title="Click to expand/collapse team load summary">
-                <span id="teamLoadSummaryToggle" class="toggle-indicator">(+) </span> Team Load Summary (for ATL Initiatives)
+                <span id="teamLoadSummaryToggle" class="toggle-indicator">${isExpanded ? '(-)' : '(+)'} </span> Team Load Summary (for ATL Initiatives)
             </h4>
-            <div id="teamLoadSummaryContent" style="display: none; padding: 10px;">
+            <div id="teamLoadSummaryContent" style="display: ${isExpanded ? 'block' : 'none'}; padding: 10px;">
                 <p style="font-size: 0.9em; color: #555;">Shows team load based *only* on initiatives currently Above The Line (ATL) according to the selected scenario below.</p>
                 <table id="teamLoadSummaryTable" style="margin: 0 auto; border-collapse: collapse; font-size: 0.9em;">
                     <thead>
