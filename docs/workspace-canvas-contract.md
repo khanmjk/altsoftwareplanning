@@ -430,25 +430,95 @@ class YearPlanningView {
 
 ## 11. AI Integration Contract
 
-### 11.1 AI Chat Panel Context
+### 11.1 CRITICAL: AI Integration Must Be Maintained
 
-Every view should expose a context function for the AI chat panel:
+> [!CAUTION]
+> When refactoring any view to the Workspace Canvas pattern, **AI integration MUST be preserved or enhanced**. 
+> Breaking AI context access is a critical regression.
+
+### 11.2 The `getAIContext()` Interface
+
+Every class-based view **MUST** implement the `getAIContext()` method:
 
 ```javascript
-// Pattern: window.get[ViewName]Context()
-window.getYearPlanningContext = function() {
-    return {
-        viewName: 'Year Planning',
-        currentYear: currentPlanningYear,
-        scenario: currentScenario,
-        initiatives: window.currentSystemData.initiatives,
-        teamCapacity: calculateTotalCapacity(),
-        // ... relevant page state
-    };
+class MyView {
+    /**
+     * Returns structured context data for AI Chat Panel integration
+     * Implements the AI_VIEW_REGISTRY contract
+     * @returns {Object} Context object with view-specific data
+     */
+    getAIContext() {
+        return {
+            viewTitle: 'My View',
+            // View-specific state
+            currentMode: this.currentMode,
+            // Relevant data for AI analysis
+            items: this.items?.map(i => ({ id: i.id, name: i.name })),
+            itemCount: this.items?.length || 0
+        };
+    }
+}
+```
+
+**Required fields**:
+- `viewTitle` - Human-readable view name
+
+**Recommended fields**:
+- Current mode/tab/sub-view state
+- Counts and summaries for quick AI analysis
+- Filtered/mapped data (avoid sending raw large objects)
+
+### 11.3 AI View Registry
+
+All views are registered in `js/ai/aiViewRegistry.js`:
+
+```javascript
+const AI_VIEW_REGISTRY = {
+    planningView: {
+        getInstance: () => window.yearPlanningView,
+        displayName: 'Year Plan',
+        fallbackGlobals: ['currentPlanningYear', 'planningCapacityScenario']
+    },
+    // ... other views
 };
 ```
 
-### 11.2 AI Optimizer Integration
+**When creating a new view**:
+1. Add entry to `AI_VIEW_REGISTRY` 
+2. Set instance variable pattern: `window.[viewName]Instance`
+3. Implement `getAIContext()` method
+
+### 11.4 How AI Scraping Works
+
+The `aiAgentController.scrapeCurrentViewContext()` function:
+
+1. **First**: Checks `AI_VIEW_REGISTRY` for class instance with `getAIContext()`
+2. **Fallback**: Uses legacy switch statement for non-class views
+
+```javascript
+// ai/aiAgentController.js
+if (window.getAIContextForView && currentView) {
+    const classContext = window.getAIContextForView(currentView);
+    if (classContext && classContext.source === 'class') {
+        contextData.data = classContext;  // Uses class method
+        return JSON.stringify(contextData);
+    }
+}
+// Falls back to legacy globals...
+```
+
+### 11.5 Compliance Checklist for AI
+
+When refactoring a view, verify:
+
+- [ ] Class implements `getAIContext()` method
+- [ ] View instance registered on `window` (e.g., `window.myViewInstance`)
+- [ ] Entry added to `AI_VIEW_REGISTRY` in `js/ai/aiViewRegistry.js`
+- [ ] `getAIContext()` returns `viewTitle` + relevant state data
+- [ ] Legacy global variables preserved until all dependencies migrated
+- [ ] Tested: Open AI Chat, ask context-dependent question, verify response
+
+### 11.6 AI Optimizer Integration
 
 Views with AI optimization capabilities must:
 
@@ -462,27 +532,34 @@ window.runYearPlanOptimizer = async function(options) {
     const preState = JSON.parse(JSON.stringify(currentPlanData));
     const result = await AIOptimizerAgent.optimize(options);
     
-    // Update data
     applyOptimizationResult(result);
-    
-    // Refresh UI
     renderPlanningView();
     
     return { success: true, undoState: preState };
 };
 ```
 
-### 11.3 Page Scraping for AI
+### 11.7 Views with AI Context Implemented
 
-The AI chat controller scrapes page context via:
-- `window.get[ViewName]Context()` — structured data
-- DOM inspection for visible elements
-
-Ensure critical data is exposed programmatically, not just visually.
+| View | Class Instance | Status |
+|------|----------------|--------|
+| `planningView` | `window.yearPlanningView` | ✅ |
+| `managementView` | `window.managementViewInstance` | ✅ |
+| `capacityConfigView` | `window.capacityPlanningViewInstance` | ✅ |
+| `visualizationCarousel` | `window.systemOverviewViewInstance` | ✅ |
+| `organogramView` | `window.orgViewInstance` | ✅ |
+| `roadmapView` | `window.roadmapViewInstance` | ✅ |
+| `dashboardView` | `window.dashboardViewInstance` | ✅ |
+| `settingsView` | `window.settingsViewInstance` | ✅ |
+| `sdmForecastingView` | `window.resourceForecastViewInstance` | ✅ |
+| `systemsView` | `window.systemsViewInstance` | ✅ |
+| `ganttPlanningView` | *(legacy)* | ⚠️ Uses fallback |
+| `welcomeView` | *(static)* | ✅ Static |
+| `helpView` | *(static)* | ✅ Static |
 
 ---
 
 **Last Updated**: 2025-12-06  
-**Version**: 2.0  
+**Version**: 2.1  
 **Owner**: SMT Platform Engineering Team
 
