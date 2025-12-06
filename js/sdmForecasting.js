@@ -446,14 +446,25 @@ function generateForecast_SDM() {
 
     // Feasibility Check
     if (closeGapWeek < hiringTime) {
-        if (hiringInfoDiv) hiringInfoDiv.innerHTML = `<span style="color:red">Target week (${closeGapWeek}) is earlier than hiring time (${hiringTime} weeks). Cannot reach target.</span>`;
-        if (outputSummaryDiv) outputSummaryDiv.innerHTML = `<p>Adjust Hiring Time or Target Week.</p>`;
-        if (forecastTable) forecastTable.innerHTML = '';
-        if (monthlySummaryTable) monthlySummaryTable.innerHTML = '';
+        if (hiringInfoDiv) {
+            while (hiringInfoDiv.firstChild) hiringInfoDiv.removeChild(hiringInfoDiv.firstChild);
+            const errorSpan = document.createElement('span');
+            errorSpan.className = 'sdm-error-text';
+            errorSpan.textContent = `Target week (${closeGapWeek}) is earlier than hiring time (${hiringTime} weeks). Cannot reach target.`;
+            hiringInfoDiv.appendChild(errorSpan);
+        }
+        if (outputSummaryDiv) {
+            while (outputSummaryDiv.firstChild) outputSummaryDiv.removeChild(outputSummaryDiv.firstChild);
+            const adjustText = document.createElement('p');
+            adjustText.textContent = 'Adjust Hiring Time or Target Week.';
+            outputSummaryDiv.appendChild(adjustText);
+        }
+        if (forecastTable) { while (forecastTable.firstChild) forecastTable.removeChild(forecastTable.firstChild); }
+        if (monthlySummaryTable) { while (monthlySummaryTable.firstChild) monthlySummaryTable.removeChild(monthlySummaryTable.firstChild); }
         if (forecastChart_SDM) { forecastChart_SDM.destroy(); forecastChart_SDM = null; }
         return;
     } else {
-        if (outputSummaryDiv) outputSummaryDiv.innerHTML = '';
+        if (outputSummaryDiv) { while (outputSummaryDiv.firstChild) outputSummaryDiv.removeChild(outputSummaryDiv.firstChild); }
     }
 
     // Calculate required hiring rate
@@ -482,7 +493,17 @@ function generateForecast_SDM() {
 
     // --- Update Hiring Info Display ---
     if (hiringInfoDiv) {
-        hiringInfoDiv.innerHTML = `Est. Hires Required: <strong style="color:blue">${Math.ceil(hiresNeeded)}</strong> by Week ${closeGapWeek} to reach funded size (Avg. rate: ~${hiringRate.toFixed(2)}/week).`;
+        while (hiringInfoDiv.firstChild) hiringInfoDiv.removeChild(hiringInfoDiv.firstChild);
+
+        hiringInfoDiv.appendChild(document.createTextNode('Est. Hires Required: '));
+
+        const hiresNumberSpan = document.createElement('strong');
+        hiresNumberSpan.className = 'sdm-highlight-text';
+        hiresNumberSpan.textContent = Math.ceil(hiresNeeded);
+        hiringInfoDiv.appendChild(hiresNumberSpan);
+
+        hiringInfoDiv.appendChild(document.createTextNode(` by Week ${closeGapWeek} to reach funded size (Avg. rate: ~${hiringRate.toFixed(2)}/week).`));
+
         hiringInfoDiv.title = `Calculated minimum constant weekly hiring rate needed: ${hiringRate.toFixed(4)}. Total hires includes gap filling (${Math.max(0, fundedSize - currentEngineers)}) and replacing estimated attrition (${estimatedAttritionByTarget.toFixed(1)}) occurring before week ${closeGapWeek}.`;
     }
     // --- -------------------------- ---

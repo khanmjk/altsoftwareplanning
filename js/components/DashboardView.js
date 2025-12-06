@@ -670,11 +670,19 @@ class DashboardView {
     }
 
     initializeRoadmapTableWidget() {
-        if (window.initializeRoadmapTableView) window.initializeRoadmapTableView();
+        // Use new RoadmapTableWidget class (refactored from roadmapTableView.js)
+        if (!this.roadmapTableWidget) {
+            this.roadmapTableWidget = new RoadmapTableWidget('roadmapTimelineWidget', 'quarterly');
+        }
+        this.roadmapTableWidget.render();
     }
 
     initialize3YPWidget() {
-        if (window.initialize3YPRoadmapView) window.initialize3YPRoadmapView();
+        // Use new RoadmapTableWidget class for 3YP (refactored from roadmapTableView.js)
+        if (!this.threeYearPlanWidget) {
+            this.threeYearPlanWidget = new RoadmapTableWidget('threeYearPlanWidget', '3yp');
+        }
+        this.threeYearPlanWidget.render();
     }
 
     initializeImpactWidget() {
