@@ -102,9 +102,7 @@ class SidebarComponent {
         const createAiBtn = this.container.querySelector('#create-ai-btn');
         if (createAiBtn) {
             createAiBtn.addEventListener('click', () => {
-                if (typeof handleCreateWithAi === 'function') {
-                    handleCreateWithAi();
-                }
+                handleCreateWithAi();
             });
         }
     }

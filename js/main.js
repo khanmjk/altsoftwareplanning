@@ -340,7 +340,8 @@ function switchView(targetViewId, newMode = null) {
     // console.log(`Switching view to: ${targetViewId || 'Home'}, Mode: ${newMode || 'Auto'}`);
 
     // 1. Close Modals (Legacy Logic)
-    if (typeof closeRoadmapModal === 'function') closeRoadmapModal();
+    // 1. Close Modals (Legacy Logic)
+    // closeRoadmapModal call removed as it's no longer defined
 
     // 2. Handle Home/Null State
     if (!targetViewId) {
@@ -419,8 +420,7 @@ function toggleCollapsibleSection(contentId, indicatorId, handleId = null) {
     }
 
     if (document.getElementById('planningView').style.display !== 'none' &&
-        (contentId === 'teamLoadSummaryContent' || contentId === 'addInitiativeContent') &&
-        typeof adjustPlanningTableHeight === 'function') {
+        (contentId === 'teamLoadSummaryContent' || contentId === 'addInitiativeContent')) {
         adjustPlanningTableHeight();
     }
     // console.log(`Toggled section ${contentId} to ${isHidden ? 'visible' : 'hidden'}`);
@@ -1055,7 +1055,7 @@ function updateCapacityCalculationsAndDisplay() {
                 dashboard.render(contentContainer);
             }
         }
-    } else if (currentViewId === 'planningView' && typeof renderPlanningView === 'function') {
+    } else if (currentViewId === 'planningView') {
         renderPlanningView();
     }
 
@@ -1072,7 +1072,7 @@ function refreshCurrentView() {
 
     switch (currentViewId) {
         case 'planningView':
-            if (typeof renderPlanningView === 'function') renderPlanningView();
+            renderPlanningView();
             break;
         case 'organogramView':
             // Use switchView to ensure proper rendering via WorkspaceComponent
@@ -1080,15 +1080,14 @@ function refreshCurrentView() {
             break;
 
         case 'capacityConfigView':
-            if (typeof updateCapacityCalculationsAndDisplay === 'function') updateCapacityCalculationsAndDisplay();
+            updateCapacityCalculationsAndDisplay();
             break;
         case 'visualizationCarousel':
-            if (typeof showVisualization === 'function') showVisualization(currentVisualizationIndex || 0);
+            showVisualization(currentVisualizationIndex || 0);
             break;
         case 'systemEditForm':
-            if (typeof showSystemEditForm === 'function') {
-                showSystemEditForm(currentSystemData);
-            }
+            showSystemEditForm(currentSystemData);
+            break;
             break;
         default:
             console.log(`[REFRESH] No specific refresh handler for view: ${currentViewId}`);
@@ -1115,18 +1114,11 @@ function initializeEventListeners() {
 
 
     // Initialize the chat panel's internal listeners (Required for Header AI Button)
-    if (typeof initializeAiChatPanel === 'function') {
-        initializeAiChatPanel();
-    } else {
-        console.error("main.js: initializeAiChatPanel() function not found. aiChatAssistant.js may not have loaded.");
-    }
+    initializeAiChatPanel();
     console.log("Event listeners initialized.");
 }
 
 
 
 
-if (typeof returnToHome === 'function') window.returnToHome = returnToHome;
-if (typeof createNewSystem === 'function') window.createNewSystem = createNewSystem;
-if (typeof deleteSystem === 'function') window.deleteSystem = deleteSystem;
-if (typeof resetToDefaults === 'function') window.resetToDefaults = resetToDefaults;
+

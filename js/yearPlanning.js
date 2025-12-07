@@ -401,7 +401,7 @@ window.toggleCapacityConstraints = toggleCapacityConstraints;
 function renderPlanningView() {
     // [SYNC FIX] Ensure capacity metrics are fresh before rendering
     // We check if the function exists to avoid errors during initial load if main.js isn't fully ready
-    if (typeof window.updateCapacityCalculationsAndDisplay === 'function') {
+    if (window.updateCapacityCalculationsAndDisplay) {
         // Note: updateCapacityCalculationsAndDisplay calls renderPlanningView if currentViewId is planningView.
         // To avoid infinite recursion, we should only call it if we are NOT already inside a recursive call triggered by it.
         // However, updateCapacityCalculationsAndDisplay updates the data and THEN calls render.
@@ -439,7 +439,7 @@ function renderPlanningView() {
                     label: 'Optimize Plan',
                     icon: 'fas fa-robot',
                     onClick: () => {
-                        if (window.aiAgentController && typeof window.aiAgentController.runPrebuiltAgent === 'function') {
+                        if (window.aiAgentController && window.aiAgentController.runPrebuiltAgent) {
                             window.aiAgentController.runPrebuiltAgent('optimizePlan');
                         } else {
                             window.notificationManager.showToast("AI Controller is not available.", "error");
@@ -502,12 +502,11 @@ function renderPlanningView() {
     // Ensure Data
     // Updated to use WorkPackageService directly
     WorkPackageService.ensureWorkPackagesForInitiatives(currentSystemData, currentPlanningYear);
-    if (typeof syncInitiativeTotals === 'function') {
-        (currentSystemData.yearlyInitiatives || [])
-            .filter(init => `${init.attributes?.planningYear || ''}` === `${currentPlanningYear}`)
-            // Updated to use WorkPackageService directly
-            .forEach(init => WorkPackageService.syncInitiativeTotals(init.initiativeId, currentSystemData));
-    }
+    // Updated to use WorkPackageService directly
+    (currentSystemData.yearlyInitiatives || [])
+        .filter(init => `${init.attributes?.planningYear || ''}` === `${currentPlanningYear}`)
+        // Updated to use WorkPackageService directly
+        .forEach(init => WorkPackageService.syncInitiativeTotals(init.initiativeId, currentSystemData));
 
     const tableContainer = document.getElementById('planningTableContainer');
 
@@ -523,9 +522,7 @@ function renderPlanningView() {
     }
 
     // Ensure Planning Years
-    if (typeof ensureInitiativePlanningYears === 'function') {
-        ensureInitiativePlanningYears(currentSystemData.yearlyInitiatives);
-    }
+    ensureInitiativePlanningYears(currentSystemData.yearlyInitiatives);
 
     // Ensure Metrics
     if (!currentSystemData.calculatedCapacityMetrics) {

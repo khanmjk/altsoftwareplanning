@@ -906,9 +906,8 @@ class YearPlanningView {
         tableContainer.appendChild(tableWrapper);
 
         // Adjust height (legacy helper)
-        if (typeof adjustPlanningTableHeight === 'function') {
-            adjustPlanningTableHeight();
-        }
+        // Adjust height (legacy helper)
+        adjustPlanningTableHeight();
     }
 
     // ==================== State Setters ====================
@@ -961,17 +960,13 @@ class YearPlanningView {
         });
 
         try {
-            if (typeof ensureWorkPackagesForInitiatives === 'function') {
-                ensureWorkPackagesForInitiatives(window.currentSystemData, this.currentYear);
-                initiativesForYear.forEach(init => {
-                    if (typeof syncWorkPackagesFromInitiative === 'function') {
-                        syncWorkPackagesFromInitiative(init, window.currentSystemData);
-                    }
-                    if (typeof syncInitiativeTotals === 'function') {
-                        syncInitiativeTotals(init.initiativeId, window.currentSystemData);
-                    }
-                });
-            }
+            // Use WorkPackageService directly (Guaranteed by Service Layer)
+            WorkPackageService.ensureWorkPackagesForInitiatives(window.currentSystemData, this.currentYear);
+            initiativesForYear.forEach(init => {
+                WorkPackageService.syncWorkPackagesFromInitiative(init, window.currentSystemData);
+                WorkPackageService.syncInitiativeTotals(init.initiativeId, window.currentSystemData);
+            });
+
             saveSystemChanges();
             window.notificationManager?.showToast(`Plan for ${this.currentYear} saved successfully.`, "success");
             this.render();

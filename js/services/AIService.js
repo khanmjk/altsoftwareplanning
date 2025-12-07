@@ -33,12 +33,12 @@ const AIService = {
             if (aiEnabled) {
                 chatContainer.style.display = 'block';
                 // Check if global aiChatAssistant is available for finer control
-                if (!(window.aiChatAssistant && typeof window.aiChatAssistant.isAiChatPanelOpen === 'function' && window.aiChatAssistant.isAiChatPanelOpen())) {
+                if (!(window.aiChatAssistant && window.aiChatAssistant.isAiChatPanelOpen && window.aiChatAssistant.isAiChatPanelOpen())) {
                     chatContainer.style.width = chatContainer.style.width || '0';
                     if (chatHandle) chatHandle.style.display = 'none';
                 }
             } else {
-                if (window.aiChatAssistant && typeof window.aiChatAssistant.closeAiChatPanel === 'function') {
+                if (window.aiChatAssistant && window.aiChatAssistant.closeAiChatPanel) {
                     window.aiChatAssistant.closeAiChatPanel();
                 }
                 chatContainer.style.display = 'none';
@@ -46,7 +46,7 @@ const AIService = {
             }
         }
 
-        if (!skipPlanningRender && typeof window.currentViewId !== 'undefined' && window.currentViewId === 'planningView' && typeof window.renderPlanningView === 'function') {
+        if (!skipPlanningRender && window.currentViewId === 'planningView') {
             window.renderPlanningView();
         }
     },

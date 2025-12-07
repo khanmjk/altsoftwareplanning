@@ -175,12 +175,13 @@ bar graph per quarter to see team load/demand impact
 [Done] - [TECH DEBT] - Enhance the codebase to be more modular, portable, separate concerns
 [Done] - [TECH DEBT] - completely remove data.js
 [Done] - [TECH DEBT] - move util function function validateGeneratedSystem(systemData) to aiService
+[Done] - [TECH DEBT] - Cleanup code wherever this pattern exists: if (typeof [NAME] === 'function') {... since we introduced service layers then these functions are guaranteed
 
 ------------
 IN PROGRESS
 ------------
 [TODO] code cleanup
-- Cleanup code wherever this pattern exists: if (typeof [NAME] === 'function') {... since we introduced service layers then these functions are guaranteed
+
 - Create a new service for SystemManager to handle all system related functions, maybe abstract to StorageService?
 - clean up main.js
 - cleanup index.html - move a bunch of html to a view file for main content or the workspace canvas files

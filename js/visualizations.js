@@ -255,16 +255,14 @@ async function renderMermaidDiagram() {
         showMessage('Load a system to see the architecture diagram.', 'mermaid-info');
         return;
     }
+    // Check generic external library availability
     if (typeof mermaid === 'undefined' || typeof mermaid.render !== 'function') {
         console.error("renderMermaidDiagram: Mermaid library is unavailable.");
         showMessage('Mermaid is not loaded. Please check your connection.', 'mermaid-error');
         return;
     }
-    if (typeof generateMermaidSyntax !== 'function') {
-        console.error("renderMermaidDiagram: generateMermaidSyntax is not defined.");
-        showMessage('Mermaid generator missing. Check script loading order.', 'mermaid-error');
-        return;
-    }
+
+    // Checking of generateMermaidSyntax removed as it is guaranteed by service layer
 
     let definition = '';
     try {
@@ -356,10 +354,7 @@ async function renderMermaidApiDiagram(serviceParam) {
         showMessage('Mermaid is not loaded.', 'mermaid-error');
         return;
     }
-    if (typeof generateMermaidApiSyntax !== 'function') {
-        showMessage('API mermaid generator missing.', 'mermaid-error');
-        return;
-    }
+    // Checking of generateMermaidApiSyntax removed as it is guaranteed by service layer
 
     let definition = '';
     try {
@@ -392,9 +387,6 @@ function getActiveVisualizationId() {
         if (activeItem) {
             return activeItem.id;
         }
-    }
-    if (typeof visualizationItems !== 'undefined' && typeof currentVisualizationIndex !== 'undefined') {
-        return visualizationItems[currentVisualizationIndex]?.id || null;
     }
     return null;
 }
