@@ -8,6 +8,24 @@ class RoadmapComponent {
         this.containerId = containerId;
         this.viewType = viewType; // 'quarterly' or '3yp'
         this.draggedInitiativeId = null;
+        // Initialize planning year from system data (first available year)
+        this.planningYear = this._getDefaultPlanningYear();
+    }
+
+    /**
+     * Get default planning year from system data
+     */
+    _getDefaultPlanningYear() {
+        const system = SystemService.getCurrentSystem();
+        if (!system || !system.yearlyInitiatives) {
+            return new Date().getFullYear();
+        }
+        const years = [...new Set(
+            system.yearlyInitiatives
+                .map(init => init.attributes?.planningYear)
+                .filter(Boolean)
+        )].sort((a, b) => a - b);
+        return years.length > 0 ? years[0] : new Date().getFullYear();
     }
 
     render() {
@@ -52,17 +70,17 @@ class RoadmapComponent {
 
         // 1. Year Filter (Crucial for 3YP context)
         const currentYear = new Date().getFullYear();
-        // Default to current year if not set or 'all'
-        if (!window.dashboardPlanningYear || window.dashboardPlanningYear === 'all') {
-            window.dashboardPlanningYear = currentYear;
+        // Ensure planningYear is set
+        if (!this.planningYear || this.planningYear === 'all') {
+            this.planningYear = currentYear;
         }
 
         const years = [currentYear - 1, currentYear, currentYear + 1, currentYear + 2];
         // Removed "All Years" option as requested
-        const yearOptions = years.map(y => `<option value="${y}" ${y == window.dashboardPlanningYear ? 'selected' : ''}>${y}</option>`).join('');
+        const yearOptions = years.map(y => `<option value="${y}" ${y == this.planningYear ? 'selected' : ''}>${y}</option>`).join('');
 
         filtersContainer.appendChild(createFilter('roadmapYearFilter', 'Year:', yearOptions, (e) => {
-            window.dashboardPlanningYear = e.target.value; // Sync with global
+            this.planningYear = parseInt(e.target.value);
             this.renderGrid();
         }));
 
@@ -133,7 +151,7 @@ class RoadmapComponent {
         // Collect Filter Values
         const orgFilter = document.getElementById('roadmapOrgFilter')?.value || 'all';
         const teamFilter = document.getElementById('roadmapTeamFilter')?.value || 'all';
-        const yearFilter = window.dashboardPlanningYear || 'all';
+        const yearFilter = this.planningYear || 'all';
 
         // Collect Theme Filters (Simplified Single Select for now, matching renderFilters)
         const themeFilter = document.getElementById('roadmapThemeFilter')?.value || 'all';
@@ -177,7 +195,7 @@ class RoadmapComponent {
         const processedIds = new Set(); // Track unique IDs to prevent duplicates
 
         // Format Headers: Q1 '25
-        const planningYear = window.dashboardPlanningYear || new Date().getFullYear();
+        const planningYear = this.planningYear || new Date().getFullYear();
         const shortYear = planningYear.toString().slice(-2);
         const headerLabels = quarters.map(q => `${q} '${shortYear}`);
 
@@ -440,8 +458,8 @@ class RoadmapComponent {
 
             initiative.targetQuarter = newQuarter;
 
-            const year = window.dashboardPlanningYear && window.dashboardPlanningYear !== 'all'
-                ? parseInt(window.dashboardPlanningYear)
+            const year = this.planningYear && this.planningYear !== 'all'
+                ? parseInt(this.planningYear)
                 : (initiative.attributes.planningYear || new Date().getFullYear());
 
             const newDueDate = RoadmapService.getEndDateForQuarter(newQuarter, year);
@@ -480,14 +498,4 @@ class RoadmapComponent {
     }
 }
 
-// Global Instance for Event Handlers
-window.roadmapComponentInstance = null;
-
-// Wrap constructor to set global instance
-const OriginalRoadmapComponent = RoadmapComponent;
-RoadmapComponent = class extends OriginalRoadmapComponent {
-    constructor(containerId, viewType) {
-        super(containerId, viewType);
-        window.roadmapComponentInstance = this;
-    }
-};
+// Note: No window.* exports - RoadmapComponent is instantiated directly where needed
