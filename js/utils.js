@@ -1,13 +1,6 @@
 // Global Constants
 const ALL_INITIATIVE_STATUSES = ['Backlog', 'Defined', 'Committed', 'Completed'];
 
-
-
-
-
-
-
-
 /** Helper to create Dual List Selectors */
 function createDualListContainer(contextIndex, leftLabel, rightLabel, currentOptions, availableOptions, leftField, rightField, moveCallback, multiSelectLeft = true, allowAddNew = false, addNewPlaceholder = '', addNewCallback = null) {
     let container = document.createElement('div');

@@ -45,7 +45,7 @@ class DashboardView {
 
         // 1. Set Workspace Metadata
         // 1. Set Workspace Metadata
-        window.workspaceComponent.setPageMetadata({
+        workspaceComponent.setPageMetadata({
             title: 'Executive Dashboard',
             breadcrumbs: ['Insights', 'Dashboard'],
             actions: []
@@ -53,7 +53,7 @@ class DashboardView {
 
         // 2. Set Workspace Toolbar
         const toolbar = this.generateDashboardToolbar();
-        window.workspaceComponent.setToolbar(toolbar);
+        workspaceComponent.setToolbar(toolbar);
 
         if (!SystemService.getCurrentSystem()) {
             this.container.innerHTML = '<div class="dashboard-empty-state"><i class="fas fa-chart-line dashboard-empty-state__icon"></i><p class="dashboard-empty-state__message">No system data loaded</p></div>';

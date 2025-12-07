@@ -41,8 +41,8 @@ function renderSdmForecastingView(container) {
     }
 
     // 1. Set Workspace Metadata (Header)
-    if (window.workspaceComponent) {
-        window.workspaceComponent.setPageMetadata({
+    if (workspaceComponent) {
+        workspaceComponent.setPageMetadata({
             title: 'Resource Forecasting',
             breadcrumbs: ['Planning', 'Resource Forecasting'],
             actions: []

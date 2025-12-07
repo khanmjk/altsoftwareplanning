@@ -222,6 +222,5 @@ class CapacityEngine {
     }
 }
 
-// Make available globally
-window.CapacityEngine = CapacityEngine;
-
+// Note: CapacityEngine is available globally via script loading
+// Do not assign to window.* per coding-agent-contract.md

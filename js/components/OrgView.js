@@ -25,7 +25,7 @@ class OrgView {
 
         // 1. Set Workspace Metadata
         // 1. Set Workspace Metadata
-        window.workspaceComponent.setPageMetadata({
+        workspaceComponent.setPageMetadata({
             title: 'Org Design',
             breadcrumbs: ['System', 'Org Design'],
             actions: []
@@ -51,7 +51,7 @@ class OrgView {
 
         // 4. Set Workspace Toolbar
         // 4. Set Workspace Toolbar
-        window.workspaceComponent.setToolbar(this.pillNav.render());
+        workspaceComponent.setToolbar(this.pillNav.render());
 
         this.container.innerHTML = ''; // Clear container cleanly
 

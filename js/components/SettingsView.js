@@ -23,7 +23,7 @@ class SettingsView {
 
         // 1. Set Workspace Metadata
         // 1. Set Workspace Metadata
-        window.workspaceComponent.setPageMetadata({
+        workspaceComponent.setPageMetadata({
             title: 'System Settings',
             breadcrumbs: ['System', 'Settings'],
             actions: []
@@ -35,7 +35,7 @@ class SettingsView {
             onSwitch: (tabId) => this.switchTab(tabId)
         });
 
-        window.workspaceComponent.setToolbar(this.pillNav.render());
+        workspaceComponent.setToolbar(this.pillNav.render());
 
         // 3. Render Content Structure
         this.container.innerHTML = `
@@ -288,7 +288,7 @@ class SettingsView {
         });
 
         // Update UI
-        window.headerComponent.updateAiButtonVisibility();
+        headerComponent.updateAiButtonVisibility();
 
         notificationManager.showToast('AI Settings saved successfully!', 'success');
     }

@@ -133,7 +133,7 @@ function switchVisualizationMode(modeId) {
  * Updates the Workspace Toolbar based on the selected mode.
  */
 function updateVisualizationToolbar(activeModeId) {
-    if (!window.workspaceComponent) return;
+    if (!workspaceComponent) return;
 
     const toolbar = document.createElement('div');
     toolbar.className = 'visualization-toolbar';
@@ -229,7 +229,7 @@ function updateVisualizationToolbar(activeModeId) {
         toolbar.appendChild(apiSelect);
     }
 
-    window.workspaceComponent.setToolbar(toolbar);
+    workspaceComponent.setToolbar(toolbar);
 }
 
 async function renderMermaidDiagram() {

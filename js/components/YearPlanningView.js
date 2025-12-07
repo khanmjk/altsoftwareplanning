@@ -102,9 +102,9 @@ class YearPlanningView {
      * NOTE: Actions moved to toolbar per Workspace Canvas UX pattern
      */
     setPageMetadata() {
-        if (!window.workspaceComponent) return;
+        if (!workspaceComponent) return;
 
-        window.workspaceComponent.setPageMetadata({
+        workspaceComponent.setPageMetadata({
             title: 'Year Plan',
             breadcrumbs: ['Planning', 'Year Plan'],
             actions: [] // Actions in toolbar, not header
@@ -115,9 +115,9 @@ class YearPlanningView {
      * Set workspace toolbar
      */
     setToolbar() {
-        if (!window.workspaceComponent) return;
+        if (!workspaceComponent) return;
         const toolbar = this.generateToolbar();
-        window.workspaceComponent.setToolbar(toolbar);
+        workspaceComponent.setToolbar(toolbar);
     }
 
     /**

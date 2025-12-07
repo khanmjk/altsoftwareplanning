@@ -81,7 +81,7 @@ class SystemOverviewView {
 
         // Set workspace metadata (header)
         // Set workspace metadata (header)
-        window.workspaceComponent.setPageMetadata({
+        workspaceComponent.setPageMetadata({
             title: 'System Overview',
             breadcrumbs: ['System', 'Overview'],
             actions: [] // No global actions for this view
@@ -100,7 +100,7 @@ class SystemOverviewView {
 
         // Set toolbar with pill navigation
         // Set toolbar with pill navigation
-        window.workspaceComponent.setToolbar(this.pillNav.render());
+        workspaceComponent.setToolbar(this.pillNav.render());
 
         // Render view structure
         this.renderViewStructure();

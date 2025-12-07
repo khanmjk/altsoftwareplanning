@@ -44,7 +44,7 @@ class ResourceForecastView {
     }
 
     _setupToolbar() {
-        if (!window.workspaceComponent) return;
+        if (!workspaceComponent) return;
 
         const toolbar = document.createElement('div');
         toolbar.className = 'canvas-toolbar__content';
@@ -115,7 +115,7 @@ class ResourceForecastView {
         pillContainer.appendChild(btn);
         toolbar.appendChild(pillContainer);
 
-        window.workspaceComponent.setToolbar(toolbar);
+        workspaceComponent.setToolbar(toolbar);
     }
 
     _renderContent() {

@@ -46,8 +46,8 @@ const AIService = {
             }
         }
 
-        if (!skipPlanningRender && window.currentViewId === 'planningView') {
-            window.renderPlanningView();
+        if (!skipPlanningRender && navigationManager?.currentViewId === 'planningView') {
+            renderPlanningView();
         }
     },
 

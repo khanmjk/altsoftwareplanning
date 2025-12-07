@@ -2,8 +2,8 @@
  * RoadmapView - Roadmap & Backlog View Orchestrator
  * Manages the sub-views: Backlog (List), Quarterly Roadmap, and 3-Year Plan.
  */
-// Global Instance
-var roadmapViewInstance = null;
+// Singleton Instance
+let roadmapViewInstance = null;
 
 class RoadmapView {
     constructor() {
@@ -24,7 +24,7 @@ class RoadmapView {
 
         // 1. Set Workspace Metadata
         // 1. Set Workspace Metadata
-        window.workspaceComponent.setPageMetadata({
+        workspaceComponent.setPageMetadata({
             title: 'Roadmap & Backlog',
             breadcrumbs: ['Product', 'Roadmap'],
             actions: [] // Actions moved to toolbar body

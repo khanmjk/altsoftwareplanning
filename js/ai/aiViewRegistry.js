@@ -111,7 +111,7 @@ function getAIContextForView(viewId) {
 
     // Try class instance first
     const instance = config.getInstance?.();
-    if (instance && typeof instance.getAIContext === 'function') {
+    if (instance && instance.getAIContext) {
         return {
             source: 'class',
             viewId: viewId,
@@ -143,7 +143,7 @@ function hasClassContextProvider(viewId) {
     if (!config) return false;
 
     const instance = config.getInstance?.();
-    return instance && typeof instance.getAIContext === 'function';
+    return instance && instance.getAIContext;
 }
 
 // Export to window

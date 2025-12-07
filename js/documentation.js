@@ -12,13 +12,13 @@ function renderHelpView(container) {
 
     // Set Workspace Metadata
     // Set Workspace Metadata
-    window.workspaceComponent.setPageMetadata({
+    workspaceComponent.setPageMetadata({
         title: 'Documentation',
         breadcrumbs: ['Help', 'Documentation'],
         actions: []
     });
     // Clear toolbar
-    window.workspaceComponent.setToolbar(null);
+    workspaceComponent.setToolbar(null);
 
     // Create the content wrapper if it doesn't exist
     // This wrapper allows us to control scrolling and padding independent of the main container

@@ -367,3 +367,16 @@ UX enhancements
 -- Update data model to support organisations: An organisation has 1..many systems, etc.
 -- Add ability to import a backlog from an excel file
 -- Launch the app :-)
+
+
+==== for reference for AI coding agents ===
+Instructions for coding agents to follow. In addition to applying best, clean coding principle, for my codebase here are my specific inspection points and rules:
+- Avoid defensive coding for source files within this repo, apart for third-party library dependencies. Only use checks like "if (typeof [NAME] === 'function')..." if the thing being queried lies outside the scope of this codebase.
+- Avoid at all costs setting window global scope with this pattern:  if (window.X) { window.X.[OPERATION] - except for the file main.js which is the main entry point for this application. No other source code in this codebase should be using window.* operations
+- Avoid duplication of responsibilities - if the service layer files appear to be doing similar responsibility - flag for reconciliation
+- Service layer classes should be instantiated as singleton objects to be accessible to any other source file in this code base. A page or view, or UI file can call the service directly
+- View files, i.e. pages should NOT be updating another page to update it's display, unless the page consists of other widgets that share the same display area
+- No inline html formatting to be allowed in js files, apart from the acceptable template html referencing
+- all features that consist of view/model/control must respect the design rules as stated in docs/workspace-canvas-contract.md
+- Remove global variables as far as possible except for the global singletons allowed to be accessible across the app
+- always ensure the code is easily portable

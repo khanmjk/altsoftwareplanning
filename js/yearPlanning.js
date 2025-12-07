@@ -464,7 +464,7 @@ function renderPlanningView() {
     // 2. Set Workspace Toolbar (Controls)
     // 2. Set Workspace Toolbar (Controls)
     const toolbarControls = generatePlanningToolbar();
-    window.workspaceComponent.setToolbar(toolbarControls);
+    workspaceComponent.setToolbar(toolbarControls);
 
     // 3. Create Content Layout
     // We only need the summary section and the table container.

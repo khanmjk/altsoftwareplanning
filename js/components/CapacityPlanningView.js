@@ -47,7 +47,7 @@ class CapacityPlanningView {
     }
 
     setupToolbar() {
-        if (!window.workspaceComponent) return;
+        if (!workspaceComponent) return;
 
         const toolbar = document.createElement('div');
         toolbar.className = 'capacity-planning-toolbar';
@@ -82,7 +82,7 @@ class CapacityPlanningView {
         saveBtn.onclick = () => this.saveChanges();
         toolbar.appendChild(saveBtn);
 
-        window.workspaceComponent.setToolbar(toolbar);
+        workspaceComponent.setToolbar(toolbar);
     }
 
     switchView(viewId) {

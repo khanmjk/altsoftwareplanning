@@ -53,7 +53,7 @@ class ManagementView {
     }
 
     renderToolbar() {
-        if (!window.workspaceComponent) return;
+        if (!workspaceComponent) return;
 
         const items = [
             { id: 'themes', label: 'Themes', icon: 'fas fa-swatchbook' },
@@ -72,7 +72,7 @@ class ManagementView {
             this.pillNav.setActive(this.activeTab);
         }
 
-        window.workspaceComponent.setToolbar(this.pillNav.render());
+        workspaceComponent.setToolbar(this.pillNav.render());
     }
 
     switchTab(tabId) {

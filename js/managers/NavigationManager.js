@@ -55,7 +55,7 @@ class NavigationManager {
         // 2. Render the View via WorkspaceComponent
         // Map viewId to render function
         if (viewId === 'planningView') {
-            window.workspaceComponent.render(viewId, (container) => {
+            workspaceComponent.render(viewId, (container) => {
                 if (!window.yearPlanningView) {
                     window.yearPlanningView = new YearPlanningView(container.id);
                 } else {
@@ -64,25 +64,25 @@ class NavigationManager {
                 window.yearPlanningView.render();
             });
         } else if (viewId === 'ganttPlanningView') {
-            window.workspaceComponent.render(viewId, window.renderGanttPlanningView);
+            workspaceComponent.render(viewId, window.renderGanttPlanningView);
         } else if (viewId === 'capacityConfigView') {
-            window.workspaceComponent.render(viewId, (container) => {
+            workspaceComponent.render(viewId, (container) => {
                 if (!window.capacityPlanningViewInstance) {
                     window.capacityPlanningViewInstance = new CapacityPlanningView();
                 }
                 window.capacityPlanningViewInstance.render(container);
             });
         } else if (viewId === 'sdmForecastingView') {
-            window.workspaceComponent.render(viewId, (container) => {
+            workspaceComponent.render(viewId, (container) => {
                 if (!window.resourceForecastViewInstance) {
                     window.resourceForecastViewInstance = new ResourceForecastView();
                 }
                 window.resourceForecastViewInstance.render(container);
             });
         } else if (viewId === 'roadmapView') {
-            window.workspaceComponent.render(viewId, window.renderRoadmapView);
+            workspaceComponent.render(viewId, window.renderRoadmapView);
         } else if (viewId === 'managementView') {
-            window.workspaceComponent.render(viewId, (container) => {
+            workspaceComponent.render(viewId, (container) => {
                 if (!window.managementViewInstance) {
                     window.managementViewInstance = new ManagementView(container.id);
                 } else {
@@ -96,7 +96,7 @@ class NavigationManager {
                 }
             });
         } else if (viewId === 'visualizationCarousel') {
-            window.workspaceComponent.render(viewId, (container) => {
+            workspaceComponent.render(viewId, (container) => {
                 if (!window.systemOverviewViewInstance) {
                     window.systemOverviewViewInstance = new SystemOverviewView(container.id);
                 } else {
@@ -105,13 +105,13 @@ class NavigationManager {
                 window.systemOverviewViewInstance.render();
             });
         } else if (viewId === 'organogramView') {
-            window.workspaceComponent.render(viewId, window.renderOrgView);
+            workspaceComponent.render(viewId, window.renderOrgView);
         } else if (viewId === 'systemEditForm') {
-            window.workspaceComponent.render(viewId, (container) => window.showSystemEditForm(SystemService.getCurrentSystem(), container));
+            workspaceComponent.render(viewId, (container) => window.showSystemEditForm(SystemService.getCurrentSystem(), container));
         } else if (viewId === 'dashboardView') {
-            window.workspaceComponent.render(viewId, window.renderDashboardView);
+            workspaceComponent.render(viewId, window.renderDashboardView);
         } else if (viewId === 'welcomeView') {
-            window.workspaceComponent.render(viewId, (container) => {
+            workspaceComponent.render(viewId, (container) => {
                 const staticWelcome = document.getElementById('welcomeViewContent');
                 if (staticWelcome) {
                     container.innerHTML = staticWelcome.innerHTML;
@@ -121,9 +121,9 @@ class NavigationManager {
                 }
             });
         } else if (viewId === 'helpView') {
-            window.workspaceComponent.render(viewId, window.renderHelpView);
+            workspaceComponent.render(viewId, window.renderHelpView);
         } else if (viewId === 'settingsView') {
-            window.workspaceComponent.render(viewId, (container) => {
+            workspaceComponent.render(viewId, (container) => {
                 if (!window.settingsViewInstance) {
                     window.settingsViewInstance = new SettingsView(container.id);
                 } else {
@@ -132,7 +132,7 @@ class NavigationManager {
                 window.settingsViewInstance.render();
             });
         } else if (viewId === 'systemsView') {
-            window.workspaceComponent.render(viewId, (container) => {
+            workspaceComponent.render(viewId, (container) => {
                 if (!window.systemsViewInstance) {
                     window.systemsViewInstance = new SystemsView(container.id);
                 } else {
@@ -170,7 +170,7 @@ class NavigationManager {
                 }
 
                 // 2. View Path (from HeaderComponent mapping)
-                if (this.header && typeof this.header.getViewPath === 'function') {
+                if (this.header && this.header.getViewPath) {
                     const path = this.header.getViewPath(viewId);
                     if (path && Array.isArray(path)) {
                         path.forEach(step => breadcrumbs.push(step.label));
@@ -178,7 +178,7 @@ class NavigationManager {
                 }
             }
 
-            window.workspaceComponent.setPageMetadata({
+            workspaceComponent.setPageMetadata({
                 title: title,
                 breadcrumbs: breadcrumbs,
                 actions: []      // Legacy actions handled by view templates
