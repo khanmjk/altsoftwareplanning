@@ -446,11 +446,12 @@ class RoadmapInitiativeModal {
     }
 }
 
-// Expose to window
+// Global singleton instance
+let roadmapInitiativeModal = null;
+
+// Initialize on load
 if (typeof window !== 'undefined') {
-    // Class is globally accessible via script loading order
-    // Initialize on load
     window.addEventListener('DOMContentLoaded', () => {
-        window.roadmapInitiativeModal = new RoadmapInitiativeModal();
+        roadmapInitiativeModal = new RoadmapInitiativeModal();
     });
 }

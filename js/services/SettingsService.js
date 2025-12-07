@@ -67,8 +67,7 @@ const SettingsService = {
     save() {
         try {
             localStorage.setItem(APP_SETTINGS_KEY, JSON.stringify(this.state));
-            // Dispatch custom event for UI updates if needed?
-            // window.dispatchEvent(new CustomEvent('settingsChanged', { detail: this.state }));
+
         } catch (e) {
             console.error("SettingsService: Failed to save settings:", e);
         }
@@ -106,16 +105,5 @@ const SettingsService = {
 
         this.state = { ...this.state, ...newSettings };
         this.save();
-    },
-
-    // Note: window.globalSettings backward compatibility removed per coding-agent-contract.md
-    // Use SettingsService.get() directly instead
+    }
 };
-
-// Auto-initialize if possible, or wait for explicit call?
-// For now, let's keep it explicit or passive. usage in main.js will trigger load.
-
-// Export for ES modules (future migration)
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = SettingsService;
-}

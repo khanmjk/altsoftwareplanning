@@ -497,5 +497,3 @@ class RoadmapComponent {
         return document.createElement('div');
     }
 }
-
-// Note: No window.* exports - RoadmapComponent is instantiated directly where needed

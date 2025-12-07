@@ -562,7 +562,7 @@ class ResourceForecastView {
             viewTitle: 'Resource Forecasting',
             selectedTeamId: document.getElementById('sdmForecastingTeamSelector')?.value || null,
             teamCount: teams.length,
-            hasEngine: !!window.forecastingEngine,
+            hasEngine: !!this.engine,
             // Current input values if available
             inputs: {
                 targetWeek: document.getElementById('targetWeekInput')?.value || null,
