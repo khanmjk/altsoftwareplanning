@@ -199,7 +199,29 @@ class CapacityEngine {
 
         return { ...teamMetrics, totals: totals };
     }
+
+    /**
+     * Static helper to recalculate capacity metrics and store them on systemData.
+     * This is a PURE DATA operation with no UI side effects.
+     * Callers that need to refresh UI should do so separately.
+     * @param {Object} systemData - The system data object to recalculate metrics for
+     * @returns {Object|null} The calculated metrics, or null if data is invalid
+     */
+    static recalculate(systemData) {
+        if (!systemData) {
+            console.warn("[CapacityEngine] recalculate called with no systemData");
+            return null;
+        }
+
+        const engine = new CapacityEngine(systemData);
+        const metrics = engine.calculateAllMetrics();
+        systemData.calculatedCapacityMetrics = metrics;
+
+        console.log("[CapacityEngine] Metrics recalculated");
+        return metrics;
+    }
 }
 
 // Make available globally
 window.CapacityEngine = CapacityEngine;
+

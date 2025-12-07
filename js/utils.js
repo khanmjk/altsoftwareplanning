@@ -170,9 +170,8 @@ function addEngineerToRoster(engineerData = {}) {
  */
 function moveEngineerToTeam(engineerName, newTeamId) {
     const result = OrgService.moveEngineerToTeam(currentSystemData, engineerName, newTeamId);
-    if (typeof window.updateCapacityCalculationsAndDisplay === 'function') {
-        window.updateCapacityCalculationsAndDisplay();
-    }
+    // Recalculate capacity metrics (pure data, no UI refresh)
+    CapacityEngine.recalculate(currentSystemData);
     return result;
 }
 

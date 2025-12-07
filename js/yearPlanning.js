@@ -692,10 +692,27 @@ function generatePlanningToolbar() {
 
     return toolbar;
 }
+/**
+ * Recalculates capacity metrics and refreshes the Year Planning view if active.
+ * For other views, use CapacityEngine.recalculate() directly for pure data updates.
+ */
+function updateCapacityCalculationsAndDisplay() {
+    if (!currentSystemData) return;
+
+    // Delegate data recalculation to CapacityEngine
+    CapacityEngine.recalculate(currentSystemData);
+
+    // Refresh Year Planning view if it's currently active
+    if (currentViewId === 'planningView') {
+        renderPlanningView();
+    }
+}
+
 if (typeof window !== 'undefined') {
     window.renderPlanningView = renderPlanningView;
     window.calculatePlanningTableData = calculatePlanningTableData;
     window.calculateTeamLoadSummaryData = calculateTeamLoadSummaryData;
+    window.updateCapacityCalculationsAndDisplay = updateCapacityCalculationsAndDisplay;
 }
 
 

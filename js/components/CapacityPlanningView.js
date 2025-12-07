@@ -98,10 +98,8 @@ class CapacityPlanningView {
 
         // Instantiate and Render Component
         if (viewId === 'dashboard') {
-            // [SYNC FIX] Ensure metrics are up-to-date before rendering dashboard
-            if (window.updateCapacityCalculationsAndDisplay) {
-                window.updateCapacityCalculationsAndDisplay();
-            }
+            // Ensure metrics are up-to-date before rendering dashboard
+            CapacityEngine.recalculate(window.currentSystemData);
             this.activeComponent = new CapacityDashboardView();
         } else if (viewId === 'configuration') {
             this.activeComponent = new CapacityConfigurationView();
@@ -114,10 +112,8 @@ class CapacityPlanningView {
 
     saveChanges() {
         if (window.saveSystemChanges) {
-            // [SYNC FIX] Recalculate before saving to ensure persisted data is correct
-            if (window.updateCapacityCalculationsAndDisplay) {
-                window.updateCapacityCalculationsAndDisplay();
-            }
+            // Recalculate before saving to ensure persisted data is correct
+            CapacityEngine.recalculate(window.currentSystemData);
             window.saveSystemChanges();
             window.notificationManager.showToast('Capacity configuration saved successfully.', 'success');
         } else {

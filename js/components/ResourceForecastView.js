@@ -344,10 +344,8 @@ class ResourceForecastView {
                     window.notificationManager.showToast('Forecast capacity gain saved to system.', 'success');
                 }
 
-                // [SYNC FIX] Update global capacity metrics immediately
-                if (window.updateCapacityCalculationsAndDisplay) {
-                    window.updateCapacityCalculationsAndDisplay();
-                }
+                // [SYNC FIX] Update global capacity metrics (pure data, no UI refresh needed)
+                CapacityEngine.recalculate(window.currentSystemData);
             }
         }
 
