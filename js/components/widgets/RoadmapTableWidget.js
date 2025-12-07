@@ -12,6 +12,15 @@ class RoadmapTableWidget {
         this.filtersContainer = null;
         this.tableContainer = null;
         this.idSuffix = type === '3yp' ? '3YP' : '';
+        this.planningYear = 'all'; // Default, set via setPlanningYear()
+    }
+
+    /**
+     * Set the planning year filter
+     * @param {string|number} year - The year to filter by, or 'all'
+     */
+    setPlanningYear(year) {
+        this.planningYear = year;
     }
 
     /**
@@ -330,7 +339,7 @@ class RoadmapTableWidget {
         const systemData = SystemService.getCurrentSystem();
         const orgFilter = document.getElementById('roadmapOrgFilter' + this.idSuffix)?.value || 'all';
         const teamFilter = document.getElementById('roadmapTeamFilter' + this.idSuffix)?.value || 'all';
-        const yearFilter = window.dashboardPlanningYear;
+        const yearFilter = this.planningYear;
 
         let initiatives = systemData?.yearlyInitiatives || [];
 
