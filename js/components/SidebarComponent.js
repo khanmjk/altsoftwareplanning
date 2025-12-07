@@ -28,15 +28,15 @@ class SidebarComponent {
 
         // Example: Update user profile or system name if available
         const systemNameEl = this.container.querySelector('.system-name-display');
-        if (systemNameEl && window.currentSystemData) {
-            systemNameEl.textContent = window.currentSystemData.systemName;
+        if (systemNameEl && SystemService.getCurrentSystem()) {
+            systemNameEl.textContent = SystemService.getCurrentSystem().systemName;
         }
 
         this.updateState();
     }
 
     updateState() {
-        const hasSystem = !!window.currentSystemData;
+        const hasSystem = !!SystemService.getCurrentSystem();
         const navLinks = this.container.querySelectorAll('.nav-item[data-view]');
 
         navLinks.forEach(link => {
@@ -102,9 +102,7 @@ class SidebarComponent {
         const createAiBtn = this.container.querySelector('#create-ai-btn');
         if (createAiBtn) {
             createAiBtn.addEventListener('click', () => {
-                if (typeof handleCreateWithAi === 'function') {
-                    handleCreateWithAi();
-                }
+                handleCreateWithAi();
             });
         }
     }

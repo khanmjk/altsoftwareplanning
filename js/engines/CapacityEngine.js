@@ -79,15 +79,13 @@ class CapacityEngine {
             const awayTotalMembers = (team.awayTeamMembers || []).length;
 
 
-            // Pre-calculate per-SDE values and total team days using helpers
-            // Note: Assuming global helper functions are available. 
-            // If strict modularity is required, these should be static methods or imported.
-            const stdLeave_days_per_sde = calculateTotalStandardLeaveDaysPerSDE(team, globalLeaveTypes, capacityConfig);
+            // Pre-calculate per-SDE values and total team days using CapacityService
+            const stdLeave_days_per_sde = CapacityService.calculateTotalStandardLeaveDaysPerSDE(team, globalLeaveTypes, capacityConfig);
             const holidays_days_per_sde = capacityConfig.globalConstraints?.publicHolidays || 0;
-            const orgEvents_days_per_sde = calculateOrgEventDaysPerSDE(capacityConfig);
-            const overhead_days_per_sde = calculateOverheadDaysPerSDE(team, workingDaysPerYear);
-            const variable_leave_total_team_days = calculateTotalVariableLeaveDays(team);
-            const teamActivityImpacts = calculateTeamActivityImpacts(team);
+            const orgEvents_days_per_sde = CapacityService.calculateOrgEventDaysPerSDE(capacityConfig);
+            const overhead_days_per_sde = CapacityService.calculateOverheadDaysPerSDE(team, workingDaysPerYear);
+            const variable_leave_total_team_days = CapacityService.calculateTotalVariableLeaveDays(team);
+            const teamActivityImpacts = CapacityService.calculateTeamActivityImpacts(team);
 
             ['TeamBIS', 'EffectiveBIS', 'FundedHC'].forEach(scenario => {
                 let totalHeadcount = 0;
@@ -201,7 +199,29 @@ class CapacityEngine {
 
         return { ...teamMetrics, totals: totals };
     }
+
+    /**
+     * Static helper to recalculate capacity metrics and store them on systemData.
+     * This is a PURE DATA operation with no UI side effects.
+     * Callers that need to refresh UI should do so separately.
+     * @param {Object} systemData - The system data object to recalculate metrics for
+     * @returns {Object|null} The calculated metrics, or null if data is invalid
+     */
+    static recalculate(systemData) {
+        if (!systemData) {
+            console.warn("[CapacityEngine] recalculate called with no systemData");
+            return null;
+        }
+
+        const engine = new CapacityEngine(systemData);
+        const metrics = engine.calculateAllMetrics();
+        systemData.calculatedCapacityMetrics = metrics;
+
+        console.log("[CapacityEngine] Metrics recalculated");
+        return metrics;
+    }
 }
 
 // Make available globally
 window.CapacityEngine = CapacityEngine;
+

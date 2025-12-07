@@ -39,7 +39,7 @@ class GoalsWidget {
      */
     prepareGoalData() {
         const yearFilter = window.dashboardPlanningYear;
-        const systemData = window.currentSystemData;
+        const systemData = SystemService.getCurrentSystem();
 
         if (!systemData) return [];
 

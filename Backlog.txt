@@ -172,15 +172,29 @@ bar graph per quarter to see team load/demand impact
 [Done] - [UX] Value: Allows users to drag bars to reschedule, which is the expected behavior for detailed planning tools.
 [Done] - [UX] - [MAJOR UX REFACTOR] - Upgrade the menu navigation layout - it's growing with each new feature - need a new cleaner menu navigation model  
 [Done] - [UX] - [MAJOR UX REFACTOR]- [TD UX] - Enhance the workspace UX feature, move away from antiquated form views and caroussels - the page needs to be seen as an integrated part of the workspace view
+[Done] - [TECH DEBT] - Enhance the codebase to be more modular, portable, separate concerns
+[Done] - [TECH DEBT] - completely remove data.js
+[Done] - [TECH DEBT] - move util function function validateGeneratedSystem(systemData) to aiService
+[Done] - [TECH DEBT] - Cleanup code wherever this pattern exists: if (typeof [NAME] === 'function') {... since we introduced service layers then these functions are guaranteed
+[Done] - [TECH DEBT] - Create a new service for SystemManager to handle all system related functions, maybe abstract to StorageService?
 
 ------------
 IN PROGRESS
 ------------
+[TODO] code cleanup
+- clean up main.js
+- cleanup occurrences of this pattern if (window.X) { window.X.[OPERATION]...
+- cleanup index.html - move a bunch of html to a view file for main content or the workspace canvas files
+- ensure AI tooling agents have the right function calls to reference with the introduction of the service layer
+- Year Planning modernization
+- Transform editSystem.js to the workspace-canvas-contract.md - create view related files
+
+
 -- Start building out detailed planning features
 -- [AI] extend the diagram agents to support mermaid generation of gantt charts, organograms
 - [AI Feature] Create an AI agent that can perform actions on the system with access to the code
 
-- [TECH DEBT] - Enhance the codebase to be more modular, portable, separate concerns
+
 
 [Feature] - Goals tracking and management. 
 Goals should have statuses (rules should be configurable on app settings): 

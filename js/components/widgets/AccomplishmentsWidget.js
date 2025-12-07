@@ -39,7 +39,7 @@ class AccomplishmentsWidget {
      */
     prepareData() {
         const yearFilter = window.dashboardPlanningYear;
-        const systemData = window.currentSystemData;
+        const systemData = SystemService.getCurrentSystem();
 
         if (!systemData) return [];
 
@@ -81,7 +81,7 @@ class AccomplishmentsWidget {
         }
 
         // Build lookup maps
-        const systemData = window.currentSystemData;
+        const systemData = SystemService.getCurrentSystem();
         const teamMap = new Map((systemData.teams || []).map(t => [t.teamId, t.teamIdentity || t.teamName]));
         const goalMap = new Map((systemData.goals || []).map(g => [g.goalId, g.name]));
         const themeMap = new Map((systemData.definedThemes || []).map(t => [t.themeId, t.name]));

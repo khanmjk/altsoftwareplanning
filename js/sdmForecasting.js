@@ -1,6 +1,31 @@
 /**
  * NEW Function: Renders the SDM Forecasting View into the Workspace
  */
+
+// ========= SDM Module State =========
+let totalRampedUpEngineersArray_SDM = [];
+let productiveEngineers_SDM = [];
+let cumulativeAttritionArray_SDM = [];
+let monthlyData_SDM = {};
+let totalHeadcountArray_SDM = [];
+let forecastChart_SDM = null;
+
+const weekToMonth_SDM = [
+    1, 1, 1, 1,    // Jan (4 weeks) Weeks 1-4
+    2, 2, 2, 2,    // Feb (4 weeks) Weeks 5-8
+    3, 3, 3, 3, 3, // Mar (5 weeks) Weeks 9-13
+    4, 4, 4, 4,    // Apr (4 weeks) Weeks 14-17
+    5, 5, 5, 5,    // May (4 weeks) Weeks 18-21
+    6, 6, 6, 6, 6, // Jun (5 weeks) Weeks 22-26
+    7, 7, 7, 7,    // Jul (4 weeks) Weeks 27-30
+    8, 8, 8, 8,    // Aug (4 weeks) Weeks 31-34
+    9, 9, 9, 9, 9, // Sep (5 weeks) Weeks 35-39
+    10, 10, 10, 10, // Oct (4 weeks) Weeks 40-43
+    11, 11, 11, 11, // Nov (4 weeks) Weeks 44-47
+    12, 12, 12, 12, 12 // Dec (5 weeks) Weeks 48-52
+];
+// ====================================
+
 /**
  * NEW Function: Renders the SDM Forecasting View into the Workspace
  */
@@ -55,8 +80,8 @@ function generateSdmToolbar() {
     teamSelect.style.minWidth = '200px';
     teamSelect.appendChild(new Option('-- Select a Team --', ''));
 
-    if (currentSystemData && currentSystemData.teams) {
-        currentSystemData.teams.forEach(team => {
+    if (SystemService.getCurrentSystem() && SystemService.getCurrentSystem().teams) {
+        SystemService.getCurrentSystem().teams.forEach(team => {
             const teamDisplayName = team.teamIdentity || team.teamName || team.teamId;
             teamSelect.appendChild(new Option(teamDisplayName, team.teamId));
         });
@@ -116,7 +141,7 @@ function loadSdmForecastInputsForTeam(teamId) {
         return;
     }
 
-    const team = currentSystemData?.teams?.find(t => t.teamId === teamId);
+    const team = SystemService.getCurrentSystem()?.teams?.find(t => t.teamId === teamId);
 
     if (!team) {
         console.error(`Team data not found for ID: ${teamId}`);
@@ -435,12 +460,12 @@ function generateForecast_SDM() {
         clearSdmForecastOutputs();
         return;
     }
-    if (!currentSystemData?.capacityConfiguration?.workingDaysPerYear || currentSystemData.capacityConfiguration.workingDaysPerYear <= 0) {
+    if (!SystemService.getCurrentSystem()?.capacityConfiguration?.workingDaysPerYear || SystemService.getCurrentSystem().capacityConfiguration.workingDaysPerYear <= 0) {
         window.notificationManager.showToast("Cannot run forecast: 'Standard Working Days Per Year' must be configured in Capacity Constraints and be greater than 0.", "error");
         clearSdmForecastOutputs();
         return;
     }
-    if (!currentSystemData?.capacityConfiguration?.leaveTypes) {
+    if (!SystemService.getCurrentSystem()?.capacityConfiguration?.leaveTypes) {
         console.warn("Leave types not defined in capacity configuration. Proceeding with defaults (0).");
     }
 
@@ -615,8 +640,8 @@ function simulateTeamSize_SDM(
 
     // --- If a specific team is provided, calculate its detailed capacity ---
     if (selectedTeamId) {
-        const team = currentSystemData?.teams?.find(t => t.teamId === selectedTeamId);
-        const capacityConfig = currentSystemData?.capacityConfiguration;
+        const team = SystemService.getCurrentSystem()?.teams?.find(t => t.teamId === selectedTeamId);
+        const capacityConfig = SystemService.getCurrentSystem()?.capacityConfiguration;
 
         if (!team) {
             console.error(`Simulation error: Team not found for ID: ${selectedTeamId}`);
@@ -630,16 +655,16 @@ function simulateTeamSize_SDM(
             return null;
         }
 
-        // --- Calculate Net Available Days per Week per SDE using helpers ---
+        // --- Calculate Net Available Days per Week per SDE using CapacityService ---
         const workingDaysPerYear = capacityConfig.workingDaysPerYear;
         const globalLeaveTypes = capacityConfig.leaveTypes || [];
 
-        // *** ADDED Logging for individual components ***
-        const stdLeave_days_per_sde = calculateTotalStandardLeaveDaysPerSDE(team, globalLeaveTypes, capacityConfig);
+        // Calculate capacity deductions using service
+        const stdLeave_days_per_sde = CapacityService.calculateTotalStandardLeaveDaysPerSDE(team, globalLeaveTypes, capacityConfig);
         const holidays_days_per_sde = capacityConfig.globalConstraints?.publicHolidays || 0;
-        const orgEvents_days_per_sde = calculateOrgEventDaysPerSDE(capacityConfig);
-        const overhead_days_per_sde = calculateOverheadDaysPerSDE(team, workingDaysPerYear);
-        const teamActivityImpacts = calculateTeamActivityImpacts(team);
+        const orgEvents_days_per_sde = CapacityService.calculateOrgEventDaysPerSDE(capacityConfig);
+        const overhead_days_per_sde = CapacityService.calculateOverheadDaysPerSDE(team, workingDaysPerYear);
+        const teamActivityImpacts = CapacityService.calculateTeamActivityImpacts(team);
         const teamActivity_days_per_sde = teamActivityImpacts.daysPerSDE; // Only use the perSDE part
 
         console.log(`  Capacity Calculation Details for Team: ${teamNameForLog}`);
@@ -867,7 +892,7 @@ function generateOutputSummary_SDM(hiringRate, closeGapWeek, selectedTeamId, sim
     const summaryDiv = document.getElementById('outputSummary_SDM');
     if (!summaryDiv) { console.error("Output summary div #outputSummary_SDM not found."); return; }
 
-    const team = currentSystemData?.teams?.find(t => t.teamId === selectedTeamId);
+    const team = SystemService.getCurrentSystem()?.teams?.find(t => t.teamId === selectedTeamId);
     const teamName = team ? (team.teamIdentity || team.teamName) : 'the selected team';
 
     // Get current input values using NEW IDs

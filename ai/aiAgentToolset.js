@@ -209,15 +209,15 @@ async function executeTool(command, payload = {}) {
         }
         case 'addNewTeam': {
             const overrides = payload.teamData || {};
-            const result = addNewTeam(overrides) || ((currentSystemData.teams || [])[currentSystemData.teams.length - 1] ?? null);
+            const result = addNewTeam(overrides) || ((SystemService.getCurrentSystem().teams || [])[SystemService.getCurrentSystem().teams.length - 1] ?? null);
             if (!result) throw new Error('Failed to add new team.');
             return result;
         }
         case 'deleteTeam': {
             if (!payload.teamId) throw new Error('deleteTeam: teamId is required.');
-            const teamIndex = (currentSystemData.teams || []).findIndex(team => team.teamId === payload.teamId);
+            const teamIndex = (SystemService.getCurrentSystem().teams || []).findIndex(team => team.teamId === payload.teamId);
             if (teamIndex === -1) throw new Error(`deleteTeam: Team with ID ${payload.teamId} not found.`);
-            const teamCopy = { ...(currentSystemData.teams[teamIndex] || {}) };
+            const teamCopy = { ...(SystemService.getCurrentSystem().teams[teamIndex] || {}) };
             const success = deleteTeam(teamIndex, { skipConfirm: true, silent: payload.silent !== undefined ? payload.silent : true });
             if (!success) throw new Error('Failed to delete team.');
             return { deleted: true, teamId: payload.teamId, team: teamCopy };
@@ -267,13 +267,13 @@ async function executeTool(command, payload = {}) {
         }
         case 'addNewService': {
             const overrides = payload.serviceData || {};
-            const newService = addNewService(overrides) || ((currentSystemData.services || [])[currentSystemData.services.length - 1] ?? null);
+            const newService = addNewService(overrides) || ((SystemService.getCurrentSystem().services || [])[SystemService.getCurrentSystem().services.length - 1] ?? null);
             if (!newService) throw new Error('Failed to add new service.');
             return newService;
         }
         case 'deleteService': {
             if (!payload.serviceName) throw new Error('deleteService: serviceName is required.');
-            const serviceIndex = (currentSystemData.services || []).findIndex(service => service.serviceName === payload.serviceName);
+            const serviceIndex = (SystemService.getCurrentSystem().services || []).findIndex(service => service.serviceName === payload.serviceName);
             if (serviceIndex === -1) throw new Error(`deleteService: Service "${payload.serviceName}" not found.`);
             const deletedService = deleteService(serviceIndex, 'editServicesManagement');
             if (!deletedService) throw new Error('Failed to delete service.');
@@ -345,8 +345,8 @@ function _teamMatchesFilter(team, filter = {}) {
         const resolvedSdmId = (typeof _resolveSdmIdentifier === 'function') ? _resolveSdmIdentifier(ident) : null;
         if (resolvedSdmId && team.sdmId && team.sdmId.toLowerCase() === resolvedSdmId.toLowerCase()) return true;
 
-        if (currentSystemData?.sdms && typeof _resolveSeniorManagerIdentifier === 'function') {
-            const teamSdm = (currentSystemData.sdms || []).find(s => s.sdmId === team.sdmId);
+        if (SystemService.getCurrentSystem()?.sdms && typeof _resolveSeniorManagerIdentifier === 'function') {
+            const teamSdm = (SystemService.getCurrentSystem().sdms || []).find(s => s.sdmId === team.sdmId);
             const resolvedSrMgrId = _resolveSeniorManagerIdentifier(ident);
             if (resolvedSrMgrId && teamSdm?.seniorManagerId === resolvedSrMgrId) return true;
         }
@@ -357,11 +357,11 @@ function _teamMatchesFilter(team, filter = {}) {
 }
 
 function bulkUpdateTeamCapacity(options = {}) {
-    if (!currentSystemData || !Array.isArray(currentSystemData.teams)) {
-        throw new Error('bulkUpdateTeamCapacity: currentSystemData.teams is unavailable.');
+    if (!SystemService.getCurrentSystem() || !Array.isArray(SystemService.getCurrentSystem().teams)) {
+        throw new Error('bulkUpdateTeamCapacity: SystemService.getCurrentSystem().teams is unavailable.');
     }
     const { updates = {}, capacityReductionPercent = null, aiProductivityGainPercent = null, avgOverheadHoursPerWeekPerSDE = null, filter = {} } = options;
-    const targets = (currentSystemData.teams || []).filter(team => _teamMatchesFilter(team, filter));
+    const targets = (SystemService.getCurrentSystem().teams || []).filter(team => _teamMatchesFilter(team, filter));
     const updatedTeams = [];
     const appliedFields = [];
 
@@ -417,7 +417,7 @@ function _initiativeMatchesCriteria(initiative, criteria = {}) {
     if (!criteria || Object.keys(criteria).length === 0) return true;
     const matchesGoal = criteria.goalId
         ? (initiative.primaryGoalId === criteria.goalId ||
-            (Array.isArray(currentSystemData?.goals) && currentSystemData.goals.some(g => g.goalId === criteria.goalId && (g.initiativeIds || []).includes(initiative.initiativeId))))
+            (Array.isArray(SystemService.getCurrentSystem()?.goals) && SystemService.getCurrentSystem().goals.some(g => g.goalId === criteria.goalId && (g.initiativeIds || []).includes(initiative.initiativeId))))
         : true;
     if (!matchesGoal) return false;
 
@@ -440,14 +440,14 @@ function _initiativeMatchesCriteria(initiative, criteria = {}) {
 }
 
 function bulkUpdateInitiatives(updates, criteria = {}) {
-    if (!currentSystemData || !Array.isArray(currentSystemData.yearlyInitiatives)) {
-        throw new Error('bulkUpdateInitiatives: currentSystemData.yearlyInitiatives is unavailable.');
+    if (!SystemService.getCurrentSystem() || !Array.isArray(SystemService.getCurrentSystem().yearlyInitiatives)) {
+        throw new Error('bulkUpdateInitiatives: SystemService.getCurrentSystem().yearlyInitiatives is unavailable.');
     }
     if (!updates || typeof updates !== 'object') {
         throw new Error('bulkUpdateInitiatives: updates object is required.');
     }
 
-    const targetInits = currentSystemData.yearlyInitiatives.filter(init => _initiativeMatchesCriteria(init, criteria));
+    const targetInits = SystemService.getCurrentSystem().yearlyInitiatives.filter(init => _initiativeMatchesCriteria(init, criteria));
     targetInits.forEach(init => {
         Object.assign(init, updates);
     });
@@ -460,15 +460,15 @@ function bulkUpdateInitiatives(updates, criteria = {}) {
 }
 
 function bulkAdjustInitiativeEstimates(adjustmentFactor, criteria = {}) {
-    if (!currentSystemData || !Array.isArray(currentSystemData.yearlyInitiatives)) {
-        throw new Error('bulkAdjustInitiativeEstimates: currentSystemData.yearlyInitiatives is unavailable.');
+    if (!SystemService.getCurrentSystem() || !Array.isArray(SystemService.getCurrentSystem().yearlyInitiatives)) {
+        throw new Error('bulkAdjustInitiativeEstimates: SystemService.getCurrentSystem().yearlyInitiatives is unavailable.');
     }
     const factor = Number(adjustmentFactor);
     if (!isFinite(factor)) {
         throw new Error('bulkAdjustInitiativeEstimates: adjustmentFactor must be a finite number.');
     }
 
-    const targetInits = currentSystemData.yearlyInitiatives.filter(init => _initiativeMatchesCriteria(init, criteria));
+    const targetInits = SystemService.getCurrentSystem().yearlyInitiatives.filter(init => _initiativeMatchesCriteria(init, criteria));
     const updates = [];
 
     targetInits.forEach(init => {
@@ -490,8 +490,8 @@ function bulkAdjustInitiativeEstimates(adjustmentFactor, criteria = {}) {
 }
 
 function bulkReassignTeams(sourceSdmId, targetSdmId) {
-    if (!currentSystemData || !Array.isArray(currentSystemData.teams)) {
-        throw new Error('bulkReassignTeams: currentSystemData.teams is unavailable.');
+    if (!SystemService.getCurrentSystem() || !Array.isArray(SystemService.getCurrentSystem().teams)) {
+        throw new Error('bulkReassignTeams: SystemService.getCurrentSystem().teams is unavailable.');
     }
     const resolveSdm = (id) => (typeof _resolveSdmIdentifier === 'function') ? _resolveSdmIdentifier(id) : id;
     const resolvedSource = resolveSdm(sourceSdmId);
@@ -500,7 +500,7 @@ function bulkReassignTeams(sourceSdmId, targetSdmId) {
     if (!resolvedTarget) throw new Error(`bulkReassignTeams: Could not resolve target SDM "${targetSdmId}".`);
     if (resolvedSource === resolvedTarget) throw new Error('bulkReassignTeams: Source and target SDM IDs are the same.');
 
-    const movedTeams = (currentSystemData.teams || []).filter(team => team.sdmId === resolvedSource);
+    const movedTeams = (SystemService.getCurrentSystem().teams || []).filter(team => team.sdmId === resolvedSource);
     movedTeams.forEach(team => { team.sdmId = resolvedTarget; });
 
     return {

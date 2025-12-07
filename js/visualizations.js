@@ -7,8 +7,10 @@ if (typeof window !== 'undefined') {
 let visualizationResizeObserver = null;
 let resizeDebounceHandle = null;
 
-
-// --- Visualization State ---
+// Initialize Mermaid for architecture diagrams
+if (typeof mermaid !== 'undefined' && typeof mermaid.initialize === 'function') {
+    mermaid.initialize({ startOnLoad: false, theme: 'default' });
+}
 let currentVisualizationMode = 'visualization';
 const visualizationModes = [
     { id: 'visualization', title: 'System Visualization' },
@@ -47,7 +49,7 @@ function switchVisualizationMode(modeId) {
     container.appendChild(contentWrapper);
 
     // 4. Render Specific View
-    if (!currentSystemData) {
+    if (!SystemService.getCurrentSystem()) {
         const alert = document.createElement('div');
         alert.className = 'alert alert-warning';
         alert.textContent = 'Please load a system configuration first.';
@@ -100,11 +102,11 @@ function switchVisualizationMode(modeId) {
     switch (modeId) {
         case 'visualization':
             contentWrapper.appendChild(createVisualizationContainer('visualization', 'systemSvg', 'legend'));
-            generateVisualization(currentSystemData);
+            generateVisualization(SystemService.getCurrentSystem());
             break;
         case 'teamVisualization':
             contentWrapper.appendChild(createVisualizationContainer('teamVisualization', 'teamSvg', 'teamLegend'));
-            generateTeamVisualization(currentSystemData);
+            generateTeamVisualization(SystemService.getCurrentSystem());
             break;
         case 'serviceRelationshipsVisualization':
             contentWrapper.appendChild(createVisualizationContainer('serviceRelationshipsVisualization', 'serviceSvg'));
@@ -172,8 +174,8 @@ function updateVisualizationToolbar(activeModeId) {
         allOpt.textContent = 'All Services';
         serviceSelect.appendChild(allOpt);
 
-        if (currentSystemData && currentSystemData.services) {
-            currentSystemData.services.forEach(s => {
+        if (SystemService.getCurrentSystem() && SystemService.getCurrentSystem().services) {
+            SystemService.getCurrentSystem().services.forEach(s => {
                 const opt = document.createElement('option');
                 opt.value = s.serviceName;
                 opt.textContent = s.serviceName;
@@ -204,8 +206,8 @@ function updateVisualizationToolbar(activeModeId) {
         allOpt.textContent = 'All Services';
         apiSelect.appendChild(allOpt);
 
-        if (currentSystemData && currentSystemData.services) {
-            currentSystemData.services
+        if (SystemService.getCurrentSystem() && SystemService.getCurrentSystem().services) {
+            SystemService.getCurrentSystem().services
                 .slice()
                 .sort((a, b) => (a.serviceName || '').localeCompare(b.serviceName || ''))
                 .forEach(s => {
@@ -250,25 +252,23 @@ async function renderMermaidDiagram() {
         graphContainer.appendChild(p);
     };
 
-    if (!currentSystemData) {
+    if (!SystemService.getCurrentSystem()) {
         console.warn("renderMermaidDiagram: No system data available.");
         showMessage('Load a system to see the architecture diagram.', 'mermaid-info');
         return;
     }
+    // Check generic external library availability
     if (typeof mermaid === 'undefined' || typeof mermaid.render !== 'function') {
         console.error("renderMermaidDiagram: Mermaid library is unavailable.");
         showMessage('Mermaid is not loaded. Please check your connection.', 'mermaid-error');
         return;
     }
-    if (typeof generateMermaidSyntax !== 'function') {
-        console.error("renderMermaidDiagram: generateMermaidSyntax is not defined.");
-        showMessage('Mermaid generator missing. Check script loading order.', 'mermaid-error');
-        return;
-    }
+
+    // Checking of generateMermaidSyntax removed as it is guaranteed by service layer
 
     let definition = '';
     try {
-        definition = generateMermaidSyntax(currentSystemData);
+        definition = generateMermaidSyntax(SystemService.getCurrentSystem());
         const renderId = 'mermaid-system-architecture';
         if (typeof mermaid.parse === 'function') {
             mermaid.parse(definition);
@@ -295,14 +295,14 @@ async function renderMermaidDiagram() {
 
 function populateApiServiceSelection() {
     const select = document.getElementById('apiServiceSelection');
-    if (!select || !currentSystemData || !Array.isArray(currentSystemData.services)) return;
+    if (!select || !SystemService.getCurrentSystem() || !Array.isArray(SystemService.getCurrentSystem().services)) return;
     select.innerHTML = '';
     const allOption = document.createElement('option');
     allOption.value = 'all';
     allOption.textContent = 'All Services';
     select.appendChild(allOption);
 
-    currentSystemData.services
+    SystemService.getCurrentSystem().services
         .slice()
         .sort((a, b) => (a.serviceName || '').localeCompare(b.serviceName || ''))
         .forEach(service => {
@@ -348,7 +348,7 @@ async function renderMermaidApiDiagram(serviceParam) {
         console.error("renderMermaidApiDiagram: required elements not found.");
         return;
     }
-    if (!currentSystemData) {
+    if (!SystemService.getCurrentSystem()) {
         showMessage('Load a system to see API interactions.', 'mermaid-info');
         return;
     }
@@ -356,14 +356,11 @@ async function renderMermaidApiDiagram(serviceParam) {
         showMessage('Mermaid is not loaded.', 'mermaid-error');
         return;
     }
-    if (typeof generateMermaidApiSyntax !== 'function') {
-        showMessage('API mermaid generator missing.', 'mermaid-error');
-        return;
-    }
+    // Checking of generateMermaidApiSyntax removed as it is guaranteed by service layer
 
     let definition = '';
     try {
-        definition = generateMermaidApiSyntax(currentSystemData, { selectedService });
+        definition = generateMermaidApiSyntax(SystemService.getCurrentSystem(), { selectedService });
         const renderId = 'mermaid-api-interactions';
         const existingSvg = document.getElementById(renderId);
         if (existingSvg) existingSvg.remove();
@@ -392,9 +389,6 @@ function getActiveVisualizationId() {
         if (activeItem) {
             return activeItem.id;
         }
-    }
-    if (typeof visualizationItems !== 'undefined' && typeof currentVisualizationIndex !== 'undefined') {
-        return visualizationItems[currentVisualizationIndex]?.id || null;
     }
     return null;
 }
@@ -902,7 +896,7 @@ function populateServiceSelection() {
     serviceSelection.appendChild(allServicesOption);
 
     // Add individual services
-    currentSystemData.services.forEach(service => {
+    SystemService.getCurrentSystem().services.forEach(service => {
         let option = document.createElement('option');
         option.value = service.serviceName;
         option.text = service.serviceName;
@@ -911,19 +905,7 @@ function populateServiceSelection() {
 }
 
 function getServiceDependencies(service, collectedServices = {}, visitedServices = {}) {
-    if (!service || visitedServices[service.serviceName]) {
-        return [];
-    }
-    visitedServices[service.serviceName] = true;
-    collectedServices[service.serviceName] = service;
-
-    // Recursively collect dependencies
-    service.serviceDependencies.forEach(depName => {
-        const depService = currentSystemData.services.find(s => s.serviceName === depName);
-        getServiceDependencies(depService, collectedServices, visitedServices);
-    });
-
-    return Object.values(collectedServices);
+    return VisualizationService.getServiceDependencies(SystemService.getCurrentSystem(), service, collectedServices, visitedServices);
 }
 
 function updateServiceVisualization(selectedService) {
@@ -934,10 +916,10 @@ function updateServiceVisualization(selectedService) {
     }
 
     if (selectedService === 'all') {
-        generateServiceVisualization(currentSystemData.services, null); // No service is selected
+        generateServiceVisualization(SystemService.getCurrentSystem().services, null); // No service is selected
     } else {
         // Find the selected service and its dependencies
-        const selectedServiceData = currentSystemData.services.find(service => service.serviceName === selectedService);
+        const selectedServiceData = SystemService.getCurrentSystem().services.find(service => service.serviceName === selectedService);
         if (selectedServiceData) {
             const relatedServices = getServiceDependencies(selectedServiceData);
             generateServiceVisualization(relatedServices, selectedService);
@@ -974,12 +956,12 @@ function generateServiceVisualization(services, selectedServiceName) {
 
     // Create a color scale based on teams
     const teamColorScale = d3.scaleOrdinal(d3.schemeCategory10);
-    const teamIds = currentSystemData.teams.map(team => team.teamId);
+    const teamIds = SystemService.getCurrentSystem().teams.map(team => team.teamId);
     teamColorScale.domain(teamIds);
 
     // Map service names to services for quick lookup
     const serviceMap = {};
-    currentSystemData.services.forEach(service => {
+    SystemService.getCurrentSystem().services.forEach(service => {
         serviceMap[service.serviceName] = service;
     });
 
@@ -1076,7 +1058,7 @@ function generateServiceVisualization(services, selectedServiceName) {
         let info = '';
         if (d.type === 'service') {
             let service = serviceMap[d.id];
-            let team = currentSystemData.teams.find(t => t.teamId === service.owningTeamId);
+            let team = SystemService.getCurrentSystem().teams.find(t => t.teamId === service.owningTeamId);
             info = `<strong>Service Name:</strong> ${service.serviceName}<br>
                     <strong>Description:</strong> ${service.serviceDescription}<br>
                     <strong>Team:</strong> ${team ? `${team.teamName} (${team.teamIdentity})` : 'Unassigned'}`;
@@ -1146,7 +1128,7 @@ function generateServiceVisualization(services, selectedServiceName) {
         .attr('stroke-width', 2);
 
     // Add legend for teams
-    let legendData = currentSystemData.teams.map(team => ({
+    let legendData = SystemService.getCurrentSystem().teams.map(team => ({
         teamIdentity: team.teamIdentity,
         color: teamColorScale(team.teamId)
     }));
@@ -1174,7 +1156,7 @@ function populateDependencyServiceSelection() {
     serviceSelection.innerHTML = ''; // Clear existing options
 
     // Add individual services
-    currentSystemData.services.forEach(service => {
+    SystemService.getCurrentSystem().services.forEach(service => {
         let option = document.createElement('option');
         option.value = service.serviceName;
         option.text = service.serviceName;
@@ -1187,165 +1169,12 @@ function populateDependencyServiceSelection() {
 //We build nodes and links without duplicating nodes.
 //Ensure the edges are defined in the correct direction (from upstream to downstream).
 function buildDependencyGraph(serviceName) {
-    const nodes = [];
-    const links = [];
-    const nodeMap = {};
-
-    const serviceMap = {};
-    currentSystemData.services.forEach(service => {
-        serviceMap[service.serviceName] = service;
-    });
-
-    const queue = [];
-    const visited = new Set();
-
-    queue.push(serviceName);
-    visited.add(serviceName);
-
-    while (queue.length > 0) {
-        const currentServiceName = queue.shift();
-        const currentService = serviceMap[currentServiceName];
-
-        if (!nodeMap[currentServiceName]) {
-            nodes.push({ id: currentServiceName, type: 'service' });
-            nodeMap[currentServiceName] = true;
-        }
-
-        // Process upstream dependencies
-        currentService.serviceDependencies.forEach(depName => {
-            if (!nodeMap[depName]) {
-                nodes.push({ id: depName, type: 'service' });
-                nodeMap[depName] = true;
-            }
-            // Edge from dependency to current service
-            links.push({
-                source: depName,
-                target: currentServiceName,
-                type: 'service-dependency',
-            });
-            if (!visited.has(depName)) {
-                visited.add(depName);
-                queue.push(depName);
-            }
-        });
-
-        // Process platform dependencies
-        if (showPlatformComponents) {
-            if (currentService.platformDependencies) {
-                currentService.platformDependencies.forEach(platform => {
-                    if (!nodeMap[platform]) {
-                        nodes.push({ id: platform, type: 'platform' });
-                        nodeMap[platform] = true;
-                    }
-                    // Edge from platform to current service
-                    links.push({
-                        source: platform,
-                        target: currentServiceName,
-                        type: 'platform-dependency',
-                    });
-                });
-            }
-        }
-
-        // Process downstream dependents
-        currentSystemData.services.forEach(service => {
-            if (service.serviceDependencies.includes(currentServiceName)) {
-                const dependentName = service.serviceName;
-                if (!nodeMap[dependentName]) {
-                    nodes.push({ id: dependentName, type: 'service' });
-                    nodeMap[dependentName] = true;
-                }
-                // Edge from current service to dependent
-                links.push({
-                    source: currentServiceName,
-                    target: dependentName,
-                    type: 'service-dependency',
-                });
-                if (!visited.has(dependentName)) {
-                    visited.add(dependentName);
-                    queue.push(dependentName);
-                }
-            }
-        });
-    }
-
-    return { nodes, links };
+    return VisualizationService.buildDependencyGraph(SystemService.getCurrentSystem(), serviceName, { showPlatformComponents });
 }
 
 //Create functions to build the data structure representing upstream and downstream dependencies.
 function buildDependencyTree(serviceName) {
-    const serviceMap = {};
-    currentSystemData.services.forEach(service => {
-        serviceMap[service.serviceName] = service;
-    });
-
-    // Recursive function to get upstream dependencies
-    function getUpstream(service, visited = new Set()) {
-        if (!service || visited.has(service.serviceName)) return null;
-        visited.add(service.serviceName);
-
-        let dependencies = [];
-        service.serviceDependencies.forEach(depName => {
-            const depService = serviceMap[depName];
-            const upstreamNode = getUpstream(depService, visited);
-            if (upstreamNode) {
-                dependencies.push(upstreamNode);
-            } else if (depService) {
-                dependencies.push({ name: depService.serviceName, children: [] });
-            }
-        });
-
-        return { name: service.serviceName, children: dependencies };
-    }
-
-    // Recursive function to get downstream dependencies
-    function getDownstream(service, visited = new Set()) {
-        if (!service || visited.has(service.serviceName)) return null;
-        visited.add(service.serviceName);
-
-        let dependents = [];
-        currentSystemData.services.forEach(otherService => {
-            if (otherService.serviceDependencies.includes(service.serviceName)) {
-                const downstreamNode = getDownstream(otherService, visited);
-                if (downstreamNode) {
-                    dependents.push(downstreamNode);
-                } else {
-                    dependents.push({ name: otherService.serviceName, children: [] });
-                }
-            }
-        });
-
-        return { name: service.serviceName, children: dependents };
-    }
-
-    const rootService = serviceMap[serviceName];
-
-    const upstreamTree = getUpstream(rootService);
-    const downstreamTree = getDownstream(rootService);
-
-    // Combine upstream and downstream trees
-    const treeData = {
-        name: rootService.serviceName,
-        children: []
-    };
-
-    if (upstreamTree && upstreamTree.children.length > 0) {
-        treeData.children.push({
-            name: 'Upstream Dependencies',
-            direction: 'upstream',
-            children: upstreamTree.children
-        });
-    }
-
-    if (downstreamTree && downstreamTree.children.length > 0) {
-        treeData.children.push({
-            name: 'Downstream Dependencies',
-            direction: 'downstream',
-            children: downstreamTree.children
-        });
-    }
-
-    return treeData;
+    return VisualizationService.buildDependencyTree(SystemService.getCurrentSystem(), serviceName);
 }
 
 /**
@@ -1488,10 +1317,10 @@ function generateDependencyForceVisualization(selectedServiceName) {
         // Tooltip Logic (same as before)
         let info = '';
         if (d.type === 'service') {
-            const service = currentSystemData.services.find(s => s.serviceName === d.id);
+            const service = SystemService.getCurrentSystem().services.find(s => s.serviceName === d.id);
             if (service) {
                 const upstreams = service.serviceDependencies || [];
-                const downstreams = currentSystemData.services.filter(s => (s.serviceDependencies || []).includes(d.id)).map(s => s.serviceName);
+                const downstreams = SystemService.getCurrentSystem().services.filter(s => (s.serviceDependencies || []).includes(d.id)).map(s => s.serviceName);
                 const platformDeps = service.platformDependencies || [];
                 info = `<strong>Service:</strong> ${d.id}<br>`;
                 info += `<strong>Upstream:</strong> ${upstreams.length > 0 ? upstreams.join(', ') : 'None'}<br>`;
@@ -1706,34 +1535,7 @@ function addDependencyLegend(svg) {
 }
 
 function prepareServiceDependenciesTableData() {
-    if (!currentSystemData || !Array.isArray(currentSystemData.services)) {
-        return [];
-    }
-
-    const services = currentSystemData.services || [];
-    const teams = currentSystemData.teams || [];
-
-    return services.map(service => {
-        const team = teams.find(t => t.teamId === service.owningTeamId);
-        const upstreamServices = service.serviceDependencies || [];
-        const platformDependencies = service.platformDependencies || [];
-        const downstreamServices = services
-            .filter(s => (s.serviceDependencies || []).includes(service.serviceName))
-            .map(s => s.serviceName);
-
-        return {
-            id: service.serviceName,
-            serviceName: service.serviceName,
-            description: service.serviceDescription || '',
-            owningTeam: team ? (team.teamIdentity || team.teamName || team.teamId) : 'Unassigned',
-            upstreamDependencies: upstreamServices,
-            platformDependencies: platformDependencies,
-            downstreamDependencies: downstreamServices,
-            upstreamDependenciesText: upstreamServices.length > 0 ? upstreamServices.join(', ') : 'None',
-            platformDependenciesText: platformDependencies.length > 0 ? platformDependencies.join(', ') : 'None',
-            downstreamDependenciesText: downstreamServices.length > 0 ? downstreamServices.join(', ') : 'None'
-        };
-    });
+    return VisualizationService.prepareServiceDependenciesTableData(SystemService.getCurrentSystem());
 }
 
 function generateServiceDependenciesTable() {
@@ -1834,8 +1636,8 @@ function updateAllToggleButtonsText(showPlatforms) {
 }
 
 function rerenderCurrentVisualizationForPlatformToggle() {
-    if (!currentSystemData) {
-        console.warn("Platform toggle: currentSystemData is not available.");
+    if (!SystemService.getCurrentSystem()) {
+        console.warn("Platform toggle: SystemService.getCurrentSystem() is not available.");
         return;
     }
 
@@ -1856,7 +1658,7 @@ function rerenderCurrentVisualizationForPlatformToggle() {
     switch (activeViewId) {
         case 'visualization':
             if (typeof generateVisualization === 'function') {
-                generateVisualization(currentSystemData);
+                generateVisualization(SystemService.getCurrentSystem());
             }
             break;
         case 'serviceRelationshipsVisualization':
@@ -1877,7 +1679,7 @@ function rerenderCurrentVisualizationForPlatformToggle() {
         default:
             // If view can't be detected, refresh all relevant visualizations
             if (typeof generateVisualization === 'function') {
-                generateVisualization(currentSystemData);
+                generateVisualization(SystemService.getCurrentSystem());
             }
             if (typeof updateServiceVisualization === 'function') {
                 updateServiceVisualization();
@@ -1972,13 +1774,13 @@ function showVisualization(index) {
         if (titleElement) titleElement.textContent = visualizationItems[index].title;
 
         // Call regenerate functions only if the specific view is now active and data is loaded
-        if (currentSystemData) {
+        if (SystemService.getCurrentSystem()) {
             switch (targetItemId) {
                 case 'visualization':
-                    if (typeof generateVisualization === 'function') generateVisualization(currentSystemData);
+                    if (typeof generateVisualization === 'function') generateVisualization(SystemService.getCurrentSystem());
                     break;
                 case 'teamVisualization':
-                    if (typeof generateTeamVisualization === 'function') generateTeamVisualization(currentSystemData);
+                    if (typeof generateTeamVisualization === 'function') generateTeamVisualization(SystemService.getCurrentSystem());
                     break;
                 case 'serviceRelationshipsVisualization':
                     if (typeof populateServiceSelection === 'function') populateServiceSelection();

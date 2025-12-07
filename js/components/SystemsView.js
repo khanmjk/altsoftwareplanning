@@ -47,7 +47,7 @@ class SystemsView {
         const aiButton = document.getElementById('createWithAiBtn');
         if (!aiButton) return;
 
-        const aiEnabled = window.globalSettings?.ai?.isEnabled || false;
+        const aiEnabled = SettingsService.get()?.ai?.isEnabled || false;
 
         if (!aiEnabled) {
             aiButton.classList.add('disabled');
@@ -103,7 +103,7 @@ class SystemsView {
      * Handle Create with AI button click
      */
     handleCreateWithAi() {
-        const aiEnabled = window.globalSettings?.ai?.isEnabled || false;
+        const aiEnabled = SettingsService.get()?.ai?.isEnabled || false;
 
         if (!aiEnabled) {
             if (window.notificationManager) {
@@ -123,11 +123,7 @@ class SystemsView {
      * Handle Create New System button click
      */
     handleCreateNew() {
-        if (window.createNewSystem) {
-            window.createNewSystem();
-        } else {
-            console.error('SystemsView: createNewSystem function not found');
-        }
+        SystemService.createAndActivate();
     }
 
     /**
@@ -194,7 +190,7 @@ class SystemsView {
      * @returns {string} HTML string
      */
     renderEmptyState() {
-        const aiEnabled = window.globalSettings?.ai?.isEnabled || false;
+        const aiEnabled = SettingsService.get()?.ai?.isEnabled || false;
         const aiButtonClass = aiEnabled ? '' : 'disabled';
         const aiButtonDisabled = aiEnabled ? '' : 'disabled';
 
@@ -268,11 +264,7 @@ class SystemsView {
      * @param {string} systemKey - The system ID to load
      */
     loadSystem(systemKey) {
-        if (window.loadSavedSystem) {
-            window.loadSavedSystem(systemKey);
-        } else {
-            console.error('SystemsView: loadSavedSystem function not found');
-        }
+        SystemService.loadAndActivate(systemKey);
     }
 
     /**
@@ -292,7 +284,14 @@ class SystemsView {
         );
 
         if (confirmed) {
-            const success = this.repository.deleteSystem(systemKey);
+            // Use SystemService if available for consistency
+            let success = false;
+            if (window.SystemService) {
+                success = window.SystemService.deleteSystem(systemKey);
+            } else {
+                success = this.repository.deleteSystem(systemKey);
+            }
+
             if (success) {
                 window.notificationManager.showToast(`System "${systemKey}" has been deleted.`, 'success');
                 this.render(); // Refresh the view
@@ -317,8 +316,8 @@ class SystemsView {
             sampleSystemCount: sampleSystems.length,
             userSystems: userSystems.map(s => ({ id: s.id, name: s.name })),
             sampleSystems: sampleSystems.map(s => ({ id: s.id, name: s.name })),
-            currentSystemLoaded: !!window.currentSystemData,
-            currentSystemName: window.currentSystemData?.systemName || null
+            currentSystemLoaded: !!SystemService.getCurrentSystem(),
+            currentSystemName: SystemService.getCurrentSystem()?.systemName || null
         };
     }
 }

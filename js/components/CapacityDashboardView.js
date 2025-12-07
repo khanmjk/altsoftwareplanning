@@ -7,7 +7,7 @@
 class CapacityDashboardView {
     constructor() {
         this.container = null;
-        this.capacityEngine = new CapacityEngine(window.currentSystemData);
+        this.capacityEngine = new CapacityEngine(SystemService.getCurrentSystem());
         this.currentScenario = 'FundedHC'; // Default to Funded Headcount (Budget)
         this.currentChartTeamId = '__ORG_VIEW__';
     }
@@ -17,7 +17,7 @@ class CapacityDashboardView {
         this.container.innerHTML = '';
 
         // Update Data
-        this.capacityEngine.updateSystemData(window.currentSystemData);
+        this.capacityEngine.updateSystemData(SystemService.getCurrentSystem());
         const metrics = this.capacityEngine.calculateAllMetrics();
 
         const wrapper = document.createElement('div');
@@ -91,7 +91,7 @@ class CapacityDashboardView {
         if (this.currentChartTeamId === '__ORG_VIEW__') orgOpt.selected = true;
         teamSelect.appendChild(orgOpt);
 
-        (window.currentSystemData.teams || []).forEach(t => {
+        (SystemService.getCurrentSystem().teams || []).forEach(t => {
             const opt = document.createElement('option');
             opt.value = t.teamId;
             opt.textContent = t.teamIdentity || t.teamName;
@@ -353,7 +353,7 @@ class CapacityDashboardView {
                 });
 
                 const tbody = table.createTBody();
-                const teams = window.currentSystemData.teams || [];
+                const teams = SystemService.getCurrentSystem().teams || [];
 
                 teams.forEach(team => {
                     const m = metrics[team.teamId]?.[this.currentScenario];
@@ -456,7 +456,7 @@ class CapacityDashboardView {
                 h4Team.style.fontWeight = '600';
                 wrapper.appendChild(h4Team);
 
-                const teams = window.currentSystemData.teams || [];
+                const teams = SystemService.getCurrentSystem().teams || [];
                 teams.forEach(team => {
                     const m = metrics[team.teamId]?.[this.currentScenario];
                     if (!m) return;

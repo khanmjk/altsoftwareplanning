@@ -36,14 +36,14 @@ class HeaderComponent {
             // For now, we rely on update() or manual checks if settings change.
 
             aiBtn.addEventListener('click', () => {
-                const isEnabled = window.globalSettings && window.globalSettings.ai && window.globalSettings.ai.isEnabled;
+                const isEnabled = SettingsService.get() && SettingsService.get().ai && SettingsService.get().ai.isEnabled;
 
                 if (!isEnabled) {
                     window.notificationManager.showToast('AI Assistant is currently disabled. Please enable it in Settings.', 'info');
                     return;
                 }
 
-                if (window.aiChatAssistant && typeof window.aiChatAssistant.openAiChatPanel === 'function') {
+                if (window.aiChatAssistant && window.aiChatAssistant.openAiChatPanel) {
                     // Check if already open
                     if (window.aiChatAssistant.isAiChatPanelOpen()) {
                         window.aiChatAssistant.closeAiChatPanel();
@@ -109,7 +109,7 @@ class HeaderComponent {
 
     updateAiButtonVisibility(btn) {
         if (!btn) return;
-        const isEnabled = window.globalSettings && window.globalSettings.ai && window.globalSettings.ai.isEnabled;
+        const isEnabled = SettingsService.get() && SettingsService.get().ai && SettingsService.get().ai.isEnabled;
 
         // Show always, but style differently if disabled
         btn.style.display = 'inline-flex';

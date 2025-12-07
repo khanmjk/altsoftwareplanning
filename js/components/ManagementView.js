@@ -152,13 +152,13 @@ class ManagementView {
     }
 
     renderThemesList() {
-        if (!window.currentSystemData) return;
+        if (!SystemService.getCurrentSystem()) return;
 
         // Initialize ThemeEditComponent
         if (!this.themeEditComponent) {
-            this.themeEditComponent = new ThemeEditComponent('themesListContainer', window.currentSystemData);
+            this.themeEditComponent = new ThemeEditComponent('themesListContainer', SystemService.getCurrentSystem());
         } else {
-            this.themeEditComponent.systemData = window.currentSystemData;
+            this.themeEditComponent.systemData = SystemService.getCurrentSystem();
             this.themeEditComponent.containerId = 'themesListContainer'; // Ensure container ID is set if re-using
         }
 
@@ -166,11 +166,11 @@ class ManagementView {
     }
 
     addNewTheme() {
-        if (!window.currentSystemData.definedThemes) {
-            window.currentSystemData.definedThemes = [];
+        if (!SystemService.getCurrentSystem().definedThemes) {
+            SystemService.getCurrentSystem().definedThemes = [];
         }
 
-        window.currentSystemData.definedThemes.push({
+        SystemService.getCurrentSystem().definedThemes.push({
             name: 'New Theme',
             description: '',
             themeId: 'theme_' + Date.now()
@@ -178,7 +178,7 @@ class ManagementView {
 
         // Refresh Component
         if (this.themeEditComponent) {
-            this.themeEditComponent.expandedIndex = window.currentSystemData.definedThemes.length - 1; // Expand new
+            this.themeEditComponent.expandedIndex = SystemService.getCurrentSystem().definedThemes.length - 1; // Expand new
             this.themeEditComponent.render();
         }
     }
@@ -203,13 +203,13 @@ class ManagementView {
     }
 
     populateInitiativesList() {
-        if (!window.currentSystemData) return;
+        if (!SystemService.getCurrentSystem()) return;
 
         // Initialize InitiativeEditComponent
         if (!this.initiativeEditComponent) {
-            this.initiativeEditComponent = new InitiativeEditComponent('initiativesListContainer', window.currentSystemData);
+            this.initiativeEditComponent = new InitiativeEditComponent('initiativesListContainer', SystemService.getCurrentSystem());
         } else {
-            this.initiativeEditComponent.systemData = window.currentSystemData;
+            this.initiativeEditComponent.systemData = SystemService.getCurrentSystem();
             this.initiativeEditComponent.containerId = 'initiativesListContainer';
         }
         this.initiativeEditComponent.render();
@@ -248,13 +248,13 @@ class ManagementView {
     }
 
     populateGoalsList() {
-        if (!window.currentSystemData) return;
+        if (!SystemService.getCurrentSystem()) return;
 
         // Initialize GoalEditComponent
         if (!this.goalEditComponent) {
-            this.goalEditComponent = new GoalEditComponent('goalsListContainer', window.currentSystemData);
+            this.goalEditComponent = new GoalEditComponent('goalsListContainer', SystemService.getCurrentSystem());
         } else {
-            this.goalEditComponent.systemData = window.currentSystemData;
+            this.goalEditComponent.systemData = SystemService.getCurrentSystem();
             this.goalEditComponent.containerId = 'goalsListContainer';
         }
         this.goalEditComponent.render();
@@ -274,9 +274,9 @@ class ManagementView {
      * @returns {Object} Context object with view-specific data
      */
     getAIContext() {
-        const themes = window.currentSystemData?.definedThemes || [];
-        const initiatives = window.currentSystemData?.yearlyInitiatives || [];
-        const goals = window.currentSystemData?.goals || [];
+        const themes = SystemService.getCurrentSystem()?.definedThemes || [];
+        const initiatives = SystemService.getCurrentSystem()?.yearlyInitiatives || [];
+        const goals = SystemService.getCurrentSystem()?.goals || [];
 
         return {
             viewTitle: 'Product Management',

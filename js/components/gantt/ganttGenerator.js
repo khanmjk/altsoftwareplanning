@@ -5,7 +5,7 @@
         const tasks = (window.ganttAdapter && typeof window.ganttAdapter.buildTasksFromInitiatives === 'function')
             ? window.ganttAdapter.buildTasksFromInitiatives({
                 initiatives: initiatives || [],
-                workPackages: currentSystemData?.workPackages || [],
+                workPackages: SystemService.getCurrentSystem()?.workPackages || [],
                 viewBy: groupBy,
                 filters: {},
                 year: viewYear,

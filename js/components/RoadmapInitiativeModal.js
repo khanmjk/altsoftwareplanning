@@ -248,19 +248,19 @@ class RoadmapInitiativeModal {
     }
 
     populateDropdowns() {
-        if (!window.currentSystemData) return;
+        if (!SystemService.getCurrentSystem()) return;
 
         // Themes
         const themesSelect = document.getElementById('roadmapModalThemesSelect');
-        themesSelect.innerHTML = (window.currentSystemData.definedThemes || []).map(t =>
+        themesSelect.innerHTML = (SystemService.getCurrentSystem().definedThemes || []).map(t =>
             `<option value="${t.themeId}">${t.name}</option>`
         ).join('');
 
         // Goals
         const goalSelect = document.getElementById('roadmapModalGoalSelect');
         const goals = [
-            ...(window.currentSystemData.goals || []),
-            ...(window.currentSystemData.subGoals || [])
+            ...(SystemService.getCurrentSystem().goals || []),
+            ...(SystemService.getCurrentSystem().subGoals || [])
         ];
         goalSelect.innerHTML = '<option value="">-- None --</option>' +
             goals.map(g => `<option value="${g.goalId}">${g.name || g.goalId}</option>`).join('');
@@ -268,27 +268,27 @@ class RoadmapInitiativeModal {
         // Owners (SDMs, PMTs, Sr Mgrs)
         const ownerSelect = document.getElementById('roadmapModalOwnerSelect');
         const owners = [
-            ...(window.currentSystemData.sdms || []).map(p => ({ id: `sdm:${p.sdmId}`, name: `${p.sdmName} (SDM)` })),
-            ...(window.currentSystemData.pmts || []).map(p => ({ id: `pmt:${p.pmtId}`, name: `${p.pmtName} (PMT)` })),
-            ...(window.currentSystemData.seniorManagers || []).map(p => ({ id: `seniorManager:${p.seniorManagerId}`, name: `${p.seniorManagerName} (Sr Mgr)` }))
+            ...(SystemService.getCurrentSystem().sdms || []).map(p => ({ id: `sdm:${p.sdmId}`, name: `${p.sdmName} (SDM)` })),
+            ...(SystemService.getCurrentSystem().pmts || []).map(p => ({ id: `pmt:${p.pmtId}`, name: `${p.pmtName} (PMT)` })),
+            ...(SystemService.getCurrentSystem().seniorManagers || []).map(p => ({ id: `seniorManager:${p.seniorManagerId}`, name: `${p.seniorManagerName} (Sr Mgr)` }))
         ];
         ownerSelect.innerHTML = '<option value="">-- Select Owner --</option>' +
             owners.map(o => `<option value="${o.id}">${o.name}</option>`).join('');
 
         // Project Managers (TPMs)
         const pmSelect = document.getElementById('roadmapModalProjectManagerSelect');
-        const tpms = (window.currentSystemData.tpms || []).map(p => ({ id: `tpm:${p.tpmId}`, name: `${p.tpmName} (TPM)` }));
+        const tpms = (SystemService.getCurrentSystem().tpms || []).map(p => ({ id: `tpm:${p.tpmId}`, name: `${p.tpmName} (TPM)` }));
         pmSelect.innerHTML = '<option value="">-- Select Project Manager --</option>' +
             tpms.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
 
         // Teams
         const teamSelect = document.getElementById('roadmapModalTeamSelect');
         teamSelect.innerHTML = '<option value="">-- Select Team --</option>' +
-            (window.currentSystemData.teams || []).map(t => `<option value="${t.teamId}">${t.teamIdentity || t.teamName}</option>`).join('');
+            (SystemService.getCurrentSystem().teams || []).map(t => `<option value="${t.teamId}">${t.teamIdentity || t.teamName}</option>`).join('');
     }
 
     loadInitiativeData(initiativeId) {
-        const initiative = (window.currentSystemData.yearlyInitiatives || []).find(i => i.initiativeId === initiativeId);
+        const initiative = (SystemService.getCurrentSystem().yearlyInitiatives || []).find(i => i.initiativeId === initiativeId);
         if (!initiative) return;
 
         const form = document.getElementById('roadmapInitiativeForm');
@@ -374,7 +374,7 @@ class RoadmapInitiativeModal {
         }
 
         container.innerHTML = this.assignments.map((a, index) => {
-            const team = (window.currentSystemData.teams || []).find(t => t.teamId === a.teamId);
+            const team = (SystemService.getCurrentSystem().teams || []).find(t => t.teamId === a.teamId);
             const teamName = team ? (team.teamIdentity || team.teamName) : a.teamId;
             return `
                 <div class="assignment-item">

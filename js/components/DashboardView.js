@@ -59,7 +59,7 @@ class DashboardView {
             window.workspaceComponent.setToolbar(toolbar);
         }
 
-        if (!window.currentSystemData) {
+        if (!SystemService.getCurrentSystem()) {
             this.container.innerHTML = '<div class="dashboard-empty-state"><i class="fas fa-chart-line dashboard-empty-state__icon"></i><p class="dashboard-empty-state__message">No system data loaded</p></div>';
             return;
         }
@@ -160,12 +160,12 @@ class DashboardView {
      */
     generateYearOptions() {
         // Safety check for data
-        if (!window.currentSystemData || !window.currentSystemData.yearlyInitiatives) {
+        if (!SystemService.getCurrentSystem() || !SystemService.getCurrentSystem().yearlyInitiatives) {
             return '<option value="all">All Years</option>';
         }
 
         const allYears = [...new Set(
-            (window.currentSystemData.yearlyInitiatives || [])
+            (SystemService.getCurrentSystem().yearlyInitiatives || [])
                 .map(init => init.attributes?.planningYear)
                 .filter(Boolean)
         )].sort((a, b) => a - b);
@@ -360,13 +360,13 @@ class DashboardView {
         }
 
         const allYears = [...new Set(
-            window.currentSystemData.yearlyInitiatives
+            SystemService.getCurrentSystem().yearlyInitiatives
                 .map(init => init.attributes.planningYear)
                 .filter(Boolean)
         )].sort((a, b) => a - b);
 
         const allThemes = [...new Set(
-            window.currentSystemData.definedThemes.map(t => t.name)
+            SystemService.getCurrentSystem().definedThemes.map(t => t.name)
         )];
 
         const themeColors = [
@@ -454,8 +454,8 @@ class DashboardView {
         }
 
         const demandData = this.processTeamDemandData();
-        const teamMap = new Map((window.currentSystemData.teams || []).map(t => [t.teamId, t.teamIdentity || t.teamName]));
-        const teamColorScale = d3.scaleOrdinal(d3.schemeCategory10).domain(window.currentSystemData.teams.map(t => t.teamId));
+        const teamMap = new Map((SystemService.getCurrentSystem().teams || []).map(t => [t.teamId, t.teamIdentity || t.teamName]));
+        const teamColorScale = d3.scaleOrdinal(d3.schemeCategory10).domain(SystemService.getCurrentSystem().teams.map(t => t.teamId));
 
         const datasets = [];
         Object.keys(demandData).forEach(teamId => {
@@ -518,15 +518,15 @@ class DashboardView {
     // ========================================
 
     processInvestmentData(selectedYear) {
-        const themeMap = new Map(window.currentSystemData.definedThemes.map(theme => [theme.themeId, theme.name]));
+        const themeMap = new Map(SystemService.getCurrentSystem().definedThemes.map(theme => [theme.themeId, theme.name]));
         const investmentByTheme = {};
 
         themeMap.forEach(name => { investmentByTheme[name] = 0; });
         investmentByTheme['Uncategorized'] = 0;
 
         const initiatives = selectedYear === 'all'
-            ? window.currentSystemData.yearlyInitiatives
-            : window.currentSystemData.yearlyInitiatives.filter(init => init.attributes.planningYear == selectedYear);
+            ? SystemService.getCurrentSystem().yearlyInitiatives
+            : SystemService.getCurrentSystem().yearlyInitiatives.filter(init => init.attributes.planningYear == selectedYear);
 
         initiatives.forEach(initiative => {
             if (initiative.status === 'Completed') return;
@@ -577,16 +577,16 @@ class DashboardView {
         const orgFilter = document.getElementById('roadmapOrgFilterDemand')?.value || 'all';
         const teamFilter = document.getElementById('roadmapTeamFilterDemand')?.value || 'all';
 
-        let initiatives = window.currentSystemData.yearlyInitiatives || [];
+        let initiatives = SystemService.getCurrentSystem().yearlyInitiatives || [];
 
         if (yearFilter !== 'all') {
             initiatives = initiatives.filter(init => init.attributes.planningYear == yearFilter);
         }
         if (orgFilter !== 'all') {
             const teamsInOrg = new Set();
-            (window.currentSystemData.sdms || []).forEach(sdm => {
+            (SystemService.getCurrentSystem().sdms || []).forEach(sdm => {
                 if (sdm.seniorManagerId === orgFilter) {
-                    (window.currentSystemData.teams || []).forEach(team => {
+                    (SystemService.getCurrentSystem().teams || []).forEach(team => {
                         if (team.sdmId === sdm.sdmId) teamsInOrg.add(team.teamId);
                     });
                 }

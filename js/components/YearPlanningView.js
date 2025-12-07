@@ -91,9 +91,9 @@ class YearPlanningView {
      * Refresh capacity metrics before rendering
      */
     refreshCapacityMetrics() {
-        if (window.currentSystemData) {
-            const capacityEngine = new CapacityEngine(window.currentSystemData);
-            window.currentSystemData.calculatedCapacityMetrics = capacityEngine.calculateAllMetrics();
+        if (SystemService.getCurrentSystem()) {
+            const capacityEngine = new CapacityEngine(SystemService.getCurrentSystem());
+            SystemService.getCurrentSystem().calculatedCapacityMetrics = capacityEngine.calculateAllMetrics();
         }
     }
 
@@ -162,7 +162,7 @@ class YearPlanningView {
         rightGroup.appendChild(saveBtn);
 
         // Optimize Button (AI-enabled only)
-        if (window.globalSettings?.ai?.isEnabled) {
+        if (SettingsService.get()?.ai?.isEnabled) {
             const optimizeBtn = document.createElement('button');
             optimizeBtn.className = 'btn btn-info btn-sm';
             optimizeBtn.innerHTML = '<i class="fas fa-robot"></i> Optimize Plan';
@@ -216,7 +216,7 @@ class YearPlanningView {
         const calendarYear = new Date().getFullYear();
         let availableYears = [];
 
-        const initiatives = window.currentSystemData?.yearlyInitiatives || [];
+        const initiatives = SystemService.getCurrentSystem()?.yearlyInitiatives || [];
         if (initiatives.length > 0) {
             const yearsFromData = new Set(
                 initiatives.map(init => init.attributes?.planningYear).filter(Boolean)
@@ -238,7 +238,7 @@ class YearPlanningView {
      * Create scenario toggle buttons
      */
     createScenarioControls() {
-        const metrics = window.currentSystemData?.calculatedCapacityMetrics;
+        const metrics = SystemService.getCurrentSystem()?.calculatedCapacityMetrics;
         if (!metrics) return null;
 
         const scenarioGroup = document.createElement('div');
@@ -282,7 +282,7 @@ class YearPlanningView {
      * Create constraints toggle checkbox
      */
     createConstraintsToggle() {
-        const metrics = window.currentSystemData?.calculatedCapacityMetrics;
+        const metrics = SystemService.getCurrentSystem()?.calculatedCapacityMetrics;
         if (!metrics) return null;
 
         const toggleGroup = document.createElement('div');
@@ -416,15 +416,13 @@ class YearPlanningView {
      * Ensure data consistency before rendering
      */
     ensureDataConsistency() {
-        if (typeof ensureWorkPackagesForInitiatives === 'function') {
-            ensureWorkPackagesForInitiatives(window.currentSystemData, this.currentYear);
-            const initiatives = window.currentSystemData?.yearlyInitiatives || [];
+        if (typeof WorkPackageService !== 'undefined') {
+            WorkPackageService.ensureWorkPackagesForInitiatives(SystemService.getCurrentSystem(), this.currentYear);
+            const initiatives = SystemService.getCurrentSystem()?.yearlyInitiatives || [];
             initiatives
                 .filter(init => init.attributes?.planningYear == this.currentYear)
                 .forEach(init => {
-                    if (typeof syncInitiativeTotals === 'function') {
-                        syncInitiativeTotals(init.initiativeId, window.currentSystemData);
-                    }
+                    WorkPackageService.syncInitiativeTotals(init.initiativeId, SystemService.getCurrentSystem());
                 });
         }
     }
@@ -433,20 +431,20 @@ class YearPlanningView {
      * Calculate summary data using PlanningService
      */
     calculateSummaryData() {
-        if (!window.currentSystemData?.calculatedCapacityMetrics || !window.currentSystemData?.teams) {
+        if (!SystemService.getCurrentSystem()?.calculatedCapacityMetrics || !SystemService.getCurrentSystem()?.teams) {
             return { rows: [], totals: {} };
         }
 
-        const initiativesForYear = (window.currentSystemData.yearlyInitiatives || [])
+        const initiativesForYear = (SystemService.getCurrentSystem().yearlyInitiatives || [])
             .filter(init => init.attributes?.planningYear == this.currentYear && init.status !== 'Completed');
 
         return PlanningService.calculateTeamLoadSummary({
-            teams: window.currentSystemData.teams,
+            teams: SystemService.getCurrentSystem().teams,
             initiatives: initiativesForYear,
-            calculatedMetrics: window.currentSystemData.calculatedCapacityMetrics,
+            calculatedMetrics: SystemService.getCurrentSystem().calculatedCapacityMetrics,
             scenario: this.scenario,
             applyConstraints: this.applyConstraints,
-            allKnownEngineers: window.currentSystemData.allKnownEngineers || []
+            allKnownEngineers: SystemService.getCurrentSystem().allKnownEngineers || []
         });
     }
 
@@ -454,23 +452,23 @@ class YearPlanningView {
      * Calculate table data using PlanningService
      */
     calculateTableData() {
-        if (!window.currentSystemData?.calculatedCapacityMetrics || !window.currentSystemData?.teams) {
+        if (!SystemService.getCurrentSystem()?.calculatedCapacityMetrics || !SystemService.getCurrentSystem()?.teams) {
             return [];
         }
 
-        const initiativesForYear = (window.currentSystemData.yearlyInitiatives || [])
+        const initiativesForYear = (SystemService.getCurrentSystem().yearlyInitiatives || [])
             .filter(init => init.attributes?.planningYear == this.currentYear && init.status !== 'Completed');
 
         const calculatedData = PlanningService.calculatePlanningTableData({
             initiatives: initiativesForYear,
-            calculatedMetrics: window.currentSystemData.calculatedCapacityMetrics,
+            calculatedMetrics: SystemService.getCurrentSystem().calculatedCapacityMetrics,
             scenario: this.scenario,
             applyConstraints: this.applyConstraints
         });
 
         // Update original initiative objects for persistence
         calculatedData.forEach(calcInit => {
-            const originalInit = (window.currentSystemData.yearlyInitiatives || [])
+            const originalInit = (SystemService.getCurrentSystem().yearlyInitiatives || [])
                 .find(i => i.initiativeId === calcInit.initiativeId);
             if (originalInit) {
                 originalInit.attributes.planningStatusFundedHc = calcInit.calculatedAtlBtlStatus;
@@ -727,8 +725,8 @@ class YearPlanningView {
         });
 
         // Team columns
-        const teams = window.currentSystemData?.teams || [];
-        const calculatedMetrics = window.currentSystemData?.calculatedCapacityMetrics || {};
+        const teams = SystemService.getCurrentSystem()?.teams || [];
+        const calculatedMetrics = SystemService.getCurrentSystem()?.calculatedCapacityMetrics || {};
         const teamHeaderMap = new Map();
 
         teams.forEach((team, index) => {
@@ -908,9 +906,8 @@ class YearPlanningView {
         tableContainer.appendChild(tableWrapper);
 
         // Adjust height (legacy helper)
-        if (typeof adjustPlanningTableHeight === 'function') {
-            adjustPlanningTableHeight();
-        }
+        // Adjust height (legacy helper)
+        adjustPlanningTableHeight();
     }
 
     // ==================== State Setters ====================
@@ -938,12 +935,12 @@ class YearPlanningView {
     handleSavePlan() {
         console.log(`Saving plan for year ${this.currentYear}...`);
 
-        if (!window.currentSystemData?.systemName) {
+        if (!SystemService.getCurrentSystem()?.systemName) {
             window.notificationManager?.showToast("Cannot save: No system data loaded.", "error");
             return;
         }
 
-        const initiativesForYear = (window.currentSystemData.yearlyInitiatives || [])
+        const initiativesForYear = (SystemService.getCurrentSystem().yearlyInitiatives || [])
             .filter(init => init.attributes?.planningYear == this.currentYear);
 
         initiativesForYear.forEach(initiative => {
@@ -963,18 +960,16 @@ class YearPlanningView {
         });
 
         try {
-            if (typeof ensureWorkPackagesForInitiatives === 'function') {
-                ensureWorkPackagesForInitiatives(window.currentSystemData, this.currentYear);
-                initiativesForYear.forEach(init => {
-                    if (typeof syncWorkPackagesFromInitiative === 'function') {
-                        syncWorkPackagesFromInitiative(init, window.currentSystemData);
-                    }
-                    if (typeof syncInitiativeTotals === 'function') {
-                        syncInitiativeTotals(init.initiativeId, window.currentSystemData);
-                    }
-                });
+            // Use WorkPackageService directly (Guaranteed by Service Layer)
+            WorkPackageService.ensureWorkPackagesForInitiatives(SystemService.getCurrentSystem(), this.currentYear);
+            initiativesForYear.forEach(init => {
+                WorkPackageService.syncWorkPackagesFromInitiative(init, SystemService.getCurrentSystem());
+                WorkPackageService.syncInitiativeTotals(init.initiativeId, SystemService.getCurrentSystem());
+            });
+
+            if (typeof SystemService !== 'undefined' && SystemService.save) {
+                SystemService.save();
             }
-            saveSystemChanges();
             window.notificationManager?.showToast(`Plan for ${this.currentYear} saved successfully.`, "success");
             this.render();
         } catch (error) {
@@ -1005,7 +1000,7 @@ class YearPlanningView {
             atlInitiatives: PlanningService.getATLInitiatives(this.tableData || []),
             btlInitiatives: PlanningService.getBTLInitiatives(this.tableData || []),
             totalCapacity: PlanningService.getTotalCapacity(
-                window.currentSystemData?.calculatedCapacityMetrics,
+                SystemService.getCurrentSystem()?.calculatedCapacityMetrics,
                 this.scenario,
                 this.applyConstraints
             ),

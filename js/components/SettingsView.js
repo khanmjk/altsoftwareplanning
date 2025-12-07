@@ -112,8 +112,8 @@ class SettingsView {
      * @returns {string} HTML for general tab
      */
     renderGeneralTab() {
-        const hasSystem = !!window.currentSystemData;
-        const systemName = hasSystem ? window.currentSystemData.systemName : '';
+        const hasSystem = !!SystemService.getCurrentSystem();
+        const systemName = hasSystem ? SystemService.getCurrentSystem().systemName : '';
         const sampleSystemNames = ['StreamView', 'ConnectPro', 'ShopSphere', 'InsightAI', 'FinSecure'];
         const isSampleSystem = sampleSystemNames.includes(systemName);
 
@@ -165,9 +165,9 @@ class SettingsView {
      * @returns {string} HTML for AI tab
      */
     renderAiTab() {
-        const isEnabled = window.globalSettings?.ai?.isEnabled || false;
-        const provider = window.globalSettings?.ai?.provider || 'google-gemini';
-        const apiKey = window.globalSettings?.ai?.apiKey || '';
+        const isEnabled = SettingsService.get()?.ai?.isEnabled || false;
+        const provider = SettingsService.get()?.ai?.provider || 'google-gemini';
+        const apiKey = SettingsService.get()?.ai?.apiKey || '';
 
         return `
             <div class="settings-section">
@@ -253,19 +253,15 @@ class SettingsView {
      * Handle reset button click
      */
     handleReset() {
-        if (window.resetToDefaults) {
-            window.resetToDefaults();
-        } else {
-            console.error('SettingsView: resetToDefaults function not found');
-        }
+        SystemService.resetToDefaults();
     }
 
     /**
      * Handle delete button click
      */
     handleDelete() {
-        const hasSystem = !!window.currentSystemData;
-        const systemName = hasSystem ? window.currentSystemData.systemName : '';
+        const hasSystem = !!SystemService.getCurrentSystem();
+        const systemName = hasSystem ? SystemService.getCurrentSystem().systemName : '';
         const sampleSystemNames = ['StreamView', 'ConnectPro', 'ShopSphere', 'InsightAI', 'FinSecure'];
         const isSampleSystem = sampleSystemNames.includes(systemName);
         const canDelete = hasSystem && !isSampleSystem;
@@ -274,11 +270,7 @@ class SettingsView {
             return; // Button should be disabled, but extra check
         }
 
-        if (window.deleteSystem) {
-            window.deleteSystem();
-        } else {
-            console.error('SettingsView: deleteSystem function not found');
-        }
+        SystemService.deleteCurrentSystem();
     }
 
     /**
@@ -289,13 +281,13 @@ class SettingsView {
         const provider = document.getElementById('aiProviderSelect_view').value;
         const apiKey = document.getElementById('aiApiKeyInput_view').value;
 
-        if (window.globalSettings) {
-            window.globalSettings.ai.isEnabled = enabled;
-            window.globalSettings.ai.provider = provider;
-            window.globalSettings.ai.apiKey = apiKey;
+        if (SettingsService.get()) {
+            SettingsService.get().ai.isEnabled = enabled;
+            SettingsService.get().ai.provider = provider;
+            SettingsService.get().ai.apiKey = apiKey;
 
             // Save to localStorage
-            localStorage.setItem('smt_global_settings', JSON.stringify(window.globalSettings));
+            localStorage.setItem('smt_global_settings', JSON.stringify(SettingsService.get()));
 
             // Update UI
             if (window.headerComponent) {
@@ -317,10 +309,10 @@ class SettingsView {
         return {
             viewTitle: 'Settings',
             currentTab: this.activeTab,
-            aiEnabled: window.globalSettings?.ai?.isEnabled || false,
-            aiProvider: window.globalSettings?.ai?.provider || 'google-gemini',
-            hasApiKey: !!window.globalSettings?.ai?.apiKey,
-            hasSystemLoaded: !!window.currentSystemData
+            aiEnabled: SettingsService.get()?.ai?.isEnabled || false,
+            aiProvider: SettingsService.get()?.ai?.provider || 'google-gemini',
+            hasApiKey: !!SettingsService.get()?.ai?.apiKey,
+            hasSystemLoaded: !!SystemService.getCurrentSystem()
         };
     }
 }

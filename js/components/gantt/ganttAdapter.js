@@ -3,9 +3,13 @@
  * Keeps Mermaid-agnostic transformation separate from rendering logic.
  */
 (function () {
+    // Use GanttService methods
+    const sanitizeId = (id) => GanttService.normalizeGanttId(id);
+    const computeSdeEstimate = (init, filterTeamId) => GanttService.computeSdeEstimate(init, filterTeamId);
+
     function buildTasksFromInitiatives({ initiatives = [], workPackages = [], viewBy = 'All Initiatives', filters = {}, year, selectedTeam, expandedInitiativeIds = new Set(), expandedWorkPackageIds = new Set() }) {
-        if (typeof ensureWorkPackagesForInitiatives === 'function' && typeof currentSystemData !== 'undefined') {
-            ensureWorkPackagesForInitiatives(currentSystemData, year);
+        if (typeof WorkPackageService !== 'undefined' && typeof SystemService.getCurrentSystem() !== 'undefined') {
+            WorkPackageService.ensureWorkPackagesForInitiatives(SystemService.getCurrentSystem(), year);
         }
         const tasks = [];
         const yearVal = year || new Date().getFullYear();
@@ -13,10 +17,10 @@
         const defaultEnd = `${yearVal}-11-01`;
         const workingDaysPerYear = (typeof getWorkingDaysPerYear === 'function')
             ? getWorkingDaysPerYear()
-            : (currentSystemData?.capacityConfiguration?.workingDaysPerYear || 261);
-        const teamMap = new Map((currentSystemData?.teams || []).map(t => [t.teamId, t]));
-        const goalMap = new Map((currentSystemData?.goals || []).map(g => [g.goalId, g]));
-        const themeMap = new Map((currentSystemData?.definedThemes || []).map(t => [t.themeId, t]));
+            : (SystemService.getCurrentSystem()?.capacityConfiguration?.workingDaysPerYear || 261);
+        const teamMap = new Map((SystemService.getCurrentSystem()?.teams || []).map(t => [t.teamId, t]));
+        const goalMap = new Map((SystemService.getCurrentSystem()?.goals || []).map(g => [g.goalId, g]));
+        const themeMap = new Map((SystemService.getCurrentSystem()?.definedThemes || []).map(t => [t.themeId, t]));
 
         // Apply explicit filters (status/year) to keep chart rows aligned with table
         const statusFilter = filters?.status;
@@ -154,11 +158,9 @@
 
     function buildInitiativeLabel(init, endDate) {
         const title = init.title || 'Initiative';
-        const rawSde = (typeof computeSdeEstimate === 'function')
-            ? parseFloat(computeSdeEstimate(init))
-            : null;
+        const rawSde = computeSdeEstimate(init);
         const hasSde = Number.isFinite(rawSde);
-        const sdeText = hasSde ? String(rawSde) : '';
+        const sdeText = hasSde ? String(rawSde.toFixed(2)) : '';
         const dateText = formatShortDate(endDate);
 
         if (sdeText) {
@@ -254,7 +256,7 @@
 
     function buildAssignmentLabel(assign, wp, workingDaysPerYear) {
         const teamName = (() => {
-            const t = (currentSystemData?.teams || []).find(team => team.teamId === assign.teamId);
+            const t = (SystemService.getCurrentSystem()?.teams || []).find(team => team.teamId === assign.teamId);
             return t ? (t.teamIdentity || t.teamName || assign.teamId) : assign.teamId;
         })();
         const sdeYears = (assign.sdeYears !== undefined && assign.sdeYears !== null)
@@ -316,14 +318,7 @@
         return rounded.toString();
     }
 
-    function sanitizeId(id) {
-        return (id || '')
-            .toString()
-            .trim()
-            .toLowerCase()
-            .replace(/[^a-z0-9_-]+/g, '-')
-            .replace(/^-+|-+$/g, '');
-    }
+    // sanitizeId is now provided via GanttService alias at top
 
     function truncateText(text, maxLength) {
         if (!text) return '';

@@ -98,10 +98,8 @@ class CapacityPlanningView {
 
         // Instantiate and Render Component
         if (viewId === 'dashboard') {
-            // [SYNC FIX] Ensure metrics are up-to-date before rendering dashboard
-            if (window.updateCapacityCalculationsAndDisplay) {
-                window.updateCapacityCalculationsAndDisplay();
-            }
+            // Ensure metrics are up-to-date before rendering dashboard
+            CapacityEngine.recalculate(SystemService.getCurrentSystem());
             this.activeComponent = new CapacityDashboardView();
         } else if (viewId === 'configuration') {
             this.activeComponent = new CapacityConfigurationView();
@@ -113,15 +111,15 @@ class CapacityPlanningView {
     }
 
     saveChanges() {
-        if (window.saveSystemChanges) {
-            // [SYNC FIX] Recalculate before saving to ensure persisted data is correct
-            if (window.updateCapacityCalculationsAndDisplay) {
-                window.updateCapacityCalculationsAndDisplay();
-            }
-            window.saveSystemChanges();
-            window.notificationManager.showToast('Capacity configuration saved successfully.', 'success');
+        if (typeof SystemService !== 'undefined' && SystemService.save) {
+            // Recalculate system-wide metrics before saving
+            CapacityEngine.recalculate(SystemService.getCurrentSystem());
+
+            SystemService.save();
+            this.render();
+            window.notificationManager?.showToast("Capacity configuration saved.", "success");
         } else {
-            console.error("saveSystemChanges not found");
+            console.error("SystemService.save not found");
         }
     }
 
@@ -134,9 +132,9 @@ class CapacityPlanningView {
         return {
             viewTitle: 'Capacity Tuning',
             currentView: this.currentView, // 'dashboard' or 'configuration'
-            metrics: window.currentSystemData?.calculatedCapacityMetrics,
-            config: window.currentSystemData?.capacityConfiguration,
-            teamCount: window.currentSystemData?.teams?.length || 0
+            metrics: SystemService.getCurrentSystem()?.calculatedCapacityMetrics,
+            config: SystemService.getCurrentSystem()?.capacityConfiguration,
+            teamCount: SystemService.getCurrentSystem()?.teams?.length || 0
         };
     }
 }

@@ -56,7 +56,7 @@ const aiPlanOptimizationAgent = (() => {
 
             let originalPlanData = parsedContext?.data?.planningTable || window.currentYearPlanTableData;
             let originalSummaryData = parsedContext?.data?.teamLoadSummary || window.currentYearPlanSummaryData;
-            
+
             if (!originalPlanData || !originalSummaryData) {
                 console.warn("[OptimizeAgent] Plan data unavailable. Attempting to refresh planning view...");
                 updateProgress('🤖 Refreshing Year Plan view to gather data...');
@@ -77,7 +77,7 @@ const aiPlanOptimizationAgent = (() => {
                     window.currentYearPlanSummaryData = originalSummaryData;
                 }
             }
-            
+
             if (!originalPlanData || !originalSummaryData) {
                 throw new Error("Year Plan data is not calculated. Please view the 'Year Plan' tab first.");
             }
@@ -109,7 +109,7 @@ const aiPlanOptimizationAgent = (() => {
             const { btlCount: afterBtlCount, overloadedTeams: afterOverloadedTeams } = _analyzePlanState(tempPlanTableData, tempSummaryData);
 
             const changesNarrative = proposedChanges.map((change, idx) => {
-                const init = currentSystemData.yearlyInitiatives.find(i => i.initiativeId === change.initiativeId);
+                const init = SystemService.getCurrentSystem().yearlyInitiatives.find(i => i.initiativeId === change.initiativeId);
                 const oldSde = (init.assignments.find(a => a.teamId === change.teamId)?.sdeYears || 0);
                 const teamName = getTeamNameById(change.teamId);
                 return `- **${idx + 1}. ${init.title} – ${teamName}:** Reduce from \`${oldSde.toFixed(2)}\` to \`${change.newSdeYears.toFixed(2)}\` SDEs.\n  - *Justification:* ${change.justification}`;
@@ -168,14 +168,18 @@ ${changesNarrative}
         }
 
         console.log("[OptimizeAgent] Applying pending changes...");
-        // Apply the changes to the live data
-        currentSystemData = pendingPlanChanges;
+        // Apply the changes to the live data via SystemService
+        SystemService.setCurrentSystem(pendingPlanChanges);
         pendingPlanChanges = null; // Clear the pending changes
 
         // Save and refresh the main UI
-        if (typeof saveSystemChanges === 'function') saveSystemChanges();
-        if (typeof refreshCurrentView === 'function') refreshCurrentView();
-        
+        if (typeof SystemService !== 'undefined' && SystemService.save) {
+            SystemService.save();
+        }
+        if (window.navigationManager && typeof window.navigationManager.refresh === 'function') {
+            window.navigationManager.refresh();
+        }
+
         postMessageCallback(md.render("✅ **Plan applied.** The Year Plan has been updated and saved."));
         return true;
     }
@@ -239,7 +243,7 @@ ${changesNarrative}
                 console.log("[OptimizeAgent] Loop ended: No more BTL items to optimize.");
                 break; // Stop if no BTL items are left
             }
-            
+
             const specialistPrompt = `
 You are an optimization specialist. I will give you a list of "Below The Line" (BTL) initiatives.
 Your goal is to propose ONE change to ONE initiative to help fit it "Above The Line".
@@ -268,8 +272,8 @@ If you cannot find a good change, respond with null.
             const analysisFn = await window.aiAgentController._waitForAnalysisFunction();
             const aiResponse = await analysisFn(
                 history,
-                globalSettings.ai.apiKey,
-                globalSettings.ai.provider
+                SettingsService.get().ai.apiKey,
+                SettingsService.get().ai.provider
             );
 
             try {
@@ -293,7 +297,7 @@ If you cannot find a good change, respond with null.
                     break;
                 }
             } catch (e) {
-            console.warn("[OptimizeAgent] Loop failed to parse AI response, ending loop.", e);
+                console.warn("[OptimizeAgent] Loop failed to parse AI response, ending loop.", e);
                 break;
             }
         }
@@ -346,12 +350,12 @@ If you cannot find a good change, respond with null.
     }
 
     /**
-     * Applies a list of changes to a deep copy of currentSystemData
+     * Applies a list of changes to a deep copy of SystemService.getCurrentSystem()
      * and recalculates the plan.
      */
     function _applyChangesToTempData(changes) {
-        const tempSystemData = JSON.parse(JSON.stringify(currentSystemData));
-        
+        const tempSystemData = JSON.parse(JSON.stringify(SystemService.getCurrentSystem()));
+
         changes.forEach(change => {
             const init = tempSystemData.yearlyInitiatives.find(i => i.initiativeId === change.initiativeId);
             if (init) {
@@ -366,14 +370,14 @@ If you cannot find a good change, respond with null.
 
         // Now, we must re-calculate the plan based on this temp data.
         // We'll *temporarily* swap out the global data to use our calculation functions.
-        const originalData = currentSystemData;
-        currentSystemData = tempSystemData; // Temporarily set global
-        
+        const originalData = SystemService.getCurrentSystem();
+        SystemService.setCurrentSystem(tempSystemData); // Temporarily set global
+
         const tempSummaryData = calculateTeamLoadSummaryData();
         const tempPlanTableData = calculatePlanningTableData();
-        
-        currentSystemData = originalData; // Restore global data
-        
+
+        SystemService.setCurrentSystem(originalData); // Restore global data
+
         return { tempSystemData, tempPlanTableData, tempSummaryData };
     }
 

@@ -118,7 +118,7 @@ window.populateSystemEditForm = populateSystemEditForm;
 /** Add New Service **/
 function addNewService(overrides = {}) {
     const newService = {
-        serviceName: 'New Service ' + ((currentSystemData.services?.length || 0) + 1),
+        serviceName: 'New Service ' + ((SystemService.getCurrentSystem().services?.length || 0) + 1),
         serviceDescription: '',
         owningTeamId: null,
         apis: [],
@@ -127,12 +127,12 @@ function addNewService(overrides = {}) {
         ...overrides
     };
 
-    if (!currentSystemData.services) currentSystemData.services = [];
-    currentSystemData.services.push(newService);
+    if (!SystemService.getCurrentSystem().services) SystemService.getCurrentSystem().services = [];
+    SystemService.getCurrentSystem().services.push(newService);
 
     // Refresh Component
     if (serviceEditComponent) {
-        serviceEditComponent.expandedIndex = currentSystemData.services.length - 1; // Expand new
+        serviceEditComponent.expandedIndex = SystemService.getCurrentSystem().services.length - 1; // Expand new
         serviceEditComponent.render();
     }
     return newService;
@@ -154,12 +154,12 @@ function addNewTeam(overrides = {}) {
         ...overrides
     };
 
-    if (!currentSystemData.teams) currentSystemData.teams = [];
-    currentSystemData.teams.push(newTeam);
+    if (!SystemService.getCurrentSystem().teams) SystemService.getCurrentSystem().teams = [];
+    SystemService.getCurrentSystem().teams.push(newTeam);
 
     // Refresh Component
     if (teamEditComponent) {
-        teamEditComponent.expandedIndex = currentSystemData.teams.length - 1; // Expand new
+        teamEditComponent.expandedIndex = SystemService.getCurrentSystem().teams.length - 1; // Expand new
         teamEditComponent.render();
     }
     return newTeam;
@@ -177,18 +177,13 @@ async function saveSystemDetails() {
         return;
     }
 
-    currentSystemData.systemName = newSystemName;
-    currentSystemData.systemDescription = systemDescriptionTextarea.value.trim();
+    SystemService.getCurrentSystem().systemName = newSystemName;
+    SystemService.getCurrentSystem().systemDescription = systemDescriptionTextarea.value.trim();
 
-    window.systemRepository.saveSystem(newSystemName, currentSystemData);
+    window.systemRepository.saveSystem(newSystemName, SystemService.getCurrentSystem());
     window.notificationManager.showToast('System details saved.', 'success');
 
-    if (currentMode == Modes.EDITING) {
-        generateTeamTable(currentSystemData);
-        generateServiceDependenciesTable();
-        updateServiceVisualization();
-        updateDependencyVisualization();
-    }
+
 }
 
 /** Save All Changes (Main Save Handler) **/
@@ -216,14 +211,14 @@ async function saveAllChanges() {
     }
 
     // 3. Update Data Object (temporarily)
-    const oldSystemNameKey = currentSystemData.systemName;
-    currentSystemData.systemName = finalSystemName;
-    currentSystemData.systemDescription = finalSystemDescription;
+    const oldSystemNameKey = SystemService.getCurrentSystem().systemName;
+    SystemService.getCurrentSystem().systemName = finalSystemName;
+    SystemService.getCurrentSystem().systemDescription = finalSystemDescription;
 
     // 4. Validate Engineer Assignments
     if (!validateEngineerAssignments()) {
         // Revert name change on validation failure to avoid state mismatch
-        currentSystemData.systemName = oldSystemNameKey;
+        SystemService.getCurrentSystem().systemName = oldSystemNameKey;
         return;
     }
 
@@ -237,31 +232,26 @@ async function saveAllChanges() {
         if (window.systemRepository.getSystemData(finalSystemName) && oldSystemNameKey !== finalSystemName) {
             if (!await window.notificationManager.confirm(`A system named "${finalSystemName}" already exists. Overwrite it?`, 'Overwrite System', { confirmStyle: 'danger' })) {
                 // Revert and Cancel
-                currentSystemData.systemName = oldSystemNameKey;
+                SystemService.getCurrentSystem().systemName = oldSystemNameKey;
                 return;
             }
         }
 
         // Perform Save
-        const saved = window.systemRepository.saveSystem(finalSystemName, currentSystemData);
+        const saved = window.systemRepository.saveSystem(finalSystemName, SystemService.getCurrentSystem());
 
         if (saved) {
             window.notificationManager.showToast(`System "${finalSystemName}" saved successfully!`, 'success');
 
-            // 6. Post-Save: Exit Edit Mode
-            // If we were creating, this effectively switches us to "Browse" mode for the new system
-            if (typeof currentMode !== 'undefined') {
-                currentMode = (typeof Modes !== 'undefined' && Modes.Browse) ? Modes.Browse : 'browse';
-            }
-            exitEditMode();
+
         } else {
             window.notificationManager.showToast('Failed to save system. Please try again.', 'error');
-            currentSystemData.systemName = oldSystemNameKey; // Revert on failure
+            SystemService.getCurrentSystem().systemName = oldSystemNameKey; // Revert on failure
         }
     } catch (error) {
         console.error("Error saving system:", error);
         window.notificationManager.showToast('An error occurred while saving.', 'error');
-        currentSystemData.systemName = oldSystemNameKey; // Revert on error
+        SystemService.getCurrentSystem().systemName = oldSystemNameKey; // Revert on error
     }
 }
 window.saveAllChanges = saveAllChanges;
@@ -270,14 +260,14 @@ window.saveAllChanges = saveAllChanges;
 function exitEditMode() {
     console.log("Exiting edit mode...");
     // If we were creating a new system, return to home or load the new system
-    if (window.currentSystemData && window.currentSystemData.systemName) {
-        if (window.loadSavedSystem) {
-            window.loadSavedSystem(window.currentSystemData.systemName);
+    if (SystemService.getCurrentSystem() && SystemService.getCurrentSystem().systemName) {
+        if (typeof SystemService !== 'undefined' && SystemService.loadAndActivate) {
+            SystemService.loadAndActivate(SystemService.getCurrentSystem().systemName);
         } else {
-            window.returnToHome();
+            appState.closeCurrentSystem();
         }
     } else {
-        window.returnToHome();
+        appState.closeCurrentSystem();
     }
 }
 window.exitEditMode = exitEditMode;
@@ -297,8 +287,8 @@ function displaySeniorManagerAssignment(sdmSectionContainer, teamIndex, currentS
     srMgrContainer.innerHTML = '';
     srMgrContainer.style.paddingLeft = '20px';
 
-    const allSdms = currentSystemData.sdms || [];
-    const allSeniorManagers = currentSystemData.seniorManagers || [];
+    const allSdms = SystemService.getCurrentSystem().sdms || [];
+    const allSeniorManagers = SystemService.getCurrentSystem().seniorManagers || [];
     const currentSdm = allSdms.find(sdm => sdm && sdm.sdmId === currentSdmId);
 
     if (!currentSdm) {
@@ -320,7 +310,7 @@ function displaySeniorManagerAssignment(sdmSectionContainer, teamIndex, currentS
         `currentSrMgr_${currentSdmId}`,
         `availableSrMgrs_${currentSdmId}`,
         (movedSrMgrId, direction) => {
-            const sdmToUpdate = currentSystemData.sdms.find(s => s.sdmId === currentSdmId);
+            const sdmToUpdate = SystemService.getCurrentSystem().sdms.find(s => s.sdmId === currentSdmId);
             if (sdmToUpdate) {
                 sdmToUpdate.seniorManagerId = (direction === 'add') ? movedSrMgrId : null;
             }
@@ -329,15 +319,15 @@ function displaySeniorManagerAssignment(sdmSectionContainer, teamIndex, currentS
         (newSrMgrName) => {
             if (!newSrMgrName || newSrMgrName.trim() === '') return null;
             newSrMgrName = newSrMgrName.trim();
-            let existingSrMgr = (currentSystemData.seniorManagers || []).find(s => s && s.seniorManagerName.toLowerCase() === newSrMgrName.toLowerCase());
+            let existingSrMgr = (SystemService.getCurrentSystem().seniorManagers || []).find(s => s && s.seniorManagerName.toLowerCase() === newSrMgrName.toLowerCase());
             if (existingSrMgr) {
                 window.notificationManager.showToast(`Senior Manager "${newSrMgrName}" already exists.`, 'warning');
                 return null;
             }
             const newSrMgrId = 'srMgr-' + Date.now();
             const newSrMgr = { seniorManagerId: newSrMgrId, seniorManagerName: newSrMgrName };
-            if (!currentSystemData.seniorManagers) currentSystemData.seniorManagers = [];
-            currentSystemData.seniorManagers.push(newSrMgr);
+            if (!SystemService.getCurrentSystem().seniorManagers) SystemService.getCurrentSystem().seniorManagers = [];
+            SystemService.getCurrentSystem().seniorManagers.push(newSrMgr);
             return { value: newSrMgrId, text: newSrMgrName };
         }
     );
@@ -347,7 +337,7 @@ function displaySeniorManagerAssignment(sdmSectionContainer, teamIndex, currentS
 /** Validation Helper */
 function validateEngineerAssignments() {
     const engineerAssignments = {};
-    currentSystemData.teams.forEach(team => {
+    SystemService.getCurrentSystem().teams.forEach(team => {
         const teamEngineers = team.engineers || []; // Now array of names
         teamEngineers.forEach(engineerName => {
             if (engineerName) {

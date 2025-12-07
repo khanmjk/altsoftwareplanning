@@ -93,10 +93,47 @@ class AppState {
         target[lastKey] = value;
         this._notify(path, value, oldValue);
     }
+
+    /**
+     * Close the current system and return to home/welcome view.
+     * Centralizes "session close" logic.
+     */
+    closeCurrentSystem() {
+        console.log("AppState: Closing current system session.");
+
+        // Clear system state via SystemService
+        if (typeof SystemService !== 'undefined') {
+            SystemService.setCurrentSystem(null);
+        }
+
+        // Also clear local state (AppState is notified by SystemService.setCurrentSystem)
+        this._state.currentSystem = null;
+
+        // Update sidebar state
+        if (typeof sidebarComponent !== 'undefined' && sidebarComponent) {
+            sidebarComponent.updateState();
+        }
+
+        // Navigate to welcome view
+        if (typeof navigationManager !== 'undefined' && navigationManager) {
+            navigationManager.navigateTo('welcomeView');
+        }
+    }
 }
 
 // Export as singleton
 const appState = new AppState();
+
+// Define Modes constant within AppState
+appState.Modes = {
+    NAVIGATION: 'navigation',
+    Browse: 'Browse',
+    EDITING: 'editing',
+    CREATING: 'creating',
+    PLANNING: 'planning',
+    ROADMAP: 'roadmap'
+};
+
 if (typeof window !== 'undefined') {
     window.appState = appState;
 }
