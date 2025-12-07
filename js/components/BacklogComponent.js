@@ -308,9 +308,9 @@ class BacklogComponent {
             if (!btn) return;
             const initiativeId = btn.dataset.initiativeId;
             if (btn.dataset.action === 'edit') {
-                if (window.roadmapViewInstance) window.roadmapViewInstance.openModalForEdit(initiativeId);
+                if (roadmapViewInstance) roadmapViewInstance.openModalForEdit(initiativeId);
             } else if (btn.dataset.action === 'delete') {
-                if (window.roadmapViewInstance) window.roadmapViewInstance.handleDelete(initiativeId);
+                if (roadmapViewInstance) roadmapViewInstance.handleDelete(initiativeId);
             }
         });
     }

@@ -157,7 +157,7 @@ ${changesNarrative}
     /**
      * Public function for the Controller to call when user clicks "Apply".
      */
-    function applyPendingChanges() {
+    async function applyPendingChanges() {
         if (!pendingPlanChanges) {
             console.error("[OptimizeAgent] No pending changes to apply.");
             return false;
@@ -172,8 +172,14 @@ ${changesNarrative}
         if (SystemService.save) {
             SystemService.save();
         }
-        if (window.navigationManager) {
-            window.navigationManager.refresh();
+        // Navigate to Planning View
+        navigationManager.navigateTo('planning');
+
+        // Wait for view to be ready
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        if (window.renderPlanningView) {
+            window.renderPlanningView();
         }
 
         postMessageCallback(md.render("✅ **Plan applied.** The Year Plan has been updated and saved."));

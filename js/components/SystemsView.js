@@ -110,11 +110,7 @@ class SystemsView {
             return;
         }
 
-        if (window.handleCreateWithAi) {
-            window.handleCreateWithAi();
-        } else {
-            console.error('SystemsView: handleCreateWithAi function not found');
-        }
+        handleCreateWithAi();
     }
 
     /**

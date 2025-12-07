@@ -424,20 +424,12 @@ window.toggleCapacityConstraints = toggleCapacityConstraints;
 function renderPlanningView() {
     // [SYNC FIX] Ensure capacity metrics are fresh before rendering
     // We check if the function exists to avoid errors during initial load if main.js isn't fully ready
-    if (window.updateCapacityCalculationsAndDisplay) {
-        // Note: updateCapacityCalculationsAndDisplay calls renderPlanningView if currentViewId is planningView.
-        // To avoid infinite recursion, we should only call it if we are NOT already inside a recursive call triggered by it.
-        // However, updateCapacityCalculationsAndDisplay updates the data and THEN calls render.
-        // If we call it here, we might loop.
-        // BETTER APPROACH: Just recalculate the metrics HERE directly or call a non-rendering update helper.
-        // OR: Trust that updateCapacityCalculationsAndDisplay is called by the triggers (save, switch view).
-        // BUT: If user navigates directly to Planning View, we want fresh data.
+    // BUT: If user navigates directly to Planning View, we want fresh data.
 
-        // SAFE FIX: Recalculate metrics directly here without triggering a full app refresh loop.
-        if (SystemService.getCurrentSystem()) {
-            const capacityEngine = new CapacityEngine(SystemService.getCurrentSystem());
-            SystemService.getCurrentSystem().calculatedCapacityMetrics = capacityEngine.calculateAllMetrics();
-        }
+    // SAFE FIX: Recalculate metrics directly here without triggering a full app refresh loop.
+    if (SystemService.getCurrentSystem()) {
+        const capacityEngine = new CapacityEngine(SystemService.getCurrentSystem());
+        SystemService.getCurrentSystem().calculatedCapacityMetrics = capacityEngine.calculateAllMetrics();
     }
 
     const container = document.getElementById('planningView');
@@ -447,8 +439,7 @@ function renderPlanningView() {
     }
 
     // 1. Set Workspace Metadata (Header)
-    // 1. Set Workspace Metadata (Header)
-    window.workspaceComponent.setPageMetadata({
+    workspaceComponent.setPageMetadata({
         title: 'Year Plan',
         breadcrumbs: ['Planning', 'Year Plan'],
         actions: [

@@ -25,8 +25,8 @@ class ResourceForecastView {
         this.container.className = 'workspace-view resource-forecast-container';
 
         // 1. Setup Metadata
-        if (window.workspaceComponent) {
-            window.workspaceComponent.setPageMetadata({
+        if (workspaceComponent) {
+            workspaceComponent.setPageMetadata({
                 title: 'Resource Forecasting',
                 breadcrumbs: ['Planning', 'Resource Forecasting'],
                 actions: []
@@ -205,11 +205,6 @@ class ResourceForecastView {
 
     async _loadFAQContent(container) {
         const faqUrl = 'docs/sdmResourceForecastingFAQ.md';
-
-        if (typeof window.markdownit === 'undefined') {
-            container.innerHTML = '<p style="color:red;">Error: Markdown renderer not loaded.</p>';
-            return;
-        }
 
         const md = window.markdownit({
             html: true,

@@ -22,8 +22,9 @@ class ManagementView {
         if (!this.container) return;
 
         // 1. Set Workspace Metadata
-        if (window.workspaceComponent) {
-            window.workspaceComponent.setPageMetadata({
+        if (workspaceComponent) {
+            workspaceComponent.setToolbar(null);
+            workspaceComponent.setPageMetadata({
                 title: 'Product Management',
                 breadcrumbs: ['Product', 'Management'],
                 actions: []

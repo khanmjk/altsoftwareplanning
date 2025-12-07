@@ -51,8 +51,8 @@ function renderSdmForecastingView(container) {
 
     // 2. Set Workspace Toolbar (Controls)
     const toolbarControls = generateSdmToolbar();
-    if (window.workspaceComponent && toolbarControls) {
-        window.workspaceComponent.setToolbar(toolbarControls);
+    if (workspaceComponent && toolbarControls) {
+        workspaceComponent.setToolbar(toolbarControls);
     }
 
     // 3. Render Content

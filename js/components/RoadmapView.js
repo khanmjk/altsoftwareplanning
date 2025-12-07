@@ -2,6 +2,9 @@
  * RoadmapView - Roadmap & Backlog View Orchestrator
  * Manages the sub-views: Backlog (List), Quarterly Roadmap, and 3-Year Plan.
  */
+// Global Instance
+var roadmapViewInstance = null;
+
 class RoadmapView {
     constructor() {
         this.currentView = 'backlog'; // default
@@ -37,8 +40,8 @@ class RoadmapView {
         this.switchView(this.currentView);
 
         // Initialize modal if needed
-        if (!window.roadmapInitiativeModal) {
-            window.roadmapInitiativeModal = new RoadmapInitiativeModal();
+        if (!roadmapInitiativeModal) {
+            roadmapInitiativeModal = new RoadmapInitiativeModal();
         }
     }
 
@@ -78,7 +81,7 @@ class RoadmapView {
         themesBtn.className = 'btn btn-secondary btn-sm';
         themesBtn.innerHTML = '<i class="fas fa-tags"></i> Manage Themes';
         themesBtn.onclick = () => {
-            window.navigationManager.navigateTo('managementView', { tab: 'themes' });
+            navigationManager.navigateTo('managementView', { tab: 'themes' });
         };
         actionsRow.appendChild(themesBtn);
 
@@ -90,7 +93,7 @@ class RoadmapView {
         controlsContainer.style.width = '100%';
         toolbarContainer.appendChild(controlsContainer);
 
-        window.workspaceComponent.setToolbar(toolbarContainer);
+        workspaceComponent.setToolbar(toolbarContainer);
     }
 
     switchView(viewId) {
@@ -127,16 +130,16 @@ class RoadmapView {
     // --- Modal & Data Handling (Delegated to Global/Shared Logic) ---
 
     openModalForAdd() {
-        if (window.roadmapInitiativeModal) {
-            window.roadmapInitiativeModal.onSave = this.handleSave.bind(this);
-            window.roadmapInitiativeModal.open();
+        if (roadmapInitiativeModal) {
+            roadmapInitiativeModal.onSave = this.handleSave.bind(this);
+            roadmapInitiativeModal.open();
         }
     }
 
     openModalForEdit(initiativeId) {
-        if (window.roadmapInitiativeModal) {
-            window.roadmapInitiativeModal.onSave = this.handleSave.bind(this);
-            window.roadmapInitiativeModal.open(initiativeId);
+        if (roadmapInitiativeModal) {
+            roadmapInitiativeModal.onSave = this.handleSave.bind(this);
+            roadmapInitiativeModal.open(initiativeId);
         }
     }
 
@@ -163,7 +166,7 @@ class RoadmapView {
         const title = initiative ? initiative.title : initiativeId;
 
         if (await notificationManager.confirm(`Are you sure you want to delete initiative "${title}"?`, 'Delete Initiative', { confirmStyle: 'danger' })) {
-            const success = window.deleteInitiative(initiativeId);
+            const success = deleteInitiative(initiativeId);
             if (success) {
                 if (typeof SystemService !== 'undefined' && SystemService.save) {
                     SystemService.save();
@@ -221,23 +224,24 @@ if (typeof window !== 'undefined') {
     window.tempRoadmapAssignments_modal = [];
 
     window.renderRoadmapView = function (container) {
-        if (!window.roadmapViewInstance) window.roadmapViewInstance = new RoadmapView();
-        window.roadmapViewInstance.render(container);
+        if (!roadmapViewInstance) roadmapViewInstance = new RoadmapView();
+        roadmapViewInstance.render(container);
     };
 
+    // Expose openModalForAdd globally or through instance
     window.openRoadmapModalForAdd = function () {
-        if (window.roadmapViewInstance) window.roadmapViewInstance.openModalForAdd();
+        if (roadmapViewInstance) roadmapViewInstance.openModalForAdd();
     };
 
     window.openRoadmapModalForEdit = function (initiativeId) {
-        if (window.roadmapViewInstance) window.roadmapViewInstance.openModalForEdit(initiativeId);
+        if (roadmapViewInstance) roadmapViewInstance.openModalForEdit(initiativeId);
     };
 
     window.handleSaveRoadmapInitiative = function (initiativeData, isEdit) {
-        if (window.roadmapViewInstance) window.roadmapViewInstance.handleSave(initiativeData, isEdit);
+        if (roadmapViewInstance) roadmapViewInstance.handleSave(initiativeData, isEdit);
     };
 
     window.handleDeleteInitiativeButtonFromTable = async function (initiativeId) {
-        if (window.roadmapViewInstance) await window.roadmapViewInstance.handleDelete(initiativeId);
+        if (roadmapViewInstance) await roadmapViewInstance.handleDelete(initiativeId);
     };
 }

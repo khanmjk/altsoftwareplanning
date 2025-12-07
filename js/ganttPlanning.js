@@ -136,8 +136,8 @@ function renderGanttPlanningView(container) {
     WorkPackageService.ensureWorkPackagesForInitiatives(SystemService.getCurrentSystem(), currentGanttYear);
 
     // 1. Set Workspace Metadata (Header)
-    if (window.workspaceComponent) {
-        window.workspaceComponent.setPageMetadata({
+    if (workspaceComponent) {
+        workspaceComponent.setPageMetadata({
             title: 'Detailed Planning (Gantt)',
             breadcrumbs: ['Planning', 'Detailed Planning'],
             actions: [] // No global actions for now, maybe "Export" later
@@ -146,8 +146,8 @@ function renderGanttPlanningView(container) {
 
     // 2. Set Workspace Toolbar (Controls)
     const toolbarControls = generateGanttToolbar();
-    if (window.workspaceComponent && toolbarControls) {
-        window.workspaceComponent.setToolbar(toolbarControls);
+    if (workspaceComponent && toolbarControls) {
+        workspaceComponent.setToolbar(toolbarControls);
     }
 
     // 3. Create Content Layout using DOM creation

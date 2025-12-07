@@ -1143,14 +1143,17 @@ class OrgView {
         const newTeamId = cell.getValue() === "" ? null : cell.getValue();
 
         try {
-            if (window.moveEngineerToTeam) {
-                window.moveEngineerToTeam(engineerName, newTeamId);
-                if (typeof SystemService !== 'undefined' && SystemService.save) {
-                    SystemService.save();
-                }
-                this.generateEngineerTable(); // Refresh table
-                notificationManager?.showToast(`Moved ${engineerName} to ${newTeamId ? 'new team' : 'Unallocated'}`, 'success');
+            if (typeof moveEngineerToTeam === 'function') {
+                moveEngineerToTeam(engineerName, newTeamId);
+            } else {
+                throw new Error("moveEngineerToTeam is not defined");
             }
+
+            if (typeof SystemService !== 'undefined' && SystemService.save) {
+                SystemService.save();
+            }
+            this.generateEngineerTable();
+            notificationManager?.showToast(`Moved ${engineerName} to ${newTeamId ? 'new team' : 'Unallocated'}`, 'success');
         } catch (error) {
             console.error('Error moving engineer:', error);
             notificationManager?.showToast(error.message || 'Failed to move engineer', 'error');
@@ -1209,8 +1212,8 @@ if (typeof window !== 'undefined') {
 
     // Export team table generator globally for AI integration
     window.generateTeamTable = function () {
-        if (window.orgViewInstance) {
-            window.orgViewInstance.generateTeamTable();
+        if (orgViewInstance) {
+            orgViewInstance.render();
         } else {
             console.error('OrgView instance not initialized');
         }

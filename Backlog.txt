@@ -233,6 +233,7 @@ the gitgub issues tracker to keep track of user feedback requests
 [TODO] Fix ROI fields in initiatives management view
 [TODO] Capacity Tuning - Show Hiring Gap as a KPI card in dashboard AND ensure capacity sink calculation does not include full bench strength for teams with an open hiring gap
 [TODO] Fix org chart visual - enhance it to display by depth
+[TODO] - Bug fix - update roadmap and 3yp if new initiative added using the modal
 
 ------
 TO DO

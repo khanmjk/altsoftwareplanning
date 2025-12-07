@@ -15,9 +15,8 @@ class DashboardView {
         this.currentWidgetIndex = 0;
 
         // Initialize year filter - DashboardView owns this state
-        if (typeof window.dashboardPlanningYear === 'undefined') {
-            window.dashboardPlanningYear = new Date().getFullYear();
-        }
+        // Ensure global state is initialized
+        // if (typeof window.dashboardPlanningYear === 'undefined') { ... }
         this.planningYear = window.dashboardPlanningYear;
 
         this.pillNav = null; // NEW: Pill navigation component

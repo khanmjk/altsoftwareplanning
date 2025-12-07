@@ -1012,13 +1012,13 @@ class YearPlanningView {
 // ==================== Global Instance & Compatibility ====================
 
 // Global instance
-window.yearPlanningView = null;
+yearPlanningView = null;
 
 // Compatibility layer - delegates to instance or uses legacy functions
-window.renderPlanningView = function () {
+renderPlanningView = function () {
     // Use new class if instance exists, otherwise fall back to legacy
-    if (window.yearPlanningView) {
-        window.yearPlanningView.render();
+    if (yearPlanningView) {
+        yearPlanningView.render();
     } else {
         // Legacy fallback - will be removed after full migration
         console.warn("YearPlanningView: Using legacy renderPlanningView");

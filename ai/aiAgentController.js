@@ -411,9 +411,9 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
         } catch (error) {
             console.error('SystemService.save failed:', error);
         }
-        if (window.navigationManager && window.navigationManager.refresh) {
-            try { window.navigationManager.refresh(); } catch (error) { console.error('navigationManager.refresh failed:', error); }
-        }
+        // if (window.navigationManager && window.navigationManager.refresh) {
+        //     try { window.navigationManager.refresh(); } catch (error) { console.error('navigationManager.refresh failed:', error); }
+        // }
 
         if (view) {
             let summaryHtml = '<b>Agent plan finished.</b> UI has been refreshed.';
@@ -592,14 +592,6 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
                     }
                     break;
 
-                case 'initiateDeleteEngineer':
-                    // Placeholder for when we implement this
-                    // Placeholder for when we implement this
-                    if (window.aiOrgChangeAgent) {
-                        window.aiOrgChangeAgent.initiateDeleteEngineer(payload.engineerName);
-                    }
-                    break;
-
                 default:
                     throw new Error(`Unknown or unavailable prebuilt agent: "${agentName}"`);
             }
@@ -635,7 +627,9 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
                 actionHandled = true;
             }
         }
-        // else if (window.aiOrgChangeAgent && window.aiOrgChangeAgent.hasPendingChanges()) {
+        else if (aiOrgChangeAgent && aiOrgChangeAgent.hasPendingChanges()) {
+            // [Handling pending org changes]
+        }
         //     // Logic for other agents will go here
         // } 
         else {
