@@ -182,14 +182,14 @@ bar graph per quarter to see team load/demand impact
 [Done] - [TECH DEBT] - remove global references to window.* 
 [Done] - [TECH DEBT] - AI settings not being persisted to local storage
 [Done] - [TECH DEBT] - clean up main.js
+[Done] - [TECH DEBT] - cleanup occurrences of this pattern if (window.X) { window.X.[OPERATION]...
+[Done] - [TECH DEBT] - code cleanup - busted utils.js!
+
 
 ------------
 IN PROGRESS
 ------------
-[TODO] code cleanup
 
-
-- cleanup occurrences of this pattern if (window.X) { window.X.[OPERATION]...
 - cleanup index.html - move a bunch of html to a view file for main content or the workspace canvas files
 - ensure AI tooling agents have the right function calls to reference with the introduction of the service layer
 - Year Planning modernization

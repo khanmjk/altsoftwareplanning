@@ -6,8 +6,23 @@ class BacklogComponent {
     constructor(containerId) {
         this.containerId = containerId;
         this.table = null;
-        this.statusFilters = [...ALL_INITIATIVE_STATUSES];
-        this.ALL_STATUSES = ALL_INITIATIVE_STATUSES;
+        this.statusFilters = [...InitiativeService.STATUSES];
+        this.ALL_STATUSES = InitiativeService.STATUSES;
+    }
+
+    formatDateToQuarterYear(dateString) {
+        if (!dateString) return "";
+        try {
+            const date = new Date(dateString + 'T00:00:00');
+            if (isNaN(date.getTime())) return "";
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1;
+            const quarter = Math.ceil(month / 3);
+            return `Q${quarter} ${year}`;
+        } catch (e) {
+            console.warn("Error formatting date:", dateString, e);
+            return "";
+        }
     }
 
     render() {
@@ -141,7 +156,7 @@ class BacklogComponent {
                 targetDueDate: cleanDate,
                 ownerDisplay: ownerName,
                 roiSummaryDisplay: roiSummary,
-                targetQuarterYearDisplay: formatDateToQuarterYear(cleanDate),
+                targetQuarterYearDisplay: this.formatDateToQuarterYear(cleanDate),
                 themeNamesDisplay: themes,
                 assignedTeamsDisplay: assignedTeams,
                 totalInitialSdesDisplay: totalSdes.toFixed(2)
@@ -251,7 +266,7 @@ class BacklogComponent {
                         attributes: { ...cell.getRow().getData().attributes, planningYear: newYear }
                     });
                     SystemService.save();
-                    cell.getRow().update({ targetQuarterYearDisplay: formatDateToQuarterYear(newDate) });
+                    cell.getRow().update({ targetQuarterYearDisplay: this.formatDateToQuarterYear(newDate) });
                 }
             },
             {

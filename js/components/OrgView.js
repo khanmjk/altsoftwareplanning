@@ -171,7 +171,7 @@ class OrgView {
         // Add teams under SDMs
         (SystemService.getCurrentSystem().teams || []).forEach(team => {
             const awayTeamCount = team.awayTeamMembers?.length ?? 0;
-            const sourceSummary = getSourceSummary(team.awayTeamMembers);
+            const sourceSummary = this.getSourceSummary(team.awayTeamMembers);
 
             const engineerChildren = (team.engineers || []).map(engineerName => {
                 const eng = (SystemService.getCurrentSystem().allKnownEngineers || []).find(e => e.name === engineerName);
@@ -223,6 +223,24 @@ class OrgView {
             type: 'root',
             children: Array.from(srMgrMap.values())
         };
+    }
+
+    /**
+     * Helper to summarize source teams (originally from utils.js)
+     */
+    getSourceSummary(awayTeamMembers) {
+        if (!awayTeamMembers || awayTeamMembers.length === 0) {
+            return '';
+        }
+        const sources = awayTeamMembers
+            .map(m => m.sourceTeam)
+            .filter(source => source && source.trim() !== '');
+        const uniqueSources = [...new Set(sources)];
+
+        if (uniqueSources.length === 0) return '';
+        if (uniqueSources.length === 1) return uniqueSources[0];
+        if (uniqueSources.length === 2) return uniqueSources.join(' & ');
+        return `${uniqueSources.slice(0, 1).join(', ')} & Others`;
     }
 
     /**

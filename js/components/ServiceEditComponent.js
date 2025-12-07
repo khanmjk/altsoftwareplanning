@@ -199,11 +199,15 @@ class ServiceEditComponent {
             .filter(dep => !(service.platformDependencies || []).includes(dep))
             .map(dep => ({ value: dep, text: dep }));
 
-        const container = createDualListContainer(
-            index, 'Current Platform Deps:', 'Available Platform Deps:',
-            currentPlatDeps, availablePlatDeps,
-            'currentPlatformDependencies', 'availablePlatformDependencies',
-            (movedDep, direction, serviceIdx) => {
+        const container = new DualListSelector({
+            contextIndex: index,
+            leftLabel: 'Current Platform Deps:',
+            rightLabel: 'Available Platform Deps:',
+            currentOptions: currentPlatDeps,
+            availableOptions: availablePlatDeps,
+            leftField: 'currentPlatformDependencies',
+            rightField: 'availablePlatformDependencies',
+            moveCallback: (movedDep, direction, serviceIdx) => {
                 const targetService = this.systemData.services[serviceIdx];
                 if (!targetService.platformDependencies) targetService.platformDependencies = [];
                 if (direction === 'add') {
@@ -212,9 +216,11 @@ class ServiceEditComponent {
                     targetService.platformDependencies = targetService.platformDependencies.filter(d => d !== movedDep);
                 }
             },
-            true, true, 'Enter New Platform Dependency',
-            (newDepName) => this._addNewPlatformDependency(newDepName, index, container)
-        );
+            multiSelectLeft: true,
+            allowAddNew: true,
+            addNewPlaceholder: 'Enter New Platform Dependency',
+            addNewCallback: (newDepName) => this._addNewPlatformDependency(newDepName, index, container)
+        }).render();
 
         wrapper.appendChild(container);
         return wrapper;
@@ -261,11 +267,15 @@ class ServiceEditComponent {
             .filter(s => s.serviceName !== service.serviceName && !(service.serviceDependencies || []).includes(s.serviceName))
             .map(s => ({ value: s.serviceName, text: s.serviceName }));
 
-        const container = createDualListContainer(
-            index, 'Current Service Deps:', 'Available Services:',
-            currentSvcDeps, availableSvcDeps,
-            'currentServiceDependencies', 'availableServiceDependencies',
-            (movedSvc, direction, serviceIdx) => {
+        const container = new DualListSelector({
+            contextIndex: index,
+            leftLabel: 'Current Service Deps:',
+            rightLabel: 'Available Services:',
+            currentOptions: currentSvcDeps,
+            availableOptions: availableSvcDeps,
+            leftField: 'currentServiceDependencies',
+            rightField: 'availableServiceDependencies',
+            moveCallback: (movedSvc, direction, serviceIdx) => {
                 const targetService = this.systemData.services[serviceIdx];
                 if (!targetService.serviceDependencies) targetService.serviceDependencies = [];
                 if (direction === 'add') {
@@ -274,8 +284,8 @@ class ServiceEditComponent {
                     targetService.serviceDependencies = targetService.serviceDependencies.filter(d => d !== movedSvc);
                 }
             },
-            true
-        );
+            multiSelectLeft: true
+        }).render();
 
         wrapper.appendChild(container);
         return wrapper;
@@ -316,11 +326,15 @@ class ServiceEditComponent {
             .filter(aName => aName !== api.apiName && !(api.dependentApis || []).includes(aName))
             .map(aName => ({ value: aName, text: aName }));
 
-        const depsContainer = createDualListContainer(
-            apiIndex, 'Current API Deps:', 'Available APIs:',
-            currentApiDeps, availableApiDeps,
-            'currentDependentApis', 'availableApis',
-            (movedApi, direction, currentApiIdx) => {
+        const depsContainer = new DualListSelector({
+            contextIndex: apiIndex,
+            leftLabel: 'Current API Deps:',
+            rightLabel: 'Available APIs:',
+            currentOptions: currentApiDeps,
+            availableOptions: availableApiDeps,
+            leftField: 'currentDependentApis',
+            rightField: 'availableApis',
+            moveCallback: (movedApi, direction, currentApiIdx) => {
                 const targetService = this.systemData.services[serviceIndex];
                 const targetApi = targetService?.apis[currentApiIdx];
                 if (targetApi) {
@@ -332,8 +346,8 @@ class ServiceEditComponent {
                     }
                 }
             },
-            true
-        );
+            multiSelectLeft: true
+        }).render();
         item.appendChild(depsContainer);
 
         // Delete API Button
@@ -451,10 +465,6 @@ class ServiceEditComponent {
         if (await notificationManager.confirm('Are you sure you want to delete this service?', 'Delete Service', { confirmStyle: 'danger' })) {
             this.systemData.services.splice(index, 1);
 
-            // Trigger global updates
-            generateTeamTable(this.systemData);
-            generateServiceDependenciesTable();
-
             this.render();
         }
     }
@@ -473,8 +483,5 @@ class ServiceEditComponent {
 
         systemRepository.saveSystem(this.systemData.systemName, this.systemData);
         notificationManager.showToast('Service changes saved.', 'success');
-
-        generateTeamTable(this.systemData);
-        generateServiceDependenciesTable();
     }
 }
