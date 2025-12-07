@@ -80,35 +80,6 @@ async function loadHtmlComponent(url, targetId) {
 }
 
 /**
- * Loads all app settings from localStorage.
- */
-function loadGlobalSettings() {
-    SettingsService.load();
-    AIService.updateAiDependentUI(SettingsService.get());
-}
-
-/**
- * Formats AI generation stats into a readable block of text.
- */
-function formatAiStats(stats) {
-    return AIService.formatAiStats(stats);
-}
-
-/**
- * Shows the AI stats modal with the latest metrics.
- */
-function showAiStatsModal(stats) {
-    AIService.showStatsModal(stats);
-}
-
-/**
- * Hides the AI stats modal.
- */
-function closeAiStatsModal() {
-    AIService.closeStatsModal();
-}
-
-/**
  * Handles the "Create with AI" button click.
  */
 async function handleCreateWithAi() {
@@ -134,7 +105,7 @@ async function handleCreateWithAi() {
     }
 
     // Hide stats modal from any previous run
-    closeAiStatsModal();
+    AIService.closeStatsModal();
 
     try {
         const result = await generateSystemFromPrompt(prompt, settings.ai.apiKey, settings.ai.provider, spinnerP);
@@ -174,9 +145,8 @@ async function handleCreateWithAi() {
 
         window.systemRepository.saveSystem(finalSystemName, newSystemData);
 
-        // Display stats in modal
         if (stats) {
-            showAiStatsModal(stats);
+            AIService.showStatsModal(stats);
         }
 
         window.notificationManager.showToast(`Successfully created and saved system: "${finalSystemName}"! Loading it now.`, "success");
@@ -224,7 +194,10 @@ window.onload = async function () {
 
 
     initializeEventListeners();
-    loadGlobalSettings();
+
+    // Load settings and update AI UI
+    SettingsService.load();
+    AIService.updateAiDependentUI(SettingsService.get());
 
     // Save sample systems if none exist
     SystemService.initializeDefaults();
