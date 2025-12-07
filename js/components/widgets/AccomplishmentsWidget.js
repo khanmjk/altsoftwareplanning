@@ -9,6 +9,15 @@ class AccomplishmentsWidget {
         this.containerId = containerId;
         this.container = null;
         this.cardsContainer = null;
+        this.planningYear = 'all'; // Default, set via setPlanningYear()
+    }
+
+    /**
+     * Set the planning year filter
+     * @param {string|number} year - The year to filter by, or 'all'
+     */
+    setPlanningYear(year) {
+        this.planningYear = year;
     }
 
     /**
@@ -38,7 +47,7 @@ class AccomplishmentsWidget {
      * @returns {Array} Filtered and sorted completed initiatives
      */
     prepareData() {
-        const yearFilter = window.dashboardPlanningYear;
+        const yearFilter = this.planningYear;
         const systemData = SystemService.getCurrentSystem();
 
         if (!systemData) return [];
@@ -206,9 +215,4 @@ class AccomplishmentsWidget {
 
         return card;
     }
-}
-
-// Export to window
-if (typeof window !== 'undefined') {
-    window.AccomplishmentsWidget = AccomplishmentsWidget;
 }

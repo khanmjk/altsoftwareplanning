@@ -505,8 +505,3 @@ class InitiativeEditComponent {
         SystemService.save();
     }
 }
-
-// Expose to window
-if (typeof window !== 'undefined') {
-    window.InitiativeEditComponent = InitiativeEditComponent;
-}

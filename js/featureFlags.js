@@ -28,6 +28,4 @@ const FeatureFlags = {
     }
 };
 
-if (typeof window !== 'undefined') {
-    window.FeatureFlags = FeatureFlags;
-}
+// Object is registered globally in main.js

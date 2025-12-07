@@ -46,8 +46,8 @@ const AIService = {
             }
         }
 
-        if (!skipPlanningRender && window.currentViewId === 'planningView') {
-            window.renderPlanningView();
+        if (!skipPlanningRender && navigationManager?.currentViewId === 'planningView') {
+            renderPlanningView();
         }
     },
 
@@ -266,6 +266,11 @@ ${systemPromptSummary}`.trim();
                 if (typeof team.teamCapacityAdjustments.aiProductivityGainPercent !== 'number') {
                     warnings.push(`Team "${team.teamName}" is missing "aiProductivityGainPercent".`);
                 }
+            }
+
+            // Type validation for numeric fields - prevents string concatenation bugs
+            if (team.fundedHeadcount !== undefined && typeof team.fundedHeadcount !== 'number') {
+                errors.push(`Team "${team.teamName}" has invalid "fundedHeadcount" type: expected number, got ${typeof team.fundedHeadcount}. Value: "${team.fundedHeadcount}"`);
             }
 
             if (!team.attributes || typeof team.attributes !== 'object') {

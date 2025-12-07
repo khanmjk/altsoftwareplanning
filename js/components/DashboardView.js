@@ -15,9 +15,8 @@ class DashboardView {
         this.currentWidgetIndex = 0;
 
         // Initialize year filter - DashboardView owns this state
-        // Ensure global state is initialized
-        // if (typeof window.dashboardPlanningYear === 'undefined') { ... }
-        this.planningYear = window.dashboardPlanningYear;
+        // Default to first available year from system data
+        this.planningYear = this._getDefaultPlanningYear();
 
         this.pillNav = null; // NEW: Pill navigation component
 
@@ -45,7 +44,7 @@ class DashboardView {
 
         // 1. Set Workspace Metadata
         // 1. Set Workspace Metadata
-        window.workspaceComponent.setPageMetadata({
+        workspaceComponent.setPageMetadata({
             title: 'Executive Dashboard',
             breadcrumbs: ['Insights', 'Dashboard'],
             actions: []
@@ -53,7 +52,7 @@ class DashboardView {
 
         // 2. Set Workspace Toolbar
         const toolbar = this.generateDashboardToolbar();
-        window.workspaceComponent.setToolbar(toolbar);
+        workspaceComponent.setToolbar(toolbar);
 
         if (!SystemService.getCurrentSystem()) {
             this.container.innerHTML = '<div class="dashboard-empty-state"><i class="fas fa-chart-line dashboard-empty-state__icon"></i><p class="dashboard-empty-state__message">No system data loaded</p></div>';
@@ -152,6 +151,23 @@ class DashboardView {
     }
 
     /**
+     * Get the default planning year from system data
+     * @returns {string|number} The first available year or 'all'
+     */
+    _getDefaultPlanningYear() {
+        const system = SystemService.getCurrentSystem();
+        if (!system || !system.yearlyInitiatives) {
+            return 'all';
+        }
+        const years = [...new Set(
+            system.yearlyInitiatives
+                .map(init => init.attributes?.planningYear)
+                .filter(Boolean)
+        )].sort((a, b) => a - b);
+        return years.length > 0 ? years[0] : 'all';
+    }
+
+    /**
      * Generate year filter options
      */
     generateYearOptions() {
@@ -186,11 +202,7 @@ class DashboardView {
      * Handle year filter change
      */
     handleYearChange(year) {
-        console.log('[DEBUG] handleYearChange called with year:', year);
         this.planningYear = year;
-        // CRITICAL: Set global variable for roadmap widgets that expect it
-        window.dashboardPlanningYear = year;
-        console.log('[DEBUG] Global dashboardPlanningYear set to:', window.dashboardPlanningYear);
         this.showWidget(this.currentWidgetIndex); // Refresh current widget
     }
 
@@ -647,6 +659,7 @@ class DashboardView {
         if (!this.goalsWidget) {
             this.goalsWidget = new GoalsWidget('strategicGoalsWidget');
         }
+        this.goalsWidget.setPlanningYear(this.planningYear);
         this.goalsWidget.render();
     }
 
@@ -655,6 +668,7 @@ class DashboardView {
         if (!this.accomplishmentsWidget) {
             this.accomplishmentsWidget = new AccomplishmentsWidget('accomplishmentsWidget');
         }
+        this.accomplishmentsWidget.setPlanningYear(this.planningYear);
         this.accomplishmentsWidget.render();
     }
 
@@ -663,6 +677,7 @@ class DashboardView {
         if (!this.roadmapTableWidget) {
             this.roadmapTableWidget = new RoadmapTableWidget('roadmapTimelineWidget', 'quarterly');
         }
+        this.roadmapTableWidget.setPlanningYear(this.planningYear);
         this.roadmapTableWidget.render();
     }
 
@@ -671,6 +686,7 @@ class DashboardView {
         if (!this.threeYearPlanWidget) {
             this.threeYearPlanWidget = new RoadmapTableWidget('threeYearPlanWidget', '3yp');
         }
+        this.threeYearPlanWidget.setPlanningYear(this.planningYear);
         this.threeYearPlanWidget.render();
     }
 
@@ -704,7 +720,7 @@ class DashboardView {
 
 // Export
 if (typeof window !== 'undefined') {
-    window.DashboardView = DashboardView;
+    // Class is globally accessible via script loading order
 
     // Backwards compatibility wrapper
     window.renderDashboardView = function (container) {

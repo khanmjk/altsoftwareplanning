@@ -186,8 +186,3 @@ class AIGenProgressOverlayView {
         return AIGenProgressOverlayView.instance;
     }
 }
-
-// Global Export - Class definition only
-if (typeof window !== 'undefined') {
-    window.AIGenProgressOverlayView = AIGenProgressOverlayView;
-}

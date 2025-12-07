@@ -102,7 +102,7 @@ class CapacityEngine {
                         humanHeadcount = teamHumanBIS + awayHumanMembers;
                         break;
                     case 'FundedHC':
-                        const storedGain = team.attributes?.newHireProductiveCapacityGain || 0;
+                        const storedGain = Number(team.attributes?.newHireProductiveCapacityGain) || 0;
                         if (storedGain > 0) {
                             // If forecast exists, start with Current Headcount and add the Gain
                             humanHeadcount = teamHumanBIS;
@@ -110,7 +110,8 @@ class CapacityEngine {
                             newHireGainYrs = storedGain;
                         } else {
                             // Default to Full Funded Headcount (Idealized)
-                            humanHeadcount = team.fundedHeadcount || 0;
+                            // Ensure numeric conversion to prevent string concatenation
+                            humanHeadcount = Number(team.fundedHeadcount) || 0;
                             totalHeadcount = humanHeadcount + teamAIBIS + awayAIMembers;
                         }
                         break;
@@ -222,6 +223,4 @@ class CapacityEngine {
     }
 }
 
-// Make available globally
-window.CapacityEngine = CapacityEngine;
-
+// Class is registered globally in main.js

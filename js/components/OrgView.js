@@ -25,7 +25,7 @@ class OrgView {
 
         // 1. Set Workspace Metadata
         // 1. Set Workspace Metadata
-        window.workspaceComponent.setPageMetadata({
+        workspaceComponent.setPageMetadata({
             title: 'Org Design',
             breadcrumbs: ['System', 'Org Design'],
             actions: []
@@ -51,7 +51,7 @@ class OrgView {
 
         // 4. Set Workspace Toolbar
         // 4. Set Workspace Toolbar
-        window.workspaceComponent.setToolbar(this.pillNav.render());
+        workspaceComponent.setToolbar(this.pillNav.render());
 
         this.container.innerHTML = ''; // Clear container cleanly
 
@@ -1143,23 +1143,20 @@ class OrgView {
         const newTeamId = cell.getValue() === "" ? null : cell.getValue();
 
         try {
-            if (typeof moveEngineerToTeam === 'function') {
-                moveEngineerToTeam(engineerName, newTeamId);
-            } else {
-                throw new Error("moveEngineerToTeam is not defined");
-            }
-
-            if (typeof SystemService !== 'undefined' && SystemService.save) {
-                SystemService.save();
-            }
-            this.generateEngineerTable();
-            notificationManager?.showToast(`Moved ${engineerName} to ${newTeamId ? 'new team' : 'Unallocated'}`, 'success');
-        } catch (error) {
-            console.error('Error moving engineer:', error);
-            notificationManager?.showToast(error.message || 'Failed to move engineer', 'error');
-            cell.restoreOldValue();
+            OrgService.moveEngineerToTeam(SystemService.getCurrentSystem(), engineerName, newTeamId);
+            CapacityEngine.recalculate(SystemService.getCurrentSystem());
+        } catch (err) {
+            // If it fails, rethrow so the outer catch block handles it
+            throw err;
         }
+
+        if (typeof SystemService !== 'undefined' && SystemService.save) {
+            SystemService.save();
+        }
+        this.generateEngineerTable();
+        notificationManager?.showToast(`Moved ${engineerName} to ${newTeamId ? 'new team' : 'Unallocated'}`, 'success');
     }
+
 
     /**
      * Returns structured context data for AI Chat Panel integration
@@ -1198,7 +1195,7 @@ class OrgView {
 
 // Export and backwards compatibility
 if (typeof window !== 'undefined') {
-    window.OrgView = OrgView;
+    // Class is globally accessible via script loading order
 
     // Backwards compatibility - global wrapper function for AI integration
     window.renderOrgChartView = function (container) {

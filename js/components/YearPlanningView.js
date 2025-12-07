@@ -27,7 +27,7 @@ class YearPlanningView {
         this.draggedRowElement = null;
 
         // UI state
-        this.isSummaryExpanded = window.isSummaryTableExpanded || false;
+        this.isSummaryExpanded = false;
     }
 
     /**
@@ -102,9 +102,9 @@ class YearPlanningView {
      * NOTE: Actions moved to toolbar per Workspace Canvas UX pattern
      */
     setPageMetadata() {
-        if (!window.workspaceComponent) return;
+        if (!workspaceComponent) return;
 
-        window.workspaceComponent.setPageMetadata({
+        workspaceComponent.setPageMetadata({
             title: 'Year Plan',
             breadcrumbs: ['Planning', 'Year Plan'],
             actions: [] // Actions in toolbar, not header
@@ -115,9 +115,9 @@ class YearPlanningView {
      * Set workspace toolbar
      */
     setToolbar() {
-        if (!window.workspaceComponent) return;
+        if (!workspaceComponent) return;
         const toolbar = this.generateToolbar();
-        window.workspaceComponent.setToolbar(toolbar);
+        workspaceComponent.setToolbar(toolbar);
     }
 
     /**
@@ -319,7 +319,6 @@ class YearPlanningView {
         const existingSummaryContent = document.getElementById('teamLoadSummaryContent');
         if (existingSummaryContent) {
             this.isSummaryExpanded = existingSummaryContent.style.display !== 'none';
-            window.isSummaryTableExpanded = this.isSummaryExpanded;
         }
 
         const isExpanded = this.isSummaryExpanded;

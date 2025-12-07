@@ -2,8 +2,8 @@
  * RoadmapView - Roadmap & Backlog View Orchestrator
  * Manages the sub-views: Backlog (List), Quarterly Roadmap, and 3-Year Plan.
  */
-// Global Instance
-var roadmapViewInstance = null;
+// Singleton Instance
+let roadmapViewInstance = null;
 
 class RoadmapView {
     constructor() {
@@ -24,7 +24,7 @@ class RoadmapView {
 
         // 1. Set Workspace Metadata
         // 1. Set Workspace Metadata
-        window.workspaceComponent.setPageMetadata({
+        workspaceComponent.setPageMetadata({
             title: 'Roadmap & Backlog',
             breadcrumbs: ['Product', 'Roadmap'],
             actions: [] // Actions moved to toolbar body
@@ -166,7 +166,7 @@ class RoadmapView {
         const title = initiative ? initiative.title : initiativeId;
 
         if (await notificationManager.confirm(`Are you sure you want to delete initiative "${title}"?`, 'Delete Initiative', { confirmStyle: 'danger' })) {
-            const success = deleteInitiative(initiativeId);
+            const success = InitiativeService.deleteInitiative(SystemService.getCurrentSystem(), initiativeId);
             if (success) {
                 if (typeof SystemService !== 'undefined' && SystemService.save) {
                     SystemService.save();
@@ -219,7 +219,7 @@ class RoadmapView {
 
 // Export and backwards compatibility
 if (typeof window !== 'undefined') {
-    window.RoadmapView = RoadmapView;
+    // Class is globally accessible via script loading order
     window.currentEditingInitiativeId = null;
     window.tempRoadmapAssignments_modal = [];
 

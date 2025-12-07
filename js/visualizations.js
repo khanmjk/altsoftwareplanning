@@ -1,9 +1,6 @@
 let showPlatformComponents = true;
 let serviceDependenciesTableWidget = null;
 let currentServiceDependenciesTableData = [];
-if (typeof window !== 'undefined') {
-    window.currentServiceDependenciesTableData = currentServiceDependenciesTableData;
-}
 let visualizationResizeObserver = null;
 let resizeDebounceHandle = null;
 
@@ -133,7 +130,7 @@ function switchVisualizationMode(modeId) {
  * Updates the Workspace Toolbar based on the selected mode.
  */
 function updateVisualizationToolbar(activeModeId) {
-    if (!window.workspaceComponent) return;
+    if (!workspaceComponent) return;
 
     const toolbar = document.createElement('div');
     toolbar.className = 'visualization-toolbar';
@@ -229,7 +226,7 @@ function updateVisualizationToolbar(activeModeId) {
         toolbar.appendChild(apiSelect);
     }
 
-    window.workspaceComponent.setToolbar(toolbar);
+    workspaceComponent.setToolbar(toolbar);
 }
 
 async function renderMermaidDiagram() {
@@ -1535,9 +1532,6 @@ function generateServiceDependenciesTable() {
 
     const tableData = prepareServiceDependenciesTableData();
     currentServiceDependenciesTableData = tableData;
-    if (typeof window !== 'undefined') {
-        window.currentServiceDependenciesTableData = currentServiceDependenciesTableData;
-    }
 
     const wrapTextFormatter = (cell, defaultText = 'None') => {
         const value = cell.getValue();

@@ -311,8 +311,3 @@ class SystemsView {
         };
     }
 }
-
-// Expose to window
-if (typeof window !== 'undefined') {
-    window.SystemsView = SystemsView;
-}

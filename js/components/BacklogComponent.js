@@ -168,7 +168,7 @@ class BacklogComponent {
                 title: 'Title', field: 'title', minWidth: 200, headerFilter: 'input', frozen: true,
                 tooltip: (e, cell) => cell.getValue(), editor: 'input',
                 cellEdited: (cell) => {
-                    window.updateInitiative(cell.getRow().getData().id, { title: cell.getValue() });
+                    InitiativeService.updateInitiative(SystemService.getCurrentSystem(), cell.getRow().getData().id, { title: cell.getValue() });
                     SystemService.save();
                 }
             },
@@ -176,7 +176,7 @@ class BacklogComponent {
                 title: 'Description', field: 'description', minWidth: 250, formatter: 'textarea', headerFilter: 'input',
                 tooltip: (e, cell) => cell.getValue(), editor: 'textarea',
                 cellEdited: (cell) => {
-                    window.updateInitiative(cell.getRow().getData().id, { description: cell.getValue() });
+                    InitiativeService.updateInitiative(SystemService.getCurrentSystem(), cell.getRow().getData().id, { description: cell.getValue() });
                     SystemService.save();
                 }
             },
@@ -199,7 +199,7 @@ class BacklogComponent {
                             notificationManager.showToast("Cannot mark as 'Completed' before due date", 'error');
                             cell.restoreOldValue(); return;
                         }
-                        window.updateInitiative(init.id, { status: newValue });
+                        InitiativeService.updateInitiative(SystemService.getCurrentSystem(), init.id, { status: newValue });
                         SystemService.save();
                     } else {
                         notificationManager.showToast("Status updates (other than to 'Completed') managed by Year Plan ATL/BTL process", 'info');
@@ -223,7 +223,7 @@ class BacklogComponent {
                         const name = selected ? selected.label.replace(/ \(.+\)/, '') : id;
                         newOwner = { type, id, name };
                     }
-                    window.updateInitiative(cell.getRow().getData().id, { owner: newOwner });
+                    InitiativeService.updateInitiative(SystemService.getCurrentSystem(), cell.getRow().getData().id, { owner: newOwner });
                     SystemService.save();
                     cell.getRow().update({ owner: newOwner });
                 }
@@ -246,7 +246,7 @@ class BacklogComponent {
                 cellEdited: (cell) => {
                     const newDate = cell.getValue();
                     const newYear = newDate ? luxon.DateTime.fromISO(newDate).year : new Date().getFullYear();
-                    window.updateInitiative(cell.getRow().getData().id, {
+                    InitiativeService.updateInitiative(SystemService.getCurrentSystem(), cell.getRow().getData().id, {
                         targetDueDate: newDate,
                         attributes: { ...cell.getRow().getData().attributes, planningYear: newYear }
                     });
@@ -262,7 +262,7 @@ class BacklogComponent {
                 },
                 editor: 'list', editorParams: getThemeEditorParams,
                 cellEdited: (cell) => {
-                    window.updateInitiative(cell.getRow().getData().id, { themes: cell.getValue() || [] });
+                    InitiativeService.updateInitiative(SystemService.getCurrentSystem(), cell.getRow().getData().id, { themes: cell.getValue() || [] });
                     SystemService.save();
                 }
             },

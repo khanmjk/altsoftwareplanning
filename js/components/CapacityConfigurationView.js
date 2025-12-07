@@ -533,5 +533,3 @@ class CapacityConfigurationView {
         return group;
     }
 }
-
-window.CapacityConfigurationView = CapacityConfigurationView;

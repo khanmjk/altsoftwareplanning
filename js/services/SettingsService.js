@@ -58,7 +58,6 @@ const SettingsService = {
             this.reset();
         }
 
-        this._syncToWindow();
         return this.state;
     },
 
@@ -68,7 +67,6 @@ const SettingsService = {
     save() {
         try {
             localStorage.setItem(APP_SETTINGS_KEY, JSON.stringify(this.state));
-            this._syncToWindow();
             // Dispatch custom event for UI updates if needed?
             // window.dispatchEvent(new CustomEvent('settingsChanged', { detail: this.state }));
         } catch (e) {
@@ -110,14 +108,8 @@ const SettingsService = {
         this.save();
     },
 
-    /**
-     * Internal helper to maintain backward compatibility with window.globalSettings
-     */
-    _syncToWindow() {
-        if (typeof window !== 'undefined') {
-            window.globalSettings = this.state;
-        }
-    }
+    // Note: window.globalSettings backward compatibility removed per coding-agent-contract.md
+    // Use SettingsService.get() directly instead
 };
 
 // Auto-initialize if possible, or wait for explicit call?

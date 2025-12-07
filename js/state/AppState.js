@@ -133,7 +133,3 @@ appState.Modes = {
     PLANNING: 'planning',
     ROADMAP: 'roadmap'
 };
-
-if (typeof window !== 'undefined') {
-    window.appState = appState;
-}

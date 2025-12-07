@@ -94,6 +94,14 @@ async function loadHtmlComponent(url, targetId) {
 
 window.onload = async function () {
 
+    // ============================================================================
+    // GLOBAL CLASS/OBJECT REGISTRATIONS
+    // Per coding-agent-contract.md, all window.* assignments must be in onload
+    // ============================================================================
+    window.CapacityEngine = CapacityEngine;
+    window.FeatureFlags = FeatureFlags;
+    window.NavigationManager = NavigationManager;
+
     // Initialize Settings
     SettingsService.init();
 

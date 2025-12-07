@@ -221,8 +221,3 @@ class PillNavigationComponent {
         this.onSwitch = () => { };
     }
 }
-
-// Export for global usage
-if (typeof window !== 'undefined') {
-    window.PillNavigationComponent = PillNavigationComponent;
-}

@@ -132,8 +132,3 @@ class SidebarComponent {
         menus.forEach(menu => menu.classList.remove('show'));
     }
 }
-
-// Export for use
-if (typeof window !== 'undefined') {
-    window.SidebarComponent = SidebarComponent;
-}
