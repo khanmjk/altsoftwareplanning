@@ -8,12 +8,9 @@ let currentMode = appState.Modes.NAVIGATION;
 if (typeof window !== 'undefined' && !window.currentViewId) window.currentViewId = null;
 
 // --- Global App Settings ---
-// --- Global App Settings ---
-// Delegated to SettingsService
-let globalSettings = SettingsService.init();
-// Sync maintained by SettingsService internally, but we assign here for local scope access if needed
-// or rely on window.globalSettings being updated by the service.
-console.log("main.js: Initialized globalSettings via SettingsService.");
+// Delegated to SettingsService (also syncs to window.globalSettings for backward compatibility)
+SettingsService.init();
+console.log("main.js: Initialized settings via SettingsService.");
 
 if (typeof mermaid !== 'undefined' && typeof mermaid.initialize === 'function') {
     mermaid.initialize({ startOnLoad: false, theme: 'default' });
@@ -127,13 +124,10 @@ async function loadHtmlComponent(url, targetId) {
 // --- AI Assistant & Settings Functions ---
 
 /**
- * Loads all app settings from localStorage into the globalSettings object.
- */
-/**
- * Loads all app settings from localStorage into the globalSettings object.
+ * Loads all app settings from localStorage.
  */
 function loadGlobalSettings() {
-    globalSettings = SettingsService.load();
+    SettingsService.load();
     updateAiDependentUI();
 }
 
@@ -168,8 +162,8 @@ function closeAiStatsModal() {
  * Handles the "Create with AI" button click.
  */
 async function handleCreateWithAi() {
-    // Read directly from the global settings
-    if (!globalSettings.ai.isEnabled || !globalSettings.ai.apiKey) {
+    const settings = SettingsService.get();
+    if (!settings.ai.isEnabled || !settings.ai.apiKey) {
         window.notificationManager.showToast("AI Assistant mode is not enabled or API key is missing. Please check AI settings.", "error");
         return;
     }
@@ -193,7 +187,7 @@ async function handleCreateWithAi() {
     closeAiStatsModal();
 
     try {
-        const result = await generateSystemFromPrompt(prompt, globalSettings.ai.apiKey, globalSettings.ai.provider, spinnerP);
+        const result = await generateSystemFromPrompt(prompt, settings.ai.apiKey, settings.ai.provider, spinnerP);
         const newSystemData = result.data;
         const stats = result.stats;
 
