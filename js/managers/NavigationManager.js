@@ -204,9 +204,7 @@ class NavigationManager {
         }
 
         // 7. Update AI-dependent UI elements
-        if (typeof updateAiDependentUI === 'function') {
-            updateAiDependentUI({ skipPlanningRender: true });
-        }
+        AIService.updateAiDependentUI(SettingsService.get(), { skipPlanningRender: true });
     }
 
     /**

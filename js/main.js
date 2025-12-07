@@ -15,10 +15,6 @@ if (typeof mermaid !== 'undefined' && typeof mermaid.initialize === 'function') 
     console.warn("Mermaid library not available during initialization.");
 }
 
-function updateAiDependentUI(options = {}) {
-    AIService.updateAiDependentUI(SettingsService.get(), options);
-}
-
 // Fallback HTML snippets for components when fetch is unavailable (e.g., file:// protocol)
 const HTML_COMPONENT_FALLBACKS = {
     'html/components/aiChatPanel.html': `
@@ -107,12 +103,9 @@ async function loadHtmlComponent(url, targetId) {
  */
 function loadGlobalSettings() {
     SettingsService.load();
-    updateAiDependentUI();
+    AIService.updateAiDependentUI(SettingsService.get());
 }
 
-/**
- * Formats AI generation stats into a readable block of text.
- */
 /**
  * Formats AI generation stats into a readable block of text.
  */
