@@ -9,12 +9,6 @@ if (typeof window !== 'undefined' && !window.currentViewId) window.currentViewId
 SettingsService.init();
 console.log("main.js: Initialized settings via SettingsService.");
 
-if (typeof mermaid !== 'undefined' && typeof mermaid.initialize === 'function') {
-    mermaid.initialize({ startOnLoad: false, theme: 'default' });
-} else {
-    console.warn("Mermaid library not available during initialization.");
-}
-
 // Fallback HTML snippets for components when fetch is unavailable (e.g., file:// protocol)
 const HTML_COMPONENT_FALLBACKS = {
     'html/components/aiChatPanel.html': `

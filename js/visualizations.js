@@ -7,8 +7,10 @@ if (typeof window !== 'undefined') {
 let visualizationResizeObserver = null;
 let resizeDebounceHandle = null;
 
-
-// --- Visualization State ---
+// Initialize Mermaid for architecture diagrams
+if (typeof mermaid !== 'undefined' && typeof mermaid.initialize === 'function') {
+    mermaid.initialize({ startOnLoad: false, theme: 'default' });
+}
 let currentVisualizationMode = 'visualization';
 const visualizationModes = [
     { id: 'visualization', title: 'System Visualization' },
