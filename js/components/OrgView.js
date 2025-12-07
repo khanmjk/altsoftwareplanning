@@ -1143,23 +1143,20 @@ class OrgView {
         const newTeamId = cell.getValue() === "" ? null : cell.getValue();
 
         try {
-            if (typeof moveEngineerToTeam === 'function') {
-                moveEngineerToTeam(engineerName, newTeamId);
-            } else {
-                throw new Error("moveEngineerToTeam is not defined");
-            }
-
-            if (typeof SystemService !== 'undefined' && SystemService.save) {
-                SystemService.save();
-            }
-            this.generateEngineerTable();
-            notificationManager?.showToast(`Moved ${engineerName} to ${newTeamId ? 'new team' : 'Unallocated'}`, 'success');
-        } catch (error) {
-            console.error('Error moving engineer:', error);
-            notificationManager?.showToast(error.message || 'Failed to move engineer', 'error');
-            cell.restoreOldValue();
+            OrgService.moveEngineerToTeam(SystemService.getCurrentSystem(), engineerName, newTeamId);
+            CapacityEngine.recalculate(SystemService.getCurrentSystem());
+        } catch (err) {
+            // If it fails, rethrow so the outer catch block handles it
+            throw err;
         }
+
+        if (typeof SystemService !== 'undefined' && SystemService.save) {
+            SystemService.save();
+        }
+        this.generateEngineerTable();
+        notificationManager?.showToast(`Moved ${engineerName} to ${newTeamId ? 'new team' : 'Unallocated'}`, 'success');
     }
+
 
     /**
      * Returns structured context data for AI Chat Panel integration

@@ -166,7 +166,7 @@ class RoadmapView {
         const title = initiative ? initiative.title : initiativeId;
 
         if (await notificationManager.confirm(`Are you sure you want to delete initiative "${title}"?`, 'Delete Initiative', { confirmStyle: 'danger' })) {
-            const success = deleteInitiative(initiativeId);
+            const success = InitiativeService.deleteInitiative(SystemService.getCurrentSystem(), initiativeId);
             if (success) {
                 if (typeof SystemService !== 'undefined' && SystemService.save) {
                     SystemService.save();

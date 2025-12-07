@@ -530,7 +530,7 @@ function renderPlanningView() {
     }
 
     // Ensure Planning Years
-    ensureInitiativePlanningYears(SystemService.getCurrentSystem().yearlyInitiatives);
+    InitiativeService.ensureInitiativePlanningYears(SystemService.getCurrentSystem().yearlyInitiatives);
 
     // Ensure Metrics
     if (!SystemService.getCurrentSystem().calculatedCapacityMetrics) {
