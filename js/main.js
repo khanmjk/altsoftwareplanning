@@ -234,7 +234,7 @@ async function handleCreateWithAi() {
         }
 
         // --- THIS IS THE VALIDATION STEP ---
-        const { isValid, errors, warnings } = validateGeneratedSystem(newSystemData);
+        const { isValid, errors, warnings } = AIService.validateGeneratedSystem(newSystemData);
 
         if (!isValid) {
             console.error("AI Generation Failed Validation:", errors);

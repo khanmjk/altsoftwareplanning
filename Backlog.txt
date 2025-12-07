@@ -174,13 +174,12 @@ bar graph per quarter to see team load/demand impact
 [Done] - [UX] - [MAJOR UX REFACTOR]- [TD UX] - Enhance the workspace UX feature, move away from antiquated form views and caroussels - the page needs to be seen as an integrated part of the workspace view
 [Done] - [TECH DEBT] - Enhance the codebase to be more modular, portable, separate concerns
 [Done] - [TECH DEBT] - completely remove data.js
-
+[Done] - [TECH DEBT] - move util function function validateGeneratedSystem(systemData) to aiService
 
 ------------
 IN PROGRESS
 ------------
 [TODO] code cleanup
-- move util function function validateGeneratedSystem(systemData) to aiService
 - Cleanup code wherever this pattern exists: if (typeof [NAME] === 'function') {... since we introduced service layers then these functions are guaranteed
 - Create a new service for SystemManager to handle all system related functions, maybe abstract to StorageService?
 - clean up main.js
