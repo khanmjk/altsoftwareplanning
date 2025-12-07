@@ -3,9 +3,11 @@
 // ========= Year Planning Module State =========
 // Global variable to store the currently selected planning year
 let currentPlanningYear = new Date().getFullYear();
+let planningCapacityScenario = 'effective'; // Default to 'effective'
+let applyCapacityConstraintsToggle = false; // Default to OFF
 
-let currentYearPlanSummaryData = null; // [NEW]
-let currentYearPlanTableData = null; // [NEW]
+let currentYearPlanSummaryData = null;
+let currentYearPlanTableData = null;
 let draggedRowElement = null; // For drag-drop row styling
 // =============================================
 

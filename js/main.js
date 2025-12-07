@@ -4,8 +4,6 @@ let currentSystemData = null;
 
 
 let currentMode = appState.Modes.NAVIGATION;
-let planningCapacityScenario = 'effective'; // Default to 'effective'
-let applyCapacityConstraintsToggle = false; // Default to OFF
 // currentViewId is now managed globally on window by NavigationManager
 if (typeof window !== 'undefined' && !window.currentViewId) window.currentViewId = null;
 
