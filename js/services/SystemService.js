@@ -10,6 +10,8 @@
 
 // Private state - the currently loaded system
 let _currentSystem = null;
+// Private state - aggregate sample data
+let _sampleSystemsData = {};
 
 const SystemService = {
 
@@ -53,26 +55,24 @@ const SystemService = {
         const { forceOverwrite = false } = options;
 
         // Aggregate sample data from potential globals if main object is missing
-        if (!window.sampleSystemsData) {
-            window.sampleSystemsData = {};
-            if (typeof sampleSystemDataStreamView !== 'undefined') window.sampleSystemsData['StreamView'] = sampleSystemDataStreamView;
-            if (typeof sampleSystemDataContactCenter !== 'undefined') window.sampleSystemsData['ConnectFlow'] = sampleSystemDataContactCenter; // Assuming ConnectFlow is the name
-            if (typeof sampleSystemDataShopSphere !== 'undefined') window.sampleSystemsData['ShopSphere'] = sampleSystemDataShopSphere;
-            if (typeof sampleSystemDataInsightAI !== 'undefined') window.sampleSystemsData['InsightAI'] = sampleSystemDataInsightAI;
-            if (typeof sampleSystemDataFinSecure !== 'undefined') window.sampleSystemsData['FinSecure'] = sampleSystemDataFinSecure;
+        if (Object.keys(_sampleSystemsData).length === 0) {
+            if (typeof sampleSystemDataStreamView !== 'undefined') _sampleSystemsData['StreamView'] = sampleSystemDataStreamView;
+            if (typeof sampleSystemDataContactCenter !== 'undefined') _sampleSystemsData['ConnectPro'] = sampleSystemDataContactCenter;
+            if (typeof sampleSystemDataShopSphere !== 'undefined') _sampleSystemsData['ShopSphere'] = sampleSystemDataShopSphere;
+            if (typeof sampleSystemDataInsightAI !== 'undefined') _sampleSystemsData['InsightAI'] = sampleSystemDataInsightAI;
+            if (typeof sampleSystemDataFinSecure !== 'undefined') _sampleSystemsData['FinSecure'] = sampleSystemDataFinSecure;
         }
 
-        if (Object.keys(window.sampleSystemsData).length === 0) {
+        if (Object.keys(_sampleSystemsData).length === 0) {
             console.warn("SystemService: No sampleSystemsData found. Skipping defaults initialization.");
             return;
         }
 
         // We use the repository to check/save
-        // We use the repository to check/save
 
 
-        Object.keys(window.sampleSystemsData).forEach(key => {
-            const sampleData = window.sampleSystemsData[key];
+        Object.keys(_sampleSystemsData).forEach(key => {
+            const sampleData = _sampleSystemsData[key];
             if (!sampleData) return;
 
             // Use the name from the data if available, otherwise the key
@@ -98,22 +98,32 @@ const SystemService = {
             systemDescription: "Description of the new system...",
             teams: [],
             allKnownEngineers: [],
+            seniorManagers: [],
+            sdms: [],
+            pmts: [],
+            projectManagers: [],
             services: [],
+            platformDependencies: [],
+            capacityConfiguration: {
+                workingDaysPerYear: 261,
+                standardHoursPerDay: 8,
+                globalConstraints: {
+                    publicHolidays: 10,
+                    orgEvents: []
+                },
+                leaveTypes: [
+                    { id: "annual", name: "Annual Leave", defaultEstimatedDays: 20, attributes: {} },
+                    { id: "sick", name: "Sick Leave", defaultEstimatedDays: 7, attributes: {} }
+                ],
+                attributes: {}
+            },
             yearlyInitiatives: [],
             goals: [],
             definedThemes: [],
-            sdms: [],
-            pmts: [],
-            seniorManagers: [],
-            projectManagers: [], // Configurable list of PMs
-            workPackages: [], // Explicitly empty
-            capacityConfiguration: {
-                standardSdeYears: 1.0,
-                supportOverheadBytes: 0.2, // ~20% overhead default
-                defaultAiProductivityGain: 0.05 // 5% default gain
-            },
-            createdDate: new Date().toISOString(),
-            lastModified: new Date().toISOString()
+            archivedYearlyPlans: [],
+            workPackages: [],
+            calculatedCapacityMetrics: null,
+            attributes: {}
         };
         return newSystem;
     },
@@ -133,9 +143,9 @@ const SystemService = {
         let systemData = systemRepository.getSystemData(systemId);
 
         // 2. Fallback: Check sampleSystemsData global (in case LocalStorage was cleared but app didn't reload)
-        if (!systemData && window.sampleSystemsData && window.sampleSystemsData[systemId]) {
+        if (!systemData && _sampleSystemsData && _sampleSystemsData[systemId]) {
             console.log(`SystemService: System '${systemId}' not in storage, loading from default samples.`);
-            systemData = window.sampleSystemsData[systemId];
+            systemData = _sampleSystemsData[systemId];
             // Auto-save to storage to persist it for next time
             systemRepository.saveSystem(systemId, systemData);
         }

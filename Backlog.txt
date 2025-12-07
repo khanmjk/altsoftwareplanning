@@ -178,7 +178,7 @@ bar graph per quarter to see team load/demand impact
 [Done] - [TECH DEBT] - Cleanup code wherever this pattern exists: if (typeof [NAME] === 'function') {... since we introduced service layers then these functions are guaranteed
 [Done] - [TECH DEBT] - Create a new service for SystemManager to handle all system related functions, maybe abstract to StorageService?
 [Done] - [TECH DEBT] - window.saveSystemData(); //TODO: Replace with correct Save System function
-
+[Done] - [TECH DEBT] - cleanup window.sampleSystemsData
 
 ------------
 IN PROGRESS
@@ -186,7 +186,7 @@ IN PROGRESS
 [TODO] code cleanup
 - clean up main.js
 
-- cleanup window.sampleSystemsData
+
 - cleanup occurrences of this pattern if (window.X) { window.X.[OPERATION]...
 - cleanup index.html - move a bunch of html to a view file for main content or the workspace canvas files
 - ensure AI tooling agents have the right function calls to reference with the introduction of the service layer
