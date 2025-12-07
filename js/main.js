@@ -1,5 +1,3 @@
-let currentMode = appState.Modes.NAVIGATION;
-
 // Fallback HTML snippets for components when fetch is unavailable (e.g., file:// protocol)
 const HTML_COMPONENT_FALLBACKS = {
     'html/components/aiChatPanel.html': `
@@ -162,7 +160,6 @@ async function handleCreateWithAi() {
 }
 
 window.onload = async function () {
-    currentMode = appState.Modes.NAVIGATION;
 
     // Initialize Settings
     SettingsService.init();
@@ -189,9 +186,8 @@ window.onload = async function () {
         console.error("Failed to load essential HTML components on startup.", e);
     }
 
-
-
-    initializeEventListeners();
+    // Initialize the chat panel's internal listeners (Required for Header AI Button)
+    initializeAiChatPanel();
 
     // Load settings and update AI UI
     SettingsService.load();
@@ -210,25 +206,3 @@ window.onload = async function () {
     }, 500);
 };
 
-
-
-// Ensure the functions are globally accessible for the old onclick attributes,
-// or for the new event listener setup.
-
-
-
-
-/**
- * NEW: Initializes all event listeners for the top bar.
- * This is the recommended modern approach.
- */
-function initializeEventListeners() {
-    console.log("Initializing event listeners...");
-
-
-
-
-    // Initialize the chat panel's internal listeners (Required for Header AI Button)
-    initializeAiChatPanel();
-    console.log("Event listeners initialized.");
-}
