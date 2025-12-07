@@ -8,8 +8,8 @@
     const computeSdeEstimate = (init, filterTeamId) => GanttService.computeSdeEstimate(init, filterTeamId);
 
     function buildTasksFromInitiatives({ initiatives = [], workPackages = [], viewBy = 'All Initiatives', filters = {}, year, selectedTeam, expandedInitiativeIds = new Set(), expandedWorkPackageIds = new Set() }) {
-        if (typeof WorkPackageService !== 'undefined' && typeof currentSystemData !== 'undefined') {
-            WorkPackageService.ensureWorkPackagesForInitiatives(currentSystemData, year);
+        if (typeof WorkPackageService !== 'undefined' && typeof SystemService.getCurrentSystem() !== 'undefined') {
+            WorkPackageService.ensureWorkPackagesForInitiatives(SystemService.getCurrentSystem(), year);
         }
         const tasks = [];
         const yearVal = year || new Date().getFullYear();
@@ -17,10 +17,10 @@
         const defaultEnd = `${yearVal}-11-01`;
         const workingDaysPerYear = (typeof getWorkingDaysPerYear === 'function')
             ? getWorkingDaysPerYear()
-            : (currentSystemData?.capacityConfiguration?.workingDaysPerYear || 261);
-        const teamMap = new Map((currentSystemData?.teams || []).map(t => [t.teamId, t]));
-        const goalMap = new Map((currentSystemData?.goals || []).map(g => [g.goalId, g]));
-        const themeMap = new Map((currentSystemData?.definedThemes || []).map(t => [t.themeId, t]));
+            : (SystemService.getCurrentSystem()?.capacityConfiguration?.workingDaysPerYear || 261);
+        const teamMap = new Map((SystemService.getCurrentSystem()?.teams || []).map(t => [t.teamId, t]));
+        const goalMap = new Map((SystemService.getCurrentSystem()?.goals || []).map(g => [g.goalId, g]));
+        const themeMap = new Map((SystemService.getCurrentSystem()?.definedThemes || []).map(t => [t.themeId, t]));
 
         // Apply explicit filters (status/year) to keep chart rows aligned with table
         const statusFilter = filters?.status;
@@ -256,7 +256,7 @@
 
     function buildAssignmentLabel(assign, wp, workingDaysPerYear) {
         const teamName = (() => {
-            const t = (currentSystemData?.teams || []).find(team => team.teamId === assign.teamId);
+            const t = (SystemService.getCurrentSystem()?.teams || []).find(team => team.teamId === assign.teamId);
             return t ? (t.teamIdentity || t.teamName || assign.teamId) : assign.teamId;
         })();
         const sdeYears = (assign.sdeYears !== undefined && assign.sdeYears !== null)

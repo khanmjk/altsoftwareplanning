@@ -55,7 +55,7 @@ function handleProtectedChange(event) {
     }
 
     // Find the initiative in the main data array
-    const initiative = currentSystemData.yearlyInitiatives.find(init => init.initiativeId === initiativeId);
+    const initiative = SystemService.getCurrentSystem().yearlyInitiatives.find(init => init.initiativeId === initiativeId);
 
     if (initiative) {
         // Update the data model
@@ -74,7 +74,7 @@ function handleProtectedChange(event) {
 /** REVISED Handles the start of a drag operation - Check Protection */
 function handleDragStart(event) {
     const initiativeId = event.target.getAttribute('data-initiative-id');
-    const initiative = currentSystemData.yearlyInitiatives.find(init => init.initiativeId === initiativeId);
+    const initiative = SystemService.getCurrentSystem().yearlyInitiatives.find(init => init.initiativeId === initiativeId);
 
     // Double-check: Do not allow dragging protected items
     if (!initiative || initiative.isProtected) {
@@ -131,7 +131,7 @@ function handleDrop(event) {
     // console.log(`Drop: ${draggedInitiativeId} onto ${targetInitiativeId}`);
 
     // --- Find initiatives and indices ---
-    const initiatives = currentSystemData.yearlyInitiatives;
+    const initiatives = SystemService.getCurrentSystem().yearlyInitiatives;
     const draggedIndex = initiatives.findIndex(init => init.initiativeId === draggedInitiativeId);
     const targetIndex = initiatives.findIndex(init => init.initiativeId === targetInitiativeId);
 
@@ -227,7 +227,7 @@ function handleEstimateChange(event) {
     const validatedValue = (!isNaN(newValue) && newValue > 0) ? newValue : 0;
 
     // Find the initiative
-    const initiative = currentSystemData.yearlyInitiatives.find(init => init.initiativeId === initiativeId);
+    const initiative = SystemService.getCurrentSystem().yearlyInitiatives.find(init => init.initiativeId === initiativeId);
     if (!initiative) {
         console.error("Could not find initiative data for ID:", initiativeId);
         return;
@@ -262,13 +262,13 @@ function handleEstimateChange(event) {
 
     // [NEW] Top-Down Sync: Propagate changes to Work Packages to prevent reversion
     // because renderPlanningView calls syncInitiativeTotals which overwrites from WPs.
-    if (currentSystemData.workPackages) {
-        const wps = currentSystemData.workPackages.filter(wp => wp.initiativeId === initiativeId);
+    if (SystemService.getCurrentSystem().workPackages) {
+        const wps = SystemService.getCurrentSystem().workPackages.filter(wp => wp.initiativeId === initiativeId);
         if (wps.length > 0) {
             // We update the first WP found. In a multi-WP scenario, this is a simplification,
             // but it ensures the total is preserved for the initiative.
             const targetWp = wps[0];
-            const workingDays = currentSystemData.capacityConfiguration?.workingDaysPerYear || 261;
+            const workingDays = SystemService.getCurrentSystem().capacityConfiguration?.workingDaysPerYear || 261;
 
             if (!targetWp.impactedTeamAssignments) targetWp.impactedTeamAssignments = [];
 
@@ -347,23 +347,23 @@ function renderTeamLoadSummaryTable(summaryData, options = {}) {
  * @returns {object} An object { rows: [], totals: {} } with the calculated data.
  */
 function calculateTeamLoadSummaryData() {
-    if (!currentSystemData || !currentSystemData.calculatedCapacityMetrics || !currentSystemData.teams) {
+    if (!SystemService.getCurrentSystem() || !SystemService.getCurrentSystem().calculatedCapacityMetrics || !SystemService.getCurrentSystem().teams) {
         console.error("calculateTeamLoadSummaryData: Missing required data.");
         return { rows: [], totals: {} };
     }
 
     // Filter initiatives for current planning year (excluding completed)
-    const initiativesForYear = (currentSystemData.yearlyInitiatives || [])
+    const initiativesForYear = (SystemService.getCurrentSystem().yearlyInitiatives || [])
         .filter(init => init.attributes.planningYear == currentPlanningYear && init.status !== 'Completed');
 
     // Delegate to PlanningService
     return PlanningService.calculateTeamLoadSummary({
-        teams: currentSystemData.teams,
+        teams: SystemService.getCurrentSystem().teams,
         initiatives: initiativesForYear,
-        calculatedMetrics: currentSystemData.calculatedCapacityMetrics,
+        calculatedMetrics: SystemService.getCurrentSystem().calculatedCapacityMetrics,
         scenario: planningCapacityScenario,
         applyConstraints: applyCapacityConstraintsToggle,
-        allKnownEngineers: currentSystemData.allKnownEngineers || []
+        allKnownEngineers: SystemService.getCurrentSystem().allKnownEngineers || []
     });
 }
 
@@ -373,26 +373,26 @@ function calculateTeamLoadSummaryData() {
  * @returns {Array<object>} A new array of initiative objects with calculated fields added.
  */
 function calculatePlanningTableData() {
-    if (!currentSystemData || !currentSystemData.calculatedCapacityMetrics || !currentSystemData.teams) {
+    if (!SystemService.getCurrentSystem() || !SystemService.getCurrentSystem().calculatedCapacityMetrics || !SystemService.getCurrentSystem().teams) {
         console.error("calculatePlanningTableData: Missing required data.");
         return [];
     }
 
     // Filter initiatives for current planning year (excluding completed)
-    const initiativesForYear = (currentSystemData.yearlyInitiatives || [])
+    const initiativesForYear = (SystemService.getCurrentSystem().yearlyInitiatives || [])
         .filter(init => init.attributes.planningYear == currentPlanningYear && init.status !== 'Completed');
 
     // Delegate to PlanningService
     const calculatedData = PlanningService.calculatePlanningTableData({
         initiatives: initiativesForYear,
-        calculatedMetrics: currentSystemData.calculatedCapacityMetrics,
+        calculatedMetrics: SystemService.getCurrentSystem().calculatedCapacityMetrics,
         scenario: planningCapacityScenario,
         applyConstraints: applyCapacityConstraintsToggle
     });
 
     // Update the planningStatusFundedHc on the original initiative objects for persistence
     calculatedData.forEach(calcInit => {
-        const originalInit = (currentSystemData.yearlyInitiatives || []).find(i => i.initiativeId === calcInit.initiativeId);
+        const originalInit = (SystemService.getCurrentSystem().yearlyInitiatives || []).find(i => i.initiativeId === calcInit.initiativeId);
         if (originalInit) {
             originalInit.attributes.planningStatusFundedHc = calcInit.calculatedAtlBtlStatus;
         }
@@ -444,9 +444,9 @@ function renderPlanningView() {
         // BUT: If user navigates directly to Planning View, we want fresh data.
 
         // SAFE FIX: Recalculate metrics directly here without triggering a full app refresh loop.
-        if (currentSystemData) {
-            const capacityEngine = new CapacityEngine(currentSystemData);
-            currentSystemData.calculatedCapacityMetrics = capacityEngine.calculateAllMetrics();
+        if (SystemService.getCurrentSystem()) {
+            const capacityEngine = new CapacityEngine(SystemService.getCurrentSystem());
+            SystemService.getCurrentSystem().calculatedCapacityMetrics = capacityEngine.calculateAllMetrics();
         }
     }
 
@@ -534,16 +534,16 @@ function renderPlanningView() {
 
     // Ensure Data
     // Updated to use WorkPackageService directly
-    WorkPackageService.ensureWorkPackagesForInitiatives(currentSystemData, currentPlanningYear);
+    WorkPackageService.ensureWorkPackagesForInitiatives(SystemService.getCurrentSystem(), currentPlanningYear);
     // Updated to use WorkPackageService directly
-    (currentSystemData.yearlyInitiatives || [])
+    (SystemService.getCurrentSystem().yearlyInitiatives || [])
         .filter(init => `${init.attributes?.planningYear || ''}` === `${currentPlanningYear}`)
         // Updated to use WorkPackageService directly
-        .forEach(init => WorkPackageService.syncInitiativeTotals(init.initiativeId, currentSystemData));
+        .forEach(init => WorkPackageService.syncInitiativeTotals(init.initiativeId, SystemService.getCurrentSystem()));
 
     const tableContainer = document.getElementById('planningTableContainer');
 
-    if (!currentSystemData || !currentSystemData.teams) {
+    if (!SystemService.getCurrentSystem() || !SystemService.getCurrentSystem().teams) {
         if (tableContainer) {
             tableContainer.innerHTML = '';
             const errorMsg = document.createElement('p');
@@ -555,12 +555,12 @@ function renderPlanningView() {
     }
 
     // Ensure Planning Years
-    ensureInitiativePlanningYears(currentSystemData.yearlyInitiatives);
+    ensureInitiativePlanningYears(SystemService.getCurrentSystem().yearlyInitiatives);
 
     // Ensure Metrics
-    if (!currentSystemData.calculatedCapacityMetrics) {
-        const capacityEngine = new CapacityEngine(currentSystemData);
-        currentSystemData.calculatedCapacityMetrics = capacityEngine.calculateAllMetrics();
+    if (!SystemService.getCurrentSystem().calculatedCapacityMetrics) {
+        const capacityEngine = new CapacityEngine(SystemService.getCurrentSystem());
+        SystemService.getCurrentSystem().calculatedCapacityMetrics = capacityEngine.calculateAllMetrics();
     }
 
     // Render Tables
@@ -588,8 +588,8 @@ function generatePlanningToolbar() {
     // 1. Year Selector
     const calendarYear = new Date().getFullYear();
     let availableYears = [];
-    if (currentSystemData.yearlyInitiatives && currentSystemData.yearlyInitiatives.length > 0) {
-        const yearsFromData = new Set(currentSystemData.yearlyInitiatives.map(init => init.attributes.planningYear).filter(year => year));
+    if (SystemService.getCurrentSystem().yearlyInitiatives && SystemService.getCurrentSystem().yearlyInitiatives.length > 0) {
+        const yearsFromData = new Set(SystemService.getCurrentSystem().yearlyInitiatives.map(init => init.attributes.planningYear).filter(year => year));
         availableYears = Array.from(yearsFromData);
     }
     if (availableYears.length === 0) availableYears.push(calendarYear);
@@ -625,7 +625,7 @@ function generatePlanningToolbar() {
     toolbar.appendChild(yearGroup);
 
     // 2. Scenario Controls
-    const calculatedMetrics = currentSystemData.calculatedCapacityMetrics;
+    const calculatedMetrics = SystemService.getCurrentSystem().calculatedCapacityMetrics;
     if (calculatedMetrics) {
         const scenarioGroup = document.createElement('div');
         scenarioGroup.style.display = 'flex';
@@ -697,10 +697,10 @@ function generatePlanningToolbar() {
  * For other views, use CapacityEngine.recalculate() directly for pure data updates.
  */
 function updateCapacityCalculationsAndDisplay() {
-    if (!currentSystemData) return;
+    if (!SystemService.getCurrentSystem()) return;
 
     // Delegate data recalculation to CapacityEngine
-    CapacityEngine.recalculate(currentSystemData);
+    CapacityEngine.recalculate(SystemService.getCurrentSystem());
 
     // Refresh Year Planning view if it's currently active
     if (currentViewId === 'planningView') {
@@ -756,12 +756,12 @@ function adjustPlanningTableHeight() {
 function handleSavePlan() {
     console.log(`Saving plan for year ${currentPlanningYear}...`);
 
-    if (!currentSystemData || !currentSystemData.systemName) {
+    if (!SystemService.getCurrentSystem() || !SystemService.getCurrentSystem().systemName) {
         window.notificationManager.showToast("Cannot save plan: No system data loaded or system name is missing.", "error");
         return;
     }
 
-    const initiativesForYear = (currentSystemData.yearlyInitiatives || []).filter(
+    const initiativesForYear = (SystemService.getCurrentSystem().yearlyInitiatives || []).filter(
         init => init.attributes.planningYear == currentPlanningYear
     );
 
@@ -783,13 +783,13 @@ function handleSavePlan() {
 
     try {
         // Updated to use WorkPackageService directly
-        WorkPackageService.ensureWorkPackagesForInitiatives(currentSystemData, currentPlanningYear);
-        (currentSystemData.yearlyInitiatives || [])
+        WorkPackageService.ensureWorkPackagesForInitiatives(SystemService.getCurrentSystem(), currentPlanningYear);
+        (SystemService.getCurrentSystem().yearlyInitiatives || [])
             .filter(init => init.attributes?.planningYear == currentPlanningYear)
             .forEach(init => {
                 // Updated to use WorkPackageService directly
-                WorkPackageService.syncWorkPackagesFromInitiative(init, currentSystemData);
-                WorkPackageService.syncInitiativeTotals(init.initiativeId, currentSystemData);
+                WorkPackageService.syncWorkPackagesFromInitiative(init, SystemService.getCurrentSystem());
+                WorkPackageService.syncInitiativeTotals(init.initiativeId, SystemService.getCurrentSystem());
             });
 
         saveSystemChanges();

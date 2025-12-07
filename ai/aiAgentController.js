@@ -134,7 +134,7 @@ ${toolsetDescription}`;
         console.log("[AI CHAT] Starting agent session. Clearing history and UI.");
         const chatLog = document.getElementById('aiChatLog');
         if (chatLog) {
-            chatLog.innerHTML = '<div class="chat-message ai-message">Hello! I have loaded the full context for <strong>' + (currentSystemData?.systemName || 'the system') + '</strong>. How can I help you analyze it?<br><br>You can now ask me to perform actions (including bulk actions!) using simple English OR Type <b>/</b> to see a list of available commands.</div>';
+            chatLog.innerHTML = '<div class="chat-message ai-message">Hello! I have loaded the full context for <strong>' + (SystemService.getCurrentSystem()?.systemName || 'the system') + '</strong>. How can I help you analyze it?<br><br>You can now ask me to perform actions (including bulk actions!) using simple English OR Type <b>/</b> to see a list of available commands.</div>';
         }
         if (window.aiChatAssistant && typeof window.aiChatAssistant.setTokenCount === 'function') {
             window.aiChatAssistant.setTokenCount(0);
@@ -147,21 +147,21 @@ ${toolsetDescription}`;
         sessionTotalTokens = 0;
         isAgentThinking = false;
 
-        if (!currentSystemData) {
+        if (!SystemService.getCurrentSystem()) {
             console.warn("[AI CHAT] No system data loaded. AI assistant will have no context.");
             return;
         }
 
         let primingPrompt = _getAiPrimingPrompt();
         if (USE_FULL_SYSTEM_CONTEXT_TOGGLE) {
-            const fullContextJson = JSON.stringify(currentSystemData, null, 2);
+            const fullContextJson = JSON.stringify(SystemService.getCurrentSystem(), null, 2);
             primingPrompt += `\n\nHERE IS THE FULL SYSTEM DATA ("CONTEXT DATA"):\n${fullContextJson}\n\nConfirm you have received these instructions and the full system data, and are ready to answer questions.`;
         } else {
             primingPrompt += `\n\nYou will be given the CONTEXT DATA with each user question. Confirm you have received these instructions.`;
         }
 
         chatSessionHistory.push({ role: 'user', parts: [{ text: primingPrompt }] });
-        chatSessionHistory.push({ role: 'model', parts: [{ text: `Understood. I have loaded the context for ${currentSystemData.systemName}. I am ready to analyze.` }] });
+        chatSessionHistory.push({ role: 'model', parts: [{ text: `Understood. I have loaded the context for ${SystemService.getCurrentSystem().systemName}. I am ready to analyze.` }] });
 
         renderSuggestionsForCurrentView();
     }
@@ -701,14 +701,14 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
 
         console.log(`[AI CHAT] Scraping context for view: ${currentView || 'none'}`);
 
-        if (!currentSystemData) {
+        if (!SystemService.getCurrentSystem()) {
             contextData.data = "No system is currently loaded.";
             console.warn('[AI CHAT] No system data available while scraping context.');
             return JSON.stringify(contextData);
         }
 
-        contextData.systemName = currentSystemData.systemName;
-        contextData.systemDescription = currentSystemData.systemDescription;
+        contextData.systemName = SystemService.getCurrentSystem().systemName;
+        contextData.systemDescription = SystemService.getCurrentSystem().systemDescription;
 
         // [NEW] Try class-based view context first via AI_VIEW_REGISTRY
         if (window.getAIContextForView && currentView) {
@@ -738,8 +738,8 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
                         viewTitle: "Detailed Planning (Gantt)",
                         currentYear: currentGanttYear,
                         groupBy: currentGanttGroupBy,
-                        workPackages: currentSystemData.workPackages || [],
-                        initiatives: (currentSystemData.yearlyInitiatives || []).filter(i =>
+                        workPackages: SystemService.getCurrentSystem().workPackages || [],
+                        initiatives: (SystemService.getCurrentSystem().yearlyInitiatives || []).filter(i =>
                             (i.attributes?.planningYear || '').toString() === (currentGanttYear || '').toString()
                         ).map(i => ({
                             id: i.initiativeId,
@@ -752,21 +752,21 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
                     break;
                 case 'capacityConfigView':
                     contextData.data = {
-                        metrics: currentSystemData.calculatedCapacityMetrics,
-                        config: currentSystemData.capacityConfiguration
+                        metrics: SystemService.getCurrentSystem().calculatedCapacityMetrics,
+                        config: SystemService.getCurrentSystem().capacityConfiguration
                     };
                     break;
                 case 'organogramView':
                     contextData.data = {
-                        seniorManagers: currentSystemData.seniorManagers,
-                        sdms: currentSystemData.sdms,
-                        teams: currentSystemData.teams.map(t => ({
+                        seniorManagers: SystemService.getCurrentSystem().seniorManagers,
+                        sdms: SystemService.getCurrentSystem().sdms,
+                        teams: SystemService.getCurrentSystem().teams.map(t => ({
                             teamId: t.teamId,
                             teamName: t.teamName,
                             teamIdentity: t.teamIdentity,
                             engineerNames: t.engineers
                         })),
-                        allKnownEngineers: currentSystemData.allKnownEngineers
+                        allKnownEngineers: SystemService.getCurrentSystem().allKnownEngineers
                     };
                     break;
                 case 'dashboardView':
@@ -799,25 +799,25 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
                     break;
                 case 'visualizationCarousel':
                     contextData.data = {
-                        services: currentSystemData.services,
-                        dependencies: currentSystemData.serviceDependencies,
-                        platformDependencies: currentSystemData.platformDependencies,
+                        services: SystemService.getCurrentSystem().services,
+                        dependencies: SystemService.getCurrentSystem().serviceDependencies,
+                        platformDependencies: SystemService.getCurrentSystem().platformDependencies,
                         serviceDependenciesTable: typeof window !== 'undefined' ? (window.currentServiceDependenciesTableData || []) : []
                     };
                     break;
                 case 'roadmapView':
                     contextData.data = {
-                        initiatives: currentSystemData.yearlyInitiatives,
-                        goals: currentSystemData.goals,
-                        themes: currentSystemData.definedThemes
+                        initiatives: SystemService.getCurrentSystem().yearlyInitiatives,
+                        goals: SystemService.getCurrentSystem().goals,
+                        themes: SystemService.getCurrentSystem().definedThemes
                     };
                     break;
                     break;
                 case 'managementView':
                     contextData.data = {
                         viewTitle: "Product Management",
-                        themes: currentSystemData.definedThemes || [],
-                        initiatives: (currentSystemData.yearlyInitiatives || []).map(i => ({
+                        themes: SystemService.getCurrentSystem().definedThemes || [],
+                        initiatives: (SystemService.getCurrentSystem().yearlyInitiatives || []).map(i => ({
                             title: i.title,
                             themeId: i.attributes?.themeId
                         }))
@@ -844,7 +844,7 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
                     };
                     break;
                 default:
-                    contextData.data = currentSystemData;
+                    contextData.data = SystemService.getCurrentSystem();
                     break;
             }
         } catch (error) {

@@ -133,7 +133,7 @@ function renderGanttPlanningView(container) {
     }
 
     // Updated to use WorkPackageService directly
-    WorkPackageService.ensureWorkPackagesForInitiatives(currentSystemData, currentGanttYear);
+    WorkPackageService.ensureWorkPackagesForInitiatives(SystemService.getCurrentSystem(), currentGanttYear);
 
     // 1. Set Workspace Metadata (Header)
     if (window.workspaceComponent) {
@@ -225,7 +225,7 @@ function generateGanttToolbar() {
     yearSelect.className = 'form-select form-select-sm';
 
     const years = Array.from(new Set(
-        (currentSystemData?.yearlyInitiatives || [])
+        (SystemService.getCurrentSystem()?.yearlyInitiatives || [])
             .map(init => init.attributes?.planningYear)
             .filter(y => y)
     ));
@@ -351,7 +351,7 @@ function createLabeledControl(labelText, controlEl) {
 }
 
 function getGanttFilteredInitiatives() {
-    let initiatives = currentSystemData?.yearlyInitiatives ? [...currentSystemData.yearlyInitiatives] : [];
+    let initiatives = SystemService.getCurrentSystem()?.yearlyInitiatives ? [...SystemService.getCurrentSystem().yearlyInitiatives] : [];
     const yearFilter = document.getElementById('ganttYearFilter')?.value || currentGanttYear;
     if (yearFilter && yearFilter !== 'all') {
         initiatives = initiatives.filter(init => (init.attributes?.planningYear || '').toString() === yearFilter.toString());
@@ -377,7 +377,7 @@ function renderGanttTable() {
     const container = document.getElementById('ganttPlanningTableContainer');
     if (!container) return;
     // Updated to use WorkPackageService directly
-    WorkPackageService.ensureWorkPackagesForInitiatives(currentSystemData, currentGanttYear);
+    WorkPackageService.ensureWorkPackagesForInitiatives(SystemService.getCurrentSystem(), currentGanttYear);
     const focus = getGanttFocusContext();
     const selectedTeam = (currentGanttGroupBy === 'Team') ? (document.getElementById('ganttGroupValue')?.value || 'all') : null;
     const showManagerTeams = currentGanttGroupBy === 'Manager' && (document.getElementById('ganttManagerFilter')?.value || 'all') !== 'all';
@@ -446,9 +446,9 @@ function renderGanttTable() {
         return;
     }
 
-    const workingDaysPerYear = currentSystemData?.capacityConfiguration?.workingDaysPerYear || 261;
-    const allInitiatives = currentSystemData?.yearlyInitiatives || [];
-    const allWorkPackages = currentSystemData.workPackages || [];
+    const workingDaysPerYear = SystemService.getCurrentSystem()?.capacityConfiguration?.workingDaysPerYear || 261;
+    const allInitiatives = SystemService.getCurrentSystem()?.yearlyInitiatives || [];
+    const allWorkPackages = SystemService.getCurrentSystem().workPackages || [];
     // Seed initialization flag without auto-expanding WPs (default collapsed)
     if (!ganttWorkPackagesInitialized) {
         ganttWorkPackagesInitialized = true;
@@ -629,11 +629,11 @@ function renderGanttTable() {
             const id = target.dataset.id;
             const init = initiativeMap.get(id);
             const defaults = { startDate: init?.displayStart, endDate: init?.displayEnd };
-            const wp = WorkPackageService.addWorkPackage(currentSystemData, id, defaults);
+            const wp = WorkPackageService.addWorkPackage(SystemService.getCurrentSystem(), id, defaults);
             if (wp) {
                 ganttExpandedInitiatives.add(id);
                 ganttExpandedWorkPackages.add(wp.workPackageId);
-                WorkPackageService.syncInitiativeTotals(id, currentSystemData);
+                WorkPackageService.syncInitiativeTotals(id, SystemService.getCurrentSystem());
                 if (typeof saveSystemChanges === 'function') {
                     saveSystemChanges();
                 }
@@ -646,9 +646,9 @@ function renderGanttTable() {
             if (!await window.notificationManager.confirm('Delete this work package?', 'Delete Work Package', { confirmStyle: 'danger' })) {
                 return;
             }
-            const deleted = WorkPackageService.deleteWorkPackage(currentSystemData, wpId);
+            const deleted = WorkPackageService.deleteWorkPackage(SystemService.getCurrentSystem(), wpId);
             ganttExpandedWorkPackages.delete(wpId);
-            WorkPackageService.syncInitiativeTotals(initId, currentSystemData);
+            WorkPackageService.syncInitiativeTotals(initId, SystemService.getCurrentSystem());
             if (typeof saveSystemChanges === 'function') {
                 saveSystemChanges();
             }
@@ -685,12 +685,12 @@ function renderGanttTable() {
         const kind = e.target.dataset.kind;
         if (kind === 'initiative') {
             const id = e.target.dataset.id;
-            const init = (currentSystemData.yearlyInitiatives || []).find(i => i.initiativeId === id);
+            const init = (SystemService.getCurrentSystem().yearlyInitiatives || []).find(i => i.initiativeId === id);
             if (!init) return;
             const value = e.target.value;
             const hasWpsForInit = hasWorkPackagesForInitiative(id);
             const selectedTeamLocal = (currentGanttGroupBy === 'Team') ? (document.getElementById('ganttGroupValue')?.value || 'all') : null;
-            const workingDaysPerYearLocal = currentSystemData?.capacityConfiguration?.workingDaysPerYear || 261;
+            const workingDaysPerYearLocal = SystemService.getCurrentSystem()?.capacityConfiguration?.workingDaysPerYear || 261;
             if (field === 'startDate') {
                 if (hasWpsForInit) {
                     window.notificationManager.showToast('Initiative dates cannot be edited when work packages exist. Edit at the work package level.', 'warning');
@@ -732,9 +732,9 @@ function renderGanttTable() {
                 }
             }
             if (typeof ensureWorkPackagesForInitiatives === 'function') {
-                ensureWorkPackagesForInitiatives(currentSystemData);
+                ensureWorkPackagesForInitiatives(SystemService.getCurrentSystem());
                 if (typeof syncInitiativeTotals === 'function') {
-                    syncInitiativeTotals(init.initiativeId, currentSystemData);
+                    syncInitiativeTotals(init.initiativeId, SystemService.getCurrentSystem());
                 }
             }
             if (typeof saveSystemChanges === 'function') {
@@ -757,7 +757,7 @@ function renderGanttTable() {
             }
             const wp = typeof updateWorkPackage === 'function'
                 ? updateWorkPackage(wpId, updates)
-                : (currentSystemData.workPackages || []).find(w => w.workPackageId === wpId);
+                : (SystemService.getCurrentSystem().workPackages || []).find(w => w.workPackageId === wpId);
             if (!wp) return;
             if (updates.startDate) {
                 (wp.impactedTeamAssignments || []).forEach(assign => assign.startDate = updates.startDate || assign.startDate);
@@ -766,7 +766,7 @@ function renderGanttTable() {
                 (wp.impactedTeamAssignments || []).forEach(assign => assign.endDate = updates.endDate || assign.endDate);
             }
             if (typeof syncInitiativeTotals === 'function') {
-                syncInitiativeTotals(initId, currentSystemData);
+                syncInitiativeTotals(initId, SystemService.getCurrentSystem());
             }
             if (typeof saveSystemChanges === 'function') {
                 saveSystemChanges();
@@ -778,7 +778,7 @@ function renderGanttTable() {
             const initId = e.target.dataset.initiativeId;
             const teamId = e.target.dataset.teamId || null;
             const field = e.target.dataset.field;
-            const wp = (currentSystemData.workPackages || []).find(w => w.workPackageId === wpId);
+            const wp = (SystemService.getCurrentSystem().workPackages || []).find(w => w.workPackageId === wpId);
             if (!wp) return;
             const assign = (wp.impactedTeamAssignments || []).find(a => `${a.teamId || ''}` === `${teamId || ''}`);
             if (!assign) return;
@@ -796,7 +796,7 @@ function renderGanttTable() {
                 recalculateWorkPackageDates(wp);
             }
             if (typeof syncInitiativeTotals === 'function') {
-                syncInitiativeTotals(initId, currentSystemData);
+                syncInitiativeTotals(initId, SystemService.getCurrentSystem());
             }
             if (typeof saveSystemChanges === 'function') {
                 saveSystemChanges();
@@ -808,7 +808,7 @@ function renderGanttTable() {
             const initId = e.target.dataset.initiativeId;
             const assignId = e.target.dataset.assignId;
             const depId = e.target.dataset.value;
-            const wp = (currentSystemData.workPackages || []).find(w => w.workPackageId === wpId);
+            const wp = (SystemService.getCurrentSystem().workPackages || []).find(w => w.workPackageId === wpId);
             if (!wp || !assignId || !depId) return;
             const assign = getAssignmentByTaskId(wp, assignId);
             if (!assign) return;
@@ -838,11 +838,11 @@ function renderGanttTable() {
         } else if (kind === 'wp-dep') {
             const wpId = e.target.dataset.wpId;
             const depId = e.target.dataset.value;
-            const wp = (currentSystemData.workPackages || []).find(w => w.workPackageId === wpId);
+            const wp = (SystemService.getCurrentSystem().workPackages || []).find(w => w.workPackageId === wpId);
             if (!wp) return;
             const deps = new Set(wp.dependencies || []);
             if (e.target.checked) {
-                const allWps = currentSystemData.workPackages || [];
+                const allWps = SystemService.getCurrentSystem().workPackages || [];
                 if (wouldCreateDependencyCycle(wpId, depId, allWps)) {
                     e.target.checked = false;
                     console.warn(`[GANTT] Prevented circular dependency: ${wpId} -> ${depId}`);
@@ -867,7 +867,7 @@ function renderGanttTable() {
         } else if (kind === 'init-dep') {
             const initId = e.target.dataset.initId;
             const depId = e.target.dataset.value;
-            const initiative = (currentSystemData.yearlyInitiatives || []).find(i => i.initiativeId === initId);
+            const initiative = (SystemService.getCurrentSystem().yearlyInitiatives || []).find(i => i.initiativeId === initId);
             if (!initiative) return;
             const deps = new Set(initiative.dependencies || []);
             if (e.target.checked) {
@@ -904,12 +904,12 @@ function computeSdeEstimate(init) {
 
 function getWorkPackagesForInitiative(initiativeId) {
     if (!initiativeId) return [];
-    WorkPackageService.ensureWorkPackagesForInitiatives(currentSystemData, currentGanttYear);
-    return (currentSystemData.workPackages || []).filter(wp => wp.initiativeId === initiativeId);
+    WorkPackageService.ensureWorkPackagesForInitiatives(SystemService.getCurrentSystem(), currentGanttYear);
+    return (SystemService.getCurrentSystem().workPackages || []).filter(wp => wp.initiativeId === initiativeId);
 }
 
 function computeWorkPackageSdeYears(wp, workingDaysPerYear, selectedTeam = null) {
-    const wpy = workingDaysPerYear || currentSystemData?.capacityConfiguration?.workingDaysPerYear || 261;
+    const wpy = workingDaysPerYear || SystemService.getCurrentSystem()?.capacityConfiguration?.workingDaysPerYear || 261;
     const assignments = wp?.impactedTeamAssignments || [];
     const filtered = (selectedTeam && selectedTeam !== 'all')
         ? assignments.filter(a => a.teamId === selectedTeam)
@@ -922,7 +922,7 @@ function formatWorkPackageTeams(wp, selectedTeam = null) {
     const teams = new Set();
     (wp?.impactedTeamAssignments || []).forEach(assign => {
         if (selectedTeam && selectedTeam !== 'all' && assign.teamId !== selectedTeam) return;
-        const team = (currentSystemData.teams || []).find(t => t.teamId === assign.teamId);
+        const team = (SystemService.getCurrentSystem().teams || []).find(t => t.teamId === assign.teamId);
         if (team) teams.add(team.teamIdentity || team.teamName || assign.teamId);
     });
     if (teams.size === 0 && selectedTeam && selectedTeam !== 'all') {
@@ -932,11 +932,11 @@ function formatWorkPackageTeams(wp, selectedTeam = null) {
 }
 
 function getWorkingDaysPerYear() {
-    return currentSystemData?.capacityConfiguration?.workingDaysPerYear || 261;
+    return SystemService.getCurrentSystem()?.capacityConfiguration?.workingDaysPerYear || 261;
 }
 
 function getTeamName(teamId) {
-    const team = (currentSystemData.teams || []).find(t => t.teamId === teamId);
+    const team = (SystemService.getCurrentSystem().teams || []).find(t => t.teamId === teamId);
     return team ? (team.teamIdentity || team.teamName || teamId) : teamId;
 }
 
@@ -951,7 +951,7 @@ function getAssignmentByTaskId(wp, assignTaskId) {
 }
 
 function hasWorkPackagesForInitiative(initiativeId) {
-    return (currentSystemData.workPackages || []).some(wp => wp.initiativeId === initiativeId);
+    return (SystemService.getCurrentSystem().workPackages || []).some(wp => wp.initiativeId === initiativeId);
 }
 
 // getEarliestAssignmentStart and getLatestAssignmentEnd are now provided via GanttService aliases at top of file
@@ -1233,7 +1233,7 @@ function setupGanttRendererToggle() {
 
 function getTeamsByManager(managerId) {
     const teams = new Set();
-    (currentSystemData.teams || []).forEach(team => {
+    (SystemService.getCurrentSystem().teams || []).forEach(team => {
         if (team.sdmId === managerId) teams.add(team.teamId);
     });
     return teams;
@@ -1242,7 +1242,7 @@ function getTeamsByManager(managerId) {
 function getTeamsForInitiative(init) {
     const teamNames = [];
     (init.assignments || []).forEach(a => {
-        const team = (currentSystemData.teams || []).find(t => t.teamId === a.teamId);
+        const team = (SystemService.getCurrentSystem().teams || []).find(t => t.teamId === a.teamId);
         if (team) {
             teamNames.push(team.teamIdentity || team.teamName || a.teamId);
         }
@@ -1252,7 +1252,7 @@ function getTeamsForInitiative(init) {
 
 function getComputedInitiativeDates(init, selectedTeam = null) {
     // Prefer work package spans
-    const workPackages = (currentSystemData.workPackages || []).filter(wp => wp.initiativeId === init.initiativeId);
+    const workPackages = (SystemService.getCurrentSystem().workPackages || []).filter(wp => wp.initiativeId === init.initiativeId);
     const year = init.attributes?.planningYear || currentGanttYear || new Date().getFullYear();
     const defaultStart = `${year}-01-15`;
     const defaultEnd = `${year}-11-01`;
@@ -1283,8 +1283,8 @@ function getComputedInitiativeDates(init, selectedTeam = null) {
 
 function setWorkPackageDatesForTeam(initiativeId, { startDate, endDate }, selectedTeam = null) {
     if (!initiativeId) return;
-    WorkPackageService.ensureWorkPackagesForInitiatives(currentSystemData);
-    const wps = (currentSystemData.workPackages || []).filter(wp => wp.initiativeId === initiativeId);
+    WorkPackageService.ensureWorkPackagesForInitiatives(SystemService.getCurrentSystem());
+    const wps = (SystemService.getCurrentSystem().workPackages || []).filter(wp => wp.initiativeId === initiativeId);
     wps.forEach(wp => {
         (wp.impactedTeamAssignments || []).forEach(assign => {
             if (selectedTeam && selectedTeam !== 'all' && assign.teamId !== selectedTeam) return;
@@ -1299,13 +1299,13 @@ function setWorkPackageDatesForTeam(initiativeId, { startDate, endDate }, select
         if (startDate) wp.startDate = startDate;
         if (endDate) wp.endDate = endDate;
     });
-    WorkPackageService.syncInitiativeTotals(initiativeId, currentSystemData);
+    WorkPackageService.syncInitiativeTotals(initiativeId, SystemService.getCurrentSystem());
 }
 
 function updateWorkPackageSde(initiativeId, teamId, sdeYears, workingDaysPerYear) {
     if (!initiativeId) return;
-    WorkPackageService.ensureWorkPackagesForInitiatives(currentSystemData);
-    const wps = (currentSystemData.workPackages || []).filter(wp => wp.initiativeId === initiativeId);
+    WorkPackageService.ensureWorkPackagesForInitiatives(SystemService.getCurrentSystem());
+    const wps = (SystemService.getCurrentSystem().workPackages || []).filter(wp => wp.initiativeId === initiativeId);
     const sdeDays = (sdeYears || 0) * (workingDaysPerYear || 261);
     wps.forEach(wp => {
         let updated = false;
@@ -1329,18 +1329,18 @@ function updateWorkPackageSde(initiativeId, teamId, sdeYears, workingDaysPerYear
         WorkPackageService.recalculateWorkPackageDates(wp);
     });
 
-    WorkPackageService.syncInitiativeTotals(initiativeId, currentSystemData);
+    WorkPackageService.syncInitiativeTotals(initiativeId, SystemService.getCurrentSystem());
 }
 
 function syncInitiativeDependenciesFromWorkPackages(initiativeId) {
     if (!initiativeId) return;
-    const initiative = (currentSystemData.yearlyInitiatives || []).find(i => i.initiativeId === initiativeId);
+    const initiative = (SystemService.getCurrentSystem().yearlyInitiatives || []).find(i => i.initiativeId === initiativeId);
     if (!initiative) return;
     const deps = new Set();
-    const wps = (currentSystemData.workPackages || []).filter(w => w.initiativeId === initiativeId);
+    const wps = (SystemService.getCurrentSystem().workPackages || []).filter(w => w.initiativeId === initiativeId);
     wps.forEach(wp => {
         (wp.dependencies || []).forEach(depWpId => {
-            const targetWp = (currentSystemData.workPackages || []).find(other => other.workPackageId === depWpId);
+            const targetWp = (SystemService.getCurrentSystem().workPackages || []).find(other => other.workPackageId === depWpId);
             if (targetWp && targetWp.initiativeId && targetWp.initiativeId !== initiativeId) {
                 deps.add(targetWp.initiativeId);
             }
@@ -1355,7 +1355,7 @@ async function renderGanttChart() {
     const container = document.getElementById('ganttChartContainer');
     if (!container) return;
     if (typeof ensureWorkPackagesForInitiatives === 'function') {
-        ensureWorkPackagesForInitiatives(currentSystemData, currentGanttYear);
+        ensureWorkPackagesForInitiatives(SystemService.getCurrentSystem(), currentGanttYear);
     }
     const focus = getGanttFocusContext();
     const selectedTeam = (currentGanttGroupBy === 'Team') ? (document.getElementById('ganttGroupValue')?.value || 'all') : null;
@@ -1367,7 +1367,7 @@ async function renderGanttChart() {
     const tasks = (window.ganttAdapter && typeof window.ganttAdapter.buildTasksFromInitiatives === 'function')
         ? window.ganttAdapter.buildTasksFromInitiatives({
             initiatives,
-            workPackages: currentSystemData.workPackages || [],
+            workPackages: SystemService.getCurrentSystem().workPackages || [],
             viewBy: currentGanttGroupBy,
             filters: { status: ganttStatusFilter },
             year: currentGanttYear,
@@ -1525,7 +1525,7 @@ function handleGanttUpdate({ task, start, end }) {
 
     if (task.type === 'initiative') {
         const initId = task.initiativeId;
-        const init = (currentSystemData.yearlyInitiatives || []).find(i => i.initiativeId === initId);
+        const init = (SystemService.getCurrentSystem().yearlyInitiatives || []).find(i => i.initiativeId === initId);
         if (!init) return;
 
         // Check if has WPs - if so, warn and revert (re-render)
@@ -1544,7 +1544,7 @@ function handleGanttUpdate({ task, start, end }) {
 
     } else if (task.type === 'workPackage') {
         const wpId = task.workPackageId;
-        const wp = (currentSystemData.workPackages || []).find(w => w.workPackageId === wpId);
+        const wp = (SystemService.getCurrentSystem().workPackages || []).find(w => w.workPackageId === wpId);
         if (!wp) return;
 
         const assignments = wp.impactedTeamAssignments || [];
@@ -1566,7 +1566,7 @@ function handleGanttUpdate({ task, start, end }) {
     } else if (task.type === 'assignment') {
         const wpId = task.workPackageId;
         const teamId = task.teamId;
-        const wp = (currentSystemData.workPackages || []).find(w => w.workPackageId === wpId);
+        const wp = (SystemService.getCurrentSystem().workPackages || []).find(w => w.workPackageId === wpId);
         if (!wp) return;
 
         const assign = (wp.impactedTeamAssignments || []).find(a => a.teamId === teamId);
@@ -1580,13 +1580,13 @@ function handleGanttUpdate({ task, start, end }) {
         WorkPackageService.recalculateWorkPackageDates(wp);
         // Keep initiative rollup in sync
         if (task.initiativeId) {
-            WorkPackageService.syncInitiativeTotals(task.initiativeId, currentSystemData);
+            WorkPackageService.syncInitiativeTotals(task.initiativeId, SystemService.getCurrentSystem());
         }
     }
 
     // Sync totals and save
     if (task.initiativeId) {
-        WorkPackageService.syncInitiativeTotals(task.initiativeId, currentSystemData);
+        WorkPackageService.syncInitiativeTotals(task.initiativeId, SystemService.getCurrentSystem());
     }
     if (typeof saveSystemChanges === 'function') {
         saveSystemChanges();
@@ -1611,7 +1611,7 @@ function renderDynamicGroupFilter() {
         defaultOption.value = 'all';
         defaultOption.textContent = 'All Teams';
         select.appendChild(defaultOption);
-        (currentSystemData.teams || [])
+        (SystemService.getCurrentSystem().teams || [])
             .slice()
             .sort((a, b) => (a.teamIdentity || a.teamName).localeCompare(b.teamIdentity || b.teamName))
             .forEach(team => {

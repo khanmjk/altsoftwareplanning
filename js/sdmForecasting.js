@@ -80,8 +80,8 @@ function generateSdmToolbar() {
     teamSelect.style.minWidth = '200px';
     teamSelect.appendChild(new Option('-- Select a Team --', ''));
 
-    if (currentSystemData && currentSystemData.teams) {
-        currentSystemData.teams.forEach(team => {
+    if (SystemService.getCurrentSystem() && SystemService.getCurrentSystem().teams) {
+        SystemService.getCurrentSystem().teams.forEach(team => {
             const teamDisplayName = team.teamIdentity || team.teamName || team.teamId;
             teamSelect.appendChild(new Option(teamDisplayName, team.teamId));
         });
@@ -141,7 +141,7 @@ function loadSdmForecastInputsForTeam(teamId) {
         return;
     }
 
-    const team = currentSystemData?.teams?.find(t => t.teamId === teamId);
+    const team = SystemService.getCurrentSystem()?.teams?.find(t => t.teamId === teamId);
 
     if (!team) {
         console.error(`Team data not found for ID: ${teamId}`);
@@ -460,12 +460,12 @@ function generateForecast_SDM() {
         clearSdmForecastOutputs();
         return;
     }
-    if (!currentSystemData?.capacityConfiguration?.workingDaysPerYear || currentSystemData.capacityConfiguration.workingDaysPerYear <= 0) {
+    if (!SystemService.getCurrentSystem()?.capacityConfiguration?.workingDaysPerYear || SystemService.getCurrentSystem().capacityConfiguration.workingDaysPerYear <= 0) {
         window.notificationManager.showToast("Cannot run forecast: 'Standard Working Days Per Year' must be configured in Capacity Constraints and be greater than 0.", "error");
         clearSdmForecastOutputs();
         return;
     }
-    if (!currentSystemData?.capacityConfiguration?.leaveTypes) {
+    if (!SystemService.getCurrentSystem()?.capacityConfiguration?.leaveTypes) {
         console.warn("Leave types not defined in capacity configuration. Proceeding with defaults (0).");
     }
 
@@ -640,8 +640,8 @@ function simulateTeamSize_SDM(
 
     // --- If a specific team is provided, calculate its detailed capacity ---
     if (selectedTeamId) {
-        const team = currentSystemData?.teams?.find(t => t.teamId === selectedTeamId);
-        const capacityConfig = currentSystemData?.capacityConfiguration;
+        const team = SystemService.getCurrentSystem()?.teams?.find(t => t.teamId === selectedTeamId);
+        const capacityConfig = SystemService.getCurrentSystem()?.capacityConfiguration;
 
         if (!team) {
             console.error(`Simulation error: Team not found for ID: ${selectedTeamId}`);
@@ -892,7 +892,7 @@ function generateOutputSummary_SDM(hiringRate, closeGapWeek, selectedTeamId, sim
     const summaryDiv = document.getElementById('outputSummary_SDM');
     if (!summaryDiv) { console.error("Output summary div #outputSummary_SDM not found."); return; }
 
-    const team = currentSystemData?.teams?.find(t => t.teamId === selectedTeamId);
+    const team = SystemService.getCurrentSystem()?.teams?.find(t => t.teamId === selectedTeamId);
     const teamName = team ? (team.teamIdentity || team.teamName) : 'the selected team';
 
     // Get current input values using NEW IDs

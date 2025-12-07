@@ -118,7 +118,7 @@ async function _fetchWithRetry(url, options, maxRetries = 5, initialDelay = 1000
  * @param {string} userPrompt The user's description (e.g., "A spreadsheet app").
  * @param {string} apiKey The user's API key.
  * @param {string} provider The selected provider (e.g., "google-gemini").
- * @returns {Promise<object|null>} A promise that resolves to the new currentSystemData object or null on failure.
+ * @returns {Promise<object|null>} A promise that resolves to the new SystemService.getCurrentSystem() object or null on failure.
  */
 async function generateSystemFromPrompt(userPrompt, apiKey, provider, spinnerP = null) {
     // [LOG] Added for debugging

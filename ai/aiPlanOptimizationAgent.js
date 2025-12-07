@@ -109,7 +109,7 @@ const aiPlanOptimizationAgent = (() => {
             const { btlCount: afterBtlCount, overloadedTeams: afterOverloadedTeams } = _analyzePlanState(tempPlanTableData, tempSummaryData);
 
             const changesNarrative = proposedChanges.map((change, idx) => {
-                const init = currentSystemData.yearlyInitiatives.find(i => i.initiativeId === change.initiativeId);
+                const init = SystemService.getCurrentSystem().yearlyInitiatives.find(i => i.initiativeId === change.initiativeId);
                 const oldSde = (init.assignments.find(a => a.teamId === change.teamId)?.sdeYears || 0);
                 const teamName = getTeamNameById(change.teamId);
                 return `- **${idx + 1}. ${init.title} – ${teamName}:** Reduce from \`${oldSde.toFixed(2)}\` to \`${change.newSdeYears.toFixed(2)}\` SDEs.\n  - *Justification:* ${change.justification}`;
@@ -348,11 +348,11 @@ If you cannot find a good change, respond with null.
     }
 
     /**
-     * Applies a list of changes to a deep copy of currentSystemData
+     * Applies a list of changes to a deep copy of SystemService.getCurrentSystem()
      * and recalculates the plan.
      */
     function _applyChangesToTempData(changes) {
-        const tempSystemData = JSON.parse(JSON.stringify(currentSystemData));
+        const tempSystemData = JSON.parse(JSON.stringify(SystemService.getCurrentSystem()));
 
         changes.forEach(change => {
             const init = tempSystemData.yearlyInitiatives.find(i => i.initiativeId === change.initiativeId);

@@ -1,17 +1,3 @@
-/**
- * Backward-compatible shim for currentSystemData.
- * Delegates to SystemService for actual state management.
- * This allows gradual migration of 450+ references.
- * 
- * NOTE: Do NOT declare 'let currentSystemData' as it would shadow this global.
- */
-Object.defineProperty(window, 'currentSystemData', {
-    get() { return SystemService.getCurrentSystem(); },
-    set(value) { SystemService.setCurrentSystem(value); },
-    configurable: true,
-    enumerable: true
-});
-
 let currentMode = appState.Modes.NAVIGATION;
 
 // Fallback HTML snippets for components when fetch is unavailable (e.g., file:// protocol)
@@ -304,7 +290,7 @@ function createNewSystem() {
     const defaultSystemData = SystemService.createSystem();
 
     SystemService.setCurrentSystem(defaultSystemData);
-    console.log("Initialized new currentSystemData via SystemService.");
+    console.log("Initialized new system via SystemService.");
 
     navigationManager.navigateTo('systemEditForm');
 }
@@ -337,12 +323,13 @@ window.resetToDefaults = resetToDefaults;
 function deleteSystem() {
     console.log("Initiating system deletion process...");
 
-    if (!currentSystemData || !currentSystemData.systemName) {
+    const currentSystem = SystemService.getCurrentSystem();
+    if (!currentSystem || !currentSystem.systemName) {
         window.notificationManager.showToast('No system currently loaded to delete.', 'warning');
         return;
     }
 
-    const systemName = currentSystemData.systemName;
+    const systemName = currentSystem.systemName;
 
     // Protection for sample systems
     if (window.systemRepository.isSampleSystem(systemName)) {
@@ -374,7 +361,8 @@ async function confirmAndDeleteSystem(systemName) {
                 window.notificationManager.showToast(`System "${systemName}" has been deleted.`, 'success');
 
                 // If we deleted the current system, return to home
-                if (currentSystemData && currentSystemData.systemName === systemName) {
+                const currentSystem = SystemService.getCurrentSystem();
+                if (currentSystem && currentSystem.systemName === systemName) {
                     appState.closeCurrentSystem();
                 }
             } else {
@@ -390,30 +378,31 @@ window.confirmAndDeleteSystem = confirmAndDeleteSystem;
 
 /** Save System Changes **/
 function saveSystemChanges() {
-    console.log("saveSystemChanges called. Persisting currentSystemData.");
+    console.log("saveSystemChanges called. Persisting current system data.");
 
-    if (!currentSystemData || !currentSystemData.systemName) {
+    const currentSystem = SystemService.getCurrentSystem();
+    if (!currentSystem || !currentSystem.systemName) {
         window.notificationManager.showToast('System name cannot be empty if trying to save.', 'error');
         // Attempt to get it from input if in edit mode
         const systemNameInput = document.getElementById('systemNameInput');
-        if (systemNameInput && systemNameInput.value.trim()) {
-            currentSystemData.systemName = systemNameInput.value.trim();
+        if (systemNameInput && systemNameInput.value.trim() && currentSystem) {
+            currentSystem.systemName = systemNameInput.value.trim();
         } else {
-            console.error("Cannot save: System name is missing in currentSystemData.");
+            console.error("Cannot save: System name is missing.");
             return false;
         }
     }
     // Ensure description is also up-to-date if possible
     const systemDescriptionTextarea = document.getElementById('systemDescriptionInput');
-    if (systemDescriptionTextarea && currentSystemData) {
-        currentSystemData.systemDescription = systemDescriptionTextarea.value.trim();
+    if (systemDescriptionTextarea && currentSystem) {
+        currentSystem.systemDescription = systemDescriptionTextarea.value.trim();
     }
 
     // Delegate to SystemService
-    const success = SystemService.saveSystem(currentSystemData);
+    const success = SystemService.saveSystem(currentSystem);
 
     if (success) {
-        window.notificationManager.showToast(`System "${currentSystemData.systemName}" saved successfully.`, 'success');
+        window.notificationManager.showToast(`System "${currentSystem.systemName}" saved successfully.`, 'success');
 
         // Update sidebar state
         if (window.sidebarComponent) {

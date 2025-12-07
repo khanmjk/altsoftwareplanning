@@ -15,7 +15,7 @@ const ALL_INITIATIVE_STATUSES = ['Backlog', 'Defined', 'Committed', 'Completed']
 
 // Helper to get team name (you might already have this or similar)
 function getTeamNameById(teamId) {
-    return OrgService.getTeamNameById(currentSystemData, teamId);
+    return OrgService.getTeamNameById(SystemService.getCurrentSystem(), teamId);
 }
 
 
@@ -133,18 +133,18 @@ function generateUniqueId(prefix = 'id') {
 
 // --- NEW CRUD functions for Initiatives ---
 /**
- * Adds a new initiative to currentSystemData.yearlyInitiatives.
+ * Adds a new initiative to SystemService.getCurrentSystem().yearlyInitiatives.
  * @param {object} initiativeData - The initiative object to add.
  * @returns {object|null} The added initiative with an ID, or null if failed.
  */
 function addInitiative(initiativeData) {
-    const result = InitiativeService.addInitiative(currentSystemData, initiativeData);
+    const result = InitiativeService.addInitiative(SystemService.getCurrentSystem(), initiativeData);
     if (result) console.log("Added initiative:", result);
     return result;
 }
 
 /**
- * Adds a new engineer to the global roster (`currentSystemData.allKnownEngineers`).
+ * Adds a new engineer to the global roster (`SystemService.getCurrentSystem().allKnownEngineers`).
  * Optionally assigns the engineer to a team by calling moveEngineerToTeam.
  * @param {object} engineerData
  * @param {string} engineerData.name
@@ -158,7 +158,7 @@ function addInitiative(initiativeData) {
  * @returns {object} The newly added engineer object.
  */
 function addEngineerToRoster(engineerData = {}) {
-    return OrgService.addEngineerToRoster(currentSystemData, engineerData);
+    return OrgService.addEngineerToRoster(SystemService.getCurrentSystem(), engineerData);
 }
 
 /**
@@ -169,9 +169,9 @@ function addEngineerToRoster(engineerData = {}) {
  * @returns {object} The updated engineer object.
  */
 function moveEngineerToTeam(engineerName, newTeamId) {
-    const result = OrgService.moveEngineerToTeam(currentSystemData, engineerName, newTeamId);
+    const result = OrgService.moveEngineerToTeam(SystemService.getCurrentSystem(), engineerName, newTeamId);
     // Recalculate capacity metrics (pure data, no UI refresh)
-    CapacityEngine.recalculate(currentSystemData);
+    CapacityEngine.recalculate(SystemService.getCurrentSystem());
     return result;
 }
 
@@ -185,7 +185,7 @@ function _generateIncrementalId(collection = [], idField, prefix) {
 }
 
 function addSeniorManager(name) {
-    return OrgService.addSeniorManager(currentSystemData, name);
+    return OrgService.addSeniorManager(SystemService.getCurrentSystem(), name);
 }
 
 function _normalizeNameForLookup(value) {
@@ -193,31 +193,31 @@ function _normalizeNameForLookup(value) {
 }
 
 function _resolveSeniorManagerIdentifier(identifier) {
-    return OrgService._resolveSeniorManagerIdentifier(currentSystemData, identifier);
+    return OrgService._resolveSeniorManagerIdentifier(SystemService.getCurrentSystem(), identifier);
 }
 
 function _resolveSdmIdentifier(identifier) {
-    return OrgService._resolveSdmIdentifier(currentSystemData, identifier);
+    return OrgService._resolveSdmIdentifier(SystemService.getCurrentSystem(), identifier);
 }
 
 function _resolveTeamIdentifier(identifier) {
-    return OrgService._resolveTeamIdentifier(currentSystemData, identifier);
+    return OrgService._resolveTeamIdentifier(SystemService.getCurrentSystem(), identifier);
 }
 
 function addSdm(name, seniorManagerId = null) {
-    return OrgService.addSdm(currentSystemData, name, seniorManagerId);
+    return OrgService.addSdm(SystemService.getCurrentSystem(), name, seniorManagerId);
 }
 
 function updateSdm(sdmId, updates = {}) {
-    return OrgService.updateSdm(currentSystemData, sdmId, updates);
+    return OrgService.updateSdm(SystemService.getCurrentSystem(), sdmId, updates);
 }
 
 function reassignTeamToSdm(teamIdentifier, newSdmIdentifier) {
-    return OrgService.reassignTeamToSdm(currentSystemData, teamIdentifier, newSdmIdentifier);
+    return OrgService.reassignTeamToSdm(SystemService.getCurrentSystem(), teamIdentifier, newSdmIdentifier);
 }
 
 function reassignSdmWithTeams(sdmIdentifier, destinationIdentifier, options = {}) {
-    return OrgService.reassignSdmWithTeams(currentSystemData, sdmIdentifier, destinationIdentifier, options);
+    return OrgService.reassignSdmWithTeams(SystemService.getCurrentSystem(), sdmIdentifier, destinationIdentifier, options);
 }
 
 /**
@@ -227,28 +227,28 @@ function reassignSdmWithTeams(sdmIdentifier, destinationIdentifier, options = {}
  * @returns {object} Information about the deletion.
  */
 function deleteSeniorManager(seniorManagerId, reassignToSeniorManagerId = null) {
-    return OrgService.deleteSeniorManager(currentSystemData, seniorManagerId, reassignToSeniorManagerId);
+    return OrgService.deleteSeniorManager(SystemService.getCurrentSystem(), seniorManagerId, reassignToSeniorManagerId);
 }
 
 /**
- * Updates an existing initiative in currentSystemData.yearlyInitiatives.
+ * Updates an existing initiative in SystemService.getCurrentSystem().yearlyInitiatives.
  * @param {string} initiativeId - The ID of the initiative to update.
  * @param {object} updates - An object containing the fields to update.
  * @returns {object|null} The updated initiative, or null if not found or failed.
  */
 function updateInitiative(initiativeId, updates) {
-    const result = InitiativeService.updateInitiative(currentSystemData, initiativeId, updates);
+    const result = InitiativeService.updateInitiative(SystemService.getCurrentSystem(), initiativeId, updates);
     if (result) console.log(`Updated initiative ${initiativeId}:`, result);
     return result;
 }
 
 /**
- * Deletes an initiative from currentSystemData.yearlyInitiatives.
+ * Deletes an initiative from SystemService.getCurrentSystem().yearlyInitiatives.
  * @param {string} initiativeId - The ID of the initiative to delete.
  * @returns {boolean} True if deletion was successful, false otherwise.
  */
 function deleteInitiative(initiativeId) {
-    const result = InitiativeService.deleteInitiative(currentSystemData, initiativeId);
+    const result = InitiativeService.deleteInitiative(SystemService.getCurrentSystem(), initiativeId);
     if (result) console.log(`Deleted initiative ${initiativeId}.`);
     return result;
 }
@@ -291,7 +291,7 @@ function formatDateToQuarterYear(dateString) {
  * Ensures all initiatives have a consistent `planningYear` attribute,
  * deriving it from the `targetDueDate` if available, or setting a default.
  * This function modifies the initiatives in place.
- * @param {Array<object>} initiatives - The array of yearly initiatives from currentSystemData.
+ * @param {Array<object>} initiatives - The array of yearly initiatives from SystemService.getCurrentSystem().
  */
 function ensureInitiativePlanningYears(initiatives) {
     if (!initiatives || !Array.isArray(initiatives)) {
