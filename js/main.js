@@ -93,11 +93,6 @@ async function loadHtmlComponent(url, targetId) {
     }
 }
 
-// --- Initialization ---
-// Moved initialization to window.onload to ensure correct order
-
-// --- AI Assistant & Settings Functions ---
-
 /**
  * Loads all app settings from localStorage.
  */
@@ -113,9 +108,6 @@ function formatAiStats(stats) {
     return AIService.formatAiStats(stats);
 }
 
-/**
- * Shows the AI stats modal with the latest metrics.
- */
 /**
  * Shows the AI stats modal with the latest metrics.
  */
@@ -249,24 +241,17 @@ window.onload = async function () {
     loadGlobalSettings();
 
     // Save sample systems if none exist
-    // Save sample systems if none exist
     SystemService.initializeDefaults();
 
     setTimeout(() => {
         // Check for view in URL
         const urlParams = new URLSearchParams(window.location.search);
         const initialView = urlParams.get('view');
-
         console.log(`Attempting initial navigation. URL View: ${initialView}`);
 
         navigationManager.navigateTo(initialView || 'welcomeView');
     }, 500);
 };
-
-/** Save Sample Systems to Local Storage if not already present **/
-
-
-
 
 /**
  * REVISED Load Saved System - Delegates to SystemService
@@ -312,14 +297,7 @@ function loadSavedSystem(systemName) {
 
     console.log("[Load] System loaded and UI updated.");
 }
-// window.loadSavedSystem = loadSavedSystem;
 
-// buildGlobalPlatformDependencies removed - logic moved to SystemService
-
-/**
- * Loads a system from local storage.
- * If multiple systems exist, shows a selection list.
- */
 /**
  * Loads a system from local storage.
  * If multiple systems exist, shows the Systems View.
@@ -348,8 +326,7 @@ function loadSystem() {
 }
 window.loadSystem = loadSystem;
 
-/** Updated function to handle "Create New Software System" button click **/
-/** Updated function to handle "Create New Software System" button click **/
+/** Creates a new blank software system **/
 function createNewSystem() {
     currentMode = appState.Modes.CREATING;
 
@@ -482,17 +459,6 @@ function saveSystemChanges() {
 }
 window.saveSystemChanges = saveSystemChanges;
 
-// validateEngineerAssignments removed - logic moved to SystemService
-
-
-
-
-
-
-
-
-
-
 /**
  * Centralized function to recalculate capacity metrics and refresh relevant views.
  * Should be called whenever capacity inputs (config, team structure, forecasts) change.
@@ -560,7 +526,6 @@ function refreshCurrentView() {
         case 'systemEditForm':
             showSystemEditForm(currentSystemData);
             break;
-            break;
         default:
             console.log(`[REFRESH] No specific refresh handler for view: ${currentViewId}`);
             break;
@@ -589,8 +554,3 @@ function initializeEventListeners() {
     initializeAiChatPanel();
     console.log("Event listeners initialized.");
 }
-
-
-
-
-
