@@ -1,9 +1,6 @@
 let currentSystemData = null;
-
-
-
-
 let currentMode = appState.Modes.NAVIGATION;
+
 // currentViewId is now managed globally on window by NavigationManager
 if (typeof window !== 'undefined' && !window.currentViewId) window.currentViewId = null;
 
@@ -31,10 +28,6 @@ function updateAiDependentUI(options = {}) {
 
 
 // Global state for engineer table sorting
-
-
-// For Planning Table Drag & Drop
-let draggedInitiativeId = null;
 
 // Store temporary assignments before adding initiative
 

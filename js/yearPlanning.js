@@ -8,6 +8,7 @@ let applyCapacityConstraintsToggle = false; // Default to OFF
 
 let currentYearPlanSummaryData = null;
 let currentYearPlanTableData = null;
+let draggedInitiativeId = null; // For drag-drop reordering
 let draggedRowElement = null; // For drag-drop row styling
 // =============================================
 
