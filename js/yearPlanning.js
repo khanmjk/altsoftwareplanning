@@ -1,10 +1,13 @@
 // js/yearPlanning.js
 
+// ========= Year Planning Module State =========
 // Global variable to store the currently selected planning year
 let currentPlanningYear = new Date().getFullYear();
 
 let currentYearPlanSummaryData = null; // [NEW]
 let currentYearPlanTableData = null; // [NEW]
+let draggedRowElement = null; // For drag-drop row styling
+// =============================================
 
 // [PATCH] Remember summary table expanded state across re-renders
 // Using window to ensure consistency with main.js toggle function

@@ -1,6 +1,31 @@
 /**
  * NEW Function: Renders the SDM Forecasting View into the Workspace
  */
+
+// ========= SDM Module State =========
+let totalRampedUpEngineersArray_SDM = [];
+let productiveEngineers_SDM = [];
+let cumulativeAttritionArray_SDM = [];
+let monthlyData_SDM = {};
+let totalHeadcountArray_SDM = [];
+let forecastChart_SDM = null;
+
+const weekToMonth_SDM = [
+    1, 1, 1, 1,    // Jan (4 weeks) Weeks 1-4
+    2, 2, 2, 2,    // Feb (4 weeks) Weeks 5-8
+    3, 3, 3, 3, 3, // Mar (5 weeks) Weeks 9-13
+    4, 4, 4, 4,    // Apr (4 weeks) Weeks 14-17
+    5, 5, 5, 5,    // May (4 weeks) Weeks 18-21
+    6, 6, 6, 6, 6, // Jun (5 weeks) Weeks 22-26
+    7, 7, 7, 7,    // Jul (4 weeks) Weeks 27-30
+    8, 8, 8, 8,    // Aug (4 weeks) Weeks 31-34
+    9, 9, 9, 9, 9, // Sep (5 weeks) Weeks 35-39
+    10, 10, 10, 10, // Oct (4 weeks) Weeks 40-43
+    11, 11, 11, 11, // Nov (4 weeks) Weeks 44-47
+    12, 12, 12, 12, 12 // Dec (5 weeks) Weeks 48-52
+];
+// ====================================
+
 /**
  * NEW Function: Renders the SDM Forecasting View into the Workspace
  */
