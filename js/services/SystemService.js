@@ -412,6 +412,186 @@ const SystemService = {
     deleteSystem(systemId) {
         if (!systemId) return false;
         return systemRepository.deleteSystem(systemId);
+    },
+
+    // ========================================
+    // HIGH-LEVEL ORCHESTRATION METHODS
+    // (Moved from main.js for cleaner architecture)
+    // ========================================
+
+    /**
+     * Loads a system by name and activates it (sets as current, navigates to view).
+     * @param {string} systemName - The system to load
+     * @returns {boolean} True if successful
+     */
+    loadAndActivate(systemName) {
+        console.log(`[SystemService] Loading and activating system: ${systemName}`);
+
+        const systemData = this.loadSystem(systemName);
+        if (!systemData) {
+            if (typeof notificationManager !== 'undefined') {
+                notificationManager.showToast(`System "${systemName}" not found.`, 'error');
+            }
+            return false;
+        }
+
+        this.setCurrentSystem(systemData);
+
+        // Start AI session
+        if (typeof aiAgentController !== 'undefined' && typeof aiAgentController.startSession === 'function') {
+            aiAgentController.startSession();
+        }
+
+        // Navigate to default view
+        if (typeof navigationManager !== 'undefined') {
+            navigationManager.navigateTo('visualizationCarousel');
+        }
+
+        // Update sidebar
+        if (typeof sidebarComponent !== 'undefined' && sidebarComponent) {
+            sidebarComponent.updateState();
+        }
+
+        console.log(`[SystemService] System "${systemName}" loaded and activated.`);
+        return true;
+    },
+
+    /**
+     * Creates a new blank system and activates it for editing.
+     * @returns {Object} The new system data
+     */
+    createAndActivate() {
+        const newSystem = this.createSystem();
+        this.setCurrentSystem(newSystem);
+
+        console.log("[SystemService] New system created and activated.");
+
+        if (typeof navigationManager !== 'undefined') {
+            navigationManager.navigateTo('systemEditForm');
+        }
+
+        return newSystem;
+    },
+
+    /**
+     * Saves the current system.
+     * Pure save - no DOM interaction.
+     * @returns {boolean} True if successful
+     */
+    save() {
+        const currentSystem = this.getCurrentSystem();
+        if (!currentSystem) {
+            console.error("[SystemService] Cannot save: No current system.");
+            return false;
+        }
+
+        const success = this.saveSystem(currentSystem);
+
+        if (success && typeof sidebarComponent !== 'undefined' && sidebarComponent) {
+            sidebarComponent.updateState();
+        }
+
+        return success;
+    },
+
+    /**
+     * Resets all systems to defaults (with user confirmation).
+     * @returns {Promise<boolean>} True if reset was performed
+     */
+    async resetToDefaults() {
+        if (typeof notificationManager === 'undefined') {
+            console.error("[SystemService] NotificationManager required for confirmation.");
+            return false;
+        }
+
+        const confirmed = await notificationManager.confirm(
+            'This will erase all your saved systems and restore the default sample systems. Do you want to proceed?',
+            'Reset to Defaults',
+            { confirmStyle: 'danger', confirmText: 'Reset' }
+        );
+
+        if (!confirmed) return false;
+
+        try {
+            systemRepository.clearAllSystems();
+            console.log('[SystemService] Cleared user systems from localStorage.');
+        } catch (error) {
+            console.error('[SystemService] Failed to clear storage:', error);
+            notificationManager.showToast('Unable to reset: storage could not be cleared.', 'error');
+            return false;
+        }
+
+        this.initializeDefaults({ forceOverwrite: true });
+        this.setCurrentSystem(null);
+        notificationManager.showToast('Systems have been reset to defaults.', 'success');
+
+        if (typeof appState !== 'undefined') {
+            appState.closeCurrentSystem();
+        }
+
+        return true;
+    },
+
+    /**
+     * Deletes the currently loaded system (with user confirmation).
+     * @returns {Promise<{success: boolean, reason?: string}>}
+     */
+    async deleteCurrentSystem() {
+        const currentSystem = this.getCurrentSystem();
+
+        if (!currentSystem?.systemName) {
+            if (typeof notificationManager !== 'undefined') {
+                notificationManager.showToast('No system currently loaded to delete.', 'warning');
+            }
+            return { success: false, reason: 'no_system' };
+        }
+
+        const systemName = currentSystem.systemName;
+
+        // Protection for sample systems
+        if (systemRepository.isSampleSystem(systemName)) {
+            if (typeof notificationManager !== 'undefined') {
+                notificationManager.showToast(`Cannot delete built-in sample system: "${systemName}".`, 'error');
+            }
+            return { success: false, reason: 'sample_system' };
+        }
+
+        // Confirmation
+        if (typeof notificationManager === 'undefined') {
+            console.error("[SystemService] NotificationManager required for confirmation.");
+            return { success: false, reason: 'no_notification_manager' };
+        }
+
+        const confirmed = await notificationManager.confirm(
+            `Are you sure you want to permanently delete "${systemName}"? This cannot be undone.`,
+            'Delete System',
+            { confirmStyle: 'danger', confirmText: 'Delete Forever' }
+        );
+
+        if (!confirmed) {
+            return { success: false, reason: 'cancelled' };
+        }
+
+        try {
+            const success = this.deleteSystem(systemName);
+
+            if (success) {
+                console.log(`[SystemService] System "${systemName}" deleted.`);
+                notificationManager.showToast(`System "${systemName}" has been deleted.`, 'success');
+
+                if (typeof appState !== 'undefined') {
+                    appState.closeCurrentSystem();
+                }
+                return { success: true, systemName };
+            } else {
+                notificationManager.showToast(`Could not delete "${systemName}".`, 'error');
+                return { success: false, reason: 'delete_failed' };
+            }
+        } catch (error) {
+            console.error("[SystemService] Error deleting system:", error);
+            notificationManager.showToast("An error occurred while deleting.", "error");
+            return { success: false, reason: 'error' };
+        }
     }
 
 };

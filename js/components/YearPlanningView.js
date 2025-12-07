@@ -967,7 +967,9 @@ class YearPlanningView {
                 WorkPackageService.syncInitiativeTotals(init.initiativeId, SystemService.getCurrentSystem());
             });
 
-            saveSystemChanges();
+            if (typeof SystemService !== 'undefined' && SystemService.save) {
+                SystemService.save();
+            }
             window.notificationManager?.showToast(`Plan for ${this.currentYear} saved successfully.`, "success");
             this.render();
         } catch (error) {

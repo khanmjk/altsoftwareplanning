@@ -173,7 +173,9 @@ ${changesNarrative}
         pendingPlanChanges = null; // Clear the pending changes
 
         // Save and refresh the main UI
-        if (typeof saveSystemChanges === 'function') saveSystemChanges();
+        if (typeof SystemService !== 'undefined' && SystemService.save) {
+            SystemService.save();
+        }
         if (window.navigationManager && typeof window.navigationManager.refresh === 'function') {
             window.navigationManager.refresh();
         }

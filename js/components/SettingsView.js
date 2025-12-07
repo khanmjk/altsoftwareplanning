@@ -253,11 +253,7 @@ class SettingsView {
      * Handle reset button click
      */
     handleReset() {
-        if (window.resetToDefaults) {
-            window.resetToDefaults();
-        } else {
-            console.error('SettingsView: resetToDefaults function not found');
-        }
+        SystemService.resetToDefaults();
     }
 
     /**
@@ -274,11 +270,7 @@ class SettingsView {
             return; // Button should be disabled, but extra check
         }
 
-        if (window.deleteSystem) {
-            window.deleteSystem();
-        } else {
-            console.error('SettingsView: deleteSystem function not found');
-        }
+        SystemService.deleteCurrentSystem();
     }
 
     /**

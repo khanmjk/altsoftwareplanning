@@ -111,13 +111,15 @@ class CapacityPlanningView {
     }
 
     saveChanges() {
-        if (window.saveSystemChanges) {
-            // Recalculate before saving to ensure persisted data is correct
+        if (typeof SystemService !== 'undefined' && SystemService.save) {
+            // Recalculate system-wide metrics before saving
             CapacityEngine.recalculate(SystemService.getCurrentSystem());
-            window.saveSystemChanges();
-            window.notificationManager.showToast('Capacity configuration saved successfully.', 'success');
+
+            SystemService.save();
+            this.render();
+            window.notificationManager?.showToast("Capacity configuration saved.", "success");
         } else {
-            console.error("saveSystemChanges not found");
+            console.error("SystemService.save not found");
         }
     }
 

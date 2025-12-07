@@ -421,8 +421,13 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
             }
         }
 
-        if (typeof saveSystemChanges === 'function') {
-            try { saveSystemChanges(); } catch (error) { console.error('saveSystemChanges failed:', error); }
+        // Save changes via SystemService
+        try {
+            if (typeof SystemService !== 'undefined' && SystemService.save) {
+                SystemService.save();
+            }
+        } catch (error) {
+            console.error('SystemService.save failed:', error);
         }
         if (window.navigationManager && typeof window.navigationManager.refresh === 'function') {
             try { window.navigationManager.refresh(); } catch (error) { console.error('navigationManager.refresh failed:', error); }

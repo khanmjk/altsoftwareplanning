@@ -76,7 +76,7 @@
                         onclick="if(window.navigationManager) window.navigationManager.navigateTo('systemsView')">
                         <i class="fas fa-folder-open sidebar__menu-icon"></i> Load System
                     </div>
-                    <div class="dropdown-item" onclick="if(window.createNewSystem) window.createNewSystem()">
+                    <div class="dropdown-item" onclick="SystemService.createAndActivate()">
                         <i class="fas fa-plus-circle sidebar__menu-icon"></i> New System
                     </div>
                     <div class="sidebar__menu-separator"></div>
@@ -218,7 +218,7 @@
 
                         <div class="welcome-grid">
                             <!-- Load System Card -->
-                            <div class="action-card" onclick="if(window.loadSystem) window.loadSystem()">
+                            <div class="action-card" onclick="navigationManager.navigateTo('systemsView')">
                                 <div class="action-card__icon-container action-card__icon-container--blue">
                                     <i class="fas fa-folder-open action-card__icon"></i>
                                 </div>
@@ -228,7 +228,7 @@
                             </div>
 
                             <!-- Create System Card -->
-                            <div class="action-card" onclick="if(window.createNewSystem) window.createNewSystem()">
+                            <div class="action-card" onclick="SystemService.createAndActivate()">
                                 <div class="action-card__icon-container action-card__icon-container--green">
                                     <i class="fas fa-plus-circle action-card__icon"></i>
                                 </div>

@@ -468,7 +468,9 @@ class RoadmapComponent {
             window.notificationManager.showToast(`Moved "${title}" to ${newYear}`, 'success');
         }
 
-        window.saveSystemChanges();
+        if (typeof SystemService !== 'undefined' && SystemService.save) {
+            SystemService.save();
+        }
         this.renderGrid();
     }
 

@@ -169,7 +169,7 @@ class BacklogComponent {
                 tooltip: (e, cell) => cell.getValue(), editor: 'input',
                 cellEdited: (cell) => {
                     window.updateInitiative(cell.getRow().getData().id, { title: cell.getValue() });
-                    window.saveSystemChanges();
+                    SystemService.save();
                 }
             },
             {
@@ -177,7 +177,7 @@ class BacklogComponent {
                 tooltip: (e, cell) => cell.getValue(), editor: 'textarea',
                 cellEdited: (cell) => {
                     window.updateInitiative(cell.getRow().getData().id, { description: cell.getValue() });
-                    window.saveSystemChanges();
+                    SystemService.save();
                 }
             },
             {
@@ -200,7 +200,7 @@ class BacklogComponent {
                             cell.restoreOldValue(); return;
                         }
                         window.updateInitiative(init.id, { status: newValue });
-                        window.saveSystemChanges();
+                        SystemService.save();
                     } else {
                         window.notificationManager.showToast("Status updates (other than to 'Completed') managed by Year Plan ATL/BTL process", 'info');
                         cell.restoreOldValue();
@@ -224,7 +224,7 @@ class BacklogComponent {
                         newOwner = { type, id, name };
                     }
                     window.updateInitiative(cell.getRow().getData().id, { owner: newOwner });
-                    window.saveSystemChanges();
+                    SystemService.save();
                     cell.getRow().update({ owner: newOwner });
                 }
             },
@@ -250,7 +250,7 @@ class BacklogComponent {
                         targetDueDate: newDate,
                         attributes: { ...cell.getRow().getData().attributes, planningYear: newYear }
                     });
-                    window.saveSystemChanges();
+                    SystemService.save();
                     cell.getRow().update({ targetQuarterYearDisplay: window.formatDateToQuarterYear(newDate) });
                 }
             },
@@ -263,7 +263,7 @@ class BacklogComponent {
                 editor: 'list', editorParams: getThemeEditorParams,
                 cellEdited: (cell) => {
                     window.updateInitiative(cell.getRow().getData().id, { themes: cell.getValue() || [] });
-                    window.saveSystemChanges();
+                    SystemService.save();
                 }
             },
             {

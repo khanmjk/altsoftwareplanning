@@ -123,11 +123,7 @@ class SystemsView {
      * Handle Create New System button click
      */
     handleCreateNew() {
-        if (window.createNewSystem) {
-            window.createNewSystem();
-        } else {
-            console.error('SystemsView: createNewSystem function not found');
-        }
+        SystemService.createAndActivate();
     }
 
     /**
@@ -268,11 +264,7 @@ class SystemsView {
      * @param {string} systemKey - The system ID to load
      */
     loadSystem(systemKey) {
-        if (window.loadSavedSystem) {
-            window.loadSavedSystem(systemKey);
-        } else {
-            console.error('SystemsView: loadSavedSystem function not found');
-        }
+        SystemService.loadAndActivate(systemKey);
     }
 
     /**

@@ -634,8 +634,8 @@ function renderGanttTable() {
                 ganttExpandedInitiatives.add(id);
                 ganttExpandedWorkPackages.add(wp.workPackageId);
                 WorkPackageService.syncInitiativeTotals(id, SystemService.getCurrentSystem());
-                if (typeof saveSystemChanges === 'function') {
-                    saveSystemChanges();
+                if (typeof SystemService !== 'undefined' && SystemService.save) {
+                    SystemService.save();
                 }
                 renderGanttTable();
                 renderGanttChart();
@@ -649,8 +649,8 @@ function renderGanttTable() {
             const deleted = WorkPackageService.deleteWorkPackage(SystemService.getCurrentSystem(), wpId);
             ganttExpandedWorkPackages.delete(wpId);
             WorkPackageService.syncInitiativeTotals(initId, SystemService.getCurrentSystem());
-            if (typeof saveSystemChanges === 'function') {
-                saveSystemChanges();
+            if (typeof SystemService !== "undefined" && SystemService.save) {
+                SystemService.save();
             }
             renderGanttTable();
             renderGanttChart();
@@ -737,8 +737,8 @@ function renderGanttTable() {
                     syncInitiativeTotals(init.initiativeId, SystemService.getCurrentSystem());
                 }
             }
-            if (typeof saveSystemChanges === 'function') {
-                saveSystemChanges();
+            if (typeof SystemService !== "undefined" && SystemService.save) {
+                SystemService.save();
             }
             renderGanttChart();
         } else if (kind === 'work-package') {
@@ -768,8 +768,8 @@ function renderGanttTable() {
             if (typeof syncInitiativeTotals === 'function') {
                 syncInitiativeTotals(initId, SystemService.getCurrentSystem());
             }
-            if (typeof saveSystemChanges === 'function') {
-                saveSystemChanges();
+            if (typeof SystemService !== "undefined" && SystemService.save) {
+                SystemService.save();
             }
             renderGanttTable();
             renderGanttChart();
@@ -798,8 +798,8 @@ function renderGanttTable() {
             if (typeof syncInitiativeTotals === 'function') {
                 syncInitiativeTotals(initId, SystemService.getCurrentSystem());
             }
-            if (typeof saveSystemChanges === 'function') {
-                saveSystemChanges();
+            if (typeof SystemService !== "undefined" && SystemService.save) {
+                SystemService.save();
             }
             renderGanttTable();
             renderGanttChart();
@@ -830,8 +830,8 @@ function renderGanttTable() {
                 deps.delete(depNorm);
             }
             assign.dependencies = Array.from(deps);
-            if (typeof saveSystemChanges === 'function') {
-                saveSystemChanges();
+            if (typeof SystemService !== "undefined" && SystemService.save) {
+                SystemService.save();
             }
             renderGanttTable();
             renderGanttChart();
@@ -859,8 +859,8 @@ function renderGanttTable() {
                 wp.dependencies = Array.from(deps);
             }
             syncInitiativeDependenciesFromWorkPackages(wp.initiativeId);
-            if (typeof saveSystemChanges === 'function') {
-                saveSystemChanges();
+            if (typeof SystemService !== "undefined" && SystemService.save) {
+                SystemService.save();
             }
             renderGanttTable();
             renderGanttChart();
@@ -876,8 +876,8 @@ function renderGanttTable() {
                 deps.delete(depId);
             }
             initiative.dependencies = Array.from(deps);
-            if (typeof saveSystemChanges === 'function') {
-                saveSystemChanges();
+            if (typeof SystemService !== "undefined" && SystemService.save) {
+                SystemService.save();
             }
             renderGanttTable();
             renderGanttChart();
@@ -1588,8 +1588,8 @@ function handleGanttUpdate({ task, start, end }) {
     if (task.initiativeId) {
         WorkPackageService.syncInitiativeTotals(task.initiativeId, SystemService.getCurrentSystem());
     }
-    if (typeof saveSystemChanges === 'function') {
-        saveSystemChanges();
+    if (typeof SystemService !== "undefined" && SystemService.save) {
+        SystemService.save();
     }
 
     // Refresh table and chart to show new dates/rollups

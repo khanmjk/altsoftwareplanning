@@ -792,7 +792,9 @@ function handleSavePlan() {
                 WorkPackageService.syncInitiativeTotals(init.initiativeId, SystemService.getCurrentSystem());
             });
 
-        saveSystemChanges();
+        if (typeof SystemService !== 'undefined' && SystemService.save) {
+            SystemService.save();
+        }
         window.notificationManager.showToast(`Plan for ${currentPlanningYear} saved successfully. Initiative statuses have been updated.`, "success");
         // Optionally, refresh the table to show any visual changes reflecting status updates
         renderPlanningView();

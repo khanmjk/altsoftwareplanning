@@ -336,8 +336,8 @@ class ResourceForecastView {
                 console.log(`Stored newHireProductiveCapacityGain for team ${team.teamId}: ${team.attributes.newHireProductiveCapacityGain}`);
 
                 // [PERSISTENCE FIX] Save changes to SystemRepository
-                if (window.saveSystemChanges) {
-                    window.saveSystemChanges();
+                if (typeof SystemService !== 'undefined' && SystemService.save) {
+                    SystemService.save();
                     // Optional: Suppress toast or show a specific "Forecast Saved" toast if desired.
                     // For now, relying on saveSystemChanges' internal logging/toast (if any, though main.js saveSystemChanges doesn't always toast on success, only error, unless called by UI button).
                     // Actually main.js saveSystemChanges returns boolean and logs. It doesn't show success toast.

@@ -261,8 +261,8 @@ function exitEditMode() {
     console.log("Exiting edit mode...");
     // If we were creating a new system, return to home or load the new system
     if (SystemService.getCurrentSystem() && SystemService.getCurrentSystem().systemName) {
-        if (window.loadSavedSystem) {
-            window.loadSavedSystem(SystemService.getCurrentSystem().systemName);
+        if (typeof SystemService !== 'undefined' && SystemService.loadAndActivate) {
+            SystemService.loadAndActivate(SystemService.getCurrentSystem().systemName);
         } else {
             appState.closeCurrentSystem();
         }
