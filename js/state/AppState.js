@@ -93,6 +93,32 @@ class AppState {
         target[lastKey] = value;
         this._notify(path, value, oldValue);
     }
+
+    /**
+     * Close the current system and return to home/welcome view.
+     * Centralizes "session close" logic.
+     */
+    closeCurrentSystem() {
+        console.log("AppState: Closing current system session.");
+
+        // Clear system state
+        this.currentSystem = null;
+
+        // Sync legacy global
+        if (typeof window !== 'undefined') {
+            window.currentSystemData = null;
+        }
+
+        // Update sidebar state
+        if (window.sidebarComponent) {
+            window.sidebarComponent.updateState();
+        }
+
+        // Navigate to welcome view
+        if (window.navigationManager) {
+            window.navigationManager.navigateTo('welcomeView');
+        }
+    }
 }
 
 // Export as singleton

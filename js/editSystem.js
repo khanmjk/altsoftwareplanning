@@ -264,10 +264,10 @@ function exitEditMode() {
         if (window.loadSavedSystem) {
             window.loadSavedSystem(window.currentSystemData.systemName);
         } else {
-            window.returnToHome();
+            appState.closeCurrentSystem();
         }
     } else {
-        window.returnToHome();
+        appState.closeCurrentSystem();
     }
 }
 window.exitEditMode = exitEditMode;

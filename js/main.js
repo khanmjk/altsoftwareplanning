@@ -278,7 +278,7 @@ function loadSavedSystem(systemName) {
 
     if (!systemData) {
         window.notificationManager.showToast(`System "${systemName}" not found in storage.`, 'error');
-        returnToHome();
+        appState.closeCurrentSystem();
         return;
     }
 
@@ -365,24 +365,6 @@ function createNewSystem() {
 window.createNewSystem = createNewSystem;
 
 
-/** Return to Home **/
-function returnToHome() {
-    console.log("Returning to Home/Welcome screen.");
-    currentSystemData = null;
-    window.currentSystemData = null;
-
-    // Update sidebar state now that system is loaded
-    if (window.sidebarComponent) {
-        console.log("[V7 LOAD] Calling sidebarComponent.updateState()...");
-        window.sidebarComponent.updateState();
-    } else {
-        console.warn("[V7 LOAD] window.sidebarComponent is missing!");
-    }
-
-    navigationManager.navigateTo('welcomeView');
-}
-window.returnToHome = returnToHome;
-
 /** Reset to Default Sample Systems **/
 async function resetToDefaults() {
     if (await window.notificationManager.confirm('This will erase all your saved systems and restore the default sample systems. Do you want to proceed?', 'Reset to Defaults', { confirmStyle: 'danger', confirmText: 'Reset' })) {
@@ -401,7 +383,7 @@ async function resetToDefaults() {
         currentSystemData = null;
         window.currentSystemData = null;
         window.notificationManager.showToast('Systems have been reset to defaults.', 'success');
-        returnToHome();
+        appState.closeCurrentSystem();
     }
 }
 window.resetToDefaults = resetToDefaults;
@@ -448,7 +430,7 @@ async function confirmAndDeleteSystem(systemName) {
 
                 // If we deleted the current system, return to home
                 if (currentSystemData && currentSystemData.systemName === systemName) {
-                    returnToHome();
+                    appState.closeCurrentSystem();
                 }
             } else {
                 window.notificationManager.showToast(`System "${systemName}" could not be deleted.`, 'error');
