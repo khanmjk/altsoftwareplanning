@@ -418,41 +418,6 @@ function saveSystemChanges() {
 }
 window.saveSystemChanges = saveSystemChanges;
 
-
-function refreshCurrentView() {
-    // Prefer NavigationManager so views render through WorkspaceComponent (consistent with refactor)
-    if (window.navigationManager && typeof window.navigationManager.navigateTo === 'function' && currentViewId) {
-        // Use popstate flag to avoid duplicating history entries
-        window.navigationManager.navigateTo(currentViewId, {}, true);
-        return;
-    }
-
-    switch (currentViewId) {
-        case 'planningView':
-            renderPlanningView();
-            break;
-        case 'organogramView':
-            navigationManager.navigateTo('organogramView', {}, true);
-            break;
-
-        case 'capacityConfigView':
-            CapacityEngine.recalculate(currentSystemData);
-            navigationManager.navigateTo('capacityConfigView', {}, true);
-            break;
-        case 'visualizationCarousel':
-            showVisualization(currentVisualizationIndex || 0);
-            break;
-        case 'systemEditForm':
-            showSystemEditForm(currentSystemData);
-            break;
-        default:
-            console.log(`[REFRESH] No specific refresh handler for view: ${currentViewId}`);
-            break;
-    }
-}
-
-
-
 // Ensure the functions are globally accessible for the old onclick attributes,
 // or for the new event listener setup.
 

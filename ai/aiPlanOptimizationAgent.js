@@ -56,7 +56,7 @@ const aiPlanOptimizationAgent = (() => {
 
             let originalPlanData = parsedContext?.data?.planningTable || window.currentYearPlanTableData;
             let originalSummaryData = parsedContext?.data?.teamLoadSummary || window.currentYearPlanSummaryData;
-            
+
             if (!originalPlanData || !originalSummaryData) {
                 console.warn("[OptimizeAgent] Plan data unavailable. Attempting to refresh planning view...");
                 updateProgress('🤖 Refreshing Year Plan view to gather data...');
@@ -77,7 +77,7 @@ const aiPlanOptimizationAgent = (() => {
                     window.currentYearPlanSummaryData = originalSummaryData;
                 }
             }
-            
+
             if (!originalPlanData || !originalSummaryData) {
                 throw new Error("Year Plan data is not calculated. Please view the 'Year Plan' tab first.");
             }
@@ -174,8 +174,10 @@ ${changesNarrative}
 
         // Save and refresh the main UI
         if (typeof saveSystemChanges === 'function') saveSystemChanges();
-        if (typeof refreshCurrentView === 'function') refreshCurrentView();
-        
+        if (window.navigationManager && typeof window.navigationManager.refresh === 'function') {
+            window.navigationManager.refresh();
+        }
+
         postMessageCallback(md.render("✅ **Plan applied.** The Year Plan has been updated and saved."));
         return true;
     }
@@ -239,7 +241,7 @@ ${changesNarrative}
                 console.log("[OptimizeAgent] Loop ended: No more BTL items to optimize.");
                 break; // Stop if no BTL items are left
             }
-            
+
             const specialistPrompt = `
 You are an optimization specialist. I will give you a list of "Below The Line" (BTL) initiatives.
 Your goal is to propose ONE change to ONE initiative to help fit it "Above The Line".
@@ -293,7 +295,7 @@ If you cannot find a good change, respond with null.
                     break;
                 }
             } catch (e) {
-            console.warn("[OptimizeAgent] Loop failed to parse AI response, ending loop.", e);
+                console.warn("[OptimizeAgent] Loop failed to parse AI response, ending loop.", e);
                 break;
             }
         }
@@ -351,7 +353,7 @@ If you cannot find a good change, respond with null.
      */
     function _applyChangesToTempData(changes) {
         const tempSystemData = JSON.parse(JSON.stringify(currentSystemData));
-        
+
         changes.forEach(change => {
             const init = tempSystemData.yearlyInitiatives.find(i => i.initiativeId === change.initiativeId);
             if (init) {
@@ -368,12 +370,12 @@ If you cannot find a good change, respond with null.
         // We'll *temporarily* swap out the global data to use our calculation functions.
         const originalData = currentSystemData;
         currentSystemData = tempSystemData; // Temporarily set global
-        
+
         const tempSummaryData = calculateTeamLoadSummaryData();
         const tempPlanTableData = calculatePlanningTableData();
-        
+
         currentSystemData = originalData; // Restore global data
-        
+
         return { tempSystemData, tempPlanTableData, tempSummaryData };
     }
 

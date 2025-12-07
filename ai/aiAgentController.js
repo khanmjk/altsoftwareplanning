@@ -424,8 +424,8 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
         if (typeof saveSystemChanges === 'function') {
             try { saveSystemChanges(); } catch (error) { console.error('saveSystemChanges failed:', error); }
         }
-        if (typeof refreshCurrentView === 'function') {
-            try { refreshCurrentView(); } catch (error) { console.error('refreshCurrentView failed:', error); }
+        if (window.navigationManager && typeof window.navigationManager.refresh === 'function') {
+            try { window.navigationManager.refresh(); } catch (error) { console.error('navigationManager.refresh failed:', error); }
         }
 
         if (view && typeof view.postAgentMessageToView === 'function') {

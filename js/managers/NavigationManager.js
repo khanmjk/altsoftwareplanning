@@ -229,6 +229,20 @@ class NavigationManager {
         };
         return titles[viewId] || 'Workspace';
     }
+    /**
+     * Refreshes the current view by re-navigating to it.
+     * Used by AI agents and other callers that modify data and need to update the UI.
+     */
+    refresh() {
+        const currentViewId = window.currentViewId;
+        if (!currentViewId) {
+            console.warn("[NavigationManager] No current view to refresh");
+            return;
+        }
+
+        // Re-navigate to current view with popstate flag to avoid history entry
+        this.navigateTo(currentViewId, {}, true);
+    }
 
 
 }
