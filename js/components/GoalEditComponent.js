@@ -423,7 +423,7 @@ class GoalEditComponent {
             }
 
             this.systemData.goals.splice(index, 1);
-            if (window.saveSystemData) window.saveSystemData();
+            SystemService.save();
             this.render();
             window.notificationManager.showToast('Goal deleted.', 'success');
         }
@@ -453,7 +453,7 @@ class GoalEditComponent {
             window.notificationManager.showToast('Goal saved successfully.', 'success');
         }
 
-        window.saveSystemData(); //TODO: Replace with correct Save System function
+        SystemService.save();
     }
 }
 

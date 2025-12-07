@@ -472,7 +472,7 @@ class InitiativeEditComponent {
 
         if (await window.notificationManager.confirm('Are you sure you want to delete this initiative?', 'Delete Initiative', { confirmStyle: 'danger' })) {
             this.systemData.yearlyInitiatives.splice(index, 1);
-            if (window.saveSystemData) window.saveSystemData();
+            SystemService.save();
             this.render();
             window.notificationManager.showToast('Initiative deleted.', 'success');
         }
@@ -502,7 +502,7 @@ class InitiativeEditComponent {
             window.notificationManager.showToast('Initiative changes saved.', 'success');
         }
 
-        if (window.saveSystemData) window.saveSystemData();
+        SystemService.save();
     }
 }
 

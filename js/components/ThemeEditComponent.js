@@ -170,7 +170,7 @@ class ThemeEditComponent {
             this.systemData.definedThemes.splice(index, 1);
 
             // Save immediately as per ManagementView logic
-            if (window.saveSystemData) window.saveSystemData();
+            SystemService.save();
 
             this.render();
             window.notificationManager.showToast('Theme deleted.', 'success');
@@ -184,7 +184,7 @@ class ThemeEditComponent {
             return;
         }
 
-        window.saveSystemData(); //TODO: Replace with correct Save System function
+        SystemService.save();
         window.notificationManager.showToast('Theme changes saved.', 'success');
 
         // No need to re-render entire list if we just saved, 
