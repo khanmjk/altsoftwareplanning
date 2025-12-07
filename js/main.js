@@ -1,11 +1,7 @@
 let currentSystemData = null;
 let currentMode = appState.Modes.NAVIGATION;
 
-// currentViewId is now managed globally on window by NavigationManager
-if (typeof window !== 'undefined' && !window.currentViewId) window.currentViewId = null;
-
-// --- Global App Settings ---
-// Delegated to SettingsService (also syncs to window.globalSettings for backward compatibility)
+// Settings delegated to SettingsService (syncs to window.globalSettings for backward compatibility)
 SettingsService.init();
 console.log("main.js: Initialized settings via SettingsService.");
 
