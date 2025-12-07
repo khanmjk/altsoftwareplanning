@@ -28,5 +28,4 @@ const FeatureFlags = {
     }
 };
 
-// Note: FeatureFlags is available globally via script loading
-// Do not assign to window.* per coding-agent-contract.md
+// Object is registered globally in main.js

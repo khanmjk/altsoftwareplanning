@@ -433,7 +433,14 @@ Your sole task is to take a user's prompt (e.g., "An excel spreadsheet company,"
       * Creating these links is critical for the Gantt chart visualization.
     * Each work package *must* have realistic \`deliveryPhases\` populated from this list: "${JSON.stringify(STANDARD_WORK_PACKAGE_PHASES)}".
  
-11.  **DO NOT TRUNCATE:** (This was old Rule 8) Your *entire* response must be a single, complete JSON object. Do not stop part-way. Ensure all brackets and braces are closed.
+11. **[CRITICAL] STRICT DATA TYPES:** Numeric values MUST be JSON numbers, NOT strings. This is a hard requirement.
+    * \`fundedHeadcount\` must be a NUMBER (e.g., \`5\`), NOT a string (e.g., \`"5"\`).
+    * \`sdeYears\`, \`level\`, \`avgOverheadHoursPerWeekPerSDE\`, \`aiProductivityGainPercent\`, \`estimatedDaysPerSDE\`, \`defaultEstimatedDays\`, \`publicHolidays\`, and ALL other numeric fields must be JSON numbers.
+    * **WRONG:** \`"fundedHeadcount": "5"\` (string)
+    * **CORRECT:** \`"fundedHeadcount": 5\` (number)
+    * Failure to follow this rule will cause the application to crash.
+ 
+12.  **DO NOT TRUNCATE:** Your *entire* response must be a single, complete JSON object. Do not stop part-way. Ensure all brackets and braces are closed.
 
 **JSON SCHEMA EXAMPLE:**
 Here is an example of the exact JSON structure you must follow.

@@ -268,6 +268,11 @@ ${systemPromptSummary}`.trim();
                 }
             }
 
+            // Type validation for numeric fields - prevents string concatenation bugs
+            if (team.fundedHeadcount !== undefined && typeof team.fundedHeadcount !== 'number') {
+                errors.push(`Team "${team.teamName}" has invalid "fundedHeadcount" type: expected number, got ${typeof team.fundedHeadcount}. Value: "${team.fundedHeadcount}"`);
+            }
+
             if (!team.attributes || typeof team.attributes !== 'object') {
                 warnings.push(`Team "${team.teamName}" is missing "attributes" object.`);
             }

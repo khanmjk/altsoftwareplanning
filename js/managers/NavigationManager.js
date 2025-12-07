@@ -242,6 +242,4 @@ class NavigationManager {
 
 }
 
-if (typeof window !== 'undefined') {
-    window.NavigationManager = NavigationManager;
-}
+// Class is registered globally in main.js
