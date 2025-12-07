@@ -202,6 +202,11 @@ class NavigationManager {
             url.searchParams.set('view', viewId);
             window.history.pushState({ viewId: viewId }, '', url);
         }
+
+        // 7. Update AI-dependent UI elements
+        if (typeof updateAiDependentUI === 'function') {
+            updateAiDependentUI({ skipPlanningRender: true });
+        }
     }
 
     /**

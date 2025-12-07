@@ -266,78 +266,9 @@ window.onload = async function () {
 
         console.log(`Attempting initial navigation. URL View: ${initialView}`);
 
-        if (initialView) {
-            // Use switchView which now uses NavigationManager
-            switchView(initialView);
-        } else {
-            switchView(null); // Default to welcome
-        }
+        navigationManager.navigateTo(initialView || 'welcomeView');
     }, 500);
 };
-
-/**
- * REVISED (v11 - Dashboard Fix)
- * Central function to manage switching between main views.
- */
-function switchView(targetViewId, newMode = null) {
-    // console.log(`Switching view to: ${targetViewId || 'Home'}, Mode: ${newMode || 'Auto'}`);
-
-    // 1. Close Modals (Legacy Logic)
-    // 1. Close Modals (Legacy Logic)
-    // closeRoadmapModal call removed as it's no longer defined
-
-    // 2. Handle Home/Null State
-    if (!targetViewId) {
-        // "Home" state - Show welcome/landing
-        // REVISED: Keep sidebar and header visible for "Workspace" feel.
-        const sidebar = document.getElementById('sidebar');
-        const header = document.getElementById('main-header');
-        if (sidebar) sidebar.style.display = 'flex';
-        if (header) header.style.display = 'flex';
-
-        if (window.navigationManager) {
-            window.navigationManager.navigateTo('welcomeView');
-        }
-        return;
-    }
-
-
-    // 3. Show UI Elements
-    const sidebar = document.getElementById('sidebar');
-    const header = document.getElementById('main-header');
-    if (sidebar) sidebar.style.display = 'flex';
-    if (header) header.style.display = 'flex';
-
-    // 4. Use Navigation Manager
-    if (!window.navigationManager) {
-        console.warn("NavigationManager not initialized in switchView! Attempting lazy initialization.");
-        try {
-            window.navigationManager = new NavigationManager();
-            if (window.sidebarComponent && window.headerComponent) {
-                window.navigationManager.init(window.sidebarComponent, window.headerComponent);
-            }
-        } catch (e) {
-            console.error("Failed to lazy initialize NavigationManager:", e);
-        }
-    }
-
-    if (window.navigationManager) {
-        window.navigationManager.navigateTo(targetViewId);
-    } else {
-        console.error("NavigationManager still not initialized!");
-    }
-
-    // 5. Update AI UI
-    updateAiDependentUI({ skipPlanningRender: true });
-
-}
-
-
-
-
-
-
-
 
 /** Save Sample Systems to Local Storage if not already present **/
 
@@ -379,7 +310,7 @@ function loadSavedSystem(systemName) {
         aiAgentController.startSession();
     }
 
-    switchView('visualizationCarousel');
+    navigationManager.navigateTo('visualizationCarousel');
 
     // Update sidebar state now that system is loaded
     if (window.sidebarComponent) {
@@ -436,14 +367,7 @@ function createNewSystem() {
     window.currentSystemData = currentSystemData;
     console.log("Initialized new currentSystemData via SystemService.");
 
-    // Use NavigationManager if available
-    if (window.navigationManager) {
-        window.navigationManager.navigateTo('systemEditForm');
-    } else {
-        // Fallback manual switch
-        console.warn("NavigationManager not ready, manually switching to systemEditForm");
-        switchView('systemEditForm');
-    }
+    navigationManager.navigateTo('systemEditForm');
 }
 window.createNewSystem = createNewSystem;
 
@@ -462,7 +386,7 @@ function returnToHome() {
         console.warn("[V7 LOAD] window.sidebarComponent is missing!");
     }
 
-    switchView('welcomeView', 'home');
+    navigationManager.navigateTo('welcomeView');
 }
 window.returnToHome = returnToHome;
 
@@ -649,8 +573,7 @@ function refreshCurrentView() {
             renderPlanningView();
             break;
         case 'organogramView':
-            // Use switchView to ensure proper rendering via WorkspaceComponent
-            switchView('organogramView');
+            navigationManager.navigateTo('organogramView', {}, true);
             break;
 
         case 'capacityConfigView':
