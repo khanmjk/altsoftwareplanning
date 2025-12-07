@@ -1,9 +1,6 @@
 let showPlatformComponents = true;
 let serviceDependenciesTableWidget = null;
 let currentServiceDependenciesTableData = [];
-if (typeof window !== 'undefined') {
-    window.currentServiceDependenciesTableData = currentServiceDependenciesTableData;
-}
 let visualizationResizeObserver = null;
 let resizeDebounceHandle = null;
 
@@ -1535,9 +1532,6 @@ function generateServiceDependenciesTable() {
 
     const tableData = prepareServiceDependenciesTableData();
     currentServiceDependenciesTableData = tableData;
-    if (typeof window !== 'undefined') {
-        window.currentServiceDependenciesTableData = currentServiceDependenciesTableData;
-    }
 
     const wrapTextFormatter = (cell, defaultText = 'None') => {
         const value = cell.getValue();

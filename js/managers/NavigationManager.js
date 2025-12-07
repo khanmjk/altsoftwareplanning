@@ -6,6 +6,7 @@ class NavigationManager {
     constructor() {
         this.sidebar = null;
         this.header = null;
+        this.currentViewId = null;
     }
 
     init(sidebarComponent, headerComponent) {
@@ -44,7 +45,7 @@ class NavigationManager {
 
         // 0. Update Global State for AI Context
         aiAgentController.setCurrentView(viewId);
-        window.currentViewId = viewId;
+        this.currentViewId = viewId;
 
         // 1. Update Sidebar Selection
         if (this.sidebar) {
@@ -229,7 +230,7 @@ class NavigationManager {
      * Used by AI agents and other callers that modify data and need to update the UI.
      */
     refresh() {
-        const currentViewId = window.currentViewId;
+        const currentViewId = this.currentViewId;
         if (!currentViewId) {
             console.warn("[NavigationManager] No current view to refresh");
             return;

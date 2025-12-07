@@ -27,7 +27,7 @@ class YearPlanningView {
         this.draggedRowElement = null;
 
         // UI state
-        this.isSummaryExpanded = window.isSummaryTableExpanded || false;
+        this.isSummaryExpanded = false;
     }
 
     /**
@@ -319,7 +319,6 @@ class YearPlanningView {
         const existingSummaryContent = document.getElementById('teamLoadSummaryContent');
         if (existingSummaryContent) {
             this.isSummaryExpanded = existingSummaryContent.style.display !== 'none';
-            window.isSummaryTableExpanded = this.isSummaryExpanded;
         }
 
         const isExpanded = this.isSummaryExpanded;

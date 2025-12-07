@@ -12,8 +12,8 @@ let draggedInitiativeId = null; // For drag-drop reordering
 let draggedRowElement = null; // For drag-drop row styling
 // =============================================
 
-// [PATCH] Remember summary table expanded state across re-renders
-window.isSummaryTableExpanded = window.isSummaryTableExpanded || false;
+// Module-level state for summary table expanded state (persists across re-renders)
+let isSummaryTableExpanded = false;
 
 /**
  * Toggles collapsible sections.
@@ -33,8 +33,8 @@ function toggleCollapsibleSection(contentId, indicatorId, handleId = null) {
     if (handleDiv) handleDiv.style.display = isHidden ? 'block' : 'none';
 
     // Track summary table expanded state
-    if (contentId === 'teamLoadSummaryContent' && typeof window.isSummaryTableExpanded !== 'undefined') {
-        window.isSummaryTableExpanded = isHidden;
+    if (contentId === 'teamLoadSummaryContent') {
+        isSummaryTableExpanded = isHidden;
     }
 
     if (document.getElementById('planningView')?.style.display !== 'none' &&
@@ -473,9 +473,9 @@ function renderPlanningView() {
     // [PATCH] Capture current expanded state from DOM before re-rendering
     const summaryContent = document.getElementById('teamLoadSummaryContent');
     if (summaryContent) {
-        window.isSummaryTableExpanded = summaryContent.style.display !== 'none';
+        isSummaryTableExpanded = summaryContent.style.display !== 'none';
     }
-    const isExpanded = window.isSummaryTableExpanded;
+    const isExpanded = isSummaryTableExpanded;
 
     container.innerHTML = `
         <div id="teamLoadSummarySection" style="margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px;">
