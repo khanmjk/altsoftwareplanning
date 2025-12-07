@@ -5,11 +5,7 @@ let currentSystemData = null;
 
 let currentMode = appState.Modes.NAVIGATION;
 let planningCapacityScenario = 'effective'; // Default to 'effective'
-let currentCapacityScenario = 'EffectiveBIS'; // Default scenario for capacity summary ('TeamBIS', 'EffectiveBIS', 'FundedHC')
-let currentChartTeamId = '__ORG_VIEW__'; // To track which team's chart is displayed
-let capacityChartInstance = null; // To hold the Chart.js instance
 let applyCapacityConstraintsToggle = false; // Default to OFF
-let lastAiGenerationStats = null; // Delegated to AIService
 // currentViewId is now managed globally on window by NavigationManager
 if (typeof window !== 'undefined' && !window.currentViewId) window.currentViewId = null;
 
