@@ -314,7 +314,8 @@ window.onload = async function () {
     loadGlobalSettings();
 
     // Save sample systems if none exist
-    saveSampleSystemsToLocalStorage(); // Moved here to ensure it runs before potential initial switchView
+    // Save sample systems if none exist
+    SystemService.initializeDefaults();
 
     setTimeout(() => {
         // Check for view in URL
@@ -427,214 +428,31 @@ function toggleCollapsibleSection(contentId, indicatorId, handleId = null) {
 }
 
 /** Save Sample Systems to Local Storage if not already present **/
+
+
+
+
 /**
- * Saves sample systems to Local Storage.
- * Default: add missing samples without touching existing (editable) ones.
- * Use { forceOverwrite: true } to reset all samples to defaults.
+ * REVISED Load Saved System - Delegates to SystemService
  */
-function saveSampleSystemsToLocalStorage(options = {}) {
-    const { forceOverwrite = false } = options;
-
-    const sampleSystems = {
-        'StreamView': sampleSystemDataStreamView,
-        'ConnectPro': sampleSystemDataContactCenter,
-        'ShopSphere': sampleSystemDataShopSphere,
-        'InsightAI': sampleSystemDataInsightAI,
-        'FinSecure': sampleSystemDataFinSecure
-    };
-
-    Object.entries(sampleSystems).forEach(([key, data]) => {
-        const exists = window.systemRepository.getSystemData(key);
-        if (forceOverwrite || !exists) {
-            window.systemRepository.saveSystem(key, data);
-        }
-    });
-}
-
-/** Show Saved Systems Modal **/
-
-
-
-/** REVISED (v7) Load Saved System - Enhanced Logging for allKnownEngineers */
 function loadSavedSystem(systemName) {
-    console.log(`[V7 LOAD] Attempting to load system: ${systemName}`);
-    const systemData = window.systemRepository.getSystemData(systemName);
+    console.log(`[Load] Attempting to load system: ${systemName}`);
+
+    const systemData = SystemService.loadSystem(systemName);
+
     if (!systemData) {
         window.notificationManager.showToast(`System "${systemName}" not found in storage.`, 'error');
-        console.error(`[V7 LOAD] System "${systemName}" not found in repository.`);
         returnToHome();
         return;
     }
 
     currentSystemData = systemData; // Assign to global
     window.currentSystemData = currentSystemData;
-    console.log(`[V7 LOAD] Successfully loaded system data for: "${currentSystemData.systemName}" from repository.`);
 
-    // ----- IMMEDIATE CHECK of allKnownEngineers -----
-    if (currentSystemData.allKnownEngineers && Array.isArray(currentSystemData.allKnownEngineers)) {
-        // console.log(`[V7 LOAD - PRE-AUGMENTATION] 'currentSystemData.allKnownEngineers' IS present. Length: ${currentSystemData.allKnownEngineers.length}`);
-        if (currentSystemData.allKnownEngineers.length > 0) {
-            // console.log("[V7 LOAD - PRE-AUGMENTATION] Sample of loaded allKnownEngineers[0]:", JSON.stringify(currentSystemData.allKnownEngineers[0]));
-        }
-    } else {
-        console.warn(`[V7 LOAD - PRE-AUGMENTATION] 'currentSystemData.allKnownEngineers' is MISSING or not an array upon loading for system "${systemName}". Will attempt to initialize.`);
-    }
-    // ----- END IMMEDIATE CHECK -----
-
-
-    // --- DATA AUGMENTATION: Ensure new fields/arrays exist for older saved data ---
-    // console.log("[V7 LOAD] Augmenting loaded system data with new model defaults if missing...");
-
-    // Top-level system attributes
-    if (!currentSystemData.projectManagers) currentSystemData.projectManagers = [];
-    if (!currentSystemData.goals) currentSystemData.goals = [];
-    if (!currentSystemData.definedThemes) currentSystemData.definedThemes = [];
-    if (!currentSystemData.archivedYearlyPlans) currentSystemData.archivedYearlyPlans = [];
-    if (!currentSystemData.workPackages) currentSystemData.workPackages = [];
-    if (!currentSystemData.attributes) currentSystemData.attributes = {};
-    // Ensure work packages exist immediately
-    WorkPackageService.ensureWorkPackagesForInitiatives(currentSystemData);
-
-    // allKnownEngineers (critical for engineer data)
-    // This block now primarily ensures attributes on existing engineers if allKnownEngineers was loaded.
-    // If it was missing, it initializes it as empty, which is then used by subsequent functions.
-    if (!currentSystemData.allKnownEngineers || !Array.isArray(currentSystemData.allKnownEngineers)) {
-        console.warn(`[V7 LOAD - AUGMENTATION] Initializing 'allKnownEngineers' as [] for loaded system: ${systemName} because it was missing or not an array.`);
-        currentSystemData.allKnownEngineers = [];
-        // Note: The logic to populate from team.engineers (if they were objects) is removed
-        // as the new data model implies team.engineers are just names and allKnownEngineers is the source of truth.
-        // If loading very old data where allKnownEngineers didn't exist AND teams had full engineer objects,
-        // that old data would need a more specific migration step if encountered.
-    }
-    // Ensure attributes in allKnownEngineers
-    (currentSystemData.allKnownEngineers || []).forEach(eng => {
-        if (!eng.attributes) eng.attributes = { isAISWE: false, skills: [], yearsOfExperience: 0, aiAgentType: null };
-        if (eng.attributes.isAISWE === undefined) eng.attributes.isAISWE = false;
-        if (!eng.attributes.skills) eng.attributes.skills = [];
-        if (eng.attributes.yearsOfExperience === undefined) eng.attributes.yearsOfExperience = 0;
-        if (eng.attributes.aiAgentType === undefined && eng.attributes.isAISWE) eng.attributes.aiAgentType = "General AI";
-        else if (eng.attributes.aiAgentType === undefined && !eng.attributes.isAISWE) eng.attributes.aiAgentType = null;
-
-    });
-
-
-    // Capacity Configuration (ensure structure and defaults for older data)
-    const defaultCapacityConfig = {
-        workingDaysPerYear: 261, standardHoursPerDay: 8,
-        globalConstraints: { publicHolidays: 0, orgEvents: [] },
-        leaveTypes: [
-            { id: "annual", name: "Annual Leave", defaultEstimatedDays: 0, attributes: {} },
-            { id: "sick", name: "Sick Leave", defaultEstimatedDays: 0, attributes: {} },
-            { id: "study", name: "Study Leave", defaultEstimatedDays: 0, attributes: {} },
-            { id: "inlieu", name: "Time off In-lieu Leave", defaultEstimatedDays: 0, attributes: {} }
-        ],
-        attributes: {}
-    };
-    if (!currentSystemData.capacityConfiguration) {
-        currentSystemData.capacityConfiguration = JSON.parse(JSON.stringify(defaultCapacityConfig)); // Deep copy
-    } else {
-        if (currentSystemData.capacityConfiguration.workingDaysPerYear === undefined) currentSystemData.capacityConfiguration.workingDaysPerYear = defaultCapacityConfig.workingDaysPerYear;
-        if (currentSystemData.capacityConfiguration.standardHoursPerDay === undefined) currentSystemData.capacityConfiguration.standardHoursPerDay = defaultCapacityConfig.standardHoursPerDay;
-        if (!currentSystemData.capacityConfiguration.globalConstraints) currentSystemData.capacityConfiguration.globalConstraints = JSON.parse(JSON.stringify(defaultCapacityConfig.globalConstraints));
-        if (currentSystemData.capacityConfiguration.globalConstraints.publicHolidays === undefined) currentSystemData.capacityConfiguration.globalConstraints.publicHolidays = 0;
-        if (!currentSystemData.capacityConfiguration.globalConstraints.orgEvents) currentSystemData.capacityConfiguration.globalConstraints.orgEvents = [];
-        (currentSystemData.capacityConfiguration.globalConstraints.orgEvents || []).forEach(event => { if (!event.attributes) event.attributes = {}; });
-        if (!currentSystemData.capacityConfiguration.leaveTypes || currentSystemData.capacityConfiguration.leaveTypes.length === 0) {
-            currentSystemData.capacityConfiguration.leaveTypes = JSON.parse(JSON.stringify(defaultCapacityConfig.leaveTypes));
-        }
-        (currentSystemData.capacityConfiguration.leaveTypes || []).forEach(lt => { if (!lt.attributes) lt.attributes = {}; });
-        if (!currentSystemData.capacityConfiguration.attributes) currentSystemData.capacityConfiguration.attributes = {};
-    }
-    if (currentSystemData.calculatedCapacityMetrics === undefined) currentSystemData.calculatedCapacityMetrics = null;
-
-
-    // Teams
-    (currentSystemData.teams || []).forEach(team => {
-        if (!team.attributes) team.attributes = {};
-        if (!team.engineers) team.engineers = []; // Should be array of names
-        if (!team.awayTeamMembers) team.awayTeamMembers = [];
-        const defaultTeamCapacityAdjustments = {
-            leaveUptakeEstimates: [],
-            variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, paternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, familyResp: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 }, medical: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 } },
-            teamActivities: [], avgOverheadHoursPerWeekPerSDE: 0, attributes: {}
-        };
-        if (!team.teamCapacityAdjustments) {
-            team.teamCapacityAdjustments = JSON.parse(JSON.stringify(defaultTeamCapacityAdjustments));
-        } else {
-            if (!team.teamCapacityAdjustments.leaveUptakeEstimates) team.teamCapacityAdjustments.leaveUptakeEstimates = [];
-            if (!team.teamCapacityAdjustments.variableLeaveImpact) team.teamCapacityAdjustments.variableLeaveImpact = JSON.parse(JSON.stringify(defaultTeamCapacityAdjustments.variableLeaveImpact));
-            else {
-                const vli = team.teamCapacityAdjustments.variableLeaveImpact;
-                if (!vli.maternity) vli.maternity = { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 };
-                if (!vli.paternity) vli.paternity = { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 };
-                if (!vli.familyResp) vli.familyResp = { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 };
-                if (!vli.medical) vli.medical = { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 };
-            }
-            if (!team.teamCapacityAdjustments.teamActivities) team.teamCapacityAdjustments.teamActivities = [];
-            if (team.teamCapacityAdjustments.avgOverheadHoursPerWeekPerSDE === undefined) team.teamCapacityAdjustments.avgOverheadHoursPerWeekPerSDE = 0;
-            if (!team.teamCapacityAdjustments.attributes) team.teamCapacityAdjustments.attributes = {};
-        }
-    });
-
-    // Services & APIs
-    (currentSystemData.services || []).forEach(service => {
-        if (!service.attributes) service.attributes = {};
-        if (!service.apis) service.apis = [];
-        (service.apis || []).forEach(api => {
-            if (!api.attributes) api.attributes = {};
-            if (!api.dependentApis) api.dependentApis = [];
-        });
-        if (!service.serviceDependencies) service.serviceDependencies = [];
-        if (!service.platformDependencies) service.platformDependencies = [];
-    });
-
-    // Yearly Initiatives
-    (currentSystemData.yearlyInitiatives || []).forEach(initiative => {
-        if (!initiative.attributes) { // Ensure attributes object itself exists
-            initiative.attributes = {};
-        }
-        if (initiative.attributes.pmCapacityNotes === undefined) { // Add pmCapacityNotes if missing
-            initiative.attributes.pmCapacityNotes = "";
-        }
-
-        if (initiative.hasOwnProperty('relatedBusinessGoalId')) {
-            if (initiative.primaryGoalId === undefined) initiative.primaryGoalId = initiative.relatedBusinessGoalId; // Migrate if primaryGoalId doesn't exist
-            delete initiative.relatedBusinessGoalId;
-        }
-        const defaultROI = { category: null, valueType: null, estimatedValue: null, currency: null, timeHorizonMonths: null, confidenceLevel: null, calculationMethodology: null, businessCaseLink: null, overrideJustification: null, attributes: {} };
-        if (!initiative.roi) initiative.roi = JSON.parse(JSON.stringify(defaultROI));
-        else { // Ensure all sub-fields of ROI exist
-            for (const key in defaultROI) { if (initiative.roi[key] === undefined) initiative.roi[key] = defaultROI[key]; }
-            if (!initiative.roi.attributes) initiative.roi.attributes = {};
-        }
-
-        if (initiative.targetDueDate === undefined) initiative.targetDueDate = null;
-        if (initiative.actualCompletionDate === undefined) initiative.actualCompletionDate = null;
-        if (!initiative.status) initiative.status = initiative.isProtected ? 'Committed' : 'Backlog';
-        if (!initiative.themes) initiative.themes = [];
-        if (initiative.primaryGoalId === undefined) initiative.primaryGoalId = null;
-        if (initiative.projectManager === undefined) initiative.projectManager = null;
-        if (initiative.owner === undefined) initiative.owner = null;
-        if (initiative.technicalPOC === undefined) initiative.technicalPOC = null;
-        if (!initiative.impactedServiceIds) initiative.impactedServiceIds = [];
-        if (!initiative.workPackageIds) initiative.workPackageIds = [];
-        // if (!initiative.attributes) initiative.attributes = {}; // Already handled above
-        if (!initiative.assignments) initiative.assignments = [];
-    });
-
-    ['seniorManagers', 'sdms', 'pmts', 'projectManagers', 'goals', 'definedThemes', 'archivedYearlyPlans', 'workPackages'].forEach(key => {
-        (currentSystemData[key] || []).forEach(item => {
-            if (item && !item.attributes) item.attributes = {};
-        });
-    });
-    // console.log("[V7 LOAD] Data augmentation complete.");
-    // --- End Data Augmentation ---
-
-
+    // UI Cleanup
     const systemLoadListDiv = document.getElementById('systemLoadListDiv');
     if (systemLoadListDiv && systemLoadListDiv.parentNode === document.body) {
         document.body.removeChild(systemLoadListDiv);
-        // console.log("[V7 LOAD] Removed system load list modal.");
     }
 
     d3.selectAll('.tooltip').remove();
@@ -644,16 +462,10 @@ function loadSavedSystem(systemName) {
         if (el) el.innerHTML = '';
     });
 
-    buildGlobalPlatformDependencies();
-
     // --- Start a new AI chat session ---
-    // This clears the old chat UI and primes the AI with the new system's persona/data.
     if (typeof aiAgentController !== 'undefined' && typeof aiAgentController.startSession === 'function') {
         aiAgentController.startSession();
-    } else {
-        console.error("main.js: aiAgentController.startSession() function not found.");
     }
-    // --- END NEW ---
 
     switchView('visualizationCarousel');
 
@@ -662,22 +474,11 @@ function loadSavedSystem(systemName) {
         window.sidebarComponent.updateState();
     }
 
-    console.log("[V7 LOAD] Finished loading and preparing display for system:", currentSystemData.systemName);
-
-    // Setup toggle buttons for platform components visibility
-
+    console.log("[Load] System loaded and UI updated.");
 }
-// window.loadSavedSystem = loadSavedSystem; // Keep global
+// window.loadSavedSystem = loadSavedSystem;
 
-/** Build global list of platform dependencies **/
-function buildGlobalPlatformDependencies() {
-    if (!currentSystemData || !currentSystemData.services) return;
-    const platformDepsSet = new Set();
-    currentSystemData.services.forEach(service => {
-        (service.platformDependencies || []).forEach(dep => platformDepsSet.add(dep));
-    });
-    currentSystemData.platformDependencies = Array.from(platformDepsSet);
-}
+// buildGlobalPlatformDependencies removed - logic moved to SystemService
 
 /**
  * Loads a system from local storage.
@@ -712,95 +513,23 @@ function loadSystem() {
 window.loadSystem = loadSystem;
 
 /** Updated function to handle "Create New Software System" button click **/
+/** Updated function to handle "Create New Software System" button click **/
 function createNewSystem() {
     currentMode = appState.Modes.CREATING;
 
-    const defaultSeniorManagersData = [];
-    const defaultSDMsData = [];
-    const defaultPMTsData = [];
-    const defaultProjectManagersData = [];
-    const defaultAllKnownEngineers = [];
-    const defaultTeamsData = [];
-    const defaultServicesData = [];
-
-    // Default Yearly Initiatives (now with assignments array)
-    const defaultYearlyInitiatives = [
-        {
-            initiativeId: 'initDefault-001',
-            title: 'Setup Initial Project Environment',
-            description: 'Configure repositories, CI/CD, and basic infrastructure for the new system.',
-            isProtected: false,
-            assignments: [], // Initialize with empty assignments array
-            impactedServiceIds: [], // Keeping this distinct for now
-            roi: {
-                category: 'Enablement',
-                valueType: 'Narrative',
-                estimatedValue: 'Foundational Setup',
-                currency: null, timeHorizonMonths: 1, confidenceLevel: 'High',
-                calculationMethodology: 'Required to start any development.',
-                businessCaseLink: null, overrideJustification: null,
-                attributes: {}
-            },
-            targetDueDate: null,
-            actualCompletionDate: null,
-            status: 'Backlog',
-            themes: [],
-            primaryGoalId: null,
-            projectManager: null,
-            owner: null,
-            technicalPOC: null,
-            workPackageIds: [],
-            attributes: {
-                pmCapacityNotes: "",
-                planningYear: new Date().getFullYear() // Add planningYear
-            }
-        }
-    ];
-
-    const defaultSystemData = {
-        systemName: '',
-        systemDescription: '',
-        seniorManagers: defaultSeniorManagersData,
-        sdms: defaultSDMsData,
-        pmts: defaultPMTsData,
-        projectManagers: defaultProjectManagersData,
-        teams: defaultTeamsData,
-        services: defaultServicesData,
-        allKnownEngineers: defaultAllKnownEngineers,
-        platformDependencies: [],
-        capacityConfiguration: {
-            workingDaysPerYear: 261,
-            standardHoursPerDay: 8,
-            globalConstraints: {
-                publicHolidays: 0,
-                orgEvents: []
-            },
-            leaveTypes: [
-                { id: "annual", name: "Annual Leave", defaultEstimatedDays: 0, attributes: {} },
-                { id: "sick", name: "Sick Leave", defaultEstimatedDays: 0, attributes: {} },
-                { id: "study", name: "Study Leave", defaultEstimatedDays: 0, attributes: {} },
-                { id: "inlieu", name: "Time off In-lieu Leave", defaultEstimatedDays: 0, attributes: {} }
-            ],
-            attributes: {}
-        },
-        yearlyInitiatives: defaultYearlyInitiatives,
-        goals: [],
-        definedThemes: [],
-        archivedYearlyPlans: [],
-        workPackages: [],
-        calculatedCapacityMetrics: null,
-        attributes: {}
-    };
+    // Delegate to SystemService
+    const defaultSystemData = SystemService.createSystem();
 
     currentSystemData = defaultSystemData;
     window.currentSystemData = currentSystemData;
-    console.log("Initialized new currentSystemData:", JSON.parse(JSON.stringify(currentSystemData)));
+    console.log("Initialized new currentSystemData via SystemService.");
 
-    // Use NavigationManager if available to ensure proper routing and metadata updates
+    // Use NavigationManager if available
     if (window.navigationManager) {
-        window.navigationManager.navigateTo('systemEditForm', { createMode: true });
+        window.navigationManager.navigateTo('systemEditForm');
     } else {
-        // Fallback (shouldn't happen)
+        // Fallback manual switch
+        console.warn("NavigationManager not ready, manually switching to systemEditForm");
         switchView('systemEditForm');
     }
 }
@@ -836,7 +565,10 @@ async function resetToDefaults() {
             window.notificationManager.showToast('Unable to reset defaults because local storage could not be cleared.', 'error');
             return;
         }
-        saveSampleSystemsToLocalStorage({ forceOverwrite: true }); // Re-add defaults explicitly
+
+        // Re-add defaults explicitly using SystemService
+        SystemService.initializeDefaults({ forceOverwrite: true });
+
         currentSystemData = null;
         window.currentSystemData = null;
         window.notificationManager.showToast('Systems have been reset to defaults.', 'success');
@@ -856,17 +588,8 @@ function deleteSystem() {
 
     const systemName = currentSystemData.systemName;
 
-    // Hardcoded list of sample systems to protect
-    // Ideally this should be shared with saveSampleSystemsToLocalStorage, but for now we duplicate or check against known keys
-    const sampleSystemNames = [
-        'StreamView',
-        'ConnectPro',
-        'ShopSphere',
-        'InsightAI',
-        'FinSecure'
-    ];
-
-    if (sampleSystemNames.includes(systemName)) {
+    // Protection for sample systems
+    if (window.systemRepository.isSampleSystem(systemName)) {
         window.notificationManager.showToast(`Cannot delete built-in sample system: "${systemName}".`, 'error');
         return;
     }
@@ -888,10 +611,10 @@ async function confirmAndDeleteSystem(systemName) {
 
     if (confirmed) {
         try {
-            const deleted = window.systemRepository.deleteSystem(systemName);
-            if (deleted) {
-                console.log(`System "${systemName}" deleted from repository.`);
+            const success = SystemService.deleteSystem(systemName);
 
+            if (success) {
+                console.log(`System "${systemName}" deleted.`);
                 window.notificationManager.showToast(`System "${systemName}" has been deleted.`, 'success');
 
                 // If we deleted the current system, return to home
@@ -899,7 +622,7 @@ async function confirmAndDeleteSystem(systemName) {
                     returnToHome();
                 }
             } else {
-                window.notificationManager.showToast(`System "${systemName}" not found in storage.`, 'error');
+                window.notificationManager.showToast(`System "${systemName}" could not be deleted.`, 'error');
             }
         } catch (error) {
             console.error("Error deleting system:", error);
@@ -909,108 +632,47 @@ async function confirmAndDeleteSystem(systemName) {
 }
 window.confirmAndDeleteSystem = confirmAndDeleteSystem;
 
-/** Validation function to check engineer assignments (placeholder for now with new model) **/
-function validateEngineerAssignments() {
-    if (!currentSystemData || !currentSystemData.teams || !currentSystemData.allKnownEngineers) {
-        console.warn("Validation skipped: Missing teams or allKnownEngineers data.");
-        return true;
-    }
-
-    let isValid = true;
-    let errorMessages = [];
-    const engineerTeamMap = new Map(); // Tracks primary team assignment for each engineer from allKnownEngineers
-
-    // Populate map from allKnownEngineers
-    currentSystemData.allKnownEngineers.forEach(eng => {
-        if (eng.name && eng.currentTeamId) {
-            if (engineerTeamMap.has(eng.name) && engineerTeamMap.get(eng.name) !== eng.currentTeamId) {
-                // This indicates an issue in allKnownEngineers itself, a name mapped to multiple currentTeamIds
-                isValid = false;
-                errorMessages.push(`Data integrity issue: Engineer "${eng.name}" listed with multiple different primary teams in allKnownEngineers.`);
-            }
-            engineerTeamMap.set(eng.name, eng.currentTeamId);
-        } else if (eng.name && !eng.currentTeamId) {
-            engineerTeamMap.set(eng.name, null); // Engineer exists but is unassigned
-        }
-    });
-
-    // Check consistency between team.engineers and allKnownEngineers.currentTeamId
-    currentSystemData.teams.forEach(team => {
-        if (!team || !team.teamId || !Array.isArray(team.engineers)) return;
-
-        team.engineers.forEach(engineerName => {
-            if (typeof engineerName !== 'string') {
-                isValid = false;
-                errorMessages.push(`Invalid engineer entry in team "${team.teamIdentity || team.teamId}": not a string.`);
-                return;
-            }
-            const knownEngineer = currentSystemData.allKnownEngineers.find(ke => ke.name === engineerName);
-            if (!knownEngineer) {
-                isValid = false;
-                errorMessages.push(`Engineer "${engineerName}" listed in team "${team.teamIdentity || team.teamId}" but not found in the global engineer roster (allKnownEngineErrors).`);
-            } else if (knownEngineer.currentTeamId !== team.teamId) {
-                isValid = false;
-                const assignedToTeam = knownEngineer.currentTeamId ?
-                    (currentSystemData.teams.find(t => t.teamId === knownEngineer.currentTeamId)?.teamIdentity || knownEngineer.currentTeamId)
-                    : "unassigned";
-                errorMessages.push(`Data inconsistency: Engineer "${engineerName}" is in team "${team.teamIdentity || team.teamId}"'s list, but their global record assigns them to "${assignedToTeam}".`);
-            }
-        });
-    });
-
-    if (!isValid) {
-        window.notificationManager.showToast("Validation Error: Cannot save changes due to data inconsistencies.\n\n" + errorMessages.join("\n") + "\n\nPlease review team assignments and engineer records.", "error");
-    }
-    return isValid;
-}
-
-
-/** Save System Changes (Placeholder - full save logic in saveAllChanges) **/
+/** Save System Changes **/
 function saveSystemChanges() {
-    // This function is now primarily a wrapper if called from simple contexts.
-    // The main save logic including validation is in saveAllChanges or specific save buttons.
     console.log("saveSystemChanges called. Persisting currentSystemData.");
 
     if (!currentSystemData || !currentSystemData.systemName) {
         window.notificationManager.showToast('System name cannot be empty if trying to save.', 'error');
-        // Attempt to get it from input if in edit mode, though this function shouldn't rely on UI state.
+        // Attempt to get it from input if in edit mode
         const systemNameInput = document.getElementById('systemNameInput');
         if (systemNameInput && systemNameInput.value.trim()) {
             currentSystemData.systemName = systemNameInput.value.trim();
         } else {
             console.error("Cannot save: System name is missing in currentSystemData.");
-            return false; // Indicate failure
+            return false;
         }
     }
-    // Ensure description is also up-to-date if possible (less critical than name)
+    // Ensure description is also up-to-date if possible
     const systemDescriptionTextarea = document.getElementById('systemDescriptionInput');
     if (systemDescriptionTextarea && currentSystemData) {
         currentSystemData.systemDescription = systemDescriptionTextarea.value.trim();
     }
 
+    // Delegate to SystemService
+    const success = SystemService.saveSystem(currentSystemData);
 
-    // It's better if validation is called by the function initiating the save (e.g., saveAllChanges)
-    // However, as a safeguard:
-    if (typeof validateEngineerAssignments === "function" && !validateEngineerAssignments()) {
-        console.error("Validation failed in saveSystemChanges. Aborting save.");
-        return false; // Indicate failure
-    }
+    if (success) {
+        window.notificationManager.showToast(`System "${currentSystemData.systemName}" saved successfully.`, 'success');
 
-    try {
-        // Track last modified for sorting and display in Systems view (handled in repository)
-        const saved = window.systemRepository.saveSystem(currentSystemData.systemName, currentSystemData);
-        if (saved) {
-            console.log('System changes saved via SystemRepository.');
-            return true; // Indicate success
+        // Update sidebar state
+        if (window.sidebarComponent) {
+            window.sidebarComponent.updateState();
         }
-        console.error("SystemRepository.saveSystem returned false.");
+        return true;
+    } else {
+        window.notificationManager.showToast("Failed to save system. See console for details.", "error");
         return false;
-    } catch (error) {
-        console.error("Error saving system via repository in saveSystemChanges:", error);
-        window.notificationManager.showToast("An error occurred while saving. Please check console.", "error");
-        return false; // Indicate failure
     }
 }
+window.saveSystemChanges = saveSystemChanges;
+
+// validateEngineerAssignments removed - logic moved to SystemService
+
 
 
 

@@ -292,7 +292,14 @@ class SystemsView {
         );
 
         if (confirmed) {
-            const success = this.repository.deleteSystem(systemKey);
+            // Use SystemService if available for consistency
+            let success = false;
+            if (window.SystemService) {
+                success = window.SystemService.deleteSystem(systemKey);
+            } else {
+                success = this.repository.deleteSystem(systemKey);
+            }
+
             if (success) {
                 window.notificationManager.showToast(`System "${systemKey}" has been deleted.`, 'success');
                 this.render(); // Refresh the view
