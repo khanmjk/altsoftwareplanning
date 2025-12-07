@@ -18,20 +18,6 @@ if (typeof mermaid !== 'undefined' && typeof mermaid.initialize === 'function') 
 function updateAiDependentUI(options = {}) {
     AIService.updateAiDependentUI(SettingsService.get(), options);
 }
-// --- End Global App Settings ---
-
-// --- Carousel State ---
-// Moved to visualizations.js
-// ----------------------
-
-// --- Documentation Resizing Logic ---
-
-
-// Global state for engineer table sorting
-
-// Store temporary assignments before adding initiative
-
-
 
 // Fallback HTML snippets for components when fetch is unavailable (e.g., file:// protocol)
 const HTML_COMPONENT_FALLBACKS = {
@@ -352,36 +338,6 @@ function switchView(targetViewId, newMode = null) {
 
 
 
-
-/**
- * Toggles collapsible sections.
- */
-function toggleCollapsibleSection(contentId, indicatorId, handleId = null) {
-    // console.log(`toggleCollapsibleSection called with contentId: '${contentId}', indicatorId: '${indicatorId}', handleId: '${handleId}'`);
-    const contentDiv = document.getElementById(contentId);
-    const indicatorSpan = document.getElementById(indicatorId);
-    const handleDiv = handleId ? document.getElementById(handleId) : null;
-
-    if (!contentDiv || !indicatorSpan) {
-        console.error(`Cannot toggle section: Missing content or indicator. ContentID: '${contentId}', IndicatorID: '${indicatorId}'`);
-        return;
-    }
-    const isHidden = contentDiv.style.display === 'none' || contentDiv.style.display === '';
-    contentDiv.style.display = isHidden ? 'block' : 'none';
-    indicatorSpan.textContent = isHidden ? '(-)' : '(+)';
-    if (handleDiv) handleDiv.style.display = isHidden ? 'block' : 'none';
-
-    // [PATCH] Track summary table expanded state for Year Planning
-    if (contentId === 'teamLoadSummaryContent' && typeof window.isSummaryTableExpanded !== 'undefined') {
-        window.isSummaryTableExpanded = isHidden; // isHidden before toggle means it's now visible
-    }
-
-    if (document.getElementById('planningView').style.display !== 'none' &&
-        (contentId === 'teamLoadSummaryContent' || contentId === 'addInitiativeContent')) {
-        adjustPlanningTableHeight();
-    }
-    // console.log(`Toggled section ${contentId} to ${isHidden ? 'visible' : 'hidden'}`);
-}
 
 /** Save Sample Systems to Local Storage if not already present **/
 

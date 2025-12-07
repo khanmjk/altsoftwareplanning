@@ -13,8 +13,35 @@ let draggedRowElement = null; // For drag-drop row styling
 // =============================================
 
 // [PATCH] Remember summary table expanded state across re-renders
-// Using window to ensure consistency with main.js toggle function
 window.isSummaryTableExpanded = window.isSummaryTableExpanded || false;
+
+/**
+ * Toggles collapsible sections.
+ */
+function toggleCollapsibleSection(contentId, indicatorId, handleId = null) {
+    const contentDiv = document.getElementById(contentId);
+    const indicatorSpan = document.getElementById(indicatorId);
+    const handleDiv = handleId ? document.getElementById(handleId) : null;
+
+    if (!contentDiv || !indicatorSpan) {
+        console.error(`Cannot toggle section: Missing content or indicator. ContentID: '${contentId}', IndicatorID: '${indicatorId}'`);
+        return;
+    }
+    const isHidden = contentDiv.style.display === 'none' || contentDiv.style.display === '';
+    contentDiv.style.display = isHidden ? 'block' : 'none';
+    indicatorSpan.textContent = isHidden ? '(-)' : '(+)';
+    if (handleDiv) handleDiv.style.display = isHidden ? 'block' : 'none';
+
+    // Track summary table expanded state
+    if (contentId === 'teamLoadSummaryContent' && typeof window.isSummaryTableExpanded !== 'undefined') {
+        window.isSummaryTableExpanded = isHidden;
+    }
+
+    if (document.getElementById('planningView')?.style.display !== 'none' &&
+        (contentId === 'teamLoadSummaryContent' || contentId === 'addInitiativeContent')) {
+        adjustPlanningTableHeight();
+    }
+}
 
 /** Handles changes to the 'Protected' checkbox in the planning table */
 function handleProtectedChange(event) {
