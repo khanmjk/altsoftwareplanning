@@ -11,33 +11,27 @@ function renderHelpView(container) {
     }
 
     // Set Workspace Metadata
-    if (window.workspaceComponent) {
-        window.workspaceComponent.setPageMetadata({
-            title: 'Documentation',
-            breadcrumbs: ['Help', 'Documentation'],
-            actions: []
-        });
-        // Clear toolbar
-        window.workspaceComponent.setToolbar(null);
-    }
+    // Set Workspace Metadata
+    window.workspaceComponent.setPageMetadata({
+        title: 'Documentation',
+        breadcrumbs: ['Help', 'Documentation'],
+        actions: []
+    });
+    // Clear toolbar
+    window.workspaceComponent.setToolbar(null);
 
     // Create the content wrapper if it doesn't exist
     // This wrapper allows us to control scrolling and padding independent of the main container
     // Load template
-    if (window.templateLoader) {
-        window.templateLoader.load('html/views/documentation-view.html')
-            .then(html => {
-                container.innerHTML = html;
-                loadAndDisplayDocumentation();
-            })
-            .catch(err => {
-                console.error('Failed to load documentation template:', err);
-                container.innerHTML = '<div class="error-state">Failed to load documentation template.</div>';
-            });
-    } else {
-        console.error('TemplateLoader not available.');
-        container.innerHTML = '<div class="error-state">TemplateLoader not initialized.</div>';
-    }
+    templateLoader.load('html/views/documentation-view.html')
+        .then(html => {
+            container.innerHTML = html;
+            loadAndDisplayDocumentation();
+        })
+        .catch(err => {
+            console.error('Failed to load documentation template:', err);
+            container.innerHTML = '<div class="error-state">Failed to load documentation template.</div>';
+        });
 
     // Trigger the load - moved to inside template load callback
     // loadAndDisplayDocumentation();
@@ -59,12 +53,7 @@ async function loadAndDisplayDocumentation() {
 
     const readmeUrl = 'https://raw.githubusercontent.com/khanmjk/altsoftwareplanning/refs/heads/main/README.md';
 
-    if (typeof window.markdownit === 'undefined') {
-        const errorMsg = "LAD_SLUGIFY: FATAL - window.markdownit is UNDEFINED. Cannot render documentation.";
-        console.error(errorMsg);
-        contentDiv.innerHTML = `<p style="color:red;">${errorMsg}</p>`;
-        return;
-    }
+
 
     let md = window.markdownit({
         html: true,
@@ -72,16 +61,14 @@ async function loadAndDisplayDocumentation() {
         typographer: true
     });
 
-    if (typeof window.markdownItAnchor === 'function' && typeof window.customSlugify === 'function') {
-        try {
-            md = md.use(window.markdownItAnchor, {
-                permalink: window.markdownItAnchor.permalink.headerLink(),
-                level: [1, 2, 3, 4, 5, 6],
-                slugify: s => window.customSlugify(s)
-            });
-        } catch (e) {
-            console.error("LAD_SLUGIFY: Error applying markdown-it-anchor:", e);
-        }
+    try {
+        md = md.use(window.markdownItAnchor, {
+            permalink: window.markdownItAnchor.permalink.headerLink(),
+            level: [1, 2, 3, 4, 5, 6],
+            slugify: s => window.customSlugify(s)
+        });
+    } catch (e) {
+        console.error("LAD_SLUGIFY: Error applying markdown-it-anchor:", e);
     }
 
     try {

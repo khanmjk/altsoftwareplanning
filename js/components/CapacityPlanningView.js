@@ -27,13 +27,11 @@ class CapacityPlanningView {
         this.container.classList.add('workspace-view');
 
         // 1. Set Metadata
-        if (window.workspaceComponent) {
-            window.workspaceComponent.setPageMetadata({
-                title: 'Capacity Tuning',
-                breadcrumbs: ['Planning', 'Capacity Tuning'],
-                actions: []
-            });
-        }
+        workspaceComponent.setPageMetadata({
+            title: 'Capacity Tuning',
+            breadcrumbs: ['Planning', 'Capacity Tuning'],
+            actions: []
+        });
 
         // 2. Setup Container
         this.contentContainer = document.createElement('div');
@@ -117,7 +115,7 @@ class CapacityPlanningView {
 
             SystemService.save();
             this.render();
-            window.notificationManager?.showToast("Capacity configuration saved.", "success");
+            notificationManager?.showToast("Capacity configuration saved.", "success");
         } else {
             console.error("SystemService.save not found");
         }

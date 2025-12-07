@@ -239,7 +239,7 @@ class ServiceEditComponent {
             const inCurrent = Array.from(currentSelect.options).some(opt => opt.value === newDepName);
             const inAvailable = Array.from(availableSelect.options).some(opt => opt.value === newDepName);
             if (inCurrent || inAvailable) {
-                window.notificationManager.showToast(`Platform dependency "${newDepName}" is already listed.`, 'warning');
+                notificationManager.showToast(`Platform dependency "${newDepName}" is already listed.`, 'warning');
                 if (textInput) textInput.value = '';
                 return null;
             }
@@ -448,12 +448,12 @@ class ServiceEditComponent {
     }
 
     async _deleteService(index) {
-        if (await window.notificationManager.confirm('Are you sure you want to delete this service?', 'Delete Service', { confirmStyle: 'danger' })) {
+        if (await notificationManager.confirm('Are you sure you want to delete this service?', 'Delete Service', { confirmStyle: 'danger' })) {
             this.systemData.services.splice(index, 1);
 
-            // Trigger global updates (if functions exist)
-            if (typeof generateTeamTable === 'function') generateTeamTable(this.systemData);
-            if (typeof generateServiceDependenciesTable === 'function') generateServiceDependenciesTable();
+            // Trigger global updates
+            generateTeamTable(this.systemData);
+            generateServiceDependenciesTable();
 
             this.render();
         }
@@ -462,7 +462,7 @@ class ServiceEditComponent {
     _saveServiceChanges(index) {
         const service = this.systemData.services[index];
         if (!service.serviceName || service.serviceName.trim() === '') {
-            window.notificationManager.showToast('Service name cannot be empty.', 'error');
+            notificationManager.showToast('Service name cannot be empty.', 'error');
             return;
         }
 
@@ -471,10 +471,10 @@ class ServiceEditComponent {
         // The original code re-read from DOM here. Since we use direct data binding in callbacks, 
         // we might not need to re-read everything, but let's be safe and trust the callbacks.
 
-        window.systemRepository.saveSystem(this.systemData.systemName, this.systemData);
-        window.notificationManager.showToast('Service changes saved.', 'success');
+        systemRepository.saveSystem(this.systemData.systemName, this.systemData);
+        notificationManager.showToast('Service changes saved.', 'success');
 
-        if (typeof generateTeamTable === 'function') generateTeamTable(this.systemData);
-        if (typeof generateServiceDependenciesTable === 'function') generateServiceDependenciesTable();
+        generateTeamTable(this.systemData);
+        generateServiceDependenciesTable();
     }
 }

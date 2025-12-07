@@ -238,9 +238,7 @@
                             </div>
 
                             <!-- Create with AI Card (Hidden by default) -->
-                            <div id="createWithAiCard" class="action-card"
-                                onclick="if(window.handleCreateWithAi) window.handleCreateWithAi()"
-                                style="display: none;">
+                            <div id="createWithAiCard" class="action-card" style="display: none;">
                                 <div class="action-card__icon-container action-card__icon-container--purple">
                                     <i class="fas fa-magic action-card__icon"></i>
                                 </div>
@@ -300,10 +298,8 @@
 
     </div> <!-- end #main-content-wrapper -->
     </div> <!-- end #app-container -->
-    <div id="aiLoadingSpinner" class="spinner-overlay" style="display:none;">
-        <div class="spinner"></div>
-        <p>AI is generating your system... This may take a moment.</p>
-    </div>
+    </div> <!-- end #app-container -->
+    <!-- [REMOVED] Old aiLoadingSpinner - Replaced by AIGenProgressOverlayView -->
 
 
     <div id="diagramModal" class="modal">
@@ -419,6 +415,7 @@
 
     <script src="js/components/ManagementView.js"></script>
     <script src="js/components/SystemsView.js"></script>
+    <script src="js/components/AIGenProgressOverlayView.js"></script>
     <script src="js/components/RoadmapInitiativeModal.js"></script>
     <script src="js/components/WorkspaceComponent.js"></script>
     <script src="js/main.js?v=2"></script>

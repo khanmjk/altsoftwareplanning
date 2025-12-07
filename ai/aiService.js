@@ -139,30 +139,30 @@ async function generateSystemFromPrompt(userPrompt, apiKey, provider, spinnerP =
             case 'openai-gpt4o':
                 // return await _generateSystemWithOpenAI(systemPrompt, userPrompt, apiKey);
                 console.warn("OpenAI generation not yet implemented.");
-                window.notificationManager.showToast("AI provider 'OpenAI (GPT-4o)' is not yet implemented.", 'warning');
+                notificationManager.showToast("AI provider 'OpenAI (GPT-4o)' is not yet implemented.", 'warning');
                 return { data: null, stats: null }; // TODO
             case 'anthropic-claude35':
                 // return await _generateSystemWithAnthropic(systemPrompt, userPrompt, apiKey);
                 console.warn("Anthropic generation not yet implemented.");
-                window.notificationManager.showToast("AI provider 'Anthropic (Claude 3.5 Sonnet)' is not yet implemented.", 'warning');
+                notificationManager.showToast("AI provider 'Anthropic (Claude 3.5 Sonnet)' is not yet implemented.", 'warning');
                 return { data: null, stats: null }; // TODO
             case 'mistral-large':
                 console.warn("Mistral generation not yet implemented.");
-                window.notificationManager.showToast("AI provider 'Mistral (Large 2)' is not yet implemented.", 'warning');
+                notificationManager.showToast("AI provider 'Mistral (Large 2)' is not yet implemented.", 'warning');
                 return { data: null, stats: null }; // TODO
             case 'cohere-command-r':
                 console.warn("Cohere generation not yet implemented.");
-                window.notificationManager.showToast("AI provider 'Cohere (Command R)' is not yet implemented.", 'warning');
+                notificationManager.showToast("AI provider 'Cohere (Command R)' is not yet implemented.", 'warning');
                 return { data: null, stats: null }; // TODO
             default:
                 console.error(`Unknown AI provider: ${provider}`);
-                window.notificationManager.showToast(`AI System Generation for "${provider}" is not yet supported.`, 'warning');
+                notificationManager.showToast(`AI System Generation for "${provider}" is not yet supported.`, 'warning');
                 return { data: null, stats: null };
         }
     } catch (error) {
         console.error(`Error during AI generation with ${provider}:`, error);
         // Changed this alert to show the specific error message
-        window.notificationManager.showToast(`An error occurred while communicating with the AI. Check the console.\nError: ${error.message}`, 'error');
+        notificationManager.showToast(`An error occurred while communicating with the AI. Check the console.\nError: ${error.message}`, 'error');
         return { data: null, stats: null };
     }
 }

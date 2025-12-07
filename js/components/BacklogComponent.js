@@ -192,17 +192,17 @@ class BacklogComponent {
                         const today = luxon.DateTime.now().startOf('day');
                         const dueDate = luxon.DateTime.fromISO(init.targetDueDate).startOf('day');
                         if (oldValue !== 'Committed') {
-                            window.notificationManager.showToast("Only 'Committed' initiatives can be marked as 'Completed'", 'error');
+                            notificationManager.showToast("Only 'Committed' initiatives can be marked as 'Completed'", 'error');
                             cell.restoreOldValue(); return;
                         }
                         if (dueDate > today) {
-                            window.notificationManager.showToast("Cannot mark as 'Completed' before due date", 'error');
+                            notificationManager.showToast("Cannot mark as 'Completed' before due date", 'error');
                             cell.restoreOldValue(); return;
                         }
                         window.updateInitiative(init.id, { status: newValue });
                         SystemService.save();
                     } else {
-                        window.notificationManager.showToast("Status updates (other than to 'Completed') managed by Year Plan ATL/BTL process", 'info');
+                        notificationManager.showToast("Status updates (other than to 'Completed') managed by Year Plan ATL/BTL process", 'info');
                         cell.restoreOldValue();
                     }
                 }
@@ -300,22 +300,17 @@ class BacklogComponent {
             uniqueIdField: 'id'
         };
 
-        if (this.table && typeof this.table.destroy === 'function') this.table.destroy();
-
-        if (typeof EnhancedTableWidget === 'function') {
-            this.table = new EnhancedTableWidget(container, options);
-        } else {
-            this.table = new Tabulator(container, { ...options, height: '600px' });
-        }
+        if (this.table) this.table.destroy();
+        this.table = new EnhancedTableWidget(container, options);
 
         container.addEventListener('click', (e) => {
             const btn = e.target.closest('[data-action]');
             if (!btn) return;
             const initiativeId = btn.dataset.initiativeId;
             if (btn.dataset.action === 'edit') {
-                if (window.roadmapViewInstance) window.roadmapViewInstance.openModalForEdit(initiativeId);
+                if (roadmapViewInstance) roadmapViewInstance.openModalForEdit(initiativeId);
             } else if (btn.dataset.action === 'delete') {
-                if (window.roadmapViewInstance) window.roadmapViewInstance.handleDelete(initiativeId);
+                if (roadmapViewInstance) roadmapViewInstance.handleDelete(initiativeId);
             }
         });
     }

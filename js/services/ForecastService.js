@@ -266,11 +266,6 @@ const ForecastService = {
     }
 };
 
-// Make available globally for non-module usage
-if (typeof window !== 'undefined') {
-    window.ForecastService = ForecastService;
-}
-
 // Export for ES modules (future migration)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = ForecastService;

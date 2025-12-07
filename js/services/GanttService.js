@@ -357,11 +357,6 @@ const GanttService = {
     }
 };
 
-// Make available globally for non-module usage
-if (typeof window !== 'undefined') {
-    window.GanttService = GanttService;
-}
-
 // Export for ES modules (future migration)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = GanttService;

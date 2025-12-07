@@ -173,15 +173,15 @@ async function saveSystemDetails() {
     const newSystemName = systemNameInput.value.trim();
 
     if (!newSystemName) {
-        window.notificationManager.showToast('System name cannot be empty.', 'warning');
+        notificationManager.showToast('System name cannot be empty.', 'warning');
         return;
     }
 
     SystemService.getCurrentSystem().systemName = newSystemName;
     SystemService.getCurrentSystem().systemDescription = systemDescriptionTextarea.value.trim();
 
-    window.systemRepository.saveSystem(newSystemName, SystemService.getCurrentSystem());
-    window.notificationManager.showToast('System details saved.', 'success');
+    systemRepository.saveSystem(newSystemName, SystemService.getCurrentSystem());
+    notificationManager.showToast('System details saved.', 'success');
 
 
 }
@@ -198,13 +198,13 @@ async function saveAllChanges() {
 
     // 2. Validate Inputs
     if (!finalSystemName) {
-        window.notificationManager.showToast('System Name cannot be empty.', 'warning');
+        notificationManager.showToast('System Name cannot be empty.', 'warning');
         if (systemNameInput) systemNameInput.focus();
         return;
     }
 
     if (!finalSystemDescription) {
-        if (!await window.notificationManager.confirm('System Description is empty. Save anyway?', 'Empty Description', { confirmStyle: 'warning' })) {
+        if (!await notificationManager.confirm('System Description is empty. Save anyway?', 'Empty Description', { confirmStyle: 'warning' })) {
             if (systemDescriptionTextarea) systemDescriptionTextarea.focus();
             return;
         }
@@ -229,28 +229,26 @@ async function saveAllChanges() {
         // if (oldSystemNameKey && oldSystemNameKey !== finalSystemName) { ... } // DELETED
 
         // Check for Overwrite: If new name exists (and it's not the same as old name)
-        if (window.systemRepository.getSystemData(finalSystemName) && oldSystemNameKey !== finalSystemName) {
-            if (!await window.notificationManager.confirm(`A system named "${finalSystemName}" already exists. Overwrite it?`, 'Overwrite System', { confirmStyle: 'danger' })) {
-                // Revert and Cancel
-                SystemService.getCurrentSystem().systemName = oldSystemNameKey;
-                return;
+        if (systemRepository.getSystemData(finalSystemName) && oldSystemNameKey !== finalSystemName) {
+            if (!await notificationManager.confirm(`A system named "${finalSystemName}" already exists. Overwrite it?`, 'Overwrite System', { confirmStyle: 'danger' })) {
+                systemRepository.saveSystem(newSystemName, SystemService.getCurrentSystem());
             }
         }
 
         // Perform Save
-        const saved = window.systemRepository.saveSystem(finalSystemName, SystemService.getCurrentSystem());
+        const saved = systemRepository.saveSystem(finalSystemName, SystemService.getCurrentSystem());
 
         if (saved) {
-            window.notificationManager.showToast(`System "${finalSystemName}" saved successfully!`, 'success');
+            notificationManager.showToast(`System "${finalSystemName}" saved successfully!`, 'success');
 
 
         } else {
-            window.notificationManager.showToast('Failed to save system. Please try again.', 'error');
+            notificationManager.showToast('Failed to save system. Please try again.', 'error');
             SystemService.getCurrentSystem().systemName = oldSystemNameKey; // Revert on failure
         }
     } catch (error) {
         console.error("Error saving system:", error);
-        window.notificationManager.showToast('An error occurred while saving.', 'error');
+        notificationManager.showToast('An error occurred while saving.', 'error');
         SystemService.getCurrentSystem().systemName = oldSystemNameKey; // Revert on error
     }
 }
@@ -321,7 +319,7 @@ function displaySeniorManagerAssignment(sdmSectionContainer, teamIndex, currentS
             newSrMgrName = newSrMgrName.trim();
             let existingSrMgr = (SystemService.getCurrentSystem().seniorManagers || []).find(s => s && s.seniorManagerName.toLowerCase() === newSrMgrName.toLowerCase());
             if (existingSrMgr) {
-                window.notificationManager.showToast(`Senior Manager "${newSrMgrName}" already exists.`, 'warning');
+                notificationManager.showToast(`Senior Manager "${newSrMgrName}" already exists.`, 'warning');
                 return null;
             }
             const newSrMgrId = 'srMgr-' + Date.now();
@@ -361,7 +359,7 @@ function validateEngineerAssignments() {
     }
 
     if (validationErrors) {
-        window.notificationManager.showToast('Validation Errors:\n' + validationErrors, 'error');
+        notificationManager.showToast('Validation Errors:\n' + validationErrors, 'error');
         return false;
     }
     return true;

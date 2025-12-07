@@ -24,13 +24,12 @@ class OrgView {
         }
 
         // 1. Set Workspace Metadata
-        if (window.workspaceComponent) {
-            window.workspaceComponent.setPageMetadata({
-                title: 'Org Design',
-                breadcrumbs: ['System', 'Org Design'],
-                actions: []
-            });
-        }
+        // 1. Set Workspace Metadata
+        window.workspaceComponent.setPageMetadata({
+            title: 'Org Design',
+            breadcrumbs: ['System', 'Org Design'],
+            actions: []
+        });
 
         // 2. Setup Navigation Items
         const navItems = [
@@ -51,9 +50,8 @@ class OrgView {
         });
 
         // 4. Set Workspace Toolbar
-        if (window.workspaceComponent) {
-            window.workspaceComponent.setToolbar(this.pillNav.render());
-        }
+        // 4. Set Workspace Toolbar
+        window.workspaceComponent.setToolbar(this.pillNav.render());
 
         this.container.innerHTML = ''; // Clear container cleanly
 
@@ -173,9 +171,7 @@ class OrgView {
         // Add teams under SDMs
         (SystemService.getCurrentSystem().teams || []).forEach(team => {
             const awayTeamCount = team.awayTeamMembers?.length ?? 0;
-            const sourceSummary = typeof window.getSourceSummary === 'function'
-                ? window.getSourceSummary(team.awayTeamMembers)
-                : '';
+            const sourceSummary = window.getSourceSummary(team.awayTeamMembers);
 
             const engineerChildren = (team.engineers || []).map(engineerName => {
                 const eng = (SystemService.getCurrentSystem().allKnownEngineers || []).find(e => e.name === engineerName);
@@ -1119,7 +1115,7 @@ class OrgView {
         const newLevel = parseInt(cell.getValue());
 
         if (isNaN(newLevel) || newLevel < 4 || newLevel > 7) {
-            window.notificationManager?.showToast('Invalid level. Must be L4-L7.', 'warning');
+            notificationManager?.showToast('Invalid level. Must be L4-L7.', 'warning');
             cell.restoreOldValue();
             return;
         }
@@ -1147,17 +1143,20 @@ class OrgView {
         const newTeamId = cell.getValue() === "" ? null : cell.getValue();
 
         try {
-            if (window.moveEngineerToTeam) {
-                window.moveEngineerToTeam(engineerName, newTeamId);
-                if (typeof SystemService !== 'undefined' && SystemService.save) {
-                    SystemService.save();
-                }
-                this.generateEngineerTable(); // Refresh table
-                window.notificationManager?.showToast(`Moved ${engineerName} to ${newTeamId ? 'new team' : 'Unallocated'}`, 'success');
+            if (typeof moveEngineerToTeam === 'function') {
+                moveEngineerToTeam(engineerName, newTeamId);
+            } else {
+                throw new Error("moveEngineerToTeam is not defined");
             }
+
+            if (typeof SystemService !== 'undefined' && SystemService.save) {
+                SystemService.save();
+            }
+            this.generateEngineerTable();
+            notificationManager?.showToast(`Moved ${engineerName} to ${newTeamId ? 'new team' : 'Unallocated'}`, 'success');
         } catch (error) {
             console.error('Error moving engineer:', error);
-            window.notificationManager?.showToast(error.message || 'Failed to move engineer', 'error');
+            notificationManager?.showToast(error.message || 'Failed to move engineer', 'error');
             cell.restoreOldValue();
         }
     }
@@ -1213,8 +1212,8 @@ if (typeof window !== 'undefined') {
 
     // Export team table generator globally for AI integration
     window.generateTeamTable = function () {
-        if (window.orgViewInstance) {
-            window.orgViewInstance.generateTeamTable();
+        if (orgViewInstance) {
+            orgViewInstance.render();
         } else {
             console.error('OrgView instance not initialized');
         }

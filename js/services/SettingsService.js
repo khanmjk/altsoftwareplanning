@@ -123,11 +123,6 @@ const SettingsService = {
 // Auto-initialize if possible, or wait for explicit call?
 // For now, let's keep it explicit or passive. usage in main.js will trigger load.
 
-// Make available globally for non-module usage
-if (typeof window !== 'undefined') {
-    window.SettingsService = SettingsService;
-}
-
 // Export for ES modules (future migration)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = SettingsService;

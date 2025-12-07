@@ -15,9 +15,8 @@ class DashboardView {
         this.currentWidgetIndex = 0;
 
         // Initialize year filter - DashboardView owns this state
-        if (typeof window.dashboardPlanningYear === 'undefined') {
-            window.dashboardPlanningYear = new Date().getFullYear();
-        }
+        // Ensure global state is initialized
+        // if (typeof window.dashboardPlanningYear === 'undefined') { ... }
         this.planningYear = window.dashboardPlanningYear;
 
         this.pillNav = null; // NEW: Pill navigation component
@@ -45,19 +44,16 @@ class DashboardView {
         }
 
         // 1. Set Workspace Metadata
-        if (window.workspaceComponent) {
-            window.workspaceComponent.setPageMetadata({
-                title: 'Executive Dashboard',
-                breadcrumbs: ['Insights', 'Dashboard'],
-                actions: []
-            });
-        }
+        // 1. Set Workspace Metadata
+        window.workspaceComponent.setPageMetadata({
+            title: 'Executive Dashboard',
+            breadcrumbs: ['Insights', 'Dashboard'],
+            actions: []
+        });
 
         // 2. Set Workspace Toolbar
         const toolbar = this.generateDashboardToolbar();
-        if (window.workspaceComponent && toolbar) {
-            window.workspaceComponent.setToolbar(toolbar);
-        }
+        window.workspaceComponent.setToolbar(toolbar);
 
         if (!SystemService.getCurrentSystem()) {
             this.container.innerHTML = '<div class="dashboard-empty-state"><i class="fas fa-chart-line dashboard-empty-state__icon"></i><p class="dashboard-empty-state__message">No system data loaded</p></div>';
@@ -435,13 +431,6 @@ class DashboardView {
      * Team Demand Chart
      */
     initializeTeamDemandWidget() {
-        if (window.generateRoadmapTableFilters) {
-            window.generateRoadmapTableFilters('Demand', () => this.renderTeamDemandChart(), { includeThemes: false });
-            // CRITICAL: Populate team dropdown after filters are in DOM
-            if (window.updateTeamFilterOptions) {
-                window.updateTeamFilterOptions('Demand');
-            }
-        }
         this.renderTeamDemandChart();
     }
 

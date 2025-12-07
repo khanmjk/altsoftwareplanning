@@ -13,7 +13,7 @@ class GoalEditComponent {
 
     startNewGoal() {
         if (this.draftGoal) {
-            window.notificationManager.showToast('You already have an unsaved goal.', 'warning');
+            notificationManager.showToast('You already have an unsaved goal.', 'warning');
             return;
         }
 
@@ -409,7 +409,7 @@ class GoalEditComponent {
             return;
         }
 
-        if (await window.notificationManager.confirm('Are you sure you want to delete this goal?', 'Delete Goal', { confirmStyle: 'danger' })) {
+        if (await notificationManager.confirm('Are you sure you want to delete this goal?', 'Delete Goal', { confirmStyle: 'danger' })) {
             const goal = this.systemData.goals[index];
 
             // Unlink initiatives
@@ -423,9 +423,9 @@ class GoalEditComponent {
             }
 
             this.systemData.goals.splice(index, 1);
-            if (window.saveSystemData) window.saveSystemData();
+            SystemService.save();
             this.render();
-            window.notificationManager.showToast('Goal deleted.', 'success');
+            notificationManager.showToast('Goal deleted.', 'success');
         }
     }
 
@@ -438,7 +438,7 @@ class GoalEditComponent {
         }
 
         if (!goal.name || goal.name.trim() === '') {
-            window.notificationManager.showToast('Goal Name is required.', 'warning');
+            notificationManager.showToast('Goal Name is required.', 'warning');
             return;
         }
 
@@ -447,13 +447,13 @@ class GoalEditComponent {
             this.systemData.goals.push(goal);
             this.draftGoal = null;
             this.expandedIndex = -1;
-            window.notificationManager.showToast('Goal created successfully.', 'success');
+            notificationManager.showToast('Goal created successfully.', 'success');
             this.render();
         } else {
-            window.notificationManager.showToast('Goal saved successfully.', 'success');
+            notificationManager.showToast('Goal saved successfully.', 'success');
         }
 
-        if (window.saveSystemData) window.saveSystemData();
+        SystemService.save();
     }
 }
 

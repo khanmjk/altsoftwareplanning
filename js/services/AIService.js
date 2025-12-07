@@ -33,13 +33,13 @@ const AIService = {
             if (aiEnabled) {
                 chatContainer.style.display = 'block';
                 // Check if global aiChatAssistant is available for finer control
-                if (!(window.aiChatAssistant && window.aiChatAssistant.isAiChatPanelOpen && window.aiChatAssistant.isAiChatPanelOpen())) {
+                if (!(aiChatAssistant && aiChatAssistant.isAiChatPanelOpen && aiChatAssistant.isAiChatPanelOpen())) {
                     chatContainer.style.width = chatContainer.style.width || '0';
                     if (chatHandle) chatHandle.style.display = 'none';
                 }
             } else {
-                if (window.aiChatAssistant && window.aiChatAssistant.closeAiChatPanel) {
-                    window.aiChatAssistant.closeAiChatPanel();
+                if (aiChatAssistant && aiChatAssistant.closeAiChatPanel) {
+                    aiChatAssistant.closeAiChatPanel();
                 }
                 chatContainer.style.display = 'none';
                 if (chatHandle) chatHandle.style.display = 'none';
@@ -411,11 +411,6 @@ ${systemPromptSummary}`.trim();
         };
     }
 };
-
-// Make available globally for non-module usage
-if (typeof window !== 'undefined') {
-    window.AIService = AIService;
-}
 
 // Export for ES modules (future migration)
 if (typeof module !== 'undefined' && module.exports) {

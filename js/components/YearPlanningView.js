@@ -936,7 +936,7 @@ class YearPlanningView {
         console.log(`Saving plan for year ${this.currentYear}...`);
 
         if (!SystemService.getCurrentSystem()?.systemName) {
-            window.notificationManager?.showToast("Cannot save: No system data loaded.", "error");
+            notificationManager?.showToast("Cannot save: No system data loaded.", "error");
             return;
         }
 
@@ -970,19 +970,19 @@ class YearPlanningView {
             if (typeof SystemService !== 'undefined' && SystemService.save) {
                 SystemService.save();
             }
-            window.notificationManager?.showToast(`Plan for ${this.currentYear} saved successfully.`, "success");
+            notificationManager?.showToast(`Plan for ${this.currentYear} saved successfully.`, "success");
             this.render();
         } catch (error) {
             console.error("Error saving plan:", error);
-            window.notificationManager?.showToast("Error saving plan. Check console.", "error");
+            notificationManager?.showToast("Error saving plan. Check console.", "error");
         }
     }
 
     runOptimizer() {
-        if (window.aiAgentController?.runPrebuiltAgent) {
-            window.aiAgentController.runPrebuiltAgent('optimizePlan');
+        if (aiAgentController?.runPrebuiltAgent) {
+            aiAgentController.runPrebuiltAgent('optimizePlan');
         } else {
-            window.notificationManager?.showToast("AI Controller not available.", "error");
+            notificationManager?.showToast("AI Controller not available.", "error");
         }
     }
 
@@ -1012,13 +1012,13 @@ class YearPlanningView {
 // ==================== Global Instance & Compatibility ====================
 
 // Global instance
-window.yearPlanningView = null;
+yearPlanningView = null;
 
 // Compatibility layer - delegates to instance or uses legacy functions
-window.renderPlanningView = function () {
+renderPlanningView = function () {
     // Use new class if instance exists, otherwise fall back to legacy
-    if (window.yearPlanningView) {
-        window.yearPlanningView.render();
+    if (yearPlanningView) {
+        yearPlanningView.render();
     } else {
         // Legacy fallback - will be removed after full migration
         console.warn("YearPlanningView: Using legacy renderPlanningView");

@@ -97,11 +97,6 @@ const InitiativeService = {
     }
 };
 
-// Make available globally for non-module usage
-if (typeof window !== 'undefined') {
-    window.InitiativeService = InitiativeService;
-}
-
 // Export for ES modules (future migration)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = InitiativeService;

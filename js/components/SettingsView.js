@@ -22,13 +22,12 @@ class SettingsView {
         if (!this.container) return;
 
         // 1. Set Workspace Metadata
-        if (window.workspaceComponent) {
-            window.workspaceComponent.setPageMetadata({
-                title: 'System Settings',
-                breadcrumbs: ['System', 'Settings'],
-                actions: []
-            });
-        }
+        // 1. Set Workspace Metadata
+        window.workspaceComponent.setPageMetadata({
+            title: 'System Settings',
+            breadcrumbs: ['System', 'Settings'],
+            actions: []
+        });
 
         // 2. Set Workspace Toolbar (Pill Navigation)
         this.pillNav = new PillNavigationComponent({
@@ -36,9 +35,7 @@ class SettingsView {
             onSwitch: (tabId) => this.switchTab(tabId)
         });
 
-        if (window.workspaceComponent) {
-            window.workspaceComponent.setToolbar(this.pillNav.render());
-        }
+        window.workspaceComponent.setToolbar(this.pillNav.render());
 
         // 3. Render Content Structure
         this.container.innerHTML = `
@@ -281,23 +278,19 @@ class SettingsView {
         const provider = document.getElementById('aiProviderSelect_view').value;
         const apiKey = document.getElementById('aiApiKeyInput_view').value;
 
-        if (SettingsService.get()) {
-            SettingsService.get().ai.isEnabled = enabled;
-            SettingsService.get().ai.provider = provider;
-            SettingsService.get().ai.apiKey = apiKey;
-
-            // Save to localStorage
-            localStorage.setItem('smt_global_settings', JSON.stringify(SettingsService.get()));
-
-            // Update UI
-            if (window.headerComponent) {
-                window.headerComponent.updateAiButtonVisibility();
+        // Use SettingsService to update and save
+        SettingsService.update({
+            ai: {
+                isEnabled: enabled,
+                provider: provider,
+                apiKey: apiKey
             }
+        });
 
-            if (window.notificationManager) {
-                window.notificationManager.showToast('AI Settings saved successfully!', 'success');
-            }
-        }
+        // Update UI
+        window.headerComponent.updateAiButtonVisibility();
+
+        notificationManager.showToast('AI Settings saved successfully!', 'success');
     }
 
     /**

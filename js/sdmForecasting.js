@@ -51,8 +51,8 @@ function renderSdmForecastingView(container) {
 
     // 2. Set Workspace Toolbar (Controls)
     const toolbarControls = generateSdmToolbar();
-    if (window.workspaceComponent && toolbarControls) {
-        window.workspaceComponent.setToolbar(toolbarControls);
+    if (workspaceComponent && toolbarControls) {
+        workspaceComponent.setToolbar(toolbarControls);
     }
 
     // 3. Render Content
@@ -427,7 +427,7 @@ function generateForecast_SDM() {
     const teamSelect = document.getElementById('sdmForecastTeamSelect');
     const selectedTeamId = teamSelect?.value;
     if (!selectedTeamId) {
-        window.notificationManager.showToast("Please select a team to forecast.", "warning");
+        notificationManager.showToast("Please select a team to forecast.", "warning");
         clearSdmForecastOutputs();
         return;
     }
@@ -456,12 +456,12 @@ function generateForecast_SDM() {
 
     // --- Validate required inputs ---
     if (isNaN(fundedSize) || isNaN(currentEngineers) || isNaN(hiringTime) || isNaN(rampUpTime) || isNaN(attritionRate) || isNaN(closeGapWeek)) {
-        window.notificationManager.showToast("Please ensure all forecast parameters (Hiring Time, Ramp-up, Attrition, Target Week) have valid numeric values.", "error");
+        notificationManager.showToast("Please ensure all forecast parameters (Hiring Time, Ramp-up, Attrition, Target Week) have valid numeric values.", "error");
         clearSdmForecastOutputs();
         return;
     }
     if (!SystemService.getCurrentSystem()?.capacityConfiguration?.workingDaysPerYear || SystemService.getCurrentSystem().capacityConfiguration.workingDaysPerYear <= 0) {
-        window.notificationManager.showToast("Cannot run forecast: 'Standard Working Days Per Year' must be configured in Capacity Constraints and be greater than 0.", "error");
+        notificationManager.showToast("Cannot run forecast: 'Standard Working Days Per Year' must be configured in Capacity Constraints and be greater than 0.", "error");
         clearSdmForecastOutputs();
         return;
     }
@@ -544,7 +544,7 @@ function generateForecast_SDM() {
     );
 
     if (!simulationResult) {
-        window.notificationManager.showToast("An error occurred during the forecast simulation. Please check the console.", "error");
+        notificationManager.showToast("An error occurred during the forecast simulation. Please check the console.", "error");
         clearSdmForecastOutputs();
         if (hiringInfoDiv) hiringInfoDiv.textContent = "Simulation Error.";
         return;
@@ -651,7 +651,7 @@ function simulateTeamSize_SDM(
 
         if (!capacityConfig || !capacityConfig.workingDaysPerYear || capacityConfig.workingDaysPerYear <= 0) {
             console.error("Simulation error: Invalid 'workingDaysPerYear' in capacity configuration.");
-            window.notificationManager.showToast("Error: 'Standard Working Days Per Year' must be configured in Capacity Constraints and be greater than 0.", "error");
+            notificationManager.showToast("Error: 'Standard Working Days Per Year' must be configured in Capacity Constraints and be greater than 0.", "error");
             return null;
         }
 

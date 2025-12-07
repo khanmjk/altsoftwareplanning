@@ -100,8 +100,8 @@ const aiAgentController = (() => {
     let cachedImageGenerationFn = null;
 
     function _getAiPrimingPrompt() {
-        const toolsetDescription = (window.aiAgentToolset && typeof window.aiAgentToolset.getAgentToolsetDescription === 'function')
-            ? window.aiAgentToolset.getAgentToolsetDescription()
+        const toolsetDescription = (aiAgentToolset)
+            ? aiAgentToolset.getAgentToolsetDescription()
             : 'Toolset description is unavailable. You may still answer questions but cannot execute actions.';
 
         return `You are an expert Software Engineering Planning & Management Partner. Your goals are to:
@@ -136,12 +136,8 @@ ${toolsetDescription}`;
         if (chatLog) {
             chatLog.innerHTML = '<div class="chat-message ai-message">Hello! I have loaded the full context for <strong>' + (SystemService.getCurrentSystem()?.systemName || 'the system') + '</strong>. How can I help you analyze it?<br><br>You can now ask me to perform actions (including bulk actions!) using simple English OR Type <b>/</b> to see a list of available commands.</div>';
         }
-        if (window.aiChatAssistant && typeof window.aiChatAssistant.setTokenCount === 'function') {
-            window.aiChatAssistant.setTokenCount(0);
-        }
-        if (window.aiChatAssistant && typeof window.aiChatAssistant.clearChatInput === 'function') {
-            window.aiChatAssistant.clearChatInput();
-        }
+        aiChatAssistant.setTokenCount(0);
+        aiChatAssistant.clearChatInput();
 
         chatSessionHistory = [];
         sessionTotalTokens = 0;
@@ -174,15 +170,13 @@ ${toolsetDescription}`;
         const suggestions = SUGGESTED_QUESTIONS[effectiveViewId] || SUGGESTED_QUESTIONS.default;
         console.log(`[AI CHAT] sample questions for this screen:`, suggestions.map(s => s.text));
 
-        if (window.aiChatAssistant && typeof window.aiChatAssistant.setSuggestionPills === 'function') {
-            window.aiChatAssistant.setSuggestionPills(suggestions);
-        }
+        aiChatAssistant.setSuggestionPills(suggestions);
     }
 
     async function handleUserChatSubmit() {
         if (isAgentThinking) return;
-        const view = window.aiChatAssistant;
-        if (!view || typeof view.getChatInputValue !== 'function') return;
+        const view = aiChatAssistant;
+        if (!view) return;
 
         const userQuestion = view.getChatInputValue();
         if (!userQuestion) return;
@@ -190,7 +184,7 @@ ${toolsetDescription}`;
 
         isAgentThinking = true;
         view.toggleChatInput(true);
-        const isImageRequest = typeof view.isImageRequestPending === 'function' ? view.isImageRequestPending() : false;
+        const isImageRequest = view.isImageRequestPending ? view.isImageRequestPending() : false;
         view.postUserMessageToView(userQuestion);
         view.clearChatInput();
 
@@ -203,17 +197,12 @@ ${toolsetDescription}`;
     }
 
     function getAvailableTools() {
-        if (window.aiAgentToolset && typeof window.aiAgentToolset.getToolsSummaryList === 'function') {
-            return window.aiAgentToolset.getToolsSummaryList();
-        }
-        return [];
+        return aiAgentToolset ? aiAgentToolset.getToolsSummaryList() : [];
     }
 
     async function _executeChatTurn(userQuestion) {
-        const view = window.aiChatAssistant;
-        const loadingMessageEl = view && typeof view.showAgentLoadingIndicator === 'function'
-            ? view.showAgentLoadingIndicator()
-            : null;
+        const view = aiChatAssistant;
+        const loadingMessageEl = view ? view.showAgentLoadingIndicator() : null;
 
         const contextJson = scrapeCurrentViewContext();
         console.log(`[AI CHAT] Scraping DYNAMIC context (${contextJson.length} chars) from view: ${currentViewId}`);
@@ -254,7 +243,7 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
 
             if (aiResponse.usage && aiResponse.usage.totalTokenCount) {
                 sessionTotalTokens += aiResponse.usage.totalTokenCount;
-                if (view && typeof view.setTokenCount === 'function') {
+                if (view) {
                     view.setTokenCount(sessionTotalTokens);
                 }
             }
@@ -262,7 +251,7 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
             const planMatch = aiResponse.textResponse.match(/<execute_plan>([\s\S]*?)<\/execute_plan>/i);
             if (!planMatch) {
                 const rendered = md.render(aiResponse.textResponse);
-                if (view && typeof view.hideAgentLoadingIndicator === 'function') {
+                if (view) {
                     view.hideAgentLoadingIndicator(loadingMessageEl, rendered);
                 }
                 return;
@@ -274,7 +263,7 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
             } catch (error) {
                 console.warn('[AI Agent Controller] Failed to parse agent plan; rendering as text instead.', error);
                 const rendered = md.render(aiResponse.textResponse);
-                if (view && typeof view.hideAgentLoadingIndicator === 'function') {
+                if (view) {
                     view.hideAgentLoadingIndicator(loadingMessageEl, rendered);
                 }
                 return;
@@ -285,15 +274,15 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
             await _executeAgentPlan(steps, loadingMessageEl);
         } catch (error) {
             console.error("Error during AI chat submit:", error);
-            if (loadingMessageEl && typeof loadingMessageEl.remove === 'function') {
+            if (loadingMessageEl && loadingMessageEl.remove) {
                 loadingMessageEl.remove();
             }
-            if (view && typeof view.postAgentMessageToView === 'function') {
+            if (view) {
                 view.postAgentMessageToView(`Error: ${error.message}`, true);
             }
         } finally {
             isAgentThinking = false;
-            if (view && typeof view.toggleChatInput === 'function') {
+            if (view) {
                 view.toggleChatInput(false);
             }
             renderSuggestionsForCurrentView();
@@ -301,10 +290,8 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
     }
 
     async function _handleImageRequest(userQuestion) {
-        const view = window.aiChatAssistant;
-        const loadingMessageEl = view && typeof view.showAgentLoadingIndicator === 'function'
-            ? view.showAgentLoadingIndicator()
-            : null;
+        const view = aiChatAssistant;
+        const loadingMessageEl = view ? view.showAgentLoadingIndicator() : null;
         try {
             const contextJson = scrapeCurrentViewContext();
             const imageFn = _resolveImageGenerationFunction();
@@ -320,14 +307,14 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
 
             if (response && response.isImage && response.imageUrl) {
                 const html = `\n                <p>Here is the generated diagram:</p>\n                <img src="${response.imageUrl}"\n                     alt="${response.altText || 'Generated diagram'}"\n                     class="chat-generated-image"\n                     title="Right-click to copy or save this image" />\n            `;
-                if (view && typeof view.hideAgentLoadingIndicator === 'function') {
+                if (view) {
                     view.hideAgentLoadingIndicator(loadingMessageEl, html);
                 }
             } else if (response && response.code) {
-                if (view && typeof view.hideAgentLoadingIndicator === 'function') {
+                if (view) {
                     view.hideAgentLoadingIndicator(loadingMessageEl, '<p>Diagram generated. Click "View Diagram" to open.</p>');
                 }
-                if (view && typeof view.postDiagramWidget === 'function') {
+                if (view) {
                     view.postDiagramWidget(response.title, response.code);
                 }
             } else {
@@ -335,12 +322,12 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
             }
         } catch (error) {
             console.error("Error during AI image submit:", error);
-            if (view && typeof view.hideAgentLoadingIndicator === 'function') {
+            if (view) {
                 view.hideAgentLoadingIndicator(loadingMessageEl, `<span style="color:red;">Error: ${error.message}</span>`);
             }
         } finally {
             isAgentThinking = false;
-            if (view && typeof view.toggleChatInput === 'function') {
+            if (view) {
                 view.toggleChatInput(false);
             }
             renderSuggestionsForCurrentView();
@@ -348,22 +335,17 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
     }
 
     async function _executeAgentPlan(steps, loadingMessageEl) {
-        const view = window.aiChatAssistant;
+        const view = aiChatAssistant;
         if (!Array.isArray(steps) || steps.length === 0) {
-            if (view && typeof view.hideAgentLoadingIndicator === 'function') {
+            if (view) {
                 view.hideAgentLoadingIndicator(loadingMessageEl, md.render('No executable steps were provided.'));
             }
             return;
         }
 
-        if (!window.aiAgentToolset || typeof window.aiAgentToolset.executeTool !== 'function') {
-            if (view && typeof view.hideAgentLoadingIndicator === 'function') {
-                view.hideAgentLoadingIndicator(loadingMessageEl, '<span style="color:red;">Agent toolset is unavailable.</span>');
-            }
-            return;
-        }
 
-        if (view && typeof view.hideAgentLoadingIndicator === 'function') {
+
+        if (view) {
             view.hideAgentLoadingIndicator(loadingMessageEl, '<p>Starting agent plan...</p>');
         }
 
@@ -375,14 +357,14 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
             const step = steps[i];
             try {
                 const resolvedPayload = _resolvePayloadPlaceholders(step.payload || {}, stepResults);
-                if (view && typeof view.postAgentMessageToView === 'function') {
+                if (view) {
                     view.postAgentMessageToView(`Step ${i + 1}: Executing <b>${step.command}</b>...`);
                 }
                 if (step.command === 'generateDiagram') {
-                    if (view && typeof view.postAgentMessageToView === 'function') {
+                    if (view) {
                         view.postAgentMessageToView(`Generating diagram: "${resolvedPayload.description || ''}"...`);
                     }
-                    const contextJson = typeof scrapeCurrentViewContext === 'function' ? scrapeCurrentViewContext() : '{}';
+                    const contextJson = scrapeCurrentViewContext();
                     console.debug("[AI-DIAGRAM] Context JSON length:", (contextJson || '').length);
                     try {
                         const result = await window.generateDiagramFromPrompt(
@@ -392,12 +374,12 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
                             SettingsService.get().ai.provider
                         );
                         console.debug("[AI-DIAGRAM] Diagram generation result:", result);
-                        if (view && typeof view.postDiagramWidget === 'function') {
+                        if (view) {
                             view.postDiagramWidget(result.title, result.code);
                         }
                         stepResults[i] = result;
                         stepSummaries.push(`Generated diagram: ${resolvedPayload.description || ''}`);
-                        if (view && typeof view.postAgentMessageToView === 'function') {
+                        if (view) {
                             view.postAgentMessageToView(`Step ${i + 1} complete.`);
                         }
                     } catch (err) {
@@ -406,15 +388,15 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
                     }
                     continue;
                 }
-                const result = await window.aiAgentToolset.executeTool(step.command, resolvedPayload);
+                const result = await aiAgentToolset.executeTool(step.command, resolvedPayload);
                 stepResults[i] = result;
                 console.debug('[AI Agent Controller] Step completed:', { step: step.command, payload: resolvedPayload, result });
                 stepSummaries.push(_describeAgentStep(step.command, resolvedPayload, result, i));
-                if (view && typeof view.postAgentMessageToView === 'function') {
+                if (view) {
                     view.postAgentMessageToView(`Step ${i + 1} complete.`);
                 }
             } catch (error) {
-                if (view && typeof view.postAgentMessageToView === 'function') {
+                if (view) {
                     view.postAgentMessageToView(`Error on step ${i + 1} (${step.command}): ${error.message}`, true);
                 }
                 break;
@@ -423,17 +405,17 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
 
         // Save changes via SystemService
         try {
-            if (typeof SystemService !== 'undefined' && SystemService.save) {
+            if (typeof SystemService !== 'undefined') {
                 SystemService.save();
             }
         } catch (error) {
             console.error('SystemService.save failed:', error);
         }
-        if (window.navigationManager && typeof window.navigationManager.refresh === 'function') {
-            try { window.navigationManager.refresh(); } catch (error) { console.error('navigationManager.refresh failed:', error); }
-        }
+        // if (window.navigationManager && window.navigationManager.refresh) {
+        //     try { window.navigationManager.refresh(); } catch (error) { console.error('navigationManager.refresh failed:', error); }
+        // }
 
-        if (view && typeof view.postAgentMessageToView === 'function') {
+        if (view) {
             let summaryHtml = '<b>Agent plan finished.</b> UI has been refreshed.';
             if (stepSummaries.length > 0) {
                 summaryHtml += '<br><br><strong>Actions performed:</strong><ul>' +
@@ -582,7 +564,7 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
      */
     async function runPrebuiltAgent(agentName, payload) {
         console.log(`[AI Agent Controller] Received request to run prebuilt agent: ${agentName}`, payload);
-        const view = window.aiChatAssistant;
+        const view = aiChatAssistant;
         if (!view) {
             console.error("AI Chat Assistant view is not available.");
             return;
@@ -595,29 +577,18 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
         try {
             switch (agentName) {
                 case 'optimizePlan':
-                    if (window.aiPlanOptimizationAgent && typeof window.aiPlanOptimizationAgent.runOptimization === 'function') {
+                    if (aiPlanOptimizationAgent) {
                         const contextJson = scrapeCurrentViewContext();
                         const pinnedHistory = [];
                         if (chatSessionHistory[0]) pinnedHistory.push(chatSessionHistory[0]);
                         if (chatSessionHistory[1]) pinnedHistory.push(chatSessionHistory[1]);
                         // Pass the function to post messages
-                        window.aiPlanOptimizationAgent.runOptimization({
+                        aiPlanOptimizationAgent.runOptimization({
                             postMessageFn: view.postAgentMessageToView
                         }, {
                             contextJson,
                             primingHistory: pinnedHistory
                         });
-                    } else {
-                        throw new Error("The Plan Optimization Agent (aiPlanOptimizationAgent.js) is not loaded or does not have a 'runOptimization' function.");
-                    }
-                    break;
-
-                case 'initiateDeleteEngineer':
-                    // Placeholder for when we implement this
-                    if (window.aiOrgChangeAgent && typeof window.aiOrgChangeAgent.initiateDeleteEngineer === 'function') {
-                        window.aiOrgChangeAgent.initiateDeleteEngineer(payload.engineerName);
-                    } else {
-                        throw new Error("The Org Change Agent (aiOrgChangeAgent.js) is not loaded or is missing 'initiateDeleteEngineer'.");
                     }
                     break;
 
@@ -637,26 +608,28 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
      */
     function confirmPrebuiltAgent(didConfirm) {
         console.log(`[AI Agent Controller] Received agent confirmation: ${didConfirm}`);
-        const view = window.aiChatAssistant;
+        const view = aiChatAssistant;
         if (!view) return;
 
         let actionHandled = false;
         let outcomeText = didConfirm ? 'Changes applied.' : 'Changes discarded.';
 
         // Check which agent has pending changes
-        if (window.aiPlanOptimizationAgent && typeof window.aiPlanOptimizationAgent.hasPendingChanges === 'function' && window.aiPlanOptimizationAgent.hasPendingChanges()) {
+        if (aiPlanOptimizationAgent && aiPlanOptimizationAgent.hasPendingChanges()) {
             if (didConfirm) {
-                const applied = window.aiPlanOptimizationAgent.applyPendingChanges();
+                const applied = aiPlanOptimizationAgent.applyPendingChanges();
                 actionHandled = applied;
                 if (!applied) {
                     outcomeText = 'Failed to apply changes.';
                 }
             } else {
-                window.aiPlanOptimizationAgent.discardPendingChanges();
+                aiPlanOptimizationAgent.discardPendingChanges();
                 actionHandled = true;
             }
         }
-        // else if (window.aiOrgChangeAgent && window.aiOrgChangeAgent.hasPendingChanges()) {
+        else if (aiOrgChangeAgent && aiOrgChangeAgent.hasPendingChanges()) {
+            // [Handling pending org changes]
+        }
         //     // Logic for other agents will go here
         // } 
         else {
@@ -672,10 +645,7 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
 
     async function _waitForAnalysisFunction(maxAttempts = 5, delayMs = 200) {
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
-            if (typeof getAnalysisFromPrompt === 'function') {
-                return getAnalysisFromPrompt;
-            }
-            if (typeof window !== 'undefined' && typeof window.getAnalysisFromPrompt === 'function') {
+            if (typeof window !== 'undefined' && window.getAnalysisFromPrompt) {
                 return window.getAnalysisFromPrompt;
             }
             await new Promise(resolve => setTimeout(resolve, delayMs));
@@ -685,11 +655,7 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
 
     function _resolveImageGenerationFunction() {
         if (cachedImageGenerationFn) return cachedImageGenerationFn;
-        if (typeof generateImageFromPrompt === 'function') {
-            cachedImageGenerationFn = generateImageFromPrompt;
-            return cachedImageGenerationFn;
-        }
-        if (typeof window !== 'undefined' && typeof window.generateImageFromPrompt === 'function') {
+        if (window.generateImageFromPrompt) {
             cachedImageGenerationFn = window.generateImageFromPrompt;
             return cachedImageGenerationFn;
         }
@@ -716,7 +682,7 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
         contextData.systemDescription = SystemService.getCurrentSystem().systemDescription;
 
         // [NEW] Try class-based view context first via AI_VIEW_REGISTRY
-        if (window.getAIContextForView && currentView) {
+        if (currentView) {
             const classContext = window.getAIContextForView(currentView);
             if (classContext && classContext.source === 'class') {
                 console.log(`[AI CHAT] Using class-based context from ${currentView}`);
@@ -783,18 +749,16 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
                     try {
                         switch (currentWidget.id) {
                             case 'strategicGoalsWidget':
-                                if (typeof prepareGoalData === 'function') {
-                                    contextData.data.widgetData = prepareGoalData();
-                                }
+                                contextData.data.widgetData = prepareGoalData(system);
                                 break;
                             case 'accomplishmentsWidget':
-                                if (typeof prepareAccomplishmentsData === 'function') {
-                                    contextData.data.widgetData = prepareAccomplishmentsData();
-                                }
+                                contextData.data.widgetData = prepareAccomplishmentsData(system);
                                 break;
                             case 'investmentDistributionWidget':
-                                if (typeof processInvestmentData === 'function') {
-                                    contextData.data.widgetData = processInvestmentData(dashboardPlanningYear);
+                                try {
+                                    contextData.data.widgetData = processInvestmentData(system);
+                                } catch (e) {
+                                    console.warn('ProcessInvestmentData failed', e);
                                 }
                                 break;
                         }
@@ -861,8 +825,8 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
     }
 
     function _markAgentConfirmationHandled(statusText) {
-        const containerId = (window.aiPlanOptimizationAgent && typeof window.aiPlanOptimizationAgent.getLastConfirmationContainerId === 'function')
-            ? window.aiPlanOptimizationAgent.getLastConfirmationContainerId()
+        const containerId = (aiPlanOptimizationAgent && typeof aiPlanOptimizationAgent.getLastConfirmationContainerId === 'function')
+            ? aiPlanOptimizationAgent.getLastConfirmationContainerId()
             : null;
         if (!containerId) return;
         const container = document.getElementById(containerId);
@@ -902,6 +866,6 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
     };
 })();
 
-if (typeof window !== 'undefined') {
-    window.aiAgentController = aiAgentController;
-}
+
+
+

@@ -253,7 +253,5 @@ class NotificationManager {
     }
 }
 
-// Expose to window
-if (typeof window !== 'undefined') {
-    window.NotificationManager = NotificationManager;
-}
+// Export as singleton
+const notificationManager = new NotificationManager();

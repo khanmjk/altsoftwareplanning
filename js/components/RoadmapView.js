@@ -2,6 +2,9 @@
  * RoadmapView - Roadmap & Backlog View Orchestrator
  * Manages the sub-views: Backlog (List), Quarterly Roadmap, and 3-Year Plan.
  */
+// Global Instance
+var roadmapViewInstance = null;
+
 class RoadmapView {
     constructor() {
         this.currentView = 'backlog'; // default
@@ -20,13 +23,12 @@ class RoadmapView {
         if (!container) { console.error('Roadmap container not found'); return; }
 
         // 1. Set Workspace Metadata
-        if (window.workspaceComponent) {
-            window.workspaceComponent.setPageMetadata({
-                title: 'Roadmap & Backlog',
-                breadcrumbs: ['Product', 'Roadmap'],
-                actions: [] // Actions moved to toolbar body
-            });
-        }
+        // 1. Set Workspace Metadata
+        window.workspaceComponent.setPageMetadata({
+            title: 'Roadmap & Backlog',
+            breadcrumbs: ['Product', 'Roadmap'],
+            actions: [] // Actions moved to toolbar body
+        });
 
         // 2. Setup Container
         container.innerHTML = `<div id="roadmapViewContainer" class="roadmap-view-container"></div>`;
@@ -38,14 +40,12 @@ class RoadmapView {
         this.switchView(this.currentView);
 
         // Initialize modal if needed
-        if (!window.roadmapInitiativeModal) {
-            window.roadmapInitiativeModal = new RoadmapInitiativeModal();
+        if (!roadmapInitiativeModal) {
+            roadmapInitiativeModal = new RoadmapInitiativeModal();
         }
     }
 
     setupToolbar() {
-        if (!window.workspaceComponent) return;
-
         const toolbarContainer = document.createElement('div');
         toolbarContainer.className = 'roadmap-main-toolbar';
         toolbarContainer.style.display = 'flex';
@@ -81,7 +81,7 @@ class RoadmapView {
         themesBtn.className = 'btn btn-secondary btn-sm';
         themesBtn.innerHTML = '<i class="fas fa-tags"></i> Manage Themes';
         themesBtn.onclick = () => {
-            if (window.navigationManager) window.navigationManager.navigateTo('managementView', { tab: 'themes' });
+            navigationManager.navigateTo('managementView', { tab: 'themes' });
         };
         actionsRow.appendChild(themesBtn);
 
@@ -93,7 +93,7 @@ class RoadmapView {
         controlsContainer.style.width = '100%';
         toolbarContainer.appendChild(controlsContainer);
 
-        window.workspaceComponent.setToolbar(toolbarContainer);
+        workspaceComponent.setToolbar(toolbarContainer);
     }
 
     switchView(viewId) {
@@ -121,7 +121,7 @@ class RoadmapView {
             this.activeComponent.render();
 
             // Inject component-specific controls into toolbar
-            if (typeof this.activeComponent.generateToolbarControls === 'function' && controlsContainer) {
+            if (this.activeComponent.generateToolbarControls && controlsContainer) {
                 controlsContainer.appendChild(this.activeComponent.generateToolbarControls());
             }
         }
@@ -130,16 +130,16 @@ class RoadmapView {
     // --- Modal & Data Handling (Delegated to Global/Shared Logic) ---
 
     openModalForAdd() {
-        if (window.roadmapInitiativeModal) {
-            window.roadmapInitiativeModal.onSave = this.handleSave.bind(this);
-            window.roadmapInitiativeModal.open();
+        if (roadmapInitiativeModal) {
+            roadmapInitiativeModal.onSave = this.handleSave.bind(this);
+            roadmapInitiativeModal.open();
         }
     }
 
     openModalForEdit(initiativeId) {
-        if (window.roadmapInitiativeModal) {
-            window.roadmapInitiativeModal.onSave = this.handleSave.bind(this);
-            window.roadmapInitiativeModal.open(initiativeId);
+        if (roadmapInitiativeModal) {
+            roadmapInitiativeModal.onSave = this.handleSave.bind(this);
+            roadmapInitiativeModal.open(initiativeId);
         }
     }
 
@@ -165,27 +165,27 @@ class RoadmapView {
         const initiative = (SystemService.getCurrentSystem().yearlyInitiatives || []).find(i => i.initiativeId === initiativeId);
         const title = initiative ? initiative.title : initiativeId;
 
-        if (await window.notificationManager.confirm(`Are you sure you want to delete initiative "${title}"?`, 'Delete Initiative', { confirmStyle: 'danger' })) {
-            const success = window.deleteInitiative(initiativeId);
+        if (await notificationManager.confirm(`Are you sure you want to delete initiative "${title}"?`, 'Delete Initiative', { confirmStyle: 'danger' })) {
+            const success = deleteInitiative(initiativeId);
             if (success) {
                 if (typeof SystemService !== 'undefined' && SystemService.save) {
                     SystemService.save();
                 }
                 this.refreshActiveView();
-                window.notificationManager.showToast('Initiative deleted', 'success');
+                notificationManager.showToast('Initiative deleted', 'success');
             } else {
-                window.notificationManager.showToast('Failed to delete initiative', 'error');
+                notificationManager.showToast('Failed to delete initiative', 'error');
             }
         }
     }
 
     refreshActiveView() {
-        if (this.activeComponent && typeof this.activeComponent.render === 'function') {
+        if (this.activeComponent && this.activeComponent.render) {
             // Re-render table/grid to reflect data changes
             // For Backlog, renderTable is enough. For Roadmap, renderGrid.
             // We can just call render() again or specific refresh methods.
-            if (typeof this.activeComponent.renderTable === 'function') this.activeComponent.renderTable();
-            else if (typeof this.activeComponent.renderGrid === 'function') this.activeComponent.renderGrid();
+            if (this.activeComponent.renderTable) this.activeComponent.renderTable();
+            else if (this.activeComponent.renderGrid) this.activeComponent.renderGrid();
             else this.activeComponent.render();
         }
     }
@@ -224,23 +224,24 @@ if (typeof window !== 'undefined') {
     window.tempRoadmapAssignments_modal = [];
 
     window.renderRoadmapView = function (container) {
-        if (!window.roadmapViewInstance) window.roadmapViewInstance = new RoadmapView();
-        window.roadmapViewInstance.render(container);
+        if (!roadmapViewInstance) roadmapViewInstance = new RoadmapView();
+        roadmapViewInstance.render(container);
     };
 
+    // Expose openModalForAdd globally or through instance
     window.openRoadmapModalForAdd = function () {
-        if (window.roadmapViewInstance) window.roadmapViewInstance.openModalForAdd();
+        if (roadmapViewInstance) roadmapViewInstance.openModalForAdd();
     };
 
     window.openRoadmapModalForEdit = function (initiativeId) {
-        if (window.roadmapViewInstance) window.roadmapViewInstance.openModalForEdit(initiativeId);
+        if (roadmapViewInstance) roadmapViewInstance.openModalForEdit(initiativeId);
     };
 
     window.handleSaveRoadmapInitiative = function (initiativeData, isEdit) {
-        if (window.roadmapViewInstance) window.roadmapViewInstance.handleSave(initiativeData, isEdit);
+        if (roadmapViewInstance) roadmapViewInstance.handleSave(initiativeData, isEdit);
     };
 
     window.handleDeleteInitiativeButtonFromTable = async function (initiativeId) {
-        if (window.roadmapViewInstance) await window.roadmapViewInstance.handleDelete(initiativeId);
+        if (roadmapViewInstance) await roadmapViewInstance.handleDelete(initiativeId);
     };
 }

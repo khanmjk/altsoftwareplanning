@@ -148,14 +148,14 @@ function handleDrop(event) {
     // Constraint 0: Cannot drag anything if the dragged item wasn't found or was somehow protected
     if (!draggedInitiative || draggedInitiative.isProtected) {
         // console.log("Drop invalid: Dragged item is protected or invalid.");
-        window.notificationManager.showToast("Cannot move a protected item.", "warning");
+        notificationManager.showToast("Cannot move a protected item.", "warning");
         // handleDragEnd will reset state
         return;
     }
     // Constraint 1: Cannot drop ONTO a protected row (target is protected)
     if (targetInitiative.isProtected) {
         // console.log("Drop invalid: Cannot drop onto a protected item.");
-        window.notificationManager.showToast("Cannot drop an item onto a protected item.", "warning");
+        notificationManager.showToast("Cannot drop an item onto a protected item.", "warning");
         // handleDragEnd will reset state
         return;
     }
@@ -164,7 +164,7 @@ function handleDrop(event) {
     const firstNonProtectedIndex = initiatives.findIndex(init => !init.isProtected);
     if (targetIndex < firstNonProtectedIndex && firstNonProtectedIndex !== -1) {
         // console.log("Drop invalid: Cannot move item above the protected block.");
-        window.notificationManager.showToast("Cannot move items above the block of protected initiatives.", "warning");
+        notificationManager.showToast("Cannot move items above the block of protected initiatives.", "warning");
         // handleDragEnd will reset state
         return;
     }
@@ -332,12 +332,7 @@ window.setPlanningScenario = setPlanningScenario;
  */
 function renderTeamLoadSummaryTable(summaryData, options = {}) {
     // If the class exists, use it
-    if (window.yearPlanningView) {
-        window.yearPlanningView.renderSummaryTable(summaryData);
-        return;
-    }
-    // Legacy fallback removed - class should always be used
-    console.warn('renderTeamLoadSummaryTable: YearPlanningView class not available');
+    window.yearPlanningView.renderSummaryTable(summaryData);
 }
 
 
@@ -407,12 +402,7 @@ function calculatePlanningTableData() {
  */
 function renderPlanningTable(planningData, options = {}) {
     // If the class exists, use it
-    if (window.yearPlanningView) {
-        window.yearPlanningView.renderPlanningTable(planningData);
-        return;
-    }
-    // Legacy fallback removed - class should always be used
-    console.warn('renderPlanningTable: YearPlanningView class not available');
+    window.yearPlanningView.renderPlanningTable(planningData);
 }
 
 window.renderTeamLoadSummaryTable = renderTeamLoadSummaryTable; // Make global if needed
@@ -434,20 +424,12 @@ window.toggleCapacityConstraints = toggleCapacityConstraints;
 function renderPlanningView() {
     // [SYNC FIX] Ensure capacity metrics are fresh before rendering
     // We check if the function exists to avoid errors during initial load if main.js isn't fully ready
-    if (window.updateCapacityCalculationsAndDisplay) {
-        // Note: updateCapacityCalculationsAndDisplay calls renderPlanningView if currentViewId is planningView.
-        // To avoid infinite recursion, we should only call it if we are NOT already inside a recursive call triggered by it.
-        // However, updateCapacityCalculationsAndDisplay updates the data and THEN calls render.
-        // If we call it here, we might loop.
-        // BETTER APPROACH: Just recalculate the metrics HERE directly or call a non-rendering update helper.
-        // OR: Trust that updateCapacityCalculationsAndDisplay is called by the triggers (save, switch view).
-        // BUT: If user navigates directly to Planning View, we want fresh data.
+    // BUT: If user navigates directly to Planning View, we want fresh data.
 
-        // SAFE FIX: Recalculate metrics directly here without triggering a full app refresh loop.
-        if (SystemService.getCurrentSystem()) {
-            const capacityEngine = new CapacityEngine(SystemService.getCurrentSystem());
-            SystemService.getCurrentSystem().calculatedCapacityMetrics = capacityEngine.calculateAllMetrics();
-        }
+    // SAFE FIX: Recalculate metrics directly here without triggering a full app refresh loop.
+    if (SystemService.getCurrentSystem()) {
+        const capacityEngine = new CapacityEngine(SystemService.getCurrentSystem());
+        SystemService.getCurrentSystem().calculatedCapacityMetrics = capacityEngine.calculateAllMetrics();
     }
 
     const container = document.getElementById('planningView');
@@ -457,39 +439,32 @@ function renderPlanningView() {
     }
 
     // 1. Set Workspace Metadata (Header)
-    if (window.workspaceComponent) {
-        window.workspaceComponent.setPageMetadata({
-            title: 'Year Plan',
-            breadcrumbs: ['Planning', 'Year Plan'],
-            actions: [
-                {
-                    label: `Save Plan for ${currentPlanningYear}`,
-                    icon: 'fas fa-save',
-                    onClick: () => handleSavePlan(),
-                    className: 'btn btn-danger btn-sm' // Keeping red style for save
+    workspaceComponent.setPageMetadata({
+        title: 'Year Plan',
+        breadcrumbs: ['Planning', 'Year Plan'],
+        actions: [
+            {
+                label: `Save Plan for ${currentPlanningYear}`,
+                icon: 'fas fa-save',
+                onClick: () => handleSavePlan(),
+                className: 'btn btn-danger btn-sm' // Keeping red style for save
+            },
+            {
+                label: 'Optimize Plan',
+                icon: 'fas fa-robot',
+                onClick: () => {
+                    aiAgentController.runPrebuiltAgent('optimizePlan');
                 },
-                {
-                    label: 'Optimize Plan',
-                    icon: 'fas fa-robot',
-                    onClick: () => {
-                        if (window.aiAgentController && window.aiAgentController.runPrebuiltAgent) {
-                            window.aiAgentController.runPrebuiltAgent('optimizePlan');
-                        } else {
-                            window.notificationManager.showToast("AI Controller is not available.", "error");
-                        }
-                    },
-                    className: 'btn btn-info btn-sm',
-                    hidden: !(SettingsService.get() && SettingsService.get().ai && SettingsService.get().ai.isEnabled)
-                }
-            ]
-        });
-    }
+                className: 'btn btn-info btn-sm',
+                hidden: !(SettingsService.get() && SettingsService.get().ai && SettingsService.get().ai.isEnabled)
+            }
+        ]
+    });
 
     // 2. Set Workspace Toolbar (Controls)
+    // 2. Set Workspace Toolbar (Controls)
     const toolbarControls = generatePlanningToolbar();
-    if (window.workspaceComponent && toolbarControls) {
-        window.workspaceComponent.setToolbar(toolbarControls);
-    }
+    window.workspaceComponent.setToolbar(toolbarControls);
 
     // 3. Create Content Layout
     // We only need the summary section and the table container.
@@ -757,7 +732,7 @@ function handleSavePlan() {
     console.log(`Saving plan for year ${currentPlanningYear}...`);
 
     if (!SystemService.getCurrentSystem() || !SystemService.getCurrentSystem().systemName) {
-        window.notificationManager.showToast("Cannot save plan: No system data loaded or system name is missing.", "error");
+        notificationManager.showToast("Cannot save plan: No system data loaded or system name is missing.", "error");
         return;
     }
 
@@ -795,12 +770,12 @@ function handleSavePlan() {
         if (typeof SystemService !== 'undefined' && SystemService.save) {
             SystemService.save();
         }
-        window.notificationManager.showToast(`Plan for ${currentPlanningYear} saved successfully. Initiative statuses have been updated.`, "success");
+        notificationManager.showToast(`Plan for ${currentPlanningYear} saved successfully. Initiative statuses have been updated.`, "success");
         // Optionally, refresh the table to show any visual changes reflecting status updates
         renderPlanningView();
     } catch (error) {
         console.error("Error saving plan:", error);
-        window.notificationManager.showToast("An error occurred while saving the plan. Please check the console for details.", "error");
+        notificationManager.showToast("An error occurred while saving the plan. Please check the console for details.", "error");
     }
 }
 

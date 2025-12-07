@@ -39,19 +39,14 @@ class HeaderComponent {
                 const isEnabled = SettingsService.get() && SettingsService.get().ai && SettingsService.get().ai.isEnabled;
 
                 if (!isEnabled) {
-                    window.notificationManager.showToast('AI Assistant is currently disabled. Please enable it in Settings.', 'info');
+                    notificationManager.showToast('AI Assistant is currently disabled. Please enable it in Settings.', 'info');
                     return;
                 }
 
-                if (window.aiChatAssistant && window.aiChatAssistant.openAiChatPanel) {
-                    // Check if already open
-                    if (window.aiChatAssistant.isAiChatPanelOpen()) {
-                        window.aiChatAssistant.closeAiChatPanel();
-                    } else {
-                        window.aiChatAssistant.openAiChatPanel();
-                    }
+                if (aiChatAssistant.isAiChatPanelOpen()) {
+                    aiChatAssistant.closeAiChatPanel();
                 } else {
-                    console.warn('AI Chat Assistant not available');
+                    aiChatAssistant.openAiChatPanel();
                 }
             });
         }
@@ -63,7 +58,7 @@ class HeaderComponent {
         const notifList = this.container.querySelector('#notifications-list');
         const notifMarkRead = this.container.querySelector('#notifications-mark-read');
         const badge = this.container.querySelector('#notification-badge');
-        const manager = window.notificationManager;
+        const manager = notificationManager;
 
         if (notifBtn && notifDropdown) {
             notifBtn.addEventListener('click', (e) => {
