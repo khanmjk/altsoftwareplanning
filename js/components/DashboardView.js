@@ -718,17 +718,4 @@ class DashboardView {
     }
 }
 
-// Export
-if (typeof window !== 'undefined') {
-    // Class is globally accessible via script loading order
 
-    // Backwards compatibility wrapper
-    window.renderDashboardView = function (container) {
-        if (!window.dashboardViewInstance) {
-            window.dashboardViewInstance = new DashboardView(container?.id || 'dashboardView');
-        } else {
-            window.dashboardViewInstance.container = container || document.getElementById('dashboardView');
-        }
-        window.dashboardViewInstance.render();
-    };
-}

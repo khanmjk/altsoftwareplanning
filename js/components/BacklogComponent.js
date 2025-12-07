@@ -141,7 +141,7 @@ class BacklogComponent {
                 targetDueDate: cleanDate,
                 ownerDisplay: ownerName,
                 roiSummaryDisplay: roiSummary,
-                targetQuarterYearDisplay: window.formatDateToQuarterYear(cleanDate),
+                targetQuarterYearDisplay: formatDateToQuarterYear(cleanDate),
                 themeNamesDisplay: themes,
                 assignedTeamsDisplay: assignedTeams,
                 totalInitialSdesDisplay: totalSdes.toFixed(2)
@@ -251,7 +251,7 @@ class BacklogComponent {
                         attributes: { ...cell.getRow().getData().attributes, planningYear: newYear }
                     });
                     SystemService.save();
-                    cell.getRow().update({ targetQuarterYearDisplay: window.formatDateToQuarterYear(newDate) });
+                    cell.getRow().update({ targetQuarterYearDisplay: formatDateToQuarterYear(newDate) });
                 }
             },
             {

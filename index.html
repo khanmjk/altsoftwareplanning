@@ -356,7 +356,12 @@
 
 
     <script src="js/utils.js"></script>
-    <script src="js/managers/NavigationManager.js?v=2"></script>
+    <!-- Wrapper View Classes (must load before NavigationManager for VIEW_REGISTRY) -->
+    <script src="js/components/WelcomeView.js"></script>
+    <script src="js/components/GanttPlanningView.js"></script>
+    <script src="js/components/HelpView.js"></script>
+    <script src="js/components/SystemEditView.js"></script>
+    <script src="js/managers/NavigationManager.js?v=3"></script>
     <script src="js/managers/NotificationManager.js"></script>
     <script src="js/sampleData/sampleStreamingPlatform.js"></script>
     <script src="js/sampleData/sampleContactCenterPlatform.js"></script>

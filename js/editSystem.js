@@ -113,7 +113,7 @@ function populateSystemEditForm(systemData) {
         console.error("Error rendering edit components:", error);
     }
 }
-window.populateSystemEditForm = populateSystemEditForm;
+
 
 /** Add New Service **/
 function addNewService(overrides = {}) {
@@ -252,7 +252,7 @@ async function saveAllChanges() {
         SystemService.getCurrentSystem().systemName = oldSystemNameKey; // Revert on error
     }
 }
-window.saveAllChanges = saveAllChanges;
+
 
 /** Exit Edit Mode **/
 function exitEditMode() {
@@ -268,7 +268,7 @@ function exitEditMode() {
         appState.closeCurrentSystem();
     }
 }
-window.exitEditMode = exitEditMode;
+
 
 /** 
  * Helper to display Senior Manager Assignment UI within SDM section 
@@ -365,12 +365,4 @@ function validateEngineerAssignments() {
     return true;
 }
 
-// Expose functions globally
-window.displayServicesForEditing = (services, containerId) => {
-    if (serviceEditComponent) serviceEditComponent.render();
-};
-window.displayTeamsForEditing = (teams, index) => {
-    if (teamEditComponent) teamEditComponent.render();
-};
-window.displaySeniorManagerAssignment = displaySeniorManagerAssignment;
-window.validateEngineerAssignments = validateEngineerAssignments;
+

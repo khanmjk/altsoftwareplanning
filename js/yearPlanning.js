@@ -323,8 +323,7 @@ function setPlanningScenario(scenario) {
         console.warn("Invalid planning scenario provided:", scenario);
     }
 }
-// Make it globally accessible if not already
-window.setPlanningScenario = setPlanningScenario;
+
 
 /**
  * DEPRECATED: This function has been moved to YearPlanningView class
@@ -332,7 +331,7 @@ window.setPlanningScenario = setPlanningScenario;
  */
 function renderTeamLoadSummaryTable(summaryData, options = {}) {
     // If the class exists, use it
-    window.yearPlanningView.renderSummaryTable(summaryData);
+    yearPlanningView.renderSummaryTable(summaryData);
 }
 
 
@@ -402,10 +401,10 @@ function calculatePlanningTableData() {
  */
 function renderPlanningTable(planningData, options = {}) {
     // If the class exists, use it
-    window.yearPlanningView.renderPlanningTable(planningData);
+    yearPlanningView.renderPlanningTable(planningData);
 }
 
-window.renderTeamLoadSummaryTable = renderTeamLoadSummaryTable; // Make global if needed
+
 
 /** NEW Helper: Toggles the capacity constraint application and redraws the planning table */
 function toggleCapacityConstraints(isChecked) {
@@ -413,8 +412,7 @@ function toggleCapacityConstraints(isChecked) {
     applyCapacityConstraintsToggle = isChecked; // Update the global state variable
     renderPlanningView(); // Redraw the table to apply the change
 }
-// Make it globally accessible for the checkbox's onchange
-window.toggleCapacityConstraints = toggleCapacityConstraints;
+
 
 /**
  * REVISED - Generates the planning table, dynamically populating the year selector
@@ -683,12 +681,7 @@ function updateCapacityCalculationsAndDisplay() {
     }
 }
 
-if (typeof window !== 'undefined') {
-    window.renderPlanningView = renderPlanningView;
-    window.calculatePlanningTableData = calculatePlanningTableData;
-    window.calculateTeamLoadSummaryData = calculateTeamLoadSummaryData;
-    window.updateCapacityCalculationsAndDisplay = updateCapacityCalculationsAndDisplay;
-}
+
 
 
 

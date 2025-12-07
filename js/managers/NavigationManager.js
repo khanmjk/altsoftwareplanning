@@ -1,19 +1,172 @@
 /**
  * NavigationManager
  * Centralizes view switching logic and coordinates components.
+ * 
+ * Uses a VIEW_REGISTRY pattern for declarative view configuration
+ * and an internal viewInstances Map for singleton management.
  */
+
+/**
+ * VIEW_REGISTRY - Declarative configuration for all navigable views.
+ * Uses string class names to avoid parse-time dependencies.
+ * Classes are resolved at runtime in getOrCreateView().
+ */
+const VIEW_REGISTRY = {
+    welcomeView: {
+        className: 'WelcomeView',
+        title: 'Welcome',
+        breadcrumbs: [],
+        singleton: true,
+        requiresSystem: false,
+        selfManaged: false
+    },
+    planningView: {
+        className: 'YearPlanningView',
+        title: 'Year Plan',
+        breadcrumbs: ['Planning', 'Year Plan'],
+        singleton: true,
+        requiresSystem: true,
+        selfManaged: false
+    },
+    ganttPlanningView: {
+        className: 'GanttPlanningView',
+        title: 'Detailed Planning',
+        breadcrumbs: ['Planning', 'Detailed Planning'],
+        singleton: true,
+        requiresSystem: true,
+        selfManaged: false
+    },
+    capacityConfigView: {
+        className: 'CapacityPlanningView',
+        title: 'Capacity Tuning',
+        breadcrumbs: ['Planning', 'Capacity Tuning'],
+        singleton: true,
+        requiresSystem: true,
+        selfManaged: true
+    },
+    sdmForecastingView: {
+        className: 'ResourceForecastView',
+        title: 'Resource Forecast',
+        breadcrumbs: ['Planning', 'Resource Forecast'],
+        singleton: true,
+        requiresSystem: true,
+        selfManaged: true
+    },
+    roadmapView: {
+        className: 'RoadmapView',
+        title: 'Roadmap & Backlog',
+        breadcrumbs: ['Product', 'Roadmap & Backlog'],
+        singleton: true,
+        requiresSystem: true,
+        selfManaged: true
+    },
+    managementView: {
+        className: 'ManagementView',
+        title: 'Management',
+        breadcrumbs: ['Product', 'Management'],
+        singleton: true,
+        requiresSystem: true,
+        selfManaged: true
+    },
+    visualizationCarousel: {
+        className: 'SystemOverviewView',
+        title: 'System Overview',
+        breadcrumbs: ['System', 'System Overview'],
+        singleton: true,
+        requiresSystem: true,
+        selfManaged: false
+    },
+    organogramView: {
+        className: 'OrgView',
+        title: 'Org Design',
+        breadcrumbs: ['System', 'Org Design'],
+        singleton: true,
+        requiresSystem: true,
+        selfManaged: false
+    },
+    systemEditForm: {
+        className: 'SystemEditView',
+        title: 'Edit System',
+        breadcrumbs: ['System', 'Edit System'],
+        singleton: true,
+        requiresSystem: false,
+        selfManaged: false
+    },
+    dashboardView: {
+        className: 'DashboardView',
+        title: 'Dashboard',
+        breadcrumbs: ['Insights', 'Dashboard'],
+        singleton: true,
+        requiresSystem: true,
+        selfManaged: true
+    },
+    helpView: {
+        className: 'HelpView',
+        title: 'How to Guide',
+        breadcrumbs: ['Help', 'How to Guide'],
+        singleton: true,
+        requiresSystem: false,
+        selfManaged: true
+    },
+    settingsView: {
+        className: 'SettingsView',
+        title: 'Settings',
+        breadcrumbs: ['Configuration', 'Settings'],
+        singleton: true,
+        requiresSystem: false,
+        selfManaged: false
+    },
+    systemsView: {
+        className: 'SystemsView',
+        title: 'My Systems',
+        breadcrumbs: ['My Systems'],
+        singleton: true,
+        requiresSystem: false,
+        selfManaged: false
+    }
+};
+
+/**
+ * CLASS_MAP - Maps class name strings to actual class constructors.
+ * Populated lazily on first navigation to ensure all classes are defined.
+ */
+let CLASS_MAP = null;
+
+function getClassMap() {
+    if (CLASS_MAP) return CLASS_MAP;
+
+    CLASS_MAP = {
+        WelcomeView,
+        YearPlanningView,
+        GanttPlanningView,
+        CapacityPlanningView,
+        ResourceForecastView,
+        RoadmapView,
+        ManagementView,
+        SystemOverviewView,
+        OrgView,
+        SystemEditView,
+        DashboardView,
+        HelpView,
+        SettingsView,
+        SystemsView
+    };
+    return CLASS_MAP;
+}
+
 class NavigationManager {
     constructor() {
         this.sidebar = null;
         this.header = null;
         this.currentViewId = null;
+        this.viewInstances = new Map();
     }
 
     init(sidebarComponent, headerComponent) {
         this.sidebar = sidebarComponent;
         this.header = headerComponent;
 
-        console.log("NavigationManager initialized.");
+        console.log("NavigationManager initialized with VIEW_REGISTRY pattern.");
 
         // Handle browser back/forward buttons
         window.addEventListener('popstate', (event) => {
@@ -26,6 +179,60 @@ class NavigationManager {
                 this.navigateTo('welcomeView', true);
             }
         });
+    }
+
+    /**
+     * Get or create a view instance from the registry.
+     * @param {string} viewId - The view identifier
+     * @param {HTMLElement} container - The container element
+     * @returns {Object|null} The view instance
+     */
+    getOrCreateView(viewId, container) {
+        const config = VIEW_REGISTRY[viewId];
+        if (!config) {
+            console.warn(`NavigationManager: Unknown view '${viewId}'`);
+            return null;
+        }
+
+        // Return cached singleton if available
+        if (config.singleton && this.viewInstances.has(viewId)) {
+            const instance = this.viewInstances.get(viewId);
+            instance.container = container;
+            return instance;
+        }
+
+        // Resolve class name to actual class at runtime via CLASS_MAP
+        const classMap = getClassMap();
+        const ViewClass = classMap[config.className];
+        if (!ViewClass) {
+            console.error(`NavigationManager: Class '${config.className}' not found for view '${viewId}'`);
+            return null;
+        }
+
+        // Create new instance
+        const instance = new ViewClass(container.id);
+        instance.container = container;
+
+        // Cache singleton
+        if (config.singleton) {
+            this.viewInstances.set(viewId, instance);
+        }
+
+        // Backwards compatibility: set global yearPlanningView for legacy yearPlanning.js
+        if (viewId === 'planningView') {
+            yearPlanningView = instance;
+        }
+
+        return instance;
+    }
+
+    /**
+     * Get view instance by ID (for external access like AI context)
+     * @param {string} viewId - The view identifier
+     * @returns {Object|null} The view instance
+     */
+    getViewInstance(viewId) {
+        return this.viewInstances.get(viewId) || null;
     }
 
     /**
@@ -43,6 +250,12 @@ class NavigationManager {
 
         console.log(`NavigationManager: Navigating to ${viewId}`, params);
 
+        const config = VIEW_REGISTRY[viewId];
+        if (!config) {
+            console.warn(`NavigationManager: No view registered for '${viewId}'`);
+            return;
+        }
+
         // 0. Update Global State for AI Context
         aiAgentController.setCurrentView(viewId);
         this.currentViewId = viewId;
@@ -53,97 +266,17 @@ class NavigationManager {
         }
 
         // 2. Render the View via WorkspaceComponent
-        // 2. Render the View via WorkspaceComponent
-        // Map viewId to render function
-        if (viewId === 'planningView') {
-            workspaceComponent.render(viewId, (container) => {
-                if (!window.yearPlanningView) {
-                    window.yearPlanningView = new YearPlanningView(container.id);
+        workspaceComponent.render(viewId, (container) => {
+            const view = this.getOrCreateView(viewId, container);
+            if (view) {
+                // Handle views that need special params (like managementView tabs)
+                if (viewId === 'managementView' && params && params.tab) {
+                    view.switchTab(params.tab);
                 } else {
-                    window.yearPlanningView.container = container;
+                    view.render(container, params);
                 }
-                window.yearPlanningView.render();
-            });
-        } else if (viewId === 'ganttPlanningView') {
-            workspaceComponent.render(viewId, window.renderGanttPlanningView);
-        } else if (viewId === 'capacityConfigView') {
-            workspaceComponent.render(viewId, (container) => {
-                if (!window.capacityPlanningViewInstance) {
-                    window.capacityPlanningViewInstance = new CapacityPlanningView();
-                }
-                window.capacityPlanningViewInstance.render(container);
-            });
-        } else if (viewId === 'sdmForecastingView') {
-            workspaceComponent.render(viewId, (container) => {
-                if (!window.resourceForecastViewInstance) {
-                    window.resourceForecastViewInstance = new ResourceForecastView();
-                }
-                window.resourceForecastViewInstance.render(container);
-            });
-        } else if (viewId === 'roadmapView') {
-            workspaceComponent.render(viewId, window.renderRoadmapView);
-        } else if (viewId === 'managementView') {
-            workspaceComponent.render(viewId, (container) => {
-                if (!window.managementViewInstance) {
-                    window.managementViewInstance = new ManagementView(container.id);
-                } else {
-                    window.managementViewInstance.container = container;
-                }
-                // Handle tab switching via params
-                if (params && params.tab) {
-                    window.managementViewInstance.switchTab(params.tab);
-                } else {
-                    window.managementViewInstance.render();
-                }
-            });
-        } else if (viewId === 'visualizationCarousel') {
-            workspaceComponent.render(viewId, (container) => {
-                if (!window.systemOverviewViewInstance) {
-                    window.systemOverviewViewInstance = new SystemOverviewView(container.id);
-                } else {
-                    window.systemOverviewViewInstance.container = container;
-                }
-                window.systemOverviewViewInstance.render();
-            });
-        } else if (viewId === 'organogramView') {
-            workspaceComponent.render(viewId, window.renderOrgView);
-        } else if (viewId === 'systemEditForm') {
-            workspaceComponent.render(viewId, (container) => window.showSystemEditForm(SystemService.getCurrentSystem(), container));
-        } else if (viewId === 'dashboardView') {
-            workspaceComponent.render(viewId, window.renderDashboardView);
-        } else if (viewId === 'welcomeView') {
-            workspaceComponent.render(viewId, (container) => {
-                const staticWelcome = document.getElementById('welcomeViewContent');
-                if (staticWelcome) {
-                    container.innerHTML = staticWelcome.innerHTML;
-                    container.style.display = 'block';
-                } else {
-                    container.innerHTML = '<h1>Welcome</h1><p>Welcome content not found.</p>';
-                }
-            });
-        } else if (viewId === 'helpView') {
-            workspaceComponent.render(viewId, window.renderHelpView);
-        } else if (viewId === 'settingsView') {
-            workspaceComponent.render(viewId, (container) => {
-                if (!window.settingsViewInstance) {
-                    window.settingsViewInstance = new SettingsView(container.id);
-                } else {
-                    window.settingsViewInstance.container = container;
-                }
-                window.settingsViewInstance.render();
-            });
-        } else if (viewId === 'systemsView') {
-            workspaceComponent.render(viewId, (container) => {
-                if (!window.systemsViewInstance) {
-                    window.systemsViewInstance = new SystemsView(container.id);
-                } else {
-                    window.systemsViewInstance.container = container;
-                }
-                window.systemsViewInstance.render();
-            });
-        } else {
-            console.warn(`NavigationManager: No render function mapped for ${viewId}`);
-        }
+            }
+        });
 
         // 3. Update Header Breadcrumbs (AFTER render, so legacy views can set breadcrumbs)
         if (this.header) {
@@ -151,38 +284,24 @@ class NavigationManager {
             this.header.update(viewId, systemName);
         }
 
-        // 4. Set Default Shell Metadata for Legacy Views
-        // (Refactored views like 'roadmapView' handle this themselves)
-        const selfManagedViews = ['roadmapView', 'managementView', 'dashboardView', 'settingsView', 'helpView', 'sdmForecastingView', 'capacityConfigView'];
-        if (!selfManagedViews.includes(viewId)) {
-            let title = this.getViewTitle(viewId);
-            let breadcrumbs = [];
+        // 4. Set Shell Metadata for non-self-managed views
+        if (!config.selfManaged) {
+            let title = config.title;
+            let breadcrumbs = [...config.breadcrumbs];
 
             // Special handling for Create System mode
             if (viewId === 'systemEditForm' && params && params.createMode) {
                 title = 'Create System';
-                breadcrumbs.push('System');
-                breadcrumbs.push('Create System');
-            } else {
-                // Standard Breadcrumbs
-                // 1. Home/System Context
-                if (SystemService.getCurrentSystem() && SystemService.getCurrentSystem().systemName) {
-                    breadcrumbs.push(SystemService.getCurrentSystem().systemName);
-                }
-
-                // 2. View Path (from HeaderComponent mapping)
-                if (this.header && this.header.getViewPath) {
-                    const path = this.header.getViewPath(viewId);
-                    if (path && Array.isArray(path)) {
-                        path.forEach(step => breadcrumbs.push(step.label));
-                    }
-                }
+                breadcrumbs = ['System', 'Create System'];
+            } else if (SystemService.getCurrentSystem() && SystemService.getCurrentSystem().systemName) {
+                // Prepend system name to breadcrumbs
+                breadcrumbs.unshift(SystemService.getCurrentSystem().systemName);
             }
 
             workspaceComponent.setPageMetadata({
                 title: title,
                 breadcrumbs: breadcrumbs,
-                actions: []      // Legacy actions handled by view templates
+                actions: []
             });
         }
 

@@ -216,32 +216,3 @@ class RoadmapView {
         };
     }
 }
-
-// Export and backwards compatibility
-if (typeof window !== 'undefined') {
-    // Class is globally accessible via script loading order
-    window.currentEditingInitiativeId = null;
-    window.tempRoadmapAssignments_modal = [];
-
-    window.renderRoadmapView = function (container) {
-        if (!roadmapViewInstance) roadmapViewInstance = new RoadmapView();
-        roadmapViewInstance.render(container);
-    };
-
-    // Expose openModalForAdd globally or through instance
-    window.openRoadmapModalForAdd = function () {
-        if (roadmapViewInstance) roadmapViewInstance.openModalForAdd();
-    };
-
-    window.openRoadmapModalForEdit = function (initiativeId) {
-        if (roadmapViewInstance) roadmapViewInstance.openModalForEdit(initiativeId);
-    };
-
-    window.handleSaveRoadmapInitiative = function (initiativeData, isEdit) {
-        if (roadmapViewInstance) roadmapViewInstance.handleSave(initiativeData, isEdit);
-    };
-
-    window.handleDeleteInitiativeButtonFromTable = async function (initiativeId) {
-        if (roadmapViewInstance) await roadmapViewInstance.handleDelete(initiativeId);
-    };
-}

@@ -171,7 +171,7 @@ class OrgView {
         // Add teams under SDMs
         (SystemService.getCurrentSystem().teams || []).forEach(team => {
             const awayTeamCount = team.awayTeamMembers?.length ?? 0;
-            const sourceSummary = window.getSourceSummary(team.awayTeamMembers);
+            const sourceSummary = getSourceSummary(team.awayTeamMembers);
 
             const engineerChildren = (team.engineers || []).map(engineerName => {
                 const eng = (SystemService.getCurrentSystem().allKnownEngineers || []).find(e => e.name === engineerName);
@@ -655,7 +655,7 @@ class OrgView {
             const pmt = pmtMap.get(team.pmtId);
 
             const teamBIS = (team.engineers || []).length;
-            const fundedHC = team.fundedHeadcount ?? 0;
+            const fundedHC = parseInt(team.fundedHeadcount, 10) || 0;
             const awayTeamBIS = (team.awayTeamMembers || []).length;
             const effectiveBIS = teamBIS + awayTeamBIS;
             const hiringGap = fundedHC - teamBIS;
@@ -871,7 +871,7 @@ class OrgView {
         const data = SystemService.getCurrentSystem();
         if (!data) return { funded: 0, teamBIS: 0, awayBIS: 0, effectiveBIS: 0, hiringGap: 0 };
 
-        const funded = (data.teams || []).reduce((sum, team) => sum + (team.fundedHeadcount ?? 0), 0);
+        const funded = (data.teams || []).reduce((sum, team) => sum + (parseInt(team.fundedHeadcount, 10) || 0), 0);
         const teamBIS = (data.allKnownEngineers || []).filter(eng => eng.currentTeamId).length;
         const awayBIS = (data.teams || []).reduce((sum, team) => sum + (team.awayTeamMembers || []).length, 0);
         const effectiveBIS = teamBIS + awayBIS;
@@ -1191,57 +1191,4 @@ class OrgView {
             humanEngineerCount: engineers.length - aiEngineers.length
         };
     }
-}
-
-// Export and backwards compatibility
-if (typeof window !== 'undefined') {
-    // Class is globally accessible via script loading order
-
-    // Backwards compatibility - global wrapper function for AI integration
-    window.renderOrgChartView = function (container) {
-        if (!window.orgViewInstance) {
-            window.orgViewInstance = new OrgView(container?.id || 'organogramView');
-        } else {
-            window.orgViewInstance.container = container || document.getElementById('organogramView');
-        }
-        window.orgViewInstance.render();
-    };
-
-    // Export team table generator globally for AI integration
-    window.generateTeamTable = function () {
-        if (orgViewInstance) {
-            orgViewInstance.render();
-        } else {
-            console.error('OrgView instance not initialized');
-        }
-    };
-
-    // Export engineer table generator globally
-    window.generateEngineerTable = function () {
-        if (window.orgViewInstance) {
-            window.orgViewInstance.generateEngineerTable();
-        } else {
-            console.error('OrgView instance not initialized');
-        }
-    };
-
-    // Export build hierarchy globally for potential AI use
-    window.buildHierarchyData = function () {
-        if (window.orgViewInstance) {
-            return window.orgViewInstance.buildHierarchyData();
-        }
-        // Fallback for direct calls
-        const view = new OrgView('temp');
-        return view.buildHierarchyData();
-    };
-
-    // CRITICAL: NavigationManager expects renderOrgView function
-    window.renderOrgView = function (container) {
-        if (!window.orgViewInstance) {
-            window.orgViewInstance = new OrgView(container?.id || 'organogramView');
-        } else {
-            window.orgViewInstance.container = container || document.getElementById('organogramView');
-        }
-        window.orgViewInstance.render();
-    };
 }
