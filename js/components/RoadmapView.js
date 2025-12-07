@@ -219,7 +219,7 @@ class RoadmapView {
 
 // Export and backwards compatibility
 if (typeof window !== 'undefined') {
-    window.RoadmapView = RoadmapView;
+    // Class is globally accessible via script loading order
     window.currentEditingInitiativeId = null;
     window.tempRoadmapAssignments_modal = [];
 

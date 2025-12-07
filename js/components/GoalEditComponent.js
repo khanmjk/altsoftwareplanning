@@ -456,8 +456,3 @@ class GoalEditComponent {
         SystemService.save();
     }
 }
-
-// Expose to window
-if (typeof window !== 'undefined') {
-    window.GoalEditComponent = GoalEditComponent;
-}

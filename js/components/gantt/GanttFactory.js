@@ -19,7 +19,3 @@ class GanttFactory {
         }
     }
 }
-
-if (typeof window !== 'undefined') {
-    window.GanttFactory = GanttFactory;
-}

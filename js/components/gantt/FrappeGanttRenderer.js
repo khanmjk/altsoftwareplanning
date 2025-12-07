@@ -631,7 +631,3 @@ class FrappeGanttRenderer extends GanttRenderer {
         this._softBadge = null;
     }
 }
-
-if (typeof window !== 'undefined') {
-    window.FrappeGanttRenderer = FrappeGanttRenderer;
-}

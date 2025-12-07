@@ -518,5 +518,3 @@ class CapacityDashboardView {
         parent.appendChild(section);
     }
 }
-
-window.CapacityDashboardView = CapacityDashboardView;

@@ -300,8 +300,3 @@ class ManagementView {
         };
     }
 }
-
-// Expose to window
-if (typeof window !== 'undefined') {
-    window.ManagementView = ManagementView;
-}

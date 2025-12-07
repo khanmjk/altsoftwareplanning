@@ -457,8 +457,3 @@ class GoalsWidget {
         });
     }
 }
-
-// Export to window
-if (typeof window !== 'undefined') {
-    window.GoalsWidget = GoalsWidget;
-}

@@ -629,8 +629,3 @@ class RoadmapTableWidget {
         }
     }
 }
-
-// Export to window
-if (typeof window !== 'undefined') {
-    window.RoadmapTableWidget = RoadmapTableWidget;
-}

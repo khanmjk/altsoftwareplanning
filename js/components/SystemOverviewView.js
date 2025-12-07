@@ -391,8 +391,3 @@ class SystemOverviewView {
         };
     }
 }
-
-// Export for global usage
-if (typeof window !== 'undefined') {
-    window.SystemOverviewView = SystemOverviewView;
-}

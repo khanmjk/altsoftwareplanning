@@ -448,7 +448,7 @@ class RoadmapInitiativeModal {
 
 // Expose to window
 if (typeof window !== 'undefined') {
-    window.RoadmapInitiativeModal = RoadmapInitiativeModal;
+    // Class is globally accessible via script loading order
     // Initialize on load
     window.addEventListener('DOMContentLoaded', () => {
         window.roadmapInitiativeModal = new RoadmapInitiativeModal();

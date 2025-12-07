@@ -1195,7 +1195,7 @@ class OrgView {
 
 // Export and backwards compatibility
 if (typeof window !== 'undefined') {
-    window.OrgView = OrgView;
+    // Class is globally accessible via script loading order
 
     // Backwards compatibility - global wrapper function for AI integration
     window.renderOrgChartView = function (container) {

@@ -222,7 +222,3 @@ class HeaderComponent {
 
 
 }
-
-if (typeof window !== 'undefined') {
-    window.HeaderComponent = HeaderComponent;
-}

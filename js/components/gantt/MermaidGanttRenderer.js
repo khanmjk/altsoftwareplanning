@@ -159,7 +159,3 @@ class MermaidGanttRenderer extends GanttRenderer {
         return /^\d{4}-\d{2}-\d{2}$/.test(str);
     }
 }
-
-if (typeof window !== 'undefined') {
-    window.MermaidGanttRenderer = MermaidGanttRenderer;
-}

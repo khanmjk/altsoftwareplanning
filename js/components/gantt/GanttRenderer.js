@@ -28,7 +28,3 @@ class GanttRenderer {
         }
     }
 }
-
-if (typeof window !== 'undefined') {
-    window.GanttRenderer = GanttRenderer;
-}

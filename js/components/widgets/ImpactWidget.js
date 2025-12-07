@@ -662,8 +662,3 @@ class ImpactWidget {
         });
     }
 }
-
-// Export to window
-if (typeof window !== 'undefined') {
-    window.ImpactWidget = ImpactWidget;
-}

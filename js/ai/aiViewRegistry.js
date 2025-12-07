@@ -148,7 +148,7 @@ function hasClassContextProvider(viewId) {
 
 // Export to window
 if (typeof window !== 'undefined') {
-    window.AI_VIEW_REGISTRY = AI_VIEW_REGISTRY;
+    // Object is globally accessible via script loading order
     window.getAIContextForView = getAIContextForView;
     window.hasClassContextProvider = hasClassContextProvider;
 }

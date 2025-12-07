@@ -216,8 +216,3 @@ class AccomplishmentsWidget {
         return card;
     }
 }
-
-// Export to window
-if (typeof window !== 'undefined') {
-    window.AccomplishmentsWidget = AccomplishmentsWidget;
-}

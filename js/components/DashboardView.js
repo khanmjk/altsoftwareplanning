@@ -720,7 +720,7 @@ class DashboardView {
 
 // Export
 if (typeof window !== 'undefined') {
-    window.DashboardView = DashboardView;
+    // Class is globally accessible via script loading order
 
     // Backwards compatibility wrapper
     window.renderDashboardView = function (container) {

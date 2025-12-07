@@ -158,8 +158,3 @@ class WorkspaceComponent {
         toolbar.style.display = 'flex';
     }
 }
-
-// Export for global usage
-if (typeof window !== 'undefined') {
-    window.WorkspaceComponent = WorkspaceComponent;
-}

@@ -136,6 +136,3 @@ class CapacityPlanningView {
         };
     }
 }
-
-// Export
-window.CapacityPlanningView = CapacityPlanningView;

@@ -309,8 +309,3 @@ class SettingsView {
         };
     }
 }
-
-// Expose to window
-if (typeof window !== 'undefined') {
-    window.SettingsView = SettingsView;
-}

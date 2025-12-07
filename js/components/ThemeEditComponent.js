@@ -194,8 +194,3 @@ class ThemeEditComponent {
         // Since we update the title on 'change', we might not need to re-render.
     }
 }
-
-// Expose to window
-if (typeof window !== 'undefined') {
-    window.ThemeEditComponent = ThemeEditComponent;
-}
