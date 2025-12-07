@@ -289,7 +289,7 @@ class SettingsView {
             // Update UI
             window.headerComponent.updateAiButtonVisibility();
 
-            window.notificationManager.showToast('AI Settings saved successfully!', 'success');
+            notificationManager.showToast('AI Settings saved successfully!', 'success');
         }
     }
 

@@ -23,7 +23,7 @@ function renderHelpView(container) {
     // Create the content wrapper if it doesn't exist
     // This wrapper allows us to control scrolling and padding independent of the main container
     // Load template
-    window.templateLoader.load('html/views/documentation-view.html')
+    templateLoader.load('html/views/documentation-view.html')
         .then(html => {
             container.innerHTML = html;
             loadAndDisplayDocumentation();

@@ -266,11 +266,6 @@ const RoadmapService = {
     }
 };
 
-// Make available globally for non-module usage
-if (typeof window !== 'undefined') {
-    window.RoadmapService = RoadmapService;
-}
-
 // Export for ES modules (future migration)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = RoadmapService;

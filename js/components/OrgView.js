@@ -1115,7 +1115,7 @@ class OrgView {
         const newLevel = parseInt(cell.getValue());
 
         if (isNaN(newLevel) || newLevel < 4 || newLevel > 7) {
-            window.notificationManager?.showToast('Invalid level. Must be L4-L7.', 'warning');
+            notificationManager?.showToast('Invalid level. Must be L4-L7.', 'warning');
             cell.restoreOldValue();
             return;
         }
@@ -1149,11 +1149,11 @@ class OrgView {
                     SystemService.save();
                 }
                 this.generateEngineerTable(); // Refresh table
-                window.notificationManager?.showToast(`Moved ${engineerName} to ${newTeamId ? 'new team' : 'Unallocated'}`, 'success');
+                notificationManager?.showToast(`Moved ${engineerName} to ${newTeamId ? 'new team' : 'Unallocated'}`, 'success');
             }
         } catch (error) {
             console.error('Error moving engineer:', error);
-            window.notificationManager?.showToast(error.message || 'Failed to move engineer', 'error');
+            notificationManager?.showToast(error.message || 'Failed to move engineer', 'error');
             cell.restoreOldValue();
         }
     }

@@ -936,7 +936,7 @@ class YearPlanningView {
         console.log(`Saving plan for year ${this.currentYear}...`);
 
         if (!SystemService.getCurrentSystem()?.systemName) {
-            window.notificationManager?.showToast("Cannot save: No system data loaded.", "error");
+            notificationManager?.showToast("Cannot save: No system data loaded.", "error");
             return;
         }
 
@@ -970,19 +970,19 @@ class YearPlanningView {
             if (typeof SystemService !== 'undefined' && SystemService.save) {
                 SystemService.save();
             }
-            window.notificationManager?.showToast(`Plan for ${this.currentYear} saved successfully.`, "success");
+            notificationManager?.showToast(`Plan for ${this.currentYear} saved successfully.`, "success");
             this.render();
         } catch (error) {
             console.error("Error saving plan:", error);
-            window.notificationManager?.showToast("Error saving plan. Check console.", "error");
+            notificationManager?.showToast("Error saving plan. Check console.", "error");
         }
     }
 
     runOptimizer() {
-        if (window.aiAgentController?.runPrebuiltAgent) {
-            window.aiAgentController.runPrebuiltAgent('optimizePlan');
+        if (aiAgentController?.runPrebuiltAgent) {
+            aiAgentController.runPrebuiltAgent('optimizePlan');
         } else {
-            window.notificationManager?.showToast("AI Controller not available.", "error");
+            notificationManager?.showToast("AI Controller not available.", "error");
         }
     }
 

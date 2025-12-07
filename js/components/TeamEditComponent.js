@@ -276,7 +276,7 @@ class TeamEditComponent {
                 if (!newSdmNameInput || newSdmNameInput.trim() === '') return null;
                 newSdmNameInput = newSdmNameInput.trim();
                 if ((this.systemData.sdms || []).some(s => s && s.sdmName.toLowerCase() === newSdmNameInput.toLowerCase())) {
-                    window.notificationManager.showToast(`SDM "${newSdmNameInput}" already exists.`, 'warning'); return { preventAdd: true };
+                    notificationManager.showToast(`SDM "${newSdmNameInput}" already exists.`, 'warning'); return { preventAdd: true };
                 }
                 const newSdmObject = { sdmId: 'sdm-' + Date.now(), sdmName: newSdmNameInput, seniorManagerId: null };
                 if (!this.systemData.sdms) this.systemData.sdms = [];
@@ -311,7 +311,7 @@ class TeamEditComponent {
                 if (!newPmtNameInput || newPmtNameInput.trim() === '') return null;
                 newPmtNameInput = newPmtNameInput.trim();
                 if ((this.systemData.pmts || []).some(p => p && p.pmtName.toLowerCase() === newPmtNameInput.toLowerCase())) {
-                    window.notificationManager.showToast(`PMT "${newPmtNameInput}" already exists.`, 'warning'); return { preventAdd: true };
+                    notificationManager.showToast(`PMT "${newPmtNameInput}" already exists.`, 'warning'); return { preventAdd: true };
                 }
                 const newPmtObject = { pmtId: 'pmt-' + Date.now(), pmtName: newPmtNameInput };
                 if (!this.systemData.pmts) this.systemData.pmts = [];
@@ -390,34 +390,34 @@ class TeamEditComponent {
                 // If not, we might need to adjust. The original code used async here.
 
                 if (!newEngineerNameInput || newEngineerNameInput.trim() === '') {
-                    window.notificationManager.showToast("Engineer name cannot be empty.", 'warning'); return null;
+                    notificationManager.showToast("Engineer name cannot be empty.", 'warning'); return null;
                 }
                 const name = newEngineerNameInput.trim();
                 if ((this.systemData.allKnownEngineers || []).some(eng => eng.name.toLowerCase() === name.toLowerCase())) {
-                    window.notificationManager.showToast(`An engineer named "${name}" already exists.`, 'warning');
+                    notificationManager.showToast(`An engineer named "${name}" already exists.`, 'warning');
                     return { preventAdd: true };
                 }
 
                 // We need to use prompt/confirm here. 
-                // Since this is a component, we rely on window.notificationManager being available globally.
-                const levelStr = await window.notificationManager.prompt(`Enter level (1-7) for "${name}":`, "1", "Engineer Level");
+                // Since this is a component, we rely on notificationManager being available globally.
+                const levelStr = await notificationManager.prompt(`Enter level (1-7) for "${name}":`, "1", "Engineer Level");
                 if (levelStr === null) return null;
                 const level = parseInt(levelStr) || 1;
 
-                const yearsStr = await window.notificationManager.prompt(`Enter years of experience for "${name}":`, "0", "Experience");
+                const yearsStr = await notificationManager.prompt(`Enter years of experience for "${name}":`, "0", "Experience");
                 if (yearsStr === null) return null;
                 const yearsOfExperience = parseInt(yearsStr) || 0;
 
-                const skillsStr = await window.notificationManager.prompt(`Enter skills for "${name}" (comma-separated):`, "", "Skills");
+                const skillsStr = await notificationManager.prompt(`Enter skills for "${name}" (comma-separated):`, "", "Skills");
                 const skills = skillsStr ? skillsStr.split(',').map(s => s.trim()).filter(s => s) : [];
 
-                let isAIInput = await window.notificationManager.prompt(`Is "${name}" an AI Software Engineer? (Yes/No)`, "No", "AI Engineer?");
+                let isAIInput = await notificationManager.prompt(`Is "${name}" an AI Software Engineer? (Yes/No)`, "No", "AI Engineer?");
                 if (isAIInput === null) return null;
                 const isAISWE = isAIInput.trim().toLowerCase() === 'yes';
 
                 let aiAgentType = null;
                 if (isAISWE) {
-                    const typeStr = await window.notificationManager.prompt(`Enter AI Agent Type for "${name}":`, "General AI", "AI Agent Type");
+                    const typeStr = await notificationManager.prompt(`Enter AI Agent Type for "${name}":`, "General AI", "AI Agent Type");
                     if (typeStr === null) return null;
                     aiAgentType = typeStr.trim() || "General AI";
                 }
@@ -507,7 +507,7 @@ class TeamEditComponent {
         const sourceTeam = sourceInput?.value.trim();
 
         if (!name || isNaN(level) || !sourceTeam) {
-            window.notificationManager.showToast('Please fill all fields for away member.', 'warning');
+            notificationManager.showToast('Please fill all fields for away member.', 'warning');
             return;
         }
 
@@ -546,7 +546,7 @@ class TeamEditComponent {
     }
 
     async _deleteTeam(index) {
-        if (await window.notificationManager.confirm('Are you sure you want to delete this team?', 'Delete Team', { confirmStyle: 'danger' })) {
+        if (await notificationManager.confirm('Are you sure you want to delete this team?', 'Delete Team', { confirmStyle: 'danger' })) {
             const team = this.systemData.teams[index];
             const teamId = team.teamId;
 
@@ -574,7 +574,7 @@ class TeamEditComponent {
     _saveTeamChanges(index) {
         const team = this.systemData.teams[index];
         if (!team.teamIdentity || !team.teamName) {
-            window.notificationManager.showToast('Team Identity and Name are required.', 'warning');
+            notificationManager.showToast('Team Identity and Name are required.', 'warning');
             return;
         }
 
@@ -583,8 +583,8 @@ class TeamEditComponent {
             return;
         }
 
-        window.systemRepository.saveSystem(this.systemData.systemName, this.systemData);
-        window.notificationManager.showToast('Team changes saved.', 'success');
+        systemRepository.saveSystem(this.systemData.systemName, this.systemData);
+        notificationManager.showToast('Team changes saved.', 'success');
 
         generateTeamTable(this.systemData);
         generateTeamVisualization(this.systemData);

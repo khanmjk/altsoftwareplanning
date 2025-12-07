@@ -82,11 +82,11 @@ async function loadHtmlComponent(url, targetId) {
 async function handleCreateWithAi() {
     const settings = SettingsService.get();
     if (!settings.ai.isEnabled || !settings.ai.apiKey) {
-        window.notificationManager.showToast("AI Assistant mode is not enabled or API key is missing. Please check AI settings.", "error");
+        notificationManager.showToast("AI Assistant mode is not enabled or API key is missing. Please check AI settings.", "error");
         return;
     }
 
-    const prompt = await window.notificationManager.prompt("Describe the new software system you want to create (e.g., 'A video streaming service like Netflix', 'An e-commerce platform like Amazon'):", "", "Create New System with AI");
+    const prompt = await notificationManager.prompt("Describe the new software system you want to create (e.g., 'A video streaming service like Netflix', 'An e-commerce platform like Amazon'):", "", "Create New System with AI");
 
     if (!prompt || prompt.trim().length === 0) {
         console.log("AI system generation cancelled by user.");
@@ -120,7 +120,7 @@ async function handleCreateWithAi() {
         if (!isValid) {
             console.error("AI Generation Failed Validation:", errors);
             const errorList = errors.slice(0, 10).join("\n- ");
-            window.notificationManager.showToast(`AI generation failed validation checks. The data is inconsistent. Please try again.\n\nErrors:\n- ${errorList}${errors.length > 10 ? '\n- ...and more.' : ''}`, "error");
+            notificationManager.showToast(`AI generation failed validation checks. The data is inconsistent. Please try again.\n\nErrors:\n- ${errorList}${errors.length > 10 ? '\n- ...and more.' : ''}`, "error");
             return;
         }
 
@@ -134,23 +134,23 @@ async function handleCreateWithAi() {
         SystemService.setCurrentSystem(newSystemData);
 
         let finalSystemName = newSystemData.systemName;
-        if (window.systemRepository.getSystemData(finalSystemName)) {
+        if (systemRepository.getSystemData(finalSystemName)) {
             finalSystemName = `${finalSystemName} (AI ${Date.now().toString().slice(-5)})`;
             newSystemData.systemName = finalSystemName;
         }
 
-        window.systemRepository.saveSystem(finalSystemName, newSystemData);
+        systemRepository.saveSystem(finalSystemName, newSystemData);
 
         if (stats) {
             AIService.showStatsModal(stats);
         }
 
-        window.notificationManager.showToast(`Successfully created and saved system: "${finalSystemName}"! Loading it now.`, "success");
+        notificationManager.showToast(`Successfully created and saved system: "${finalSystemName}"! Loading it now.`, "success");
         SystemService.loadAndActivate(finalSystemName);
 
     } catch (error) {
         // This existing alert will show the final error message after all retries fail.
-        window.notificationManager.showToast("An error occurred during AI system generation. Please check the console.\nError: " + error.message, "error");
+        notificationManager.showToast("An error occurred during AI system generation. Please check the console.\nError: " + error.message, "error");
         console.error("Error in handleCreateWithAi:", error);
     } finally {
         if (spinner) spinner.style.display = 'none';
@@ -165,7 +165,6 @@ window.onload = async function () {
     SettingsService.init();
 
     // Initialize Managers
-    window.notificationManager = new NotificationManager();
     window.navigationManager = new NavigationManager();
 
     // Initialize Components

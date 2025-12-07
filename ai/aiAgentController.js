@@ -100,8 +100,8 @@ const aiAgentController = (() => {
     let cachedImageGenerationFn = null;
 
     function _getAiPrimingPrompt() {
-        const toolsetDescription = (window.aiAgentToolset)
-            ? window.aiAgentToolset.getAgentToolsetDescription()
+        const toolsetDescription = (aiAgentToolset)
+            ? aiAgentToolset.getAgentToolsetDescription()
             : 'Toolset description is unavailable. You may still answer questions but cannot execute actions.';
 
         return `You are an expert Software Engineering Planning & Management Partner. Your goals are to:
@@ -136,8 +136,8 @@ ${toolsetDescription}`;
         if (chatLog) {
             chatLog.innerHTML = '<div class="chat-message ai-message">Hello! I have loaded the full context for <strong>' + (SystemService.getCurrentSystem()?.systemName || 'the system') + '</strong>. How can I help you analyze it?<br><br>You can now ask me to perform actions (including bulk actions!) using simple English OR Type <b>/</b> to see a list of available commands.</div>';
         }
-        window.aiChatAssistant.setTokenCount(0);
-        window.aiChatAssistant.clearChatInput();
+        aiChatAssistant.setTokenCount(0);
+        aiChatAssistant.clearChatInput();
 
         chatSessionHistory = [];
         sessionTotalTokens = 0;
@@ -170,12 +170,12 @@ ${toolsetDescription}`;
         const suggestions = SUGGESTED_QUESTIONS[effectiveViewId] || SUGGESTED_QUESTIONS.default;
         console.log(`[AI CHAT] sample questions for this screen:`, suggestions.map(s => s.text));
 
-        window.aiChatAssistant.setSuggestionPills(suggestions);
+        aiChatAssistant.setSuggestionPills(suggestions);
     }
 
     async function handleUserChatSubmit() {
         if (isAgentThinking) return;
-        const view = window.aiChatAssistant;
+        const view = aiChatAssistant;
         if (!view) return;
 
         const userQuestion = view.getChatInputValue();
@@ -197,11 +197,11 @@ ${toolsetDescription}`;
     }
 
     function getAvailableTools() {
-        return window.aiAgentToolset ? window.aiAgentToolset.getToolsSummaryList() : [];
+        return aiAgentToolset ? aiAgentToolset.getToolsSummaryList() : [];
     }
 
     async function _executeChatTurn(userQuestion) {
-        const view = window.aiChatAssistant;
+        const view = aiChatAssistant;
         const loadingMessageEl = view ? view.showAgentLoadingIndicator() : null;
 
         const contextJson = scrapeCurrentViewContext();
@@ -290,7 +290,7 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
     }
 
     async function _handleImageRequest(userQuestion) {
-        const view = window.aiChatAssistant;
+        const view = aiChatAssistant;
         const loadingMessageEl = view ? view.showAgentLoadingIndicator() : null;
         try {
             const contextJson = scrapeCurrentViewContext();
@@ -335,7 +335,7 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
     }
 
     async function _executeAgentPlan(steps, loadingMessageEl) {
-        const view = window.aiChatAssistant;
+        const view = aiChatAssistant;
         if (!Array.isArray(steps) || steps.length === 0) {
             if (view) {
                 view.hideAgentLoadingIndicator(loadingMessageEl, md.render('No executable steps were provided.'));
@@ -388,7 +388,7 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
                     }
                     continue;
                 }
-                const result = await window.aiAgentToolset.executeTool(step.command, resolvedPayload);
+                const result = await aiAgentToolset.executeTool(step.command, resolvedPayload);
                 stepResults[i] = result;
                 console.debug('[AI Agent Controller] Step completed:', { step: step.command, payload: resolvedPayload, result });
                 stepSummaries.push(_describeAgentStep(step.command, resolvedPayload, result, i));
@@ -564,7 +564,7 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
      */
     async function runPrebuiltAgent(agentName, payload) {
         console.log(`[AI Agent Controller] Received request to run prebuilt agent: ${agentName}`, payload);
-        const view = window.aiChatAssistant;
+        const view = aiChatAssistant;
         if (!view) {
             console.error("AI Chat Assistant view is not available.");
             return;
@@ -577,13 +577,13 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
         try {
             switch (agentName) {
                 case 'optimizePlan':
-                    if (window.aiPlanOptimizationAgent) {
+                    if (aiPlanOptimizationAgent) {
                         const contextJson = scrapeCurrentViewContext();
                         const pinnedHistory = [];
                         if (chatSessionHistory[0]) pinnedHistory.push(chatSessionHistory[0]);
                         if (chatSessionHistory[1]) pinnedHistory.push(chatSessionHistory[1]);
                         // Pass the function to post messages
-                        window.aiPlanOptimizationAgent.runOptimization({
+                        aiPlanOptimizationAgent.runOptimization({
                             postMessageFn: view.postAgentMessageToView
                         }, {
                             contextJson,
@@ -616,22 +616,22 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
      */
     function confirmPrebuiltAgent(didConfirm) {
         console.log(`[AI Agent Controller] Received agent confirmation: ${didConfirm}`);
-        const view = window.aiChatAssistant;
+        const view = aiChatAssistant;
         if (!view) return;
 
         let actionHandled = false;
         let outcomeText = didConfirm ? 'Changes applied.' : 'Changes discarded.';
 
         // Check which agent has pending changes
-        if (window.aiPlanOptimizationAgent && window.aiPlanOptimizationAgent.hasPendingChanges()) {
+        if (aiPlanOptimizationAgent && aiPlanOptimizationAgent.hasPendingChanges()) {
             if (didConfirm) {
-                const applied = window.aiPlanOptimizationAgent.applyPendingChanges();
+                const applied = aiPlanOptimizationAgent.applyPendingChanges();
                 actionHandled = applied;
                 if (!applied) {
                     outcomeText = 'Failed to apply changes.';
                 }
             } else {
-                window.aiPlanOptimizationAgent.discardPendingChanges();
+                aiPlanOptimizationAgent.discardPendingChanges();
                 actionHandled = true;
             }
         }
@@ -831,8 +831,8 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
     }
 
     function _markAgentConfirmationHandled(statusText) {
-        const containerId = (window.aiPlanOptimizationAgent && typeof window.aiPlanOptimizationAgent.getLastConfirmationContainerId === 'function')
-            ? window.aiPlanOptimizationAgent.getLastConfirmationContainerId()
+        const containerId = (aiPlanOptimizationAgent && typeof aiPlanOptimizationAgent.getLastConfirmationContainerId === 'function')
+            ? aiPlanOptimizationAgent.getLastConfirmationContainerId()
             : null;
         if (!containerId) return;
         const container = document.getElementById(containerId);
@@ -872,6 +872,6 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
     };
 })();
 
-if (typeof window !== 'undefined') {
-    window.aiAgentController = aiAgentController;
-}
+
+
+

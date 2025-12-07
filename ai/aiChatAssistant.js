@@ -59,7 +59,7 @@ function initializeAiChatPanel() {
     aiChatInput.dataset.imageRequest = 'false';
 
     const submitHandler = () => {
-        window.aiAgentController.handleUserChatSubmit();
+        aiAgentController.handleUserChatSubmit();
     };
 
     aiChatSendButton.addEventListener('click', submitHandler);
@@ -101,7 +101,7 @@ function openAiChatPanel() {
         handle.style.right = panel ? panel.style.width : '0';
     }
     chatPanelIsOpen = true;
-    window.aiAgentController.renderSuggestionsForCurrentView();
+    aiAgentController.renderSuggestionsForCurrentView();
     if (aiChatInput) aiChatInput.focus();
 }
 
@@ -202,7 +202,7 @@ function setSuggestionPills(suggestions = []) {
                 aiChatInput.value = suggestion.text || '';
                 aiChatInput.dataset.imageRequest = suggestion.isImageRequest ? 'true' : 'false';
             }
-            window.aiAgentController.handleUserChatSubmit();
+            aiAgentController.handleUserChatSubmit();
         };
 
         suggestionsContainer.appendChild(pill);
@@ -276,7 +276,7 @@ function handleChatInput(e) {
         return;
     }
 
-    const tools = window.aiAgentController.getAvailableTools();
+    const tools = aiAgentController.getAvailableTools();
 
     if (!tools || tools.length === 0) {
         hideCommandPopup();
@@ -495,24 +495,23 @@ function postDiagramWidget(title, code) {
     aiChatLog.scrollTop = aiChatLog.scrollHeight;
 }
 
-if (typeof window !== 'undefined') {
-    window.aiChatAssistant = {
-        initializeAiChatPanel,
-        openAiChatPanel,
-        closeAiChatPanel,
-        isAiChatPanelOpen,
-        postAgentMessageToView,
-        postUserMessageToView,
-        showAgentLoadingIndicator,
-        hideAgentLoadingIndicator,
-        setSuggestionPills,
-        setTokenCount,
-        toggleChatInput,
-        getChatInputValue,
-        clearChatInput,
-        isImageRequestPending,
-        openDiagramModal,
-        closeDiagramModal,
-        postDiagramWidget
-    };
-}
+// Export
+const aiChatAssistant = {
+    initializeAiChatPanel,
+    openAiChatPanel,
+    closeAiChatPanel,
+    isAiChatPanelOpen,
+    postAgentMessageToView,
+    postUserMessageToView,
+    showAgentLoadingIndicator,
+    hideAgentLoadingIndicator,
+    toggleChatInput,
+    getChatInputValue,
+    clearChatInput,
+    isImageRequestPending,
+    setTokenCount,
+    setSuggestionPills,
+    openDiagramModal,
+    closeDiagramModal,
+    postDiagramWidget
+};

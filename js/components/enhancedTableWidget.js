@@ -255,14 +255,14 @@ class EnhancedTableWidget {
             item.onclick = () => {
                 try {
                     if (format === "xlsx" && typeof XLSX === 'undefined') {
-                        window.notificationManager.showToast("XLSX export requires the SheetJS library (xlsx.full.min.js) to be included.", "error");
+                        notificationManager.showToast("XLSX export requires the SheetJS library (xlsx.full.min.js) to be included.", "error");
                         console.warn("SheetJS library not found for XLSX export.");
                         return;
                     }
                     this.tabulatorInstance.download(format, fileName, format === "xlsx" ? { sheetName: this.options.exportSheetName } : undefined);
                 } catch (e) {
                     console.error(`Error downloading as ${format}:`, e);
-                    window.notificationManager.showToast(`Could not download as ${format}. Check console for details.`, "error");
+                    notificationManager.showToast(`Could not download as ${format}. Check console for details.`, "error");
                 }
                 if (this.exportDropdown) this.exportDropdown.remove(); // Close dropdown after action
                 this.exportDropdown = null;

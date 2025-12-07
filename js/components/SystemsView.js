@@ -6,7 +6,7 @@
 class SystemsView {
     constructor(containerId) {
         this.container = document.getElementById(containerId);
-        this.repository = window.systemRepository;
+        this.repository = systemRepository;
         this._boundClickHandler = this.handleClick.bind(this);
         this._eventsBound = false;
     }
@@ -23,7 +23,7 @@ class SystemsView {
 
         try {
             // Load the template
-            const template = await window.templateLoader.load('html/components/systems-view-template.html');
+            const template = await templateLoader.load('html/components/systems-view-template.html');
             this.container.innerHTML = template;
 
             // Update UI based on AI settings
@@ -106,7 +106,7 @@ class SystemsView {
         const aiEnabled = SettingsService.get()?.ai?.isEnabled || false;
 
         if (!aiEnabled) {
-            window.notificationManager.showToast('Please select a system to load.', 'warning');
+            notificationManager.showToast('Please select a system to load.', 'warning');
             return;
         }
 
@@ -270,12 +270,12 @@ class SystemsView {
      * @param {string} systemKey - The system ID to delete
      */
     async deleteSystem(systemKey) {
-        if (!window.notificationManager) {
+        if (!notificationManager) {
             console.error('SystemsView: notificationManager not found');
             return;
         }
 
-        const confirmed = await window.notificationManager.confirm(
+        const confirmed = await notificationManager.confirm(
             `Are you sure you want to permanently delete "${systemKey}"? This action cannot be undone.`,
             'Delete System',
             { confirmStyle: 'danger' }
@@ -284,17 +284,13 @@ class SystemsView {
         if (confirmed) {
             // Use SystemService if available for consistency
             let success = false;
-            if (window.SystemService) {
-                success = window.SystemService.deleteSystem(systemKey);
-            } else {
-                success = this.repository.deleteSystem(systemKey);
-            }
+            success = SystemService.deleteSystem(systemKey);
 
             if (success) {
-                window.notificationManager.showToast(`System "${systemKey}" has been deleted.`, 'success');
+                notificationManager.showToast(`System "${systemKey}" has been deleted.`, 'success');
                 this.render(); // Refresh the view
             } else {
-                window.notificationManager.showToast('Failed to delete system.', 'error');
+                notificationManager.showToast('Failed to delete system.', 'error');
             }
         }
     }

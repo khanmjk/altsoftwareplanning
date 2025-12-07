@@ -43,7 +43,7 @@ class NavigationManager {
         console.log(`NavigationManager: Navigating to ${viewId}`, params);
 
         // 0. Update Global State for AI Context
-        window.aiAgentController.setCurrentView(viewId);
+        aiAgentController.setCurrentView(viewId);
         window.currentViewId = viewId;
 
         // 1. Update Sidebar Selection

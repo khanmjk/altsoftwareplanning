@@ -206,7 +206,3 @@ class LocalStorageDriver {
 
 // Export as singleton
 const systemRepository = new SystemRepository();
-if (typeof window !== 'undefined') {
-    window.systemRepository = systemRepository;
-    window.SystemRepository = SystemRepository;
-}

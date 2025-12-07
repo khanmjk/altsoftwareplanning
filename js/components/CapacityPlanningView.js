@@ -117,7 +117,7 @@ class CapacityPlanningView {
 
             SystemService.save();
             this.render();
-            window.notificationManager?.showToast("Capacity configuration saved.", "success");
+            notificationManager?.showToast("Capacity configuration saved.", "success");
         } else {
             console.error("SystemService.save not found");
         }

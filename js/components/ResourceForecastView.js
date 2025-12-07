@@ -314,7 +314,7 @@ class ResourceForecastView {
 
         // Validation
         if (targetWeek < hiringTime) {
-            window.notificationManager.showToast('Target week cannot be less than hiring time.', 'error');
+            notificationManager.showToast('Target week cannot be less than hiring time.', 'error');
             return;
         }
 
@@ -323,7 +323,7 @@ class ResourceForecastView {
         const results = this.engine.simulateTeamSize(hiringRate, fundedSize, currentEng, hiringTime, rampUp, attrition / 100, this.currentTeamId);
 
         if (!results) {
-            window.notificationManager.showToast('Simulation failed. Check console.', 'error');
+            notificationManager.showToast('Simulation failed. Check console.', 'error');
             return;
         }
 
@@ -341,7 +341,7 @@ class ResourceForecastView {
                     // Optional: Suppress toast or show a specific "Forecast Saved" toast if desired.
                     // For now, relying on saveSystemChanges' internal logging/toast (if any, though main.js saveSystemChanges doesn't always toast on success, only error, unless called by UI button).
                     // Actually main.js saveSystemChanges returns boolean and logs. It doesn't show success toast.
-                    window.notificationManager.showToast('Forecast capacity gain saved to system.', 'success');
+                    notificationManager.showToast('Forecast capacity gain saved to system.', 'success');
                 }
 
                 // [SYNC FIX] Update global capacity metrics (pure data, no UI refresh needed)

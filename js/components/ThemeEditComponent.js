@@ -166,26 +166,26 @@ class ThemeEditComponent {
     }
 
     async _deleteTheme(index) {
-        if (await window.notificationManager.confirm('Are you sure you want to delete this theme?', 'Delete Theme', { confirmStyle: 'danger' })) {
+        if (await notificationManager.confirm('Are you sure you want to delete this theme?', 'Delete Theme', { confirmStyle: 'danger' })) {
             this.systemData.definedThemes.splice(index, 1);
 
             // Save immediately as per ManagementView logic
             SystemService.save();
 
             this.render();
-            window.notificationManager.showToast('Theme deleted.', 'success');
+            notificationManager.showToast('Theme deleted.', 'success');
         }
     }
 
     _saveThemeChanges(index) {
         const theme = this.systemData.definedThemes[index];
         if (!theme.name || theme.name.trim() === '') {
-            window.notificationManager.showToast('Theme name cannot be empty.', 'warning');
+            notificationManager.showToast('Theme name cannot be empty.', 'warning');
             return;
         }
 
         SystemService.save();
-        window.notificationManager.showToast('Theme changes saved.', 'success');
+        notificationManager.showToast('Theme changes saved.', 'success');
 
         // No need to re-render entire list if we just saved, 
         // but if we want to ensure state consistency:

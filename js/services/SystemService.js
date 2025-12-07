@@ -402,9 +402,8 @@ const SystemService = {
 
         if (!isValid) {
             console.warn("SystemService: Validation errors:", errorMessages);
-            if (window.notificationManager) {
-                window.notificationManager.showToast("Data Inconsistency: Engineer assignments do not match global roster. See console.", "error");
-            }
+            notificationManager.showToast("Data Inconsistency: Engineer assignments do not match global roster. See console.", "error");
+
         }
 
         return isValid;
@@ -435,7 +434,7 @@ const SystemService = {
 
         const systemData = this.loadSystem(systemName);
         if (!systemData) {
-            window.notificationManager.showToast(`System "${systemName}" not found.`, 'error');
+            notificationManager.showToast(`System "${systemName}" not found.`, 'error');
             return false;
         }
 
@@ -533,7 +532,7 @@ const SystemService = {
         const currentSystem = this.getCurrentSystem();
 
         if (!currentSystem?.systemName) {
-            window.notificationManager.showToast('No system currently loaded to delete.', 'warning');
+            notificationManager.showToast('No system currently loaded to delete.', 'warning');
             return { success: false, reason: 'no_system' };
         }
 
@@ -541,7 +540,7 @@ const SystemService = {
 
         // Protection for sample systems
         if (systemRepository.isSampleSystem(systemName)) {
-            window.notificationManager.showToast(`Cannot delete built-in sample system: "${systemName}".`, 'error');
+            notificationManager.showToast(`Cannot delete built-in sample system: "${systemName}".`, 'error');
             return { success: false, reason: 'sample_system' };
         }
 
@@ -581,9 +580,7 @@ const SystemService = {
 };
 
 // Export to window
-if (typeof window !== 'undefined') {
-    window.SystemService = SystemService;
-}
+// Export for ES modules (future migration)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = SystemService;
 }

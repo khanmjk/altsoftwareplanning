@@ -641,7 +641,7 @@ function renderGanttTable() {
         } else if (action === 'delete-wp') {
             const wpId = target.dataset.id;
             const initId = target.dataset.initiativeId;
-            if (!await window.notificationManager.confirm('Delete this work package?', 'Delete Work Package', { confirmStyle: 'danger' })) {
+            if (!await notificationManager.confirm('Delete this work package?', 'Delete Work Package', { confirmStyle: 'danger' })) {
                 return;
             }
             const deleted = WorkPackageService.deleteWorkPackage(SystemService.getCurrentSystem(), wpId);
@@ -691,7 +691,7 @@ function renderGanttTable() {
             const workingDaysPerYearLocal = SystemService.getCurrentSystem()?.capacityConfiguration?.workingDaysPerYear || 261;
             if (field === 'startDate') {
                 if (hasWpsForInit) {
-                    window.notificationManager.showToast('Initiative dates cannot be edited when work packages exist. Edit at the work package level.', 'warning');
+                    notificationManager.showToast('Initiative dates cannot be edited when work packages exist. Edit at the work package level.', 'warning');
                     renderGanttTable();
                     return;
                 }
@@ -700,7 +700,7 @@ function renderGanttTable() {
                 setWorkPackageDatesForTeam(init.initiativeId, { startDate: value }, selectedTeamLocal);
             } else if (field === 'targetDueDate') {
                 if (hasWpsForInit) {
-                    window.notificationManager.showToast('Initiative dates cannot be edited when work packages exist. Edit at the work package level.', 'warning');
+                    notificationManager.showToast('Initiative dates cannot be edited when work packages exist. Edit at the work package level.', 'warning');
                     renderGanttTable();
                     return;
                 }
@@ -807,12 +807,12 @@ function renderGanttTable() {
             if (e.target.checked) {
                 if (depNorm === normalizeGanttId(assignId)) {
                     e.target.checked = false;
-                    window.notificationManager.showToast('A task cannot depend on itself.', 'warning');
+                    notificationManager.showToast('A task cannot depend on itself.', 'warning');
                     return;
                 }
                 if (wouldCreateAssignmentCycle(wp, assignId, depId)) {
                     e.target.checked = false;
-                    window.notificationManager.showToast('Circular dependency not allowed between tasks in this work package.', 'warning');
+                    notificationManager.showToast('Circular dependency not allowed between tasks in this work package.', 'warning');
                     return;
                 }
                 deps.add(depNorm);
@@ -835,7 +835,7 @@ function renderGanttTable() {
                 if (wouldCreateDependencyCycle(wpId, depId, allWps)) {
                     e.target.checked = false;
                     console.warn(`[GANTT] Prevented circular dependency: ${wpId} -> ${depId}`);
-                    window.notificationManager.showToast('Circular dependency not allowed (would create a cycle).', 'warning');
+                    notificationManager.showToast('Circular dependency not allowed (would create a cycle).', 'warning');
                     return;
                 }
                 deps.add(depId);

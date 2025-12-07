@@ -13,7 +13,7 @@ class InitiativeEditComponent {
 
     startNewInitiative() {
         if (this.draftInitiative) {
-            window.notificationManager.showToast('You already have an unsaved initiative.', 'warning');
+            notificationManager.showToast('You already have an unsaved initiative.', 'warning');
             return;
         }
 
@@ -470,11 +470,11 @@ class InitiativeEditComponent {
             return;
         }
 
-        if (await window.notificationManager.confirm('Are you sure you want to delete this initiative?', 'Delete Initiative', { confirmStyle: 'danger' })) {
+        if (await notificationManager.confirm('Are you sure you want to delete this initiative?', 'Delete Initiative', { confirmStyle: 'danger' })) {
             this.systemData.yearlyInitiatives.splice(index, 1);
             SystemService.save();
             this.render();
-            window.notificationManager.showToast('Initiative deleted.', 'success');
+            notificationManager.showToast('Initiative deleted.', 'success');
         }
     }
 
@@ -487,7 +487,7 @@ class InitiativeEditComponent {
         }
 
         if (!init.title || init.title.trim() === '') {
-            window.notificationManager.showToast('Title is required.', 'warning');
+            notificationManager.showToast('Title is required.', 'warning');
             return;
         }
 
@@ -496,10 +496,10 @@ class InitiativeEditComponent {
             this.systemData.yearlyInitiatives.push(init);
             this.draftInitiative = null;
             this.expandedIndex = -1; // Collapse after create? Or keep open? Let's collapse.
-            window.notificationManager.showToast('Initiative created successfully.', 'success');
+            notificationManager.showToast('Initiative created successfully.', 'success');
             this.render();
         } else {
-            window.notificationManager.showToast('Initiative changes saved.', 'success');
+            notificationManager.showToast('Initiative changes saved.', 'success');
         }
 
         SystemService.save();

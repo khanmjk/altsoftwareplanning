@@ -259,11 +259,6 @@ const PlanningService = {
     }
 };
 
-// Make available globally for non-module usage
-if (typeof window !== 'undefined') {
-    window.PlanningService = PlanningService;
-}
-
 // Export for ES modules (future migration)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = PlanningService;

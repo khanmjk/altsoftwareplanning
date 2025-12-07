@@ -162,16 +162,16 @@ class RoadmapView {
         const initiative = (SystemService.getCurrentSystem().yearlyInitiatives || []).find(i => i.initiativeId === initiativeId);
         const title = initiative ? initiative.title : initiativeId;
 
-        if (await window.notificationManager.confirm(`Are you sure you want to delete initiative "${title}"?`, 'Delete Initiative', { confirmStyle: 'danger' })) {
+        if (await notificationManager.confirm(`Are you sure you want to delete initiative "${title}"?`, 'Delete Initiative', { confirmStyle: 'danger' })) {
             const success = window.deleteInitiative(initiativeId);
             if (success) {
                 if (typeof SystemService !== 'undefined' && SystemService.save) {
                     SystemService.save();
                 }
                 this.refreshActiveView();
-                window.notificationManager.showToast('Initiative deleted', 'success');
+                notificationManager.showToast('Initiative deleted', 'success');
             } else {
-                window.notificationManager.showToast('Failed to delete initiative', 'error');
+                notificationManager.showToast('Failed to delete initiative', 'error');
             }
         }
     }

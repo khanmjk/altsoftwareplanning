@@ -517,7 +517,3 @@ const aiAgentToolset = {
     getToolsSummaryList,
     executeTool
 };
-
-if (typeof window !== 'undefined') {
-    window.aiAgentToolset = aiAgentToolset;
-}

@@ -192,17 +192,17 @@ class BacklogComponent {
                         const today = luxon.DateTime.now().startOf('day');
                         const dueDate = luxon.DateTime.fromISO(init.targetDueDate).startOf('day');
                         if (oldValue !== 'Committed') {
-                            window.notificationManager.showToast("Only 'Committed' initiatives can be marked as 'Completed'", 'error');
+                            notificationManager.showToast("Only 'Committed' initiatives can be marked as 'Completed'", 'error');
                             cell.restoreOldValue(); return;
                         }
                         if (dueDate > today) {
-                            window.notificationManager.showToast("Cannot mark as 'Completed' before due date", 'error');
+                            notificationManager.showToast("Cannot mark as 'Completed' before due date", 'error');
                             cell.restoreOldValue(); return;
                         }
                         window.updateInitiative(init.id, { status: newValue });
                         SystemService.save();
                     } else {
-                        window.notificationManager.showToast("Status updates (other than to 'Completed') managed by Year Plan ATL/BTL process", 'info');
+                        notificationManager.showToast("Status updates (other than to 'Completed') managed by Year Plan ATL/BTL process", 'info');
                         cell.restoreOldValue();
                     }
                 }

@@ -263,7 +263,7 @@ If you cannot find a good change, respond with null.
             }
             history.push({ role: 'user', parts: [{ text: specialistPrompt }] });
 
-            const analysisFn = await window.aiAgentController._waitForAnalysisFunction();
+            const analysisFn = await aiAgentController._waitForAnalysisFunction();
             const aiResponse = await analysisFn(
                 history,
                 SettingsService.get().ai.apiKey,
@@ -376,12 +376,5 @@ If you cannot find a good change, respond with null.
         applyPendingChanges,
         discardPendingChanges,
         hasPendingChanges,
-        getLastConfirmationContainerId
-    };
-
+    }
 })();
-
-// Make it globally accessible
-if (typeof window !== 'undefined') {
-    window.aiPlanOptimizationAgent = aiPlanOptimizationAgent;
-}

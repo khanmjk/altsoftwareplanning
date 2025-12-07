@@ -47,6 +47,3 @@ class TemplateLoader {
 
 // Export as singleton
 const templateLoader = new TemplateLoader();
-if (typeof window !== 'undefined') {
-    window.templateLoader = templateLoader;
-}

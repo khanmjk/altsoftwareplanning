@@ -341,11 +341,11 @@ class RoadmapInitiativeModal {
         const sdeYears = parseFloat(sdeInput.value);
 
         if (!teamId) {
-            window.notificationManager.showToast('Please select a team.', 'warning');
+            notificationManager.showToast('Please select a team.', 'warning');
             return;
         }
         if (isNaN(sdeYears) || sdeYears < 0) {
-            window.notificationManager.showToast('Please enter a valid SDE Years value.', 'warning');
+            notificationManager.showToast('Please enter a valid SDE Years value.', 'warning');
             return;
         }
 
@@ -390,11 +390,11 @@ class RoadmapInitiativeModal {
 
         // Validation
         if (!form.elements['title'].value.trim()) {
-            window.notificationManager.showToast('Title is required.', 'error');
+            notificationManager.showToast('Title is required.', 'error');
             return;
         }
         if (!form.elements['targetDueDate'].value) {
-            window.notificationManager.showToast('Target Due Date is required.', 'error');
+            notificationManager.showToast('Target Due Date is required.', 'error');
             return;
         }
 

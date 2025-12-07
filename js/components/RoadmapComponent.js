@@ -447,7 +447,7 @@ class RoadmapComponent {
             const newDueDate = RoadmapService.getEndDateForQuarter(newQuarter, year);
             if (newDueDate) initiative.targetDueDate = newDueDate;
 
-            window.notificationManager.showToast(`Moved "${title}" from ${oldQuarter} to ${newQuarter}`, 'success');
+            notificationManager.showToast(`Moved "${title}" from ${oldQuarter} to ${newQuarter}`, 'success');
 
         } else if (this.viewType === '3yp') {
             // 3YP View Update
@@ -465,7 +465,7 @@ class RoadmapComponent {
             // Clear specific quarter/date when moving years to avoid confusion? 
             // Or just let them persist? Let's keep them for now but maybe reset quarter if moving to future.
 
-            window.notificationManager.showToast(`Moved "${title}" to ${newYear}`, 'success');
+            notificationManager.showToast(`Moved "${title}" to ${newYear}`, 'success');
         }
 
         if (typeof SystemService !== 'undefined' && SystemService.save) {
