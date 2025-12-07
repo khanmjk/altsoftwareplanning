@@ -8,8 +8,8 @@
     const computeSdeEstimate = (init, filterTeamId) => GanttService.computeSdeEstimate(init, filterTeamId);
 
     function buildTasksFromInitiatives({ initiatives = [], workPackages = [], viewBy = 'All Initiatives', filters = {}, year, selectedTeam, expandedInitiativeIds = new Set(), expandedWorkPackageIds = new Set() }) {
-        if (typeof ensureWorkPackagesForInitiatives === 'function' && typeof currentSystemData !== 'undefined') {
-            ensureWorkPackagesForInitiatives(currentSystemData, year);
+        if (typeof WorkPackageService !== 'undefined' && typeof currentSystemData !== 'undefined') {
+            WorkPackageService.ensureWorkPackagesForInitiatives(currentSystemData, year);
         }
         const tasks = [];
         const yearVal = year || new Date().getFullYear();

@@ -416,15 +416,13 @@ class YearPlanningView {
      * Ensure data consistency before rendering
      */
     ensureDataConsistency() {
-        if (typeof ensureWorkPackagesForInitiatives === 'function') {
-            ensureWorkPackagesForInitiatives(window.currentSystemData, this.currentYear);
+        if (typeof WorkPackageService !== 'undefined') {
+            WorkPackageService.ensureWorkPackagesForInitiatives(window.currentSystemData, this.currentYear);
             const initiatives = window.currentSystemData?.yearlyInitiatives || [];
             initiatives
                 .filter(init => init.attributes?.planningYear == this.currentYear)
                 .forEach(init => {
-                    if (typeof syncInitiativeTotals === 'function') {
-                        syncInitiativeTotals(init.initiativeId, window.currentSystemData);
-                    }
+                    WorkPackageService.syncInitiativeTotals(init.initiativeId, window.currentSystemData);
                 });
         }
     }

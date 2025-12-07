@@ -97,6 +97,17 @@ class AppState {
 
 // Export as singleton
 const appState = new AppState();
+
+// Define Modes constant within AppState
+appState.Modes = {
+    NAVIGATION: 'navigation',
+    Browse: 'Browse',
+    EDITING: 'editing',
+    CREATING: 'creating',
+    PLANNING: 'planning',
+    ROADMAP: 'roadmap'
+};
+
 if (typeof window !== 'undefined') {
     window.appState = appState;
 }

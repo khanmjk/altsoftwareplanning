@@ -3,7 +3,7 @@ let currentSystemData = null;
 
 
 
-let currentMode = Modes.NAVIGATION;
+let currentMode = appState.Modes.NAVIGATION;
 let planningCapacityScenario = 'effective'; // Default to 'effective'
 let currentCapacityScenario = 'EffectiveBIS'; // Default scenario for capacity summary ('TeamBIS', 'EffectiveBIS', 'FundedHC')
 let currentChartTeamId = '__ORG_VIEW__'; // To track which team's chart is displayed
@@ -282,7 +282,7 @@ async function handleCreateWithAi() {
 
 window.onload = async function () {
     // console.log("!!! window.onload: Page HTML and synchronous scripts loaded. !!!");
-    currentMode = Modes.NAVIGATION;
+    currentMode = appState.Modes.NAVIGATION;
 
     // console.log("Initializing Application Components...");
 
@@ -492,9 +492,8 @@ function loadSavedSystem(systemName) {
     if (!currentSystemData.archivedYearlyPlans) currentSystemData.archivedYearlyPlans = [];
     if (!currentSystemData.workPackages) currentSystemData.workPackages = [];
     if (!currentSystemData.attributes) currentSystemData.attributes = {};
-    if (typeof ensureWorkPackagesForInitiatives === 'function') {
-        ensureWorkPackagesForInitiatives(currentSystemData);
-    }
+    // Ensure work packages exist immediately
+    WorkPackageService.ensureWorkPackagesForInitiatives(currentSystemData);
 
     // allKnownEngineers (critical for engineer data)
     // This block now primarily ensures attributes on existing engineers if allKnownEngineers was loaded.
@@ -714,7 +713,7 @@ window.loadSystem = loadSystem;
 
 /** Updated function to handle "Create New Software System" button click **/
 function createNewSystem() {
-    currentMode = Modes.CREATING;
+    currentMode = appState.Modes.CREATING;
 
     const defaultSeniorManagersData = [];
     const defaultSDMsData = [];

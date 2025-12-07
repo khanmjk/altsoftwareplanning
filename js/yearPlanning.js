@@ -500,13 +500,13 @@ function renderPlanningView() {
     `;
 
     // Ensure Data
-    if (typeof ensureWorkPackagesForInitiatives === 'function') {
-        ensureWorkPackagesForInitiatives(currentSystemData, currentPlanningYear);
-        if (typeof syncInitiativeTotals === 'function') {
-            (currentSystemData.yearlyInitiatives || [])
-                .filter(init => `${init.attributes?.planningYear || ''}` === `${currentPlanningYear}`)
-                .forEach(init => syncInitiativeTotals(init.initiativeId, currentSystemData));
-        }
+    // Updated to use WorkPackageService directly
+    WorkPackageService.ensureWorkPackagesForInitiatives(currentSystemData, currentPlanningYear);
+    if (typeof syncInitiativeTotals === 'function') {
+        (currentSystemData.yearlyInitiatives || [])
+            .filter(init => `${init.attributes?.planningYear || ''}` === `${currentPlanningYear}`)
+            // Updated to use WorkPackageService directly
+            .forEach(init => WorkPackageService.syncInitiativeTotals(init.initiativeId, currentSystemData));
     }
 
     const tableContainer = document.getElementById('planningTableContainer');
@@ -735,19 +735,16 @@ function handleSavePlan() {
     });
 
     try {
-        if (typeof ensureWorkPackagesForInitiatives === 'function') {
-            ensureWorkPackagesForInitiatives(currentSystemData, currentPlanningYear);
-            (currentSystemData.yearlyInitiatives || [])
-                .filter(init => init.attributes?.planningYear == currentPlanningYear)
-                .forEach(init => {
-                    if (typeof syncWorkPackagesFromInitiative === 'function') {
-                        syncWorkPackagesFromInitiative(init, currentSystemData);
-                    }
-                    if (typeof syncInitiativeTotals === 'function') {
-                        syncInitiativeTotals(init.initiativeId, currentSystemData);
-                    }
-                });
-        }
+        // Updated to use WorkPackageService directly
+        WorkPackageService.ensureWorkPackagesForInitiatives(currentSystemData, currentPlanningYear);
+        (currentSystemData.yearlyInitiatives || [])
+            .filter(init => init.attributes?.planningYear == currentPlanningYear)
+            .forEach(init => {
+                // Updated to use WorkPackageService directly
+                WorkPackageService.syncWorkPackagesFromInitiative(init, currentSystemData);
+                WorkPackageService.syncInitiativeTotals(init.initiativeId, currentSystemData);
+            });
+
         saveSystemChanges();
         window.notificationManager.showToast(`Plan for ${currentPlanningYear} saved successfully. Initiative statuses have been updated.`, "success");
         // Optionally, refresh the table to show any visual changes reflecting status updates

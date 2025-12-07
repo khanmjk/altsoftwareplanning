@@ -183,12 +183,7 @@ async function saveSystemDetails() {
     window.systemRepository.saveSystem(newSystemName, currentSystemData);
     window.notificationManager.showToast('System details saved.', 'success');
 
-    if (currentMode == Modes.EDITING) {
-        generateTeamTable(currentSystemData);
-        generateServiceDependenciesTable();
-        updateServiceVisualization();
-        updateDependencyVisualization();
-    }
+
 }
 
 /** Save All Changes (Main Save Handler) **/
@@ -248,12 +243,7 @@ async function saveAllChanges() {
         if (saved) {
             window.notificationManager.showToast(`System "${finalSystemName}" saved successfully!`, 'success');
 
-            // 6. Post-Save: Exit Edit Mode
-            // If we were creating, this effectively switches us to "Browse" mode for the new system
-            if (typeof currentMode !== 'undefined') {
-                currentMode = (typeof Modes !== 'undefined' && Modes.Browse) ? Modes.Browse : 'browse';
-            }
-            exitEditMode();
+
         } else {
             window.notificationManager.showToast('Failed to save system. Please try again.', 'error');
             currentSystemData.systemName = oldSystemNameKey; // Revert on failure
