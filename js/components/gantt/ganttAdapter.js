@@ -2,7 +2,9 @@
  * Gantt Adapter: converts domain initiatives/workPackages into normalized tasks for the Gantt component.
  * Keeps Mermaid-agnostic transformation separate from rendering logic.
  */
-(function () {
+
+// Global ganttAdapter object
+const ganttAdapter = (function () {
     // Use GanttService methods
     const sanitizeId = (id) => GanttService.normalizeGanttId(id);
     const computeSdeEstimate = (init, filterTeamId) => GanttService.computeSdeEstimate(init, filterTeamId);
@@ -153,8 +155,6 @@
         });
         return tasks;
     }
-
-    // Removed createTaskForWorkPackage helper as logic is now inline for indentation control
 
     function buildInitiativeLabel(init, endDate) {
         const title = init.title || 'Initiative';
@@ -318,15 +318,12 @@
         return rounded.toString();
     }
 
-    // sanitizeId is now provided via GanttService alias at top
-
     function truncateText(text, maxLength) {
         if (!text) return '';
         if (text.length <= maxLength) return text;
         return text.substring(0, maxLength) + '...';
     }
 
-    if (typeof window !== 'undefined') {
-        window.ganttAdapter = { buildTasksFromInitiatives };
-    }
+    // Return the public API
+    return { buildTasksFromInitiatives };
 })();

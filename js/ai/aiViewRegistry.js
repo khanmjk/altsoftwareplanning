@@ -10,7 +10,6 @@
 const AI_VIEW_REGISTRY = {
     // P0 - Critical
     planningView: {
-        getInstance: () => window.yearPlanningView,
         displayName: 'Year Plan',
         fallbackGlobals: ['currentPlanningYear', 'planningCapacityScenario',
             'applyCapacityConstraintsToggle', 'currentYearPlanSummaryData',
@@ -19,85 +18,84 @@ const AI_VIEW_REGISTRY = {
 
     // P1 - High Priority
     ganttPlanningView: {
-        getInstance: () => null, // Legacy - no class yet
         displayName: 'Detailed Planning (Gantt)',
         fallbackGlobals: ['currentGanttYear', 'currentGanttGroupBy']
     },
 
     capacityConfigView: {
-        getInstance: () => window.capacityPlanningViewInstance,
         displayName: 'Capacity Tuning',
         fallbackGlobals: []
     },
 
     managementView: {
-        getInstance: () => window.managementViewInstance,
         displayName: 'Product Management',
         fallbackGlobals: []
     },
 
     visualizationCarousel: {
-        getInstance: () => window.systemOverviewViewInstance,
         displayName: 'System Overview',
         fallbackGlobals: ['currentServiceDependenciesTableData']
     },
 
     organogramView: {
-        getInstance: () => window.orgViewInstance,
         displayName: 'Org Design',
         fallbackGlobals: []
     },
 
     roadmapView: {
-        getInstance: () => window.roadmapViewInstance,
         displayName: 'Roadmap',
         fallbackGlobals: []
     },
 
     // P2 - Secondary
     dashboardView: {
-        getInstance: () => window.dashboardViewInstance,
         displayName: 'Dashboard',
         fallbackGlobals: ['dashboardItems', 'currentDashboardIndex', 'dashboardPlanningYear']
     },
 
     sdmForecastingView: {
-        getInstance: () => window.resourceForecastViewInstance,
         displayName: 'Resource Forecasting',
         fallbackGlobals: []
     },
 
     settingsView: {
-        getInstance: () => window.settingsViewInstance,
         displayName: 'Settings',
         fallbackGlobals: []
     },
 
     systemsView: {
-        getInstance: () => window.systemsViewInstance,
         displayName: 'Systems',
         fallbackGlobals: []
     },
 
     // P3 - Low Priority / Static
     welcomeView: {
-        getInstance: () => null,
         displayName: 'Welcome',
         isStatic: true
     },
 
     helpView: {
-        getInstance: () => null,
         displayName: 'Help & Documentation',
         isStatic: true
     },
 
     systemEditForm: {
-        getInstance: () => null,
         displayName: 'Edit System',
         fallbackGlobals: []
     }
 };
+
+/**
+ * Get view instance from NavigationManager
+ * @param {string} viewId - The view ID
+ * @returns {Object|null} View instance or null
+ */
+function getViewInstance(viewId) {
+    if (typeof navigationManager !== 'undefined' && navigationManager.getViewInstance) {
+        return navigationManager.getViewInstance(viewId);
+    }
+    return null;
+}
 
 /**
  * Get AI context for the current view
@@ -109,8 +107,8 @@ function getAIContextForView(viewId) {
     const config = AI_VIEW_REGISTRY[viewId];
     if (!config) return null;
 
-    // Try class instance first
-    const instance = config.getInstance?.();
+    // Try class instance from NavigationManager
+    const instance = getViewInstance(viewId);
     if (instance && instance.getAIContext) {
         return {
             source: 'class',
@@ -142,13 +140,6 @@ function hasClassContextProvider(viewId) {
     const config = AI_VIEW_REGISTRY[viewId];
     if (!config) return false;
 
-    const instance = config.getInstance?.();
+    const instance = getViewInstance(viewId);
     return instance && instance.getAIContext;
-}
-
-// Export to window
-if (typeof window !== 'undefined') {
-    // Object is globally accessible via script loading order
-    window.getAIContextForView = getAIContextForView;
-    window.hasClassContextProvider = hasClassContextProvider;
 }

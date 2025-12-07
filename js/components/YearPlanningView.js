@@ -1023,34 +1023,3 @@ renderPlanningView = function () {
         console.warn("YearPlanningView: Using legacy renderPlanningView");
     }
 };
-
-window.setPlanningYear = function (year) {
-    if (window.yearPlanningView) {
-        window.yearPlanningView.setYear(year);
-    } else {
-        currentPlanningYear = parseInt(year);
-        renderPlanningView();
-    }
-};
-
-window.setPlanningScenario = function (scenario) {
-    if (window.yearPlanningView) {
-        window.yearPlanningView.setScenario(scenario);
-    } else {
-        planningCapacityScenario = scenario;
-        renderPlanningView();
-    }
-};
-
-// AI context function
-window.getYearPlanningContext = function () {
-    if (window.yearPlanningView) {
-        return window.yearPlanningView.getContext();
-    }
-    return { viewName: 'Year Planning', error: 'View not initialized' };
-};
-
-// Export for modules
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = YearPlanningView;
-}

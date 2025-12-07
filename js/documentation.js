@@ -36,7 +36,7 @@ function renderHelpView(container) {
     // Trigger the load - moved to inside template load callback
     // loadAndDisplayDocumentation();
 }
-window.renderHelpView = renderHelpView;
+
 
 /**
  * Fetches README.md, converts Markdown to HTML, displays it,
@@ -65,7 +65,7 @@ async function loadAndDisplayDocumentation() {
         md = md.use(window.markdownItAnchor, {
             permalink: window.markdownItAnchor.permalink.headerLink(),
             level: [1, 2, 3, 4, 5, 6],
-            slugify: s => window.customSlugify(s)
+            slugify: s => customSlugify(s)
         });
     } catch (e) {
         console.error("LAD_SLUGIFY: Error applying markdown-it-anchor:", e);
@@ -140,4 +140,3 @@ function customSlugify(str) {
 
     return s.replace(new RegExp(AMPERSAND_PLACEHOLDER, 'g'), '--');
 }
-window.customSlugify = customSlugify;

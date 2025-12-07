@@ -179,9 +179,7 @@ function generateMermaidSyntax(systemData) {
     }
 }
 
-if (typeof window !== 'undefined') {
-    window.generateMermaidSyntax = generateMermaidSyntax;
-}
+
 
 function generateMermaidApiSyntax(systemData, options = {}) {
     const includePlatforms = (typeof showPlatformComponents === 'undefined') ? true : !!showPlatformComponents;
@@ -404,6 +402,4 @@ function generateMermaidApiSyntax(systemData, options = {}) {
     }
 }
 
-if (typeof window !== 'undefined') {
-    window.generateMermaidApiSyntax = generateMermaidApiSyntax;
-}
+

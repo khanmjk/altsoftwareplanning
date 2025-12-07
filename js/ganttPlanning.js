@@ -1347,8 +1347,8 @@ async function renderGanttChart() {
         container.textContent = 'No initiatives to display.';
         return;
     }
-    const tasks = (window.ganttAdapter)
-        ? window.ganttAdapter.buildTasksFromInitiatives({
+    const tasks = (ganttAdapter)
+        ? ganttAdapter.buildTasksFromInitiatives({
             initiatives,
             workPackages: SystemService.getCurrentSystem().workPackages || [],
             viewBy: currentGanttGroupBy,
@@ -1580,9 +1580,7 @@ function handleGanttUpdate({ task, start, end }) {
     renderGanttChart();
 }
 
-if (typeof window !== 'undefined') {
-    window.renderGanttPlanningView = renderGanttPlanningView;
-}
+
 function renderDynamicGroupFilter() {
     const wrap = document.getElementById('ganttDynamicFilter');
     if (!wrap) return;

@@ -1787,9 +1787,3 @@ function navigateVisualizations(direction) {
 }
 
 
-if (typeof window !== 'undefined') {
-    window.setupPlatformToggleButtons = setupPlatformToggleButtons;
-    window.navigateVisualizations = navigateVisualizations;
-    window.showVisualization = showVisualization;
-}
-

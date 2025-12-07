@@ -58,7 +58,6 @@ function renderSdmForecastingView(container) {
     // 3. Render Content
     generateForecastingUI_SDM();
 }
-window.renderSdmForecastingView = renderSdmForecastingView;
 
 /**
  * Generates the toolbar controls for SDM Forecasting.
