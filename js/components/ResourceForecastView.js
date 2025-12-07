@@ -6,7 +6,7 @@
  */
 class ResourceForecastView {
     constructor() {
-        this.engine = new ForecastingEngine(window.currentSystemData);
+        this.engine = new ForecastingEngine(SystemService.getCurrentSystem());
         this.chartInstance = null;
         this.currentTeamId = null;
     }
@@ -15,8 +15,8 @@ class ResourceForecastView {
         if (!container) return;
 
         // Ensure engine has latest data (fix for singleton stale data)
-        if (window.currentSystemData) {
-            this.engine.updateSystemData(window.currentSystemData);
+        if (SystemService.getCurrentSystem()) {
+            this.engine.updateSystemData(SystemService.getCurrentSystem());
         }
 
         this.container = container;
@@ -75,8 +75,8 @@ class ResourceForecastView {
         defaultOption.textContent = '-- Select a Team --';
         select.appendChild(defaultOption);
 
-        if (window.currentSystemData && window.currentSystemData.teams) {
-            window.currentSystemData.teams.forEach(team => {
+        if (SystemService.getCurrentSystem() && SystemService.getCurrentSystem().teams) {
+            SystemService.getCurrentSystem().teams.forEach(team => {
                 const name = team.teamIdentity || team.teamName || team.teamId;
                 const option = document.createElement('option');
                 option.value = team.teamId;
@@ -283,7 +283,7 @@ class ResourceForecastView {
         fundedInput.placeholder = '-';
         currentInput.placeholder = '-';
 
-        const team = window.currentSystemData.teams.find(t => t.teamId === teamId);
+        const team = SystemService.getCurrentSystem().teams.find(t => t.teamId === teamId);
         if (team) {
             fundedInput.value = team.fundedHeadcount || 0;
             currentInput.value = (team.engineers || []).length;
@@ -328,8 +328,8 @@ class ResourceForecastView {
         }
 
         // Store Capacity Gain in Team Attributes (if team selected)
-        if (this.currentTeamId && window.currentSystemData && window.currentSystemData.teams) {
-            const team = window.currentSystemData.teams.find(t => t.teamId === this.currentTeamId);
+        if (this.currentTeamId && SystemService.getCurrentSystem() && SystemService.getCurrentSystem().teams) {
+            const team = SystemService.getCurrentSystem().teams.find(t => t.teamId === this.currentTeamId);
             if (team) {
                 if (!team.attributes) team.attributes = {};
                 team.attributes.newHireProductiveCapacityGain = results.newHireCapacityGainSdeYears || 0;
@@ -345,7 +345,7 @@ class ResourceForecastView {
                 }
 
                 // [SYNC FIX] Update global capacity metrics (pure data, no UI refresh needed)
-                CapacityEngine.recalculate(window.currentSystemData);
+                CapacityEngine.recalculate(SystemService.getCurrentSystem());
             }
         }
 
@@ -365,8 +365,8 @@ class ResourceForecastView {
         box.innerHTML = '';
 
         let team = null;
-        if (this.currentTeamId && window.currentSystemData && window.currentSystemData.teams) {
-            team = window.currentSystemData.teams.find(t => t.teamId === this.currentTeamId);
+        if (this.currentTeamId && SystemService.getCurrentSystem() && SystemService.getCurrentSystem().teams) {
+            team = SystemService.getCurrentSystem().teams.find(t => t.teamId === this.currentTeamId);
         }
 
         let teamDisplayName = 'Playground Scenario';
@@ -561,7 +561,7 @@ class ResourceForecastView {
      * @returns {Object} Context object with view-specific data
      */
     getAIContext() {
-        const teams = window.currentSystemData?.teams || [];
+        const teams = SystemService.getCurrentSystem()?.teams || [];
 
         return {
             viewTitle: 'Resource Forecasting',

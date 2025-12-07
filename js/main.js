@@ -1,4 +1,17 @@
-let currentSystemData = null;
+/**
+ * Backward-compatible shim for currentSystemData.
+ * Delegates to SystemService for actual state management.
+ * This allows gradual migration of 450+ references.
+ * 
+ * NOTE: Do NOT declare 'let currentSystemData' as it would shadow this global.
+ */
+Object.defineProperty(window, 'currentSystemData', {
+    get() { return SystemService.getCurrentSystem(); },
+    set(value) { SystemService.setCurrentSystem(value); },
+    configurable: true,
+    enumerable: true
+});
+
 let currentMode = appState.Modes.NAVIGATION;
 
 // Fallback HTML snippets for components when fetch is unavailable (e.g., file:// protocol)
@@ -134,8 +147,7 @@ async function handleCreateWithAi() {
 
         console.log("AI generation successful and validated:", newSystemData);
 
-        currentSystemData = newSystemData;
-        window.currentSystemData = currentSystemData;
+        SystemService.setCurrentSystem(newSystemData);
 
         let finalSystemName = newSystemData.systemName;
         if (window.systemRepository.getSystemData(finalSystemName)) {
@@ -226,8 +238,7 @@ function loadSavedSystem(systemName) {
         return;
     }
 
-    currentSystemData = systemData; // Assign to global
-    window.currentSystemData = currentSystemData;
+    SystemService.setCurrentSystem(systemData);
 
     // UI Cleanup
     const systemLoadListDiv = document.getElementById('systemLoadListDiv');
@@ -292,8 +303,7 @@ function createNewSystem() {
     // Delegate to SystemService
     const defaultSystemData = SystemService.createSystem();
 
-    currentSystemData = defaultSystemData;
-    window.currentSystemData = currentSystemData;
+    SystemService.setCurrentSystem(defaultSystemData);
     console.log("Initialized new currentSystemData via SystemService.");
 
     navigationManager.navigateTo('systemEditForm');
@@ -316,8 +326,7 @@ async function resetToDefaults() {
         // Re-add defaults explicitly using SystemService
         SystemService.initializeDefaults({ forceOverwrite: true });
 
-        currentSystemData = null;
-        window.currentSystemData = null;
+        SystemService.setCurrentSystem(null);
         window.notificationManager.showToast('Systems have been reset to defaults.', 'success');
         appState.closeCurrentSystem();
     }

@@ -111,7 +111,7 @@ class NavigationManager {
             } else if (viewId === 'organogramView') {
                 window.workspaceComponent.render(viewId, window.renderOrgView);
             } else if (viewId === 'systemEditForm') {
-                window.workspaceComponent.render(viewId, (container) => window.showSystemEditForm(window.currentSystemData, container));
+                window.workspaceComponent.render(viewId, (container) => window.showSystemEditForm(SystemService.getCurrentSystem(), container));
             } else if (viewId === 'dashboardView') {
                 window.workspaceComponent.render(viewId, window.renderDashboardView);
             } else if (viewId === 'welcomeView') {
@@ -151,7 +151,7 @@ class NavigationManager {
 
         // 3. Update Header Breadcrumbs (AFTER render, so legacy views can set breadcrumbs)
         if (this.header) {
-            const systemName = window.currentSystemData ? window.currentSystemData.systemName : 'System';
+            const systemName = SystemService.getCurrentSystem() ? SystemService.getCurrentSystem().systemName : 'System';
             this.header.update(viewId, systemName);
         }
 
@@ -170,8 +170,8 @@ class NavigationManager {
             } else {
                 // Standard Breadcrumbs
                 // 1. Home/System Context
-                if (window.currentSystemData && window.currentSystemData.systemName) {
-                    breadcrumbs.push(window.currentSystemData.systemName);
+                if (SystemService.getCurrentSystem() && SystemService.getCurrentSystem().systemName) {
+                    breadcrumbs.push(SystemService.getCurrentSystem().systemName);
                 }
 
                 // 2. View Path (from HeaderComponent mapping)

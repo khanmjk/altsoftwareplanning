@@ -101,18 +101,18 @@ class BacklogComponent {
     }
 
     prepareTableData() {
-        if (!window.currentSystemData || !window.currentSystemData.yearlyInitiatives) {
+        if (!SystemService.getCurrentSystem() || !SystemService.getCurrentSystem().yearlyInitiatives) {
             return [];
         }
 
-        let initiatives = JSON.parse(JSON.stringify(window.currentSystemData.yearlyInitiatives));
+        let initiatives = JSON.parse(JSON.stringify(SystemService.getCurrentSystem().yearlyInitiatives));
 
         if (this.statusFilters.length > 0 && this.statusFilters.length < this.ALL_STATUSES.length) {
             initiatives = initiatives.filter(init => this.statusFilters.includes(init.status));
         }
 
-        const themesMap = new Map((window.currentSystemData.definedThemes || []).map(t => [t.themeId, t.name]));
-        const teamsMap = new Map((window.currentSystemData.teams || []).map(t => [t.teamId, t.teamIdentity || t.teamName]));
+        const themesMap = new Map((SystemService.getCurrentSystem().definedThemes || []).map(t => [t.themeId, t.name]));
+        const teamsMap = new Map((SystemService.getCurrentSystem().teams || []).map(t => [t.teamId, t.teamIdentity || t.teamName]));
 
         return initiatives.map(init => {
             const ownerName = init.owner?.name || 'N/A';
@@ -152,14 +152,14 @@ class BacklogComponent {
     defineColumns() {
         const getPersonnelEditorParams = () => {
             const options = [{ label: '- No Owner -', value: '' }];
-            (window.currentSystemData.sdms || []).forEach(p => options.push({ label: `${p.sdmName} (SDM)`, value: `sdm:${p.sdmId}` }));
-            (window.currentSystemData.pmts || []).forEach(p => options.push({ label: `${p.pmtName} (PMT)`, value: `pmt:${p.pmtId}` }));
-            (window.currentSystemData.seniorManagers || []).forEach(p => options.push({ label: `${p.seniorManagerName} (Sr. Mgr)`, value: `seniorManager:${p.seniorManagerId}` }));
+            (SystemService.getCurrentSystem().sdms || []).forEach(p => options.push({ label: `${p.sdmName} (SDM)`, value: `sdm:${p.sdmId}` }));
+            (SystemService.getCurrentSystem().pmts || []).forEach(p => options.push({ label: `${p.pmtName} (PMT)`, value: `pmt:${p.pmtId}` }));
+            (SystemService.getCurrentSystem().seniorManagers || []).forEach(p => options.push({ label: `${p.seniorManagerName} (Sr. Mgr)`, value: `seniorManager:${p.seniorManagerId}` }));
             return { values: options, autocomplete: true };
         };
 
         const getThemeEditorParams = () => {
-            const options = (window.currentSystemData.definedThemes || []).map(t => ({ label: t.name, value: t.themeId }));
+            const options = (SystemService.getCurrentSystem().definedThemes || []).map(t => ({ label: t.name, value: t.themeId }));
             return { values: options, multiselect: true };
         };
 
@@ -257,7 +257,7 @@ class BacklogComponent {
             {
                 title: 'Themes', field: 'themes', minWidth: 150, headerFilter: 'input',
                 formatter: (cell) => {
-                    const themeMap = new Map((window.currentSystemData.definedThemes || []).map(t => [t.themeId, t.name]));
+                    const themeMap = new Map((SystemService.getCurrentSystem().definedThemes || []).map(t => [t.themeId, t.name]));
                     return (cell.getValue() || []).map(id => themeMap.get(id) || id).join(', ');
                 },
                 editor: 'list', editorParams: getThemeEditorParams,

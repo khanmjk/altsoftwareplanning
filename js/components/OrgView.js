@@ -57,7 +57,7 @@ class OrgView {
 
         this.container.innerHTML = ''; // Clear container cleanly
 
-        if (!window.currentSystemData) {
+        if (!SystemService.getCurrentSystem()) {
             const errorMsg = document.createElement('div');
             errorMsg.className = 'workspace-empty-state';
             errorMsg.textContent = 'No system data loaded';
@@ -141,13 +141,13 @@ class OrgView {
      * Build hierarchical data for visualization
      */
     buildHierarchyData() {
-        if (!window.currentSystemData) return null;
+        if (!SystemService.getCurrentSystem()) return null;
 
-        const sdmMap = new Map((window.currentSystemData.sdms || []).map(sdm =>
+        const sdmMap = new Map((SystemService.getCurrentSystem().sdms || []).map(sdm =>
             [sdm.sdmId, { ...sdm, name: sdm.sdmName, children: [], type: 'sdm' }]
         ));
 
-        const srMgrMap = new Map((window.currentSystemData.seniorManagers || []).map(sr =>
+        const srMgrMap = new Map((SystemService.getCurrentSystem().seniorManagers || []).map(sr =>
             [sr.seniorManagerId, { ...sr, name: sr.seniorManagerName, children: [], type: 'srMgr' }]
         ));
 
@@ -171,14 +171,14 @@ class OrgView {
         });
 
         // Add teams under SDMs
-        (window.currentSystemData.teams || []).forEach(team => {
+        (SystemService.getCurrentSystem().teams || []).forEach(team => {
             const awayTeamCount = team.awayTeamMembers?.length ?? 0;
             const sourceSummary = typeof window.getSourceSummary === 'function'
                 ? window.getSourceSummary(team.awayTeamMembers)
                 : '';
 
             const engineerChildren = (team.engineers || []).map(engineerName => {
-                const eng = (window.currentSystemData.allKnownEngineers || []).find(e => e.name === engineerName);
+                const eng = (SystemService.getCurrentSystem().allKnownEngineers || []).find(e => e.name === engineerName);
                 return {
                     name: `${eng ? eng.name : engineerName} (L${eng ? eng.level : '?'})${eng?.attributes?.isAISWE ? ' [AI]' : ''}`,
                     type: 'engineer'
@@ -223,7 +223,7 @@ class OrgView {
         });
 
         return {
-            name: window.currentSystemData.systemName || 'Organization',
+            name: SystemService.getCurrentSystem().systemName || 'Organization',
             type: 'root',
             children: Array.from(srMgrMap.values())
         };
@@ -636,24 +636,24 @@ class OrgView {
      * Prepare data for team table
      */
     prepareTeamDataForTabulator() {
-        if (!window.currentSystemData || !window.currentSystemData.teams) {
+        if (!SystemService.getCurrentSystem() || !SystemService.getCurrentSystem().teams) {
             return [];
         }
 
-        const sdmMap = new Map((window.currentSystemData.sdms || []).map(s => [s.sdmId, s]));
-        const srMgrMap = new Map((window.currentSystemData.seniorManagers || []).map(sm => [sm.seniorManagerId, sm]));
-        const pmtMap = new Map((window.currentSystemData.pmts || []).map(p => [p.pmtId, p]));
-        const engineerMap = new Map((window.currentSystemData.allKnownEngineers || []).map(e => [e.name, e]));
+        const sdmMap = new Map((SystemService.getCurrentSystem().sdms || []).map(s => [s.sdmId, s]));
+        const srMgrMap = new Map((SystemService.getCurrentSystem().seniorManagers || []).map(sm => [sm.seniorManagerId, sm]));
+        const pmtMap = new Map((SystemService.getCurrentSystem().pmts || []).map(p => [p.pmtId, p]));
+        const engineerMap = new Map((SystemService.getCurrentSystem().allKnownEngineers || []).map(e => [e.name, e]));
 
         let teamServicesMap = {};
-        (window.currentSystemData.services || []).forEach(service => {
+        (SystemService.getCurrentSystem().services || []).forEach(service => {
             if (service.owningTeamId) {
                 if (!teamServicesMap[service.owningTeamId]) teamServicesMap[service.owningTeamId] = [];
                 teamServicesMap[service.owningTeamId].push(service.serviceName);
             }
         });
 
-        return window.currentSystemData.teams.map(team => {
+        return SystemService.getCurrentSystem().teams.map(team => {
             const sdm = sdmMap.get(team.sdmId);
             const seniorManager = sdm ? srMgrMap.get(sdm.seniorManagerId) : null;
             const pmt = pmtMap.get(team.pmtId);
@@ -735,11 +735,11 @@ class OrgView {
         };
 
         return [
-            { title: "Sr. Manager", field: "seniorManagerName", headerFilter: "list", headerFilterParams: getNameHeaderFilterParams(window.currentSystemData.seniorManagers, "seniorManagerName") },
-            { title: "SDM", field: "sdmName", headerFilter: "list", headerFilterParams: getNameHeaderFilterParams(window.currentSystemData.sdms, "sdmName") },
+            { title: "Sr. Manager", field: "seniorManagerName", headerFilter: "list", headerFilterParams: getNameHeaderFilterParams(SystemService.getCurrentSystem().seniorManagers, "seniorManagerName") },
+            { title: "SDM", field: "sdmName", headerFilter: "list", headerFilterParams: getNameHeaderFilterParams(SystemService.getCurrentSystem().sdms, "sdmName") },
             { title: "Team Identity", field: "teamIdentity", width: 180 },
             { title: "Team Name", field: "teamName", width: 200 },
-            { title: "PMT", field: "pmtName", headerFilter: "list", headerFilterParams: getNameHeaderFilterParams(window.currentSystemData.pmts, "pmtName") },
+            { title: "PMT", field: "pmtName", headerFilter: "list", headerFilterParams: getNameHeaderFilterParams(SystemService.getCurrentSystem().pmts, "pmtName") },
             { title: "Team BIS", field: "teamBIS", hozAlign: "center", width: 100 },
             { title: "Funded HC", field: "fundedHeadcount", hozAlign: "center", width: 100 },
             { title: "Effective BIS", field: "effectiveBIS", hozAlign: "center", width: 120 },
@@ -824,7 +824,7 @@ class OrgView {
      */
     updateEngineerTableStatistics() {
         const heading = document.getElementById('orgEngineerTableHeading');
-        if (!heading || !window.currentSystemData) return;
+        if (!heading || !SystemService.getCurrentSystem()) return;
 
         const stats = this.calculateEngineerStatistics();
 
@@ -872,7 +872,7 @@ class OrgView {
      * EXTRACTED: Pure function for testability
      */
     calculateEngineerStatistics() {
-        const data = window.currentSystemData;
+        const data = SystemService.getCurrentSystem();
         if (!data) return { funded: 0, teamBIS: 0, awayBIS: 0, effectiveBIS: 0, hiringGap: 0 };
 
         const funded = (data.teams || []).reduce((sum, team) => sum + (team.fundedHeadcount ?? 0), 0);
@@ -889,26 +889,26 @@ class OrgView {
      * Retrieved from legacy code and adapted
      */
     prepareEngineerDataForTabulator() {
-        if (!window.currentSystemData || !window.currentSystemData.allKnownEngineers) {
+        if (!SystemService.getCurrentSystem() || !SystemService.getCurrentSystem().allKnownEngineers) {
             return [];
         }
 
-        return window.currentSystemData.allKnownEngineers.map((engineer) => {
+        return SystemService.getCurrentSystem().allKnownEngineers.map((engineer) => {
             let teamDisplayForColumn = "Unallocated";
             let actualTeamIdForData = engineer.currentTeamId;
             let sdmName = "N/A";
             let seniorManagerName = "N/A";
 
             if (engineer.currentTeamId) {
-                const team = (window.currentSystemData.teams || []).find(t => t.teamId === engineer.currentTeamId);
+                const team = (SystemService.getCurrentSystem().teams || []).find(t => t.teamId === engineer.currentTeamId);
                 if (team) {
                     teamDisplayForColumn = team.teamIdentity || team.teamName || "Unknown Team";
                     if (team.sdmId) {
-                        const sdm = (window.currentSystemData.sdms || []).find(s => s.sdmId === team.sdmId);
+                        const sdm = (SystemService.getCurrentSystem().sdms || []).find(s => s.sdmId === team.sdmId);
                         if (sdm) {
                             sdmName = sdm.sdmName;
                             if (sdm.seniorManagerId) {
-                                const srMgr = (window.currentSystemData.seniorManagers || []).find(sm => sm.seniorManagerId === sdm.seniorManagerId);
+                                const srMgr = (SystemService.getCurrentSystem().seniorManagers || []).find(sm => sm.seniorManagerId === sdm.seniorManagerId);
                                 if (srMgr) {
                                     seniorManagerName = srMgr.seniorManagerName;
                                 }
@@ -1043,7 +1043,7 @@ class OrgView {
             return columnDef.editor ? `Unallocated <span style='color:#007bff; font-size:0.8em; margin-left:5px; cursor:pointer;'>✏️</span>` : 'Unallocated';
         }
 
-        const team = (window.currentSystemData.teams || []).find(t => t.teamId === teamId);
+        const team = (SystemService.getCurrentSystem().teams || []).find(t => t.teamId === teamId);
         const display = team ? (team.teamIdentity || team.teamName || teamId) : `Missing (${teamId.slice(-4)})`;
 
         if (columnDef.editor) {
@@ -1057,7 +1057,7 @@ class OrgView {
      */
     getTeamEditorParams() {
         const options = [{ label: "Unallocated", value: "" }];
-        (window.currentSystemData.teams || []).forEach(team => {
+        (SystemService.getCurrentSystem().teams || []).forEach(team => {
             options.push({
                 label: team.teamIdentity || team.teamName || team.teamId,
                 value: team.teamId
@@ -1073,9 +1073,9 @@ class OrgView {
         const options = [{ label: "All", value: "" }, { label: "Unallocated", value: "_UNALLOCATED_" }];
         const addedTeams = new Set();
 
-        (window.currentSystemData.allKnownEngineers || []).forEach(engineer => {
+        (SystemService.getCurrentSystem().allKnownEngineers || []).forEach(engineer => {
             if (engineer.currentTeamId && !addedTeams.has(engineer.currentTeamId)) {
-                const team = (window.currentSystemData.teams || []).find(t => t.teamId === engineer.currentTeamId);
+                const team = (SystemService.getCurrentSystem().teams || []).find(t => t.teamId === engineer.currentTeamId);
                 if (team) {
                     options.push({
                         label: team.teamIdentity || team.teamName || team.teamId,
@@ -1094,7 +1094,7 @@ class OrgView {
      */
     getManagerFilterParams(arrayName, fieldName) {
         const options = [{ label: "All", value: "" }];
-        const source = window.currentSystemData[arrayName] || [];
+        const source = SystemService.getCurrentSystem()[arrayName] || [];
         const uniqueNames = new Set();
 
         source.forEach(item => {
@@ -1124,12 +1124,12 @@ class OrgView {
             return;
         }
 
-        const engineer = (window.currentSystemData.allKnownEngineers || []).find(e => e.name === engineerName);
+        const engineer = (SystemService.getCurrentSystem().allKnownEngineers || []).find(e => e.name === engineerName);
         if (engineer) {
             engineer.level = newLevel;
             if (window.saveSystemChanges) window.saveSystemChanges();
             // Recalculate capacity metrics (pure data, no UI refresh needed here)
-            CapacityEngine.recalculate(window.currentSystemData);
+            CapacityEngine.recalculate(SystemService.getCurrentSystem());
             console.log(`Updated ${engineerName} to L${newLevel}`);
         } else {
             console.error(`Engineer ${engineerName} not found`);
@@ -1164,18 +1164,18 @@ class OrgView {
      * @returns {Object} Context object with view-specific data
      */
     getAIContext() {
-        const engineers = window.currentSystemData?.allKnownEngineers || [];
-        const teams = window.currentSystemData?.teams || [];
+        const engineers = SystemService.getCurrentSystem()?.allKnownEngineers || [];
+        const teams = SystemService.getCurrentSystem()?.teams || [];
         const aiEngineers = engineers.filter(e => e.attributes?.isAISWE);
 
         return {
             viewTitle: 'Org Design',
             currentMode: this.currentMode,
-            seniorManagers: window.currentSystemData?.seniorManagers?.map(sm => ({
+            seniorManagers: SystemService.getCurrentSystem()?.seniorManagers?.map(sm => ({
                 id: sm.id,
                 name: sm.name
             })),
-            sdms: window.currentSystemData?.sdms?.map(sdm => ({
+            sdms: SystemService.getCurrentSystem()?.sdms?.map(sdm => ({
                 id: sdm.id,
                 name: sdm.name,
                 reportsToSeniorManagerId: sdm.reportsToSeniorManagerId

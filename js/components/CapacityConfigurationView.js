@@ -93,7 +93,7 @@ class CapacityConfigurationView {
     }
 
     _renderCompanyPolicy(container) {
-        const config = window.currentSystemData.capacityConfiguration;
+        const config = SystemService.getCurrentSystem().capacityConfiguration;
         if (!config) {
             const alert = document.createElement('div');
             alert.className = 'alert alert-danger';
@@ -152,7 +152,7 @@ class CapacityConfigurationView {
     }
 
     _renderDivisionalEvents(container) {
-        const config = window.currentSystemData.capacityConfiguration;
+        const config = SystemService.getCurrentSystem().capacityConfiguration;
 
         const orgEventsTable = document.createElement('table');
         orgEventsTable.className = 'table table-striped capacity-org-events-table';
@@ -212,7 +212,7 @@ class CapacityConfigurationView {
 
     _renderLeaveTypesRows(tbody) {
         tbody.innerHTML = '';
-        const leaveTypes = window.currentSystemData.capacityConfiguration?.leaveTypes || [];
+        const leaveTypes = SystemService.getCurrentSystem().capacityConfiguration?.leaveTypes || [];
         leaveTypes.forEach(lt => {
             const row = tbody.insertRow();
             row.insertCell().textContent = lt.name;
@@ -227,7 +227,7 @@ class CapacityConfigurationView {
 
     _renderOrgEventsRows(tbody) {
         tbody.innerHTML = '';
-        const events = window.currentSystemData.capacityConfiguration?.globalConstraints?.orgEvents || [];
+        const events = SystemService.getCurrentSystem().capacityConfiguration?.globalConstraints?.orgEvents || [];
         events.forEach((event, index) => {
             const row = tbody.insertRow();
 
@@ -261,7 +261,7 @@ class CapacityConfigurationView {
     }
 
     _renderTeamConstraints(parentContainer) {
-        const teams = window.currentSystemData.teams || [];
+        const teams = SystemService.getCurrentSystem().teams || [];
 
         // Accordion container
         const accordion = document.createElement('div');

@@ -479,7 +479,7 @@ function renderPlanningView() {
                         }
                     },
                     className: 'btn btn-info btn-sm',
-                    hidden: !(window.globalSettings && window.globalSettings.ai && window.globalSettings.ai.isEnabled)
+                    hidden: !(SettingsService.get() && SettingsService.get().ai && SettingsService.get().ai.isEnabled)
                 }
             ]
         });

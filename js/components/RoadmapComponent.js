@@ -68,7 +68,7 @@ class RoadmapComponent {
 
         // 2. Org Filter
         let orgOptions = '<option value="all">All Organizations</option>';
-        (window.currentSystemData.seniorManagers || []).forEach(sm => {
+        (SystemService.getCurrentSystem().seniorManagers || []).forEach(sm => {
             orgOptions += `<option value="${sm.seniorManagerId}">${sm.seniorManagerName}</option>`;
         });
 
@@ -82,7 +82,7 @@ class RoadmapComponent {
 
         // 4. Theme Filter (Simplified for now, can enhance to multiselect later if needed)
         let themeOptions = '<option value="all">All Themes</option>';
-        (window.currentSystemData.definedThemes || []).forEach(t => {
+        (SystemService.getCurrentSystem().definedThemes || []).forEach(t => {
             themeOptions += `<option value="${t.themeId}">${t.name}</option>`;
         });
 
@@ -96,10 +96,10 @@ class RoadmapComponent {
         const teamSelect = document.getElementById('roadmapTeamFilter');
         if (!teamSelect) return;
 
-        let teams = window.currentSystemData.teams || [];
+        let teams = SystemService.getCurrentSystem().teams || [];
         if (orgId !== 'all') {
             const validSdmIds = new Set();
-            (window.currentSystemData.sdms || []).forEach(sdm => {
+            (SystemService.getCurrentSystem().sdms || []).forEach(sdm => {
                 if (sdm.seniorManagerId === orgId) validSdmIds.add(sdm.sdmId);
             });
             teams = teams.filter(t => validSdmIds.has(t.sdmId));
@@ -140,7 +140,7 @@ class RoadmapComponent {
         const selectedThemes = themeFilter !== 'all' ? [themeFilter] : [];
 
         // Use RoadmapService for data retrieval
-        const systemData = window.currentSystemData;
+        const systemData = SystemService.getCurrentSystem();
         if (this.viewType === 'quarterly') {
             return RoadmapService.getQuarterlyRoadmapData({
                 initiatives: systemData.yearlyInitiatives || [],
@@ -216,13 +216,13 @@ class RoadmapComponent {
                 // Pills Logic
                 const sdeTotal = (init.assignments || []).reduce((sum, a) => sum + (a.sdeYears || 0), 0).toFixed(1);
                 const themeNames = (init.themes || []).map(tid => {
-                    const t = window.currentSystemData.definedThemes.find(th => th.themeId === tid);
+                    const t = SystemService.getCurrentSystem().definedThemes.find(th => th.themeId === tid);
                     return t ? t.name : 'Uncategorized';
                 }).join(', ') || 'Uncategorized';
 
                 // Team Pills
                 const teams = [...new Set((init.assignments || []).map(a => {
-                    const t = window.currentSystemData.teams.find(tm => tm.teamId === a.teamId);
+                    const t = SystemService.getCurrentSystem().teams.find(tm => tm.teamId === a.teamId);
                     return t ? (t.teamIdentity || t.teamName) : 'Unknown';
                 }))];
                 const teamPills = teams.map(t => `<span class="pill pill-team">${t}</span>`).join('');
@@ -303,12 +303,12 @@ class RoadmapComponent {
                 // Pills Logic (Reused)
                 const sdeTotal = (init.assignments || []).reduce((sum, a) => sum + (a.sdeYears || 0), 0).toFixed(1);
                 const themeNames = (init.themes || []).map(tid => {
-                    const t = window.currentSystemData.definedThemes.find(th => th.themeId === tid);
+                    const t = SystemService.getCurrentSystem().definedThemes.find(th => th.themeId === tid);
                     return t ? t.name : 'Uncategorized';
                 }).join(', ') || 'Uncategorized';
 
                 const teams = [...new Set((init.assignments || []).map(a => {
-                    const t = window.currentSystemData.teams.find(tm => tm.teamId === a.teamId);
+                    const t = SystemService.getCurrentSystem().teams.find(tm => tm.teamId === a.teamId);
                     return t ? (t.teamIdentity || t.teamName) : 'Unknown';
                 }))];
                 const teamPills = teams.map(t => `<span class="pill pill-team">${t}</span>`).join('');
@@ -427,10 +427,10 @@ class RoadmapComponent {
     }
 
     updateInitiative(initiativeId, target) {
-        const initiativeIndex = window.currentSystemData.yearlyInitiatives.findIndex(i => i.initiativeId === initiativeId);
+        const initiativeIndex = SystemService.getCurrentSystem().yearlyInitiatives.findIndex(i => i.initiativeId === initiativeId);
         if (initiativeIndex === -1) return;
 
-        const initiative = window.currentSystemData.yearlyInitiatives[initiativeIndex];
+        const initiative = SystemService.getCurrentSystem().yearlyInitiatives[initiativeIndex];
         const title = initiative.title;
 
         if (this.viewType === 'quarterly') {

@@ -101,22 +101,22 @@ class AppState {
     closeCurrentSystem() {
         console.log("AppState: Closing current system session.");
 
-        // Clear system state
-        this.currentSystem = null;
-
-        // Sync legacy global
-        if (typeof window !== 'undefined') {
-            window.currentSystemData = null;
+        // Clear system state via SystemService
+        if (typeof SystemService !== 'undefined') {
+            SystemService.setCurrentSystem(null);
         }
 
+        // Also clear local state (AppState is notified by SystemService.setCurrentSystem)
+        this._state.currentSystem = null;
+
         // Update sidebar state
-        if (window.sidebarComponent) {
-            window.sidebarComponent.updateState();
+        if (typeof sidebarComponent !== 'undefined' && sidebarComponent) {
+            sidebarComponent.updateState();
         }
 
         // Navigate to welcome view
-        if (window.navigationManager) {
-            window.navigationManager.navigateTo('welcomeView');
+        if (typeof navigationManager !== 'undefined' && navigationManager) {
+            navigationManager.navigateTo('welcomeView');
         }
     }
 }

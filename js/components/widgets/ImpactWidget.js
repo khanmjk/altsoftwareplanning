@@ -93,7 +93,7 @@ class ImpactWidget {
         controlsContainer.appendChild(this.dynamicSelectContainer);
 
         // Initialize and bind events
-        if (window.currentSystemData) {
+        if (SystemService.getCurrentSystem()) {
             this.updateDynamicSelector();
             this.modeSelect.addEventListener('change', () => this.updateDynamicSelector());
         }
@@ -114,7 +114,7 @@ class ImpactWidget {
         select.style.minWidth = '250px';
         this.dynamicSelectContainer.appendChild(select);
 
-        const systemData = window.currentSystemData;
+        const systemData = SystemService.getCurrentSystem();
         let items = [];
         let renderFunc;
         let noItemsText = 'No items found.';
@@ -184,7 +184,7 @@ class ImpactWidget {
      * Generate initiative-centric graph
      */
     generateInitiativeGraph(selectedInitiativeId) {
-        const systemData = window.currentSystemData;
+        const systemData = SystemService.getCurrentSystem();
         const initiative = systemData.yearlyInitiatives.find(i => i.initiativeId === selectedInitiativeId);
         if (!initiative) return;
 
@@ -251,7 +251,7 @@ class ImpactWidget {
             return;
         }
 
-        const systemData = window.currentSystemData;
+        const systemData = SystemService.getCurrentSystem();
         const team = systemData.teams.find(t => t.teamId === selectedTeamId);
         if (!team) return;
 
@@ -300,7 +300,7 @@ class ImpactWidget {
      * Generate all teams graph
      */
     generateAllTeamsGraph() {
-        const systemData = window.currentSystemData;
+        const systemData = SystemService.getCurrentSystem();
         const nodes = [], links = [], nodeMap = new Map();
         const addNode = (node) => {
             if (!nodeMap.has(node.id)) {
@@ -327,7 +327,7 @@ class ImpactWidget {
      * Generate service-centric graph
      */
     generateServiceGraph(selectedServiceName) {
-        const systemData = window.currentSystemData;
+        const systemData = SystemService.getCurrentSystem();
         const service = systemData.services.find(s => s.serviceName === selectedServiceName);
         if (!service) return;
 
@@ -373,7 +373,7 @@ class ImpactWidget {
      * Render force-directed graph
      */
     renderGraph(nodes, links, selectedId) {
-        const systemData = window.currentSystemData;
+        const systemData = SystemService.getCurrentSystem();
         this.svg.selectAll('*').remove();
 
         const width = this.svg.node().getBoundingClientRect().width;
@@ -512,7 +512,7 @@ class ImpactWidget {
         const summaryContainer = document.getElementById('impact-summary-container');
         if (!summaryContainer) return;
 
-        const systemData = window.currentSystemData;
+        const systemData = SystemService.getCurrentSystem();
         const selectedNode = nodes.find(n => n.id === selectedId && n.type === 'Initiative');
 
         // Clear previous content

@@ -144,15 +144,15 @@ class RoadmapView {
     }
 
     handleSave(initiativeData, isEdit) {
-        if (!window.currentSystemData.yearlyInitiatives) window.currentSystemData.yearlyInitiatives = [];
+        if (!SystemService.getCurrentSystem().yearlyInitiatives) SystemService.getCurrentSystem().yearlyInitiatives = [];
 
         if (isEdit) {
-            const index = window.currentSystemData.yearlyInitiatives.findIndex(i => i.initiativeId === initiativeData.initiativeId);
+            const index = SystemService.getCurrentSystem().yearlyInitiatives.findIndex(i => i.initiativeId === initiativeData.initiativeId);
             if (index > -1) {
-                window.currentSystemData.yearlyInitiatives[index] = { ...window.currentSystemData.yearlyInitiatives[index], ...initiativeData };
+                SystemService.getCurrentSystem().yearlyInitiatives[index] = { ...SystemService.getCurrentSystem().yearlyInitiatives[index], ...initiativeData };
             }
         } else {
-            window.currentSystemData.yearlyInitiatives.push(initiativeData);
+            SystemService.getCurrentSystem().yearlyInitiatives.push(initiativeData);
         }
 
         window.saveSystemChanges();
@@ -160,7 +160,7 @@ class RoadmapView {
     }
 
     async handleDelete(initiativeId) {
-        const initiative = (window.currentSystemData.yearlyInitiatives || []).find(i => i.initiativeId === initiativeId);
+        const initiative = (SystemService.getCurrentSystem().yearlyInitiatives || []).find(i => i.initiativeId === initiativeId);
         const title = initiative ? initiative.title : initiativeId;
 
         if (await window.notificationManager.confirm(`Are you sure you want to delete initiative "${title}"?`, 'Delete Initiative', { confirmStyle: 'danger' })) {
@@ -192,9 +192,9 @@ class RoadmapView {
      * @returns {Object} Context object with view-specific data
      */
     getAIContext() {
-        const initiatives = window.currentSystemData?.yearlyInitiatives || [];
-        const goals = window.currentSystemData?.goals || [];
-        const themes = window.currentSystemData?.definedThemes || [];
+        const initiatives = SystemService.getCurrentSystem()?.yearlyInitiatives || [];
+        const goals = SystemService.getCurrentSystem()?.goals || [];
+        const themes = SystemService.getCurrentSystem()?.definedThemes || [];
 
         return {
             viewTitle: 'Roadmap',

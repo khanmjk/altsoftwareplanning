@@ -168,8 +168,8 @@ ${changesNarrative}
         }
 
         console.log("[OptimizeAgent] Applying pending changes...");
-        // Apply the changes to the live data
-        currentSystemData = pendingPlanChanges;
+        // Apply the changes to the live data via SystemService
+        SystemService.setCurrentSystem(pendingPlanChanges);
         pendingPlanChanges = null; // Clear the pending changes
 
         // Save and refresh the main UI
@@ -270,8 +270,8 @@ If you cannot find a good change, respond with null.
             const analysisFn = await window.aiAgentController._waitForAnalysisFunction();
             const aiResponse = await analysisFn(
                 history,
-                globalSettings.ai.apiKey,
-                globalSettings.ai.provider
+                SettingsService.get().ai.apiKey,
+                SettingsService.get().ai.provider
             );
 
             try {
@@ -368,13 +368,13 @@ If you cannot find a good change, respond with null.
 
         // Now, we must re-calculate the plan based on this temp data.
         // We'll *temporarily* swap out the global data to use our calculation functions.
-        const originalData = currentSystemData;
-        currentSystemData = tempSystemData; // Temporarily set global
+        const originalData = SystemService.getCurrentSystem();
+        SystemService.setCurrentSystem(tempSystemData); // Temporarily set global
 
         const tempSummaryData = calculateTeamLoadSummaryData();
         const tempPlanTableData = calculatePlanningTableData();
 
-        currentSystemData = originalData; // Restore global data
+        SystemService.setCurrentSystem(originalData); // Restore global data
 
         return { tempSystemData, tempPlanTableData, tempSummaryData };
     }

@@ -242,8 +242,8 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
 
             const aiResponse = await analysisFn(
                 historyToSend,
-                globalSettings.ai.apiKey,
-                globalSettings.ai.provider
+                SettingsService.get().ai.apiKey,
+                SettingsService.get().ai.provider
             );
 
             if (!aiResponse || typeof aiResponse.textResponse !== 'string') {
@@ -314,8 +314,8 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
             const response = await imageFn(
                 userQuestion,
                 contextJson,
-                globalSettings.ai.apiKey,
-                globalSettings.ai.provider
+                SettingsService.get().ai.apiKey,
+                SettingsService.get().ai.provider
             );
 
             if (response && response.isImage && response.imageUrl) {
@@ -388,8 +388,8 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
                         const result = await window.generateDiagramFromPrompt(
                             resolvedPayload.description || '',
                             contextJson,
-                            globalSettings.ai.apiKey,
-                            globalSettings.ai.provider
+                            SettingsService.get().ai.apiKey,
+                            SettingsService.get().ai.provider
                         );
                         console.debug("[AI-DIAGRAM] Diagram generation result:", result);
                         if (view && typeof view.postDiagramWidget === 'function') {

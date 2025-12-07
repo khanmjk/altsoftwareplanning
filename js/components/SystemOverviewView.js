@@ -331,14 +331,14 @@ class SystemOverviewView {
     // These delegate to existing global functions
 
     renderSystemVisualization() {
-        if (window.currentSystemData && typeof generateVisualization === 'function') {
-            generateVisualization(window.currentSystemData);
+        if (SystemService.getCurrentSystem() && typeof generateVisualization === 'function') {
+            generateVisualization(SystemService.getCurrentSystem());
         }
     }
 
     renderTeamVisualization() {
-        if (window.currentSystemData && typeof generateTeamVisualization === 'function') {
-            generateTeamVisualization(window.currentSystemData);
+        if (SystemService.getCurrentSystem() && typeof generateTeamVisualization === 'function') {
+            generateTeamVisualization(SystemService.getCurrentSystem());
         }
     }
 
@@ -409,13 +409,13 @@ class SystemOverviewView {
             viewTitle: 'System Overview',
             currentVisualization: this.currentView,
             availableViews: this.viewConfigs.map(v => ({ id: v.id, label: v.label })),
-            services: window.currentSystemData?.services?.map(s => ({
+            services: SystemService.getCurrentSystem()?.services?.map(s => ({
                 serviceName: s.serviceName,
                 owningTeamId: s.owningTeamId
             })),
-            serviceCount: window.currentSystemData?.services?.length || 0,
-            dependencies: window.currentSystemData?.serviceDependencies,
-            platformDependencies: window.currentSystemData?.platformDependencies
+            serviceCount: SystemService.getCurrentSystem()?.services?.length || 0,
+            dependencies: SystemService.getCurrentSystem()?.serviceDependencies,
+            platformDependencies: SystemService.getCurrentSystem()?.platformDependencies
         };
     }
 }

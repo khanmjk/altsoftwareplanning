@@ -128,7 +128,7 @@ class RoadmapTableWidget {
      */
     getOrgOptions() {
         const options = [{ value: 'all', label: 'All Organizations' }];
-        const systemData = window.currentSystemData;
+        const systemData = SystemService.getCurrentSystem();
 
         (systemData?.seniorManagers || []).forEach(sm => {
             options.push({ value: sm.seniorManagerId, label: sm.seniorManagerName });
@@ -141,7 +141,7 @@ class RoadmapTableWidget {
      * Create theme multi-select filter
      */
     createThemeFilter() {
-        const systemData = window.currentSystemData;
+        const systemData = SystemService.getCurrentSystem();
         const wrapper = document.createElement('div');
         wrapper.className = 'filter-item';
         wrapper.style.display = 'flex';
@@ -270,7 +270,7 @@ class RoadmapTableWidget {
         if (!teamSelect) return;
 
         const orgValue = orgFilter?.value || 'all';
-        const systemData = window.currentSystemData;
+        const systemData = SystemService.getCurrentSystem();
 
         // Clear existing options
         while (teamSelect.firstChild) {
@@ -327,7 +327,7 @@ class RoadmapTableWidget {
      * Get filtered initiatives based on current filter selections
      */
     getFilteredInitiatives() {
-        const systemData = window.currentSystemData;
+        const systemData = SystemService.getCurrentSystem();
         const orgFilter = document.getElementById('roadmapOrgFilter' + this.idSuffix)?.value || 'all';
         const teamFilter = document.getElementById('roadmapTeamFilter' + this.idSuffix)?.value || 'all';
         const yearFilter = window.dashboardPlanningYear;
@@ -393,7 +393,7 @@ class RoadmapTableWidget {
             this.tableContainer.removeChild(this.tableContainer.firstChild);
         }
 
-        const systemData = window.currentSystemData;
+        const systemData = SystemService.getCurrentSystem();
         const initiatives = this.getFilteredInitiatives();
         const themeMap = new Map((systemData?.definedThemes || []).map(t => [t.themeId, t.name]));
 
@@ -446,7 +446,7 @@ class RoadmapTableWidget {
             this.tableContainer.removeChild(this.tableContainer.firstChild);
         }
 
-        const systemData = window.currentSystemData;
+        const systemData = SystemService.getCurrentSystem();
         const initiatives = this.getFilteredInitiatives();
         const themeMap = new Map((systemData?.definedThemes || []).map(t => [t.themeId, t.name]));
         const currentYear = new Date().getFullYear();
@@ -553,7 +553,7 @@ class RoadmapTableWidget {
      * Create initiative card element
      */
     createInitiativeCard(init, orgFilter, teamFilter) {
-        const systemData = window.currentSystemData;
+        const systemData = SystemService.getCurrentSystem();
         const card = document.createElement('div');
         const statusClass = `status-${(init.status || 'backlog').toLowerCase().replace(/\s+/g, '-')}`;
         card.className = `initiative-card ${statusClass}`;

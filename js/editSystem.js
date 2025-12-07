@@ -260,9 +260,9 @@ window.saveAllChanges = saveAllChanges;
 function exitEditMode() {
     console.log("Exiting edit mode...");
     // If we were creating a new system, return to home or load the new system
-    if (window.currentSystemData && window.currentSystemData.systemName) {
+    if (SystemService.getCurrentSystem() && SystemService.getCurrentSystem().systemName) {
         if (window.loadSavedSystem) {
-            window.loadSavedSystem(window.currentSystemData.systemName);
+            window.loadSavedSystem(SystemService.getCurrentSystem().systemName);
         } else {
             appState.closeCurrentSystem();
         }

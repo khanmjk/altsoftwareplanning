@@ -8,7 +8,42 @@
  * Part of Service Layer Architecture.
  */
 
+// Private state - the currently loaded system
+let _currentSystem = null;
+
 const SystemService = {
+
+    /**
+     * Get the currently loaded system.
+     * @returns {Object|null}
+     */
+    getCurrentSystem() {
+        return _currentSystem;
+    },
+
+    /**
+     * Set the currently loaded system.
+     * Notifies AppState for subscribers.
+     * @param {Object|null} systemData
+     */
+    setCurrentSystem(systemData) {
+        _currentSystem = systemData;
+
+        // Sync to AppState for change notification subscribers
+        if (typeof appState !== 'undefined') {
+            appState.currentSystem = systemData;
+        }
+
+        console.log(`[SystemService] Current system set to: ${systemData?.systemName || 'null'}`);
+    },
+
+    /**
+     * Check if a system is currently loaded.
+     * @returns {boolean}
+     */
+    hasCurrentSystem() {
+        return _currentSystem !== null;
+    },
 
     /**
      * Initialize default sample systems if they don't exist.

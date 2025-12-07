@@ -47,7 +47,7 @@ class SystemsView {
         const aiButton = document.getElementById('createWithAiBtn');
         if (!aiButton) return;
 
-        const aiEnabled = window.globalSettings?.ai?.isEnabled || false;
+        const aiEnabled = SettingsService.get()?.ai?.isEnabled || false;
 
         if (!aiEnabled) {
             aiButton.classList.add('disabled');
@@ -103,7 +103,7 @@ class SystemsView {
      * Handle Create with AI button click
      */
     handleCreateWithAi() {
-        const aiEnabled = window.globalSettings?.ai?.isEnabled || false;
+        const aiEnabled = SettingsService.get()?.ai?.isEnabled || false;
 
         if (!aiEnabled) {
             if (window.notificationManager) {
@@ -194,7 +194,7 @@ class SystemsView {
      * @returns {string} HTML string
      */
     renderEmptyState() {
-        const aiEnabled = window.globalSettings?.ai?.isEnabled || false;
+        const aiEnabled = SettingsService.get()?.ai?.isEnabled || false;
         const aiButtonClass = aiEnabled ? '' : 'disabled';
         const aiButtonDisabled = aiEnabled ? '' : 'disabled';
 
@@ -324,8 +324,8 @@ class SystemsView {
             sampleSystemCount: sampleSystems.length,
             userSystems: userSystems.map(s => ({ id: s.id, name: s.name })),
             sampleSystems: sampleSystems.map(s => ({ id: s.id, name: s.name })),
-            currentSystemLoaded: !!window.currentSystemData,
-            currentSystemName: window.currentSystemData?.systemName || null
+            currentSystemLoaded: !!SystemService.getCurrentSystem(),
+            currentSystemName: SystemService.getCurrentSystem()?.systemName || null
         };
     }
 }

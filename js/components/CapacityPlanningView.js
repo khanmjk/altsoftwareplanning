@@ -99,7 +99,7 @@ class CapacityPlanningView {
         // Instantiate and Render Component
         if (viewId === 'dashboard') {
             // Ensure metrics are up-to-date before rendering dashboard
-            CapacityEngine.recalculate(window.currentSystemData);
+            CapacityEngine.recalculate(SystemService.getCurrentSystem());
             this.activeComponent = new CapacityDashboardView();
         } else if (viewId === 'configuration') {
             this.activeComponent = new CapacityConfigurationView();
@@ -113,7 +113,7 @@ class CapacityPlanningView {
     saveChanges() {
         if (window.saveSystemChanges) {
             // Recalculate before saving to ensure persisted data is correct
-            CapacityEngine.recalculate(window.currentSystemData);
+            CapacityEngine.recalculate(SystemService.getCurrentSystem());
             window.saveSystemChanges();
             window.notificationManager.showToast('Capacity configuration saved successfully.', 'success');
         } else {
@@ -130,9 +130,9 @@ class CapacityPlanningView {
         return {
             viewTitle: 'Capacity Tuning',
             currentView: this.currentView, // 'dashboard' or 'configuration'
-            metrics: window.currentSystemData?.calculatedCapacityMetrics,
-            config: window.currentSystemData?.capacityConfiguration,
-            teamCount: window.currentSystemData?.teams?.length || 0
+            metrics: SystemService.getCurrentSystem()?.calculatedCapacityMetrics,
+            config: SystemService.getCurrentSystem()?.capacityConfiguration,
+            teamCount: SystemService.getCurrentSystem()?.teams?.length || 0
         };
     }
 }
