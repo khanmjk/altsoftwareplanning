@@ -300,13 +300,8 @@ class BacklogComponent {
             uniqueIdField: 'id'
         };
 
-        if (this.table && typeof this.table.destroy === 'function') this.table.destroy();
-
-        if (typeof EnhancedTableWidget === 'function') {
-            this.table = new EnhancedTableWidget(container, options);
-        } else {
-            this.table = new Tabulator(container, { ...options, height: '600px' });
-        }
+        if (this.table) this.table.destroy();
+        this.table = new EnhancedTableWidget(container, options);
 
         container.addEventListener('click', (e) => {
             const btn = e.target.closest('[data-action]');

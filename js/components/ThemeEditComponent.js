@@ -184,7 +184,7 @@ class ThemeEditComponent {
             return;
         }
 
-        if (window.saveSystemData) window.saveSystemData();
+        window.saveSystemData(); //TODO: Replace with correct Save System function
         window.notificationManager.showToast('Theme changes saved.', 'success');
 
         // No need to re-render entire list if we just saved, 

@@ -1,5 +1,5 @@
 // Unified Gantt syntax generator: delegates to ganttAdapter + ganttChart helpers.
-(function() {
+(function () {
     function generateGanttSyntax(initiatives, groupBy = 'Initiative', viewYear = new Date().getFullYear(), options = {}) {
         const selectedTeam = options.selectedTeamId || null;
         const tasks = (window.ganttAdapter && typeof window.ganttAdapter.buildTasksFromInitiatives === 'function')
@@ -12,9 +12,10 @@
                 selectedTeam
             })
             : [];
-        if (typeof window.buildMermaidFromTasks === 'function') {
-            return window.buildMermaidFromTasks(tasks, { title: `Detailed Plan - ${viewYear}` });
-        }
+        window.buildMermaidFromTasks(tasks, 'gantt-chart-container', (task) => {
+            console.log('Task clicked:', task);
+            // openEditTaskModal(task); // user can implement
+        });
         return 'gantt\ndateFormat YYYY-MM-DD\nsection No Data\nNo data :done, 2025-01-01, 2025-01-02';
     }
 

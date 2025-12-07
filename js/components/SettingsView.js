@@ -22,13 +22,12 @@ class SettingsView {
         if (!this.container) return;
 
         // 1. Set Workspace Metadata
-        if (window.workspaceComponent) {
-            window.workspaceComponent.setPageMetadata({
-                title: 'System Settings',
-                breadcrumbs: ['System', 'Settings'],
-                actions: []
-            });
-        }
+        // 1. Set Workspace Metadata
+        window.workspaceComponent.setPageMetadata({
+            title: 'System Settings',
+            breadcrumbs: ['System', 'Settings'],
+            actions: []
+        });
 
         // 2. Set Workspace Toolbar (Pill Navigation)
         this.pillNav = new PillNavigationComponent({
@@ -36,9 +35,7 @@ class SettingsView {
             onSwitch: (tabId) => this.switchTab(tabId)
         });
 
-        if (window.workspaceComponent) {
-            window.workspaceComponent.setToolbar(this.pillNav.render());
-        }
+        window.workspaceComponent.setToolbar(this.pillNav.render());
 
         // 3. Render Content Structure
         this.container.innerHTML = `
@@ -290,13 +287,9 @@ class SettingsView {
             localStorage.setItem('smt_global_settings', JSON.stringify(SettingsService.get()));
 
             // Update UI
-            if (window.headerComponent) {
-                window.headerComponent.updateAiButtonVisibility();
-            }
+            window.headerComponent.updateAiButtonVisibility();
 
-            if (window.notificationManager) {
-                window.notificationManager.showToast('AI Settings saved successfully!', 'success');
-            }
+            window.notificationManager.showToast('AI Settings saved successfully!', 'success');
         }
     }
 

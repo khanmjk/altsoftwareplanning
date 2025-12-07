@@ -68,10 +68,8 @@ const SystemService = {
         }
 
         // We use the repository to check/save
-        if (typeof systemRepository === 'undefined') {
-            console.error("SystemService: systemRepository is required but missing.");
-            return;
-        }
+        // We use the repository to check/save
+
 
         Object.keys(window.sampleSystemsData).forEach(key => {
             const sampleData = window.sampleSystemsData[key];
@@ -219,9 +217,7 @@ const SystemService = {
         }
 
         // 5. Initiatives and Work Packages
-        if (typeof WorkPackageService !== 'undefined') {
-            WorkPackageService.ensureWorkPackagesForInitiatives(systemData);
-        }
+        WorkPackageService.ensureWorkPackagesForInitiatives(systemData);
 
         if (systemData.yearlyInitiatives) {
             systemData.yearlyInitiatives.forEach(initiative => {
@@ -429,23 +425,17 @@ const SystemService = {
 
         const systemData = this.loadSystem(systemName);
         if (!systemData) {
-            if (typeof notificationManager !== 'undefined') {
-                notificationManager.showToast(`System "${systemName}" not found.`, 'error');
-            }
+            window.notificationManager.showToast(`System "${systemName}" not found.`, 'error');
             return false;
         }
 
         this.setCurrentSystem(systemData);
 
         // Start AI session
-        if (typeof aiAgentController !== 'undefined' && typeof aiAgentController.startSession === 'function') {
-            aiAgentController.startSession();
-        }
+        aiAgentController.startSession();
 
         // Navigate to default view
-        if (typeof navigationManager !== 'undefined') {
-            navigationManager.navigateTo('visualizationCarousel');
-        }
+        navigationManager.navigateTo('visualizationCarousel');
 
         // Update sidebar
         if (typeof sidebarComponent !== 'undefined' && sidebarComponent) {
@@ -466,9 +456,7 @@ const SystemService = {
 
         console.log("[SystemService] New system created and activated.");
 
-        if (typeof navigationManager !== 'undefined') {
-            navigationManager.navigateTo('systemEditForm');
-        }
+        navigationManager.navigateTo('systemEditForm');
 
         return newSystem;
     },
@@ -499,10 +487,7 @@ const SystemService = {
      * @returns {Promise<boolean>} True if reset was performed
      */
     async resetToDefaults() {
-        if (typeof notificationManager === 'undefined') {
-            console.error("[SystemService] NotificationManager required for confirmation.");
-            return false;
-        }
+
 
         const confirmed = await notificationManager.confirm(
             'This will erase all your saved systems and restore the default sample systems. Do you want to proceed?',
@@ -525,9 +510,7 @@ const SystemService = {
         this.setCurrentSystem(null);
         notificationManager.showToast('Systems have been reset to defaults.', 'success');
 
-        if (typeof appState !== 'undefined') {
-            appState.closeCurrentSystem();
-        }
+        appState.closeCurrentSystem();
 
         return true;
     },
@@ -540,9 +523,7 @@ const SystemService = {
         const currentSystem = this.getCurrentSystem();
 
         if (!currentSystem?.systemName) {
-            if (typeof notificationManager !== 'undefined') {
-                notificationManager.showToast('No system currently loaded to delete.', 'warning');
-            }
+            window.notificationManager.showToast('No system currently loaded to delete.', 'warning');
             return { success: false, reason: 'no_system' };
         }
 
@@ -550,17 +531,12 @@ const SystemService = {
 
         // Protection for sample systems
         if (systemRepository.isSampleSystem(systemName)) {
-            if (typeof notificationManager !== 'undefined') {
-                notificationManager.showToast(`Cannot delete built-in sample system: "${systemName}".`, 'error');
-            }
+            window.notificationManager.showToast(`Cannot delete built-in sample system: "${systemName}".`, 'error');
             return { success: false, reason: 'sample_system' };
         }
 
         // Confirmation
-        if (typeof notificationManager === 'undefined') {
-            console.error("[SystemService] NotificationManager required for confirmation.");
-            return { success: false, reason: 'no_notification_manager' };
-        }
+
 
         const confirmed = await notificationManager.confirm(
             `Are you sure you want to permanently delete "${systemName}"? This cannot be undone.`,
@@ -579,9 +555,7 @@ const SystemService = {
                 console.log(`[SystemService] System "${systemName}" deleted.`);
                 notificationManager.showToast(`System "${systemName}" has been deleted.`, 'success');
 
-                if (typeof appState !== 'undefined') {
-                    appState.closeCurrentSystem();
-                }
+                appState.closeCurrentSystem();
                 return { success: true, systemName };
             } else {
                 notificationManager.showToast(`Could not delete "${systemName}".`, 'error');

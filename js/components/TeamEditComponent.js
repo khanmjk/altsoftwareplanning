@@ -269,9 +269,7 @@ class TeamEditComponent {
                 const targetTeam = this.systemData.teams[teamIndexCallback];
                 if (targetTeam) {
                     targetTeam.sdmId = (directionCallback === 'add') ? movedSdmId : null;
-                    if (typeof displaySeniorManagerAssignment === 'function') {
-                        displaySeniorManagerAssignment(sdmSection, teamIndexCallback, targetTeam.sdmId);
-                    }
+                    displaySeniorManagerAssignment(sdmSection, teamIndexCallback, targetTeam.sdmId);
                 }
             }, false, true, 'Enter New SDM Name',
             (newSdmNameInput) => {
@@ -540,7 +538,7 @@ class TeamEditComponent {
     _refreshDynamicSections(details, team, index) {
         // Trigger SDM Sr Mgr display
         const sdmSection = details.querySelector(`#sdmSection_${index}`);
-        if (sdmSection && typeof displaySeniorManagerAssignment === 'function') {
+        if (sdmSection) {
             displaySeniorManagerAssignment(sdmSection, index, team.sdmId);
         }
         // Update BIS
@@ -566,8 +564,8 @@ class TeamEditComponent {
             }
 
             // Global updates
-            if (typeof generateTeamTable === 'function') generateTeamTable(this.systemData);
-            if (typeof generateTeamVisualization === 'function') generateTeamVisualization(this.systemData);
+            generateTeamTable(this.systemData);
+            generateTeamVisualization(this.systemData);
 
             this.render();
         }
@@ -581,14 +579,14 @@ class TeamEditComponent {
         }
 
         // Validate Engineer Assignments (Global function check)
-        if (typeof validateEngineerAssignments === 'function' && !validateEngineerAssignments()) {
+        if (!validateEngineerAssignments()) {
             return;
         }
 
         window.systemRepository.saveSystem(this.systemData.systemName, this.systemData);
         window.notificationManager.showToast('Team changes saved.', 'success');
 
-        if (typeof generateTeamTable === 'function') generateTeamTable(this.systemData);
-        if (typeof generateTeamVisualization === 'function') generateTeamVisualization(this.systemData);
+        generateTeamTable(this.systemData);
+        generateTeamVisualization(this.systemData);
     }
 }

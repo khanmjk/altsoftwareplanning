@@ -451,9 +451,9 @@ class ServiceEditComponent {
         if (await window.notificationManager.confirm('Are you sure you want to delete this service?', 'Delete Service', { confirmStyle: 'danger' })) {
             this.systemData.services.splice(index, 1);
 
-            // Trigger global updates (if functions exist)
-            if (typeof generateTeamTable === 'function') generateTeamTable(this.systemData);
-            if (typeof generateServiceDependenciesTable === 'function') generateServiceDependenciesTable();
+            // Trigger global updates
+            generateTeamTable(this.systemData);
+            generateServiceDependenciesTable();
 
             this.render();
         }
@@ -474,7 +474,7 @@ class ServiceEditComponent {
         window.systemRepository.saveSystem(this.systemData.systemName, this.systemData);
         window.notificationManager.showToast('Service changes saved.', 'success');
 
-        if (typeof generateTeamTable === 'function') generateTeamTable(this.systemData);
-        if (typeof generateServiceDependenciesTable === 'function') generateServiceDependenciesTable();
+        generateTeamTable(this.systemData);
+        generateServiceDependenciesTable();
     }
 }

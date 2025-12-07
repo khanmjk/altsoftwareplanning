@@ -106,9 +106,7 @@ class SystemsView {
         const aiEnabled = SettingsService.get()?.ai?.isEnabled || false;
 
         if (!aiEnabled) {
-            if (window.notificationManager) {
-                window.notificationManager.showToast('Please enable AI in Settings to use this feature.', 'warning');
-            }
+            window.notificationManager.showToast('Please select a system to load.', 'warning');
             return;
         }
 

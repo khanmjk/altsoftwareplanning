@@ -332,12 +332,7 @@ window.setPlanningScenario = setPlanningScenario;
  */
 function renderTeamLoadSummaryTable(summaryData, options = {}) {
     // If the class exists, use it
-    if (window.yearPlanningView) {
-        window.yearPlanningView.renderSummaryTable(summaryData);
-        return;
-    }
-    // Legacy fallback removed - class should always be used
-    console.warn('renderTeamLoadSummaryTable: YearPlanningView class not available');
+    window.yearPlanningView.renderSummaryTable(summaryData);
 }
 
 
@@ -407,12 +402,7 @@ function calculatePlanningTableData() {
  */
 function renderPlanningTable(planningData, options = {}) {
     // If the class exists, use it
-    if (window.yearPlanningView) {
-        window.yearPlanningView.renderPlanningTable(planningData);
-        return;
-    }
-    // Legacy fallback removed - class should always be used
-    console.warn('renderPlanningTable: YearPlanningView class not available');
+    window.yearPlanningView.renderPlanningTable(planningData);
 }
 
 window.renderTeamLoadSummaryTable = renderTeamLoadSummaryTable; // Make global if needed
@@ -457,39 +447,33 @@ function renderPlanningView() {
     }
 
     // 1. Set Workspace Metadata (Header)
-    if (window.workspaceComponent) {
-        window.workspaceComponent.setPageMetadata({
-            title: 'Year Plan',
-            breadcrumbs: ['Planning', 'Year Plan'],
-            actions: [
-                {
-                    label: `Save Plan for ${currentPlanningYear}`,
-                    icon: 'fas fa-save',
-                    onClick: () => handleSavePlan(),
-                    className: 'btn btn-danger btn-sm' // Keeping red style for save
+    // 1. Set Workspace Metadata (Header)
+    window.workspaceComponent.setPageMetadata({
+        title: 'Year Plan',
+        breadcrumbs: ['Planning', 'Year Plan'],
+        actions: [
+            {
+                label: `Save Plan for ${currentPlanningYear}`,
+                icon: 'fas fa-save',
+                onClick: () => handleSavePlan(),
+                className: 'btn btn-danger btn-sm' // Keeping red style for save
+            },
+            {
+                label: 'Optimize Plan',
+                icon: 'fas fa-robot',
+                onClick: () => {
+                    window.aiAgentController.runPrebuiltAgent('optimizePlan');
                 },
-                {
-                    label: 'Optimize Plan',
-                    icon: 'fas fa-robot',
-                    onClick: () => {
-                        if (window.aiAgentController && window.aiAgentController.runPrebuiltAgent) {
-                            window.aiAgentController.runPrebuiltAgent('optimizePlan');
-                        } else {
-                            window.notificationManager.showToast("AI Controller is not available.", "error");
-                        }
-                    },
-                    className: 'btn btn-info btn-sm',
-                    hidden: !(SettingsService.get() && SettingsService.get().ai && SettingsService.get().ai.isEnabled)
-                }
-            ]
-        });
-    }
+                className: 'btn btn-info btn-sm',
+                hidden: !(SettingsService.get() && SettingsService.get().ai && SettingsService.get().ai.isEnabled)
+            }
+        ]
+    });
 
     // 2. Set Workspace Toolbar (Controls)
+    // 2. Set Workspace Toolbar (Controls)
     const toolbarControls = generatePlanningToolbar();
-    if (window.workspaceComponent && toolbarControls) {
-        window.workspaceComponent.setToolbar(toolbarControls);
-    }
+    window.workspaceComponent.setToolbar(toolbarControls);
 
     // 3. Create Content Layout
     // We only need the summary section and the table container.

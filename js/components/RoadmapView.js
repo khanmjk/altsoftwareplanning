@@ -20,13 +20,12 @@ class RoadmapView {
         if (!container) { console.error('Roadmap container not found'); return; }
 
         // 1. Set Workspace Metadata
-        if (window.workspaceComponent) {
-            window.workspaceComponent.setPageMetadata({
-                title: 'Roadmap & Backlog',
-                breadcrumbs: ['Product', 'Roadmap'],
-                actions: [] // Actions moved to toolbar body
-            });
-        }
+        // 1. Set Workspace Metadata
+        window.workspaceComponent.setPageMetadata({
+            title: 'Roadmap & Backlog',
+            breadcrumbs: ['Product', 'Roadmap'],
+            actions: [] // Actions moved to toolbar body
+        });
 
         // 2. Setup Container
         container.innerHTML = `<div id="roadmapViewContainer" class="roadmap-view-container"></div>`;
@@ -44,8 +43,6 @@ class RoadmapView {
     }
 
     setupToolbar() {
-        if (!window.workspaceComponent) return;
-
         const toolbarContainer = document.createElement('div');
         toolbarContainer.className = 'roadmap-main-toolbar';
         toolbarContainer.style.display = 'flex';
@@ -81,7 +78,7 @@ class RoadmapView {
         themesBtn.className = 'btn btn-secondary btn-sm';
         themesBtn.innerHTML = '<i class="fas fa-tags"></i> Manage Themes';
         themesBtn.onclick = () => {
-            if (window.navigationManager) window.navigationManager.navigateTo('managementView', { tab: 'themes' });
+            window.navigationManager.navigateTo('managementView', { tab: 'themes' });
         };
         actionsRow.appendChild(themesBtn);
 
@@ -121,7 +118,7 @@ class RoadmapView {
             this.activeComponent.render();
 
             // Inject component-specific controls into toolbar
-            if (typeof this.activeComponent.generateToolbarControls === 'function' && controlsContainer) {
+            if (this.activeComponent.generateToolbarControls && controlsContainer) {
                 controlsContainer.appendChild(this.activeComponent.generateToolbarControls());
             }
         }
@@ -180,12 +177,12 @@ class RoadmapView {
     }
 
     refreshActiveView() {
-        if (this.activeComponent && typeof this.activeComponent.render === 'function') {
+        if (this.activeComponent && this.activeComponent.render) {
             // Re-render table/grid to reflect data changes
             // For Backlog, renderTable is enough. For Roadmap, renderGrid.
             // We can just call render() again or specific refresh methods.
-            if (typeof this.activeComponent.renderTable === 'function') this.activeComponent.renderTable();
-            else if (typeof this.activeComponent.renderGrid === 'function') this.activeComponent.renderGrid();
+            if (this.activeComponent.renderTable) this.activeComponent.renderTable();
+            else if (this.activeComponent.renderGrid) this.activeComponent.renderGrid();
             else this.activeComponent.render();
         }
     }

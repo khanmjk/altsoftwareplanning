@@ -183,6 +183,8 @@ IN PROGRESS
 ------------
 [TODO] code cleanup
 - clean up main.js
+- window.saveSystemData(); //TODO: Replace with correct Save System function
+- cleanup window.sampleSystemsData
 - cleanup occurrences of this pattern if (window.X) { window.X.[OPERATION]...
 - cleanup index.html - move a bunch of html to a view file for main content or the workspace canvas files
 - ensure AI tooling agents have the right function calls to reference with the introduction of the service layer

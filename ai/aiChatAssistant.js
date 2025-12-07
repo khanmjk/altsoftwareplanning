@@ -38,17 +38,8 @@ function monitorChatInputHeight() {
         }
     };
 
-    if (typeof ResizeObserver === 'function') {
-        chatInputResizeObserver = new ResizeObserver(() => updateHeightVar());
-        chatInputResizeObserver.observe(aiChatInput);
-    } else {
-        chatInputFallbackTarget = aiChatInput;
-        ['input', 'mouseup', 'keyup'].forEach(eventName => {
-            const handler = () => updateHeightVar();
-            chatInputFallbackTarget.addEventListener(eventName, handler);
-            chatInputFallbackEvents.push({ event: eventName, handler });
-        });
-    }
+    chatInputResizeObserver = new ResizeObserver(() => updateHeightVar());
+    chatInputResizeObserver.observe(aiChatInput);
 
     updateHeightVar();
 }
@@ -68,11 +59,7 @@ function initializeAiChatPanel() {
     aiChatInput.dataset.imageRequest = 'false';
 
     const submitHandler = () => {
-        if (window.aiAgentController && typeof window.aiAgentController.handleUserChatSubmit === 'function') {
-            window.aiAgentController.handleUserChatSubmit();
-        } else {
-            console.error("AI Chat: aiAgentController.handleUserChatSubmit() not available.");
-        }
+        window.aiAgentController.handleUserChatSubmit();
     };
 
     aiChatSendButton.addEventListener('click', submitHandler);
@@ -95,9 +82,7 @@ function initializeAiChatPanel() {
 
     monitorChatInputHeight();
 
-    if (typeof initializeChatResizer === 'function') {
-        initializeChatResizer();
-    }
+    initializeChatResizer();
 
     console.log("AI Chat Assistant view initialized.");
 }
@@ -116,9 +101,7 @@ function openAiChatPanel() {
         handle.style.right = panel ? panel.style.width : '0';
     }
     chatPanelIsOpen = true;
-    if (window.aiAgentController && typeof window.aiAgentController.renderSuggestionsForCurrentView === 'function') {
-        window.aiAgentController.renderSuggestionsForCurrentView();
-    }
+    window.aiAgentController.renderSuggestionsForCurrentView();
     if (aiChatInput) aiChatInput.focus();
 }
 
@@ -219,9 +202,7 @@ function setSuggestionPills(suggestions = []) {
                 aiChatInput.value = suggestion.text || '';
                 aiChatInput.dataset.imageRequest = suggestion.isImageRequest ? 'true' : 'false';
             }
-            if (window.aiAgentController && typeof window.aiAgentController.handleUserChatSubmit === 'function') {
-                window.aiAgentController.handleUserChatSubmit();
-            }
+            window.aiAgentController.handleUserChatSubmit();
         };
 
         suggestionsContainer.appendChild(pill);
@@ -295,9 +276,7 @@ function handleChatInput(e) {
         return;
     }
 
-    const tools = (window.aiAgentController && typeof window.aiAgentController.getAvailableTools === 'function')
-        ? window.aiAgentController.getAvailableTools()
-        : [];
+    const tools = window.aiAgentController.getAvailableTools();
 
     if (!tools || tools.length === 0) {
         hideCommandPopup();
@@ -480,7 +459,7 @@ function openDiagramModal(code, title = 'Generated Diagram') {
     contentEl.textContent = sanitized;
     contentEl.removeAttribute('data-processed');
     modal.style.display = 'block';
-    if (typeof mermaid !== 'undefined' && typeof mermaid.init === 'function') {
+    if (typeof mermaid !== 'undefined') {
         try {
             mermaid.init(undefined, contentEl);
         } catch (err) {

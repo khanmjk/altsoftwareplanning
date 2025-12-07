@@ -597,9 +597,7 @@ class RoadmapTableWidget {
 
         // Click handler
         card.addEventListener('click', () => {
-            if (typeof window.openRoadmapModalForEdit === 'function') {
-                window.openRoadmapModalForEdit(init.initiativeId);
-            }
+            openRoadmapModalForEdit(init.initiativeId);
         });
 
         return card;

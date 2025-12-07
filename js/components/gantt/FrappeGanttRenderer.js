@@ -115,12 +115,8 @@ class FrappeGanttRenderer extends GanttRenderer {
             if (this.gantt) {
                 this.gantt.gantt_start = startDateObj;
                 this.gantt.gantt_end = endDateObj;
-                if (typeof this.gantt.setup_dates === 'function') {
-                    this.gantt.setup_dates();
-                }
-                if (typeof this.gantt.change_view_mode === 'function') {
-                    this.gantt.change_view_mode(this.currentViewMode);
-                }
+                this.gantt.setup_dates();
+                this.gantt.change_view_mode(this.currentViewMode);
             }
 
             // Apply custom styles after render
@@ -211,7 +207,7 @@ class FrappeGanttRenderer extends GanttRenderer {
     _bindDoubleClick(wrapper, tasks, options = {}) {
         if (!wrapper || !tasks || !tasks.length) return;
         const cb = options.onItemDoubleClick;
-        if (typeof cb !== 'function') return;
+        if (!cb) return;
 
         const taskMap = new Map(tasks.map(t => [t.id, t]));
         const handler = (e) => {

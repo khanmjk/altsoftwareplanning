@@ -43,12 +43,8 @@ class NavigationManager {
         console.log(`NavigationManager: Navigating to ${viewId}`, params);
 
         // 0. Update Global State for AI Context
-        if (window.aiAgentController && typeof window.aiAgentController.setCurrentView === 'function') {
-            window.aiAgentController.setCurrentView(viewId);
-        }
-        if (typeof window !== 'undefined') {
-            window.currentViewId = viewId;
-        }
+        window.aiAgentController.setCurrentView(viewId);
+        window.currentViewId = viewId;
 
         // 1. Update Sidebar Selection
         if (this.sidebar) {
@@ -56,97 +52,96 @@ class NavigationManager {
         }
 
         // 2. Render the View via WorkspaceComponent
-        if (window.workspaceComponent) {
-            // Map viewId to render function
-            if (viewId === 'planningView') {
-                window.workspaceComponent.render(viewId, (container) => {
-                    if (!window.yearPlanningView) {
-                        window.yearPlanningView = new YearPlanningView(container.id);
-                    } else {
-                        window.yearPlanningView.container = container;
-                    }
-                    window.yearPlanningView.render();
-                });
-            } else if (viewId === 'ganttPlanningView') {
-                window.workspaceComponent.render(viewId, window.renderGanttPlanningView);
-            } else if (viewId === 'capacityConfigView') {
-                window.workspaceComponent.render(viewId, (container) => {
-                    if (!window.capacityPlanningViewInstance) {
-                        window.capacityPlanningViewInstance = new CapacityPlanningView();
-                    }
-                    window.capacityPlanningViewInstance.render(container);
-                });
-            } else if (viewId === 'sdmForecastingView') {
-                window.workspaceComponent.render(viewId, (container) => {
-                    if (!window.resourceForecastViewInstance) {
-                        window.resourceForecastViewInstance = new ResourceForecastView();
-                    }
-                    window.resourceForecastViewInstance.render(container);
-                });
-            } else if (viewId === 'roadmapView') {
-                window.workspaceComponent.render(viewId, window.renderRoadmapView);
-            } else if (viewId === 'managementView') {
-                window.workspaceComponent.render(viewId, (container) => {
-                    if (!window.managementViewInstance) {
-                        window.managementViewInstance = new ManagementView(container.id);
-                    } else {
-                        window.managementViewInstance.container = container;
-                    }
-                    // Handle tab switching via params
-                    if (params && params.tab) {
-                        window.managementViewInstance.switchTab(params.tab);
-                    } else {
-                        window.managementViewInstance.render();
-                    }
-                });
-            } else if (viewId === 'visualizationCarousel') {
-                window.workspaceComponent.render(viewId, (container) => {
-                    if (!window.systemOverviewViewInstance) {
-                        window.systemOverviewViewInstance = new SystemOverviewView(container.id);
-                    } else {
-                        window.systemOverviewViewInstance.container = container;
-                    }
-                    window.systemOverviewViewInstance.render();
-                });
-            } else if (viewId === 'organogramView') {
-                window.workspaceComponent.render(viewId, window.renderOrgView);
-            } else if (viewId === 'systemEditForm') {
-                window.workspaceComponent.render(viewId, (container) => window.showSystemEditForm(SystemService.getCurrentSystem(), container));
-            } else if (viewId === 'dashboardView') {
-                window.workspaceComponent.render(viewId, window.renderDashboardView);
-            } else if (viewId === 'welcomeView') {
-                window.workspaceComponent.render(viewId, (container) => {
-                    const staticWelcome = document.getElementById('welcomeViewContent');
-                    if (staticWelcome) {
-                        container.innerHTML = staticWelcome.innerHTML;
-                        container.style.display = 'block';
-                    } else {
-                        container.innerHTML = '<h1>Welcome</h1><p>Welcome content not found.</p>';
-                    }
-                });
-            } else if (viewId === 'helpView') {
-                window.workspaceComponent.render(viewId, window.renderHelpView);
-            } else if (viewId === 'settingsView') {
-                window.workspaceComponent.render(viewId, (container) => {
-                    if (!window.settingsViewInstance) {
-                        window.settingsViewInstance = new SettingsView(container.id);
-                    } else {
-                        window.settingsViewInstance.container = container;
-                    }
-                    window.settingsViewInstance.render();
-                });
-            } else if (viewId === 'systemsView') {
-                window.workspaceComponent.render(viewId, (container) => {
-                    if (!window.systemsViewInstance) {
-                        window.systemsViewInstance = new SystemsView(container.id);
-                    } else {
-                        window.systemsViewInstance.container = container;
-                    }
-                    window.systemsViewInstance.render();
-                });
-            } else {
-                console.warn(`NavigationManager: No render function mapped for ${viewId}`);
-            }
+        // 2. Render the View via WorkspaceComponent
+        // Map viewId to render function
+        if (viewId === 'planningView') {
+            window.workspaceComponent.render(viewId, (container) => {
+                if (!window.yearPlanningView) {
+                    window.yearPlanningView = new YearPlanningView(container.id);
+                } else {
+                    window.yearPlanningView.container = container;
+                }
+                window.yearPlanningView.render();
+            });
+        } else if (viewId === 'ganttPlanningView') {
+            window.workspaceComponent.render(viewId, window.renderGanttPlanningView);
+        } else if (viewId === 'capacityConfigView') {
+            window.workspaceComponent.render(viewId, (container) => {
+                if (!window.capacityPlanningViewInstance) {
+                    window.capacityPlanningViewInstance = new CapacityPlanningView();
+                }
+                window.capacityPlanningViewInstance.render(container);
+            });
+        } else if (viewId === 'sdmForecastingView') {
+            window.workspaceComponent.render(viewId, (container) => {
+                if (!window.resourceForecastViewInstance) {
+                    window.resourceForecastViewInstance = new ResourceForecastView();
+                }
+                window.resourceForecastViewInstance.render(container);
+            });
+        } else if (viewId === 'roadmapView') {
+            window.workspaceComponent.render(viewId, window.renderRoadmapView);
+        } else if (viewId === 'managementView') {
+            window.workspaceComponent.render(viewId, (container) => {
+                if (!window.managementViewInstance) {
+                    window.managementViewInstance = new ManagementView(container.id);
+                } else {
+                    window.managementViewInstance.container = container;
+                }
+                // Handle tab switching via params
+                if (params && params.tab) {
+                    window.managementViewInstance.switchTab(params.tab);
+                } else {
+                    window.managementViewInstance.render();
+                }
+            });
+        } else if (viewId === 'visualizationCarousel') {
+            window.workspaceComponent.render(viewId, (container) => {
+                if (!window.systemOverviewViewInstance) {
+                    window.systemOverviewViewInstance = new SystemOverviewView(container.id);
+                } else {
+                    window.systemOverviewViewInstance.container = container;
+                }
+                window.systemOverviewViewInstance.render();
+            });
+        } else if (viewId === 'organogramView') {
+            window.workspaceComponent.render(viewId, window.renderOrgView);
+        } else if (viewId === 'systemEditForm') {
+            window.workspaceComponent.render(viewId, (container) => window.showSystemEditForm(SystemService.getCurrentSystem(), container));
+        } else if (viewId === 'dashboardView') {
+            window.workspaceComponent.render(viewId, window.renderDashboardView);
+        } else if (viewId === 'welcomeView') {
+            window.workspaceComponent.render(viewId, (container) => {
+                const staticWelcome = document.getElementById('welcomeViewContent');
+                if (staticWelcome) {
+                    container.innerHTML = staticWelcome.innerHTML;
+                    container.style.display = 'block';
+                } else {
+                    container.innerHTML = '<h1>Welcome</h1><p>Welcome content not found.</p>';
+                }
+            });
+        } else if (viewId === 'helpView') {
+            window.workspaceComponent.render(viewId, window.renderHelpView);
+        } else if (viewId === 'settingsView') {
+            window.workspaceComponent.render(viewId, (container) => {
+                if (!window.settingsViewInstance) {
+                    window.settingsViewInstance = new SettingsView(container.id);
+                } else {
+                    window.settingsViewInstance.container = container;
+                }
+                window.settingsViewInstance.render();
+            });
+        } else if (viewId === 'systemsView') {
+            window.workspaceComponent.render(viewId, (container) => {
+                if (!window.systemsViewInstance) {
+                    window.systemsViewInstance = new SystemsView(container.id);
+                } else {
+                    window.systemsViewInstance.container = container;
+                }
+                window.systemsViewInstance.render();
+            });
+        } else {
+            console.warn(`NavigationManager: No render function mapped for ${viewId}`);
         }
 
         // 3. Update Header Breadcrumbs (AFTER render, so legacy views can set breadcrumbs)
@@ -158,7 +153,7 @@ class NavigationManager {
         // 4. Set Default Shell Metadata for Legacy Views
         // (Refactored views like 'roadmapView' handle this themselves)
         const selfManagedViews = ['roadmapView', 'managementView', 'dashboardView', 'settingsView', 'helpView', 'sdmForecastingView', 'capacityConfigView'];
-        if (window.workspaceComponent && !selfManagedViews.includes(viewId)) {
+        if (!selfManagedViews.includes(viewId)) {
             let title = this.getViewTitle(viewId);
             let breadcrumbs = [];
 

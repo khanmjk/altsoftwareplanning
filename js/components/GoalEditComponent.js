@@ -453,7 +453,7 @@ class GoalEditComponent {
             window.notificationManager.showToast('Goal saved successfully.', 'success');
         }
 
-        if (window.saveSystemData) window.saveSystemData();
+        window.saveSystemData(); //TODO: Replace with correct Save System function
     }
 }
 

@@ -80,13 +80,12 @@ class SystemOverviewView {
         }
 
         // Set workspace metadata (header)
-        if (window.workspaceComponent) {
-            window.workspaceComponent.setPageMetadata({
-                title: 'System Overview',
-                breadcrumbs: ['System', 'Overview'],
-                actions: [] // No global actions for this view
-            });
-        }
+        // Set workspace metadata (header)
+        window.workspaceComponent.setPageMetadata({
+            title: 'System Overview',
+            breadcrumbs: ['System', 'Overview'],
+            actions: [] // No global actions for this view
+        });
 
         // Create pill navigation
         this.pillNav = new PillNavigationComponent({
@@ -100,9 +99,8 @@ class SystemOverviewView {
         });
 
         // Set toolbar with pill navigation
-        if (window.workspaceComponent) {
-            window.workspaceComponent.setToolbar(this.pillNav.render());
-        }
+        // Set toolbar with pill navigation
+        window.workspaceComponent.setToolbar(this.pillNav.render());
 
         // Render view structure
         this.renderViewStructure();
@@ -269,12 +267,8 @@ class SystemOverviewView {
                 if (toggleSystem) {
                     toggleSystem.onclick = () => {
                         showPlatformComponents = !showPlatformComponents;
-                        if (typeof rerenderCurrentVisualizationForPlatformToggle === 'function') {
-                            rerenderCurrentVisualizationForPlatformToggle();
-                        }
-                        if (typeof updateAllToggleButtonsText === 'function') {
-                            updateAllToggleButtonsText(showPlatformComponents);
-                        }
+                        rerenderCurrentVisualizationForPlatformToggle();
+                        updateAllToggleButtonsText(showPlatformComponents);
                     };
                 }
                 break;
@@ -282,7 +276,7 @@ class SystemOverviewView {
             case 'serviceRelationshipsVisualization':
                 // Service selection dropdown
                 const serviceSelect = document.getElementById('serviceSelection');
-                if (serviceSelect && typeof updateServiceVisualization === 'function') {
+                if (serviceSelect) {
                     serviceSelect.onchange = () => updateServiceVisualization();
                 }
 
@@ -291,12 +285,8 @@ class SystemOverviewView {
                 if (toggleService) {
                     toggleService.onclick = () => {
                         showPlatformComponents = !showPlatformComponents;
-                        if (typeof rerenderCurrentVisualizationForPlatformToggle === 'function') {
-                            rerenderCurrentVisualizationForPlatformToggle();
-                        }
-                        if (typeof updateAllToggleButtonsText === 'function') {
-                            updateAllToggleButtonsText(showPlatformComponents);
-                        }
+                        rerenderCurrentVisualizationForPlatformToggle();
+                        updateAllToggleButtonsText(showPlatformComponents);
                     };
                 }
                 break;
@@ -304,7 +294,7 @@ class SystemOverviewView {
             case 'dependencyVisualization':
                 // Dependency service selection dropdown
                 const depServiceSelect = document.getElementById('dependencyServiceSelection');
-                if (depServiceSelect && typeof updateDependencyVisualization === 'function') {
+                if (depServiceSelect) {
                     depServiceSelect.onchange = () => updateDependencyVisualization();
                 }
 
@@ -313,12 +303,8 @@ class SystemOverviewView {
                 if (toggleDependency) {
                     toggleDependency.onclick = () => {
                         showPlatformComponents = !showPlatformComponents;
-                        if (typeof rerenderCurrentVisualizationForPlatformToggle === 'function') {
-                            rerenderCurrentVisualizationForPlatformToggle();
-                        }
-                        if (typeof updateAllToggleButtonsText === 'function') {
-                            updateAllToggleButtonsText(showPlatformComponents);
-                        }
+                        rerenderCurrentVisualizationForPlatformToggle();
+                        updateAllToggleButtonsText(showPlatformComponents);
                     };
                 }
                 break;
@@ -331,59 +317,45 @@ class SystemOverviewView {
     // These delegate to existing global functions
 
     renderSystemVisualization() {
-        if (SystemService.getCurrentSystem() && typeof generateVisualization === 'function') {
+        if (SystemService.getCurrentSystem()) {
             generateVisualization(SystemService.getCurrentSystem());
         }
     }
 
     renderTeamVisualization() {
-        if (SystemService.getCurrentSystem() && typeof generateTeamVisualization === 'function') {
+        if (SystemService.getCurrentSystem()) {
             generateTeamVisualization(SystemService.getCurrentSystem());
         }
     }
 
     renderServiceRelationships() {
-        if (typeof populateServiceSelection === 'function') {
-            populateServiceSelection();
-        }
-        if (typeof updateServiceVisualization === 'function') {
-            updateServiceVisualization();
-        }
+        populateServiceSelection();
+        updateServiceVisualization();
     }
 
     renderDependencyGraph() {
-        if (typeof populateDependencyServiceSelection === 'function') {
-            populateDependencyServiceSelection();
-        }
-        if (typeof updateDependencyVisualization === 'function') {
-            updateDependencyVisualization();
-        }
+        populateDependencyServiceSelection();
+        updateDependencyVisualization();
     }
 
     renderDependencyTable() {
-        if (typeof generateServiceDependenciesTable === 'function') {
-            // Defer to next frame to ensure proper layout
-            requestAnimationFrame(() => generateServiceDependenciesTable());
-        }
+        // Defer to next frame to ensure proper layout
+        requestAnimationFrame(() => generateServiceDependenciesTable());
     }
 
     renderMermaidDiagram() {
-        if (typeof renderMermaidDiagram === 'function') {
-            renderMermaidDiagram();
-        }
+        renderMermaidDiagram();
     }
 
     renderMermaidApiDiagram() {
         // Populate dropdown first only if empty
         const select = document.getElementById('apiServiceSelection');
-        if (select && select.options.length === 0 && typeof populateApiServiceSelection === 'function') {
+        if (select && select.options.length === 0) {
             populateApiServiceSelection();
         }
         // Render with current selection
-        if (typeof renderMermaidApiDiagram === 'function') {
-            const selectedService = select ? select.value : 'all';
-            renderMermaidApiDiagram(selectedService);
-        }
+        const selectedService = select ? select.value : 'all';
+        renderMermaidApiDiagram(selectedService);
     }
 
     /**

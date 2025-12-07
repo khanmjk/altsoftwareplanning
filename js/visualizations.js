@@ -8,9 +8,7 @@ let visualizationResizeObserver = null;
 let resizeDebounceHandle = null;
 
 // Initialize Mermaid for architecture diagrams
-if (typeof mermaid !== 'undefined' && typeof mermaid.initialize === 'function') {
-    mermaid.initialize({ startOnLoad: false, theme: 'default' });
-}
+mermaid.initialize({ startOnLoad: false, theme: 'default' });
 let currentVisualizationMode = 'visualization';
 const visualizationModes = [
     { id: 'visualization', title: 'System Visualization' },
@@ -258,11 +256,7 @@ async function renderMermaidDiagram() {
         return;
     }
     // Check generic external library availability
-    if (typeof mermaid === 'undefined' || typeof mermaid.render !== 'function') {
-        console.error("renderMermaidDiagram: Mermaid library is unavailable.");
-        showMessage('Mermaid is not loaded. Please check your connection.', 'mermaid-error');
-        return;
-    }
+
 
     // Checking of generateMermaidSyntax removed as it is guaranteed by service layer
 
@@ -270,9 +264,8 @@ async function renderMermaidDiagram() {
     try {
         definition = generateMermaidSyntax(SystemService.getCurrentSystem());
         const renderId = 'mermaid-system-architecture';
-        if (typeof mermaid.parse === 'function') {
-            mermaid.parse(definition);
-        }
+        mermaid.parse(definition);
+
         // Clear container
         while (graphContainer.firstChild) {
             graphContainer.removeChild(graphContainer.firstChild);
@@ -313,9 +306,7 @@ function populateApiServiceSelection() {
         });
 
     select.onchange = () => {
-        if (typeof renderMermaidApiDiagram === 'function') {
-            renderMermaidApiDiagram(select.value);
-        }
+        renderMermaidApiDiagram(select.value);
     };
 }
 
@@ -352,10 +343,7 @@ async function renderMermaidApiDiagram(serviceParam) {
         showMessage('Load a system to see API interactions.', 'mermaid-info');
         return;
     }
-    if (typeof mermaid === 'undefined' || typeof mermaid.render !== 'function') {
-        showMessage('Mermaid is not loaded.', 'mermaid-error');
-        return;
-    }
+
     // Checking of generateMermaidApiSyntax removed as it is guaranteed by service layer
 
     let definition = '';
@@ -365,9 +353,9 @@ async function renderMermaidApiDiagram(serviceParam) {
         const existingSvg = document.getElementById(renderId);
         if (existingSvg) existingSvg.remove();
 
-        if (typeof mermaid.parse === 'function') {
-            mermaid.parse(definition);
-        }
+
+        mermaid.parse(definition);
+
         // Clear container
         while (graphContainer.firstChild) {
             graphContainer.removeChild(graphContainer.firstChild);
@@ -1600,10 +1588,9 @@ function generateServiceDependenciesTable() {
         initialSort: [{ column: 'serviceName', dir: 'asc' }]
     };
 
-    if (typeof EnhancedTableWidget === 'function') {
-        if (serviceDependenciesTableWidget && typeof serviceDependenciesTableWidget.destroy === 'function') {
-            serviceDependenciesTableWidget.destroy();
-        }
+    if (EnhancedTableWidget) {
+        if (serviceDependenciesTableWidget) serviceDependenciesTableWidget.destroy();
+
         serviceDependenciesTableWidget = new EnhancedTableWidget(tableContainer, {
             ...tabulatorOptions,
             uniqueIdField: 'id',
@@ -1614,9 +1601,9 @@ function generateServiceDependenciesTable() {
         });
     } else {
         console.warn("EnhancedTableWidget not available. Falling back to Tabulator for service dependencies.");
-        if (serviceDependenciesTableWidget && typeof serviceDependenciesTableWidget.destroy === 'function') {
-            serviceDependenciesTableWidget.destroy();
-        }
+
+        if (serviceDependenciesTableWidget) serviceDependenciesTableWidget.destroy();
+
         serviceDependenciesTableWidget = new Tabulator(tableContainer, {
             ...tabulatorOptions,
             height: '500px'
@@ -1657,36 +1644,22 @@ function rerenderCurrentVisualizationForPlatformToggle() {
 
     switch (activeViewId) {
         case 'visualization':
-            if (typeof generateVisualization === 'function') {
-                generateVisualization(SystemService.getCurrentSystem());
-            }
+            generateVisualization(SystemService.getCurrentSystem());
             break;
         case 'serviceRelationshipsVisualization':
-            if (typeof updateServiceVisualization === 'function') {
-                updateServiceVisualization();
-            }
+            updateServiceVisualization();
             break;
         case 'dependencyVisualization':
-            if (typeof updateDependencyVisualization === 'function') {
-                updateDependencyVisualization();
-            }
+            updateDependencyVisualization();
             break;
         case 'mermaidVisualization':
-            if (typeof renderMermaidDiagram === 'function') {
-                renderMermaidDiagram();
-            }
+            renderMermaidDiagram();
             break;
         default:
             // If view can't be detected, refresh all relevant visualizations
-            if (typeof generateVisualization === 'function') {
-                generateVisualization(SystemService.getCurrentSystem());
-            }
-            if (typeof updateServiceVisualization === 'function') {
-                updateServiceVisualization();
-            }
-            if (typeof updateDependencyVisualization === 'function') {
-                updateDependencyVisualization();
-            }
+            generateVisualization(SystemService.getCurrentSystem());
+            updateServiceVisualization();
+            updateDependencyVisualization();
             break;
     }
 }
@@ -1777,31 +1750,29 @@ function showVisualization(index) {
         if (SystemService.getCurrentSystem()) {
             switch (targetItemId) {
                 case 'visualization':
-                    if (typeof generateVisualization === 'function') generateVisualization(SystemService.getCurrentSystem());
+                    generateVisualization(SystemService.getCurrentSystem());
                     break;
                 case 'teamVisualization':
-                    if (typeof generateTeamVisualization === 'function') generateTeamVisualization(SystemService.getCurrentSystem());
+                    generateTeamVisualization(SystemService.getCurrentSystem());
                     break;
                 case 'serviceRelationshipsVisualization':
-                    if (typeof populateServiceSelection === 'function') populateServiceSelection();
-                    if (typeof updateServiceVisualization === 'function') updateServiceVisualization();
+                    populateServiceSelection();
+                    updateServiceVisualization();
                     break;
                 case 'dependencyVisualization':
-                    if (typeof populateDependencyServiceSelection === 'function') populateDependencyServiceSelection();
-                    if (typeof updateDependencyVisualization === 'function') updateDependencyVisualization();
+                    populateDependencyServiceSelection();
+                    updateDependencyVisualization();
                     break;
                 case 'serviceDependenciesTableSlide':
-                    if (typeof generateServiceDependenciesTable === 'function') {
-                        // Defer table render until after layout/visibility is applied to avoid zero-height issues.
-                        requestAnimationFrame(() => generateServiceDependenciesTable());
-                    }
+                    // Defer table render until after layout/visibility is applied to avoid zero-height issues.
+                    requestAnimationFrame(() => generateServiceDependenciesTable());
                     break;
                 case 'mermaidVisualization':
-                    if (typeof renderMermaidDiagram === 'function') renderMermaidDiagram();
+                    renderMermaidDiagram();
                     break;
                 case 'mermaidApiVisualization':
-                    if (typeof populateApiServiceSelection === 'function') populateApiServiceSelection();
-                    if (typeof renderMermaidApiDiagram === 'function') renderMermaidApiDiagram();
+                    populateApiServiceSelection();
+                    renderMermaidApiDiagram();
                     break;
             }
         }

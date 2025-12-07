@@ -43,15 +43,10 @@ class HeaderComponent {
                     return;
                 }
 
-                if (window.aiChatAssistant && window.aiChatAssistant.openAiChatPanel) {
-                    // Check if already open
-                    if (window.aiChatAssistant.isAiChatPanelOpen()) {
-                        window.aiChatAssistant.closeAiChatPanel();
-                    } else {
-                        window.aiChatAssistant.openAiChatPanel();
-                    }
+                if (window.aiChatAssistant.isAiChatPanelOpen()) {
+                    window.aiChatAssistant.closeAiChatPanel();
                 } else {
-                    console.warn('AI Chat Assistant not available');
+                    window.aiChatAssistant.openAiChatPanel();
                 }
             });
         }

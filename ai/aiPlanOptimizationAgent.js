@@ -11,9 +11,7 @@ const aiPlanOptimizationAgent = (() => {
     let pendingPlanChanges = null;
     let postMessageCallback = null; // Stores the function to post messages to the chat
     let lastConfirmationContainerId = null;
-    const md = (typeof window !== 'undefined' && typeof window.markdownit === 'function')
-        ? window.markdownit()
-        : { render: (text) => text };
+    const md = window.markdownit();
 
     /**
      * Public entry point. Starts the optimization analysis.
@@ -60,22 +58,20 @@ const aiPlanOptimizationAgent = (() => {
             if (!originalPlanData || !originalSummaryData) {
                 console.warn("[OptimizeAgent] Plan data unavailable. Attempting to refresh planning view...");
                 updateProgress('🤖 Refreshing Year Plan view to gather data...');
-                if (typeof window.renderPlanningView === 'function') {
-                    window.renderPlanningView();
-                    originalPlanData = window.currentYearPlanTableData;
-                    originalSummaryData = window.currentYearPlanSummaryData;
-                }
+                window.renderPlanningView();
+                originalPlanData = window.currentYearPlanTableData;
+                originalSummaryData = window.currentYearPlanSummaryData;
             }
 
             if (!originalPlanData || !originalSummaryData) {
                 console.warn("[OptimizeAgent] Plan data still missing after render. Calculating directly...");
                 updateProgress('🤖 Calculating plan data directly...');
-                if (typeof window.calculatePlanningTableData === 'function' && typeof window.calculateTeamLoadSummaryData === 'function') {
-                    originalPlanData = window.calculatePlanningTableData();
-                    window.currentYearPlanTableData = originalPlanData;
-                    originalSummaryData = window.calculateTeamLoadSummaryData();
-                    window.currentYearPlanSummaryData = originalSummaryData;
-                }
+                // Assuming these functions are always available globally after initial setup
+                // and that they update window.currentYearPlanTableData/SummaryData
+                window.calculatePlanningTableData();
+                window.calculateTeamLoadSummaryData();
+                originalPlanData = window.currentYearPlanTableData;
+                originalSummaryData = window.currentYearPlanSummaryData;
             }
 
             if (!originalPlanData || !originalSummaryData) {
@@ -173,10 +169,10 @@ ${changesNarrative}
         pendingPlanChanges = null; // Clear the pending changes
 
         // Save and refresh the main UI
-        if (typeof SystemService !== 'undefined' && SystemService.save) {
+        if (SystemService.save) {
             SystemService.save();
         }
-        if (window.navigationManager && typeof window.navigationManager.refresh === 'function') {
+        if (window.navigationManager) {
             window.navigationManager.refresh();
         }
 
@@ -227,9 +223,7 @@ ${changesNarrative}
         const pinnedHistory = Array.isArray(primingHistory) ? primingHistory.filter(Boolean) : [];
 
         for (let i = 0; i < 5; i++) { // Run 5 iterations
-            if (typeof progressCallback === 'function') {
-                progressCallback(`🤖 Running optimization iterations (${i + 1}/5)...`);
-            }
+            progressCallback(`🤖 Running optimization iterations (${i + 1}/5)...`);
             const simplifiedPlan = currentTempPlanData
                 .filter(init => init.isBTL && !init.isProtected) // Only look at non-protected BTL items
                 .map(init => ({
@@ -337,11 +331,6 @@ If you cannot find a good change, respond with null.
     }
 
     function _normalizeUiHooks(input) {
-        if (typeof input === 'function') {
-            return {
-                postMessage: input
-            };
-        }
         const hooks = input || {};
         const postMessage = hooks.postMessageFn || hooks.postMessage || null;
         return {

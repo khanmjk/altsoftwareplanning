@@ -308,9 +308,7 @@ function generateGanttToolbar() {
     legendDiv.className = 'gantt-legend';
     legendDiv.style.marginLeft = 'auto'; // Push to right
 
-    const currentRenderer = (typeof FeatureFlags !== 'undefined' && typeof FeatureFlags.getRenderer === 'function')
-        ? FeatureFlags.getRenderer()
-        : 'mermaid';
+    const currentRenderer = FeatureFlags.getRenderer();
 
     legendDiv.style.display = currentRenderer === 'frappe' ? 'flex' : 'none';
 
@@ -731,15 +729,11 @@ function renderGanttTable() {
                     updateWorkPackageSde(init.initiativeId, selectedTeamLocal || null, num, workingDaysPerYearLocal);
                 }
             }
-            if (typeof ensureWorkPackagesForInitiatives === 'function') {
-                ensureWorkPackagesForInitiatives(SystemService.getCurrentSystem());
-                if (typeof syncInitiativeTotals === 'function') {
-                    syncInitiativeTotals(init.initiativeId, SystemService.getCurrentSystem());
-                }
-            }
-            if (typeof SystemService !== "undefined" && SystemService.save) {
-                SystemService.save();
-            }
+            WorkPackageService.ensureWorkPackagesForInitiatives(SystemService.getCurrentSystem());
+            WorkPackageService.syncInitiativeTotals(init.initiativeId, SystemService.getCurrentSystem());
+
+            SystemService.save();
+
             renderGanttChart();
         } else if (kind === 'work-package') {
             const wpId = e.target.dataset.wpId;
@@ -755,7 +749,7 @@ function renderGanttTable() {
             } else if (field === 'dependencies') {
                 updates.dependencies = value.split(',').map(s => s.trim()).filter(Boolean);
             }
-            const wp = typeof updateWorkPackage === 'function'
+            const wp = updateWorkPackage
                 ? updateWorkPackage(wpId, updates)
                 : (SystemService.getCurrentSystem().workPackages || []).find(w => w.workPackageId === wpId);
             if (!wp) return;
@@ -765,12 +759,10 @@ function renderGanttTable() {
             if (updates.endDate) {
                 (wp.impactedTeamAssignments || []).forEach(assign => assign.endDate = updates.endDate || assign.endDate);
             }
-            if (typeof syncInitiativeTotals === 'function') {
-                syncInitiativeTotals(initId, SystemService.getCurrentSystem());
-            }
-            if (typeof SystemService !== "undefined" && SystemService.save) {
-                SystemService.save();
-            }
+            WorkPackageService.syncInitiativeTotals(initId, SystemService.getCurrentSystem());
+
+            SystemService.save();
+
             renderGanttTable();
             renderGanttChart();
         } else if (kind === 'wp-assign') {
@@ -792,15 +784,13 @@ function renderGanttTable() {
             }
 
             // Recalculate WP dates from assignments (Bottom-up)
-            if (typeof recalculateWorkPackageDates === 'function') {
-                recalculateWorkPackageDates(wp);
-            }
-            if (typeof syncInitiativeTotals === 'function') {
-                syncInitiativeTotals(initId, SystemService.getCurrentSystem());
-            }
-            if (typeof SystemService !== "undefined" && SystemService.save) {
-                SystemService.save();
-            }
+
+            recalculateWorkPackageDates(wp);
+
+            WorkPackageService.syncInitiativeTotals(initId, SystemService.getCurrentSystem());
+
+            SystemService.save();
+
             renderGanttTable();
             renderGanttChart();
         } else if (kind === 'wp-assign-dep') {
@@ -830,9 +820,8 @@ function renderGanttTable() {
                 deps.delete(depNorm);
             }
             assign.dependencies = Array.from(deps);
-            if (typeof SystemService !== "undefined" && SystemService.save) {
-                SystemService.save();
-            }
+            SystemService.save();
+
             renderGanttTable();
             renderGanttChart();
         } else if (kind === 'wp-dep') {
@@ -853,15 +842,11 @@ function renderGanttTable() {
             } else {
                 deps.delete(depId);
             }
-            if (typeof updateWorkPackage === 'function') {
-                updateWorkPackage(wpId, { dependencies: Array.from(deps) });
-            } else {
-                wp.dependencies = Array.from(deps);
-            }
+            onSaveCallback();
+            updateWorkPackage(wpId, { dependencies: Array.from(deps) });
             syncInitiativeDependenciesFromWorkPackages(wp.initiativeId);
-            if (typeof SystemService !== "undefined" && SystemService.save) {
-                SystemService.save();
-            }
+            SystemService.save();
+
             renderGanttTable();
             renderGanttChart();
         } else if (kind === 'init-dep') {
@@ -1354,9 +1339,7 @@ function syncInitiativeDependenciesFromWorkPackages(initiativeId) {
 async function renderGanttChart() {
     const container = document.getElementById('ganttChartContainer');
     if (!container) return;
-    if (typeof ensureWorkPackagesForInitiatives === 'function') {
-        ensureWorkPackagesForInitiatives(SystemService.getCurrentSystem(), currentGanttYear);
-    }
+    WorkPackageService.ensureWorkPackagesForInitiatives(SystemService.getCurrentSystem(), currentGanttYear);
     const focus = getGanttFocusContext();
     const selectedTeam = (currentGanttGroupBy === 'Team') ? (document.getElementById('ganttGroupValue')?.value || 'all') : null;
     const initiatives = getGanttFilteredInitiatives();
@@ -1364,7 +1347,7 @@ async function renderGanttChart() {
         container.textContent = 'No initiatives to display.';
         return;
     }
-    const tasks = (window.ganttAdapter && typeof window.ganttAdapter.buildTasksFromInitiatives === 'function')
+    const tasks = (window.ganttAdapter)
         ? window.ganttAdapter.buildTasksFromInitiatives({
             initiatives,
             workPackages: SystemService.getCurrentSystem().workPackages || [],

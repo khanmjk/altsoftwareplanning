@@ -62,17 +62,15 @@ class WorkspaceComponent {
         }
 
         // 3. Execute the render callback to populate the content
-        if (typeof renderCallback === 'function') {
-            try {
-                renderCallback(viewContainer);
-            } catch (error) {
-                console.error(`WorkspaceComponent: Error in render callback for '${viewId}':`, error);
-                viewContainer.innerHTML = `<div class="error-message">
-                    <h3>Error Loading View</h3>
-                    <p>There was a problem rendering this page.</p>
-                    <pre>${error.message}</pre>
-                </div>`;
-            }
+        try {
+            renderCallback(viewContainer);
+        } catch (error) {
+            console.error(`WorkspaceComponent: Error in render callback for '${viewId}':`, error);
+            viewContainer.innerHTML = `<div class="error-message">
+                <h3>Error Loading View</h3>
+                <p>There was a problem rendering this page.</p>
+                <pre>${error.message}</pre>
+            </div>`;
         }
     }
 
@@ -133,7 +131,7 @@ class WorkspaceComponent {
             actions.forEach(action => {
                 const btn = document.createElement('button');
                 btn.className = action.className || 'btn btn-primary btn-sm';
-                btn.innerHTML = `${action.icon ? `<i class="${action.icon}"></i> ` : ''}${action.label}`;
+                btn.innerHTML = `${action.icon ? `<i class="${action.icon}"></i> ` : ''}${action.label} `;
                 if (action.onClick) {
                     btn.onclick = action.onClick;
                 }
