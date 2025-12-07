@@ -1,3 +1,15 @@
+/**
+ * main.js
+ * Application Entry Point
+ *
+ * This file is responsible for bootstrapping the application. It:
+ * 1. Initializes core Services (Settings, System).
+ * 2. Instantiates global Managers (Navigation).
+ * 3. Creates and wires up UI Components (Header, Sidebar, Workspace).
+ * 4. Sets up global event listeners (e.g., AI delegation).
+ * 5. Handles initial routing and view navigation.
+ */
+
 // Fallback HTML snippets for components when fetch is unavailable (e.g., file:// protocol)
 const HTML_COMPONENT_FALLBACKS = {
     'html/components/aiChatPanel.html': `
@@ -76,13 +88,9 @@ async function loadHtmlComponent(url, targetId) {
     }
 }
 
-/**
- * Handles the "Create with AI" button click.
- */
-// [REMOVED] handleCreateWithAi - functionality moved to AIGenProgressOverlayView.js
+
 
 // Global Component Instances
-// var aiGenOverlay = null; // Removed in favor of Singleton pattern
 
 window.onload = async function () {
 
@@ -96,7 +104,6 @@ window.onload = async function () {
     window.headerComponent = new HeaderComponent('main-header');
     window.sidebarComponent = new SidebarComponent('sidebar', window.navigationManager);
     window.workspaceComponent = new WorkspaceComponent('main-content-area');
-    // aiGenOverlay is now a Singleton accessed via AIGenProgressOverlayView.getInstance()
 
     // AI Generation Overlay Event Listener (Event Delegation to handle view re-renders)
     document.addEventListener('click', (event) => {
@@ -122,20 +129,17 @@ window.onload = async function () {
     // Initialize the chat panel's internal listeners (Required for Header AI Button)
     initializeAiChatPanel();
 
-    // Load settings and update AI UI
-    SettingsService.load();
+    // Update AI UI based on loaded settings
     AIService.updateAiDependentUI(SettingsService.get());
 
     // Save sample systems if none exist
     SystemService.initializeDefaults();
 
-    setTimeout(() => {
-        // Check for view in URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const initialView = urlParams.get('view');
-        console.log(`Attempting initial navigation. URL View: ${initialView}`);
+    // Check for view in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialView = urlParams.get('view');
+    console.log(`Attempting initial navigation. URL View: ${initialView}`);
 
-        navigationManager.navigateTo(initialView || 'welcomeView');
-    }, 500);
+    navigationManager.navigateTo(initialView || 'welcomeView');
 };
 
