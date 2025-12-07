@@ -1,10 +1,6 @@
 let currentSystemData = null;
 let currentMode = appState.Modes.NAVIGATION;
 
-// Settings delegated to SettingsService (syncs to window.globalSettings for backward compatibility)
-SettingsService.init();
-console.log("main.js: Initialized settings via SettingsService.");
-
 // Fallback HTML snippets for components when fetch is unavailable (e.g., file:// protocol)
 const HTML_COMPONENT_FALLBACKS = {
     'html/components/aiChatPanel.html': `
@@ -198,10 +194,10 @@ async function handleCreateWithAi() {
 }
 
 window.onload = async function () {
-    // console.log("!!! window.onload: Page HTML and synchronous scripts loaded. !!!");
     currentMode = appState.Modes.NAVIGATION;
 
-    // console.log("Initializing Application Components...");
+    // Initialize Settings
+    SettingsService.init();
 
     // Initialize Managers
     window.notificationManager = new NotificationManager();
