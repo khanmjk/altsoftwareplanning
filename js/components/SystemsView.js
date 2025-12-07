@@ -110,7 +110,7 @@ class SystemsView {
             return;
         }
 
-        handleCreateWithAi();
+        AIGenProgressOverlayView.getInstance().startGenerationFlow();
     }
 
     /**

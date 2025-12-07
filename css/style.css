@@ -31,6 +31,7 @@
 
 /* Components Layer - UI page-specific components */
 @import url('components/aiChatPanel.css');
+@import url('components/ai-gen-progress-overlay.css');
 @import url('components/enhancedTableWidget.css');
 @import url('components/ganttChart.css');
 @import url('components/header.css');

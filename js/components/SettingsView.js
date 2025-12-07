@@ -278,19 +278,19 @@ class SettingsView {
         const provider = document.getElementById('aiProviderSelect_view').value;
         const apiKey = document.getElementById('aiApiKeyInput_view').value;
 
-        if (SettingsService.get()) {
-            SettingsService.get().ai.isEnabled = enabled;
-            SettingsService.get().ai.provider = provider;
-            SettingsService.get().ai.apiKey = apiKey;
+        // Use SettingsService to update and save
+        SettingsService.update({
+            ai: {
+                isEnabled: enabled,
+                provider: provider,
+                apiKey: apiKey
+            }
+        });
 
-            // Save to localStorage
-            localStorage.setItem('smt_global_settings', JSON.stringify(SettingsService.get()));
+        // Update UI
+        window.headerComponent.updateAiButtonVisibility();
 
-            // Update UI
-            window.headerComponent.updateAiButtonVisibility();
-
-            notificationManager.showToast('AI Settings saved successfully!', 'success');
-        }
+        notificationManager.showToast('AI Settings saved successfully!', 'success');
     }
 
     /**
