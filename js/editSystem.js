@@ -300,21 +300,25 @@ function displaySeniorManagerAssignment(sdmSectionContainer, teamIndex, currentS
 
     const currentSrMgr = allSeniorManagers.find(sr => sr && sr.seniorManagerId === currentSdm.seniorManagerId);
 
-    const srMgrDualList = createDualListContainer(
-        teamIndex, 'Current Sr. Mgr:', 'Available Sr. Mgrs:',
-        currentSrMgr ? [{ value: currentSrMgr.seniorManagerId, text: currentSrMgr.seniorManagerName }] : [],
-        allSeniorManagers.filter(sr => sr && sr.seniorManagerId !== currentSdm.seniorManagerId)
+    const srMgrDualList = new DualListSelector({
+        contextIndex: teamIndex,
+        leftLabel: 'Current Sr. Mgr:',
+        rightLabel: 'Available Sr. Mgrs:',
+        currentOptions: currentSrMgr ? [{ value: currentSrMgr.seniorManagerId, text: currentSrMgr.seniorManagerName }] : [],
+        availableOptions: allSeniorManagers.filter(sr => sr && sr.seniorManagerId !== currentSdm.seniorManagerId)
             .map(sr => ({ value: sr.seniorManagerId, text: sr.seniorManagerName })),
-        `currentSrMgr_${currentSdmId}`,
-        `availableSrMgrs_${currentSdmId}`,
-        (movedSrMgrId, direction) => {
+        leftField: `currentSrMgr_${currentSdmId}`,
+        rightField: `availableSrMgrs_${currentSdmId}`,
+        moveCallback: (movedSrMgrId, direction) => {
             const sdmToUpdate = SystemService.getCurrentSystem().sdms.find(s => s.sdmId === currentSdmId);
             if (sdmToUpdate) {
                 sdmToUpdate.seniorManagerId = (direction === 'add') ? movedSrMgrId : null;
             }
         },
-        false, true, 'Enter New Sr. Manager Name',
-        (newSrMgrName) => {
+        multiSelectLeft: false,
+        allowAddNew: true,
+        addNewPlaceholder: 'Enter New Sr. Manager Name',
+        addNewCallback: (newSrMgrName) => {
             if (!newSrMgrName || newSrMgrName.trim() === '') return null;
             newSrMgrName = newSrMgrName.trim();
             let existingSrMgr = (SystemService.getCurrentSystem().seniorManagers || []).find(s => s && s.seniorManagerName.toLowerCase() === newSrMgrName.toLowerCase());
@@ -328,7 +332,7 @@ function displaySeniorManagerAssignment(sdmSectionContainer, teamIndex, currentS
             SystemService.getCurrentSystem().seniorManagers.push(newSrMgr);
             return { value: newSrMgrId, text: newSrMgrName };
         }
-    );
+    }).render();
     srMgrContainer.appendChild(srMgrDualList);
 }
 

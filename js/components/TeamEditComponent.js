@@ -220,12 +220,15 @@ class TeamEditComponent {
         const currentServicesForTeam = (team.teamId && allServices.filter(s => s.owningTeamId === team.teamId)) || [];
         const availableServicesForTeam = allServices.filter(s => !s.owningTeamId || s.owningTeamId === null);
 
-        const container = createDualListContainer(
-            index, 'Services Owned:', 'Available Unowned Services:',
-            currentServicesForTeam.map(s => ({ value: s.value, text: s.text })),
-            availableServicesForTeam.map(s => ({ value: s.value, text: s.text })),
-            'currentServices', 'availableServices',
-            (movedServiceValue, direction, currentTeamIndexCallback) => {
+        const container = new DualListSelector({
+            contextIndex: index,
+            leftLabel: 'Services Owned:',
+            rightLabel: 'Available Unowned Services:',
+            currentOptions: currentServicesForTeam.map(s => ({ value: s.value, text: s.text })),
+            availableOptions: availableServicesForTeam.map(s => ({ value: s.value, text: s.text })),
+            leftField: 'currentServices',
+            rightField: 'availableServices',
+            moveCallback: (movedServiceValue, direction, currentTeamIndexCallback) => {
                 const serviceToUpdate = this.systemData.services.find(s => s.serviceName === movedServiceValue);
                 const targetTeamForService = this.systemData.teams[currentTeamIndexCallback];
                 if (serviceToUpdate && targetTeamForService) {
@@ -235,7 +238,7 @@ class TeamEditComponent {
                     // Ideally we'd trigger a full re-render or smart update
                 }
             }
-        );
+        }).render();
         wrapper.appendChild(container);
         return wrapper;
     }
@@ -260,19 +263,25 @@ class TeamEditComponent {
         const allSdms = this.systemData.sdms || [];
         const currentSdm = allSdms.find(sdm => sdm && sdm.sdmId === team.sdmId);
 
-        return createDualListContainer(
-            index, 'Current SDM:', 'Available SDMs:',
-            currentSdm ? [{ value: currentSdm.sdmId, text: currentSdm.sdmName }] : [],
-            allSdms.filter(sdm => sdm && (!team.sdmId || sdm.sdmId !== team.sdmId)).map(s => ({ value: s.sdmId, text: s.sdmName })),
-            'currentSdm', 'availableSdms',
-            (movedSdmId, directionCallback, teamIndexCallback) => {
+        return new DualListSelector({
+            contextIndex: index,
+            leftLabel: 'Current SDM:',
+            rightLabel: 'Available SDMs:',
+            currentOptions: currentSdm ? [{ value: currentSdm.sdmId, text: currentSdm.sdmName }] : [],
+            availableOptions: allSdms.filter(sdm => sdm && (!team.sdmId || sdm.sdmId !== team.sdmId)).map(s => ({ value: s.sdmId, text: s.sdmName })),
+            leftField: 'currentSdm',
+            rightField: 'availableSdms',
+            moveCallback: (movedSdmId, directionCallback, teamIndexCallback) => {
                 const targetTeam = this.systemData.teams[teamIndexCallback];
                 if (targetTeam) {
                     targetTeam.sdmId = (directionCallback === 'add') ? movedSdmId : null;
                     displaySeniorManagerAssignment(sdmSection, teamIndexCallback, targetTeam.sdmId);
                 }
-            }, false, true, 'Enter New SDM Name',
-            (newSdmNameInput) => {
+            },
+            multiSelectLeft: false,
+            allowAddNew: true,
+            addNewPlaceholder: 'Enter New SDM Name',
+            addNewCallback: (newSdmNameInput) => {
                 if (!newSdmNameInput || newSdmNameInput.trim() === '') return null;
                 newSdmNameInput = newSdmNameInput.trim();
                 if ((this.systemData.sdms || []).some(s => s && s.sdmName.toLowerCase() === newSdmNameInput.toLowerCase())) {
@@ -285,7 +294,7 @@ class TeamEditComponent {
                 // We just need to ensure data consistency.
                 return { value: newSdmObject.sdmId, text: newSdmObject.sdmName };
             }
-        );
+        }).render();
     }
 
     _createPmtAssignmentContent(team, index) {
@@ -298,16 +307,22 @@ class TeamEditComponent {
         const allPmts = this.systemData.pmts || [];
         const currentPmt = allPmts.find(pmt => pmt && pmt.pmtId === team.pmtId);
 
-        return createDualListContainer(
-            index, 'Current PMT:', 'Available PMTs:',
-            currentPmt ? [{ value: currentPmt.pmtId, text: currentPmt.pmtName }] : [],
-            allPmts.filter(pmt => pmt && (!team.pmtId || pmt.pmtId !== team.pmtId)).map(p => ({ value: p.pmtId, text: p.pmtName })),
-            'currentPmt', 'availablePmts',
-            (movedPmtId, directionCallback, teamIndexCallback) => {
+        return new DualListSelector({
+            contextIndex: index,
+            leftLabel: 'Current PMT:',
+            rightLabel: 'Available PMTs:',
+            currentOptions: currentPmt ? [{ value: currentPmt.pmtId, text: currentPmt.pmtName }] : [],
+            availableOptions: allPmts.filter(pmt => pmt && (!team.pmtId || pmt.pmtId !== team.pmtId)).map(p => ({ value: p.pmtId, text: p.pmtName })),
+            leftField: 'currentPmt',
+            rightField: 'availablePmts',
+            moveCallback: (movedPmtId, directionCallback, teamIndexCallback) => {
                 const targetTeam = this.systemData.teams[teamIndexCallback];
                 if (targetTeam) targetTeam.pmtId = (directionCallback === 'add') ? movedPmtId : null;
-            }, false, true, 'Enter New PMT Name',
-            (newPmtNameInput) => {
+            },
+            multiSelectLeft: false,
+            allowAddNew: true,
+            addNewPlaceholder: 'Enter New PMT Name',
+            addNewCallback: (newPmtNameInput) => {
                 if (!newPmtNameInput || newPmtNameInput.trim() === '') return null;
                 newPmtNameInput = newPmtNameInput.trim();
                 if ((this.systemData.pmts || []).some(p => p && p.pmtName.toLowerCase() === newPmtNameInput.toLowerCase())) {
@@ -318,7 +333,7 @@ class TeamEditComponent {
                 this.systemData.pmts.push(newPmtObject);
                 return { value: newPmtObject.pmtId, text: newPmtObject.pmtName };
             }
-        );
+        }).render();
     }
 
     _createEngineersContent(team, index) {
@@ -348,11 +363,15 @@ class TeamEditComponent {
                 };
             });
 
-        const container = createDualListContainer(
-            index, 'Current Engineers:', 'Available Engineers (System Pool):',
-            currentEngineerOptions, availableEngineerOptions,
-            'currentTeamEngineersList', 'availableSystemEngineersList',
-            (movedEngineerName, direction, currentTeamEditIndex) => {
+        const container = new DualListSelector({
+            contextIndex: index,
+            leftLabel: 'Current Engineers:',
+            rightLabel: 'Available Engineers (System Pool):',
+            currentOptions: currentEngineerOptions,
+            availableOptions: availableEngineerOptions,
+            leftField: 'currentTeamEngineersList',
+            rightField: 'availableSystemEngineersList',
+            moveCallback: (movedEngineerName, direction, currentTeamEditIndex) => {
                 const targetTeam = this.systemData.teams[currentTeamEditIndex];
                 if (!targetTeam) return;
                 if (!Array.isArray(targetTeam.engineers)) targetTeam.engineers = [];
@@ -382,8 +401,10 @@ class TeamEditComponent {
                 // Update BIS display
                 this._updateEffectiveBIS(currentTeamEditIndex);
             },
-            true, true, 'Enter New Engineer Name',
-            async (newEngineerNameInput) => {
+            multiSelectLeft: true,
+            allowAddNew: true,
+            addNewPlaceholder: 'Enter New Engineer Name',
+            addNewCallback: async (newEngineerNameInput) => {
                 // This async callback logic matches the original editSystem.js
                 // Note: Since this is a callback passed to createDualListContainer, 
                 // we assume createDualListContainer handles the async nature if implemented correctly.
@@ -432,7 +453,7 @@ class TeamEditComponent {
 
                 return { value: newEngineerData.name, text: `${newEngineerData.name} (L${newEngineerData.level})${newEngineerData.attributes.isAISWE ? ' [AI]' : ''} - (Unallocated)` };
             }
-        );
+        }).render();
         return container;
     }
 
@@ -563,10 +584,6 @@ class TeamEditComponent {
                 });
             }
 
-            // Global updates
-            generateTeamTable(this.systemData);
-            generateTeamVisualization(this.systemData);
-
             this.render();
         }
     }
@@ -586,7 +603,5 @@ class TeamEditComponent {
         systemRepository.saveSystem(this.systemData.systemName, this.systemData);
         notificationManager.showToast('Team changes saved.', 'success');
 
-        generateTeamTable(this.systemData);
-        generateTeamVisualization(this.systemData);
     }
 }
