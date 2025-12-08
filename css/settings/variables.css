@@ -1,28 +1,63 @@
+/* Master CSS Variables - Theme-Aware Architecture */
+
 :root {
-    /* Colors - Primary */
-    --color-primary: #007bff;
-    --color-primary-hover: #0069d9;
-    --color-primary-active: #0062cc;
+    /* Theme Colors - Dynamically set by ThemeService */
+    /* These will be overridden by JavaScript when themes change */
+    --theme-bg-primary: #ffffff;
+    --theme-bg-secondary: #f8f9fa;
+    --theme-bg-tertiary: #f0f2f5;
 
-    /* Colors - Semantic */
-    --color-danger: #dc3545;
+    --theme-text-primary: #212529;
+    --theme-text-secondary: #6c757d;
+    --theme-text-muted: #adb5bd;
+
+    --theme-border-color: #e0e0e0;
+    --theme-border-light: #f1f5f9;
+
+    --theme-primary: #007bff;
+    --theme-primary-hover: #0069d9;
+    --theme-primary-active: #0062cc;
+
+    --theme-success: #28a745;
+    --theme-warning: #ffc107;
+    --theme-danger: #dc3545;
+    --theme-info: #17a2b8;
+
+    --theme-card-bg: #ffffff;
+    --theme-card-border: #e0e0e0;
+    --theme-card-shadow: rgba(0, 0, 0, 0.05);
+
+    --theme-modal-overlay: rgba(0, 0, 0, 0.5);
+    --theme-dropdown-bg: #ffffff;
+
+    --theme-header-bg: #ffffff;
+    --theme-header-text: #212529;
+    --theme-sidebar-bg: #ffffff;
+    --theme-sidebar-text: #495057;
+
+    /* Legacy Color Aliases - For Backwards Compatibility */
+    /* Components still using old variable names will continue to work */
+    --color-primary: var(--theme-primary);
+    --color-primary-hover: var(--theme-primary-hover);
+    --color-primary-active: var(--theme-primary-active);
+
+    --color-danger: var(--theme-danger);
     --color-danger-hover: #c82333;
-    --color-success: #28a745;
-    --color-warning: #ffc107;
-    --color-info: #17a2b8;
+    --color-success: var(--theme-success);
+    --color-warning: var(--theme-warning);
+    --color-info: var(--theme-info);
 
-    /* Colors - Neutral */
-    --color-white: #ffffff;
-    --color-gray-50: #f8f9fa;
-    --color-gray-100: #f0f2f5;
+    --color-white: var(--theme-bg-primary);
+    --color-gray-50: var(--theme-bg-secondary);
+    --color-gray-100: var(--theme-bg-tertiary);
     --color-gray-200: #e9ecef;
     --color-gray-300: #dee2e6;
     --color-gray-400: #ced4da;
-    --color-gray-500: #adb5bd;
-    --color-gray-600: #6c757d;
+    --color-gray-500: var(--theme-text-muted);
+    --color-gray-600: var(--theme-text-secondary);
     --color-gray-700: #495057;
     --color-gray-800: #343a40;
-    --color-gray-900: #212529;
+    --color-gray-900: var(--theme-text-primary);
 
     /* Spacing Scale */
     --space-xs: 0.25rem;
@@ -78,4 +113,29 @@
     --transition-fast: 0.15s ease-in-out;
     --transition-base: 0.2s ease-in-out;
     --transition-slow: 0.3s ease-in-out;
+}
+
+/* Smooth Theme Transitions */
+* {
+    transition: background-color var(--transition-base),
+        color var(--transition-base),
+        border-color var(--transition-base);
+}
+
+/* Disable transitions during theme switch for performance */
+.theme-transitioning * {
+    transition: none !important;
+}
+
+/* Exceptions - elements that should not transition */
+button,
+a,
+input,
+textarea,
+select {
+    transition: background-color var(--transition-fast),
+        color var(--transition-fast),
+        border-color var(--transition-fast),
+        transform var(--transition-fast),
+        box-shadow var(--transition-fast);
 }
