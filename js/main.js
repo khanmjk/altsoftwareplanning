@@ -13,20 +13,20 @@
 // Fallback HTML snippets for components when fetch is unavailable (e.g., file:// protocol)
 const HTML_COMPONENT_FALLBACKS = {
     'html/components/aiChatPanel.html': `
-<div id="aiChatPanel" style="display: flex; flex-direction: column; width: 100%; height: 100%; background-color: #fff; border-left: 1px solid #ccc;">
-    <div class="modal-header" style="border-top-left-radius: 8px; border-top-right-radius: 8px;">
-        <h3 id="aiChatTitle" style="margin: 0; font-size: 1.2em;">AI Assistant</h3>
+<div id="aiChatPanel">
+    <div class="modal-header">
+        <h3 id="aiChatTitle">AI Assistant</h3>
         <span class="close-button" onclick="closeAiChatPanel()">&times;</span>
     </div>
-    <div id="aiChatLog" style="flex-grow: 1; padding: 10px; overflow-y: auto; background-color: #f8f9fa; border-bottom: 1px solid #eee;">
+    <div id="aiChatLog">
         <div class="chat-message ai-message">Hello! How can I help you analyze the current system?</div>
     </div>
-    <div id="aiChatSuggestions" style="padding: 8px 10px; display: flex; flex-wrap: wrap; gap: 6px; border-top: 1px solid #f1f1f1; border-bottom: 1px solid #ccc; background: #fff;"></div>
-    <div id="aiChatUsageDisplay" style="font-size: 0.8em; color: #6c757d; text-align: right; padding: 0 10px 5px 10px;">Session Tokens: 0</div>
-    <div id="aiChatInputContainer" style="padding: 10px; border-top: 1px solid #ccc; position: relative;">
-        <div id="aiChatCommandPopup" style="display: none;"></div>
-        <textarea id="aiChatInput" style="width: 100%; min-height: 70px; max-height: 280px; border: 1px solid #ccc; border-radius: 4px; resize: vertical; box-sizing: border-box; padding: 6px 8px; line-height: 1.4; font-size: 0.95em;" placeholder="Ask about the current view..."></textarea>
-        <button id="aiChatSendButton" class="btn-primary" style="width: 100%; margin-top: 5px;">Send</button>
+    <div id="aiChatSuggestions"></div>
+    <div id="aiChatUsageDisplay">Session Tokens: 0</div>
+    <div id="aiChatInputContainer">
+        <div id="aiChatCommandPopup"></div>
+        <textarea id="aiChatInput" placeholder="Ask about the current view..."></textarea>
+        <button id="aiChatSendButton" class="btn-primary">Send</button>
     </div>
 </div>`
 };
@@ -104,6 +104,9 @@ window.onload = async function () {
 
     // Initialize Settings
     SettingsService.init();
+
+    // Initialize Theme (must be after Settings)
+    ThemeService.init();
 
     // Initialize Managers
     window.navigationManager = new NavigationManager();

@@ -114,7 +114,7 @@ class AIGenProgressOverlayView {
             // 2. Call AI Service
             // Pass the message element as the 'spinnerP' compatible object (wrapper)
             // The service expects an element with .textContent property
-            const result = await generateSystemFromPrompt(
+            const result = await AIService.generateSystemFromPrompt(
                 prompt,
                 settings.ai.apiKey,
                 settings.ai.provider,

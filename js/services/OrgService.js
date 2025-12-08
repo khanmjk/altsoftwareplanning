@@ -149,6 +149,138 @@ const OrgService = {
     },
 
     /**
+     * Adds a new team to the organization.
+     * @param {object} systemData
+     * @param {object} teamData - Optional overrides for team properties
+     * @returns {object} The newly created team
+     */
+    addTeam(systemData, teamData = {}) {
+        if (!systemData) {
+            throw new Error('OrgService.addTeam: systemData is required.');
+        }
+        if (!Array.isArray(systemData.teams)) {
+            systemData.teams = [];
+        }
+
+        const newTeamId = this._generateIncrementalId(systemData.teams, 'teamId', 'team');
+        const newTeam = {
+            teamId: newTeamId,
+            teamName: '',
+            teamIdentity: '',
+            teamDescription: '',
+            fundedHeadcount: 0,
+            buildersInSeats: 0,
+            engineers: [],
+            sdmId: null,
+            pmtId: null,
+            ...teamData
+        };
+
+        systemData.teams.push(newTeam);
+        console.log(`OrgService: Added team ${newTeam.teamId}`);
+        return newTeam;
+    },
+
+    /**
+     * Deletes a team by ID.
+     * @param {object} systemData
+     * @param {string} teamId
+     * @returns {boolean} True if team was deleted
+     */
+    deleteTeam(systemData, teamId) {
+        if (!systemData || !Array.isArray(systemData.teams)) {
+            throw new Error('OrgService.deleteTeam: systemData.teams is unavailable.');
+        }
+        const initialLength = systemData.teams.length;
+        systemData.teams = systemData.teams.filter(t => t.teamId !== teamId);
+
+        const deleted = systemData.teams.length < initialLength;
+        if (deleted) {
+            console.log(`OrgService: Deleted team ${teamId}`);
+        }
+        return deleted;
+    },
+
+    /**
+     * Adds a new service to the system.
+     * @param {object} systemData
+     * @param {object} serviceData - Optional overrides for service properties
+     * @returns {object} The newly created service
+     */
+    addService(systemData, serviceData = {}) {
+        if (!systemData) {
+            throw new Error('OrgService.addService: systemData is required.');
+        }
+        if (!Array.isArray(systemData.services)) {
+            systemData.services = [];
+        }
+
+        const newService = {
+            serviceName: 'New Service ' + ((systemData.services?.length || 0) + 1),
+            serviceDescription: '',
+            owningTeamId: null,
+            apis: [],
+            serviceDependencies: [],
+            platformDependencies: [],
+            ...serviceData
+        };
+
+        systemData.services.push(newService);
+        console.log(`OrgService: Added service ${newService.serviceName}`);
+        return newService;
+    },
+
+    /**
+     * Deletes a service by name.
+     * @param {object} systemData
+     * @param {string} serviceName
+     * @returns {object|null} The deleted service, or null if not found
+     */
+    deleteService(systemData, serviceName) {
+        if (!systemData || !Array.isArray(systemData.services)) {
+            throw new Error('OrgService.deleteService: systemData.services is unavailable.');
+        }
+        const serviceIndex = systemData.services.findIndex(s => s.serviceName === serviceName);
+        if (serviceIndex === -1) {
+            console.warn(`OrgService.deleteService: Service "${serviceName}" not found.`);
+            return null;
+        }
+
+        const deletedService = systemData.services.splice(serviceIndex, 1)[0];
+        console.log(`OrgService: Deleted service ${serviceName}`);
+        return deletedService;
+    },
+
+    /**
+     * Bulk-reassigns teams from one SDM to another.
+     * @param {object} systemData
+     * @param {string} sourceSdmId
+     * @param {string} targetSdmId
+     * @returns {object} Summary of reassignments
+     */
+    bulkReassignTeams(systemData, sourceSdmId, targetSdmId) {
+        if (!systemData || !Array.isArray(systemData.teams)) {
+            throw new Error('OrgService.bulkReassignTeams: systemData.teams is unavailable.');
+        }
+        const resolvedSource = this._resolveSdmIdentifier(systemData, sourceSdmId);
+        const resolvedTarget = this._resolveSdmIdentifier(systemData, targetSdmId);
+        if (!resolvedSource) throw new Error(`bulkReassignTeams: Could not resolve source SDM "${sourceSdmId}".`);
+        if (!resolvedTarget) throw new Error(`bulkReassignTeams: Could not resolve target SDM "${targetSdmId}".`);
+        if (resolvedSource === resolvedTarget) throw new Error('bulkReassignTeams: Source and target SDM IDs are the same.');
+
+        const movedTeams = systemData.teams.filter(team => team.sdmId === resolvedSource);
+        movedTeams.forEach(team => { team.sdmId = resolvedTarget; });
+
+        console.log(`OrgService: Moved ${movedTeams.length} teams from ${resolvedSource} to ${resolvedTarget}`);
+        return {
+            movedTeamIds: movedTeams.map(t => t.teamId),
+            movedTeamNames: movedTeams.map(t => t.teamIdentity || t.teamName || t.teamId),
+            sourceSdmId: resolvedSource,
+            targetSdmId: resolvedTarget
+        };
+    },
+
+    /**
      * Adds a new SDM.
      * @param {object} systemData
      * @param {string} name

@@ -327,7 +327,7 @@ class GoalEditComponent {
         });
 
         const helpText = document.createElement('small');
-        helpText.style.color = '#64748b';
+        helpText.style.color = 'var(--theme-text-muted)';
         helpText.style.display = 'block';
         helpText.style.marginTop = '4px';
         helpText.innerText = 'Hold Ctrl/Cmd to select multiple initiatives';

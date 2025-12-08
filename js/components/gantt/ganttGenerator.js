@@ -2,16 +2,14 @@
 (function () {
     function generateGanttSyntax(initiatives, groupBy = 'Initiative', viewYear = new Date().getFullYear(), options = {}) {
         const selectedTeam = options.selectedTeamId || null;
-        const tasks = (ganttAdapter && typeof ganttAdapter.buildTasksFromInitiatives === 'function')
-            ? ganttAdapter.buildTasksFromInitiatives({
-                initiatives: initiatives || [],
-                workPackages: SystemService.getCurrentSystem()?.workPackages || [],
-                viewBy: groupBy,
-                filters: {},
-                year: viewYear,
-                selectedTeam
-            })
-            : [];
+        const tasks = ganttAdapter.buildTasksFromInitiatives({
+            initiatives: initiatives || [],
+            workPackages: SystemService.getCurrentSystem()?.workPackages || [],
+            viewBy: groupBy,
+            filters: {},
+            year: viewYear,
+            selectedTeam
+        });
         buildMermaidFromTasks(tasks, 'gantt-chart-container', (task) => {
             console.log('Task clicked:', task);
             // openEditTaskModal(task); // user can implement

@@ -25,11 +25,11 @@
 }
 
 .capacity-dashboard-controls-container {
-    background-color: #f8f9fa;
+    background-color: var(--theme-bg-secondary);
     padding: 15px;
     border-radius: 6px;
     margin-bottom: 20px;
-    border: 1px solid #e9ecef;
+    border: 1px solid var(--theme-border-color);
 }
 
 .capacity-dashboard-controls {
@@ -48,7 +48,7 @@
 
 .capacity-dashboard-controls__label {
     font-weight: 600;
-    color: #495057;
+    color: var(--theme-text-secondary);
     font-size: 0.95rem;
 }
 
@@ -60,9 +60,9 @@
 
 .capacity-dashboard-context-heading {
     font-size: 1.1rem;
-    color: #343a40;
+    color: var(--theme-text-primary);
     padding-top: 10px;
-    border-top: 1px solid #dee2e6;
+    border-top: 1px solid var(--theme-border-color);
     margin-top: 5px;
 }
 
@@ -121,11 +121,11 @@
 }
 
 .capacity-summary-deduction {
-    color: #dc3545;
+    color: var(--theme-danger);
 }
 
 .capacity-summary-gain {
-    color: #28a745;
+    color: var(--theme-success);
 }
 
 .capacity-summary-net {
@@ -133,7 +133,7 @@
 }
 
 .capacity-summary-net--negative {
-    background-color: #f8d7da;
+    background-color: color-mix(in srgb, var(--theme-danger), transparent 85%);
 }
 
 /* --- Configuration --- */
@@ -146,7 +146,7 @@
 
 .capacity-config-header {
     margin-bottom: 20px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--theme-border-color);
     padding-bottom: 10px;
 }
 
@@ -157,7 +157,7 @@
 }
 
 .capacity-section-desc {
-    color: #666;
+    color: var(--theme-text-secondary);
     margin-bottom: 0;
     font-size: 0.9rem;
     margin-top: 5px;
@@ -183,7 +183,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid var(--theme-border-color);
     /* Keep separator */
     transition: opacity 0.2s;
 }
@@ -194,7 +194,7 @@
 }
 
 .capacity-collapsible-header--active {
-    border-bottom-color: #e0e0e0;
+    border-bottom-color: var(--theme-border-color);
     background-color: transparent;
 }
 
@@ -221,8 +221,8 @@
     font-size: 1rem;
     font-weight: bold;
     margin-bottom: 10px;
-    color: #555;
-    border-bottom: 1px solid #eee;
+    color: var(--theme-text-secondary);
+    border-bottom: 1px solid var(--theme-border-color);
     padding-bottom: 5px;
 }
 
@@ -261,7 +261,7 @@
 }
 
 .capacity-team-item:hover {
-    background-color: rgba(0, 0, 0, 0.02);
+    background-color: var(--theme-bg-tertiary);
     /* Subtle hover */
 }
 
@@ -284,7 +284,7 @@
 }
 
 .capacity-team-icon {
-    color: #999;
+    color: var(--theme-text-muted);
     transition: transform 0.2s;
 }
 
@@ -294,7 +294,7 @@
     /* Align left */
     background-color: transparent;
     /* Remove white bg */
-    border-top: 1px solid #f0f0f0;
+    border-top: 1px solid var(--theme-border-color);
 }
 
 .capacity-team-grid {
@@ -315,11 +315,11 @@
 .capacity-variable-leave-header {
     font-size: 0.85rem;
     font-weight: 600;
-    color: #6c757d;
+    color: var(--theme-text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     padding-bottom: 5px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--theme-border-color);
     margin-bottom: 5px;
 }
 
@@ -343,7 +343,7 @@
 .capacity-input-suffix {
     position: absolute;
     right: 10px;
-    color: #adb5bd;
+    color: var(--theme-text-muted);
     font-size: 0.8rem;
     pointer-events: none;
 }
@@ -357,9 +357,9 @@
 .capacity-engineer-leave-container {
     max-height: 250px;
     overflow-y: auto;
-    border: 1px solid #e9ecef;
+    border: 1px solid var(--theme-border-color);
     border-radius: 6px;
-    background-color: #fff;
+    background-color: var(--theme-bg-primary);
 }
 
 .capacity-engineer-leave-header {
@@ -367,11 +367,11 @@
     grid-template-columns: 1fr 100px;
     padding: 6px 15px;
     /* Reduced from 10px */
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #e9ecef;
+    background-color: var(--theme-bg-secondary);
+    border-bottom: 1px solid var(--theme-border-color);
     font-size: 0.85rem;
     font-weight: 600;
-    color: #6c757d;
+    color: var(--theme-text-secondary);
     position: sticky;
     top: 0;
 }
@@ -382,7 +382,7 @@
     padding: 5px 15px;
     /* Reduced from 8px */
     align-items: center;
-    border-bottom: 1px solid #f1f3f5;
+    border-bottom: 1px solid var(--theme-border-light);
 }
 
 .capacity-engineer-row:last-child {
@@ -395,7 +395,7 @@
 
 .capacity-engineer-name {
     font-size: 0.9rem;
-    color: #212529;
+    color: var(--theme-text-primary);
 }
 
 .capacity-separator {

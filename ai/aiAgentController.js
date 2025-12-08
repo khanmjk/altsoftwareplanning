@@ -367,7 +367,7 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
                     const contextJson = scrapeCurrentViewContext();
                     console.debug("[AI-DIAGRAM] Context JSON length:", (contextJson || '').length);
                     try {
-                        const result = await window.generateDiagramFromPrompt(
+                        const result = await AIService.generateDiagramFromPrompt(
                             resolvedPayload.description || '',
                             contextJson,
                             SettingsService.get().ai.apiKey,
@@ -643,21 +643,17 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
         }
     }
 
-    async function _waitForAnalysisFunction(maxAttempts = 5, delayMs = 200) {
-        for (let attempt = 0; attempt < maxAttempts; attempt++) {
-            if (typeof window !== 'undefined' && window.getAnalysisFromPrompt) {
-                return window.getAnalysisFromPrompt;
-            }
-            await new Promise(resolve => setTimeout(resolve, delayMs));
+    function _waitForAnalysisFunction(maxAttempts = 5, delayMs = 200) {
+        // Direct return of the service method
+        if (typeof AIService !== 'undefined' && AIService.getAnalysisFromPrompt) {
+            return AIService.getAnalysisFromPrompt;
         }
         return null;
     }
 
     function _resolveImageGenerationFunction() {
-        if (cachedImageGenerationFn) return cachedImageGenerationFn;
-        if (window.generateImageFromPrompt) {
-            cachedImageGenerationFn = window.generateImageFromPrompt;
-            return cachedImageGenerationFn;
+        if (typeof AIService !== 'undefined' && AIService.generateImageFromPrompt) {
+            return AIService.generateImageFromPrompt;
         }
         return null;
     }

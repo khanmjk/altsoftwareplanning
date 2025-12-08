@@ -151,6 +151,102 @@ const InitiativeService = {
         });
         console.log("Finished ensuring all initiatives have a consistent planningYear.");
     },
+
+    /**
+     * Bulk-updates initiative fields (e.g., status/isProtected) that match criteria.
+     * @param {object} systemData - The global system data object.
+     * @param {object} updates - Fields to apply to each matching initiative (e.g., { status: 'Backlog' }).
+     * @param {object} criteria - Filter initiatives by { goalId, themeId, roiValue, confidenceLevel, status, isProtected }.
+     * @returns {object} Summary of updates applied.
+     */
+    bulkUpdateInitiatives(systemData, updates, criteria = {}) {
+        if (!systemData || !Array.isArray(systemData.yearlyInitiatives)) {
+            throw new Error('bulkUpdateInitiatives: systemData.yearlyInitiatives is unavailable.');
+        }
+        if (!updates || typeof updates !== 'object') {
+            throw new Error('bulkUpdateInitiatives: updates object is required.');
+        }
+
+        const targetInits = systemData.yearlyInitiatives.filter(init => this._initiativeMatchesCriteria(init, criteria, systemData));
+        targetInits.forEach(init => {
+            Object.assign(init, updates);
+        });
+
+        return {
+            updatedCount: targetInits.length,
+            appliedUpdates: updates,
+            criteria
+        };
+    },
+
+    /**
+     * Scales SDE-year estimates for assignments on matching initiatives by a factor.
+     * @param {object} systemData - The global system data object.
+     * @param {number} adjustmentFactor - Multiplier (0.9 reduces scope by 10%, 1.1 adds 10%).
+     * @param {object} criteria - Filter initiatives by { goalId, themeId, roiValue, confidenceLevel, status, isProtected }.
+     * @returns {object} Summary of adjustments made.
+     */
+    bulkAdjustInitiativeEstimates(systemData, adjustmentFactor, criteria = {}) {
+        if (!systemData || !Array.isArray(systemData.yearlyInitiatives)) {
+            throw new Error('bulkAdjustInitiativeEstimates: systemData.yearlyInitiatives is unavailable.');
+        }
+        const factor = Number(adjustmentFactor);
+        if (!isFinite(factor)) {
+            throw new Error('bulkAdjustInitiativeEstimates: adjustmentFactor must be a finite number.');
+        }
+
+        const targetInits = systemData.yearlyInitiatives.filter(init => this._initiativeMatchesCriteria(init, criteria, systemData));
+        const updates = [];
+
+        targetInits.forEach(init => {
+            const before = (init.assignments || []).map(a => ({ ...a }));
+            init.assignments = (init.assignments || []).map(a => {
+                const currentValue = Number(a.sdeYears) || 0;
+                const newValue = Number((currentValue * factor).toFixed(2));
+                return { ...a, sdeYears: newValue };
+            });
+            updates.push({ initiativeId: init.initiativeId, before, after: init.assignments });
+        });
+
+        return {
+            updatedCount: updates.length,
+            adjustmentFactor: factor,
+            updates,
+            criteria
+        };
+    },
+
+    /**
+     * Helper to check if initiative matches filter criteria.
+     * @private
+     */
+    _initiativeMatchesCriteria(initiative, criteria = {}, systemData = null) {
+        if (!criteria || Object.keys(criteria).length === 0) return true;
+
+        const matchesGoal = criteria.goalId
+            ? (initiative.primaryGoalId === criteria.goalId ||
+                (Array.isArray(systemData?.goals) && systemData.goals.some(g => g.goalId === criteria.goalId && (g.initiativeIds || []).includes(initiative.initiativeId))))
+            : true;
+        if (!matchesGoal) return false;
+
+        const matchesTheme = criteria.themeId ? Array.isArray(initiative.themes) && initiative.themes.includes(criteria.themeId) : true;
+        if (!matchesTheme) return false;
+
+        const matchesRoiValue = criteria.roiValue ? String(initiative.roi?.estimatedValue || '').toLowerCase() === String(criteria.roiValue).toLowerCase() : true;
+        if (!matchesRoiValue) return false;
+
+        const matchesConfidence = criteria.confidenceLevel ? String(initiative.roi?.confidenceLevel || '').toLowerCase() === String(criteria.confidenceLevel).toLowerCase() : true;
+        if (!matchesConfidence) return false;
+
+        const matchesStatus = criteria.status ? String(initiative.status || '').toLowerCase() === String(criteria.status).toLowerCase() : true;
+        if (!matchesStatus) return false;
+
+        const matchesProtection = typeof criteria.isProtected === 'boolean' ? initiative.isProtected === criteria.isProtected : true;
+        if (!matchesProtection) return false;
+
+        return true;
+    }
+
 };
 
 // Export for ES modules (future migration)

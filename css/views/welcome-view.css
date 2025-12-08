@@ -13,13 +13,13 @@
 
 .welcome-header__title {
     font-size: 2.5rem;
-    color: var(--color-gray-900);
+    color: var(--theme-text-primary);
     margin-bottom: 15px;
 }
 
 .welcome-header__subtitle {
     font-size: 1.1rem;
-    color: var(--color-gray-600);
+    color: var(--theme-text-secondary);
     max-width: 800px;
     margin: 0 auto;
 }
@@ -31,19 +31,19 @@
 }
 
 .action-card {
-    background: var(--color-white);
+    background: var(--theme-card-bg);
     padding: 30px;
     border-radius: var(--radius-lg);
-    border: 1px solid var(--color-gray-200);
+    border: 1px solid var(--theme-card-border);
     cursor: pointer;
     transition: all 0.2s;
-    box-shadow: var(--shadow-md);
+    box-shadow: var(--theme-card-shadow);
 }
 
 .action-card:hover {
     transform: translateY(-5px);
     box-shadow: var(--shadow-lg);
-    border-color: var(--color-gray-400);
+    border-color: var(--theme-border-color);
 }
 
 .action-card__icon-container {
@@ -58,24 +58,25 @@
 
 /* Modifiers for icon colors */
 .action-card__icon-container--blue {
-    background: #eff6ff;
-    color: var(--color-primary);
+    background: color-mix(in srgb, var(--theme-primary), transparent 90%);
+    color: var(--theme-primary);
 }
 
 .action-card__icon-container--green {
-    background: #f0fdf4;
-    color: var(--color-success);
+    background: color-mix(in srgb, var(--theme-success), transparent 90%);
+    color: var(--theme-success);
 }
 
 .action-card__icon-container--purple {
-    background: #f3e8ff;
+    background: color-mix(in srgb, #a855f7, transparent 90%);
+    /* Keeping purple as accent */
     color: #a855f7;
     /* No variable for purple yet, keeping hex */
 }
 
 .action-card__icon-container--gray {
-    background: var(--color-gray-50);
-    color: var(--color-gray-600);
+    background: var(--theme-bg-tertiary);
+    color: var(--theme-text-secondary);
 }
 
 .action-card__icon {
@@ -85,12 +86,12 @@
 .action-card__title {
     font-size: 1.25rem;
     margin-bottom: 10px;
-    color: #0f172a;
+    color: var(--theme-text-primary);
     /* Dark slate */
 }
 
 .action-card__description {
-    color: var(--color-gray-600);
+    color: var(--theme-text-secondary);
     font-size: 0.95rem;
 }
 

@@ -67,23 +67,24 @@
 .quarterly-roadmap-table {
     width: 100%;
     border-collapse: collapse;
-    background: var(--bg-card);
+    background: var(--theme-card-bg);
     border-radius: 8px;
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--theme-card-shadow);
 }
 
 .quarterly-roadmap-table th,
 .quarterly-roadmap-table td {
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--theme-border-color);
     padding: 10px;
     vertical-align: top;
 }
 
 .quarterly-roadmap-table th {
-    background: var(--bg-header);
+    background: var(--theme-bg-tertiary);
     font-weight: 600;
     text-align: center;
     position: sticky;
+    color: var(--theme-text-primary);
     top: 0;
     z-index: 10;
 }
@@ -131,27 +132,27 @@
 
 /* Status Colors for Cards */
 .initiative-card.status-backlog {
-    border-left-color: #6c757d;
+    border-left-color: var(--theme-text-secondary);
 }
 
 .initiative-card.status-committed {
-    border-left-color: #0d6efd;
+    border-left-color: var(--theme-primary);
 }
 
 .initiative-card.status-in-progress {
-    border-left-color: #ffc107;
+    border-left-color: var(--theme-warning);
 }
 
 .initiative-card.status-completed {
-    border-left-color: #198754;
+    border-left-color: var(--theme-success);
 }
 
 .initiative-card.status-blocked {
-    border-left-color: #dc3545;
+    border-left-color: var(--theme-danger);
 }
 
 .initiative-card.status-deferred {
-    border-left-color: #fd7e14;
+    border-left-color: var(--theme-warning);
 }
 
 /* Empty State */
@@ -168,7 +169,7 @@
     flex: 1;
     overflow: auto;
     padding: 24px;
-    background: var(--bg-body);
+    background: var(--theme-bg-secondary);
 }
 
 .roadmap-grid {
@@ -220,7 +221,7 @@
 }
 
 .roadmap-quarter-cell.column-Q3 {
-    background-color: #fffbf6;
+    background-color: var(--theme-bg-secondary);
 }
 
 .roadmap-quarter-cell.column-Q4 {
@@ -244,7 +245,7 @@
 }
 
 .header-Q4 {
-    border-top: 3px solid #9c27b0;
+    border-top: 33px solid #9c27b0;
     color: #7b1fa2;
 }
 
@@ -296,11 +297,11 @@
 .roadmap-quarter-cell {
     flex: 1;
     padding: 16px;
-    border-right: 1px solid var(--border-color);
+    border-right: 1px solid var(--theme-border-color);
     display: flex;
     flex-direction: column;
     gap: 12px;
-    background: var(--bg-card);
+    background: var(--theme-card-bg);
     transition: background-color 0.2s ease;
     overflow-y: auto;
     /* Allow individual column scrolling */
@@ -340,13 +341,13 @@
 
 /* Initiative Card */
 .roadmap-card {
-    background: var(--bg-primary);
-    border: 1px solid var(--border-color);
+    background: var(--theme-card-bg);
+    border: 1px solid var(--theme-card-border);
     border-left: 4px solid var(--primary-color);
-    border-radius: 6px;
+    border-radius: 4px;
     padding: 12px;
     cursor: grab;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--theme-card-shadow);
     transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
     user-select: none;
     position: relative;

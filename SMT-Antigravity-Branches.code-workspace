@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "worktrees/ux"
+		}
+	],
+	"settings": {
+		"chatgpt.openOnStartup": true,
+		"liveServer.settings.multiRootWorkspaceName": "ux"
+	}
+}
