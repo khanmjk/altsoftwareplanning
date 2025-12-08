@@ -1,7 +1,6 @@
 /* Main Layout Structure */
 :root {
-    --content-bg: #f1f5f9;
-    /* Slate 100 */
+    --content-bg: var(--theme-bg-secondary);
 }
 
 body {
