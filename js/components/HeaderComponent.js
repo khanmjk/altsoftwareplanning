@@ -179,7 +179,7 @@ class HeaderComponent {
             return;
         }
 
-        const homeIcon = '<span style="color: #64748b;"><i class="fas fa-home"></i></span>';
+        const homeIcon = '<span style="color: var(--theme-text-secondary);"><i class="fas fa-home"></i></span>';
         const separator = '<span class="canvas-header__breadcrumb-item"></span>'; // Use new separator style if possible, or just text
 
         let html = `${homeIcon}`;

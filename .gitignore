@@ -27,3 +27,4 @@ jspm_packages/
 # Build output
 dist/
 build/
+worktrees/

@@ -7,9 +7,16 @@
         {
             "type": "chrome",
             "request": "launch",
-            "name": "Launch Chrome against localhost",
-            "url": "http://127.0.0.1:5501/index.html",
+            "name": "Launch Chrome (Root - Port 5500)",
+            "url": "http://127.0.0.1:5500/index.html",
             "webRoot": "${workspaceFolder}"
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "UX Agent: Server at Worktree (Port 5501)",
+            "url": "http://127.0.0.1:5501/index.html",
+            "webRoot": "${workspaceFolder}/worktrees/ux"
         }
     ]
 }
