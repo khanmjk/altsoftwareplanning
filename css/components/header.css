@@ -1,6 +1,7 @@
 /* Header Styling */
 :root {
-    --header-bg: #ffffff;
+    --header-bg: var(--theme-header-bg);
+    --header-text: var(--theme-header-text);
     --header-border: #e2e8f0;
     --header-height: 60px;
 }

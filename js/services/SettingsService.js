@@ -15,7 +15,8 @@ const DEFAULT_SETTINGS = {
         provider: 'google-gemini',
         apiKey: null
     },
-    // Future settings (theme, autoSave, etc.) can be added here
+    theme: 'light', // Theme preference
+    // Future settings (autoSave, etc.) can be added here
 };
 
 const SettingsService = {

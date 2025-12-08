@@ -2,60 +2,60 @@
 
 /* Initiative Card - Used across planning, roadmap, capacity views */
 .initiative-card {
-    background-color: #ffffff;
-    border: 1px solid #ccc;
-    border-left: 5px solid #007bff;
+    background-color: var(--theme-card-bg);
+    border: 1px solid var(--theme-card-border);
+    border-left: 5px solid var(--theme-primary);
     border-radius: 4px;
     padding: 8px;
     margin-bottom: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--theme-card-shadow);
     cursor: help;
-    transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
 }
 
 .initiative-card:hover {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    border-color: #999;
+    border-color: var(--theme-border-color);
 }
 
 .initiative-title {
     font-weight: 500;
     font-size: 0.9em;
     margin-bottom: 4px;
+    color: var(--theme-text-primary);
 }
 
 .initiative-sde {
     font-size: 0.8em;
-    color: #555;
+    color: var(--theme-text-secondary);
     text-align: right;
 }
 
 /* Mini Initiative Card - Smaller variant */
 .mini-initiative-card {
-    background-color: #ffffff;
-    border: 1px solid #ddd;
-    border-left: 3px solid #007bff;
+    background-color: var(--theme-card-bg);
+    border: 1px solid var(--theme-card-border);
+    border-left: 3px solid var(--theme-primary);
     border-radius: 3px;
     padding: 6px;
     margin-bottom: 6px;
     font-size: 0.85em;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--theme-card-shadow);
 }
 
 .mini-initiative-card:hover {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    border-left-color: #0056b3;
+    border-left-color: var(--theme-primary-hover);
 }
 
 /* Section Cards - Subsections within views */
 #addInitiativeSection,
 .service-edit {
-    background-color: #ffffff;
-    border: 1px solid #e0e0e0;
+    background-color: var(--theme-card-bg);
+    border: 1px solid var(--theme-card-border);
     border-radius: 4px;
     padding: 15px;
     margin-bottom: 20px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--theme-card-shadow);
 }
 
 /* Content within section cards */

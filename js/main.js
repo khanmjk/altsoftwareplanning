@@ -105,6 +105,9 @@ window.onload = async function () {
     // Initialize Settings
     SettingsService.init();
 
+    // Initialize Theme (must be after Settings)
+    ThemeService.init();
+
     // Initialize Managers
     window.navigationManager = new NavigationManager();
 
