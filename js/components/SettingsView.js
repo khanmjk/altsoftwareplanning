@@ -133,6 +133,12 @@ class SettingsView {
         if (randomBtn) {
             randomBtn.addEventListener('click', this.handleRandomTheme.bind(this));
         }
+
+        // Live Preview: Bind change event to theme selector
+        const themeSelect = document.getElementById('themeSelect_view');
+        if (themeSelect) {
+            themeSelect.addEventListener('change', this.handleThemeChange.bind(this));
+        }
     }
 
     /**
@@ -580,11 +586,23 @@ class SettingsView {
     }
 
     /**
+     * Handle theme preview on selection change
+     * @param {Event} event - Change event
+     */
+    handleThemeChange(event) {
+        const themeId = event.target.value;
+        // Apply theme but DO NOT persist settings yet
+        ThemeService.applyTheme(themeId, false);
+    }
+
+    /**
      * Handle random theme generation
      */
     handleRandomTheme() {
         const randomTheme = ThemeService.generateRandomTheme();
-        ThemeService.applyTheme(randomTheme.id);
+
+        // Preview random theme (do not persist)
+        ThemeService.applyTheme(randomTheme.id, false);
 
         // Update UI to show random theme
         const themeSelect = document.getElementById('themeSelect_view');
@@ -600,10 +618,11 @@ class SettingsView {
                 themeSelect.appendChild(randomOption);
             }
             themeSelect.value = randomTheme.id;
-            currentDisplay.textContent = randomTheme.name;
+            // We don't update currentDisplay text until Applied, or maybe we do?
+            // Let's keep it consistent: visual preview only.
         }
 
-        notificationManager.showToast('Random theme generated!', 'success');
+        notificationManager.showToast('Random theme generated (Preview)', 'info');
     }
 
     /**
