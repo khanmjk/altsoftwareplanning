@@ -16,7 +16,7 @@
     height: 100vh;
     width: 0;
     overflow: hidden;
-    background-color: var(--theme-bg-primary);
+    background-color: var(--theme-sidebar-bg);
     border-left: 1px solid var(--theme-border-color);
     box-shadow: -2px 0 10px rgba(0, 0, 0, 0.08);
     display: flex;

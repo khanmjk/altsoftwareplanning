@@ -35,28 +35,33 @@
 }
 
 /* D3 Visualization Common Styles */
-.visualization-node {
+/* D3 Visualization Common Styles - Matching BaseVisualization.js structure */
+.nodes circle {
     cursor: pointer;
     stroke: var(--theme-text-primary);
-    stroke-width: 2px;
+    stroke-width: 1.5px;
+    /* Default fill */
 }
 
-.visualization-node:hover {
+.nodes circle:hover {
     stroke-width: 3px;
     filter: brightness(1.1);
 }
 
-.visualization-link {
-    stroke: var(--theme-border-color);
+.links line {
+    stroke: var(--theme-text-muted);
+    /* Better visibility than border-color */
     stroke-opacity: 0.6;
     stroke-width: 1.5px;
 }
 
-.visualization-label {
-    font-family: Arial, sans-serif;
+.labels text {
+    font-family: 'Inter', sans-serif;
     font-size: 10px;
     pointer-events: none;
     fill: var(--theme-text-primary);
+    text-shadow: 0 0 3px var(--theme-bg-primary);
+    /* Halo for readability */
 }
 
 .legend-item text {

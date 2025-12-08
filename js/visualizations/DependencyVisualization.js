@@ -155,7 +155,7 @@ class DependencyVisualization extends BaseVisualization {
             .attr('font-size', '10px')
             .style('pointer-events', 'none')
             .attr('font-weight', d => d.id === this.selectedServiceName ? 'bold' : 'normal')
-            .attr('fill', d => d.id === this.selectedServiceName ? 'red' : 'black');
+            .attr('font-weight', d => d.id === this.selectedServiceName ? 'bold' : 'normal');
     }
 
     /**

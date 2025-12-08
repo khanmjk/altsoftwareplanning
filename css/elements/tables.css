@@ -24,6 +24,14 @@ thead th {
     color: var(--theme-text-primary);
 }
 
+/* Tabulator Header Filters */
+.tabulator-header-filter input,
+.tabulator-header-filter select {
+    background-color: var(--theme-bg-primary) !important;
+    color: var(--theme-text-primary) !important;
+    border: 1px solid var(--theme-border-color) !important;
+}
+
 /* Striped rows for better readability */
 tbody tr:nth-child(even) {
     background-color: var(--theme-bg-tertiary);

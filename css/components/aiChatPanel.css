@@ -3,6 +3,52 @@
     --ai-chat-input-height: 80px;
 }
 
+#aiChatPanel {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    background-color: var(--theme-sidebar-bg);
+    border-left: 1px solid var(--theme-border-color);
+    color: var(--theme-sidebar-text);
+}
+
+#aiChatPanel .modal-header {
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    background-color: var(--theme-bg-secondary);
+    border-bottom: 1px solid var(--theme-border-color);
+    padding: 10px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#aiChatTitle {
+    margin: 0;
+    font-size: 1.2em;
+    color: var(--theme-text-primary);
+}
+
+#aiChatPanel .close-button {
+    color: var(--theme-text-secondary);
+    cursor: pointer;
+    font-size: 1.5em;
+    line-height: 1;
+}
+
+#aiChatPanel .close-button:hover {
+    color: var(--theme-text-primary);
+}
+
+#aiChatLog {
+    flex-grow: 1;
+    padding: 10px;
+    overflow-y: auto;
+    background-color: transparent !important;
+    border-bottom: 1px solid var(--theme-border-color);
+}
+
 #aiChatLog .chat-message {
     padding: 8px 12px;
     border-radius: 18px;
@@ -20,27 +66,93 @@
 }
 
 #aiChatLog .ai-message {
-    background-color: var(--theme-bg-tertiary);
+    background-color: var(--theme-bg-secondary);
     color: var(--theme-text-primary);
     margin-right: auto;
     border-bottom-left-radius: 4px;
+    border: 1px solid var(--theme-border-color);
 }
 
 #aiChatLog .chat-message.loading {
     font-style: italic;
-    color: #6c757d;
+    color: var(--theme-text-muted);
 }
 
-/* --- [NEW] Styles for Markdown Content --- */
+#aiChatSuggestions {
+    padding: 8px 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    border-top: 1px solid var(--theme-border-color);
+    border-bottom: 1px solid var(--theme-border-color);
+    background: transparent !important;
+}
+
+#aiChatUsageDisplay {
+    font-size: 0.8em;
+    color: var(--theme-text-muted);
+    text-align: right;
+    padding: 0 10px 5px 10px;
+}
+
+#aiChatInputContainer {
+    padding: 10px;
+    border-top: 1px solid var(--theme-border-color);
+    position: relative;
+    background-color: var(--theme-sidebar-bg);
+}
+
+#aiChatCommandPopup {
+    display: none;
+    background-color: var(--theme-sidebar-bg);
+    border: 1px solid var(--theme-border-color);
+    position: absolute;
+    bottom: calc(var(--ai-chat-input-height, 80px) + 20px);
+    left: 10px;
+    right: 10px;
+    border-radius: 6px;
+    box-shadow: var(--theme-card-shadow);
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 5;
+    padding: 6px 0;
+}
+
+#aiChatInput {
+    width: 100%;
+    min-height: 70px;
+    max-height: 280px;
+    border: 1px solid var(--theme-border-color);
+    background-color: var(--theme-bg-primary);
+    color: var(--theme-text-primary);
+    border-radius: 4px;
+    resize: vertical;
+    box-sizing: border-box;
+    padding: 6px 8px;
+    line-height: 1.4;
+    font-size: 0.95em;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#aiChatInput:focus {
+    border-color: var(--theme-primary);
+    box-shadow: 0 0 0 2px rgba(var(--theme-primary-rgb), 0.25);
+    outline: none;
+}
+
+#aiChatSendButton {
+    width: 100%;
+    margin-top: 5px;
+}
+
+/* --- Styles for Markdown Content --- */
 
 .ai-message {
-    /* Make the message a positioning context for the copy button */
     position: relative;
 }
 
 .ai-message p {
     margin: 0 0 0.5em 0;
-    /* Add space between paragraphs */
 }
 
 .ai-message p:last-child {
@@ -50,7 +162,6 @@
 .ai-message ul,
 .ai-message ol {
     padding-left: 20px;
-    /* Indent lists */
     margin: 0.5em 0;
 }
 
@@ -59,90 +170,109 @@
     line-height: 1.5;
 }
 
-/* Inline code */
 .ai-message code {
     font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-    background-color: var(--theme-bg-secondary);
+    background-color: var(--theme-bg-tertiary);
     border: 1px solid var(--theme-border-color);
     padding: 0.1em 0.4em;
     border-radius: 3px;
     font-size: 0.85em;
+    color: var(--theme-text-primary);
 }
 
-/* Code blocks */
 .ai-message pre {
     background-color: #212529;
-    /* Dark background for code blocks */
+    /* Keep code blocks dark */
     color: #f8f9fa;
     padding: 10px;
     border-radius: 4px;
     overflow-x: auto;
-    /* Allow horizontal scrolling */
     font-size: 0.85em;
     line-height: 1.4;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
-/* --- [NEW] Styles for Copy Button --- */
+.ai-message table {
+    border-collapse: collapse;
+    margin: 1em 0;
+    font-size: 0.9em;
+    width: 100%;
+}
+
+.ai-message th,
+.ai-message td {
+    border: 1px solid var(--theme-border-color);
+    padding: 6px 10px;
+}
+
+.ai-message th {
+    background-color: var(--theme-bg-tertiary);
+    font-weight: bold;
+}
+
+.ai-message tr:nth-child(even) {
+    background-color: var(--theme-bg-tertiary);
+}
+
+/* Copy Button */
 .chat-copy-button {
     position: absolute;
     top: 5px;
     right: 5px;
     background: none;
     border: none;
-    color: var(--theme-text-secondary);
+    color: var(--theme-text-muted);
     cursor: pointer;
     font-size: 0.9em;
     padding: 3px 6px;
     border-radius: 4px;
     opacity: 0;
-    /* Hide by default */
     transition: opacity 0.2s ease, background-color 0.2s ease;
 }
 
 .ai-message:hover .chat-copy-button {
     opacity: 1;
-    /* Show on hover */
 }
 
 .chat-copy-button:hover {
-    background-color: #dee2e6;
-    /* Light gray background on button hover */
-    color: #212529;
+    background-color: var(--theme-bg-tertiary);
+    color: var(--theme-text-primary);
 }
 
 .chat-copy-button .fa-check {
     color: var(--theme-success);
 }
 
-/* --- [NEW] Styles for Suggestion Pills with Icons --- */
+/* Suggestion Pills */
 .suggestion-pill {
     display: inline-flex;
     align-items: center;
     gap: 6px;
     padding: 6px 12px;
     border-radius: 999px;
-    background-color: #f1f3f5;
-    color: #212529;
+    background-color: var(--theme-bg-secondary);
+    color: var(--theme-text-primary);
     font-size: 0.85rem;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--theme-border-color);
     cursor: pointer;
     transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .suggestion-pill:hover {
-    background-color: #e2e6ea;
-    border-color: #c1c9d0;
+    background-color: var(--theme-bg-tertiary);
+    border-color: var(--theme-border-color);
 }
 
 .suggestion-pill .fa-image {
-    color: #007bff;
+    color: var(--theme-primary);
 }
 
-/* --- [NEW] Styles for Generated Images in Chat --- */
+/* Generated Images */
 .ai-message .chat-generated-image {
     max-width: 100%;
     border-radius: 4px;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--theme-border-color);
     margin-top: 5px;
 }
 
@@ -155,43 +285,7 @@
     font-weight: 600;
 }
 
-#aiChatInput {
-    width: 100%;
-    min-height: 70px;
-    max-height: 280px;
-    resize: vertical;
-    border: 1px solid var(--theme-border-color);
-    border-radius: 4px;
-    padding: 6px 8px;
-    line-height: 1.4;
-    font-size: 0.95em;
-    box-sizing: border-box;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-#aiChatInput:focus {
-    border-color: var(--theme-primary);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-primary), transparent 85%);
-    outline: none;
-}
-
-#aiChatCommandPopup {
-    position: absolute;
-    bottom: calc(var(--ai-chat-input-height, 80px) + 20px);
-    left: 10px;
-    right: 10px;
-    left: 10px;
-    right: 10px;
-    background: var(--theme-card-bg);
-    border: 1px solid var(--theme-border-color);
-    border-radius: 6px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    max-height: 220px;
-    overflow-y: auto;
-    z-index: 5;
-    padding: 6px 0;
-}
-
+/* Command Popup Options */
 .ai-command-option {
     padding: 8px 12px;
     cursor: pointer;
@@ -218,131 +312,5 @@
 
 .ai-command-option .command-desc {
     font-size: 0.85em;
-    color: #495057;
-}
-
-.ai-message {
-    /* Make the message a positioning context for the copy button */
-    position: relative;
-    /* Remove padding, as it will be on the child */
-}
-
-/* [NEW] This container holds the rendered markdown */
-.chat-content-container {
-    padding-right: 30px;
-    /* Space for the copy button */
-}
-
-.ai-message p {
-    margin: 0 0 0.5em 0;
-    /* Add space between paragraphs */
-}
-
-.ai-message p:last-child {
-    margin-bottom: 0;
-}
-
-.ai-message ul,
-.ai-message ol {
-    padding-left: 20px;
-    /* Indent lists */
-    margin: 0.5em 0;
-}
-
-.ai-message li {
-    margin-bottom: 0.25em;
-    line-height: 1.5;
-}
-
-/* Inline code */
-.ai-message code {
-    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-    background-color: #f8f9fa;
-    /* Light background */
-    border: 1px solid #dee2e6;
-    padding: 0.1em 0.4em;
-    border-radius: 3px;
-    font-size: 0.85em;
-}
-
-/* Code blocks */
-.ai-message pre {
-    background-color: #212529;
-    /* Dark background for code blocks */
-    color: #f8f9fa;
-    padding: 10px;
-    border-radius: 4px;
-    overflow-x: auto;
-    /* Allow horizontal scrolling */
-    font-size: 0.85em;
-    line-height: 1.4;
-    max-width: 100%;
-    box-sizing: border-box;
-}
-
-/* Markdown Tables */
-.ai-message table {
-    border-collapse: collapse;
-    margin: 1em 0;
-    font-size: 0.9em;
-    width: 100%;
-}
-
-.ai-message th,
-.ai-message td {
-    border: 1px solid #dee2e6;
-    padding: 6px 10px;
-}
-
-.ai-message th {
-    background-color: #f8f9fa;
-    font-weight: bold;
-}
-
-.ai-message tr:nth-child(even) {
-    background-color: #f8f9fa;
-}
-
-/* --- [NEW] Styles for Copy Button --- */
-.chat-copy-button {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    background: none;
-    border: none;
-    color: #6c757d;
-    /* Muted gray */
-    cursor: pointer;
-    font-size: 0.9em;
-    padding: 3px 6px;
-    border-radius: 4px;
-    opacity: 0;
-    /* Hide by default */
-    transition: opacity 0.2s ease, background-color 0.2s ease;
-}
-
-.ai-message:hover .chat-copy-button {
-    opacity: 1;
-    /* Show on hover */
-}
-
-.chat-copy-button:hover {
-    background-color: #dee2e6;
-    /* Light gray background on button hover */
-    color: #212529;
-}
-
-.chat-copy-button .fa-check {
-    color: #28a745;
-    /* Green checkmark */
-}
-
-.ai-chat-suggestions {
-    padding: 8px 10px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    border-top: 1px solid #f1f1f1;
-    border-bottom: 1px solid #ccc;
-    background: #fff;
+    color: var(--theme-text-secondary);
 }

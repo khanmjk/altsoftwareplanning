@@ -5,8 +5,11 @@ input[type="number"],
 input[type="email"],
 input[type="password"],
 input[type="date"],
+input[type="search"],
 textarea,
-select {
+select,
+.form-select,
+.form-control {
     display: block;
     width: 100%;
     padding: 0.5rem 0.75rem;

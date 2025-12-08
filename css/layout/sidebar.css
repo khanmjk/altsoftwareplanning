@@ -27,13 +27,15 @@
 
 /* Logo Area */
 #sidebar .logo-area {
-    padding: 20px;
+    padding: 0 24px;
+    height: 64px;
     display: flex;
     align-items: center;
     color: var(--theme-text-primary);
     font-weight: 700;
     font-size: 1.1rem;
     border-bottom: 1px solid var(--theme-border-color);
+    box-sizing: border-box;
 }
 
 #sidebar .logo-icon {

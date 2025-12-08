@@ -105,7 +105,7 @@
 }
 
 /* ==========================================================================
-   Tabulator Modern Overrides (Workspace Canvas Contract)
+   Tabulator Modern Overrides (Workspace Canvas Contract) - THEME AWARE
    ========================================================================== */
 
 /* 1. Reset & Transparency */
@@ -117,19 +117,19 @@
 
 /* 2. Header Styling */
 .tabulator .tabulator-header {
-    background-color: transparent !important;
-    border-bottom: 2px solid var(--color-gray-300) !important;
+    background-color: var(--theme-bg-secondary) !important;
+    border-bottom: 2px solid var(--theme-border-color) !important;
     border-top: none !important;
     border-left: none !important;
     border-right: none !important;
-    color: var(--color-gray-700) !important;
+    color: var(--theme-text-primary) !important;
     font-weight: 600 !important;
 }
 
 .tabulator .tabulator-header .tabulator-col {
     background-color: transparent !important;
-    border-right: none !important;
-    /* Remove vertical separators */
+    border-right: 1px solid var(--theme-border-color) !important;
+    /* kept border for clarity but themed */
 }
 
 .tabulator .tabulator-header .tabulator-col .tabulator-col-content {
@@ -139,89 +139,98 @@
 /* 3. Row Styling */
 .tabulator .tabulator-tableholder .tabulator-table {
     background-color: transparent !important;
+    color: var(--theme-text-primary) !important;
 }
 
 .tabulator-row {
-    background-color: transparent !important;
-    border-bottom: 1px solid var(--color-gray-200) !important;
-    color: var(--color-gray-800) !important;
+    background-color: var(--theme-bg-primary) !important;
+    border-bottom: 1px solid var(--theme-border-color) !important;
+    color: var(--theme-text-primary) !important;
 }
 
 .tabulator-row:nth-child(even) {
-    background-color: rgba(255, 255, 255, 0.3) !important;
-    /* Very subtle stripe */
+    background-color: var(--theme-bg-tertiary) !important;
 }
 
 .tabulator-row:hover {
-    background-color: rgba(255, 255, 255, 0.6) !important;
-    /* Subtle hover effect */
+    background-color: var(--theme-bg-secondary) !important;
     cursor: pointer;
+    filter: brightness(1.1);
 }
 
 .tabulator-row.tabulator-selected {
-    background-color: rgba(59, 130, 246, 0.1) !important;
-    /* Light blue selection */
+    background-color: var(--theme-accent) !important;
+    /* Use accent color */
+    color: white !important;
 }
 
 /* 4. Cell Styling */
 .tabulator-row .tabulator-cell {
-    border-right: none !important;
-    /* Remove vertical separators */
+    border-right: 1px solid var(--theme-border-color) !important;
     padding: 10px 8px !important;
     height: auto !important;
-    /* Allow wrapping if needed */
     align-content: center;
 }
 
 /* 5. Footer/Pagination Styling */
 .tabulator .tabulator-footer {
-    background-color: transparent !important;
-    border-top: 1px solid var(--color-gray-300) !important;
+    background-color: var(--theme-bg-secondary) !important;
+    border-top: 1px solid var(--theme-border-color) !important;
     padding: 10px 0 !important;
 }
 
 .tabulator .tabulator-footer .tabulator-page {
-    background: transparent !important;
-    border: 1px solid var(--color-gray-300) !important;
-    color: var(--color-gray-600) !important;
+    background: var(--theme-bg-primary) !important;
+    border: 1px solid var(--theme-border-color) !important;
+    color: var(--theme-text-primary) !important;
     border-radius: 4px !important;
     margin: 0 2px !important;
 }
 
+.tabulator .tabulator-footer .tabulator-page[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 .tabulator .tabulator-footer .tabulator-page.active {
-    background: var(--color-primary) !important;
+    background: var(--theme-primary) !important;
     color: white !important;
-    border-color: var(--color-primary) !important;
+    border-color: var(--theme-primary) !important;
 }
 
-.tabulator .tabulator-footer .tabulator-page:hover {
-    background: var(--color-gray-100) !important;
-    color: var(--color-gray-900) !important;
+.tabulator .tabulator-footer .tabulator-page:hover:not(.active) {
+    background: var(--theme-bg-tertiary) !important;
+    color: var(--theme-text-primary) !important;
 }
 
-/* 6. Remove "90s" Bevels/Shadows */
+/* 6. Header Filter Inputs */
 .tabulator-header-filter input {
-    border: 1px solid var(--color-gray-300) !important;
+    border: 1px solid var(--theme-border-color) !important;
     border-radius: 4px !important;
     padding: 4px 8px !important;
-    background: rgba(255, 255, 255, 0.8) !important;
+    background: var(--theme-bg-primary) !important;
+    color: var(--theme-text-primary) !important;
 }
 
-/* 7. Scrollbars (Optional polish) */
+.tabulator-header-filter input::placeholder {
+    color: var(--theme-text-secondary);
+}
+
+/* 7. Scrollbars */
 .tabulator-tableholder::-webkit-scrollbar {
     width: 8px;
     height: 8px;
 }
 
 .tabulator-tableholder::-webkit-scrollbar-track {
-    background: transparent;
+    background: var(--theme-bg-secondary);
 }
 
 .tabulator-tableholder::-webkit-scrollbar-thumb {
-    background: var(--color-gray-300);
+    background: var(--theme-border-color);
     border-radius: 4px;
 }
 
 .tabulator-tableholder::-webkit-scrollbar-thumb:hover {
-    background: var(--color-gray-400);
+    background: var(--theme-text-muted);
 }
