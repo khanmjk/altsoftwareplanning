@@ -155,14 +155,14 @@ button.btn-small,
 }
 
 .btn--primary {
-    color: #fff;
-    background-color: #007bff;
-    border-color: #007bff;
+    color: #ffffff;
+    background-color: var(--theme-primary);
+    border-color: var(--theme-primary);
 }
 
 .btn--primary:hover {
-    background-color: #0069d9;
-    border-color: #0062cc;
+    background-color: var(--theme-primary-hover);
+    border-color: var(--theme-primary-active);
 }
 
 .btn--gradient {

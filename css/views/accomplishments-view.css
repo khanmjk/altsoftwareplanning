@@ -16,8 +16,8 @@
 
 /* Accomplishment Card */
 .accomplishment-card {
-    background: var(--color-white);
-    border: 1px solid var(--color-gray-300);
+    background: var(--theme-card-bg);
+    border: 1px solid var(--theme-card-border);
     border-radius: var(--radius-md);
     padding: var(--space-lg);
     margin-bottom: var(--space-lg);
@@ -26,7 +26,7 @@
 }
 
 .accomplishment-card:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--theme-card-shadow);
 }
 
 /* Header */
@@ -36,22 +36,23 @@
     align-items: flex-start;
     margin-bottom: var(--space-md);
     padding-bottom: var(--space-sm);
-    border-bottom: 2px solid var(--color-gray-200);
+    border-bottom: 2px solid var(--theme-border-color);
 }
 
 .accomplishment-title {
     margin: 0;
     font-size: 1.25rem;
+    font-size: 1.25rem;
     font-weight: 600;
-    color: var(--color-gray-900);
+    color: var(--theme-text-primary);
     flex: 1;
 }
 
 .accomplishment-date {
     font-size: 0.875rem;
-    color: var(--color-gray-600);
+    color: var(--theme-text-secondary);
     font-weight: 500;
-    background: var(--color-gray-100);
+    background: var(--theme-bg-tertiary);
     padding: 4px 12px;
     border-radius: var(--radius-sm);
     white-space: nowrap;
@@ -60,14 +61,14 @@
 
 /* Description */
 .accomplishment-description {
-    color: var(--color-gray-700);
+    color: var(--theme-text-primary);
     line-height: 1.6;
     margin-bottom: var(--space-md);
 }
 
 /* Details */
 .accomplishment-details {
-    background: var(--color-gray-50);
+    background: var(--theme-bg-secondary);
     padding: var(--space-md);
     border-radius: var(--radius-sm);
     margin-bottom: var(--space-md);
@@ -75,7 +76,7 @@
 
 .accomplishment-details>div {
     margin-bottom: 8px;
-    color: var(--color-gray-700);
+    color: var(--theme-text-primary);
     font-size: 0.9rem;
 }
 
@@ -84,7 +85,7 @@
 }
 
 .accomplishment-details strong {
-    color: var(--color-gray-900);
+    color: var(--theme-text-primary);
     font-weight: 600;
 }
 
@@ -94,15 +95,15 @@
     justify-content: space-between;
     align-items: center;
     padding-top: var(--space-md);
-    border-top: 1px solid var(--color-gray-200);
+    border-top: 1px solid var(--theme-border-color);
     font-size: 0.9rem;
 }
 
 .accomplishment-footer strong {
-    color: var(--color-gray-900);
+    color: var(--theme-text-primary);
     font-weight: 600;
 }
 
 .accomplishment-footer span {
-    color: var(--color-gray-700);
+    color: var(--theme-text-secondary);
 }
