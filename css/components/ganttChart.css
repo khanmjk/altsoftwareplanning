@@ -41,7 +41,7 @@
 .gantt-resizer {
     width: 10px;
     cursor: col-resize;
-    background: linear-gradient(90deg, transparent 0%, #d9d9d9 50%, transparent 100%);
+    background: linear-gradient(90deg, transparent 0%, var(--theme-border-color) 50%, transparent 100%);
     border-radius: 6px;
     margin: 4px 0;
     position: relative;
@@ -57,14 +57,14 @@
     bottom: 0;
     left: 4px;
     width: 2px;
-    background: #b5b5b5;
+    background: var(--theme-border-color);
     opacity: 0.7;
 }
 
 .gantt-panel {
-    border: 1px solid var(--theme-border-color);
-    border-radius: 6px;
-    background: var(--theme-card-bg);
+    border: none;
+    border-radius: 0;
+    background: transparent;
     padding: 8px;
     display: flex;
     flex-direction: column;
@@ -76,8 +76,8 @@
     flex: 1;
     min-height: 0;
     overflow: auto;
-    border: 1px solid var(--theme-border-color);
-    border-radius: 4px;
+    border: none;
+    border-radius: 0;
 }
 
 .gantt-table thead th {
@@ -86,7 +86,7 @@
     line-height: 16px;
     position: sticky;
     top: 0;
-    background: #fff;
+    background: var(--theme-bg-primary);
     z-index: 2;
 }
 
@@ -95,9 +95,9 @@
     min-height: 0;
     height: 100%;
     overflow: auto;
-    background-color: var(--theme-card-bg);
+    background-color: transparent;
     padding: 0;
-    border: 1px solid var(--theme-border-color);
+    border: none;
     position: relative;
     display: block;
 }
@@ -113,13 +113,13 @@
 }
 
 .gantt-table .gantt-focus-initiative {
-    background: linear-gradient(90deg, #eef3ff 0%, #f7faff 100%);
-    box-shadow: inset 3px 0 0 #5b8def;
+    background: color-mix(in srgb, var(--theme-primary), transparent 90%);
+    box-shadow: inset 3px 0 0 var(--theme-primary);
 }
 
 .gantt-table .gantt-focus-row {
-    background: linear-gradient(90deg, #e8f1ff 0%, #f2f7ff 100%);
-    box-shadow: inset 3px 0 0 #2f6fed;
+    background: color-mix(in srgb, var(--theme-primary), transparent 85%);
+    box-shadow: inset 3px 0 0 var(--theme-primary);
 }
 
 .gantt-table .gantt-focus-row input,
@@ -144,6 +144,78 @@
     height: 100%;
     min-height: 100%;
 }
+
+/* Frappe Gantt Container Theme Overrides */
+.gantt-container {
+    background: var(--theme-bg-primary) !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.gantt-container .gantt {
+    background: var(--theme-bg-primary) !important;
+}
+
+.gantt-container svg {
+    background: var(--theme-bg-primary) !important;
+}
+
+/* Target dynamically created Frappe wrapper divs */
+.gantt-chart-box>div,
+.gantt-chart-box>div>div,
+[id^="frappe-gantt-"] {
+    background: var(--theme-bg-primary) !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Override any default Frappe white backgrounds */
+.gantt,
+.gantt svg,
+.gantt-container>svg {
+    background: var(--theme-bg-primary) !important;
+    background-color: var(--theme-bg-primary) !important;
+}
+
+/* Frappe Grid Lines */
+.gantt .grid-background {
+    fill: var(--theme-bg-primary) !important;
+    stroke: none !important;
+}
+
+.gantt .grid-header {
+    fill: var(--theme-bg-secondary) !important;
+    stroke: none !important;
+}
+
+.gantt .grid-row {
+    fill: var(--theme-bg-primary) !important;
+}
+
+.gantt .grid-row:nth-child(even) {
+    fill: var(--theme-bg-secondary) !important;
+}
+
+.gantt .row-line {
+    stroke: var(--theme-border-light) !important;
+}
+
+.gantt .tick {
+    stroke: var(--theme-border-light) !important;
+}
+
+.gantt .tick text,
+.gantt .lower-text,
+.gantt .upper-text {
+    fill: var(--theme-text-secondary) !important;
+}
+
+/* Remove any outer borders from Frappe SVG */
+.gantt svg>rect:first-child {
+    stroke: none !important;
+    fill: var(--theme-bg-primary) !important;
+}
+
 
 .gantt .bar-wrapper.locked-task .bar,
 .gantt .bar-wrapper.locked-task .bar-progress {
@@ -254,11 +326,11 @@
     top: 110%;
     left: 0;
     min-width: 220px;
-    background: #fff;
-    border: 1px solid #ddd;
+    background: var(--theme-bg-primary);
+    border: 1px solid var(--theme-border-color);
     border-radius: 4px;
     padding: 6px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--theme-card-shadow);
     display: none;
     z-index: 5;
 }
@@ -278,7 +350,7 @@
 
 .gantt-predecessor-empty {
     font-size: 12px;
-    color: #777;
+    color: var(--theme-text-muted);
 }
 
 .mermaid .task rect {
@@ -299,13 +371,13 @@
 }
 
 .mermaid .taskText {
-    fill: #333 !important;
+    fill: var(--theme-text-primary) !important;
     font-weight: 500 !important;
 }
 
 .mermaid .sectionTitle {
     font-weight: bold !important;
-    fill: #212529 !important;
+    fill: var(--theme-text-primary) !important;
 }
 
 /* View Mode Buttons */
@@ -313,15 +385,15 @@
     display: inline-flex;
     border-radius: 4px;
     overflow: hidden;
-    border: 1px solid #ccc;
+    border: 1px solid var(--theme-border-color);
 }
 
 .btn-group .btn-sm {
     padding: 4px 10px;
     font-size: 12px;
     border: none;
-    border-right: 1px solid #ccc;
-    background-color: #fff;
+    border-right: 1px solid var(--theme-border-color);
+    background-color: var(--theme-bg-primary);
     cursor: pointer;
     transition: background-color 0.2s;
 }
@@ -331,7 +403,7 @@
 }
 
 .btn-group .btn-sm:hover {
-    background-color: #f0f0f0;
+    background-color: var(--theme-bg-secondary);
 }
 
 .btn-group .btn-sm.active {
@@ -352,14 +424,13 @@
 
 .gantt .bar-wrapper.gantt-initiative .bar {
     fill: #6f42c1 !important;
-    opacity: 0.2 !important;
+    opacity: 0.35 !important;
 }
 
 .gantt .bar-wrapper.gantt-initiative .bar-label {
     font-weight: 800 !important;
     font-size: 14px !important;
-    fill: #333 !important;
-    /* Dark text for better contrast */
+    fill: var(--theme-text-primary) !important;
 }
 
 /* Work Package: Standard, Blue */
@@ -369,13 +440,13 @@
 
 .gantt .bar-wrapper.gantt-work-package .bar {
     fill: #0366d6 !important;
-    opacity: 0.2 !important;
+    opacity: 0.35 !important;
 }
 
 .gantt .bar-wrapper.gantt-work-package .bar-label {
     font-weight: 600 !important;
     font-size: 13px !important;
-    fill: #333 !important;
+    fill: var(--theme-text-primary) !important;
 }
 
 /* Assignment: Thinner, Green, Italic */
@@ -385,14 +456,14 @@
 
 .gantt .bar-wrapper.gantt-assignment .bar {
     fill: #2ea44f !important;
-    opacity: 0.2 !important;
+    opacity: 0.35 !important;
 }
 
 .gantt .bar-wrapper.gantt-assignment .bar-label {
     font-weight: 500 !important;
     font-size: 12px !important;
     font-style: italic !important;
-    fill: #444 !important;
+    fill: var(--theme-text-secondary) !important;
 }
 
 /* Status Colors Override - Ensure specificity */
@@ -416,21 +487,21 @@
 /* Tooltip Styling */
 .gantt-container .popup-wrapper {
     width: 280px !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-    border: 1px solid #ddd !important;
+    box-shadow: var(--theme-card-shadow) !important;
+    border: 1px solid var(--theme-border-color) !important;
     border-radius: 6px !important;
 }
 
 .gantt-container .popup-wrapper .title {
-    border-bottom: 1px solid #eee !important;
+    border-bottom: 1px solid var(--theme-border-light) !important;
     padding-bottom: 8px !important;
     margin-bottom: 8px !important;
     font-weight: 600 !important;
-    color: #333 !important;
+    color: var(--theme-text-primary) !important;
 }
 
 .gantt-container .popup-wrapper .subtitle {
-    color: #666 !important;
+    color: var(--theme-text-secondary) !important;
     font-size: 11px !important;
     margin-bottom: 4px !important;
 }

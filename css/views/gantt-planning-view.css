@@ -45,15 +45,15 @@
 }
 
 .gantt-legend__color-box--initiative {
-    background-color: #6f42c1;
+    background-color: var(--theme-gantt-initiative, #6f42c1);
 }
 
 .gantt-legend__color-box--work-package {
-    background-color: #0366d6;
+    background-color: var(--theme-gantt-workpackage, #0366d6);
 }
 
 .gantt-legend__color-box--assignment {
-    background-color: #2ea44f;
+    background-color: var(--theme-gantt-assignment, #2ea44f);
 }
 
 /* Split Pane Layout */
@@ -95,6 +95,32 @@
     height: 100%;
     flex: 1;
     min-height: 0;
+}
+
+/* Theme-aware scrollbar */
+.gantt-table-wrapper::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.gantt-table-wrapper::-webkit-scrollbar-track {
+    background: var(--theme-bg-secondary);
+    border-radius: 5px;
+}
+
+.gantt-table-wrapper::-webkit-scrollbar-thumb {
+    background: var(--theme-border-color);
+    border-radius: 5px;
+}
+
+.gantt-table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: var(--theme-text-muted);
+}
+
+/* Firefox scrollbar */
+.gantt-table-wrapper {
+    scrollbar-width: thin;
+    scrollbar-color: var(--theme-border-color) var(--theme-bg-secondary);
 }
 
 /* Table */
@@ -155,13 +181,23 @@
 }
 
 .gantt-table__cell--wp-title {
-    display: flex;
+    padding: 6px 6px 6px 32px;
+}
+
+.gantt-table__cell--wp-title>div {
+    display: inline-flex;
     align-items: center;
     gap: 8px;
+    vertical-align: middle;
+}
+
+.gantt-table__cell--wp-title .gantt-expander {
+    flex-shrink: 0;
+    margin: 0;
 }
 
 .gantt-table__cell--wp-teams {
-    color: #555;
+    color: var(--theme-text-secondary);
 }
 
 .gantt-table__cell--wp-sde {
@@ -178,7 +214,7 @@
 
 .gantt-table__cell--assignment-empty {
     padding: 4px;
-    border-bottom: 1px solid #fafafa;
+    border-bottom: 1px solid var(--theme-border-light);
 }
 
 /* Other Teams Toggle Row */
@@ -191,7 +227,7 @@
 
 .gantt-table__cell--other-teams-action {
     padding: 4px;
-    border-bottom: 1px solid #fafafa;
+    border-bottom: 1px solid var(--theme-border-light);
 }
 
 /* Empty State */
@@ -229,13 +265,24 @@
     font-size: 12px;
 }
 
+/* WP Actions Column - buttons inline */
+.gantt-table__cell--wp-actions {
+    white-space: nowrap;
+}
+
+.gantt-table__cell--wp-actions button {
+    display: inline-block;
+    margin-right: 4px;
+    vertical-align: middle;
+}
+
 /* Row States */
 .gantt-init-row {
-    background: var(--color-white);
+    background: var(--theme-bg-primary);
 }
 
 .gantt-init-row:hover {
-    background: var(--color-gray-50);
+    background: var(--theme-bg-secondary);
 }
 
 .gantt-wp-row {

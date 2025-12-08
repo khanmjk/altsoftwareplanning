@@ -1,0 +1,13 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch with Live Server",
+            "type": "chrome",
+            "request": "launch",
+            "url": "http://127.0.0.1:5501",
+            "webRoot": "${workspaceFolder}",
+            "file": "${workspaceFolder}/index.html"
+        }
+    ]
+}

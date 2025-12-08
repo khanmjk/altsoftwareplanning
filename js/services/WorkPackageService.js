@@ -52,20 +52,8 @@ const WorkPackageService = {
                         endDate: wp.endDate || null,
                         status: 'Planned'
                     }));
-                    // Add missing team assignments if initiative assignments exist
-                    const initAssignments = init.assignments || [];
-                    initAssignments.forEach(assign => {
-                        if (!assign.teamId) return;
-                        const already = (wp.impactedTeamAssignments || []).some(a => a.teamId === assign.teamId);
-                        if (!already) {
-                            wp.impactedTeamAssignments.push({
-                                teamId: assign.teamId,
-                                sdeDays: (assign.sdeYears || 0) * workingDaysPerYear,
-                                startDate: wp.startDate || null,
-                                endDate: wp.endDate || null
-                            });
-                        }
-                    });
+                    // NOTE: We deliberately do NOT auto-add team assignments here
+                    // Team assignments should only be added/removed explicitly by the user
                 });
                 return;
             }
@@ -129,9 +117,12 @@ const WorkPackageService = {
         const defaultStart = initiative.attributes?.startDate || `${planningYear}-01-15`;
         const defaultEnd = initiative.targetDueDate || `${planningYear}-11-01`;
 
-        const impactedTeamAssignments = (initiative.assignments || []).map(assign => ({
-            teamId: assign.teamId || null,
-            sdeDays: (assign.sdeYears || 0) * (systemData.capacityConfiguration?.workingDaysPerYear || 261),
+        // Create task rows for ALL teams in the system (not just initiative assignments)
+        // This allows planners to enter estimates for any team
+        const allTeams = systemData.teams || [];
+        const impactedTeamAssignments = allTeams.map(team => ({
+            teamId: team.teamId,
+            sdeDays: 0, // Start with zero, user will enter estimates
             startDate: wpData.startDate || defaultStart,
             endDate: wpData.endDate || defaultEnd
         }));
@@ -226,6 +217,63 @@ const WorkPackageService = {
         if (initiative && initiative.workPackageIds) {
             initiative.workPackageIds = initiative.workPackageIds.filter(id => id !== workPackageId);
         }
+
+        return true;
+    },
+
+    /**
+     * Adds a new team assignment (task) to a Work Package.
+     * @param {object} systemData - The full system data object
+     * @param {string} workPackageId - The WP to add the assignment to
+     * @param {object} assignData - Optional overrides { teamId, sdeDays, startDate, endDate }
+     * @returns {object|null} The created assignment or null on failure
+     */
+    addAssignment(systemData, workPackageId, assignData = {}) {
+        if (!systemData) return null;
+        const wp = (systemData.workPackages || []).find(w => w.workPackageId === workPackageId);
+        if (!wp) {
+            console.error("Work Package not found:", workPackageId);
+            return null;
+        }
+
+        wp.impactedTeamAssignments = wp.impactedTeamAssignments || [];
+
+        // Create new assignment with defaults
+        const newAssignment = {
+            teamId: assignData.teamId || null, // Will be unassigned if not provided
+            sdeDays: assignData.sdeDays || 0,
+            startDate: assignData.startDate || wp.startDate || null,
+            endDate: assignData.endDate || wp.endDate || null,
+            dependencies: assignData.dependencies || []
+        };
+
+        wp.impactedTeamAssignments.push(newAssignment);
+
+        // Recalculate WP dates from assignments
+        this.recalculateWorkPackageDates(wp);
+
+        return newAssignment;
+    },
+
+    /**
+     * Deletes a team assignment (task) from a Work Package.
+     * @param {object} systemData - The full system data object
+     * @param {string} workPackageId - The WP containing the assignment
+     * @param {string} teamId - The team ID of the assignment to delete
+     * @returns {boolean} True if deleted, false otherwise
+     */
+    deleteAssignment(systemData, workPackageId, teamId) {
+        if (!systemData) return false;
+        const wp = (systemData.workPackages || []).find(w => w.workPackageId === workPackageId);
+        if (!wp || !wp.impactedTeamAssignments) return false;
+
+        const index = wp.impactedTeamAssignments.findIndex(a => a.teamId === teamId);
+        if (index === -1) return false;
+
+        wp.impactedTeamAssignments.splice(index, 1);
+
+        // Recalculate WP dates from remaining assignments
+        this.recalculateWorkPackageDates(wp);
 
         return true;
     },
