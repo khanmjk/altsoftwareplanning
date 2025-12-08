@@ -262,8 +262,7 @@ class YearPlanningView {
             btn.className = `btn btn-sm ${this.scenario === sc.id ? 'btn-primary' : 'btn-light'}`;
             btn.style.border = '1px solid #ccc';
             if (this.scenario === sc.id) {
-                btn.style.backgroundColor = '#007bff';
-                btn.style.color = 'white';
+                // btn-primary class handles the style
             }
 
             const scMetrics = metrics.totals?.[sc.key];
@@ -365,7 +364,7 @@ class YearPlanningView {
         // Table Header
         const thead = document.createElement('thead');
         const headerRow = document.createElement('tr');
-        headerRow.style.backgroundColor = '#f2f2f2';
+        // headerRow.style.backgroundColor = '#f2f2f2'; // Removed to use CSS theming
 
         const headers = [
             { text: 'Team Name', title: '' },

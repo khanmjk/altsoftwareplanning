@@ -175,11 +175,9 @@ class ResourceForecastView {
         // Narrative Summary Box (Below Chart)
         const narrativeBox = document.createElement('div');
         narrativeBox.id = 'rf-narrative-box';
-        narrativeBox.className = 'workspace-card'; // Use standard card
+        narrativeBox.className = 'workspace-card';
         narrativeBox.style.display = 'none';
-        narrativeBox.style.backgroundColor = '#f1f5f9'; // Light gray background per screenshot
-        narrativeBox.style.border = 'none';
-        narrativeBox.style.padding = '20px';
+        narrativeBox.style.marginTop = '20px';
         narrativeBox.style.marginTop = '20px';
 
         outputSection.appendChild(narrativeBox);

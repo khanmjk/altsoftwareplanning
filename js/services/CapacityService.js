@@ -157,6 +157,127 @@ const CapacityService = {
             netDaysPerSDE,
             netWeeksPerSDE: netDaysPerSDE / 5
         };
+    },
+
+    /**
+     * Bulk-updates capacity settings for multiple teams.
+     * @param {object} systemData
+     * @param {object} options - Configuration options
+     * @param {object} options.updates - Fields to merge into teamCapacityAdjustments
+     * @param {number} options.capacityReductionPercent - Percent reduction (converted to overhead hours)
+     * @param {number} options.aiProductivityGainPercent - AI productivity gain %
+     * @param {number} options.avgOverheadHoursPerWeekPerSDE - Overhead hours per week
+     * @param {object} options.filter - Optional filter { teamIds: [], orgIdentifier: 'sdmId|seniorManagerId|All' }
+     * @returns {object} Summary of updates applied
+     */
+    bulkUpdateTeamCapacity(systemData, options = {}) {
+        if (!systemData || !Array.isArray(systemData.teams)) {
+            throw new Error('bulkUpdateTeamCapacity: systemData.teams is unavailable.');
+        }
+        const { updates = {}, capacityReductionPercent = null, aiProductivityGainPercent = null, avgOverheadHoursPerWeekPerSDE = null, filter = {} } = options;
+
+        // Helper to ensure team has capacity adjustments initialized
+        const ensureTeamCapacityAdjustments = (team) => {
+            if (!team.teamCapacityAdjustments || typeof team.teamCapacityAdjustments !== 'object') {
+                team.teamCapacityAdjustments = {
+                    leaveUptakeEstimates: [],
+                    variableLeaveImpact: {},
+                    teamActivities: [],
+                    avgOverheadHoursPerWeekPerSDE: 0,
+                    aiProductivityGainPercent: 0,
+                    attributes: {}
+                };
+            }
+            const adj = team.teamCapacityAdjustments;
+            if (!Array.isArray(adj.leaveUptakeEstimates)) adj.leaveUptakeEstimates = [];
+            if (!adj.variableLeaveImpact || typeof adj.variableLeaveImpact !== 'object') adj.variableLeaveImpact = {};
+            if (!Array.isArray(adj.teamActivities)) adj.teamActivities = [];
+            if (adj.avgOverheadHoursPerWeekPerSDE === undefined || adj.avgOverheadHoursPerWeekPerSDE === null) adj.avgOverheadHoursPerWeekPerSDE = 0;
+            if (adj.aiProductivityGainPercent === undefined || adj.aiProductivityGainPercent === null) adj.aiProductivityGainPercent = 0;
+            if (!adj.attributes || typeof adj.attributes !== 'object') adj.attributes = {};
+            return adj;
+        };
+
+        // Filter teams based on criteria
+        const targets = systemData.teams.filter(team => {
+            if (!filter || Object.keys(filter).length === 0) return true;
+
+            if (Array.isArray(filter.teamIds) && filter.teamIds.length > 0) {
+                return filter.teamIds.includes(team.teamId);
+            }
+
+            if (filter.orgIdentifier) {
+                const ident = String(filter.orgIdentifier).trim();
+                if (!ident || ident.toLowerCase() === 'all') return true;
+                if ((team.sdmId || '').toLowerCase() === ident.toLowerCase()) return true;
+
+                // Check via SDM resolution
+                if (typeof OrgService !== 'undefined' && OrgService._resolveSdmIdentifier) {
+                    const resolvedSdmId = OrgService._resolveSdmIdentifier(systemData, ident);
+                    if (resolvedSdmId && team.sdmId && team.sdmId.toLowerCase() === resolvedSdmId.toLowerCase()) return true;
+                }
+
+                // Check via Senior Manager
+                if (systemData?.sdms && typeof OrgService !== 'undefined' && OrgService._resolveSeniorManagerIdentifier) {
+                    const teamSdm = (systemData.sdms || []).find(s => s.sdmId === team.sdmId);
+                    const resolvedSrMgrId = OrgService._resolveSeniorManagerIdentifier(systemData, ident);
+                    if (resolvedSrMgrId && teamSdm?.seniorManagerId === resolvedSrMgrId) return true;
+                }
+                return false;
+            }
+
+            return true;
+        });
+
+        const updatedTeams = [];
+        const appliedFields = [];
+
+        targets.forEach(team => {
+            const adj = ensureTeamCapacityAdjustments(team);
+            const changeLog = {};
+
+            if (aiProductivityGainPercent !== null && aiProductivityGainPercent !== undefined) {
+                adj.aiProductivityGainPercent = aiProductivityGainPercent;
+                changeLog.aiProductivityGainPercent = aiProductivityGainPercent;
+                if (!appliedFields.includes('aiProductivityGainPercent')) appliedFields.push('aiProductivityGainPercent');
+            }
+            if (avgOverheadHoursPerWeekPerSDE !== null && avgOverheadHoursPerWeekPerSDE !== undefined) {
+                adj.avgOverheadHoursPerWeekPerSDE = avgOverheadHoursPerWeekPerSDE;
+                changeLog.avgOverheadHoursPerWeekPerSDE = avgOverheadHoursPerWeekPerSDE;
+                if (!appliedFields.includes('avgOverheadHoursPerWeekPerSDE')) appliedFields.push('avgOverheadHoursPerWeekPerSDE');
+            }
+            if (capacityReductionPercent !== null && capacityReductionPercent !== undefined && !isNaN(capacityReductionPercent)) {
+                const percent = Number(capacityReductionPercent);
+                const assumedHoursPerWeek = 40;
+                const addedOverhead = Math.max(0, (percent / 100) * assumedHoursPerWeek);
+                adj.avgOverheadHoursPerWeekPerSDE = (adj.avgOverheadHoursPerWeekPerSDE || 0) + addedOverhead;
+                adj.strategicBufferPercent = percent;
+                changeLog.capacityReductionPercent = percent;
+                changeLog.addedOverheadHoursPerWeekPerSDE = addedOverhead;
+                if (!appliedFields.includes('capacityReductionPercent')) appliedFields.push('capacityReductionPercent');
+            }
+            if (updates && typeof updates === 'object') {
+                Object.keys(updates).forEach(key => {
+                    adj[key] = updates[key];
+                    changeLog[key] = updates[key];
+                    if (!appliedFields.includes(key)) appliedFields.push(key);
+                });
+            }
+
+            updatedTeams.push({
+                teamId: team.teamId,
+                teamName: team.teamIdentity || team.teamName || team.teamId,
+                changes: changeLog
+            });
+        });
+
+        return {
+            updatedCount: updatedTeams.length,
+            updatedTeams,
+            appliedFields,
+            scopeDescription: `${updatedTeams.length} ${updatedTeams.length === 1 ? 'team' : 'teams'}`,
+            filterApplied: filter
+        };
     }
 };
 

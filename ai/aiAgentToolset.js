@@ -183,25 +183,33 @@ function getToolsSummaryList() {
 }
 
 async function executeTool(command, payload = {}) {
+    const system = SystemService.getCurrentSystem();
+    if (!system) {
+        throw new Error('No system currently loaded.');
+    }
+
     switch (command) {
         case 'addInitiative': {
-            const newInitiative = addInitiative(payload);
+            const newInitiative = InitiativeService.addInitiative(system, payload);
             if (!newInitiative) throw new Error('Failed to add initiative.');
+            SystemService.save();
             _smartRefreshInitiative(newInitiative);
             return newInitiative;
         }
         case 'updateInitiative': {
             if (!payload.initiativeId) throw new Error('updateInitiative: initiativeId is required.');
             const updates = payload.updates || {};
-            const updated = updateInitiative(payload.initiativeId, updates);
+            const updated = InitiativeService.updateInitiative(system, payload.initiativeId, updates);
             if (!updated) throw new Error('Failed to update initiative.');
+            SystemService.save();
             _smartRefreshInitiative(updated);
             return updated;
         }
         case 'deleteInitiative': {
             if (!payload.initiativeId) throw new Error('deleteInitiative: initiativeId is required.');
-            const success = deleteInitiative(payload.initiativeId);
+            const success = InitiativeService.deleteInitiative(system, payload.initiativeId);
             if (!success) throw new Error('Failed to delete initiative.');
+            SystemService.save();
             if (typeof currentEditingInitiativeId !== 'undefined' && currentEditingInitiativeId === payload.initiativeId) {
                 currentEditingInitiativeId = null;
             }
@@ -209,49 +217,58 @@ async function executeTool(command, payload = {}) {
         }
         case 'addNewTeam': {
             const overrides = payload.teamData || {};
-            const result = addNewTeam(overrides) || ((SystemService.getCurrentSystem().teams || [])[SystemService.getCurrentSystem().teams.length - 1] ?? null);
+            const result = OrgService.addTeam(system, overrides);
             if (!result) throw new Error('Failed to add new team.');
+            SystemService.save();
             return result;
         }
         case 'deleteTeam': {
             if (!payload.teamId) throw new Error('deleteTeam: teamId is required.');
-            const teamIndex = (SystemService.getCurrentSystem().teams || []).findIndex(team => team.teamId === payload.teamId);
-            if (teamIndex === -1) throw new Error(`deleteTeam: Team with ID ${payload.teamId} not found.`);
-            const teamCopy = { ...(SystemService.getCurrentSystem().teams[teamIndex] || {}) };
-            const success = deleteTeam(teamIndex, { skipConfirm: true, silent: payload.silent !== undefined ? payload.silent : true });
+            const success = OrgService.deleteTeam(system, payload.teamId);
             if (!success) throw new Error('Failed to delete team.');
-            return { deleted: true, teamId: payload.teamId, team: teamCopy };
+            SystemService.save();
+            return { deleted: true, teamId: payload.teamId };
         }
         case 'addEngineerToRoster': {
-            const engineer = addEngineerToRoster(payload);
+            const engineer = OrgService.addEngineerToRoster(system, payload);
+            SystemService.save();
             return engineer;
         }
         case 'moveEngineerToTeam': {
             if (!payload.engineerName) throw new Error('moveEngineerToTeam: engineerName is required.');
-            const updatedEngineer = moveEngineerToTeam(payload.engineerName, payload.newTeamId || null);
+            const updatedEngineer = OrgService.moveEngineerToTeam(system, payload.engineerName, payload.newTeamId || null);
+            SystemService.save();
             return updatedEngineer;
         }
         case 'addSeniorManager': {
             if (!payload.name) throw new Error('addSeniorManager: name is required.');
-            return addSeniorManager(payload.name);
+            const result = OrgService.addSeniorManager(system, payload.name);
+            SystemService.save();
+            return result;
         }
         case 'addSdm': {
             if (!payload.name) throw new Error('addSdm: name is required.');
-            return addSdm(payload.name, payload.seniorManagerId || null);
+            const result = OrgService.addSdm(system, payload.name, payload.seniorManagerId || null);
+            SystemService.save();
+            return result;
         }
         case 'updateSdm': {
             if (!payload.sdmId) throw new Error('updateSdm: sdmId is required.');
             if (!payload.updates || typeof payload.updates !== 'object') {
                 throw new Error('updateSdm: updates object is required.');
             }
-            return updateSdm(payload.sdmId, payload.updates);
+            const result = OrgService.updateSdm(system, payload.sdmId, payload.updates);
+            SystemService.save();
+            return result;
         }
         case 'reassignTeamToSdm': {
             const teamIdentifier = payload.teamIdentifier || payload.teamId;
             const sdmIdentifier = payload.sdmIdentifier || payload.newSdmId;
             if (!teamIdentifier) throw new Error('reassignTeamToSdm: teamIdentifier is required.');
             if (!sdmIdentifier) throw new Error('reassignTeamToSdm: sdmIdentifier is required.');
-            return reassignTeamToSdm(teamIdentifier, sdmIdentifier);
+            const result = OrgService.reassignTeamToSdm(system, teamIdentifier, sdmIdentifier);
+            SystemService.save();
+            return result;
         }
         case 'reassignSdmWithTeams': {
             const sdmIdentifier = payload.sdmIdentifier || payload.sdmId;
@@ -259,34 +276,40 @@ async function executeTool(command, payload = {}) {
             const destinationType = payload.destinationType || payload.targetType || null;
             if (!sdmIdentifier) throw new Error('reassignSdmWithTeams: sdmIdentifier is required.');
             if (!destinationIdentifier) throw new Error('reassignSdmWithTeams: destinationIdentifier is required.');
-            return reassignSdmWithTeams(sdmIdentifier, destinationIdentifier, { destinationType });
+            const result = OrgService.reassignSdmWithTeams(system, sdmIdentifier, destinationIdentifier, { destinationType });
+            SystemService.save();
+            return result;
         }
         case 'deleteSeniorManager': {
             if (!payload.seniorManagerId) throw new Error('deleteSeniorManager: seniorManagerId is required.');
-            return deleteSeniorManager(payload.seniorManagerId, payload.reassignToSeniorManagerId || null);
+            const result = OrgService.deleteSeniorManager(system, payload.seniorManagerId, payload.reassignToSeniorManagerId || null);
+            SystemService.save();
+            return result;
         }
         case 'addNewService': {
             const overrides = payload.serviceData || {};
-            const newService = addNewService(overrides) || ((SystemService.getCurrentSystem().services || [])[SystemService.getCurrentSystem().services.length - 1] ?? null);
+            const newService = OrgService.addService(system, overrides);
             if (!newService) throw new Error('Failed to add new service.');
+            SystemService.save();
             return newService;
         }
         case 'deleteService': {
             if (!payload.serviceName) throw new Error('deleteService: serviceName is required.');
-            const serviceIndex = (SystemService.getCurrentSystem().services || []).findIndex(service => service.serviceName === payload.serviceName);
-            if (serviceIndex === -1) throw new Error(`deleteService: Service "${payload.serviceName}" not found.`);
-            const deletedService = deleteService(serviceIndex, 'editServicesManagement');
+            const deletedService = OrgService.deleteService(system, payload.serviceName);
             if (!deletedService) throw new Error('Failed to delete service.');
+            SystemService.save();
             return { deleted: true, serviceName: payload.serviceName, service: deletedService };
         }
         case 'bulkUpdateTeamCapacity': {
-            const result = bulkUpdateTeamCapacity(payload || {});
+            const result = CapacityService.bulkUpdateTeamCapacity(system, payload || {});
             if (!result) throw new Error('bulkUpdateTeamCapacity: No changes were applied.');
+            SystemService.save();
             return result;
         }
         case 'bulkUpdateInitiatives': {
             if (!payload || !payload.updates) throw new Error('bulkUpdateInitiatives: updates object is required.');
-            const result = bulkUpdateInitiatives(payload.updates, payload.criteria || {});
+            const result = InitiativeService.bulkUpdateInitiatives(system, payload.updates, payload.criteria || {});
+            SystemService.save();
             return result;
         }
         case 'bulkAdjustInitiativeEstimates': {
@@ -294,14 +317,18 @@ async function executeTool(command, payload = {}) {
             if (factor === undefined || factor === null || isNaN(factor)) {
                 throw new Error('bulkAdjustInitiativeEstimates: adjustmentFactor (number) is required.');
             }
-            return bulkAdjustInitiativeEstimates(Number(factor), payload.criteria || {});
+            const result = InitiativeService.bulkAdjustInitiativeEstimates(system, Number(factor), payload.criteria || {});
+            SystemService.save();
+            return result;
         }
         case 'bulkReassignTeams': {
             const sourceSdmId = payload?.sourceSdmId || payload?.fromSdmId;
             const targetSdmId = payload?.targetSdmId || payload?.toSdmId;
             if (!sourceSdmId) throw new Error('bulkReassignTeams: sourceSdmId is required.');
             if (!targetSdmId) throw new Error('bulkReassignTeams: targetSdmId is required.');
-            return bulkReassignTeams(sourceSdmId, targetSdmId);
+            const result = OrgService.bulkReassignTeams(system, sourceSdmId, targetSdmId);
+            SystemService.save();
+            return result;
         }
         default:
             throw new Error(`Unknown tool command: ${command}`);
@@ -313,203 +340,6 @@ function _smartRefreshInitiative(initiative) {
     // Removed legacy modal update logic
 }
 
-/**
- * --- Bulk/Macro Tool Implementations ---
- */
-function _ensureTeamCapacityAdjustments(team) {
-    if (!team.teamCapacityAdjustments || typeof team.teamCapacityAdjustments !== 'object') {
-        team.teamCapacityAdjustments = { leaveUptakeEstimates: [], variableLeaveImpact: {}, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 0, aiProductivityGainPercent: 0, attributes: {} };
-    }
-    const adj = team.teamCapacityAdjustments;
-    if (!Array.isArray(adj.leaveUptakeEstimates)) adj.leaveUptakeEstimates = [];
-    if (!adj.variableLeaveImpact || typeof adj.variableLeaveImpact !== 'object') adj.variableLeaveImpact = {};
-    if (!Array.isArray(adj.teamActivities)) adj.teamActivities = [];
-    if (adj.avgOverheadHoursPerWeekPerSDE === undefined || adj.avgOverheadHoursPerWeekPerSDE === null) adj.avgOverheadHoursPerWeekPerSDE = 0;
-    if (adj.aiProductivityGainPercent === undefined || adj.aiProductivityGainPercent === null) adj.aiProductivityGainPercent = 0;
-    if (!adj.attributes || typeof adj.attributes !== 'object') adj.attributes = {};
-    return adj;
-}
-
-function _teamMatchesFilter(team, filter = {}) {
-    if (!filter || Object.keys(filter).length === 0) return true;
-
-    if (Array.isArray(filter.teamIds) && filter.teamIds.length > 0) {
-        return filter.teamIds.includes(team.teamId);
-    }
-
-    if (filter.orgIdentifier) {
-        const ident = String(filter.orgIdentifier).trim();
-        if (!ident || ident.toLowerCase() === 'all') return true;
-        if ((team.sdmId || '').toLowerCase() === ident.toLowerCase()) return true;
-
-        const resolvedSdmId = (typeof _resolveSdmIdentifier === 'function') ? _resolveSdmIdentifier(ident) : null;
-        if (resolvedSdmId && team.sdmId && team.sdmId.toLowerCase() === resolvedSdmId.toLowerCase()) return true;
-
-        if (SystemService.getCurrentSystem()?.sdms && typeof _resolveSeniorManagerIdentifier === 'function') {
-            const teamSdm = (SystemService.getCurrentSystem().sdms || []).find(s => s.sdmId === team.sdmId);
-            const resolvedSrMgrId = _resolveSeniorManagerIdentifier(ident);
-            if (resolvedSrMgrId && teamSdm?.seniorManagerId === resolvedSrMgrId) return true;
-        }
-        return false;
-    }
-
-    return true;
-}
-
-function bulkUpdateTeamCapacity(options = {}) {
-    if (!SystemService.getCurrentSystem() || !Array.isArray(SystemService.getCurrentSystem().teams)) {
-        throw new Error('bulkUpdateTeamCapacity: SystemService.getCurrentSystem().teams is unavailable.');
-    }
-    const { updates = {}, capacityReductionPercent = null, aiProductivityGainPercent = null, avgOverheadHoursPerWeekPerSDE = null, filter = {} } = options;
-    const targets = (SystemService.getCurrentSystem().teams || []).filter(team => _teamMatchesFilter(team, filter));
-    const updatedTeams = [];
-    const appliedFields = [];
-
-    targets.forEach(team => {
-        const adj = _ensureTeamCapacityAdjustments(team);
-        const changeLog = {};
-
-        if (aiProductivityGainPercent !== null && aiProductivityGainPercent !== undefined) {
-            adj.aiProductivityGainPercent = aiProductivityGainPercent;
-            changeLog.aiProductivityGainPercent = aiProductivityGainPercent;
-            if (!appliedFields.includes('aiProductivityGainPercent')) appliedFields.push('aiProductivityGainPercent');
-        }
-        if (avgOverheadHoursPerWeekPerSDE !== null && avgOverheadHoursPerWeekPerSDE !== undefined) {
-            adj.avgOverheadHoursPerWeekPerSDE = avgOverheadHoursPerWeekPerSDE;
-            changeLog.avgOverheadHoursPerWeekPerSDE = avgOverheadHoursPerWeekPerSDE;
-            if (!appliedFields.includes('avgOverheadHoursPerWeekPerSDE')) appliedFields.push('avgOverheadHoursPerWeekPerSDE');
-        }
-        if (capacityReductionPercent !== null && capacityReductionPercent !== undefined && !isNaN(capacityReductionPercent)) {
-            const percent = Number(capacityReductionPercent);
-            const assumedHoursPerWeek = 40;
-            const addedOverhead = Math.max(0, (percent / 100) * assumedHoursPerWeek);
-            adj.avgOverheadHoursPerWeekPerSDE = (adj.avgOverheadHoursPerWeekPerSDE || 0) + addedOverhead;
-            adj.strategicBufferPercent = percent;
-            changeLog.capacityReductionPercent = percent;
-            changeLog.addedOverheadHoursPerWeekPerSDE = addedOverhead;
-            if (!appliedFields.includes('capacityReductionPercent')) appliedFields.push('capacityReductionPercent');
-        }
-        if (updates && typeof updates === 'object') {
-            Object.keys(updates).forEach(key => {
-                adj[key] = updates[key];
-                changeLog[key] = updates[key];
-                if (!appliedFields.includes(key)) appliedFields.push(key);
-            });
-        }
-
-        updatedTeams.push({
-            teamId: team.teamId,
-            teamName: team.teamIdentity || team.teamName || team.teamId,
-            changes: changeLog
-        });
-    });
-
-    return {
-        updatedCount: updatedTeams.length,
-        updatedTeams,
-        appliedFields,
-        scopeDescription: `${updatedTeams.length} ${updatedTeams.length === 1 ? 'team' : 'teams'}`,
-        filterApplied: filter
-    };
-}
-
-function _initiativeMatchesCriteria(initiative, criteria = {}) {
-    if (!criteria || Object.keys(criteria).length === 0) return true;
-    const matchesGoal = criteria.goalId
-        ? (initiative.primaryGoalId === criteria.goalId ||
-            (Array.isArray(SystemService.getCurrentSystem()?.goals) && SystemService.getCurrentSystem().goals.some(g => g.goalId === criteria.goalId && (g.initiativeIds || []).includes(initiative.initiativeId))))
-        : true;
-    if (!matchesGoal) return false;
-
-    const matchesTheme = criteria.themeId ? Array.isArray(initiative.themes) && initiative.themes.includes(criteria.themeId) : true;
-    if (!matchesTheme) return false;
-
-    const matchesRoiValue = criteria.roiValue ? String(initiative.roi?.estimatedValue || '').toLowerCase() === String(criteria.roiValue).toLowerCase() : true;
-    if (!matchesRoiValue) return false;
-
-    const matchesConfidence = criteria.confidenceLevel ? String(initiative.roi?.confidenceLevel || '').toLowerCase() === String(criteria.confidenceLevel).toLowerCase() : true;
-    if (!matchesConfidence) return false;
-
-    const matchesStatus = criteria.status ? String(initiative.status || '').toLowerCase() === String(criteria.status).toLowerCase() : true;
-    if (!matchesStatus) return false;
-
-    const matchesProtection = typeof criteria.isProtected === 'boolean' ? initiative.isProtected === criteria.isProtected : true;
-    if (!matchesProtection) return false;
-
-    return true;
-}
-
-function bulkUpdateInitiatives(updates, criteria = {}) {
-    if (!SystemService.getCurrentSystem() || !Array.isArray(SystemService.getCurrentSystem().yearlyInitiatives)) {
-        throw new Error('bulkUpdateInitiatives: SystemService.getCurrentSystem().yearlyInitiatives is unavailable.');
-    }
-    if (!updates || typeof updates !== 'object') {
-        throw new Error('bulkUpdateInitiatives: updates object is required.');
-    }
-
-    const targetInits = SystemService.getCurrentSystem().yearlyInitiatives.filter(init => _initiativeMatchesCriteria(init, criteria));
-    targetInits.forEach(init => {
-        Object.assign(init, updates);
-    });
-
-    return {
-        updatedCount: targetInits.length,
-        appliedUpdates: updates,
-        criteria
-    };
-}
-
-function bulkAdjustInitiativeEstimates(adjustmentFactor, criteria = {}) {
-    if (!SystemService.getCurrentSystem() || !Array.isArray(SystemService.getCurrentSystem().yearlyInitiatives)) {
-        throw new Error('bulkAdjustInitiativeEstimates: SystemService.getCurrentSystem().yearlyInitiatives is unavailable.');
-    }
-    const factor = Number(adjustmentFactor);
-    if (!isFinite(factor)) {
-        throw new Error('bulkAdjustInitiativeEstimates: adjustmentFactor must be a finite number.');
-    }
-
-    const targetInits = SystemService.getCurrentSystem().yearlyInitiatives.filter(init => _initiativeMatchesCriteria(init, criteria));
-    const updates = [];
-
-    targetInits.forEach(init => {
-        const before = (init.assignments || []).map(a => ({ ...a }));
-        init.assignments = (init.assignments || []).map(a => {
-            const currentValue = Number(a.sdeYears) || 0;
-            const newValue = Number((currentValue * factor).toFixed(2));
-            return { ...a, sdeYears: newValue };
-        });
-        updates.push({ initiativeId: init.initiativeId, before, after: init.assignments });
-    });
-
-    return {
-        updatedCount: updates.length,
-        adjustmentFactor: factor,
-        updates,
-        criteria
-    };
-}
-
-function bulkReassignTeams(sourceSdmId, targetSdmId) {
-    if (!SystemService.getCurrentSystem() || !Array.isArray(SystemService.getCurrentSystem().teams)) {
-        throw new Error('bulkReassignTeams: SystemService.getCurrentSystem().teams is unavailable.');
-    }
-    const resolveSdm = (id) => (typeof _resolveSdmIdentifier === 'function') ? _resolveSdmIdentifier(id) : id;
-    const resolvedSource = resolveSdm(sourceSdmId);
-    const resolvedTarget = resolveSdm(targetSdmId);
-    if (!resolvedSource) throw new Error(`bulkReassignTeams: Could not resolve source SDM "${sourceSdmId}".`);
-    if (!resolvedTarget) throw new Error(`bulkReassignTeams: Could not resolve target SDM "${targetSdmId}".`);
-    if (resolvedSource === resolvedTarget) throw new Error('bulkReassignTeams: Source and target SDM IDs are the same.');
-
-    const movedTeams = (SystemService.getCurrentSystem().teams || []).filter(team => team.sdmId === resolvedSource);
-    movedTeams.forEach(team => { team.sdmId = resolvedTarget; });
-
-    return {
-        movedTeamIds: movedTeams.map(t => t.teamId),
-        movedTeamNames: movedTeams.map(t => t.teamIdentity || t.teamName || t.teamId),
-        sourceSdmId: resolvedSource,
-        targetSdmId: resolvedTarget
-    };
-}
 
 const aiAgentToolset = {
     aiAgentTools,
