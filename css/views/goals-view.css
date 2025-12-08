@@ -35,27 +35,27 @@
     margin-bottom: 20px;
 
     /* Card styling */
-    border: 1px solid #ddd;
+    border: 1px solid var(--theme-border-color);
     border-left-width: 5px;
     border-radius: 5px;
     padding: 15px;
-    background-color: #fff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    background-color: var(--theme-card-bg);
+    box-shadow: var(--theme-card-shadow);
     display: flex;
     flex-direction: column;
 }
 
 /* Status border colors */
 .goal-card.status-on-track {
-    border-left-color: #007bff;
+    border-left-color: var(--theme-primary);
 }
 
 .goal-card.status-at-risk {
-    border-left-color: #ffc107;
+    border-left-color: var(--theme-warning);
 }
 
 .goal-card.status-completed {
-    border-left-color: #28a745;
+    border-left-color: var(--theme-success);
 }
 
 /* Card Header */
@@ -69,7 +69,7 @@
 .goal-card-header h3 {
     margin: 0;
     font-size: 1.25em;
-    color: #333;
+    color: var(--theme-text-primary);
 }
 
 /* Status Badge - Original Design */
@@ -82,23 +82,23 @@
 }
 
 .status-on-track .goal-status {
-    background-color: #007bff;
+    background-color: var(--theme-primary);
 }
 
 .status-at-risk .goal-status {
-    background-color: #ffc107;
+    background-color: var(--theme-warning);
     color: #212529;
 }
 
 .status-completed .goal-status {
-    background-color: #28a745;
+    background-color: var(--theme-success);
 }
 
 
 /* Description */
 .goal-description {
     font-size: 0.9em;
-    color: #666;
+    color: var(--theme-text-secondary);
     margin-bottom: 15px;
     flex-grow: 1;
 }
@@ -109,8 +109,8 @@
     justify-content: space-around;
     text-align: center;
     padding: 10px 0;
-    border-top: 1px solid #eee;
-    border-bottom: 1px solid #eee;
+    border-top: 1px solid var(--theme-border-color);
+    border-bottom: 1px solid var(--theme-border-color);
     margin-bottom: 15px;
 }
 
@@ -122,12 +122,12 @@
     display: block;
     font-size: 1.5em;
     font-weight: 600;
-    color: #0056b3;
+    color: var(--theme-primary);
 }
 
 .metric-label {
     font-size: 0.8em;
-    color: #6c757d;
+    color: var(--theme-text-muted);
 }
 
 /* Progress Bar (kept for compatibility) */
@@ -169,13 +169,13 @@
     font-size: 0.9em;
     line-height: 1.5;
     margin-bottom: 15px;
-    color: #495057;
+    color: var(--theme-text-secondary);
 }
 
 .goal-ownership strong,
 .goal-teams strong,
 .goal-themes strong {
-    color: #212529;
+    color: var(--theme-text-primary);
 }
 
 /* Theme Pills/Badges */
@@ -200,7 +200,7 @@
 
 /* Initiatives Toggle - Original style */
 .goal-initiatives-toggle {
-    border-top: 1px dashed #ccc;
+    border-top: 1px dashed var(--theme-border-color);
     padding-top: 10px;
     margin-top: 10px;
 }
@@ -208,7 +208,7 @@
 .toggle-summary {
     cursor: pointer;
     font-weight: bold;
-    color: #0056b3;
+    color: var(--theme-primary);
     display: inline-block;
     user-select: none;
 }
@@ -225,7 +225,7 @@
 .initiatives-list {
     margin-top: var(--space-sm);
     padding: var(--space-sm);
-    background: var(--color-gray-50);
+    background: var(--theme-bg-secondary);
     border-radius: var(--radius-sm);
 }
 
@@ -235,8 +235,8 @@
 
 /* Mini Initiative Cards */
 .mini-initiative-card {
-    background: var(--color-white);
-    border-left: 3px solid var(--color-gray-400);
+    background: var(--theme-card-bg);
+    border-left: 3px solid var(--theme-text-muted);
     padding: var(--space-sm);
     margin-bottom: var(--space-sm);
     border-radius: var(--radius-sm);
@@ -248,15 +248,15 @@
 }
 
 .mini-initiative-card.status-completed {
-    border-left-color: var(--color-success-500);
+    border-left-color: var(--theme-success);
 }
 
 .mini-initiative-card.status-in-progress {
-    border-left-color: var(--color-primary-500);
+    border-left-color: var(--theme-primary);
 }
 
 .mini-initiative-card.status-blocked {
-    border-left-color: var(--color-danger-500);
+    border-left-color: var(--theme-danger);
 }
 
 .mini-initiative-card.btl {
@@ -272,20 +272,20 @@
 
 .mini-card-title {
     font-weight: 600;
-    color: var(--color-gray-900);
+    color: var(--theme-text-primary);
     flex: 1;
 }
 
 .mini-card-sde {
     font-size: 0.8rem;
-    color: var(--color-gray-600);
+    color: var(--theme-text-secondary);
     white-space: nowrap;
     margin-left: var(--space-sm);
 }
 
 .mini-card-breakdown {
     font-size: 0.75rem;
-    color: var(--color-gray-600);
+    color: var(--theme-text-muted);
 }
 
 .no-initiatives-text {

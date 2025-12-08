@@ -18,7 +18,7 @@
 
 /* Mermaid Error/Info States */
 .mermaid-error {
-    color: red;
+    color: var(--theme-danger);
 }
 
 .mermaid-info {
@@ -56,7 +56,7 @@
     font-family: Arial, sans-serif;
     font-size: 10px;
     pointer-events: none;
-    fill: var(--color-gray-900);
+    fill: var(--theme-text-primary);
 }
 
 .legend-item text {
@@ -109,7 +109,7 @@
 }
 
 .visualization-legend__text {
-    fill: var(--color-gray-900);
+    fill: var(--theme-text-primary);
 }
 
 /* View Container Styles */
@@ -310,7 +310,7 @@
 }
 
 .visualization-error-message {
-    color: red;
+    color: var(--theme-danger);
     text-align: center;
     padding: 20px;
 }

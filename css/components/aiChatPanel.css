@@ -13,15 +13,15 @@
 }
 
 #aiChatLog .user-message {
-    background-color: #007bff;
-    color: white;
+    background-color: var(--theme-primary);
+    color: #ffffff;
     margin-left: auto;
     border-bottom-right-radius: 4px;
 }
 
 #aiChatLog .ai-message {
-    background-color: #e9ecef;
-    color: #212529;
+    background-color: var(--theme-bg-tertiary);
+    color: var(--theme-text-primary);
     margin-right: auto;
     border-bottom-left-radius: 4px;
 }
@@ -39,17 +39,21 @@
 }
 
 .ai-message p {
-    margin: 0 0 0.5em 0; /* Add space between paragraphs */
+    margin: 0 0 0.5em 0;
+    /* Add space between paragraphs */
 }
+
 .ai-message p:last-child {
     margin-bottom: 0;
 }
 
 .ai-message ul,
 .ai-message ol {
-    padding-left: 20px; /* Indent lists */
+    padding-left: 20px;
+    /* Indent lists */
     margin: 0.5em 0;
 }
+
 .ai-message li {
     margin-bottom: 0.25em;
     line-height: 1.5;
@@ -58,8 +62,8 @@
 /* Inline code */
 .ai-message code {
     font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-    background-color: #f8f9fa; /* Light background */
-    border: 1px solid #dee2e6;
+    background-color: var(--theme-bg-secondary);
+    border: 1px solid var(--theme-border-color);
     padding: 0.1em 0.4em;
     border-radius: 3px;
     font-size: 0.85em;
@@ -67,11 +71,13 @@
 
 /* Code blocks */
 .ai-message pre {
-    background-color: #212529; /* Dark background for code blocks */
+    background-color: #212529;
+    /* Dark background for code blocks */
     color: #f8f9fa;
     padding: 10px;
     border-radius: 4px;
-    overflow-x: auto; /* Allow horizontal scrolling */
+    overflow-x: auto;
+    /* Allow horizontal scrolling */
     font-size: 0.85em;
     line-height: 1.4;
 }
@@ -83,26 +89,29 @@
     right: 5px;
     background: none;
     border: none;
-    color: #6c757d; /* Muted gray */
+    color: var(--theme-text-secondary);
     cursor: pointer;
     font-size: 0.9em;
     padding: 3px 6px;
     border-radius: 4px;
-    opacity: 0; /* Hide by default */
+    opacity: 0;
+    /* Hide by default */
     transition: opacity 0.2s ease, background-color 0.2s ease;
 }
 
 .ai-message:hover .chat-copy-button {
-    opacity: 1; /* Show on hover */
+    opacity: 1;
+    /* Show on hover */
 }
 
 .chat-copy-button:hover {
-    background-color: #dee2e6; /* Light gray background on button hover */
+    background-color: #dee2e6;
+    /* Light gray background on button hover */
     color: #212529;
 }
 
 .chat-copy-button .fa-check {
-    color: #28a745; /* Green checkmark */
+    color: var(--theme-success);
 }
 
 /* --- [NEW] Styles for Suggestion Pills with Icons --- */
@@ -142,7 +151,7 @@
 }
 
 .ai-chat-error {
-    color: #c62828;
+    color: var(--theme-danger);
     font-weight: 600;
 }
 
@@ -151,7 +160,7 @@
     min-height: 70px;
     max-height: 280px;
     resize: vertical;
-    border: 1px solid #ccc;
+    border: 1px solid var(--theme-border-color);
     border-radius: 4px;
     padding: 6px 8px;
     line-height: 1.4;
@@ -161,8 +170,8 @@
 }
 
 #aiChatInput:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+    border-color: var(--theme-primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-primary), transparent 85%);
     outline: none;
 }
 
@@ -171,10 +180,12 @@
     bottom: calc(var(--ai-chat-input-height, 80px) + 20px);
     left: 10px;
     right: 10px;
-    background: #ffffff;
-    border: 1px solid #ced4da;
+    left: 10px;
+    right: 10px;
+    background: var(--theme-card-bg);
+    border: 1px solid var(--theme-border-color);
     border-radius: 6px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     max-height: 220px;
     overflow-y: auto;
     z-index: 5;
@@ -189,11 +200,11 @@
 }
 
 .ai-command-option:hover {
-    background-color: #f1f3f5;
+    background-color: var(--theme-bg-tertiary);
 }
 
 .ai-command-option.active {
-    background-color: #e7f1ff;
+    background-color: var(--theme-bg-secondary);
 }
 
 #aiChatCommandPopup.keyboard-nav .ai-command-option:hover {
@@ -202,7 +213,7 @@
 
 .ai-command-option .command-name {
     font-weight: 600;
-    color: #212529;
+    color: var(--theme-text-primary);
 }
 
 .ai-command-option .command-desc {
@@ -218,21 +229,26 @@
 
 /* [NEW] This container holds the rendered markdown */
 .chat-content-container {
-    padding-right: 30px; /* Space for the copy button */
+    padding-right: 30px;
+    /* Space for the copy button */
 }
 
 .ai-message p {
-    margin: 0 0 0.5em 0; /* Add space between paragraphs */
+    margin: 0 0 0.5em 0;
+    /* Add space between paragraphs */
 }
+
 .ai-message p:last-child {
     margin-bottom: 0;
 }
 
 .ai-message ul,
 .ai-message ol {
-    padding-left: 20px; /* Indent lists */
+    padding-left: 20px;
+    /* Indent lists */
     margin: 0.5em 0;
 }
+
 .ai-message li {
     margin-bottom: 0.25em;
     line-height: 1.5;
@@ -241,7 +257,8 @@
 /* Inline code */
 .ai-message code {
     font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-    background-color: #f8f9fa; /* Light background */
+    background-color: #f8f9fa;
+    /* Light background */
     border: 1px solid #dee2e6;
     padding: 0.1em 0.4em;
     border-radius: 3px;
@@ -250,11 +267,13 @@
 
 /* Code blocks */
 .ai-message pre {
-    background-color: #212529; /* Dark background for code blocks */
+    background-color: #212529;
+    /* Dark background for code blocks */
     color: #f8f9fa;
     padding: 10px;
     border-radius: 4px;
-    overflow-x: auto; /* Allow horizontal scrolling */
+    overflow-x: auto;
+    /* Allow horizontal scrolling */
     font-size: 0.85em;
     line-height: 1.4;
     max-width: 100%;
@@ -268,15 +287,18 @@
     font-size: 0.9em;
     width: 100%;
 }
+
 .ai-message th,
 .ai-message td {
     border: 1px solid #dee2e6;
     padding: 6px 10px;
 }
+
 .ai-message th {
     background-color: #f8f9fa;
     font-weight: bold;
 }
+
 .ai-message tr:nth-child(even) {
     background-color: #f8f9fa;
 }
@@ -288,27 +310,33 @@
     right: 5px;
     background: none;
     border: none;
-    color: #6c757d; /* Muted gray */
+    color: #6c757d;
+    /* Muted gray */
     cursor: pointer;
     font-size: 0.9em;
     padding: 3px 6px;
     border-radius: 4px;
-    opacity: 0; /* Hide by default */
+    opacity: 0;
+    /* Hide by default */
     transition: opacity 0.2s ease, background-color 0.2s ease;
 }
 
 .ai-message:hover .chat-copy-button {
-    opacity: 1; /* Show on hover */
+    opacity: 1;
+    /* Show on hover */
 }
 
 .chat-copy-button:hover {
-    background-color: #dee2e6; /* Light gray background on button hover */
+    background-color: #dee2e6;
+    /* Light gray background on button hover */
     color: #212529;
 }
 
 .chat-copy-button .fa-check {
-    color: #28a745; /* Green checkmark */
+    color: #28a745;
+    /* Green checkmark */
 }
+
 .ai-chat-suggestions {
     padding: 8px 10px;
     display: flex;
