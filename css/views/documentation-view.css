@@ -29,7 +29,7 @@
     max-width: 850px;
     /* Optimal reading width */
     margin: 0 auto;
-    color: var(--color-gray-800);
+    color: var(--theme-text-primary);
     line-height: 1.7;
     font-size: 1rem;
 }
@@ -45,7 +45,7 @@
 .documentation-content h1 {
     font-size: 2.5rem;
     font-weight: 700;
-    color: var(--color-gray-900);
+    color: var(--theme-text-primary);
     margin-top: 0 !important;
     /* Force removal of top margin */
     margin-bottom: 2rem;
@@ -77,7 +77,7 @@
 .documentation-content h2 {
     font-size: 1.8rem;
     font-weight: 600;
-    color: var(--color-gray-900);
+    color: var(--theme-text-primary);
     margin-top: 3rem;
     margin-bottom: 1.25rem;
     letter-spacing: -0.01em;
@@ -186,7 +186,7 @@
 .documentation-content th,
 .documentation-content td {
     padding: 1rem;
-    border-bottom: 1px solid var(--color-gray-200);
+    border-bottom: 1px solid var(--theme-border-color);
     text-align: left;
 }
 

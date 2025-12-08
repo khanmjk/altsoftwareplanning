@@ -16,10 +16,10 @@
     align-items: center;
     gap: 6px;
     padding: 6px 14px;
-    border: 1px solid var(--color-gray-300);
+    border: 1px solid var(--theme-border-color);
     border-radius: var(--radius-md);
-    background: var(--color-white);
-    color: var(--color-gray-700);
+    background: var(--theme-bg-secondary);
+    color: var(--theme-text-secondary);
     font-size: 0.875rem;
     font-weight: 500;
     line-height: 1.5;
@@ -42,9 +42,9 @@
 
 /* Hover state */
 .pill-nav__item:hover {
-    background: var(--color-gray-50);
-    border-color: var(--color-gray-400);
-    color: var(--color-gray-900);
+    background: var(--theme-bg-tertiary);
+    border-color: var(--theme-border-color);
+    color: var(--theme-text-primary);
 }
 
 /* Focus state (keyboard navigation) */
@@ -56,9 +56,9 @@
 
 /* Active state */
 .pill-nav__item--active {
-    background: var(--color-primary);
-    border-color: var(--color-primary);
-    color: var(--color-white);
+    background: var(--theme-primary);
+    border-color: var(--theme-primary);
+    color: #ffffff;
     font-weight: 600;
 }
 
