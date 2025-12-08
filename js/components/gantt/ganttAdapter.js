@@ -10,16 +10,14 @@ const ganttAdapter = (function () {
     const computeSdeEstimate = (init, filterTeamId) => GanttService.computeSdeEstimate(init, filterTeamId);
 
     function buildTasksFromInitiatives({ initiatives = [], workPackages = [], viewBy = 'All Initiatives', filters = {}, year, selectedTeam, expandedInitiativeIds = new Set(), expandedWorkPackageIds = new Set() }) {
-        if (typeof WorkPackageService !== 'undefined' && typeof SystemService.getCurrentSystem() !== 'undefined') {
+        if (SystemService.getCurrentSystem()) {
             WorkPackageService.ensureWorkPackagesForInitiatives(SystemService.getCurrentSystem(), year);
         }
         const tasks = [];
         const yearVal = year || new Date().getFullYear();
         const defaultStart = `${yearVal}-01-15`;
         const defaultEnd = `${yearVal}-11-01`;
-        const workingDaysPerYear = (typeof getWorkingDaysPerYear === 'function')
-            ? getWorkingDaysPerYear()
-            : (SystemService.getCurrentSystem()?.capacityConfiguration?.workingDaysPerYear || 261);
+        const workingDaysPerYear = getWorkingDaysPerYear();
         const teamMap = new Map((SystemService.getCurrentSystem()?.teams || []).map(t => [t.teamId, t]));
         const goalMap = new Map((SystemService.getCurrentSystem()?.goals || []).map(g => [g.goalId, g]));
         const themeMap = new Map((SystemService.getCurrentSystem()?.definedThemes || []).map(t => [t.themeId, t]));
@@ -47,9 +45,7 @@ const ganttAdapter = (function () {
             const hasWorkPackages = wpList.length > 0;
 
             // Level 1: Initiative Summary (Always Render)
-            const initDates = (typeof getComputedInitiativeDates === 'function')
-                ? getComputedInitiativeDates(init, selectedTeam)
-                : { startDate: init.attributes?.startDate || defaultStart, endDate: init.targetDueDate || defaultEnd };
+            const initDates = getComputedInitiativeDates(init, selectedTeam);
             const initStart = initDates.startDate || defaultStart;
             const initEnd = initDates.endDate || defaultEnd;
             const initiativeLabel = buildInitiativeLabel(init, initEnd);

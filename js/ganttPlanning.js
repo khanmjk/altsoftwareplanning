@@ -15,6 +15,7 @@ let ganttStatusFilter = new Set(GANTT_STATUS_OPTIONS);
 let lastGanttFocusTaskId = null;
 let lastGanttFocusTaskType = null;
 let lastGanttFocusInitiativeId = null;
+let ganttChartInstance = null; // Chart renderer instance (Mermaid or Frappe)
 
 // Use GanttService methods via local aliases for cleaner internal usage
 const normalizeGanttId = (value) => GanttService.normalizeGanttId(value);
