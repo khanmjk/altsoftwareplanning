@@ -459,29 +459,115 @@ function renderGanttTable() {
         const initIdNorm = normalizeGanttId(init.initiativeId);
         const isFocusInitiative = focus.initiativeId && initIdNorm === focus.initiativeId;
         const isFocusRow = focus.taskType === 'initiative' && focus.taskId && initIdNorm === focus.taskId;
+
         const tr = document.createElement('tr');
         tr.className = [
             'gantt-init-row',
             isFocusInitiative ? 'gantt-focus-initiative' : '',
             isFocusRow ? 'gantt-focus-row' : ''
         ].filter(Boolean).join(' ');
-        tr.innerHTML = `
-            <td class="gantt-table__cell gantt-table__cell--initiative gantt-table__cell--initiative-title">
-                <button class="gantt-expander" data-action="toggle-initiative" data-id="${init.initiativeId}" aria-label="Toggle work packages">${isExpanded ? '-' : '+'}</button>
-                <div class="gantt-table__title-container">
-                    <div>${init.title || '(Untitled)'}</div>
-                    <div class="gantt-table__id-badge">${init.initiativeId || ''}</div>
-                </div>
-            </td>
-            ${showManagerTeams ? `<td class="gantt-table__cell gantt-table__cell--initiative">${getTeamsForInitiative(init).join(', ')}</td>` : ''}
-            <td class="gantt-table__cell gantt-table__cell--initiative"><input type="date" value="${init.displayStart || ''}" data-kind="initiative" data-field="startDate" data-id="${init.initiativeId}" ${hasWorkPackages ? 'disabled title="Edit dates at Work Package level when WPs exist."' : ''}></td>
-            <td class="gantt-table__cell gantt-table__cell--initiative"><input type="date" value="${init.displayEnd || ''}" data-kind="initiative" data-field="targetDueDate" data-id="${init.initiativeId}" ${hasWorkPackages ? 'disabled title="Edit dates at Work Package level when WPs exist."' : ''}></td>
-            <td class="gantt-table__cell gantt-table__cell--initiative"><input type="number" step="0.01" value="${computeSdeEstimate(init)}" data-kind="initiative" data-field="sdeEstimate" data-id="${init.initiativeId}" ${hasWorkPackages ? 'disabled title="Edit SDEs at Work Package level when WPs exist."' : ''}></td>
-            <td class="gantt-table__cell gantt-table__cell--initiative">${renderInitiativePredecessorSelector(allInitiatives, init)}</td>
-            <td class="gantt-table__cell gantt-table__cell--initiative">
-                <button class="gantt-add-wp btn-primary" data-action="add-wp" data-id="${init.initiativeId}">Add WP</button>
-            </td>
-        `;
+
+        // Title cell with expander and initiative info
+        const titleCell = document.createElement('td');
+        titleCell.className = 'gantt-table__cell gantt-table__cell--initiative gantt-table__cell--initiative-title';
+
+        const expanderBtn = document.createElement('button');
+        expanderBtn.className = 'gantt-expander';
+        expanderBtn.dataset.action = 'toggle-initiative';
+        expanderBtn.dataset.id = init.initiativeId;
+        expanderBtn.setAttribute('aria-label', 'Toggle work packages');
+        expanderBtn.textContent = isExpanded ? '-' : '+';
+        titleCell.appendChild(expanderBtn);
+
+        const titleContainer = document.createElement('div');
+        titleContainer.className = 'gantt-table__title-container';
+
+        const titleDiv = document.createElement('div');
+        titleDiv.textContent = init.title || '(Untitled)';
+        titleContainer.appendChild(titleDiv);
+
+        const idBadge = document.createElement('div');
+        idBadge.className = 'gantt-table__id-badge';
+        idBadge.textContent = init.initiativeId || '';
+        titleContainer.appendChild(idBadge);
+
+        titleCell.appendChild(titleContainer);
+        tr.appendChild(titleCell);
+
+        // Optional Teams cell (for Manager view)
+        if (showManagerTeams) {
+            const teamsCell = document.createElement('td');
+            teamsCell.className = 'gantt-table__cell gantt-table__cell--initiative';
+            teamsCell.textContent = getTeamsForInitiative(init).join(', ');
+            tr.appendChild(teamsCell);
+        }
+
+        // Start date cell
+        const startCell = document.createElement('td');
+        startCell.className = 'gantt-table__cell gantt-table__cell--initiative';
+        const startInput = document.createElement('input');
+        startInput.type = 'date';
+        startInput.value = init.displayStart || '';
+        startInput.dataset.kind = 'initiative';
+        startInput.dataset.field = 'startDate';
+        startInput.dataset.id = init.initiativeId;
+        if (hasWorkPackages) {
+            startInput.disabled = true;
+            startInput.title = 'Edit dates at Work Package level when WPs exist.';
+        }
+        startCell.appendChild(startInput);
+        tr.appendChild(startCell);
+
+        // Target date cell
+        const targetCell = document.createElement('td');
+        targetCell.className = 'gantt-table__cell gantt-table__cell--initiative';
+        const targetInput = document.createElement('input');
+        targetInput.type = 'date';
+        targetInput.value = init.displayEnd || '';
+        targetInput.dataset.kind = 'initiative';
+        targetInput.dataset.field = 'targetDueDate';
+        targetInput.dataset.id = init.initiativeId;
+        if (hasWorkPackages) {
+            targetInput.disabled = true;
+            targetInput.title = 'Edit dates at Work Package level when WPs exist.';
+        }
+        targetCell.appendChild(targetInput);
+        tr.appendChild(targetCell);
+
+        // SDE cell
+        const sdeCell = document.createElement('td');
+        sdeCell.className = 'gantt-table__cell gantt-table__cell--initiative';
+        const sdeInput = document.createElement('input');
+        sdeInput.type = 'number';
+        sdeInput.step = '0.01';
+        sdeInput.value = computeSdeEstimate(init);
+        sdeInput.dataset.kind = 'initiative';
+        sdeInput.dataset.field = 'sdeEstimate';
+        sdeInput.dataset.id = init.initiativeId;
+        if (hasWorkPackages) {
+            sdeInput.disabled = true;
+            sdeInput.title = 'Edit SDEs at Work Package level when WPs exist.';
+        }
+        sdeCell.appendChild(sdeInput);
+        tr.appendChild(sdeCell);
+
+        // Dependencies cell
+        const depsCell = document.createElement('td');
+        depsCell.className = 'gantt-table__cell gantt-table__cell--initiative';
+        depsCell.innerHTML = renderInitiativePredecessorSelector(allInitiatives, init); // Keep innerHTML for selector temporarily
+        tr.appendChild(depsCell);
+
+        // Actions cell
+        const actionsCell = document.createElement('td');
+        actionsCell.className = 'gantt-table__cell gantt-table__cell--initiative';
+        const addWpBtn = document.createElement('button');
+        addWpBtn.className = 'gantt-add-wp btn-primary';
+        addWpBtn.dataset.action = 'add-wp';
+        addWpBtn.dataset.id = init.initiativeId;
+        addWpBtn.textContent = 'Add WP';
+        actionsCell.appendChild(addWpBtn);
+        tr.appendChild(actionsCell);
+
         tbody.appendChild(tr);
 
         if (isExpanded) {
@@ -507,30 +593,94 @@ function renderGanttTable() {
                     ].filter(Boolean).join(' ');
                     const wpRow = document.createElement('tr');
                     wpRow.className = wpRowClasses;
-                    const depsValue = (wp.dependencies || []).join(', ');
-                    wpRow.innerHTML = `
-                        <td class="gantt-table__cell gantt-table__cell--wp gantt-table__cell--wp-title">
-                            <div>
-                                <button class="gantt-expander" data-action="toggle-wp" data-wp-id="${wp.workPackageId}" aria-label="Toggle team assignments">${wpExpanded ? '-' : '+'}</button>
-                                <input type="text" value="${wp.title || ''}" data-kind="work-package" data-field="title" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}">
-                            </div>
-                        </td>
-                        ${showManagerTeams ? `<td class="gantt-table__cell gantt-table__cell--wp gantt-table__cell--wp-teams">${formatWorkPackageTeams(wp, selectedTeam)}</td>` : ''}
-                        <td class="gantt-table__cell gantt-table__cell--wp"><input type="date" value="${wp.startDate || ''}" data-kind="work-package" data-field="startDate" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}"></td>
-                        <td class="gantt-table__cell gantt-table__cell--wp"><input type="date" value="${wp.endDate || ''}" data-kind="work-package" data-field="endDate" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}"></td>
-                        <td class="gantt-table__cell gantt-table__cell--wp gantt-table__cell--wp-sde">${computeWorkPackageSdeYears(wp, workingDaysPerYear, selectedTeam)}</td>
-                        <td class="gantt-table__cell gantt-table__cell--wp">
-                            ${renderPredecessorSelector(allWorkPackages, wp)}
-                        </td>
-                        <td class="gantt-table__cell gantt-table__cell--wp">
-                            <button data-action="delete-wp" data-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" class="btn-danger">Delete</button>
-                        </td>
-                    `;
+
+                    // WP Title cell with expander
+                    const wpTitleCell = document.createElement('td');
+                    wpTitleCell.className = 'gantt-table__cell gantt-table__cell--wp gantt-table__cell--wp-title';
+                    const wpTitleDiv = document.createElement('div');
+
+                    const wpExpanderBtn = document.createElement('button');
+                    wpExpanderBtn.className = 'gantt-expander';
+                    wpExpanderBtn.dataset.action = 'toggle-wp';
+                    wpExpanderBtn.dataset.wpId = wp.workPackageId;
+                    wpExpanderBtn.setAttribute('aria-label', 'Toggle team assignments');
+                    wpExpanderBtn.textContent = wpExpanded ? '-' : '+';
+                    wpTitleDiv.appendChild(wpExpanderBtn);
+
+                    const wpTitleInput = document.createElement('input');
+                    wpTitleInput.type = 'text';
+                    wpTitleInput.value = wp.title || '';
+                    wpTitleInput.dataset.kind = 'work-package';
+                    wpTitleInput.dataset.field = 'title';
+                    wpTitleInput.dataset.wpId = wp.workPackageId;
+                    wpTitleInput.dataset.initiativeId = wp.initiativeId;
+                    wpTitleDiv.appendChild(wpTitleInput);
+
+                    wpTitleCell.appendChild(wpTitleDiv);
+                    wpRow.appendChild(wpTitleCell);
+
+                    // Optional Teams cell
+                    if (showManagerTeams) {
+                        const wpTeamsCell = document.createElement('td');
+                        wpTeamsCell.className = 'gantt-table__cell gantt-table__cell--wp gantt-table__cell--wp-teams';
+                        wpTeamsCell.textContent = formatWorkPackageTeams(wp, selectedTeam);
+                        wpRow.appendChild(wpTeamsCell);
+                    }
+
+                    // Start date cell
+                    const wpStartCell = document.createElement('td');
+                    wpStartCell.className = 'gantt-table__cell gantt-table__cell--wp';
+                    const wpStartInput = document.createElement('input');
+                    wpStartInput.type = 'date';
+                    wpStartInput.value = wp.startDate || '';
+                    wpStartInput.dataset.kind = 'work-package';
+                    wpStartInput.dataset.field = 'startDate';
+                    wpStartInput.dataset.wpId = wp.workPackageId;
+                    wpStartInput.dataset.initiativeId = wp.initiativeId;
+                    wpStartCell.appendChild(wpStartInput);
+                    wpRow.appendChild(wpStartCell);
+
+                    // End date cell
+                    const wpEndCell = document.createElement('td');
+                    wpEndCell.className = 'gantt-table__cell gantt-table__cell--wp';
+                    const wpEndInput = document.createElement('input');
+                    wpEndInput.type = 'date';
+                    wpEndInput.value = wp.endDate || '';
+                    wpEndInput.dataset.kind = 'work-package';
+                    wpEndInput.dataset.field = 'endDate';
+                    wpEndInput.dataset.wpId = wp.workPackageId;
+                    wpEndInput.dataset.initiativeId = wp.initiativeId;
+                    wpEndCell.appendChild(wpEndInput);
+                    wpRow.appendChild(wpEndCell);
+
+                    // SDE cell (readonly display)
+                    const wpSdeCell = document.createElement('td');
+                    wpSdeCell.className = 'gantt-table__cell gantt-table__cell--wp gantt-table__cell--wp-sde';
+                    wpSdeCell.textContent = computeWorkPackageSdeYears(wp, workingDaysPerYear, selectedTeam);
+                    wpRow.appendChild(wpSdeCell);
+
+                    // Dependencies cell
+                    const wpDepsCell = document.createElement('td');
+                    wpDepsCell.className = 'gantt-table__cell gantt-table__cell--wp';
+                    wpDepsCell.innerHTML = renderPredecessorSelector(allWorkPackages, wp); // Keep innerHTML for selector temporarily
+                    wpRow.appendChild(wpDepsCell);
+
+                    // Actions cell
+                    const wpActionsCell = document.createElement('td');
+                    wpActionsCell.className = 'gantt-table__cell gantt-table__cell--wp';
+                    const deleteWpBtn = document.createElement('button');
+                    deleteWpBtn.dataset.action = 'delete-wp';
+                    deleteWpBtn.dataset.id = wp.workPackageId;
+                    deleteWpBtn.dataset.initiativeId = wp.initiativeId;
+                    deleteWpBtn.className = 'btn-danger';
+                    deleteWpBtn.textContent = 'Delete';
+                    wpActionsCell.appendChild(deleteWpBtn);
+                    wpRow.appendChild(wpActionsCell);
+
                     tbody.appendChild(wpRow);
 
                     // Team-level assignment rows for this work package
                     if (wpExpanded) {
-                        const teamFilterActive = currentGanttGroupBy === 'Team' && selectedTeam && selectedTeam !== 'all';
                         const assigns = wp.impactedTeamAssignments || [];
                         const selectedAssignments = teamFilterActive ? assigns.filter(a => a.teamId === selectedTeam) : assigns;
                         const otherAssignments = teamFilterActive ? assigns.filter(a => a.teamId !== selectedTeam) : [];
@@ -548,61 +698,125 @@ function renderGanttTable() {
                             ].filter(Boolean).join(' ');
                             const depsSelector = renderAssignmentPredecessorSelector(wp, assign);
                             const sdeYears = ((assign.sdeDays || 0) / workingDaysPerYear).toFixed(2);
+
+                            // Team name cell
+                            const teamCell = document.createElement('td');
+                            teamCell.className = 'gantt-table__cell--assignment';
+                            teamCell.textContent = `Team: ${getTeamName(assign.teamId) || '(Unassigned)'}`;
+                            assignRow.appendChild(teamCell);
+
                             if (showManagerTeams) {
-                                assignRow.innerHTML = `
-                                    <td class="gantt-table__cell--assignment">Team: ${getTeamName(assign.teamId) || '(Unassigned)'}</td>
-                                    <td class="gantt-table__cell--assignment-empty"></td>
-                                    <td class="gantt-table__cell--assignment-empty">
-                                        <input type="date" value="${assign.startDate || wp.startDate || ''}" data-kind="wp-assign" data-field="startDate" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" data-team-id="${assign.teamId || ''}">
-                                    </td>
-                                    <td class="gantt-table__cell--assignment-empty">
-                                        <input type="date" value="${assign.endDate || wp.endDate || ''}" data-kind="wp-assign" data-field="endDate" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" data-team-id="${assign.teamId || ''}">
-                                    </td>
-                                    <td class="gantt-table__cell--assignment-empty">
-                                        <input type="number" step="0.01" value="${sdeYears}" data-kind="wp-assign" data-field="sdeYears" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" data-team-id="${assign.teamId || ''}">
-                                    </td>
-                                    <td class="gantt-table__cell--assignment-empty">${depsSelector}</td>
-                                    <td class="gantt-table__cell--assignment-empty"></td>
-                                `;
-                            } else {
-                                assignRow.innerHTML = `
-                                    <td class="gantt-table__cell--assignment">Team: ${getTeamName(assign.teamId) || '(Unassigned)'}</td>
-                                    <td class="gantt-table__cell--assignment-empty">
-                                        <input type="date" value="${assign.startDate || wp.startDate || ''}" data-kind="wp-assign" data-field="startDate" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" data-team-id="${assign.teamId || ''}">
-                                    </td>
-                                    <td class="gantt-table__cell--assignment-empty">
-                                        <input type="date" value="${assign.endDate || wp.endDate || ''}" data-kind="wp-assign" data-field="endDate" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" data-team-id="${assign.teamId || ''}">
-                                    </td>
-                                    <td class="gantt-table__cell--assignment-empty">
-                                        <input type="number" step="0.01" value="${sdeYears}" data-kind="wp-assign" data-field="sdeYears" data-wp-id="${wp.workPackageId}" data-initiative-id="${wp.initiativeId}" data-team-id="${assign.teamId || ''}">
-                                    </td>
-                                    <td class="gantt-table__cell--assignment-empty">${depsSelector}</td>
-                                    <td class="gantt-table__cell--assignment-empty"></td>
-                                `;
+                                // Empty cell for manager teams column
+                                const emptyTeamCell = document.createElement('td');
+                                emptyTeamCell.className = 'gantt-table__cell--assignment-empty';
+                                assignRow.appendChild(emptyTeamCell);
                             }
+
+                            // Start date cell
+                            const startCell = document.createElement('td');
+                            startCell.className = 'gantt-table__cell--assignment-empty';
+                            const startInput = document.createElement('input');
+                            startInput.type = 'date';
+                            startInput.value = assign.startDate || wp.startDate || '';
+                            startInput.dataset.kind = 'wp-assign';
+                            startInput.dataset.field = 'startDate';
+                            startInput.dataset.wpId = wp.workPackageId;
+                            startInput.dataset.initiativeId = wp.initiativeId;
+                            startInput.dataset.teamId = assign.teamId || '';
+                            startCell.appendChild(startInput);
+                            assignRow.appendChild(startCell);
+
+                            // End date cell
+                            const endCell = document.createElement('td');
+                            endCell.className = 'gantt-table__cell--assignment-empty';
+                            const endInput = document.createElement('input');
+                            endInput.type = 'date';
+                            endInput.value = assign.endDate || wp.endDate || '';
+                            endInput.dataset.kind = 'wp-assign';
+                            endInput.dataset.field = 'endDate';
+                            endInput.dataset.wpId = wp.workPackageId;
+                            endInput.dataset.initiativeId = wp.initiativeId;
+                            endInput.dataset.teamId = assign.teamId || '';
+                            endCell.appendChild(endInput);
+                            assignRow.appendChild(endCell);
+
+                            // SDE years cell
+                            const sdeCell = document.createElement('td');
+                            sdeCell.className = 'gantt-table__cell--assignment-empty';
+                            const sdeInput = document.createElement('input');
+                            sdeInput.type = 'number';
+                            sdeInput.step = '0.01';
+                            sdeInput.value = sdeYears;
+                            sdeInput.dataset.kind = 'wp-assign';
+                            sdeInput.dataset.field = 'sdeYears';
+                            sdeInput.dataset.wpId = wp.workPackageId;
+                            sdeInput.dataset.initiativeId = wp.initiativeId;
+                            sdeInput.dataset.teamId = assign.teamId || '';
+                            sdeCell.appendChild(sdeInput);
+                            assignRow.appendChild(sdeCell);
+
+                            // Dependencies cell
+                            const depsCell = document.createElement('td');
+                            depsCell.className = 'gantt-table__cell--assignment-empty';
+                            depsCell.innerHTML = depsSelector; // Keep innerHTML temporarily
+                            assignRow.appendChild(depsCell);
+
+                            // Empty actions cell
+                            const actionsCell = document.createElement('td');
+                            actionsCell.className = 'gantt-table__cell--assignment-empty';
+                            assignRow.appendChild(actionsCell);
+
                             tbody.appendChild(assignRow);
                         });
 
                         if (teamFilterActive && otherAssignments.length) {
                             const toggleRow = document.createElement('tr');
+
+                            // Label cell
+                            const labelCell = document.createElement('td');
+                            labelCell.className = 'gantt-table__cell--other-teams';
+                            labelCell.textContent = `Other teams (${otherAssignments.length})`;
+                            toggleRow.appendChild(labelCell);
+
                             if (showManagerTeams) {
-                                toggleRow.innerHTML = `
-                                    <td class="gantt-table__cell--other-teams">Other teams (${otherAssignments.length})</td>
-                                    <td class="gantt-table__cell--other-teams-action"></td>
-                                    <td colspan="4" class="gantt-table__cell--other-teams-action">
-                                        <button data-action="toggle-other-teams" data-wp-id="${wp.workPackageId}">${showOtherTeams ? 'Hide' : 'Show'} other teams</button>
-                                    </td>
-                                    <td class="gantt-table__cell--other-teams-action"></td>
-                                `;
+                                // Empty cell for manager teams column
+                                const emptyCell = document.createElement('td');
+                                emptyCell.className = 'gantt-table__cell--other-teams-action';
+                                toggleRow.appendChild(emptyCell);
+
+                                // Action cell with colspan
+                                const actionCell = document.createElement('td');
+                                actionCell.className = 'gantt-table__cell--other-teams-action';
+                                actionCell.colSpan = 4;
+                                const toggleBtn = document.createElement('button');
+                                toggleBtn.dataset.action = 'toggle-other-teams';
+                                toggleBtn.dataset.wpId = wp.workPackageId;
+                                toggleBtn.textContent = showOtherTeams ? 'Hide' : 'Show' + ' other teams';
+                                actionCell.appendChild(toggleBtn);
+                                toggleRow.appendChild(actionCell);
+
+                                // Empty trailing cell
+                                const trailingCell = document.createElement('td');
+                                trailingCell.className = 'gantt-table__cell--other-teams-action';
+                                toggleRow.appendChild(trailingCell);
                             } else {
-                                toggleRow.innerHTML = `
-                                    <td class="gantt-table__cell--other-teams">Other teams (${otherAssignments.length})</td>
-                                    <td colspan="4" class="gantt-table__cell--other-teams-action">
-                                        <button data-action="toggle-other-teams" data-wp-id="${wp.workPackageId}">${showOtherTeams ? 'Hide' : 'Show'} other teams</button>
-                                    </td>
-                                    <td class="gantt-table__cell--other-teams-action"></td>
-                                `;
+                                // Action cell with colspan (no manager teams column)
+                                const actionCell = document.createElement('td');
+                                actionCell.className = 'gantt-table__cell--other-teams-action';
+                                actionCell.colSpan = 4;
+                                const toggleBtn = document.createElement('button');
+                                toggleBtn.dataset.action = 'toggle-other-teams';
+                                toggleBtn.dataset.wpId = wp.workPackageId;
+                                toggleBtn.textContent = showOtherTeams ? 'Hide' : 'Show' + ' other teams';
+                                actionCell.appendChild(toggleBtn);
+                                toggleRow.appendChild(actionCell);
+
+                                // Empty trailing cell
+                                const trailingCell = document.createElement('td');
+                                trailingCell.className = 'gantt-table__cell--other-teams-action';
+                                toggleRow.appendChild(trailingCell);
                             }
+
                             tbody.appendChild(toggleRow);
                         }
                     }
