@@ -54,14 +54,14 @@ class ServiceVisualization extends BaseVisualization {
             .call(this.createDragBehavior());
 
         const labels = this.graphGroup.append('g')
+            .attr('class', 'labels')
             .selectAll('text')
             .data(this.nodes)
             .join('text')
             .attr('dx', 0)
             .attr('dy', 4)
             .attr('text-anchor', 'middle')
-            .text(d => d.id)
-            .attr('fill', d => d.isSelected ? 'red' : 'black');
+            .text(d => d.id);
 
         const link = this.graphGroup.append('g')
             .attr('stroke', '#aaa')
