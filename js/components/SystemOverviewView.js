@@ -318,13 +318,13 @@ class SystemOverviewView {
 
     renderSystemVisualization() {
         if (SystemService.getCurrentSystem()) {
-            generateVisualization(SystemService.getCurrentSystem());
+            getSystemVisualization().render(SystemService.getCurrentSystem());
         }
     }
 
     renderTeamVisualization() {
         if (SystemService.getCurrentSystem()) {
-            generateTeamVisualization(SystemService.getCurrentSystem());
+            getTeamVisualization().render(SystemService.getCurrentSystem());
         }
     }
 
