@@ -191,6 +191,8 @@ class GanttPlanningView {
         groupSelect.value = this.currentGanttGroupBy;
         groupSelect.onchange = () => {
             this.currentGanttGroupBy = groupSelect.value;
+            // Sync class state to global for legacy functions
+            currentGanttGroupBy = this.currentGanttGroupBy;
             console.log('[GANTT] View By changed', this.currentGanttGroupBy);
             renderDynamicGroupFilter(); // Still uses legacy temporarily
             renderGanttChart(); // Still uses legacy temporarily

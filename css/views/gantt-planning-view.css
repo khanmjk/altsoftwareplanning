@@ -155,9 +155,19 @@
 }
 
 .gantt-table__cell--wp-title {
-    display: flex;
+    padding: 6px 6px 6px 32px;
+}
+
+.gantt-table__cell--wp-title>div {
+    display: inline-flex;
     align-items: center;
     gap: 8px;
+    vertical-align: middle;
+}
+
+.gantt-table__cell--wp-title .gantt-expander {
+    flex-shrink: 0;
+    margin: 0;
 }
 
 .gantt-table__cell--wp-teams {
@@ -227,6 +237,17 @@
 .gantt-add-wp {
     padding: 4px 8px;
     font-size: 12px;
+}
+
+/* WP Actions Column - buttons inline */
+.gantt-table__cell--wp-actions {
+    white-space: nowrap;
+}
+
+.gantt-table__cell--wp-actions button {
+    display: inline-block;
+    margin-right: 4px;
+    vertical-align: middle;
 }
 
 /* Row States */
