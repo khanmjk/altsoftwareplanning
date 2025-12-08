@@ -323,6 +323,11 @@ Before submitting a new view or refactoring an existing one, verify:
 - [ ] Scrolling works correctly (canvas-level or view-level)
 - [ ] Registered in `NavigationManager.navigateTo()`
 
+**Theming & Design System**:
+- [ ] No hardcoded colors (`#fff`, `black`, `rgb(...)`) - use `var(--theme-*)`
+- [ ] Visualizations/Canvas elements respect current theme (Light/Dark compliant)
+- [ ] Components inherit standard background/text variables (`--theme-bg-primary`, etc.)
+
 **Code Quality (Migration Readiness)**:
 - [ ] No inline HTML strings (use DOM creation)
 - [ ] No inline CSS (use view-specific CSS file in `css/views/`)
@@ -563,3 +568,78 @@ window.runYearPlanOptimizer = async function(options) {
 **Version**: 2.1  
 **Owner**: SMT Platform Engineering Team
 
+---
+
+## 12. Theming & Design System Integrity
+
+To ensure a seamless, premium experience across Light, Dark, and Seasonal themes, strict adherence to the **Semantic Variable System** is mandatory.
+
+### 12.1 The Golden Rule: No Hardcoded Colors
+
+> [!CRITICAL]
+> **NEVER** use hardcoded hex values, RGB/RGBA, or named colors in CSS or JavaScript.
+> *   ❌ `background-color: #ffffff;`
+> *   ❌ `color: black;`
+> *   ❌ `.style('fill', '#333')`
+> 
+> **ALWAYS** use the semantic theme variables defined in `css/settings/variables.css`.
+> *   ✅ `background-color: var(--theme-bg-primary);`
+> *   ✅ `color: var(--theme-text-primary);`
+> *   ✅ `.style('fill', 'var(--theme-text-secondary)')`
+
+### 12.2 Semantic Variable Usage Guide
+
+**Backgrounds**:
+- `var(--theme-bg-primary)`: Main page background (Canvas)
+- `var(--theme-bg-secondary)`: Sidebar, headers, card backgrounds (if distinct)
+- `var(--theme-bg-tertiary)`: Hover states, active items
+- `var(--theme-card-bg)`: Explicit card container background
+
+**Text**:
+- `var(--theme-text-primary)`: Main headings, body text
+- `var(--theme-text-secondary)`: Metadata, secondary labels
+- `var(--theme-text-muted)`: Disabled text, subtle hints (placeholders)
+
+**Borders**:
+- `var(--theme-border-color)`: Standard borders
+- `var(--theme-border-light)`: Subtle dividers
+
+**Interactive**:
+- `var(--theme-primary)`: Primary brand color (Actions, Active States)
+- `var(--theme-primary-hover)`: Hover state for primary actions
+
+### 12.3 JavaScript & Visualizations (D3/Canvas)
+
+Dynamic visualizations must not break the theme.
+
+1.  **CSS Classes First**: Whenever possible, apply a CSS class to SVG elements and style them in CSS using variables.
+    ```javascript
+    // GOOD
+    node.append('circle').attr('class', 'node-circle');
+    // CSS: .node-circle { fill: var(--theme-bg-secondary); }
+    ```
+
+2.  **Inline Styles with Variables**: If dynamic styling is required, inject the variable string.
+    ```javascript
+    // GOOD
+    element.style('stroke', 'var(--theme-text-muted)');
+    ```
+
+3.  **Computed Styles**: If a raw hex value is absolutely needed (e.g., for Canvas API), read it from a dummy element or `getComputedStyle`.
+
+### 12.4 Integrity Checks
+
+Any PR or Refactor involving UI changes must pass the **"Midnight Test"**:
+1.  Complete the work in Light Mode.
+2.  Switch to Dark Mode using Settings.
+3.  Verify:
+    - No "white blocks" or jarring backgrounds.
+    - All text is legible (no black text on dark background).
+    - Borders are visible but not overpowering.
+    - Tables do not have hardcoded white stripes.
+
+---
+
+**Last Updated**: 2025-12-08
+**Version**: 2.2
+**Owner**: SMT Platform Engineering Team
