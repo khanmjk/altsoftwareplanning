@@ -362,7 +362,8 @@ function debounceResize(callback, delay = 200) {
  * - Ensures consistent use of event.subject in drag handler.
  */
 function generateVisualization(systemData) {
-    let svg = d3.select('#systemSvg');
+    const d3 = D3Service.getInstance();
+    let svg = D3Service.select('#systemSvg');
     svg.selectAll('*').remove(); // Clear any existing content
 
     // --- Get SVG Dimensions ---
@@ -380,16 +381,13 @@ function generateVisualization(systemData) {
     // --- Zoom Setup ---
     let graphGroup = svg.append('g').attr('class', 'graph-group'); // Container for zoomable elements
 
-    let zoom = d3.zoom()
-        .scaleExtent([0.1, 5]) // Adjusted scale extent slightly
-        .on('zoom', zoomed);
+    const zoomBehavior = D3Service.createZoomBehavior({
+        scaleExtent: [0.1, 5],
+        onZoom: (transform) => graphGroup.attr('transform', transform)
+    });
 
     // Apply zoom AFTER appending graphGroup, call it on SVG element
-    svg.call(zoom);
-
-    function zoomed(event) {
-        graphGroup.attr('transform', event.transform); // Apply transform to the group
-    }
+    svg.call(zoomBehavior);
     // --- End Zoom Setup ---
 
     // Define node radius
@@ -401,9 +399,8 @@ function generateVisualization(systemData) {
     let nodeMap = {};
 
     // --- Prepare Nodes and Links ---
-    const teamColorScale = d3.scaleOrdinal(d3.schemeCategory10);
     const teamIds = (systemData.teams || []).map(team => team.teamId);
-    teamColorScale.domain(teamIds);
+    const teamColorScale = D3Service.createColorScale(teamIds);
 
     // Create nodes for services and APIs
     (systemData.services || []).forEach(service => {
@@ -523,10 +520,6 @@ function generateVisualization(systemData) {
     // --- End Draw Elements ---
 
     // --- Tooltip ---
-    let tooltip = d3.select('body').selectAll('.visualization-tooltip').data([null]).join('div') // Reuse or create tooltip
-        .attr('class', 'visualization-tooltip')
-        .style('opacity', 0);
-
     node.on('mouseover', function (event, d) {
         let info = '';
         if (d.type === 'service') {
@@ -548,10 +541,9 @@ function generateVisualization(systemData) {
         } else if (d.type === 'platform') {
             info = `<strong>Platform:</strong> ${d.id}`;
         }
-        tooltip.transition().duration(200).style('opacity', .9);
-        tooltip.html(info).style('left', (event.pageX + 10) + 'px').style('top', (event.pageY - 28) + 'px');
+        D3Service.showTooltip(event, info, { className: 'visualization-tooltip' });
     }).on('mouseout', function () {
-        tooltip.transition().duration(500).style('opacity', 0);
+        D3Service.hideTooltip();
     });
     // --- End Tooltip ---
 
@@ -571,36 +563,14 @@ function generateVisualization(systemData) {
     });
     // --- End Tick ---
 
-    // --- Drag Functions (with fix) ---
+    // --- Drag Functions (using D3Service) ---
     function drag(simulation) {
-        function dragstarted(event, d) {
-            // *** FIX: Stop event propagation to prevent zoom/pan interference ***
-            if (event.sourceEvent) { // Ensure sourceEvent exists
-                event.sourceEvent.stopPropagation();
-            }
-            // *******************************************************************
-            if (!event.active) simulation.alphaTarget(0.3).restart();
-            event.subject.fx = event.subject.x; // Use event.subject which is the datum 'd'
-            event.subject.fy = event.subject.y;
-        }
-        function dragged(event, d) {
-            event.subject.fx = event.x;
-            event.subject.fy = event.y;
-        }
-        function dragended(event, d) {
-            if (!event.active) simulation.alphaTarget(0);
-            event.subject.fx = null;
-            event.subject.fy = null;
-        }
-        return d3.drag()
-            .on('start', dragstarted)
-            .on('drag', dragged)
-            .on('end', dragended);
+        return D3Service.createDragBehavior(simulation);
     }
     // --- End Drag Functions ---
 
     // --- Legend ---
-    d3.select('#legend').selectAll('*').remove(); // Clear previous legend in the dedicated div
+    D3Service.select('#legend').selectAll('*').remove(); // Clear previous legend in the dedicated div
     let legendData = (systemData.teams || []).map(team => ({
         teamIdentity: team.teamIdentity || team.teamName || team.teamId, // Use identity, fallback to name/ID
         color: teamColorScale(team.teamId)
@@ -610,7 +580,7 @@ function generateVisualization(systemData) {
         legendData.push({ teamIdentity: 'Platform Dependency', color: '#a04040' });
     }
 
-    let legend = d3.select('#legend').selectAll('.legend-item')
+    let legend = D3Service.select('#legend').selectAll('.legend-item')
         .data(legendData)
         .enter().append('div')
         .attr('class', 'legend-item'); // Use existing CSS class
@@ -629,7 +599,8 @@ function generateVisualization(systemData) {
 
 /** Generate Team Relationships Visualization **/
 function generateTeamVisualization(systemData) {
-    let svg = d3.select('#teamSvg');
+    const d3 = D3Service.getInstance();
+    let svg = D3Service.select('#teamSvg');
     svg.selectAll('*').remove(); // Clear any existing content
 
     // Set SVG dimensions
@@ -654,9 +625,8 @@ function generateTeamVisualization(systemData) {
     let nodeMap = {};
 
     // Create a color scale for teams
-    const teamColorScale = d3.scaleOrdinal(d3.schemeCategory10);
     const teamIds = systemData.teams.map(team => team.teamId);
-    teamColorScale.domain(teamIds);
+    const teamColorScale = D3Service.createColorScale(teamIds);
 
     // Map teamId to services
     let teamServicesMap = {};
@@ -751,10 +721,6 @@ function generateTeamVisualization(systemData) {
         .text(d => d.name);
 
     // Tooltip
-    let tooltip = d3.select('body').append('div')
-        .attr('class', 'visualization-tooltip')
-        .style('opacity', 0);
-
     node.on('mouseover', function (event, d) {
         let team = systemData.teams.find(t => t.teamId === d.id);
         let sdm = systemData.sdms.find(s => s.sdmId === team.sdmId);
@@ -767,16 +733,9 @@ function generateTeamVisualization(systemData) {
                     <strong>Size of Team:</strong> ${team.fundedHeadcount !== undefined ? team.fundedHeadcount : (team.engineers ? team.engineers.length : 'N/A')}<br>
                     <strong>Engineer Names:</strong> ${(team.engineers && team.engineers.length > 0) ? team.engineers.join(', ') : 'None'}<br>
                     <strong>Services Owned:</strong> ${services}`;
-        tooltip.transition()
-            .duration(200)
-            .style('opacity', .9);
-        tooltip.html(info)
-            .style('left', (event.pageX + 10) + 'px')
-            .style('top', (event.pageY - 28) + 'px');
+        D3Service.showTooltip(event, info, { className: 'visualization-tooltip' });
     }).on('mouseout', function () {
-        tooltip.transition()
-            .duration(500)
-            .style('opacity', 0);
+        D3Service.hideTooltip();
     });
 
     // Update positions on each tick
@@ -794,26 +753,9 @@ function generateTeamVisualization(systemData) {
             .attr('y2', d => d.target.y);
     });
 
-    // Drag functions
+    // Drag functions (using D3Service)
     function drag(simulation) {
-        function dragstarted(event) {
-            if (!event.active) simulation.alphaTarget(0.3).restart();
-            event.subject.fx = event.subject.x;
-            event.subject.fy = event.subject.y;
-        }
-        function dragged(event) {
-            event.subject.fx = event.x;
-            event.subject.fy = event.y;
-        }
-        function dragended(event) {
-            if (!event.active) simulation.alphaTarget(0);
-            event.subject.fx = null;
-            event.subject.fy = null;
-        }
-        return d3.drag()
-            .on('start', dragstarted)
-            .on('drag', dragged)
-            .on('end', dragended);
+        return D3Service.createDragBehavior(simulation);
     }
 
     // Add legend for teams
@@ -822,7 +764,7 @@ function generateTeamVisualization(systemData) {
         color: teamColorScale(team.teamId)
     }));
 
-    let legend = d3.select('#teamLegend').selectAll('.legend-item')
+    let legend = D3Service.select('#teamLegend').selectAll('.legend-item')
         .data(legendData)
         .enter().append('div')
         .attr('class', 'legend-item');
@@ -884,7 +826,8 @@ function updateServiceVisualization(selectedService) {
 }
 
 function generateServiceVisualization(services, selectedServiceName) {
-    let svg = d3.select('#serviceSvg');
+    const d3 = D3Service.getInstance();
+    let svg = D3Service.select('#serviceSvg');
     svg.selectAll('*').remove(); // Clear any existing content
 
     // Prepare nodes and links data
@@ -909,9 +852,8 @@ function generateServiceVisualization(services, selectedServiceName) {
     const radius = 20;
 
     // Create a color scale based on teams
-    const teamColorScale = d3.scaleOrdinal(d3.schemeCategory10);
     const teamIds = SystemService.getCurrentSystem().teams.map(team => team.teamId);
-    teamColorScale.domain(teamIds);
+    const teamColorScale = D3Service.createColorScale(teamIds);
 
     // Map service names to services for quick lookup
     const serviceMap = {};
@@ -1004,10 +946,6 @@ function generateServiceVisualization(services, selectedServiceName) {
         .attr('fill', d => d.isSelected ? 'red' : 'black'); // Change text color to red for selected node
 
     // Tooltip
-    let tooltip = d3.select('body').append('div')
-        .attr('class', 'visualization-tooltip')
-        .style('opacity', 0);
-
     node.on('mouseover', function (event, d) {
         let info = '';
         if (d.type === 'service') {
@@ -1019,16 +957,9 @@ function generateServiceVisualization(services, selectedServiceName) {
         } else if (d.type === 'platform') {
             info = `<strong>Platform Dependency:</strong> ${d.id}`;
         }
-        tooltip.transition()
-            .duration(200)
-            .style('opacity', .9);
-        tooltip.html(info)
-            .style('left', (event.pageX + 10) + 'px')
-            .style('top', (event.pageY - 28) + 'px');
+        D3Service.showTooltip(event, info, { className: 'visualization-tooltip' });
     }).on('mouseout', function () {
-        tooltip.transition()
-            .duration(500)
-            .style('opacity', 0);
+        D3Service.hideTooltip();
     });
 
     // Update positions on each tick
@@ -1046,26 +977,9 @@ function generateServiceVisualization(services, selectedServiceName) {
             .attr('y2', d => d.target.y);
     });
 
-    // Drag functions
+    // Drag functions (using D3Service)
     function drag(simulation) {
-        function dragstarted(event) {
-            if (!event.active) simulation.alphaTarget(0.3).restart();
-            event.subject.fx = event.subject.x;
-            event.subject.fy = event.subject.y;
-        }
-        function dragged(event) {
-            event.subject.fx = event.x;
-            event.subject.fy = event.y;
-        }
-        function dragended(event) {
-            if (!event.active) simulation.alphaTarget(0);
-            event.subject.fx = null;
-            event.subject.fy = null;
-        }
-        return d3.drag()
-            .on('start', dragstarted)
-            .on('drag', dragged)
-            .on('end', dragended);
+        return D3Service.createDragBehavior(simulation);
     }
 
     // **Add links to the SVG after nodes are created**
@@ -1087,7 +1001,7 @@ function generateServiceVisualization(services, selectedServiceName) {
         color: teamColorScale(team.teamId)
     }));
 
-    let legend = d3.select('#serviceLegend').selectAll('.legend-item')
+    let legend = D3Service.select('#serviceLegend').selectAll('.legend-item')
         .data(legendData)
         .enter().append('div')
         .attr('class', 'legend-item');
@@ -1140,7 +1054,8 @@ function buildDependencyTree(serviceName) {
 function generateDependencyForceVisualization(selectedServiceName) {
     console.log(`Generating Dependency Force Viz for: ${selectedServiceName}`); // Log entry
 
-    const svg = d3.select('#dependencySvg');
+    const d3 = D3Service.getInstance();
+    const svg = D3Service.select('#dependencySvg');
 
     // --- SAFEGUARD ---
     if (!svg || svg.empty()) {
@@ -1186,9 +1101,7 @@ function generateDependencyForceVisualization(selectedServiceName) {
     graphLinks.forEach((link, index) => { link.index = index; });
 
     // Color scale
-    const color = d3.scaleOrdinal()
-        .domain(['service', 'platform'])
-        .range(['#1f77b4', '#ff7f0e']);
+    const color = D3Service.createColorScale(['service', 'platform'], ['#1f77b4', '#ff7f0e']);
 
     // --- Simulation Setup ---
     const simulation = d3.forceSimulation(graphNodes)
@@ -1249,26 +1162,20 @@ function generateDependencyForceVisualization(selectedServiceName) {
     // --- End Data Binding ---
 
     // --- Zoom Setup ---
-    const zoom = d3.zoom()
-        .scaleExtent([0.1, 4])
-        .on('zoom', (event) => {
-            vizContainer.attr('transform', event.transform);
-        });
-    svg.call(zoom);
+    const zoomBehavior = D3Service.createZoomBehavior({
+        scaleExtent: [0.1, 4],
+        onZoom: (transform) => vizContainer.attr('transform', transform)
+    });
+    svg.call(zoomBehavior);
     // --- End Zoom Setup ---
-
-    // Tooltip Element
-    const tooltip = d3.select('body').selectAll('.visualization-tooltip').data([null]).join('div')
-        .attr('class', 'visualization-tooltip')
-        .style('opacity', 0);
 
     // Highlight State
     let highlightedNodes = new Set();
     let highlightedLinks = new Set();
 
-    // --- Event Handlers ---
+    // --- Event Handlers (using D3Service for tooltips) ---
     function handleMouseOver(event, d) {
-        // Tooltip Logic (same as before)
+        // Tooltip Logic
         let info = '';
         if (d.type === 'service') {
             const service = SystemService.getCurrentSystem().services.find(s => s.serviceName === d.id);
@@ -1284,12 +1191,9 @@ function generateDependencyForceVisualization(selectedServiceName) {
         } else if (d.type === 'platform') {
             info = `<strong>Platform:</strong> ${d.id}`;
         }
-        tooltip.transition().duration(200).style('opacity', .9);
-        tooltip.html(info)
-            .style('left', (event.pageX + 10) + 'px')
-            .style('top', (event.pageY - 28) + 'px');
+        D3Service.showTooltip(event, info, { className: 'visualization-tooltip' });
 
-        // Highlight Logic (same as before)
+        // Highlight Logic
         highlightedNodes.clear();
         highlightedLinks.clear();
         highlightedNodes.add(d.id);
@@ -1299,15 +1203,15 @@ function generateDependencyForceVisualization(selectedServiceName) {
         });
         node.style('opacity', n => highlightedNodes.has(n.id) ? 1 : 0.1);
         label.style('opacity', n => highlightedNodes.has(n.id) ? 1 : 0.1);
-        link.style('opacity', l => highlightedLinks.has(l.index) ? 0.9 : 0.1).attr('stroke', l => highlightedLinks.has(l.index) ? '#555' : '#999'); // Make highlighted links darker
+        link.style('opacity', l => highlightedLinks.has(l.index) ? 0.9 : 0.1).attr('stroke', l => highlightedLinks.has(l.index) ? '#555' : '#999');
     }
 
     function handleMouseOut() {
-        tooltip.transition().duration(500).style('opacity', 0);
+        D3Service.hideTooltip();
         // Remove highlights
         node.style('opacity', 1);
         label.style('opacity', 1);
-        link.style('opacity', 0.6).attr('stroke', '#999'); // Restore default opacity and color
+        link.style('opacity', 0.6).attr('stroke', '#999');
         highlightedNodes.clear();
         highlightedLinks.clear();
     }
@@ -1331,19 +1235,9 @@ function generateDependencyForceVisualization(selectedServiceName) {
     }
     // --- End Ticked Function ---
 
-    // --- Drag Functions ---
+    // --- Drag Functions (using D3Service) ---
     function drag(simulation) {
-        function dragstarted(event, d) {
-            if (event.sourceEvent) event.sourceEvent.stopPropagation(); // Prevent interference
-            if (!event.active) simulation.alphaTarget(0.3).restart();
-            d.fx = d.x; d.fy = d.y;
-        }
-        function dragged(event, d) { d.fx = event.x; d.fy = event.y; }
-        function dragended(event, d) {
-            if (!event.active) simulation.alphaTarget(0);
-            d.fx = null; d.fy = null;
-        }
-        return d3.drag().on('start', dragstarted).on('drag', dragged).on('end', dragended);
+        return D3Service.createDragBehavior(simulation);
     }
     // --- End Drag Functions ---
 

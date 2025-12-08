@@ -184,12 +184,12 @@ bar graph per quarter to see team load/demand impact
 [Done] - [TECH DEBT] - clean up main.js
 [Done] - [TECH DEBT] - cleanup occurrences of this pattern if (window.X) { window.X.[OPERATION]...
 [Done] - [TECH DEBT] - code cleanup - busted utils.js!
-
+[Done] - [TECH DEBT] - Abstract 3p libraries like markdown, mermaid, frappe, d3js
 
 ------------
 IN PROGRESS
 ------------
-- [TECH DEBT] - Abstract 3p libraries like markdown, mermaid, frappe
+
 
 - cleanup index.html - move a bunch of html to a view file for main content or the workspace canvas files
 - ensure AI tooling agents have the right function calls to reference with the introduction of the service layer
