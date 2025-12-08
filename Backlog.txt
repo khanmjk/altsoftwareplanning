@@ -189,6 +189,7 @@ bar graph per quarter to see team load/demand impact
 ------------
 IN PROGRESS
 ------------
+- [TECH DEBT] - Abstract 3p libraries like markdown, mermaid, frappe
 
 - cleanup index.html - move a bunch of html to a view file for main content or the workspace canvas files
 - ensure AI tooling agents have the right function calls to reference with the introduction of the service layer

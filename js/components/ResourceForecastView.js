@@ -205,25 +205,8 @@ class ResourceForecastView {
 
     async _loadFAQContent(container) {
         const faqUrl = 'docs/sdmResourceForecastingFAQ.md';
-
-        const md = window.markdownit({
-            html: true,
-            linkify: true,
-            typographer: true
-        });
-
-        try {
-            const response = await fetch(faqUrl);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const markdownText = await response.text();
-            const htmlContent = md.render(markdownText);
-            container.innerHTML = htmlContent;
-        } catch (error) {
-            console.error("Failed to load FAQ:", error);
-            container.innerHTML = `<p style="color:red;">Could not load FAQ content. Details: ${error.message}</p>`;
-        }
+        const htmlContent = await MarkdownService.fetchAndRender(faqUrl);
+        container.innerHTML = htmlContent;
     }
 
     _attachListeners() {

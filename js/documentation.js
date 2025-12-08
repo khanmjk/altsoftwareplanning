@@ -53,22 +53,10 @@ async function loadAndDisplayDocumentation() {
 
     const readmeUrl = 'https://raw.githubusercontent.com/khanmjk/altsoftwareplanning/refs/heads/main/README.md';
 
-
-
-    let md = window.markdownit({
-        html: true,
-        linkify: true,
-        typographer: true
-    });
-
-    try {
-        md = md.use(window.markdownItAnchor, {
-            permalink: window.markdownItAnchor.permalink.headerLink(),
-            level: [1, 2, 3, 4, 5, 6],
-            slugify: s => customSlugify(s)
-        });
-    } catch (e) {
-        console.error("LAD_SLUGIFY: Error applying markdown-it-anchor:", e);
+    // Use MarkdownService for rendering with anchor support
+    if (!MarkdownService.isAvailable()) {
+        console.error("LAD_SLUGIFY: MarkdownService not available");
+        return;
     }
 
     try {
@@ -88,7 +76,7 @@ async function loadAndDisplayDocumentation() {
         // (\n|\r\n)* -> Any following newlines
         markdownText = markdownText.replace(/^\s*#\s+[^\n]+(\n|\r\n)*/, '');
 
-        const htmlContent = md.render(markdownText);
+        const htmlContent = MarkdownService.renderWithAnchors(markdownText, customSlugify);
         contentDiv.innerHTML = htmlContent;
         console.log("LAD_SLUGIFY: Documentation rendered.");
 
