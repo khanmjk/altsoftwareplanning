@@ -50,7 +50,7 @@
     /* Force removal of top margin */
     margin-bottom: 2rem;
     padding-bottom: 1rem;
-    border-bottom: 1px solid var(--color-gray-200);
+    border-bottom: 1px solid var(--theme-border-color);
     letter-spacing: -0.02em;
     line-height: 1.2;
 }
@@ -101,14 +101,14 @@
 
 .documentation-content p {
     margin-bottom: 1.5rem;
-    color: var(--color-gray-700);
+    color: var(--theme-text-secondary);
 }
 
 .documentation-content ul,
 .documentation-content ol {
     margin-bottom: 1.5rem;
     padding-left: 1.5rem;
-    color: var(--color-gray-700);
+    color: var(--theme-text-secondary);
 }
 
 .documentation-content li {
@@ -116,11 +116,11 @@
 }
 
 .documentation-content li::marker {
-    color: var(--color-gray-400);
+    color: var(--theme-text-muted);
 }
 
 .documentation-content a {
-    color: var(--color-primary);
+    color: var(--theme-primary);
     text-decoration: none;
     font-weight: 500;
     border-bottom: 1px solid transparent;
@@ -128,26 +128,26 @@
 }
 
 .documentation-content a:hover {
-    border-bottom-color: var(--color-primary);
+    border-bottom-color: var(--theme-primary);
 }
 
 .documentation-content blockquote {
-    border-left: 4px solid var(--color-primary);
-    background-color: rgba(59, 130, 246, 0.04);
+    border-left: 4px solid var(--theme-primary);
+    background-color: color-mix(in srgb, var(--theme-primary), transparent 95%);
     padding: 1.25rem 1.75rem;
     margin: 2rem 0;
     border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
     font-style: italic;
-    color: var(--color-gray-700);
+    color: var(--theme-text-secondary);
 }
 
 .documentation-content code {
     font-family: 'Fira Code', 'Roboto Mono', monospace;
     font-size: 0.9em;
-    background-color: var(--color-gray-100);
+    background-color: var(--theme-bg-tertiary);
     padding: 0.2em 0.4em;
     border-radius: 4px;
-    color: var(--color-secondary-dark);
+    color: var(--theme-primary);
 }
 
 .documentation-content pre {
@@ -162,7 +162,7 @@
     font-family: 'Fira Code', 'Roboto Mono', monospace;
     font-size: 0.9rem;
     line-height: 1.5;
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--theme-card-shadow);
 }
 
 .documentation-content pre code {
@@ -177,7 +177,7 @@
     border-collapse: collapse;
     margin: 2rem 0;
     font-size: 0.95rem;
-    border: 1px solid var(--color-gray-200);
+    border: 1px solid var(--theme-border-color);
     border-radius: var(--radius-sm);
     overflow: hidden;
     /* For border radius on table */
@@ -191,10 +191,10 @@
 }
 
 .documentation-content th {
-    background-color: var(--color-gray-50);
+    background-color: var(--theme-bg-secondary);
     font-weight: 600;
-    color: var(--color-gray-900);
-    border-bottom: 2px solid var(--color-gray-200);
+    color: var(--theme-text-primary);
+    border-bottom: 2px solid var(--theme-border-color);
 }
 
 .documentation-content tr:last-child td {
@@ -204,7 +204,7 @@
 .documentation-content hr {
     border: 0;
     height: 1px;
-    background-color: var(--color-gray-200);
+    background-color: var(--theme-border-color);
     margin: 3rem 0;
 }
 
@@ -215,6 +215,6 @@
     justify-content: center;
     gap: 12px;
     padding-top: 100px;
-    color: var(--color-gray-500);
+    color: var(--theme-text-muted);
     font-size: 1.1rem;
 }

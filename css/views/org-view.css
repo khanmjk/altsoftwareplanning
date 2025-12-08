@@ -19,34 +19,34 @@
 .org-list-node {
     margin-bottom: 5px;
     padding: 6px 12px;
-    border-left: 2px solid var(--border-color, #eee);
+    border-left: 2px solid var(--theme-border-color);
     position: relative;
     border-radius: 4px;
     /* Slight modernize */
-    background-color: var(--bg-card, #fff);
+    background-color: var(--theme-card-bg);
     /* Fallback */
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--theme-card-shadow);
 }
 
 /* Indentation Levels */
 .org-level-0 {
     margin-left: 0;
-    border-left-color: #333;
+    border-left-color: var(--theme-text-primary);
 }
 
 .org-level-1 {
     margin-left: 25px;
-    border-left-color: #0056b3;
+    border-left-color: var(--theme-primary);
 }
 
 .org-level-2 {
     margin-left: 50px;
-    border-left-color: #007bff;
+    border-left-color: var(--theme-info);
 }
 
 .org-level-3 {
     margin-left: 75px;
-    border-left-color: #17a2b8;
+    border-left-color: var(--theme-success);
 }
 
 .org-level-4 {
@@ -62,33 +62,33 @@
 
 .org-text-srmgr {
     font-size: 1.1em;
-    color: #0056b3;
+    color: var(--theme-primary);
     font-weight: 600;
 }
 
 .org-text-sdm {
-    color: #007bff;
+    color: var(--theme-info);
     font-weight: 600;
 }
 
 .org-text-team {
-    color: #17a2b8;
+    color: var(--theme-success);
     font-weight: 500;
 }
 
 .org-text-default {
-    color: #6c757d;
+    color: var(--theme-text-secondary);
     font-weight: 600;
 }
 
 .org-details {
     font-size: 0.85em;
-    color: #666;
+    color: var(--theme-text-secondary);
     margin-left: 8px;
 }
 
 .org-away-tag {
-    color: #dc3545;
+    color: var(--theme-danger);
     font-style: italic;
     font-size: 0.85em;
     margin-left: 5px;
@@ -103,7 +103,7 @@
 
 .org-engineer-item {
     font-size: 0.9em;
-    color: #444;
+    color: var(--theme-text-primary);
     padding: 2px 0;
 }
 
@@ -111,19 +111,19 @@
 .org-engineer-narrative {
     margin-bottom: 15px;
     padding: 10px 15px;
-    background-color: var(--bg-secondary, #f8f9fa);
-    border-left: 4px solid var(--accent-color, #007bff);
+    background-color: var(--theme-bg-secondary);
+    border-left: 4px solid var(--theme-primary);
     border-radius: 4px;
     font-size: 0.95em;
     line-height: 1.5;
-    color: var(--text-primary, #333);
+    color: var(--theme-text-primary);
 }
 
 .org-error-message {
-    color: #dc3545;
+    color: var(--theme-danger);
     padding: 20px;
-    background-color: #fff3f3;
-    border: 1px solid #ffc9c9;
+    background-color: color-mix(in srgb, var(--theme-danger), transparent 90%);
+    border: 1px solid var(--theme-danger);
     border-radius: 4px;
     margin: 20px;
 }
