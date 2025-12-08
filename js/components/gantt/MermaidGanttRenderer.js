@@ -5,7 +5,8 @@
 class MermaidGanttRenderer extends GanttRenderer {
     constructor(container, mermaidInstance) {
         super(container);
-        this.mermaid = mermaidInstance || (typeof mermaid !== 'undefined' ? mermaid : null);
+        // Use MermaidService if available, fallback to direct mermaid global
+        this.mermaid = mermaidInstance || MermaidService?.getInstance() || (typeof mermaid !== 'undefined' ? mermaid : null);
         this.config = {
             theme: "default",
             // themeVariables: {

@@ -4,8 +4,8 @@ let currentServiceDependenciesTableData = [];
 let visualizationResizeObserver = null;
 let resizeDebounceHandle = null;
 
-// Initialize Mermaid for architecture diagrams
-mermaid.initialize({ startOnLoad: false, theme: 'default' });
+// Initialize Mermaid via MermaidService
+MermaidService.init({ startOnLoad: false, theme: 'default' });
 let currentVisualizationMode = 'visualization';
 const visualizationModes = [
     { id: 'visualization', title: 'System Visualization' },
@@ -252,33 +252,15 @@ async function renderMermaidDiagram() {
         showMessage('Load a system to see the architecture diagram.', 'mermaid-info');
         return;
     }
-    // Check generic external library availability
 
-
-    // Checking of generateMermaidSyntax removed as it is guaranteed by service layer
-
-    let definition = '';
     try {
-        definition = generateMermaidSyntax(SystemService.getCurrentSystem());
-        const renderId = 'mermaid-system-architecture';
-        mermaid.parse(definition);
-
-        // Clear container
-        while (graphContainer.firstChild) {
-            graphContainer.removeChild(graphContainer.firstChild);
+        const definition = MermaidService.generateArchitectureSyntax(SystemService.getCurrentSystem());
+        const success = await MermaidService.renderToContainer(definition, graphContainer, 'mermaid-system-architecture');
+        if (!success) {
+            showMessage('Unable to render Mermaid diagram. Check console for details.', 'mermaid-error');
         }
-        const result = await mermaid.render(renderId, definition, graphContainer);
-        // NOTE: Mermaid returns SVG as string, must use innerHTML for SVG injection
-        graphContainer.innerHTML = result.svg;
-        graphContainer.style.display = 'block';
     } catch (error) {
         console.error("Failed to render Mermaid diagram:", error);
-        if (error && error.hash && error.hash.line) {
-            console.error("Mermaid parse error at line", error.hash.line, "col", error.hash.loc?.last_column, ":", error.hash.text);
-        }
-        if (definition) {
-            console.error("Mermaid definition used for rendering:\n", definition);
-        }
         showMessage('Unable to render Mermaid diagram. Check console for details.', 'mermaid-error');
     }
 }
@@ -341,25 +323,12 @@ async function renderMermaidApiDiagram(serviceParam) {
         return;
     }
 
-    // Checking of generateMermaidApiSyntax removed as it is guaranteed by service layer
-
-    let definition = '';
     try {
-        definition = generateMermaidApiSyntax(SystemService.getCurrentSystem(), { selectedService });
-        const renderId = 'mermaid-api-interactions';
-        const existingSvg = document.getElementById(renderId);
-        if (existingSvg) existingSvg.remove();
-
-
-        mermaid.parse(definition);
-
-        // Clear container
-        while (graphContainer.firstChild) {
-            graphContainer.removeChild(graphContainer.firstChild);
+        const definition = MermaidService.generateApiSyntax(SystemService.getCurrentSystem(), { selectedService });
+        const success = await MermaidService.renderToContainer(definition, graphContainer, 'mermaid-api-interactions');
+        if (!success) {
+            showMessage('Unable to render API interactions diagram. Check console for details.', 'mermaid-error');
         }
-        const result = await mermaid.render(renderId, definition, graphContainer);
-        // NOTE: Mermaid returns SVG as string, must use innerHTML for SVG injection
-        graphContainer.innerHTML = result.svg;
     } catch (error) {
         console.error("Failed to render Mermaid API diagram:", error);
         showMessage('Unable to render API interactions diagram. Check console for details.', 'mermaid-error');
