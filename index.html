@@ -353,8 +353,10 @@
     <script src="js/services/CapacityService.js?v=1"></script>
     <script src="js/services/RoadmapService.js?v=1"></script>
     <script src="js/services/ForecastService.js?v=1"></script>
-
-
+    <script src="js/services/MarkdownService.js"></script>
+    <script src="js/services/MermaidService.js"></script>
+    <script src="js/services/FrappeGanttService.js"></script>
+    <script src="js/services/D3Service.js"></script>
 
     <!-- Wrapper View Classes (must load before NavigationManager for VIEW_REGISTRY) -->
     <script src="js/components/WelcomeView.js"></script>
@@ -375,8 +377,16 @@
     <script src="js/documentation.js"></script>
     <script src="js/engines/ForecastingEngine.js"></script>
     <script src="js/components/ResourceForecastView.js"></script>
-    <script src="js/mermaidGenerator.js"></script>
-    <script src="js/visualizations.js?v=2"></script>
+
+    <!-- Visualization Modules (must load before visualizations.js) -->
+    <script src="js/visualizations/BaseVisualization.js"></script>
+    <script src="js/visualizations/SystemVisualization.js"></script>
+    <script src="js/visualizations/TeamVisualization.js"></script>
+    <script src="js/visualizations/ServiceVisualization.js"></script>
+    <script src="js/visualizations/DependencyVisualization.js"></script>
+    <script src="js/visualizations/index.js"></script>
+
+    <script src="js/visualizations.js?v=3"></script>
     <script src="js/components/SettingsView.js?v=2"></script>
     <script src="js/components/ServiceEditComponent.js?v=1"></script>
     <script src="js/components/TeamEditComponent.js?v=1"></script>

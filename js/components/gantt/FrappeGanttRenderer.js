@@ -55,7 +55,8 @@ class FrappeGanttRenderer extends GanttRenderer {
             const startDateObj = new Date(`${year}-01-01T00:00:00Z`);
             const endDateObj = new Date(`${year}-12-31T00:00:00Z`);
 
-            this.gantt = new Gantt(`#${wrapperId}`, frappeTasks, {
+            // Use FrappeGanttService to create the instance
+            this.gantt = FrappeGanttService.createInstance(`#${wrapperId}`, frappeTasks, {
                 header_height: 60, // Taller header
                 column_width: 30,
                 step: 24,

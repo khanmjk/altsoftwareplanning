@@ -35,7 +35,8 @@ class ImpactWidget {
         svgContainer.id = 'impact-graph-container';
         this.container.appendChild(svgContainer);
 
-        this.svg = d3.select(svgContainer).append('svg')
+        // Use D3Service for SVG creation
+        this.svg = D3Service.select(svgContainer).append('svg')
             .attr('width', '100%')
             .attr('height', '800px');
 
@@ -379,12 +380,11 @@ class ImpactWidget {
         const width = this.svg.node().getBoundingClientRect().width;
         const height = this.svg.node().getBoundingClientRect().height;
 
-        // Tooltip
-        const tooltip = d3.select('body').selectAll('.tooltip').data([null]).join('div')
-            .attr('class', 'tooltip').style('opacity', 0);
+        // Tooltip - use D3Service tooltip controller
+        const tooltipController = D3Service.createTooltipController({ className: 'tooltip' });
 
-        // Color scales
-        const teamColors = d3.scaleOrdinal(d3.schemeCategory10).domain(systemData.teams.map(t => t.teamId));
+        // Color scales - use D3Service
+        const teamColors = D3Service.createColorScale(systemData.teams.map(t => t.teamId));
         const serviceImpactCount = new Map();
         links.forEach(link => {
             if (link.type === 'impact') {
@@ -397,7 +397,8 @@ class ImpactWidget {
             'In Progress': '#ffc107', 'Completed': '#28a745'
         };
 
-        // Force simulation
+        // Force simulation - use D3Service with custom collision radius
+        const d3 = D3Service.getInstance();
         const simulation = d3.forceSimulation(nodes)
             .force('link', d3.forceLink(links).id(d => d.id).distance(d => d.type === 'owns' ? 80 : 150).strength(0.6))
             .force('charge', d3.forceManyBody().strength(-800))
@@ -423,30 +424,18 @@ class ImpactWidget {
             .attr('marker-end', d => `url(#arrow-${d.type})`)
             .style('stroke-dasharray', d => d.type === 'owns' ? '3, 3' : '0')
             .on('mouseover', (event, d) => {
-                tooltip.transition().duration(200).style('opacity', .9);
                 let content = `<strong>${d.type.replace('_', ' ')}</strong>`;
                 if (d.sde) content += `<br>SDE Years: ${d.sde}`;
-                tooltip.html(content).style('left', (event.pageX + 15) + 'px').style('top', (event.pageY - 15) + 'px');
+                D3Service.showTooltip(event, content);
             })
-            .on('mouseout', () => tooltip.transition().duration(500).style('opacity', 0));
+            .on('mouseout', () => D3Service.hideTooltip());
 
-        // Drag handlers
-        const dragstarted = (event, d) => {
-            if (!event.active) simulation.alphaTarget(0.3).restart();
-            d.fx = d.x; d.fy = d.y;
-        };
-        const dragged = (event, d) => { d.fx = event.x; d.fy = event.y; };
-        const dragended = (event, d) => {
-            if (!event.active) simulation.alphaTarget(0);
-            d.fx = null; d.fy = null;
-        };
-
-        // Node groups
+        // Node groups with D3Service drag behavior
         const nodeGroup = this.svg.append('g')
             .selectAll('g')
             .data(nodes)
             .join('g')
-            .call(d3.drag().on('start', dragstarted).on('drag', dragged).on('end', dragended));
+            .call(D3Service.createDragBehavior(simulation));
 
         // Node circles
         nodeGroup.append('circle')
@@ -456,32 +445,31 @@ class ImpactWidget {
                 if (d.type === 'Team') return teamColors(d.id);
                 if (d.type === 'Service') {
                     const owningTeam = systemData.teams.find(t => t.teamId === d.data.owningTeamId);
-                    return owningTeam ? d3.color(teamColors(owningTeam.teamId)).brighter(0.5) : '#2ca02c';
+                    return owningTeam ? D3Service.adjustColor(teamColors(owningTeam.teamId), 0.5) : '#2ca02c';
                 }
                 return '#ccc';
             })
             .attr('stroke', d => d.id === selectedId ? 'red' : '#fff')
             .attr('stroke-width', d => d.id === selectedId ? 4 : 2);
 
-        // Node tooltips
-        nodeGroup.on('mouseover', (event, d) => tooltip.transition().duration(200).style('opacity', .9))
-            .on('mousemove', (event, d) => {
-                let content = `<strong>${d.type}:</strong> ${d.name}`;
-                if (d.type === 'Initiative') {
-                    const sdmName = d.data.owner?.name || 'N/A';
-                    const teamsImpacted = (d.data.assignments || [])
-                        .map(a => systemData.teams.find(t => t.teamId === a.teamId)?.teamIdentity || a.teamId).join(' / ');
-                    content += `<br>Owner: ${sdmName}<br>Due: ${d.data.targetDueDate || 'N/A'}<br>Teams: ${teamsImpacted}`;
-                } else if (d.type === 'Service') {
-                    const ownerTeam = systemData.teams.find(t => t.teamId === d.data.owningTeamId);
-                    content += `<br>Owner: ${ownerTeam?.teamIdentity || 'N/A'}`;
-                } else if (d.type === 'Team') {
-                    const sdm = systemData.sdms.find(s => s.sdmId === d.data.sdmId);
-                    content += `<br>SDM: ${sdm?.sdmName || 'N/A'}`;
-                }
-                tooltip.html(content).style('left', (event.pageX + 15) + 'px').style('top', (event.pageY - 15) + 'px');
-            })
-            .on('mouseout', () => tooltip.transition().duration(500).style('opacity', 0));
+        // Node tooltips using D3Service
+        nodeGroup.on('mouseover', (event, d) => {
+            let content = `<strong>${d.type}:</strong> ${d.name}`;
+            if (d.type === 'Initiative') {
+                const sdmName = d.data.owner?.name || 'N/A';
+                const teamsImpacted = (d.data.assignments || [])
+                    .map(a => systemData.teams.find(t => t.teamId === a.teamId)?.teamIdentity || a.teamId).join(' / ');
+                content += `<br>Owner: ${sdmName}<br>Due: ${d.data.targetDueDate || 'N/A'}<br>Teams: ${teamsImpacted}`;
+            } else if (d.type === 'Service') {
+                const ownerTeam = systemData.teams.find(t => t.teamId === d.data.owningTeamId);
+                content += `<br>Owner: ${ownerTeam?.teamIdentity || 'N/A'}`;
+            } else if (d.type === 'Team') {
+                const sdm = systemData.sdms.find(s => s.sdmId === d.data.sdmId);
+                content += `<br>SDM: ${sdm?.sdmName || 'N/A'}`;
+            }
+            D3Service.showTooltip(event, content);
+        })
+            .on('mouseout', () => D3Service.hideTooltip());
 
         // Node labels
         nodeGroup.append('text')
@@ -641,7 +629,7 @@ class ImpactWidget {
      */
     wrapText(text, widthFn) {
         text.each(function () {
-            const t = d3.select(this);
+            const t = D3Service.select(this);
             const words = t.text().split(/\s+/).reverse();
             let word, line = [], lineNumber = 0;
             const lineHeight = 1.1;
