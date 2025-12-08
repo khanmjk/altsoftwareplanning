@@ -9,8 +9,8 @@
 
 /* --- 1. Canvas Header --- */
 .canvas-header {
-    background: var(--color-white);
-    border-bottom: 1px solid var(--color-gray-200);
+    background: var(--theme-bg-primary);
+    border-bottom: 1px solid var(--theme-border-color);
     padding: 16px 24px;
     display: flex;
     justify-content: space-between;
@@ -30,7 +30,7 @@
 
 .canvas-header__breadcrumbs {
     font-size: 0.85rem;
-    color: var(--color-gray-500);
+    color: var(--theme-text-secondary);
     margin-bottom: 4px;
     display: flex;
     align-items: center;
@@ -40,13 +40,13 @@
 .canvas-header__breadcrumb-item:not(:last-child)::after {
     content: '/';
     margin-left: 6px;
-    color: var(--color-gray-400);
+    color: var(--theme-text-muted);
 }
 
 .canvas-header__title {
     font-size: 1.25rem;
     font-weight: 600;
-    color: var(--color-gray-900);
+    color: var(--theme-text-primary);
     margin: 0;
     line-height: 1.2;
 }
@@ -59,10 +59,10 @@
 
 /* --- 2. Canvas Toolbar (Sticky) --- */
 .canvas-toolbar {
-    background: rgba(255, 255, 255, 0.9);
+    background: var(--theme-bg-primary);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    border-bottom: 1px solid var(--color-gray-200);
+    border-bottom: 1px solid var(--theme-border-color);
     padding: 12px 24px;
     display: flex;
     align-items: center;
@@ -103,10 +103,10 @@
 
 /* Workspace Card - A standard container for content blocks */
 .workspace-card {
-    background: var(--color-white);
-    border: 1px solid var(--color-gray-200);
+    background: var(--theme-card-bg);
+    border: 1px solid var(--theme-border-color);
     border-radius: var(--radius-md);
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--theme-card-shadow);
     padding: 20px;
     margin-bottom: 20px;
 }
@@ -119,7 +119,7 @@
     justify-content: center;
     padding: 60px 20px;
     text-align: center;
-    color: var(--color-gray-500);
+    color: var(--theme-text-secondary);
 }
 
 .workspace-empty-state i {
