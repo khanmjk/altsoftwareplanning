@@ -108,14 +108,18 @@ class BaseVisualization {
             height: this.height
         };
 
+        // Left-align: use width/3 instead of width/2 to shift graph toward left
+        const xCenter = this.width / 3;
+        const yCenter = this.height / 2;
+
         this.simulation = this.d3.forceSimulation(this.nodes)
             .force('link', this.d3.forceLink(this.links)
                 .id(d => d.id)
                 .distance(config.linkDistance))
             .force('charge', this.d3.forceManyBody().strength(config.chargeStrength))
-            .force('center', this.d3.forceCenter(this.width / 2, this.height / 2))
-            .force('x', this.d3.forceX(this.width / 2).strength(config.centerStrength))
-            .force('y', this.d3.forceY(this.height / 2).strength(config.centerStrength))
+            .force('center', this.d3.forceCenter(xCenter, yCenter))
+            .force('x', this.d3.forceX(xCenter).strength(config.centerStrength))
+            .force('y', this.d3.forceY(yCenter).strength(config.centerStrength))
             .force('collide', this.d3.forceCollide(config.collideRadius));
 
         return this.simulation;
@@ -240,7 +244,9 @@ class BaseVisualization {
         this.simulation.on('tick', () => {
             if (node) {
                 node
-                    .attr('cx', d => d.x = Math.max(radius, Math.min(this.width - radius, d.x)))
+                    // Allow horizontal movement without clamping for left-alignment
+                    // Only clamp vertically to keep nodes visible
+                    .attr('cx', d => d.x)
                     .attr('cy', d => d.y = Math.max(radius, Math.min(this.height - radius, d.y)));
             }
 

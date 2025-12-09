@@ -23,6 +23,18 @@ class SystemOverviewView {
         this.pillNav = null;
         this.currentView = 'visualization'; // default to System Architecture
 
+        // ===== State migrated from visualizations.js =====
+        // Previously module-level globals, now class properties
+        this.showPlatformComponents = true;
+        this.serviceDependenciesTableWidget = null;
+        this.serviceDependenciesTableData = [];
+
+        // Lazy-loaded visualization instances
+        this._systemVisualization = null;
+        this._teamVisualization = null;
+        this._serviceVisualization = null;
+        this._dependencyVisualization = null;
+
         // View configurations
         this.viewConfigs = [
             {
@@ -142,73 +154,152 @@ class SystemOverviewView {
         section.className = 'workspace-view__section carousel-item'; // Keep carousel-item for CSS compatibility
         section.style.display = 'none';
 
-        // Create view-specific content
+        // Create view-specific content using DOM creation (compliant with §2.6)
         switch (viewId) {
-            case 'visualization':
-                section.innerHTML = `
-                    <button id="togglePlatformComponentsSystem" class="btn btn-sm system-overview-platform-toggle">Hide Platforms</button>
-                    <svg id="systemSvg" class="system-overview-svg"></svg>
-                    <div id="legend" class="legend"></div>
-                `;
-                break;
+            case 'visualization': {
+                const toggleBtn = document.createElement('button');
+                toggleBtn.id = 'togglePlatformComponentsSystem';
+                toggleBtn.className = 'btn btn-sm system-overview-platform-toggle';
+                toggleBtn.textContent = 'Hide Platforms';
 
-            case 'teamVisualization':
-                section.innerHTML = `
-                    <svg id="teamSvg" class="system-overview-svg"></svg>
-                    <div id="teamLegend" class="legend"></div>
-                `;
-                break;
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('id', 'systemSvg');
+                svg.setAttribute('class', 'system-overview-svg');
 
-            case 'serviceRelationshipsVisualization':
-                section.innerHTML = `
-                    <div class="system-overview-filter-controls">
-                        <label for="serviceSelection" class="system-overview-filter-label">Select Service:</label>
-                        <select id="serviceSelection" class="form-select system-overview-filter-select"></select>
-                        <button id="togglePlatformComponentsService" class="btn btn-sm system-overview-toggle-btn">Hide Platforms</button>
-                    </div>
-                    <svg id="serviceSvg" class="system-overview-svg"></svg>
-                    <div id="serviceLegend" class="legend"></div>
-                `;
-                break;
+                const legend = document.createElement('div');
+                legend.id = 'legend';
+                legend.className = 'legend';
 
-            case 'dependencyVisualization':
-                section.innerHTML = `
-                    <div class="system-overview-filter-controls">
-                        <label for="dependencyServiceSelection" class="system-overview-filter-label">Select Service:</label>
-                        <select id="dependencyServiceSelection" class="form-select system-overview-filter-select"></select>
-                        <button id="togglePlatformComponentsDependency" class="btn btn-sm system-overview-toggle-btn">Hide Platforms</button>
-                    </div>
-                    <svg id="dependencySvg" class="system-overview-svg"></svg>
-                    <div id="dependencyLegend" class="legend"></div>
-                `;
+                section.append(toggleBtn, svg, legend);
                 break;
+            }
 
-            case 'serviceDependenciesTableSlide':
-                section.innerHTML = `
-                    <div id="serviceDependenciesTable">
-                        <h2>Service Dependencies Table</h2>
-                        <div id="serviceDependenciesTableHost"></div>
-                    </div>
-                `;
+            case 'teamVisualization': {
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('id', 'teamSvg');
+                svg.setAttribute('class', 'system-overview-svg');
+
+                const legend = document.createElement('div');
+                legend.id = 'teamLegend';
+                legend.className = 'legend';
+
+                section.append(svg, legend);
+                break;
+            }
+
+            case 'serviceRelationshipsVisualization': {
+                const controls = document.createElement('div');
+                controls.className = 'system-overview-filter-controls';
+
+                const label = document.createElement('label');
+                label.htmlFor = 'serviceSelection';
+                label.className = 'system-overview-filter-label';
+                label.textContent = 'Select Service:';
+
+                const select = document.createElement('select');
+                select.id = 'serviceSelection';
+                select.className = 'form-select system-overview-filter-select';
+
+                const toggleBtn = document.createElement('button');
+                toggleBtn.id = 'togglePlatformComponentsService';
+                toggleBtn.className = 'btn btn-sm system-overview-toggle-btn';
+                toggleBtn.textContent = 'Hide Platforms';
+
+                controls.append(label, select, toggleBtn);
+
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('id', 'serviceSvg');
+                svg.setAttribute('class', 'system-overview-svg');
+
+                const legend = document.createElement('div');
+                legend.id = 'serviceLegend';
+                legend.className = 'legend';
+
+                section.append(controls, svg, legend);
+                break;
+            }
+
+            case 'dependencyVisualization': {
+                const controls = document.createElement('div');
+                controls.className = 'system-overview-filter-controls';
+
+                const label = document.createElement('label');
+                label.htmlFor = 'dependencyServiceSelection';
+                label.className = 'system-overview-filter-label';
+                label.textContent = 'Select Service:';
+
+                const select = document.createElement('select');
+                select.id = 'dependencyServiceSelection';
+                select.className = 'form-select system-overview-filter-select';
+
+                const toggleBtn = document.createElement('button');
+                toggleBtn.id = 'togglePlatformComponentsDependency';
+                toggleBtn.className = 'btn btn-sm system-overview-toggle-btn';
+                toggleBtn.textContent = 'Hide Platforms';
+
+                controls.append(label, select, toggleBtn);
+
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('id', 'dependencySvg');
+                svg.setAttribute('class', 'system-overview-svg');
+
+                const legend = document.createElement('div');
+                legend.id = 'dependencyLegend';
+                legend.className = 'legend';
+
+                section.append(controls, svg, legend);
+                break;
+            }
+
+            case 'serviceDependenciesTableSlide': {
+                const container = document.createElement('div');
+                container.id = 'serviceDependenciesTable';
+
+                const heading = document.createElement('h2');
+                heading.textContent = 'Service Dependencies Table';
+
+                const host = document.createElement('div');
+                host.id = 'serviceDependenciesTableHost';
+
+                container.append(heading, host);
+                section.appendChild(container);
                 section.style.height = '100%';
                 section.style.overflowY = 'auto';
                 break;
+            }
 
-            case 'mermaidVisualization':
-                section.innerHTML = `<div id="mermaidGraph" class="system-overview-mermaid-container"></div>`;
+            case 'mermaidVisualization': {
+                const container = document.createElement('div');
+                container.id = 'mermaidGraph';
+                container.className = 'system-overview-mermaid-container';
+                section.appendChild(container);
                 section.style.overflowY = 'auto';
                 break;
+            }
 
-            case 'mermaidApiVisualization':
-                section.innerHTML = `
-                    <div class="system-overview-filter-controls">
-                        <label for="apiServiceSelection" class="system-overview-filter-label">Select Service:</label>
-                        <select id="apiServiceSelection" class="form-select system-overview-filter-select"></select>
-                    </div>
-                    <div id="mermaidApiGraph" class="system-overview-mermaid-container"></div>
-                `;
+            case 'mermaidApiVisualization': {
+                const controls = document.createElement('div');
+                controls.className = 'system-overview-filter-controls';
+
+                const label = document.createElement('label');
+                label.htmlFor = 'apiServiceSelection';
+                label.className = 'system-overview-filter-label';
+                label.textContent = 'Select Service:';
+
+                const select = document.createElement('select');
+                select.id = 'apiServiceSelection';
+                select.className = 'form-select system-overview-filter-select';
+
+                controls.append(label, select);
+
+                const graphContainer = document.createElement('div');
+                graphContainer.id = 'mermaidApiGraph';
+                graphContainer.className = 'system-overview-mermaid-container';
+
+                section.append(controls, graphContainer);
                 section.style.overflowY = 'auto';
                 break;
+            }
         }
 
         return section;
@@ -266,9 +357,9 @@ class SystemOverviewView {
                 const toggleSystem = document.getElementById('togglePlatformComponentsSystem');
                 if (toggleSystem) {
                     toggleSystem.onclick = () => {
-                        showPlatformComponents = !showPlatformComponents;
-                        rerenderCurrentVisualizationForPlatformToggle();
-                        updateAllToggleButtonsText(showPlatformComponents);
+                        this.showPlatformComponents = !this.showPlatformComponents;
+                        this._rerenderCurrentVisualizationForPlatformToggle();
+                        this._updateAllToggleButtonsText();
                     };
                 }
                 break;
@@ -277,16 +368,16 @@ class SystemOverviewView {
                 // Service selection dropdown
                 const serviceSelect = document.getElementById('serviceSelection');
                 if (serviceSelect) {
-                    serviceSelect.onchange = () => updateServiceVisualization();
+                    serviceSelect.onchange = () => this._updateServiceVisualization();
                 }
 
                 // Platform toggle button
                 const toggleService = document.getElementById('togglePlatformComponentsService');
                 if (toggleService) {
                     toggleService.onclick = () => {
-                        showPlatformComponents = !showPlatformComponents;
-                        rerenderCurrentVisualizationForPlatformToggle();
-                        updateAllToggleButtonsText(showPlatformComponents);
+                        this.showPlatformComponents = !this.showPlatformComponents;
+                        this._rerenderCurrentVisualizationForPlatformToggle();
+                        this._updateAllToggleButtonsText();
                     };
                 }
                 break;
@@ -295,67 +386,379 @@ class SystemOverviewView {
                 // Dependency service selection dropdown
                 const depServiceSelect = document.getElementById('dependencyServiceSelection');
                 if (depServiceSelect) {
-                    depServiceSelect.onchange = () => updateDependencyVisualization();
+                    depServiceSelect.onchange = () => this._updateDependencyVisualization();
                 }
 
                 // Platform toggle button
                 const toggleDependency = document.getElementById('togglePlatformComponentsDependency');
                 if (toggleDependency) {
                     toggleDependency.onclick = () => {
-                        showPlatformComponents = !showPlatformComponents;
-                        rerenderCurrentVisualizationForPlatformToggle();
-                        updateAllToggleButtonsText(showPlatformComponents);
+                        this.showPlatformComponents = !this.showPlatformComponents;
+                        this._rerenderCurrentVisualizationForPlatformToggle();
+                        this._updateAllToggleButtonsText();
                     };
                 }
                 break;
 
-            // mermaidApiVisualization case removed - onchange handled by populateApiServiceSelection()
+            // mermaidApiVisualization case removed - onchange handled by _populateApiServiceSelection()
         }
     }
 
     // ===== Visualization Rendering Methods =====
-    // These delegate to existing global functions
 
     renderSystemVisualization() {
         if (SystemService.getCurrentSystem()) {
-            getSystemVisualization().render(SystemService.getCurrentSystem());
+            this.getSystemVisualization().render(SystemService.getCurrentSystem());
         }
     }
 
     renderTeamVisualization() {
         if (SystemService.getCurrentSystem()) {
-            getTeamVisualization().render(SystemService.getCurrentSystem());
+            this.getTeamVisualization().render(SystemService.getCurrentSystem());
         }
     }
 
     renderServiceRelationships() {
-        populateServiceSelection();
-        updateServiceVisualization();
+        this._populateServiceSelection();
+        this._updateServiceVisualization();
     }
 
     renderDependencyGraph() {
-        populateDependencyServiceSelection();
-        updateDependencyVisualization();
+        this._populateDependencyServiceSelection();
+        this._updateDependencyVisualization();
     }
 
     renderDependencyTable() {
         // Defer to next frame to ensure proper layout
-        requestAnimationFrame(() => generateServiceDependenciesTable());
+        requestAnimationFrame(() => this._generateServiceDependenciesTable());
     }
 
     renderMermaidDiagram() {
-        renderMermaidDiagram();
+        this._renderMermaidDiagramImpl();
     }
 
     renderMermaidApiDiagram() {
         // Populate dropdown first only if empty
         const select = document.getElementById('apiServiceSelection');
         if (select && select.options.length === 0) {
-            populateApiServiceSelection();
+            this._populateApiServiceSelection();
         }
         // Render with current selection
         const selectedService = select ? select.value : 'all';
-        renderMermaidApiDiagram(selectedService);
+        this._renderMermaidApiDiagramImpl(selectedService);
+    }
+
+    // ===== Visualization Getters (migrated from visualizations.js) =====
+
+    getSystemVisualization() {
+        if (!this._systemVisualization) {
+            this._systemVisualization = new SystemVisualization({ showPlatformComponents: this.showPlatformComponents });
+        }
+        return this._systemVisualization;
+    }
+
+    getTeamVisualization() {
+        if (!this._teamVisualization) {
+            this._teamVisualization = new TeamVisualization();
+        }
+        return this._teamVisualization;
+    }
+
+    getServiceVisualization() {
+        if (!this._serviceVisualization) {
+            this._serviceVisualization = new ServiceVisualization({ showPlatformComponents: this.showPlatformComponents });
+        }
+        return this._serviceVisualization;
+    }
+
+    getDependencyVisualization() {
+        if (!this._dependencyVisualization) {
+            this._dependencyVisualization = new DependencyVisualization({ showPlatformComponents: this.showPlatformComponents });
+        }
+        return this._dependencyVisualization;
+    }
+
+    // ===== Helper Methods (migrated from visualizations.js) =====
+
+    _updateAllToggleButtonsText() {
+        const toggleButtonSystem = document.getElementById('togglePlatformComponentsSystem');
+        const toggleButtonService = document.getElementById('togglePlatformComponentsService');
+        const toggleButtonDependency = document.getElementById('togglePlatformComponentsDependency');
+        const newText = this.showPlatformComponents ? 'Hide Platforms' : 'Show Platforms';
+
+        if (toggleButtonSystem) toggleButtonSystem.textContent = newText;
+        if (toggleButtonService) toggleButtonService.textContent = newText;
+        if (toggleButtonDependency) toggleButtonDependency.textContent = newText;
+    }
+
+    _rerenderCurrentVisualizationForPlatformToggle() {
+        if (!SystemService.getCurrentSystem()) {
+            console.warn("Platform toggle: SystemService.getCurrentSystem() is not available.");
+            return;
+        }
+
+        // Update showPlatformComponents on cached instances
+        if (this._systemVisualization) this._systemVisualization.setShowPlatformComponents(this.showPlatformComponents);
+        if (this._serviceVisualization) this._serviceVisualization.setShowPlatformComponents(this.showPlatformComponents);
+        if (this._dependencyVisualization) this._dependencyVisualization.setShowPlatformComponents(this.showPlatformComponents);
+
+        // Re-render current view
+        const viewConfig = this.viewConfigs.find(v => v.id === this.currentView);
+        if (viewConfig) {
+            viewConfig.renderFn();
+        }
+    }
+
+    _populateServiceSelection() {
+        const serviceSelection = document.getElementById('serviceSelection');
+        if (!serviceSelection) return;
+
+        // Preserve current selection
+        const previousValue = serviceSelection.value;
+        serviceSelection.innerHTML = '';
+
+        const allServicesOption = document.createElement('option');
+        allServicesOption.value = 'all';
+        allServicesOption.text = 'All Services View';
+        serviceSelection.appendChild(allServicesOption);
+
+        SystemService.getCurrentSystem().services.forEach(service => {
+            const option = document.createElement('option');
+            option.value = service.serviceName;
+            option.text = service.serviceName;
+            serviceSelection.appendChild(option);
+        });
+
+        // Restore previous selection if it still exists
+        if (previousValue && [...serviceSelection.options].some(o => o.value === previousValue)) {
+            serviceSelection.value = previousValue;
+        }
+    }
+
+    _updateServiceVisualization(selectedService) {
+        if (selectedService === undefined) {
+            const dropdown = document.getElementById('serviceSelection');
+            selectedService = dropdown ? dropdown.value : 'all';
+        }
+
+        const viz = this.getServiceVisualization();
+
+        if (selectedService === 'all') {
+            viz.render(SystemService.getCurrentSystem().services, null);
+        } else {
+            const selectedServiceData = SystemService.getCurrentSystem().services.find(service => service.serviceName === selectedService);
+            if (selectedServiceData) {
+                const relatedServices = VisualizationService.getServiceDependencies(SystemService.getCurrentSystem(), selectedServiceData, {}, {});
+                viz.render(relatedServices, selectedService);
+            } else {
+                viz.render([], null);
+            }
+        }
+    }
+
+    _populateDependencyServiceSelection() {
+        const serviceSelection = document.getElementById('dependencyServiceSelection');
+        if (!serviceSelection) return;
+
+        // Preserve current selection
+        const previousValue = serviceSelection.value;
+        serviceSelection.innerHTML = '';
+
+        SystemService.getCurrentSystem().services.forEach(service => {
+            const option = document.createElement('option');
+            option.value = service.serviceName;
+            option.text = service.serviceName;
+            serviceSelection.appendChild(option);
+        });
+
+        // Restore previous selection if it still exists
+        if (previousValue && [...serviceSelection.options].some(o => o.value === previousValue)) {
+            serviceSelection.value = previousValue;
+        }
+    }
+
+    _updateDependencyVisualization() {
+        const selectionEl = document.getElementById('dependencyServiceSelection');
+        if (!selectionEl) {
+            console.warn("Dependency service selection element not found.");
+            return;
+        }
+
+        const selectedServiceName = selectionEl.value;
+        this._populateDependencyServiceSelection();
+
+        if (Array.from(selectionEl.options).some(opt => opt.value === selectedServiceName)) {
+            selectionEl.value = selectedServiceName;
+        }
+
+        this.getDependencyVisualization().render(selectionEl.value);
+    }
+
+    async _renderMermaidDiagramImpl() {
+        const graphContainer = document.getElementById('mermaidGraph');
+        if (!graphContainer) {
+            console.error("renderMermaidDiagram: #mermaidGraph not found.");
+            return;
+        }
+
+        const showMessage = (text, className) => {
+            while (graphContainer.firstChild) {
+                graphContainer.removeChild(graphContainer.firstChild);
+            }
+            const p = document.createElement('p');
+            p.className = className;
+            p.textContent = text;
+            graphContainer.appendChild(p);
+        };
+
+        if (!SystemService.getCurrentSystem()) {
+            console.warn("renderMermaidDiagram: No system data available.");
+            showMessage('Load a system to see the architecture diagram.', 'mermaid-info');
+            return;
+        }
+
+        try {
+            const definition = MermaidService.generateArchitectureSyntax(SystemService.getCurrentSystem());
+            const success = await MermaidService.renderToContainer(definition, graphContainer, 'mermaid-system-architecture');
+            if (!success) {
+                showMessage('Unable to render Mermaid diagram. Check console for details.', 'mermaid-error');
+            }
+        } catch (error) {
+            console.error("Failed to render Mermaid diagram:", error);
+            showMessage('Unable to render Mermaid diagram. Check console for details.', 'mermaid-error');
+        }
+    }
+
+    _populateApiServiceSelection() {
+        const select = document.getElementById('apiServiceSelection');
+        if (!select || !SystemService.getCurrentSystem() || !Array.isArray(SystemService.getCurrentSystem().services)) return;
+        select.innerHTML = '';
+        const allOption = document.createElement('option');
+        allOption.value = 'all';
+        allOption.textContent = 'All Services';
+        select.appendChild(allOption);
+
+        SystemService.getCurrentSystem().services
+            .slice()
+            .sort((a, b) => (a.serviceName || '').localeCompare(b.serviceName || ''))
+            .forEach(service => {
+                const opt = document.createElement('option');
+                opt.value = service.serviceName;
+                opt.textContent = service.serviceName;
+                select.appendChild(opt);
+            });
+
+        select.onchange = () => {
+            this._renderMermaidApiDiagramImpl(select.value);
+        };
+    }
+
+    async _renderMermaidApiDiagramImpl(serviceParam) {
+        const graphContainer = document.getElementById('mermaidApiGraph');
+
+        let selectedService = serviceParam;
+        if (!selectedService || selectedService === 'all') {
+            const select = document.getElementById('apiServiceSelection');
+            if (select && select.value) {
+                selectedService = select.value;
+            } else {
+                selectedService = 'all';
+            }
+        }
+
+        const showMessage = (text, className) => {
+            while (graphContainer.firstChild) {
+                graphContainer.removeChild(graphContainer.firstChild);
+            }
+            const p = document.createElement('p');
+            p.className = className;
+            p.textContent = text;
+            graphContainer.appendChild(p);
+        };
+
+        if (!graphContainer) {
+            console.error("renderMermaidApiDiagram: required elements not found.");
+            return;
+        }
+        if (!SystemService.getCurrentSystem()) {
+            showMessage('Load a system to see API interactions.', 'mermaid-info');
+            return;
+        }
+
+        try {
+            const definition = MermaidService.generateApiSyntax(SystemService.getCurrentSystem(), { selectedService });
+            const success = await MermaidService.renderToContainer(definition, graphContainer, 'mermaid-api-interactions');
+            if (!success) {
+                showMessage('Unable to render API interactions diagram. Check console for details.', 'mermaid-error');
+            }
+        } catch (error) {
+            console.error("Failed to render Mermaid API diagram:", error);
+            showMessage('Unable to render API interactions diagram. Check console for details.', 'mermaid-error');
+        }
+    }
+
+    _generateServiceDependenciesTable() {
+        const tableContainer = document.getElementById('serviceDependenciesTableHost');
+        if (!tableContainer) {
+            console.error("Service Dependencies table container not found.");
+            return;
+        }
+
+        const tableData = VisualizationService.prepareServiceDependenciesTableData(SystemService.getCurrentSystem());
+        this.serviceDependenciesTableData = tableData;
+
+        const wrapTextFormatter = (cell, defaultText = 'None') => {
+            const value = cell.getValue();
+            const display = (value && value !== '') ? value : defaultText;
+            const el = cell.getElement();
+            el.style.whiteSpace = 'normal';
+            el.style.lineHeight = '1.3';
+            return display;
+        };
+
+        const columns = [
+            { title: 'Service Name', field: 'serviceName', headerFilter: 'input', width: 180, formatter: wrapTextFormatter },
+            { title: 'Description', field: 'description', headerFilter: 'input', width: 220, formatter: wrapTextFormatter },
+            { title: 'Owning Team', field: 'owningTeam', headerFilter: 'input', width: 160, formatter: wrapTextFormatter },
+            { title: 'Upstream Dependencies', field: 'upstreamDependenciesText', formatter: wrapTextFormatter, headerFilter: 'input', width: 220 },
+            { title: 'Platform Dependencies', field: 'platformDependenciesText', formatter: wrapTextFormatter, headerFilter: 'input', width: 220 },
+            { title: 'Downstream Dependencies', field: 'downstreamDependenciesText', formatter: wrapTextFormatter, headerFilter: 'input', width: 220 }
+        ];
+
+        const tabulatorOptions = {
+            data: tableData,
+            columns,
+            layout: 'fitDataStretch',
+            responsiveLayout: false,
+            placeholder: 'No services available.',
+            pagination: 'local',
+            paginationSize: 20,
+            paginationSizeSelector: [10, 20, 50, 100],
+            movableColumns: true,
+            initialSort: [{ column: 'serviceName', dir: 'asc' }]
+        };
+
+        if (EnhancedTableWidget) {
+            if (this.serviceDependenciesTableWidget) this.serviceDependenciesTableWidget.destroy();
+
+            this.serviceDependenciesTableWidget = new EnhancedTableWidget(tableContainer, {
+                ...tabulatorOptions,
+                uniqueIdField: 'id',
+                exportCsvFileName: 'service_dependencies.csv',
+                exportJsonFileName: 'service_dependencies.json',
+                exportXlsxFileName: 'service_dependencies.xlsx',
+                exportSheetName: 'Service Dependencies'
+            });
+        } else {
+            console.warn("EnhancedTableWidget not available. Falling back to Tabulator for service dependencies.");
+
+            if (this.serviceDependenciesTableWidget) this.serviceDependenciesTableWidget.destroy();
+
+            this.serviceDependenciesTableWidget = new Tabulator(tableContainer, {
+                ...tabulatorOptions,
+                height: '500px'
+            });
+        }
     }
 
     /**
@@ -365,6 +768,10 @@ class SystemOverviewView {
         if (this.pillNav) {
             this.pillNav.destroy();
             this.pillNav = null;
+        }
+        if (this.serviceDependenciesTableWidget) {
+            this.serviceDependenciesTableWidget.destroy();
+            this.serviceDependenciesTableWidget = null;
         }
         if (this.container) {
             this.container.innerHTML = '';
