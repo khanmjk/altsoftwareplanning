@@ -55,16 +55,28 @@ class DashboardView {
         workspaceComponent.setToolbar(toolbar);
 
         if (!SystemService.getCurrentSystem()) {
-            this.container.innerHTML = '<div class="dashboard-empty-state"><i class="fas fa-chart-line dashboard-empty-state__icon"></i><p class="dashboard-empty-state__message">No system data loaded</p></div>';
+            this.container.innerHTML = '';
+            const emptyState = document.createElement('div');
+            emptyState.className = 'dashboard-empty-state';
+            const icon = document.createElement('i');
+            icon.className = 'fas fa-chart-line dashboard-empty-state__icon';
+            const msg = document.createElement('p');
+            msg.className = 'dashboard-empty-state__message';
+            msg.textContent = 'No system data loaded';
+            emptyState.append(icon, msg);
+            this.container.appendChild(emptyState);
             return;
         }
 
-        // 3. Render Content Container
-        this.container.innerHTML = `
-            <div class="dashboard-view">
-                <div id="dashboardContent" class="dashboard-content"></div>
-            </div>
-        `;
+        // 3. Render Content Container (DOM creation for §2.6 compliance)
+        this.container.innerHTML = '';
+        const dashboardView = document.createElement('div');
+        dashboardView.className = 'dashboard-view';
+        const dashboardContent = document.createElement('div');
+        dashboardContent.id = 'dashboardContent';
+        dashboardContent.className = 'dashboard-content';
+        dashboardView.appendChild(dashboardContent);
+        this.container.appendChild(dashboardView);
 
         // Show current widget
         this.showWidget(this.currentWidgetIndex);
@@ -274,28 +286,39 @@ class DashboardView {
         const widgetEl = document.getElementById(widget.id);
         if (!widgetEl) return;
 
+        // Widget content templates converted to DOM creation (§2.6 compliance)
         if (widget.id === 'investmentDistributionWidget') {
-            widgetEl.innerHTML = `
-                <p class="widget-subtitle">Investment distribution across strategic themes</p>
-                <div class="chart-container">
-                    <canvas id="investmentDistributionChart"></canvas>
-                </div>
-                <div id="investmentTableContainer"></div>
-            `;
+            const subtitle = document.createElement('p');
+            subtitle.className = 'widget-subtitle';
+            subtitle.textContent = 'Investment distribution across strategic themes';
+            const chartContainer = document.createElement('div');
+            chartContainer.className = 'chart-container';
+            const canvas = document.createElement('canvas');
+            canvas.id = 'investmentDistributionChart';
+            chartContainer.appendChild(canvas);
+            const tableContainer = document.createElement('div');
+            tableContainer.id = 'investmentTableContainer';
+            widgetEl.append(subtitle, chartContainer, tableContainer);
         } else if (widget.id === 'investmentTrendWidget') {
-            widgetEl.innerHTML = `
-                <p class="widget-subtitle">Track how investment priorities shift over time</p>
-                <div class="chart-container">
-                    <canvas id="investmentTrendChart"></canvas>
-                </div>
-            `;
+            const subtitle = document.createElement('p');
+            subtitle.className = 'widget-subtitle';
+            subtitle.textContent = 'Track how investment priorities shift over time';
+            const chartContainer = document.createElement('div');
+            chartContainer.className = 'chart-container';
+            const canvas = document.createElement('canvas');
+            canvas.id = 'investmentTrendChart';
+            chartContainer.appendChild(canvas);
+            widgetEl.append(subtitle, chartContainer);
         } else if (widget.id === 'teamDemandWidget') {
-            widgetEl.innerHTML = `
-                <div id="roadmapTableFiltersDemand" class="widget-filter-bar"></div>
-                <div class="chart-container chart-container--tall">
-                    <canvas id="teamDemandChart"></canvas>
-                </div>
-            `;
+            const filterBar = document.createElement('div');
+            filterBar.id = 'roadmapTableFiltersDemand';
+            filterBar.className = 'widget-filter-bar';
+            const chartContainer = document.createElement('div');
+            chartContainer.className = 'chart-container chart-container--tall';
+            const canvas = document.createElement('canvas');
+            canvas.id = 'teamDemandChart';
+            chartContainer.appendChild(canvas);
+            widgetEl.append(filterBar, chartContainer);
         }
     }
 
@@ -561,16 +584,55 @@ class DashboardView {
         const container = document.getElementById('investmentTableContainer');
         if (!container) return;
 
-        let tableHTML = '<table class="investment-table"><thead><tr><th>Theme</th><th>SDE-Years</th><th>Percentage</th></tr></thead><tbody>';
+        container.innerHTML = ''; // Clear previous
 
+        const table = document.createElement('table');
+        table.className = 'investment-table';
+
+        // Header
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+        ['Theme', 'SDE-Years', 'Percentage'].forEach(text => {
+            const th = document.createElement('th');
+            th.textContent = text;
+            headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        // Body
+        const tbody = document.createElement('tbody');
         data.labels.forEach((label, index) => {
             const sdeYears = data.sdeValues[index];
             const percentage = data.total > 0 ? (sdeYears / data.total * 100).toFixed(1) : 0;
-            tableHTML += `<tr><td>${label}</td><td>${sdeYears.toFixed(2)}</td><td>${percentage}%</td></tr>`;
-        });
+            const row = document.createElement('tr');
 
-        tableHTML += `</tbody><tfoot><tr><td>Total</td><td>${data.total.toFixed(2)}</td><td>${data.total > 0 ? '100.0%' : '0.0%'}</td></tr></tfoot></table>`;
-        container.innerHTML = tableHTML;
+            const tdLabel = document.createElement('td');
+            tdLabel.textContent = label;
+            const tdSde = document.createElement('td');
+            tdSde.textContent = sdeYears.toFixed(2);
+            const tdPct = document.createElement('td');
+            tdPct.textContent = `${percentage}%`;
+
+            row.append(tdLabel, tdSde, tdPct);
+            tbody.appendChild(row);
+        });
+        table.appendChild(tbody);
+
+        // Footer
+        const tfoot = document.createElement('tfoot');
+        const footerRow = document.createElement('tr');
+        const tdTotal = document.createElement('td');
+        tdTotal.textContent = 'Total';
+        const tdTotalSde = document.createElement('td');
+        tdTotalSde.textContent = data.total.toFixed(2);
+        const tdTotalPct = document.createElement('td');
+        tdTotalPct.textContent = data.total > 0 ? '100.0%' : '0.0%';
+        footerRow.append(tdTotal, tdTotalSde, tdTotalPct);
+        tfoot.appendChild(footerRow);
+        table.appendChild(tfoot);
+
+        container.appendChild(table);
     }
 
     processTeamDemandData() {

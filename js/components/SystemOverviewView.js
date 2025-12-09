@@ -154,73 +154,152 @@ class SystemOverviewView {
         section.className = 'workspace-view__section carousel-item'; // Keep carousel-item for CSS compatibility
         section.style.display = 'none';
 
-        // Create view-specific content
+        // Create view-specific content using DOM creation (compliant with §2.6)
         switch (viewId) {
-            case 'visualization':
-                section.innerHTML = `
-                    <button id="togglePlatformComponentsSystem" class="btn btn-sm system-overview-platform-toggle">Hide Platforms</button>
-                    <svg id="systemSvg" class="system-overview-svg"></svg>
-                    <div id="legend" class="legend"></div>
-                `;
-                break;
+            case 'visualization': {
+                const toggleBtn = document.createElement('button');
+                toggleBtn.id = 'togglePlatformComponentsSystem';
+                toggleBtn.className = 'btn btn-sm system-overview-platform-toggle';
+                toggleBtn.textContent = 'Hide Platforms';
 
-            case 'teamVisualization':
-                section.innerHTML = `
-                    <svg id="teamSvg" class="system-overview-svg"></svg>
-                    <div id="teamLegend" class="legend"></div>
-                `;
-                break;
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('id', 'systemSvg');
+                svg.setAttribute('class', 'system-overview-svg');
 
-            case 'serviceRelationshipsVisualization':
-                section.innerHTML = `
-                    <div class="system-overview-filter-controls">
-                        <label for="serviceSelection" class="system-overview-filter-label">Select Service:</label>
-                        <select id="serviceSelection" class="form-select system-overview-filter-select"></select>
-                        <button id="togglePlatformComponentsService" class="btn btn-sm system-overview-toggle-btn">Hide Platforms</button>
-                    </div>
-                    <svg id="serviceSvg" class="system-overview-svg"></svg>
-                    <div id="serviceLegend" class="legend"></div>
-                `;
-                break;
+                const legend = document.createElement('div');
+                legend.id = 'legend';
+                legend.className = 'legend';
 
-            case 'dependencyVisualization':
-                section.innerHTML = `
-                    <div class="system-overview-filter-controls">
-                        <label for="dependencyServiceSelection" class="system-overview-filter-label">Select Service:</label>
-                        <select id="dependencyServiceSelection" class="form-select system-overview-filter-select"></select>
-                        <button id="togglePlatformComponentsDependency" class="btn btn-sm system-overview-toggle-btn">Hide Platforms</button>
-                    </div>
-                    <svg id="dependencySvg" class="system-overview-svg"></svg>
-                    <div id="dependencyLegend" class="legend"></div>
-                `;
+                section.append(toggleBtn, svg, legend);
                 break;
+            }
 
-            case 'serviceDependenciesTableSlide':
-                section.innerHTML = `
-                    <div id="serviceDependenciesTable">
-                        <h2>Service Dependencies Table</h2>
-                        <div id="serviceDependenciesTableHost"></div>
-                    </div>
-                `;
+            case 'teamVisualization': {
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('id', 'teamSvg');
+                svg.setAttribute('class', 'system-overview-svg');
+
+                const legend = document.createElement('div');
+                legend.id = 'teamLegend';
+                legend.className = 'legend';
+
+                section.append(svg, legend);
+                break;
+            }
+
+            case 'serviceRelationshipsVisualization': {
+                const controls = document.createElement('div');
+                controls.className = 'system-overview-filter-controls';
+
+                const label = document.createElement('label');
+                label.htmlFor = 'serviceSelection';
+                label.className = 'system-overview-filter-label';
+                label.textContent = 'Select Service:';
+
+                const select = document.createElement('select');
+                select.id = 'serviceSelection';
+                select.className = 'form-select system-overview-filter-select';
+
+                const toggleBtn = document.createElement('button');
+                toggleBtn.id = 'togglePlatformComponentsService';
+                toggleBtn.className = 'btn btn-sm system-overview-toggle-btn';
+                toggleBtn.textContent = 'Hide Platforms';
+
+                controls.append(label, select, toggleBtn);
+
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('id', 'serviceSvg');
+                svg.setAttribute('class', 'system-overview-svg');
+
+                const legend = document.createElement('div');
+                legend.id = 'serviceLegend';
+                legend.className = 'legend';
+
+                section.append(controls, svg, legend);
+                break;
+            }
+
+            case 'dependencyVisualization': {
+                const controls = document.createElement('div');
+                controls.className = 'system-overview-filter-controls';
+
+                const label = document.createElement('label');
+                label.htmlFor = 'dependencyServiceSelection';
+                label.className = 'system-overview-filter-label';
+                label.textContent = 'Select Service:';
+
+                const select = document.createElement('select');
+                select.id = 'dependencyServiceSelection';
+                select.className = 'form-select system-overview-filter-select';
+
+                const toggleBtn = document.createElement('button');
+                toggleBtn.id = 'togglePlatformComponentsDependency';
+                toggleBtn.className = 'btn btn-sm system-overview-toggle-btn';
+                toggleBtn.textContent = 'Hide Platforms';
+
+                controls.append(label, select, toggleBtn);
+
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('id', 'dependencySvg');
+                svg.setAttribute('class', 'system-overview-svg');
+
+                const legend = document.createElement('div');
+                legend.id = 'dependencyLegend';
+                legend.className = 'legend';
+
+                section.append(controls, svg, legend);
+                break;
+            }
+
+            case 'serviceDependenciesTableSlide': {
+                const container = document.createElement('div');
+                container.id = 'serviceDependenciesTable';
+
+                const heading = document.createElement('h2');
+                heading.textContent = 'Service Dependencies Table';
+
+                const host = document.createElement('div');
+                host.id = 'serviceDependenciesTableHost';
+
+                container.append(heading, host);
+                section.appendChild(container);
                 section.style.height = '100%';
                 section.style.overflowY = 'auto';
                 break;
+            }
 
-            case 'mermaidVisualization':
-                section.innerHTML = `<div id="mermaidGraph" class="system-overview-mermaid-container"></div>`;
+            case 'mermaidVisualization': {
+                const container = document.createElement('div');
+                container.id = 'mermaidGraph';
+                container.className = 'system-overview-mermaid-container';
+                section.appendChild(container);
                 section.style.overflowY = 'auto';
                 break;
+            }
 
-            case 'mermaidApiVisualization':
-                section.innerHTML = `
-                    <div class="system-overview-filter-controls">
-                        <label for="apiServiceSelection" class="system-overview-filter-label">Select Service:</label>
-                        <select id="apiServiceSelection" class="form-select system-overview-filter-select"></select>
-                    </div>
-                    <div id="mermaidApiGraph" class="system-overview-mermaid-container"></div>
-                `;
+            case 'mermaidApiVisualization': {
+                const controls = document.createElement('div');
+                controls.className = 'system-overview-filter-controls';
+
+                const label = document.createElement('label');
+                label.htmlFor = 'apiServiceSelection';
+                label.className = 'system-overview-filter-label';
+                label.textContent = 'Select Service:';
+
+                const select = document.createElement('select');
+                select.id = 'apiServiceSelection';
+                select.className = 'form-select system-overview-filter-select';
+
+                controls.append(label, select);
+
+                const graphContainer = document.createElement('div');
+                graphContainer.id = 'mermaidApiGraph';
+                graphContainer.className = 'system-overview-mermaid-container';
+
+                section.append(controls, graphContainer);
                 section.style.overflowY = 'auto';
                 break;
+            }
         }
 
         return section;
@@ -433,6 +512,9 @@ class SystemOverviewView {
     _populateServiceSelection() {
         const serviceSelection = document.getElementById('serviceSelection');
         if (!serviceSelection) return;
+
+        // Preserve current selection
+        const previousValue = serviceSelection.value;
         serviceSelection.innerHTML = '';
 
         const allServicesOption = document.createElement('option');
@@ -446,6 +528,11 @@ class SystemOverviewView {
             option.text = service.serviceName;
             serviceSelection.appendChild(option);
         });
+
+        // Restore previous selection if it still exists
+        if (previousValue && [...serviceSelection.options].some(o => o.value === previousValue)) {
+            serviceSelection.value = previousValue;
+        }
     }
 
     _updateServiceVisualization(selectedService) {
@@ -472,6 +559,9 @@ class SystemOverviewView {
     _populateDependencyServiceSelection() {
         const serviceSelection = document.getElementById('dependencyServiceSelection');
         if (!serviceSelection) return;
+
+        // Preserve current selection
+        const previousValue = serviceSelection.value;
         serviceSelection.innerHTML = '';
 
         SystemService.getCurrentSystem().services.forEach(service => {
@@ -480,6 +570,11 @@ class SystemOverviewView {
             option.text = service.serviceName;
             serviceSelection.appendChild(option);
         });
+
+        // Restore previous selection if it still exists
+        if (previousValue && [...serviceSelection.options].some(o => o.value === previousValue)) {
+            serviceSelection.value = previousValue;
+        }
     }
 
     _updateDependencyVisualization() {
