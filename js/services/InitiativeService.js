@@ -245,6 +245,160 @@ const InitiativeService = {
         if (!matchesProtection) return false;
 
         return true;
+    },
+
+    // =========================================================================
+    // DATE PROPAGATION (NEW)
+    // =========================================================================
+
+    /**
+     * Computes the end date for an initiative based on its work packages.
+     * Rule: initiative.endDate = max(wp.endDate) for all WPs
+     * 
+     * @param {object} initiative - The initiative object.
+     * @param {Array} workPackages - Work packages for this initiative.
+     * @returns {string|null} Computed end date (YYYY-MM-DD) or null.
+     */
+    computeInitiativeEndDate(initiative, workPackages) {
+        if (!workPackages || workPackages.length === 0) {
+            // Fall back to initiative's own targetDueDate
+            return initiative.targetDueDate || null;
+        }
+
+        let maxEndDate = null;
+
+        workPackages.forEach(wp => {
+            // Check WP end date
+            if (wp.endDate) {
+                if (!maxEndDate || wp.endDate > maxEndDate) {
+                    maxEndDate = wp.endDate;
+                }
+            }
+
+            // Also check assignment end dates within WP
+            (wp.impactedTeamAssignments || []).forEach(assign => {
+                if (assign.endDate) {
+                    if (!maxEndDate || assign.endDate > maxEndDate) {
+                        maxEndDate = assign.endDate;
+                    }
+                }
+            });
+        });
+
+        return maxEndDate || initiative.targetDueDate || null;
+    },
+
+    /**
+     * Gets all initiatives linked to a specific goal.
+     * 
+     * @param {object} systemData - The global system data object.
+     * @param {string} goalId - The goal ID.
+     * @returns {Array} Initiatives linked to this goal.
+     */
+    getInitiativesForGoal(systemData, goalId) {
+        if (!systemData || !systemData.yearlyInitiatives || !goalId) {
+            return [];
+        }
+
+        return systemData.yearlyInitiatives.filter(init => {
+            // Support both primaryGoalId and goalIds array
+            if (init.primaryGoalId === goalId) return true;
+            if (init.goalId === goalId) return true;
+            if (Array.isArray(init.goalIds) && init.goalIds.includes(goalId)) return true;
+            return false;
+        });
+    },
+
+    /**
+     * Refreshes an initiative's computed dates from its work packages.
+     * Updates the initiative in place.
+     * 
+     * @param {object} systemData - The global system data object.
+     * @param {string} initiativeId - The initiative ID.
+     * @returns {object|null} Updated initiative or null.
+     */
+    refreshInitiativeDates(systemData, initiativeId) {
+        if (!systemData || !systemData.yearlyInitiatives) {
+            return null;
+        }
+
+        const initiative = systemData.yearlyInitiatives.find(
+            i => i.initiativeId === initiativeId
+        );
+
+        if (!initiative) {
+            return null;
+        }
+
+        const workPackages = (systemData.workPackages || []).filter(
+            wp => wp.initiativeId === initiativeId
+        );
+
+        // Compute end date (max of WP end dates)
+        const computedEndDate = this.computeInitiativeEndDate(initiative, workPackages);
+        initiative.computedEndDate = computedEndDate;
+
+        // Compute start date (min of WP start dates)
+        const computedStartDate = this.computeInitiativeStartDate(initiative, workPackages);
+        initiative.computedStartDate = computedStartDate;
+
+        // Update actual date fields if we have WPs
+        if (workPackages.length > 0) {
+            if (computedStartDate) {
+                if (!initiative.attributes) initiative.attributes = {};
+                initiative.attributes.startDate = computedStartDate;
+            }
+            if (computedEndDate) {
+                initiative.targetDueDate = computedEndDate;
+            }
+        }
+
+        // Trigger goal refresh if initiative is linked to a goal
+        if (initiative.primaryGoalId || initiative.goalId) {
+            const goalId = initiative.primaryGoalId || initiative.goalId;
+            if (typeof GoalService !== 'undefined' && GoalService.refreshGoalDates) {
+                GoalService.refreshGoalDates(systemData, goalId);
+            }
+        }
+
+        return initiative;
+    },
+
+    /**
+     * Computes the start date for an initiative based on its work packages.
+     * Start date = Minimum of all WP start dates.
+     * 
+     * @param {object} initiative - The initiative object.
+     * @param {Array} workPackages - Work packages belonging to this initiative.
+     * @returns {string|null} Computed start date (YYYY-MM-DD) or null.
+     */
+    computeInitiativeStartDate(initiative, workPackages) {
+        if (!workPackages || workPackages.length === 0) {
+            // Fall back to initiative's own start date
+            return initiative.attributes?.startDate || initiative.startDate || null;
+        }
+
+        let minStartDate = null;
+
+        workPackages.forEach(wp => {
+            // Check WP start date
+            if (wp.startDate) {
+                if (!minStartDate || wp.startDate < minStartDate) {
+                    minStartDate = wp.startDate;
+                }
+            }
+
+            // Also check assignment start dates within WP
+            (wp.impactedTeamAssignments || []).forEach(assign => {
+                if (assign.startDate) {
+                    if (!minStartDate || assign.startDate < minStartDate) {
+                        minStartDate = assign.startDate;
+                    }
+                }
+            });
+        });
+
+        return minStartDate || initiative.attributes?.startDate || initiative.startDate || null;
     }
 
 };

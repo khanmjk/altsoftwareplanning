@@ -152,6 +152,11 @@ const WorkPackageService = {
         if (!initiative.workPackageIds) initiative.workPackageIds = [];
         initiative.workPackageIds.push(newWpId);
 
+        // Refresh parent initiative dates based on WP dates
+        if (typeof InitiativeService !== 'undefined' && InitiativeService.refreshInitiativeDates) {
+            InitiativeService.refreshInitiativeDates(systemData, initiativeId);
+        }
+
         return newWp;
     },
 
@@ -363,6 +368,101 @@ const WorkPackageService = {
             // This is tricky bi-directional sync; mostly we assume WPs drive Initiative total 
             // EXCEPT when the user manually edits the initiative total in the table.
         }
+    },
+
+    // =========================================================================
+    // DATE PROPAGATION (NEW)
+    // =========================================================================
+
+    /**
+     * Computes the end date for a work package based on its assignments.
+     * Rule: wp.endDate = max(assignment.endDate)
+     * 
+     * @param {object} wp - The work package object.
+     * @returns {string|null} Computed end date (YYYY-MM-DD) or null.
+     */
+    computeWpEndDate(wp) {
+        if (!wp || !wp.impactedTeamAssignments || wp.impactedTeamAssignments.length === 0) {
+            return wp?.endDate || null;
+        }
+
+        let maxEndDate = wp.endDate || null;
+
+        wp.impactedTeamAssignments.forEach(assign => {
+            if (assign.endDate) {
+                if (!maxEndDate || assign.endDate > maxEndDate) {
+                    maxEndDate = assign.endDate;
+                }
+            }
+        });
+
+        return maxEndDate;
+    },
+
+    /**
+     * Gets all work packages for a specific initiative.
+     * 
+     * @param {object} systemData - The global system data object.
+     * @param {string} initiativeId - The initiative ID.
+     * @returns {Array} Work packages for this initiative.
+     */
+    getWorkPackagesForInitiative(systemData, initiativeId) {
+        if (!systemData || !systemData.workPackages || !initiativeId) {
+            return [];
+        }
+
+        return systemData.workPackages.filter(wp => wp.initiativeId === initiativeId);
+    },
+
+    /**
+     * Updates an assignment (task) within a work package.
+     * 
+     * @param {object} systemData - The global system data object.
+     * @param {string} workPackageId - The WP containing the assignment.
+     * @param {string} teamId - The team ID of the assignment to update.
+     * @param {object} updates - Fields to update.
+     * @returns {object|null} Updated assignment or null.
+     */
+    updateAssignment(systemData, workPackageId, teamId, updates) {
+        if (!systemData || !systemData.workPackages || !workPackageId || !teamId) {
+            console.error('WorkPackageService.updateAssignment: Missing required parameters');
+            return null;
+        }
+
+        const wp = systemData.workPackages.find(w => w.workPackageId === workPackageId);
+        if (!wp) {
+            console.warn(`WorkPackageService.updateAssignment: WP not found: ${workPackageId}`);
+            return null;
+        }
+
+        if (!wp.impactedTeamAssignments) {
+            wp.impactedTeamAssignments = [];
+        }
+
+        const assignment = wp.impactedTeamAssignments.find(a => a.teamId === teamId);
+        if (!assignment) {
+            console.warn(`WorkPackageService.updateAssignment: Assignment not found for team: ${teamId}`);
+            return null;
+        }
+
+        Object.assign(assignment, updates);
+
+        // Recalculate WP dates from assignments
+        this.recalculateWorkPackageDates(wp);
+
+        // Trigger initiative date refresh
+        if (typeof InitiativeService !== 'undefined' && InitiativeService.refreshInitiativeDates) {
+            InitiativeService.refreshInitiativeDates(systemData, wp.initiativeId);
+        }
+
+        return assignment;
+    },
+
+    /**
+     * Removes an assignment (alias for deleteAssignment for consistency).
+     */
+    removeAssignment(systemData, workPackageId, teamId) {
+        return this.deleteAssignment(systemData, workPackageId, teamId);
     }
 };
 

@@ -29,6 +29,9 @@ class GanttPlanningView {
         this.lastGanttFocusTaskType = null;
         this.lastGanttFocusInitiativeId = null;
 
+        // MVC Controller instance (new architecture)
+        this.tableController = null;
+
         // Constants
         this.GANTT_TABLE_WIDTH_KEY = 'ganttTableWidthPct';
         this.GANTT_STATUS_OPTIONS = ['Backlog', 'Defined', 'Committed', 'In Progress', 'Done', 'Blocked'];
@@ -132,8 +135,12 @@ class GanttPlanningView {
         this.renderStatusFilter();
         setupGanttRendererToggle(); // Still uses legacy function temporarily
 
-        this.renderGanttTable();
-        renderGanttChart(); // Still uses legacy function temporarily
+        // Defer table render to after browser layout completes
+        // Container has 0 dimensions until flex layout is calculated
+        requestAnimationFrame(() => {
+            this.renderGanttTable();
+            renderGanttChart(); // Still uses legacy function temporarily
+        });
     }
 
     /**
@@ -341,8 +348,38 @@ class GanttPlanningView {
     }
 
     renderGanttTable() {
-        // Directly call legacy function - will be fully migrated soon
-        renderGanttTable();
+        // Always use MVC controller (legacy is deprecated)
+        const tableContainer = document.getElementById('ganttPlanningTableContainer');
+        if (!tableContainer) {
+            console.warn('GanttPlanningView: Table container not found');
+            return;
+        }
+
+        // Always create a fresh controller instance with the current container
+        // Container is recreated on each view render, so cached controller has stale reference
+        this.tableController = new GanttTableController({
+            container: tableContainer,
+            frappeRenderer: typeof ganttChartInstance !== 'undefined' ? ganttChartInstance : null
+        });
+
+        // Sync MVC model with view state
+        const model = this.tableController.model;
+        model.setFilter('year', this.currentGanttYear);
+        model.setFilter('groupBy', this.currentGanttGroupBy);
+        model.setFilter('statusFilter', this.ganttStatusFilter);
+
+        // Copy expanded states from view to model
+        this.ganttExpandedInitiatives.forEach(id => model.expandedInitiatives.add(id));
+        this.ganttExpandedWorkPackages.forEach(id => model.expandedWorkPackages.add(id));
+
+        // Render with controller
+        const systemData = SystemService.getCurrentSystem();
+        const selectedTeam = document.getElementById('ganttGroupValue')?.value || null;
+
+        this.tableController.init(systemData, {
+            selectedTeam,
+            showManagerTeams: this.currentGanttGroupBy === 'Team'
+        });
     }
 
     /**
