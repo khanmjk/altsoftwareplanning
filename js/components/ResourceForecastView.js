@@ -204,7 +204,29 @@ class ResourceForecastView {
     async _loadFAQContent(container) {
         const faqUrl = 'docs/sdmResourceForecastingFAQ.md';
         const htmlContent = await MarkdownService.fetchAndRender(faqUrl);
-        container.innerHTML = htmlContent;
+
+        // If fetch failed (e.g., CORS on file:// protocol), show fallback content
+        if (htmlContent.includes('Could not load content')) {
+            container.innerHTML = `
+                <h3>FAQ & Model Insights</h3>
+                <p><em>Full FAQ documentation is available when running via a local server. 
+                   See <code>docs/sdmResourceForecastingFAQ.md</code> for details.</em></p>
+                <details>
+                    <summary><strong>Quick Reference: Key Metrics</strong></summary>
+                    <ul>
+                        <li><strong>Effective Engineers:</strong> Ramped-up engineers × (Net Available Days / 5)</li>
+                        <li><strong>SDE-Weeks:</strong> Sum of weekly Effective Engineers for a month</li>
+                        <li><strong>SDE-Days:</strong> Sum of (Effective Engineers × Net Available Days/Week) for a month</li>
+                    </ul>
+                </details>
+                <details>
+                    <summary><strong>How to Run with Full Docs</strong></summary>
+                    <p>Start a local server: <code>python3 -m http.server 8000</code> or use VS Code Live Server</p>
+                </details>
+            `;
+        } else {
+            container.innerHTML = htmlContent;
+        }
     }
 
     _attachListeners() {
