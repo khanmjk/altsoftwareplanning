@@ -397,12 +397,13 @@ class ImpactWidget {
             'In Progress': '#ffc107', 'Completed': '#28a745'
         };
 
-        // Force simulation - use D3Service with custom collision radius
+        // Force simulation - use D3Service with custom collision radius, left-aligned
         const d3 = D3Service.getInstance();
+        const xCenter = width / 3; // Left-align: shift graph toward left side
         const simulation = d3.forceSimulation(nodes)
             .force('link', d3.forceLink(links).id(d => d.id).distance(d => d.type === 'owns' ? 80 : 150).strength(0.6))
             .force('charge', d3.forceManyBody().strength(-800))
-            .force('center', d3.forceCenter(width / 2, height / 2))
+            .force('center', d3.forceCenter(xCenter, height / 2))
             .force('collide', d3.forceCollide().radius(d =>
                 (d.type === 'Team' ? 40 : (d.type === 'Initiative' ? 28 : (serviceImpactCount.get(d.id) || 0) * 5 + 20)) + 10));
 

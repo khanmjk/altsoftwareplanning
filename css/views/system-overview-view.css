@@ -4,6 +4,7 @@
 .system-overview-svg {
     width: 100%;
     height: 600px;
+    display: block;
 }
 
 /* Filter Controls */
@@ -47,4 +48,5 @@
 /* Mermaid Graphs */
 .system-overview-mermaid-container {
     min-height: 600px;
+    text-align: left;
 }

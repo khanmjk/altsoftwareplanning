@@ -133,15 +133,19 @@ const D3Service = {
             centerStrength = 0.1
         } = options;
 
+        // Left-align: use width/3 instead of width/2 to shift graph toward left
+        const xCenter = width / 3;
+        const yCenter = height / 2;
+
         const simulation = d3.forceSimulation(nodes)
             .force('link', d3.forceLink(links)
                 .id(d => d.id)
                 .distance(typeof linkDistance === 'function' ? linkDistance : () => linkDistance)
             )
             .force('charge', d3.forceManyBody().strength(chargeStrength))
-            .force('center', d3.forceCenter(width / 2, height / 2))
-            .force('x', d3.forceX(width / 2).strength(centerStrength))
-            .force('y', d3.forceY(height / 2).strength(centerStrength))
+            .force('center', d3.forceCenter(xCenter, yCenter))
+            .force('x', d3.forceX(xCenter).strength(centerStrength))
+            .force('y', d3.forceY(yCenter).strength(centerStrength))
             .force('collide', d3.forceCollide(collideRadius));
 
         return simulation;
