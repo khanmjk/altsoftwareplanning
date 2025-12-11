@@ -16,6 +16,7 @@ let lastGanttFocusTaskId = null;
 let lastGanttFocusTaskType = null;
 let lastGanttFocusInitiativeId = null;
 let ganttChartInstance = null; // Chart renderer instance (Mermaid or Frappe)
+let ganttPlanningViewInstance = null; // GanttPlanningView instance (set by NavigationManager)
 
 // Use GanttService methods via local aliases for cleaner internal usage
 const normalizeGanttId = (value) => GanttService.normalizeGanttId(value);
@@ -373,6 +374,14 @@ function getGanttFilteredInitiatives() {
 }
 
 function renderGanttTable() {
+    // DEPRECATED: Legacy function - always delegates to MVC controller via GanttPlanningView
+    if (typeof ganttPlanningViewInstance !== 'undefined' && ganttPlanningViewInstance) {
+        ganttPlanningViewInstance.renderGanttTable();
+        return;
+    }
+
+    // Fallback if view not yet initialized (shouldn't happen in normal flow)
+    console.warn('renderGanttTable: ganttPlanningViewInstance not available - legacy render skipped');
     const container = document.getElementById('ganttPlanningTableContainer');
     if (!container) return;
     // Updated to use WorkPackageService directly
@@ -396,6 +405,13 @@ function renderGanttTable() {
     while (container.firstChild) {
         container.removeChild(container.firstChild);
     }
+
+    // Version indicator badge (Legacy)
+    const versionBadge = document.createElement('div');
+    versionBadge.className = 'gantt-table-version-badge';
+    versionBadge.style.cssText = 'background: #f59e0b; color: white; padding: 4px 10px; font-size: 11px; font-weight: 600; border-radius: 4px; display: inline-block; margin-bottom: 8px;';
+    versionBadge.textContent = '⚠ Legacy Table (Old Architecture)';
+    container.appendChild(versionBadge);
 
     const tableWrapper = document.createElement('div');
     tableWrapper.className = 'gantt-table-wrapper';
@@ -465,23 +481,103 @@ function renderGanttTable() {
             isFocusInitiative ? 'gantt-focus-initiative' : '',
             isFocusRow ? 'gantt-focus-row' : ''
         ].filter(Boolean).join(' ');
-        tr.innerHTML = `
-            <td class="gantt-table__cell gantt-table__cell--initiative gantt-table__cell--initiative-title">
-                <button class="gantt-expander" data-action="toggle-initiative" data-id="${init.initiativeId}" aria-label="Toggle work packages">${isExpanded ? '-' : '+'}</button>
-                <div class="gantt-table__title-container">
-                    <div>${init.title || '(Untitled)'}</div>
-                    <div class="gantt-table__id-badge">${init.initiativeId || ''}</div>
-                </div>
-            </td>
-            ${showManagerTeams ? `<td class="gantt-table__cell gantt-table__cell--initiative">${getTeamsForInitiative(init).join(', ')}</td>` : ''}
-            <td class="gantt-table__cell gantt-table__cell--initiative"><input type="date" value="${init.displayStart || ''}" data-kind="initiative" data-field="startDate" data-id="${init.initiativeId}" ${hasWorkPackages ? 'disabled title="Edit dates at Work Package level when WPs exist."' : ''}></td>
-            <td class="gantt-table__cell gantt-table__cell--initiative"><input type="date" value="${init.displayEnd || ''}" data-kind="initiative" data-field="targetDueDate" data-id="${init.initiativeId}" ${hasWorkPackages ? 'disabled title="Edit dates at Work Package level when WPs exist."' : ''}></td>
-            <td class="gantt-table__cell gantt-table__cell--initiative"><input type="number" step="0.01" value="${computeSdeEstimate(init)}" data-kind="initiative" data-field="sdeEstimate" data-id="${init.initiativeId}" ${hasWorkPackages ? 'disabled title="Edit SDEs at Work Package level when WPs exist."' : ''}></td>
-            <td class="gantt-table__cell gantt-table__cell--initiative">${renderInitiativePredecessorSelector(allInitiatives, init)}</td>
-            <td class="gantt-table__cell gantt-table__cell--initiative">
-                <button class="gantt-add-wp btn-primary" data-action="add-wp" data-id="${init.initiativeId}">Add WP</button>
-            </td>
-        `;
+
+        // Initiative Title Cell
+        const titleCell = document.createElement('td');
+        titleCell.className = 'gantt-table__cell gantt-table__cell--initiative gantt-table__cell--initiative-title';
+
+        const expanderBtn = document.createElement('button');
+        expanderBtn.className = 'gantt-expander';
+        expanderBtn.dataset.action = 'toggle-initiative';
+        expanderBtn.dataset.id = init.initiativeId;
+        expanderBtn.setAttribute('aria-label', 'Toggle work packages');
+        expanderBtn.textContent = isExpanded ? '-' : '+';
+
+        const titleContainer = document.createElement('div');
+        titleContainer.className = 'gantt-table__title-container';
+        const titleDiv = document.createElement('div');
+        titleDiv.textContent = init.title || '(Untitled)';
+        const idBadge = document.createElement('div');
+        idBadge.className = 'gantt-table__id-badge';
+        idBadge.textContent = init.initiativeId || '';
+        titleContainer.append(titleDiv, idBadge);
+        titleCell.append(expanderBtn, titleContainer);
+        tr.appendChild(titleCell);
+
+        // Teams Cell (conditional)
+        if (showManagerTeams) {
+            const teamsCell = document.createElement('td');
+            teamsCell.className = 'gantt-table__cell gantt-table__cell--initiative';
+            teamsCell.textContent = getTeamsForInitiative(init).join(', ');
+            tr.appendChild(teamsCell);
+        }
+
+        // Start Date Cell
+        const startCell = document.createElement('td');
+        startCell.className = 'gantt-table__cell gantt-table__cell--initiative';
+        const startInput = document.createElement('input');
+        startInput.type = 'date';
+        startInput.value = init.displayStart || '';
+        startInput.dataset.kind = 'initiative';
+        startInput.dataset.field = 'startDate';
+        startInput.dataset.id = init.initiativeId;
+        if (hasWorkPackages) {
+            startInput.disabled = true;
+            startInput.title = 'Edit dates at Work Package level when WPs exist.';
+        }
+        startCell.appendChild(startInput);
+        tr.appendChild(startCell);
+
+        // Target End Date Cell
+        const endCell = document.createElement('td');
+        endCell.className = 'gantt-table__cell gantt-table__cell--initiative';
+        const endInput = document.createElement('input');
+        endInput.type = 'date';
+        endInput.value = init.displayEnd || '';
+        endInput.dataset.kind = 'initiative';
+        endInput.dataset.field = 'targetDueDate';
+        endInput.dataset.id = init.initiativeId;
+        if (hasWorkPackages) {
+            endInput.disabled = true;
+            endInput.title = 'Edit dates at Work Package level when WPs exist.';
+        }
+        endCell.appendChild(endInput);
+        tr.appendChild(endCell);
+
+        // SDEs Cell
+        const sdeCell = document.createElement('td');
+        sdeCell.className = 'gantt-table__cell gantt-table__cell--initiative';
+        const sdeInput = document.createElement('input');
+        sdeInput.type = 'number';
+        sdeInput.step = '0.01';
+        sdeInput.value = computeSdeEstimate(init);
+        sdeInput.dataset.kind = 'initiative';
+        sdeInput.dataset.field = 'sdeEstimate';
+        sdeInput.dataset.id = init.initiativeId;
+        if (hasWorkPackages) {
+            sdeInput.disabled = true;
+            sdeInput.title = 'Edit SDEs at Work Package level when WPs exist.';
+        }
+        sdeCell.appendChild(sdeInput);
+        tr.appendChild(sdeCell);
+
+        // Dependencies Cell
+        const depsCell = document.createElement('td');
+        depsCell.className = 'gantt-table__cell gantt-table__cell--initiative';
+        depsCell.innerHTML = renderInitiativePredecessorSelector(allInitiatives, init);
+        tr.appendChild(depsCell);
+
+        // Actions Cell
+        const actionsCell = document.createElement('td');
+        actionsCell.className = 'gantt-table__cell gantt-table__cell--initiative';
+        const addWpBtn = document.createElement('button');
+        addWpBtn.className = 'gantt-add-wp btn-primary';
+        addWpBtn.dataset.action = 'add-wp';
+        addWpBtn.dataset.id = init.initiativeId;
+        addWpBtn.textContent = 'Add WP';
+        actionsCell.appendChild(addWpBtn);
+        tr.appendChild(actionsCell);
+
         tbody.appendChild(tr);
 
         if (isExpanded) {

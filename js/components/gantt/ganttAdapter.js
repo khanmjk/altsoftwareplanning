@@ -103,7 +103,7 @@ const ganttAdapter = (function () {
                         end: span.endDate,
                         status: wp.status || init.status || 'active',
                         type: 'workPackage',
-                        dependencies: (wp.dependencies || []).map(sanitizeId).join(','),
+                        dependencies: (Array.isArray(wp.dependencies) ? wp.dependencies : []).map(sanitizeId).join(','),
                         assignmentCount,
                         // Metadata for updates
                         initiativeId: init.initiativeId,

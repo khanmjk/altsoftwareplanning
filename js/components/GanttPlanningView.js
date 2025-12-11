@@ -29,6 +29,9 @@ class GanttPlanningView {
         this.lastGanttFocusTaskType = null;
         this.lastGanttFocusInitiativeId = null;
 
+        // MVC Controller instance (new architecture)
+        this.tableController = null;
+
         // Constants
         this.GANTT_TABLE_WIDTH_KEY = 'ganttTableWidthPct';
         this.GANTT_STATUS_OPTIONS = ['Backlog', 'Defined', 'Committed', 'In Progress', 'Done', 'Blocked'];
@@ -132,8 +135,71 @@ class GanttPlanningView {
         this.renderStatusFilter();
         setupGanttRendererToggle(); // Still uses legacy function temporarily
 
-        this.renderGanttTable();
-        renderGanttChart(); // Still uses legacy function temporarily
+        // Defer table render to after browser layout completes
+        // Container has 0 dimensions until flex layout is calculated
+        requestAnimationFrame(() => {
+            this.renderGanttTable();
+            renderGanttChart(); // Still uses legacy function temporarily
+            this.setupScrollSync(); // Sync vertical scroll between table and chart
+        });
+    }
+
+    /**
+     * Sets up bidirectional scroll synchronization between table and chart.
+     * When the user scrolls the table, the chart scrolls to match, and vice versa.
+     */
+    setupScrollSync() {
+        const tableContainer = document.getElementById('ganttPlanningTableContainer');
+        const chartWrapper = document.getElementById('ganttChartContainer');
+
+        if (!tableContainer || !chartWrapper) return;
+
+        // Frappe Gantt creates its own scrollable container - find it
+        // The actual scrollable element might be .gantt-container, .gantt, or the wrapper itself
+        const frappeScrollable = chartWrapper.querySelector('.gantt-container')
+            || chartWrapper.querySelector('.gantt')
+            || chartWrapper;
+
+        // Also get the table's scrollable wrapper if it exists
+        const tableScrollable = tableContainer.querySelector('.gantt-table-wrapper')
+            || tableContainer;
+
+        // Prevent infinite scroll loops
+        let syncing = false;
+
+        const syncScrollHandler = (source, target) => {
+            return () => {
+                if (syncing) return;
+                syncing = true;
+
+                // Match vertical scroll position
+                target.scrollTop = source.scrollTop;
+
+                requestAnimationFrame(() => {
+                    syncing = false;
+                });
+            };
+        };
+
+        // Remove any previous listeners to prevent duplicates
+        if (tableScrollable._syncHandler) {
+            tableScrollable.removeEventListener('scroll', tableScrollable._syncHandler);
+        }
+        if (frappeScrollable._syncHandler) {
+            frappeScrollable.removeEventListener('scroll', frappeScrollable._syncHandler);
+        }
+
+        // Create and store handlers for cleanup
+        tableScrollable._syncHandler = syncScrollHandler(tableScrollable, frappeScrollable);
+        frappeScrollable._syncHandler = syncScrollHandler(frappeScrollable, tableScrollable);
+
+        tableScrollable.addEventListener('scroll', tableScrollable._syncHandler);
+        frappeScrollable.addEventListener('scroll', frappeScrollable._syncHandler);
+
+        console.log('[GanttPlanningView] Scroll sync setup:', {
+            tableScrollable: tableScrollable.className || tableScrollable.id,
+            frappeScrollable: frappeScrollable.className || frappeScrollable.id
+        });
     }
 
     /**
@@ -341,8 +407,50 @@ class GanttPlanningView {
     }
 
     renderGanttTable() {
-        // Directly call legacy function - will be fully migrated soon
-        renderGanttTable();
+        // Always use MVC controller (legacy is deprecated)
+        const tableContainer = document.getElementById('ganttPlanningTableContainer');
+        if (!tableContainer) {
+            console.warn('GanttPlanningView: Table container not found');
+            return;
+        }
+
+        // Always create a fresh controller instance with the current container
+        // Container is recreated on each view render, so cached controller has stale reference
+        this.tableController = new GanttTableController({
+            container: tableContainer,
+            frappeRenderer: typeof ganttChartInstance !== 'undefined' ? ganttChartInstance : null
+        });
+
+        // Sync MVC model with view state
+        const model = this.tableController.model;
+        model.setFilter('year', this.currentGanttYear);
+        model.setFilter('groupBy', this.currentGanttGroupBy);
+        model.setFilter('statusFilter', this.ganttStatusFilter);
+
+        // Sync expansion states from GLOBAL legacy variables for chart↔table sync
+        // The chart updates these globals, so we read from them to stay in sync
+        model.expandedInitiatives.clear();
+        model.expandedWorkPackages.clear();
+
+        if (typeof ganttExpandedInitiatives !== 'undefined') {
+            ganttExpandedInitiatives.forEach(id => model.expandedInitiatives.add(id));
+        }
+        if (typeof ganttExpandedWorkPackages !== 'undefined') {
+            ganttExpandedWorkPackages.forEach(id => model.expandedWorkPackages.add(id));
+        }
+
+        // Also sync view's local state from globals (for consistency)
+        this.ganttExpandedInitiatives = new Set(model.expandedInitiatives);
+        this.ganttExpandedWorkPackages = new Set(model.expandedWorkPackages);
+
+        // Render with controller
+        const systemData = SystemService.getCurrentSystem();
+        const selectedTeam = document.getElementById('ganttGroupValue')?.value || null;
+
+        this.tableController.init(systemData, {
+            selectedTeam,
+            showManagerTeams: this.currentGanttGroupBy === 'Team'
+        });
     }
 
     /**

@@ -218,7 +218,7 @@ Goals should have statuses (rules should be configurable on app settings):
 
 
 Logic needs to be linked to initiative delivery dates, and initiative due dates linked to WP delivery dates
-A goals planned end date inherits the last initative's end date
+A goal has target end date and a planned end date. The planned end date inherits the last initative's end date linked to that goal
 Status rules trigger a call to action when there is a conflict with the last initiative's end date exceeding the due date for the goal
 A goal therefore needs to have additional attributes in its data structure - code already supports extensible attributes
 The goals dashboard cards status must align with the product management view pages for goals management
