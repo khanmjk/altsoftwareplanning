@@ -140,6 +140,65 @@ class GanttPlanningView {
         requestAnimationFrame(() => {
             this.renderGanttTable();
             renderGanttChart(); // Still uses legacy function temporarily
+            this.setupScrollSync(); // Sync vertical scroll between table and chart
+        });
+    }
+
+    /**
+     * Sets up bidirectional scroll synchronization between table and chart.
+     * When the user scrolls the table, the chart scrolls to match, and vice versa.
+     */
+    setupScrollSync() {
+        const tableContainer = document.getElementById('ganttPlanningTableContainer');
+        const chartWrapper = document.getElementById('ganttChartContainer');
+
+        if (!tableContainer || !chartWrapper) return;
+
+        // Frappe Gantt creates its own scrollable container - find it
+        // The actual scrollable element might be .gantt-container, .gantt, or the wrapper itself
+        const frappeScrollable = chartWrapper.querySelector('.gantt-container')
+            || chartWrapper.querySelector('.gantt')
+            || chartWrapper;
+
+        // Also get the table's scrollable wrapper if it exists
+        const tableScrollable = tableContainer.querySelector('.gantt-table-wrapper')
+            || tableContainer;
+
+        // Prevent infinite scroll loops
+        let syncing = false;
+
+        const syncScrollHandler = (source, target) => {
+            return () => {
+                if (syncing) return;
+                syncing = true;
+
+                // Match vertical scroll position
+                target.scrollTop = source.scrollTop;
+
+                requestAnimationFrame(() => {
+                    syncing = false;
+                });
+            };
+        };
+
+        // Remove any previous listeners to prevent duplicates
+        if (tableScrollable._syncHandler) {
+            tableScrollable.removeEventListener('scroll', tableScrollable._syncHandler);
+        }
+        if (frappeScrollable._syncHandler) {
+            frappeScrollable.removeEventListener('scroll', frappeScrollable._syncHandler);
+        }
+
+        // Create and store handlers for cleanup
+        tableScrollable._syncHandler = syncScrollHandler(tableScrollable, frappeScrollable);
+        frappeScrollable._syncHandler = syncScrollHandler(frappeScrollable, tableScrollable);
+
+        tableScrollable.addEventListener('scroll', tableScrollable._syncHandler);
+        frappeScrollable.addEventListener('scroll', frappeScrollable._syncHandler);
+
+        console.log('[GanttPlanningView] Scroll sync setup:', {
+            tableScrollable: tableScrollable.className || tableScrollable.id,
+            frappeScrollable: frappeScrollable.className || frappeScrollable.id
         });
     }
 
@@ -368,9 +427,21 @@ class GanttPlanningView {
         model.setFilter('groupBy', this.currentGanttGroupBy);
         model.setFilter('statusFilter', this.ganttStatusFilter);
 
-        // Copy expanded states from view to model
-        this.ganttExpandedInitiatives.forEach(id => model.expandedInitiatives.add(id));
-        this.ganttExpandedWorkPackages.forEach(id => model.expandedWorkPackages.add(id));
+        // Sync expansion states from GLOBAL legacy variables for chart↔table sync
+        // The chart updates these globals, so we read from them to stay in sync
+        model.expandedInitiatives.clear();
+        model.expandedWorkPackages.clear();
+
+        if (typeof ganttExpandedInitiatives !== 'undefined') {
+            ganttExpandedInitiatives.forEach(id => model.expandedInitiatives.add(id));
+        }
+        if (typeof ganttExpandedWorkPackages !== 'undefined') {
+            ganttExpandedWorkPackages.forEach(id => model.expandedWorkPackages.add(id));
+        }
+
+        // Also sync view's local state from globals (for consistency)
+        this.ganttExpandedInitiatives = new Set(model.expandedInitiatives);
+        this.ganttExpandedWorkPackages = new Set(model.expandedWorkPackages);
 
         // Render with controller
         const systemData = SystemService.getCurrentSystem();

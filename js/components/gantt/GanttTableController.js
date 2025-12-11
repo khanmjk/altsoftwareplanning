@@ -170,14 +170,18 @@ class GanttTableController {
         switch (data.action) {
             case 'toggle-initiative':
                 this.model.toggleInitiative(data.id);
+                this.model.setFocus({ taskType: 'initiative', taskId: data.id, initiativeId: data.id });
                 this.render();
                 this._syncExpansionToChart();
+                this._scrollToFocus(data.id, 'initiative');
                 break;
 
             case 'toggle-wp':
                 this.model.toggleWorkPackage(data.wpId);
+                this.model.setFocus({ taskType: 'workPackage', taskId: data.wpId, initiativeId: data.initiativeId });
                 this.render();
                 this._syncExpansionToChart();
+                this._scrollToFocus(data.wpId, 'wp');
                 break;
 
             case 'toggle-other-teams':
@@ -230,10 +234,8 @@ class GanttTableController {
                 console.warn('GanttTableController: Unknown field kind', kind);
         }
 
-        // Sync to Frappe if date changed
-        if (['startDate', 'endDate', 'targetDueDate'].includes(field)) {
-            this._syncToFrappe();
-        }
+        // Always sync to Frappe after field changes to keep chart in sync
+        this._syncToFrappe();
     }
 
     /**
@@ -372,8 +374,8 @@ class GanttTableController {
             if (['startDate', 'endDate'].includes(field)) {
                 this._propagateDates(initiativeId, wpId);
                 this.render(); // Re-render to show updated WP/Init dates
-                this._syncToFrappe();
             }
+            // Note: _syncToFrappe is called by parent _handleFieldChange
         }
     }
 
@@ -437,6 +439,23 @@ class GanttTableController {
         return null;
     }
 
+    /**
+     * Scrolls the focused row into view in the table
+     * @param {string} id - The initiative or WP id
+     * @param {string} type - 'initiative' or 'wp'
+     */
+    _scrollToFocus(id, type) {
+        requestAnimationFrame(() => {
+            const selector = type === 'initiative'
+                ? `tr[data-initiative-id="${id}"]`
+                : `tr[data-wp-id="${id}"]`;
+            const row = this.container.querySelector(selector);
+            if (row) {
+                row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        });
+    }
+
     // =========================================================================
     // FRAPPE SYNC
     // =========================================================================
@@ -460,10 +479,15 @@ class GanttTableController {
     }
 
     /**
-     * Syncs table changes to Frappe chart
+     * Syncs table changes to Frappe chart by re-rendering the chart
      */
     _syncToFrappe() {
-        if (this.frappeRenderer && typeof this.frappeRenderer.refresh === 'function') {
+        // Call the legacy renderGanttChart function which rebuilds the entire chart
+        // This ensures the chart reflects all data changes from the table
+        if (typeof renderGanttChart === 'function') {
+            renderGanttChart();
+        } else if (this.frappeRenderer && typeof this.frappeRenderer.refresh === 'function') {
+            // Fallback to renderer refresh if available
             this.frappeRenderer.refresh();
         }
     }
@@ -492,12 +516,27 @@ class GanttTableController {
             this.model.expandedWorkPackages.forEach(id => ganttExpandedWorkPackages.add(id));
         }
 
+        // Sync focus to legacy globals for chart highlighting
+        const focus = this.model.getFocus();
+        if (focus && typeof setLastGanttFocus === 'function') {
+            setLastGanttFocus({
+                taskId: focus.taskId,
+                taskType: focus.taskType,
+                initiativeId: focus.initiativeId
+            });
+        }
+
         // Call the legacy renderGanttChart if available
         if (typeof renderGanttChart === 'function') {
             renderGanttChart();
         } else if (this.frappeRenderer && typeof this.frappeRenderer.refresh === 'function') {
             // Fallback to Frappe refresh
             this.frappeRenderer.refresh();
+        }
+
+        // Scroll chart to focused bar
+        if (typeof scrollToGanttFocusTask === 'function') {
+            setTimeout(() => scrollToGanttFocusTask(), 100);
         }
     }
 
