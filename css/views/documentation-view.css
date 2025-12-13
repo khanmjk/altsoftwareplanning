@@ -26,9 +26,9 @@
    No borders, no shadows - just text on the "page".
 */
 .documentation-content {
-    max-width: 850px;
-    /* Optimal reading width */
-    margin: 0 auto;
+    /* max-width: 850px; Removed to allow full width like other views, or keep max-width but remove auto margin for left align */
+    max-width: 1000px; /* Optional: Keep some readability limit but align left */
+    margin: 0; /* Left align */
     color: var(--theme-text-primary);
     line-height: 1.7;
     font-size: 1rem;
