@@ -22,13 +22,116 @@ const MermaidService = {
             return;
         }
 
+        const themeConfig = this._getMermaidThemeConfig();
         const defaultConfig = {
             startOnLoad: false,
-            theme: 'default'
+            ...themeConfig
         };
 
         this._mermaid.initialize({ ...defaultConfig, ...config });
         this._initialized = true;
+    },
+
+    /**
+     * Reinitialize mermaid with current theme settings
+     * Call this when theme changes to update diagram rendering
+     */
+    reinitialize() {
+        if (!this._mermaid) {
+            this._mermaid = this._getMermaidInstance();
+        }
+        if (!this._mermaid) return;
+
+        const themeConfig = this._getMermaidThemeConfig();
+        this._mermaid.initialize({
+            startOnLoad: false,
+            ...themeConfig
+        });
+    },
+
+    /**
+     * Get Mermaid theme configuration based on current app theme
+     * @private
+     */
+    _getMermaidThemeConfig() {
+        const isDark = typeof ThemeService !== 'undefined' && ThemeService.isDarkTheme();
+        const colors = typeof ThemeService !== 'undefined' ? ThemeService.getThemeColors() : null;
+
+        if (isDark) {
+            const bgSecondary = colors?.bgSecondary || '#16213e';
+            const bgTertiary = colors?.bgTertiary || '#0f3460';
+            const borderColor = colors?.borderColor || '#2a2a3e';
+            const textPrimary = colors?.textPrimary || '#e8e8e8';
+            const textMuted = colors?.textMuted || '#808080';
+
+            return {
+                theme: 'dark',
+                themeVariables: {
+                    primaryColor: bgSecondary,
+                    primaryTextColor: textPrimary,
+                    primaryBorderColor: borderColor,
+                    lineColor: textMuted,
+                    secondaryColor: bgTertiary,
+                    tertiaryColor: colors?.bgPrimary || '#1a1a2e',
+                    background: colors?.bgPrimary || '#1a1a2e',
+                    mainBkg: bgSecondary,
+                    secondBkg: bgTertiary,
+                    nodeBorder: borderColor,
+                    // Cluster/Subgraph styling
+                    clusterBkg: bgTertiary,
+                    clusterBorder: borderColor,
+                    // Flowchart specific subgraph styling
+                    subGraph0Fill: bgTertiary,
+                    subGraph0Stroke: borderColor,
+                    // Title and label colors
+                    titleColor: textPrimary,
+                    actorTextColor: textPrimary,
+                    signalTextColor: textPrimary,
+                    labelTextColor: textPrimary,
+                    loopTextColor: textPrimary,
+                    edgeLabelBackground: bgSecondary,
+                    // Ensure node labels are visible
+                    nodeTextColor: textPrimary
+                }
+            };
+        } else {
+            const bgSecondary = colors?.bgSecondary || '#f8f9fa';
+            const bgTertiary = colors?.bgTertiary || '#f0f2f5';
+            const borderColor = colors?.borderColor || '#e0e0e0';
+            const textPrimary = colors?.textPrimary || '#212529';
+            const textSecondary = colors?.textSecondary || '#6c757d';
+
+            return {
+                theme: 'default',
+                themeVariables: {
+                    primaryColor: bgSecondary,
+                    primaryTextColor: textPrimary,
+                    primaryBorderColor: borderColor,
+                    lineColor: textSecondary,
+                    secondaryColor: bgTertiary,
+                    tertiaryColor: '#ffffff',
+                    background: '#ffffff',
+                    mainBkg: bgSecondary,
+                    secondBkg: bgTertiary,
+                    nodeBorder: borderColor,
+                    // Cluster/Subgraph styling - theme-aware, not white
+                    clusterBkg: bgSecondary,
+                    clusterBorder: borderColor,
+                    // Flowchart specific subgraph styling
+                    subGraph0Fill: bgSecondary,
+                    subGraph0Stroke: borderColor,
+                    // Title and label colors
+                    titleColor: textPrimary,
+                    actorTextColor: textPrimary,
+                    signalTextColor: textPrimary,
+                    labelTextColor: textPrimary,
+                    loopTextColor: textPrimary,
+                    edgeLabelBackground: '#ffffff',
+                    // Ensure node labels are visible
+                    nodeTextColor: textPrimary
+                }
+            };
+        }
     },
 
     /**
@@ -40,6 +143,47 @@ const MermaidService = {
             return mermaid;
         }
         return null;
+    },
+
+    /**
+     * Get theme-aware classDef statements for Mermaid diagrams
+     * @returns {Object} Object containing classDef strings
+     */
+    _getThemeClassDefs() {
+        const isDark = typeof ThemeService !== 'undefined' && ThemeService.isDarkTheme();
+        const colors = typeof ThemeService !== 'undefined' ? ThemeService.getThemeColors() : null;
+
+        if (isDark) {
+            // Dark theme colors
+            const bgPrimary = colors?.bgSecondary || '#16213e';
+            const borderColor = colors?.borderColor || '#2a2a3e';
+            const textColor = colors?.textPrimary || '#e8e8e8';
+            const primary = colors?.primary || '#4a9eff';
+            const warning = colors?.warning || '#ffca28';
+
+            return {
+                serviceNode: `fill:${bgPrimary},stroke:${borderColor},stroke-width:1px,color:${textColor};`,
+                platformNode: `fill:${bgPrimary},stroke:${warning},stroke-width:1px,stroke-dasharray: 3 2,color:${textColor};`,
+                apiNode: `fill:${bgPrimary},stroke:${primary},stroke-width:1px,color:${textColor};`,
+                subgraphBg: bgPrimary,
+                subgraphBorder: borderColor
+            };
+        } else {
+            // Light theme colors
+            const bgSecondary = colors?.bgSecondary || '#f8f9fa';
+            const borderColor = colors?.borderColor || '#e0e0e0';
+            const textColor = colors?.textPrimary || '#212529';
+            const primary = colors?.primary || '#007bff';
+            const warning = colors?.warning || '#ffc107';
+
+            return {
+                serviceNode: `fill:${bgSecondary},stroke:${borderColor},stroke-width:1px,color:${textColor};`,
+                platformNode: `fill:#fff7ed,stroke:${warning},stroke-width:1px,stroke-dasharray: 3 2,color:${textColor};`,
+                apiNode: `fill:#f0fff4,stroke:${primary},stroke-width:1px,color:${textColor};`,
+                subgraphBg: '#ffffff',
+                subgraphBorder: borderColor
+            };
+        }
     },
 
     /**
@@ -138,9 +282,12 @@ const MermaidService = {
         const includePlatforms = (typeof showPlatformComponents === 'undefined') ? true : !!showPlatformComponents;
         const data = systemData || {};
         const lines = ['graph TD'];
+
+        // Get theme-aware classDef colors
+        const themeStyles = this._getThemeClassDefs();
         const classDefLines = [
-            'classDef serviceNode fill:#eef2ff,stroke:#4a5568,stroke-width:1px;',
-            'classDef platformNode fill:#fff7ed,stroke:#b7791f,stroke-width:1px,stroke-dasharray: 3 2;'
+            `classDef serviceNode ${themeStyles.serviceNode}`,
+            `classDef platformNode ${themeStyles.platformNode}`
         ];
 
         const teams = Array.isArray(data.teams) ? [...data.teams] : [];
@@ -261,10 +408,13 @@ const MermaidService = {
         const teamById = new Map(teams.map(team => [team.teamId, team]));
 
         const lines = ['graph LR'];
+
+        // Get theme-aware classDef colors
+        const themeStyles = this._getThemeClassDefs();
         const classDefLines = [
-            'classDef serviceNode fill:#e2e8f0,stroke:#2d3748,stroke-width:1px;',
-            'classDef apiNode fill:#f0fff4,stroke:#276749,stroke-width:1px;',
-            'classDef platformNode fill:#fff7ed,stroke:#b7791f,stroke-width:1px,stroke-dasharray: 3 2;'
+            `classDef serviceNode ${themeStyles.serviceNode}`,
+            `classDef apiNode ${themeStyles.apiNode}`,
+            `classDef platformNode ${themeStyles.platformNode}`
         ];
 
         const idRegistry = new Map();
