@@ -310,6 +310,49 @@ const ThemeService = {
     },
 
     /**
+     * Check if the current theme is a dark theme
+     * @returns {boolean}
+     */
+    isDarkTheme() {
+        const theme = THEME_DEFINITIONS[this.currentTheme] || this.customThemes[this.currentTheme];
+        if (!theme) return false;
+
+        // Check background lightness - dark themes have dark backgrounds
+        const bgPrimary = theme.colors.bgPrimary || '#ffffff';
+
+        // Simple heuristic: if bgPrimary starts with a dark color
+        if (bgPrimary.startsWith('hsl')) {
+            // Extract lightness from HSL
+            const match = bgPrimary.match(/hsl\(\s*\d+\s*,\s*\d+%?\s*,\s*(\d+)%?\s*\)/);
+            if (match) {
+                return parseInt(match[1]) < 50;
+            }
+        }
+
+        // For hex colors, convert and check brightness
+        if (bgPrimary.startsWith('#')) {
+            const hex = bgPrimary.replace('#', '');
+            const r = parseInt(hex.substr(0, 2), 16);
+            const g = parseInt(hex.substr(2, 2), 16);
+            const b = parseInt(hex.substr(4, 2), 16);
+            const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+            return brightness < 128;
+        }
+
+        // Known dark theme IDs
+        return this.currentTheme === 'dark';
+    },
+
+    /**
+     * Get the current theme's color palette
+     * @returns {Object} Color palette object
+     */
+    getThemeColors() {
+        const theme = THEME_DEFINITIONS[this.currentTheme] || this.customThemes[this.currentTheme];
+        return theme?.colors || THEME_DEFINITIONS.light.colors;
+    },
+
+    /**
      * Get list of available themes
      * @returns {Array<{id: string, name: string}>}
      */
