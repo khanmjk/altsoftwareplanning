@@ -270,40 +270,41 @@ class GoalEditComponent {
         label.className = 'inline-edit-label';
         label.innerText = labelText;
 
-        const select = document.createElement('select');
-        select.className = 'inline-edit-select';
-
+        // Build options array for ThemedSelect
+        const selectOptions = [];
         if (hasNoneOption) {
-            select.appendChild(new Option('-- None --', ''));
+            selectOptions.push({ value: '', text: '-- None --' });
         }
-
         options.forEach(opt => {
             const val = typeof opt === 'string' ? opt : opt.value;
             const text = typeof opt === 'string' ? opt : opt.text;
-            const option = new Option(text, val);
-            if (val === selectedValue) option.selected = true;
-            select.appendChild(option);
+            selectOptions.push({ value: val, text: text });
         });
 
-        select.addEventListener('change', (e) => {
-            let val = e.target.value;
-            // Handle Person special parsing
-            if (['owner', 'projectManager', 'technicalPOC'].includes(fieldName)) {
-                if (val) {
-                    const [type, id] = val.split(':');
-                    val = { type, id };
+        const selectContainer = document.createElement('div');
+        selectContainer.className = 'inline-edit-select-container';
 
-                    // Special case for PMT to match data model expectations if needed
-                    // But 'pmt' type is standard in our systemData
-                } else {
-                    val = null;
+        const themedSelect = new ThemedSelect({
+            options: selectOptions,
+            value: selectedValue || '',
+            id: `goal-${index}-${fieldName}`,
+            onChange: (val) => {
+                // Handle Person special parsing
+                if (['owner', 'projectManager', 'technicalPOC'].includes(fieldName)) {
+                    if (val) {
+                        const [type, id] = val.split(':');
+                        val = { type, id };
+                    } else {
+                        val = null;
+                    }
                 }
+                this._updateField(index, fieldName, val);
             }
-            this._updateField(index, fieldName, val);
         });
 
+        selectContainer.appendChild(themedSelect.render());
         group.appendChild(label);
-        group.appendChild(select);
+        group.appendChild(selectContainer);
         return group;
     }
 

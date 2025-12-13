@@ -1,12 +1,13 @@
-/* Year Planning View - EXACT CSS from style-legacy.css commit 5fee202 */
+/* Year Planning View - Refactored for Theming */
 
 /* Planning Table Headers */
 #planningTable thead th {
     position: sticky;
     top: 0;
     z-index: 2;
-    background-color: #e9ecef;
-    border: 1px solid #ccc;
+    background-color: var(--theme-bg-tertiary);
+    border: 1px solid var(--theme-border-color);
+    color: var(--theme-text-primary);
     text-align: left;
     white-space: nowrap;
     padding: 3px 5px;
@@ -14,7 +15,9 @@
 }
 
 #planningTable th[data-team-id] {
-    background-color: #ddeeff;
+    background-color: var(--theme-bg-tertiary);
+    /* Was legacy light blue #ddeeff */
+    color: var(--theme-text-primary);
     padding: 5px 2px;
     font-size: 0.8em;
     min-width: 25px;
@@ -26,23 +29,30 @@
 #teamLoadSummaryTable tbody td {
     padding: 2px 4px;
     font-size: 0.82em;
-    border: 1px solid #f0f0f0;
+    border: 1px solid var(--theme-border-color);
     vertical-align: middle;
+    color: var(--theme-text-primary);
 }
 
 #planningTable tbody td input[type="number"] {
     font-size: 0.9em;
     padding: 2px;
+    background-color: var(--theme-bg-primary);
+    color: var(--theme-text-primary);
+    border: 1px solid var(--theme-border-color);
 }
 
 /* Team Load Summary Table */
 #teamLoadSummaryTable {
     font-size: 0.85em;
+    color: var(--theme-text-primary);
 }
 
 #teamLoadSummaryTable thead th {
     padding: 5px 8px;
-    background-color: #f0f2f5;
+    background-color: var(--theme-bg-tertiary);
+    color: var(--theme-text-primary);
+    border: 1px solid var(--theme-border-color);
 }
 
 #teamLoadSummaryTable tbody td,
@@ -52,8 +62,10 @@
 }
 
 #teamLoadSummaryTable tfoot td {
-    background-color: #f8f9fa;
+    background-color: var(--theme-bg-secondary);
+    color: var(--theme-text-primary);
     font-weight: 600;
+    border: 1px solid var(--theme-border-color);
 }
 
 /* ============================================
@@ -72,16 +84,18 @@
 /* Team Load Summary Section (collapsible) */
 #teamLoadSummarySection {
     margin-bottom: 20px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--theme-border-color);
     border-radius: 4px;
+    background-color: var(--theme-bg-primary);
 }
 
 #teamLoadSummarySection h4 {
     cursor: pointer;
     margin: 0;
     padding: 10px;
-    background-color: #e9ecef;
-    border-bottom: 1px solid #ccc;
+    background-color: var(--theme-bg-secondary);
+    border-bottom: 1px solid var(--theme-border-color);
+    color: var(--theme-text-primary);
 }
 
 #teamLoadSummaryContent {
@@ -90,7 +104,7 @@
 
 #teamLoadSummaryContent>p {
     font-size: 0.9em;
-    color: #555;
+    color: var(--theme-text-muted);
     margin-top: 0;
 }
 
@@ -107,12 +121,12 @@
 /* Row being dragged */
 #planningTableBody tr.dragging {
     opacity: 0.5;
-    border: 2px dashed #6c757d;
-    background-color: #f8f9fa;
+    border: 2px dashed var(--theme-text-muted);
+    background-color: var(--theme-bg-secondary);
 }
 
 /* Drop zone indicator - shows where the row will be placed */
 #planningTableBody tr.drag-over {
-    border-top: 3px solid #007bff;
-    box-shadow: 0 -2px 4px rgba(0, 123, 255, 0.3);
+    border-top: 3px solid var(--theme-primary);
+    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.2);
 }

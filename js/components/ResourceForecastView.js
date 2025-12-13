@@ -382,7 +382,7 @@ class ResourceForecastView {
         headline.style.marginTop = '0';
         headline.style.fontSize = '1.1rem';
         headline.style.fontWeight = '600';
-        headline.style.color = '#1e293b';
+        headline.style.color = 'var(--theme-text-primary)';
         headline.textContent = `For ${teamDisplayName}, to reach the funded team size of ${fundedSize} by Week ${targetWeek}, the required hiring rate is approximately ${hiringRate.toFixed(2)} engineers per week.`;
         box.appendChild(headline);
 
@@ -414,7 +414,7 @@ class ResourceForecastView {
         // 3. Effective Engineers Explanation
         const explanation = document.createElement('p');
         explanation.style.lineHeight = '1.5';
-        explanation.style.color = '#334155';
+        explanation.style.color = 'var(--theme-text-primary)';
 
         const boldText = document.createElement('strong');
         boldText.textContent = "The 'Effective Engineers' shown reflect the ramped-up engineers adjusted for their actual productive time. ";
@@ -430,7 +430,7 @@ class ResourceForecastView {
         footer.style.marginTop = '16px';
         footer.style.fontStyle = 'italic';
         footer.style.fontSize = '0.9rem';
-        footer.style.color = '#64748b';
+        footer.style.color = 'var(--theme-text-muted)';
         footer.textContent = 'Note: Manual forecast parameters (hiring time, ramp-up, attrition) are not currently saved per team.';
         box.appendChild(footer);
     }

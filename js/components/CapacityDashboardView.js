@@ -374,7 +374,7 @@ class CapacityDashboardView {
                         const nhCell = row.insertCell();
                         nhCell.textContent = `+${(m.deductionsBreakdown.newHireGainYrs || 0).toFixed(2)}`;
                         nhCell.className = 'capacity-summary-gain';
-                        nhCell.style.color = '#20c997'; // Teal
+                        nhCell.style.color = 'var(--theme-success)'; // Use theme success color
                     }
 
                     const netCell = row.insertCell();
@@ -405,7 +405,7 @@ class CapacityDashboardView {
                 wrapper.className = 'capacity-narrative-content';
                 wrapper.style.padding = '20px';
                 wrapper.style.lineHeight = '1.6';
-                wrapper.style.color = '#333';
+                wrapper.style.color = 'var(--theme-text-primary)';
 
                 // 1. Overall Summary
                 const h4 = document.createElement('h4');

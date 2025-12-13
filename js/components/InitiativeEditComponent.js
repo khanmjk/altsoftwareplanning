@@ -231,37 +231,41 @@ class InitiativeEditComponent {
         label.className = 'initiative-edit-label';
         label.innerText = labelText;
 
-        const select = document.createElement('select');
-        select.className = 'initiative-edit-select';
-
+        // Build options array for ThemedSelect
+        const selectOptions = [];
         if (hasNoneOption) {
-            select.appendChild(new Option('-- None --', ''));
+            selectOptions.push({ value: '', text: '-- None --' });
         }
-
         options.forEach(opt => {
             const val = typeof opt === 'string' ? opt : opt.value;
             const text = typeof opt === 'string' ? opt : opt.text;
-            const option = new Option(text, val);
-            if (val === selectedValue) option.selected = true;
-            select.appendChild(option);
+            selectOptions.push({ value: val, text: text });
         });
 
-        select.addEventListener('change', (e) => {
-            let val = e.target.value;
-            // Handle Owner/PM special parsing
-            if (fieldName === 'owner' || fieldName === 'projectManager') {
-                if (val) {
-                    const [type, id] = val.split(':');
-                    val = { type, id };
-                } else {
-                    val = null;
+        const selectContainer = document.createElement('div');
+        selectContainer.className = 'initiative-edit-select-container';
+
+        const themedSelect = new ThemedSelect({
+            options: selectOptions,
+            value: selectedValue || '',
+            id: `initiative-${index}-${fieldName}`,
+            onChange: (val) => {
+                // Handle Owner/PM special parsing
+                if (fieldName === 'owner' || fieldName === 'projectManager') {
+                    if (val) {
+                        const [type, id] = val.split(':');
+                        val = { type, id };
+                    } else {
+                        val = null;
+                    }
                 }
+                this._updateField(index, fieldName, val);
             }
-            this._updateField(index, fieldName, val);
         });
 
+        selectContainer.appendChild(themedSelect.render());
         group.appendChild(label);
-        group.appendChild(select);
+        group.appendChild(selectContainer);
         return group;
     }
 
@@ -370,12 +374,25 @@ class InitiativeEditComponent {
         const controls = document.createElement('div');
         controls.className = 'initiative-assignment-controls';
 
-        const teamSelect = document.createElement('select');
-        teamSelect.className = 'initiative-edit-select';
-        teamSelect.appendChild(new Option('-- Select Team --', ''));
+        // Build team options for ThemedSelect
+        const teamOptions = [{ value: '', text: '-- Select Team --' }];
         (this.systemData.teams || []).forEach(t => {
-            teamSelect.appendChild(new Option(t.teamIdentity || t.teamName, t.teamId));
+            teamOptions.push({ value: t.teamId, text: t.teamIdentity || t.teamName });
         });
+
+        const teamSelectContainer = document.createElement('div');
+        teamSelectContainer.className = 'initiative-assignment-team-select';
+
+        let selectedTeamId = '';
+        const teamThemedSelect = new ThemedSelect({
+            options: teamOptions,
+            value: '',
+            id: `assignment-team-${index}`,
+            onChange: (val) => {
+                selectedTeamId = val;
+            }
+        });
+        teamSelectContainer.appendChild(teamThemedSelect.render());
 
         const sdeInput = document.createElement('input');
         sdeInput.type = 'number';
@@ -388,18 +405,19 @@ class InitiativeEditComponent {
         addBtn.className = 'btn btn-secondary';
         addBtn.innerText = 'Add';
         addBtn.onclick = () => {
-            const teamId = teamSelect.value;
+            const teamId = selectedTeamId || teamThemedSelect.getValue();
             const sdeYears = parseFloat(sdeInput.value);
             if (!teamId || isNaN(sdeYears)) return;
 
             if (!init.assignments) init.assignments = [];
             init.assignments.push({ teamId, sdeYears });
             renderList();
-            teamSelect.value = '';
+            // Reset the select
+            selectedTeamId = '';
             sdeInput.value = '';
         };
 
-        controls.appendChild(teamSelect);
+        controls.appendChild(teamSelectContainer);
         controls.appendChild(sdeInput);
         controls.appendChild(addBtn);
         container.appendChild(controls);
