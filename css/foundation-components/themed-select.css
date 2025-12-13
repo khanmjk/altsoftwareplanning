@@ -248,3 +248,22 @@
 .themed-select--inline .themed-select__dropdown {
     min-width: 150px;
 }
+
+/* Compact variant for data tables (Gantt) */
+.themed-select--compact .themed-select__trigger {
+    padding: 2px 6px;
+    padding-right: 20px;
+    font-size: 0.85rem;
+    height: 24px;
+    line-height: normal;
+}
+
+.themed-select--compact .themed-select__trigger::after {
+    right: 6px;
+    border-width: 4px;
+}
+
+.themed-select--compact .themed-select__option {
+    padding: 4px 8px;
+    font-size: 0.85rem;
+}

@@ -169,33 +169,42 @@ class InitiativeRow {
     _createDependenciesCell(init, allInitiatives) {
         const cell = document.createElement('td');
         cell.className = 'gantt-table__cell gantt-table__cell--initiative';
+        cell.style.overflow = 'visible'; // Allow dropdown to overflow
 
-        // Create select for predecessor
-        const select = document.createElement('select');
-        select.dataset.kind = 'initiative';
-        select.dataset.field = 'predecessorId';
-        select.dataset.id = init.initiativeId;
-
-        // None option
-        const noneOption = document.createElement('option');
-        noneOption.value = '';
-        noneOption.textContent = 'None';
-        select.appendChild(noneOption);
-
-        // Add other initiatives as options
+        // Build options
+        const options = [{ value: '', text: 'None' }];
         allInitiatives.forEach(other => {
             if (other.initiativeId !== init.initiativeId) {
-                const option = document.createElement('option');
-                option.value = other.initiativeId;
-                option.textContent = this._truncateLabel(other.title, 25);
-                if (init.predecessorId === other.initiativeId) {
-                    option.selected = true;
-                }
-                select.appendChild(option);
+                options.push({
+                    value: other.initiativeId,
+                    text: this._truncateLabel(other.title, 25)
+                });
             }
         });
 
-        cell.appendChild(select);
+        // Create ThemedSelect
+        const themedSelect = new ThemedSelect({
+            options: options,
+            value: init.predecessorId || '',
+            className: 'themed-select--compact',
+            onChange: (value, text) => {
+                // Dispatch bubbling custom event for delegation
+                const event = new CustomEvent('themed-select-change', {
+                    bubbles: true,
+                    detail: { value, text }
+                });
+                selectContainer.dispatchEvent(event);
+            }
+        });
+
+        const selectContainer = themedSelect.render();
+
+        // Attach data attributes for delegation handler
+        selectContainer.dataset.kind = 'initiative';
+        selectContainer.dataset.field = 'predecessorId';
+        selectContainer.dataset.id = init.initiativeId;
+
+        cell.appendChild(selectContainer);
         return cell;
     }
 
