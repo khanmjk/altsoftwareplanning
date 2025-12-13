@@ -58,7 +58,7 @@
 .pill-nav__item--active {
     background: var(--theme-primary);
     border-color: var(--theme-primary);
-    color: #ffffff;
+    color: var(--color-white);
     font-weight: 600;
 }
 

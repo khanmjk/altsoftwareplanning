@@ -56,7 +56,7 @@
 /* Text Styles */
 .org-text-root {
     font-size: 1.2em;
-    color: #333;
+    color: var(--theme-text-primary);
     font-weight: 600;
 }
 
@@ -134,60 +134,64 @@
     text-align: left;
     padding: 10px;
     font: 12px sans-serif;
-    background: white;
-    border: 1px solid #ccc;
+    background: var(--theme-card-bg);
+    border: 1px solid var(--theme-border-color);
     border-radius: 4px;
     pointer-events: none;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     z-index: 1000;
 }
 
+/* D3 Link (connector lines) */
+.org-link {
+    fill: none;
+    stroke: var(--theme-border-color);
+    stroke-width: 1.5px;
+}
+
 /*** D3 Chart Styles - Fix for Black Box Issue ***/
 
 /* Base Node Rect Style */
 .org-node-rect {
-    fill: #fff;
+    fill: var(--theme-bg-primary);
     /* Default white background */
-    stroke: #999;
+    stroke: var(--theme-text-muted);
     stroke-width: 1px;
     transition: all 0.3s ease;
 }
 
 /* Hover Effect */
 .org-node-rect:hover {
-    stroke: #007bff;
+    stroke: var(--theme-primary);
     stroke-width: 2px;
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
 /* Node Type Specific Colors */
 .org-type-root .org-node-rect {
-    fill: #f8f9fa;
-    stroke: #333;
+    fill: var(--theme-bg-secondary);
+    stroke: var(--theme-text-primary);
     stroke-width: 2px;
 }
 
 .org-type-srMgr .org-node-rect {
-    fill: #e3f2fd;
-    /* Light Blue 50 */
-    stroke: #1e88e5;
+    fill: color-mix(in srgb, var(--theme-primary), var(--theme-bg-primary) 85%);
+    stroke: var(--theme-primary);
 }
 
 .org-type-sdm .org-node-rect {
-    fill: #e1f5fe;
-    /* Light Blue 50 variant */
-    stroke: #039be5;
+    fill: color-mix(in srgb, var(--theme-info), var(--theme-bg-primary) 85%);
+    stroke: var(--theme-info);
 }
 
 .org-type-team .org-node-rect {
-    fill: #e0f7fa;
-    /* Cyan 50 */
-    stroke: #00acc1;
+    fill: color-mix(in srgb, var(--theme-success), var(--theme-bg-primary) 85%);
+    stroke: var(--theme-success);
 }
 
 .org-type-engineer .org-node-rect {
-    fill: #ffffff;
-    stroke: #eee;
+    fill: var(--theme-bg-primary);
+    stroke: var(--theme-border-light);
 }
 
 /* Text inside SVG Nodes */
@@ -207,7 +211,7 @@
 .org-node-label-name {
     font-size: 14px;
     font-weight: 600;
-    color: #333;
+    color: var(--theme-text-primary);
     margin-bottom: 2px;
     white-space: nowrap;
     overflow: hidden;
@@ -217,7 +221,7 @@
 
 .org-node-label-details {
     font-size: 11px;
-    color: #666;
+    color: var(--theme-text-secondary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -227,7 +231,7 @@
 /* Toggle Arrow */
 .org-node-toggle {
     font-size: 12px;
-    fill: #666;
+    fill: var(--theme-text-secondary);
     cursor: pointer;
     pointer-events: none;
     /* Let click pass through to g element */

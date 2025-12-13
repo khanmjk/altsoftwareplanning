@@ -47,73 +47,98 @@ class RoadmapComponent {
 
         filtersContainer.innerHTML = '';
 
-        // Helper to create filter
-        const createFilter = (id, label, options, onChange) => {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'roadmap-filter-group';
-
-            const labelEl = document.createElement('label');
-            labelEl.className = 'roadmap-filter-label';
-            labelEl.htmlFor = id;
-            labelEl.textContent = label;
-
-            const select = document.createElement('select');
-            select.id = id;
-            select.className = 'form-select form-select-sm';
-            select.innerHTML = options;
-            select.onchange = onChange;
-
-            wrapper.appendChild(labelEl);
-            wrapper.appendChild(select);
-            return wrapper;
-        };
-
-        // 1. Year Filter (Crucial for 3YP context)
+        // 1. Year Filter
         const currentYear = new Date().getFullYear();
-        // Ensure planningYear is set
         if (!this.planningYear || this.planningYear === 'all') {
             this.planningYear = currentYear;
         }
 
         const years = [currentYear - 1, currentYear, currentYear + 1, currentYear + 2];
-        // Removed "All Years" option as requested
-        const yearOptions = years.map(y => `<option value="${y}" ${y == this.planningYear ? 'selected' : ''}>${y}</option>`).join('');
+        const yearOptions = years.map(y => ({ value: y.toString(), text: y.toString() }));
 
-        filtersContainer.appendChild(createFilter('roadmapYearFilter', 'Year:', yearOptions, (e) => {
-            this.planningYear = parseInt(e.target.value);
-            this.renderGrid();
-        }));
+        const yearWrap = this._createFilterWrapper('Year:');
+        this._yearSelect = new ThemedSelect({
+            options: yearOptions,
+            value: this.planningYear.toString(),
+            id: 'roadmapYearFilter',
+            onChange: (value) => {
+                this.planningYear = parseInt(value);
+                this.renderGrid();
+            }
+        });
+        yearWrap.appendChild(this._yearSelect.render());
+        filtersContainer.appendChild(yearWrap);
 
         // 2. Org Filter
-        let orgOptions = '<option value="all">All Organizations</option>';
+        const orgOptions = [{ value: 'all', text: 'All Organizations' }];
         (SystemService.getCurrentSystem().seniorManagers || []).forEach(sm => {
-            orgOptions += `<option value="${sm.seniorManagerId}">${sm.seniorManagerName}</option>`;
+            orgOptions.push({ value: sm.seniorManagerId, text: sm.seniorManagerName });
         });
 
-        filtersContainer.appendChild(createFilter('roadmapOrgFilter', 'Org:', orgOptions, (e) => {
-            this.updateTeamOptions(e.target.value);
-            this.renderGrid();
-        }));
+        const orgWrap = this._createFilterWrapper('Org:');
+        this._orgSelect = new ThemedSelect({
+            options: orgOptions,
+            value: 'all',
+            id: 'roadmapOrgFilter',
+            onChange: (value) => {
+                this.updateTeamOptions(value);
+                this.renderGrid();
+            }
+        });
+        orgWrap.appendChild(this._orgSelect.render());
+        filtersContainer.appendChild(orgWrap);
 
-        // 3. Team Filter
-        filtersContainer.appendChild(createFilter('roadmapTeamFilter', 'Team:', '<option value="all">All Teams</option>', () => this.renderGrid()));
+        // 3. Team Filter (will be populated by updateTeamOptions)
+        const teamWrap = this._createFilterWrapper('Team:');
+        teamWrap.id = 'roadmapTeamFilterContainer';
+        filtersContainer.appendChild(teamWrap);
 
-        // 4. Theme Filter (Simplified for now, can enhance to multiselect later if needed)
-        let themeOptions = '<option value="all">All Themes</option>';
+        // 4. Theme Filter
+        const themeOptions = [{ value: 'all', text: 'All Themes' }];
         (SystemService.getCurrentSystem().definedThemes || []).forEach(t => {
-            themeOptions += `<option value="${t.themeId}">${t.name}</option>`;
+            themeOptions.push({ value: t.themeId, text: t.name });
         });
 
-        filtersContainer.appendChild(createFilter('roadmapThemeFilter', 'Theme:', themeOptions, () => this.renderGrid()));
+        const themeWrap = this._createFilterWrapper('Theme:');
+        this._themeSelect = new ThemedSelect({
+            options: themeOptions,
+            value: 'all',
+            id: 'roadmapThemeFilter',
+            onChange: () => this.renderGrid()
+        });
+        themeWrap.appendChild(this._themeSelect.render());
+        filtersContainer.appendChild(themeWrap);
 
         // Initial Team Population
         this.updateTeamOptions('all');
     }
 
-    updateTeamOptions(orgId) {
-        const teamSelect = document.getElementById('roadmapTeamFilter');
-        if (!teamSelect) return;
+    /**
+     * Create filter wrapper with label
+     */
+    _createFilterWrapper(labelText) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'roadmap-filter-group';
 
+        const label = document.createElement('label');
+        label.className = 'roadmap-filter-label';
+        label.textContent = labelText;
+        wrapper.appendChild(label);
+
+        return wrapper;
+    }
+
+    updateTeamOptions(orgId) {
+        const container = document.getElementById('roadmapTeamFilterContainer');
+        if (!container) return;
+
+        // Clear previous ThemedSelect
+        const existingSelect = container.querySelector('.themed-select');
+        if (existingSelect) {
+            existingSelect.remove();
+        }
+
+        // Filter teams based on org selection
         let teams = SystemService.getCurrentSystem().teams || [];
         if (orgId !== 'all') {
             const validSdmIds = new Set();
@@ -123,11 +148,25 @@ class RoadmapComponent {
             teams = teams.filter(t => validSdmIds.has(t.sdmId));
         }
 
-        teamSelect.innerHTML = '<option value="all">All Teams</option>';
+        // Build team options
+        const teamOptions = [{ value: 'all', text: 'All Teams' }];
         teams.sort((a, b) => (a.teamIdentity || a.teamName).localeCompare(b.teamIdentity || b.teamName))
             .forEach(t => {
-                teamSelect.add(new Option(t.teamIdentity || t.teamName, t.teamId));
+                teamOptions.push({
+                    value: t.teamId,
+                    text: t.teamIdentity || t.teamName
+                });
             });
+
+        // Create new ThemedSelect
+        this._teamSelect = new ThemedSelect({
+            options: teamOptions,
+            value: 'all',
+            id: 'roadmapTeamFilter',
+            onChange: () => this.renderGrid()
+        });
+
+        container.appendChild(this._teamSelect.render());
     }
 
     renderGrid() {
@@ -148,13 +187,13 @@ class RoadmapComponent {
     }
 
     prepareData() {
-        // Collect Filter Values
-        const orgFilter = document.getElementById('roadmapOrgFilter')?.value || 'all';
-        const teamFilter = document.getElementById('roadmapTeamFilter')?.value || 'all';
+        // Collect Filter Values from ThemedSelect instances
+        const orgFilter = this._orgSelect?.getValue() || 'all';
+        const teamFilter = this._teamSelect?.getValue() || 'all';
         const yearFilter = this.planningYear || 'all';
 
-        // Collect Theme Filters (Simplified Single Select for now, matching renderFilters)
-        const themeFilter = document.getElementById('roadmapThemeFilter')?.value || 'all';
+        // Collect Theme Filters
+        const themeFilter = this._themeSelect?.getValue() || 'all';
         const selectedThemes = themeFilter !== 'all' ? [themeFilter] : [];
 
         // Use RoadmapService for data retrieval

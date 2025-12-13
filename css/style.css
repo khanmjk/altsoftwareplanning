@@ -28,6 +28,7 @@
 @import url('foundation-components/dependencies.css');
 @import url('foundation-components/ai-chat.css');
 @import url('foundation-components/loading.css');
+@import url('foundation-components/themed-select.css');
 
 /* Components Layer - UI page-specific components */
 @import url('components/aiChatPanel.css');

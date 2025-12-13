@@ -71,27 +71,26 @@ class RoadmapTableWidget {
         container.style.alignItems = 'center';
 
         // Org Filter
-        const orgFilter = this.createDropdownFilter(
-            'roadmapOrgFilter' + this.idSuffix,
-            'Org:',
-            this.getOrgOptions()
-        );
-        orgFilter.querySelector('select').addEventListener('change', () => {
-            this.updateTeamFilterOptions();
-            this.renderTable();
+        const orgWrap = this._createFilterWrapper('Org:');
+        const orgOptions = this.getOrgOptions();
+        this._orgSelect = new ThemedSelect({
+            options: orgOptions.map(opt => ({ value: opt.value, text: opt.label })),
+            value: 'all',
+            id: 'roadmapOrgFilter' + this.idSuffix,
+            onChange: () => {
+                this.updateTeamFilterOptions();
+                this.renderTable();
+            }
         });
-        container.appendChild(orgFilter);
+        orgWrap.appendChild(this._orgSelect.render());
+        container.appendChild(orgWrap);
 
-        // Team Filter
-        const teamFilter = this.createDropdownFilter(
-            'roadmapTeamFilter' + this.idSuffix,
-            'Team:',
-            [{ value: 'all', label: 'All Teams' }]
-        );
-        teamFilter.querySelector('select').addEventListener('change', () => this.renderTable());
-        container.appendChild(teamFilter);
+        // Team Filter (container for dynamic rebuilding)
+        const teamWrap = this._createFilterWrapper('Team:');
+        teamWrap.id = 'roadmapTeamFilterContainer' + this.idSuffix;
+        container.appendChild(teamWrap);
 
-        // Theme Filter (only for quarterly)
+        // Theme Filter (only for quarterly) - uses custom multi-select, not native
         if (this.type === 'quarterly') {
             const themeFilter = this.createThemeFilter();
             container.appendChild(themeFilter);
@@ -101,9 +100,9 @@ class RoadmapTableWidget {
     }
 
     /**
-     * Create a dropdown filter
+     * Create filter wrapper with label
      */
-    createDropdownFilter(id, labelText, options) {
+    _createFilterWrapper(labelText) {
         const div = document.createElement('div');
         div.className = 'filter-item';
         div.style.display = 'flex';
@@ -111,11 +110,19 @@ class RoadmapTableWidget {
         div.style.gap = '5px';
 
         const label = document.createElement('label');
-        label.htmlFor = id;
         label.textContent = labelText;
         label.style.fontWeight = '600';
         label.style.marginBottom = '0';
         div.appendChild(label);
+
+        return div;
+    }
+
+    /**
+     * Create a dropdown filter (legacy - kept for compatibility)
+     */
+    createDropdownFilter(id, labelText, options) {
+        const div = this._createFilterWrapper(labelText);
 
         const select = document.createElement('select');
         select.id = id;
@@ -274,23 +281,17 @@ class RoadmapTableWidget {
      * Update team filter options based on org selection
      */
     updateTeamFilterOptions() {
-        const orgFilter = document.getElementById('roadmapOrgFilter' + this.idSuffix);
-        const teamSelect = document.getElementById('roadmapTeamFilter' + this.idSuffix);
-        if (!teamSelect) return;
+        const container = document.getElementById('roadmapTeamFilterContainer' + this.idSuffix);
+        if (!container) return;
 
-        const orgValue = orgFilter?.value || 'all';
-        const systemData = SystemService.getCurrentSystem();
-
-        // Clear existing options
-        while (teamSelect.firstChild) {
-            teamSelect.removeChild(teamSelect.firstChild);
+        // Clear previous ThemedSelect
+        const existingSelect = container.querySelector('.themed-select');
+        if (existingSelect) {
+            existingSelect.remove();
         }
 
-        // Add "All Teams" option
-        const allOption = document.createElement('option');
-        allOption.value = 'all';
-        allOption.textContent = 'All Teams';
-        teamSelect.appendChild(allOption);
+        const orgValue = this._orgSelect?.getValue() || 'all';
+        const systemData = SystemService.getCurrentSystem();
 
         // Get teams to show
         let teamsToShow = [];
@@ -310,15 +311,26 @@ class RoadmapTableWidget {
             teamsToShow = Array.from(teamsInOrg);
         }
 
-        // Add team options
+        // Build team options
+        const teamOptions = [{ value: 'all', text: 'All Teams' }];
         teamsToShow
             .sort((a, b) => (a.teamIdentity || a.teamName).localeCompare(b.teamIdentity || b.teamName))
             .forEach(team => {
-                const option = document.createElement('option');
-                option.value = team.teamId;
-                option.textContent = team.teamIdentity || team.teamName;
-                teamSelect.appendChild(option);
+                teamOptions.push({
+                    value: team.teamId,
+                    text: team.teamIdentity || team.teamName
+                });
             });
+
+        // Create new ThemedSelect
+        this._teamSelect = new ThemedSelect({
+            options: teamOptions,
+            value: 'all',
+            id: 'roadmapTeamFilter' + this.idSuffix,
+            onChange: () => this.renderTable()
+        });
+
+        container.appendChild(this._teamSelect.render());
     }
 
     /**
@@ -337,8 +349,8 @@ class RoadmapTableWidget {
      */
     getFilteredInitiatives() {
         const systemData = SystemService.getCurrentSystem();
-        const orgFilter = document.getElementById('roadmapOrgFilter' + this.idSuffix)?.value || 'all';
-        const teamFilter = document.getElementById('roadmapTeamFilter' + this.idSuffix)?.value || 'all';
+        const orgFilter = this._orgSelect?.getValue() || 'all';
+        const teamFilter = this._teamSelect?.getValue() || 'all';
         const yearFilter = this.planningYear;
 
         let initiatives = systemData?.yearlyInitiatives || [];
@@ -524,8 +536,8 @@ class RoadmapTableWidget {
 
         // Body
         const tbody = document.createElement('tbody');
-        const orgFilter = document.getElementById('roadmapOrgFilter' + this.idSuffix)?.value || 'all';
-        const teamFilter = document.getElementById('roadmapTeamFilter' + this.idSuffix)?.value || 'all';
+        const orgFilter = this._orgSelect?.getValue() || 'all';
+        const teamFilter = this._teamSelect?.getValue() || 'all';
 
         rows.forEach(row => {
             const tr = document.createElement('tr');

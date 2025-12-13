@@ -178,16 +178,13 @@
                             <span id="notification-badge"
                                 style="display: none; position: absolute; top: 0; right: 0; width: 8px; height: 8px; background: #ef4444; border-radius: 50%; border: 1px solid white;"></span>
                         </button>
-                        <div id="notifications-dropdown" class="dropdown-menu"
-                            style="right: 0; left: auto; width: 320px; background: white; border: 1px solid #e2e8f0; color: #1e293b; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);">
-                            <div class="dropdown-header"
-                                style="padding: 12px 15px; font-weight: 600; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
+                        <div id="notifications-dropdown" class="dropdown-menu notifications-dropdown">
+                            <div class="notifications-dropdown__header">
                                 <span>Notifications</span>
-                                <span id="notifications-mark-read"
-                                    style="font-size: 0.75rem; color: #64748b; cursor: pointer;">Mark all read</span>
+                                <span id="notifications-mark-read" class="notifications-dropdown__mark-read">Mark all
+                                    read</span>
                             </div>
-                            <div id="notifications-list" class="dropdown-content"
-                                style="max-height: 300px; overflow-y: auto;">
+                            <div id="notifications-list" class="notifications-dropdown__content">
                             </div>
                         </div>
                     </div>
@@ -375,6 +372,7 @@
 
     <script src="js/components/enhancedTableWidget.js?v=3"></script>
     <script src="js/components/widgets/DualListSelector.js"></script>
+    <script src="js/components/widgets/ThemedSelect.js"></script>
     <script src="js/components/PillNavigationComponent.js"></script>
     <script src="js/documentation.js"></script>
     <script src="js/engines/ForecastingEngine.js"></script>

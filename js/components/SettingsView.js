@@ -134,11 +134,7 @@ class SettingsView {
             randomBtn.addEventListener('click', this.handleRandomTheme.bind(this));
         }
 
-        // Live Preview: Bind change event to theme selector
-        const themeSelect = document.getElementById('themeSelect_view');
-        if (themeSelect) {
-            themeSelect.addEventListener('change', this.handleThemeChange.bind(this));
-        }
+        // Note: Live preview is now handled by ThemedSelect onChange callback
     }
 
     /**
@@ -267,33 +263,31 @@ class SettingsView {
 
         const configCard = this.createSettingsCard();
 
-        // Provider select
+        // Provider select - use container for ThemedSelect
         const providerGroup = this.createFormGroup();
         const providerLabel = document.createElement('label');
         providerLabel.className = 'settings-label';
         providerLabel.textContent = 'LLM Provider';
 
-        const providerSelect = document.createElement('select');
-        providerSelect.id = 'aiProviderSelect_view';
-        providerSelect.className = 'settings-select';
+        const providerContainer = document.createElement('div');
+        providerContainer.id = 'aiProviderSelectContainer_view';
 
         const options = [
-            { value: 'google-gemini', text: 'Google (Gemini Pro)', disabled: false },
+            { value: 'google-gemini', text: 'Google (Gemini Pro)' },
             { value: 'openai-gpt4o', text: 'OpenAI (GPT-4o) - Coming Soon', disabled: true },
             { value: 'anthropic-claude35', text: 'Anthropic (Claude 3.5 Sonnet) - Coming Soon', disabled: true }
         ];
 
-        options.forEach(opt => {
-            const option = document.createElement('option');
-            option.value = opt.value;
-            option.textContent = opt.text;
-            option.disabled = opt.disabled;
-            option.selected = opt.value === provider;
-            providerSelect.appendChild(option);
+        this._providerSelect = new ThemedSelect({
+            options: options,
+            value: provider,
+            id: 'aiProviderSelect_view',
+            onChange: () => { } // No immediate action needed
         });
 
+        providerContainer.appendChild(this._providerSelect.render());
         providerGroup.appendChild(providerLabel);
-        providerGroup.appendChild(providerSelect);
+        providerGroup.appendChild(providerContainer);
         configCard.appendChild(providerGroup);
 
         // API Key input
@@ -400,20 +394,27 @@ class SettingsView {
         selectorLabel.className = 'settings-label';
         selectorLabel.textContent = 'Select Theme';
 
-        const themeSelect = document.createElement('select');
-        themeSelect.id = 'themeSelect_view';
-        themeSelect.className = 'settings-select';
+        const themeContainer = document.createElement('div');
+        themeContainer.id = 'themeSelectContainer_view';
 
-        themeList.forEach(theme => {
-            const option = document.createElement('option');
-            option.value = theme.id;
-            option.textContent = theme.name;
-            option.selected = theme.id === currentTheme;
-            themeSelect.appendChild(option);
+        const themeOptions = themeList.map(theme => ({
+            value: theme.id,
+            text: theme.name
+        }));
+
+        this._themeSelect = new ThemedSelect({
+            options: themeOptions,
+            value: currentTheme,
+            id: 'themeSelect_view',
+            onChange: (value) => {
+                // Live preview - apply theme but don't persist
+                ThemeService.applyTheme(value, false);
+            }
         });
 
+        themeContainer.appendChild(this._themeSelect.render());
         selectorGroup.appendChild(selectorLabel);
-        selectorGroup.appendChild(themeSelect);
+        selectorGroup.appendChild(themeContainer);
         themeCard.appendChild(selectorGroup);
 
         // Actions
@@ -545,7 +546,7 @@ class SettingsView {
      */
     saveAiSettings() {
         const enabled = document.getElementById('aiModeEnabled_view').checked;
-        const provider = document.getElementById('aiProviderSelect_view').value;
+        const provider = this._providerSelect?.getValue() || 'google-gemini';
         const apiKey = document.getElementById('aiApiKeyInput_view').value;
 
         // Use SettingsService to update and save
@@ -570,8 +571,7 @@ class SettingsView {
     handleThemeApply(event) {
         event.preventDefault();
 
-        const themeSelect = document.getElementById('themeSelect_view');
-        const selectedTheme = themeSelect.value;
+        const selectedTheme = this._themeSelect?.getValue() || ThemeService.getCurrentTheme();
 
         ThemeService.applyTheme(selectedTheme);
 
@@ -604,22 +604,37 @@ class SettingsView {
         // Preview random theme (do not persist)
         ThemeService.applyTheme(randomTheme.id, false);
 
-        // Update UI to show random theme
-        const themeSelect = document.getElementById('themeSelect_view');
+        // Update the ThemedSelect with the new random theme option
+        const themeContainer = document.getElementById('themeSelectContainer_view');
         const currentDisplay = document.getElementById('currentThemeDisplay_view');
 
-        if (themeSelect && currentDisplay) {
-            // Add random theme to dropdown if not already there
-            let randomOption = Array.from(themeSelect.options).find(opt => opt.value === randomTheme.id);
-            if (!randomOption) {
-                randomOption = document.createElement('option');
-                randomOption.value = randomTheme.id;
-                randomOption.textContent = randomTheme.name;
-                themeSelect.appendChild(randomOption);
+        if (themeContainer && this._themeSelect) {
+            // Get current theme list and add the random theme
+            const themeList = ThemeService.getThemeList();
+            const allThemes = [...themeList];
+
+            // Add random theme if not already in list
+            if (!allThemes.find(t => t.id === randomTheme.id)) {
+                allThemes.push({ id: randomTheme.id, name: randomTheme.name });
             }
-            themeSelect.value = randomTheme.id;
-            // We don't update currentDisplay text until Applied, or maybe we do?
-            // Let's keep it consistent: visual preview only.
+
+            // Rebuild ThemedSelect with updated options
+            const themeOptions = allThemes.map(theme => ({
+                value: theme.id,
+                text: theme.name
+            }));
+
+            // Clear container and rebuild ThemedSelect
+            themeContainer.innerHTML = '';
+            this._themeSelect = new ThemedSelect({
+                options: themeOptions,
+                value: randomTheme.id,
+                id: 'themeSelect_view',
+                onChange: (value) => {
+                    ThemeService.applyTheme(value, false);
+                }
+            });
+            themeContainer.appendChild(this._themeSelect.render());
         }
 
         notificationManager.showToast('Random theme generated (Preview)', 'info');

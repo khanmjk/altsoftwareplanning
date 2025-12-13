@@ -1713,26 +1713,42 @@ function renderDynamicGroupFilter() {
     if (!wrap) return;
     wrap.innerHTML = '';
     if (currentGanttGroupBy === 'Team') {
-        const select = document.createElement('select');
-        select.id = 'ganttGroupValue';
-        const defaultOption = document.createElement('option');
-        defaultOption.value = 'all';
-        defaultOption.textContent = 'All Teams';
-        select.appendChild(defaultOption);
+        // Build team options for ThemedSelect
+        const teamOptions = [{ value: 'all', text: 'All Teams' }];
         (SystemService.getCurrentSystem().teams || [])
             .slice()
             .sort((a, b) => (a.teamIdentity || a.teamName).localeCompare(b.teamIdentity || b.teamName))
             .forEach(team => {
-                const opt = document.createElement('option');
-                opt.value = team.teamId;
-                opt.textContent = team.teamIdentity || team.teamName;
-                select.appendChild(opt);
+                teamOptions.push({
+                    value: team.teamId,
+                    text: team.teamIdentity || team.teamName
+                });
             });
-        select.onchange = () => {
-            renderGanttTable();
-            renderGanttChart();
-        };
-        wrap.appendChild(createLabeledControl('Team:', select));
+
+        const teamSelect = new ThemedSelect({
+            options: teamOptions,
+            value: 'all',
+            id: 'ganttGroupValue',
+            onChange: () => {
+                renderGanttTable();
+                renderGanttChart();
+            }
+        });
+
+        // Create label wrapper
+        const labelWrap = document.createElement('div');
+        labelWrap.className = 'filter-item';
+        labelWrap.style.display = 'flex';
+        labelWrap.style.alignItems = 'center';
+        labelWrap.style.gap = '6px';
+
+        const label = document.createElement('span');
+        label.textContent = 'Team:';
+        label.style.fontWeight = '600';
+        labelWrap.appendChild(label);
+        labelWrap.appendChild(teamSelect.render());
+
+        wrap.appendChild(labelWrap);
     } else {
         // No extra filter for All Initiatives or other modes
         const placeholder = document.createElement('div');

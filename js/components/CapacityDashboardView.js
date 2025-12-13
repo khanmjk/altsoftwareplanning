@@ -54,24 +54,24 @@ class CapacityDashboardView {
         scenLabel.className = 'capacity-dashboard-controls__label';
         scenGroup.appendChild(scenLabel);
 
-        const scenSelect = document.createElement('select');
-        scenSelect.className = 'form-control capacity-dashboard-controls__select';
-        [
-            { val: 'EffectiveBIS', text: 'Effective BIS (Actual + Borrowed)' },
-            { val: 'TeamBIS', text: 'Team BIS (Actual Only)' },
-            { val: 'FundedHC', text: 'Funded Headcount (Budget)' }
-        ].forEach(opt => {
-            const o = document.createElement('option');
-            o.value = opt.val;
-            o.textContent = opt.text;
-            if (opt.val === this.currentScenario) o.selected = true;
-            scenSelect.appendChild(o);
+        // Build scenario options for ThemedSelect
+        const scenarioOptions = [
+            { value: 'EffectiveBIS', text: 'Effective BIS (Actual + Borrowed)' },
+            { value: 'TeamBIS', text: 'Team BIS (Actual Only)' },
+            { value: 'FundedHC', text: 'Funded Headcount (Budget)' }
+        ];
+
+        this.scenarioSelect = new ThemedSelect({
+            options: scenarioOptions,
+            value: this.currentScenario,
+            id: 'capacity-scenario-select',
+            onChange: (value) => {
+                this.currentScenario = value;
+                this.render(this.container);
+            }
         });
-        scenSelect.onchange = (e) => {
-            this.currentScenario = e.target.value;
-            this.render(this.container);
-        };
-        scenGroup.appendChild(scenSelect);
+
+        scenGroup.appendChild(this.scenarioSelect.render());
         row.appendChild(scenGroup);
 
         // Team Filter (Moved from Chart)
@@ -82,28 +82,26 @@ class CapacityDashboardView {
         teamLabel.className = 'capacity-dashboard-controls__label';
         teamGroup.appendChild(teamLabel);
 
-        const teamSelect = document.createElement('select');
-        teamSelect.className = 'form-control capacity-dashboard-controls__select';
-
-        const orgOpt = document.createElement('option');
-        orgOpt.value = '__ORG_VIEW__';
-        orgOpt.textContent = 'Entire Organization';
-        if (this.currentChartTeamId === '__ORG_VIEW__') orgOpt.selected = true;
-        teamSelect.appendChild(orgOpt);
-
+        // Build team options for ThemedSelect
+        const teamOptions = [{ value: '__ORG_VIEW__', text: 'Entire Organization' }];
         (SystemService.getCurrentSystem().teams || []).forEach(t => {
-            const opt = document.createElement('option');
-            opt.value = t.teamId;
-            opt.textContent = t.teamIdentity || t.teamName;
-            if (t.teamId === this.currentChartTeamId) opt.selected = true;
-            teamSelect.appendChild(opt);
+            teamOptions.push({
+                value: t.teamId,
+                text: t.teamIdentity || t.teamName
+            });
         });
 
-        teamSelect.onchange = (e) => {
-            this.currentChartTeamId = e.target.value;
-            this.render(this.container); // Re-render to update KPIs and Chart
-        };
-        teamGroup.appendChild(teamSelect);
+        this.teamSelect = new ThemedSelect({
+            options: teamOptions,
+            value: this.currentChartTeamId,
+            id: 'capacity-team-select',
+            onChange: (value) => {
+                this.currentChartTeamId = value;
+                this.render(this.container);
+            }
+        });
+
+        teamGroup.appendChild(this.teamSelect.render());
         row.appendChild(teamGroup);
 
         container.appendChild(row);
@@ -112,8 +110,8 @@ class CapacityDashboardView {
         const heading = document.createElement('div');
         heading.className = 'capacity-dashboard-context-heading';
 
-        const scenarioText = scenSelect.options[scenSelect.selectedIndex].text;
-        const teamText = teamSelect.options[teamSelect.selectedIndex].text;
+        const scenarioText = scenarioOptions.find(o => o.value === this.currentScenario)?.text || this.currentScenario;
+        const teamText = teamOptions.find(o => o.value === this.currentChartTeamId)?.text || this.currentChartTeamId;
 
         heading.innerHTML = `Views reflect <strong>${scenarioText}</strong> for <strong>${teamText}</strong>`;
         container.appendChild(heading);
@@ -516,5 +514,28 @@ class CapacityDashboardView {
         contentRenderer(body);
         section.appendChild(body);
         parent.appendChild(section);
+    }
+
+    /**
+     * Returns structured context data for AI Chat Panel integration
+     * Implements the AI_VIEW_REGISTRY contract
+     * @returns {Object} Context object with view-specific data
+     */
+    getAIContext() {
+        const metrics = this.capacityEngine?.calculateAllMetrics();
+        const data = this.currentChartTeamId === '__ORG_VIEW__'
+            ? metrics?.totals?.[this.currentScenario]
+            : metrics?.[this.currentChartTeamId]?.[this.currentScenario];
+
+        return {
+            viewTitle: 'Capacity Dashboard',
+            currentScenario: this.currentScenario,
+            currentTeamView: this.currentChartTeamId === '__ORG_VIEW__' ? 'Organization' : this.currentChartTeamId,
+            grossCapacity: data?.grossYrs?.toFixed(2),
+            netCapacity: data?.netYrs?.toFixed(2),
+            totalDeductions: data?.deductYrs?.toFixed(2),
+            aiProductivityGain: data?.deductionsBreakdown?.aiProductivityGainYrs?.toFixed(2),
+            teamCount: SystemService.getCurrentSystem()?.teams?.length || 0
+        };
     }
 }

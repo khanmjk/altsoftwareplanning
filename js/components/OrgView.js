@@ -440,10 +440,7 @@ class OrgView {
                     .attr("d", d => {
                         const o = { x: source.x0 || source.x, y: source.y0 || source.y };
                         return `M ${o.x},${o.y + nodeHeight / 2} V ${o.y + nodeHeight / 2} H ${o.x} V ${o.y + nodeHeight / 2}`;
-                    })
-                    .attr("fill", "none")
-                    .attr("stroke", "#ccc")
-                    .attr("stroke-width", 1.5);
+                    });
 
                 link.merge(linkEnter).transition().duration(duration)
                     .attr("d", elbow);

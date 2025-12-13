@@ -532,4 +532,24 @@ class CapacityConfigurationView {
 
         return group;
     }
+
+    /**
+     * Returns structured context data for AI Chat Panel integration
+     * Implements the AI_VIEW_REGISTRY contract
+     * @returns {Object} Context object with view-specific data
+     */
+    getAIContext() {
+        const config = SystemService.getCurrentSystem()?.capacityConfiguration;
+        const teams = SystemService.getCurrentSystem()?.teams || [];
+
+        return {
+            viewTitle: 'Capacity Configuration',
+            workingDaysPerYear: config?.workingDaysPerYear,
+            publicHolidays: config?.globalConstraints?.publicHolidays,
+            leaveTypesCount: config?.leaveTypes?.length || 0,
+            orgEventsCount: config?.globalConstraints?.orgEvents?.length || 0,
+            teamCount: teams.length,
+            teamsWithAdjustments: teams.filter(t => t.teamCapacityAdjustments).length
+        };
+    }
 }

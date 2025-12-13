@@ -176,11 +176,10 @@ class YearPlanningView {
     }
 
     /**
-     * Create year selector dropdown
+     * Create year selector control
      */
     createYearSelector() {
-        const calendarYear = new Date().getFullYear();
-        let availableYears = this.getAvailableYears();
+        const availableYears = this.getAvailableYears();
 
         const yearGroup = document.createElement('div');
         yearGroup.style.display = 'flex';
@@ -191,21 +190,21 @@ class YearPlanningView {
         yearLabel.textContent = 'Planning Year:';
         yearGroup.appendChild(yearLabel);
 
-        const yearSelect = document.createElement('select');
-        yearSelect.className = 'form-select form-select-sm';
-        yearSelect.style.padding = '4px 8px';
-        yearSelect.style.borderRadius = '4px';
-        yearSelect.addEventListener('change', (e) => this.setYear(parseInt(e.target.value)));
+        // Build year options for ThemedSelect
+        const yearOptions = availableYears.map(year => ({
+            value: year.toString(),
+            text: year.toString()
+        }));
 
-        availableYears.forEach(year => {
-            const option = document.createElement('option');
-            option.value = year;
-            option.textContent = year;
-            if (year === this.currentYear) option.selected = true;
-            yearSelect.appendChild(option);
+        // Create ThemedSelect instance
+        this.yearSelect = new ThemedSelect({
+            options: yearOptions,
+            value: this.currentYear.toString(),
+            id: 'year-planning-selector',
+            onChange: (value) => this.setYear(parseInt(value))
         });
 
-        yearGroup.appendChild(yearSelect);
+        yearGroup.appendChild(this.yearSelect.render());
         return yearGroup;
     }
 

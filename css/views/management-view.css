@@ -10,7 +10,7 @@
     overflow-y: auto;
     background-color: transparent;
     font-family: var(--font-family-base);
-    color: var(--color-gray-800);
+    color: var(--theme-text-primary);
     margin: 0 !important;
     /* Force left align */
     max-width: none !important;
@@ -28,7 +28,7 @@
 .management-section-header {
     margin-top: var(--space-xl);
     margin-bottom: var(--space-md);
-    border-bottom: 2px solid var(--color-gray-200);
+    border-bottom: 2px solid var(--theme-border-color);
     padding-bottom: var(--space-sm);
 }
 
@@ -37,7 +37,7 @@
     font-size: 1.2rem;
     /* Match System Edit */
     font-weight: 600;
-    color: var(--color-gray-800);
+    color: var(--theme-text-primary);
 }
 
 /* 3. List Container */
@@ -50,7 +50,7 @@
 /* 4. List Item (Expandable) - Matches .service-edit */
 .management-item {
     background: transparent;
-    border-bottom: 1px solid var(--color-gray-100);
+    border-bottom: 1px solid var(--theme-border-light);
     margin-bottom: 0;
     transition: background-color 0.2s ease;
 }
@@ -78,7 +78,7 @@
 
 .management-item-indicator {
     margin-right: 4px;
-    color: var(--color-gray-400);
+    color: var(--theme-text-muted);
     font-family: monospace;
     font-weight: normal;
     width: 12px;
@@ -89,11 +89,11 @@
 .management-item-title {
     font-size: 0.9rem;
     font-weight: 500;
-    color: var(--color-gray-700);
+    color: var(--theme-text-secondary);
 }
 
 .management-item-header:hover .management-item-title {
-    color: var(--color-gray-900);
+    color: var(--theme-text-primary);
 }
 
 /* Item Details (Collapsible) - Matches .service-details */
@@ -118,7 +118,7 @@
     display: block;
     font-size: 0.85rem;
     font-weight: 500;
-    color: var(--color-gray-600);
+    color: var(--theme-text-secondary);
     margin-bottom: 4px;
     margin-top: var(--space-sm);
 }
@@ -127,12 +127,12 @@
 .management-textarea {
     width: 100%;
     padding: 6px 10px;
-    border: 1px solid var(--color-gray-300);
+    border: 1px solid var(--theme-border-color);
     border-radius: var(--radius-sm);
     font-size: 0.9rem;
     line-height: 1.4;
-    color: var(--color-gray-900);
-    background-color: #ffffff;
+    color: var(--theme-text-primary);
+    background-color: var(--theme-bg-primary);
     transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
@@ -160,7 +160,7 @@
 
 /* Empty State */
 .management-list-empty {
-    color: var(--color-gray-500);
+    color: var(--theme-text-muted);
     font-style: italic;
     padding: var(--space-md) 0;
 }

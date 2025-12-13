@@ -209,7 +209,7 @@
 }
 
 .capacity-collapsible-icon {
-    color: #adb5bd;
+    color: var(--theme-text-muted);
     transition: transform 0.2s;
 }
 
@@ -252,11 +252,11 @@
 
 /* Accordion Styling (Minimalist) */
 .capacity-accordion {
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--theme-border-light);
 }
 
 .capacity-team-item {
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--theme-border-light);
     transition: background-color 0.2s;
 }
 
@@ -330,7 +330,7 @@
 
 .capacity-variable-leave-label {
     font-weight: 500;
-    color: #495057;
+    color: var(--theme-text-secondary);
     text-transform: capitalize;
 }
 
@@ -390,7 +390,7 @@
 }
 
 .capacity-engineer-row:hover {
-    background-color: #f8f9fa;
+    background-color: var(--theme-bg-secondary);
 }
 
 .capacity-engineer-name {
@@ -400,6 +400,6 @@
 
 .capacity-separator {
     border: 0;
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--theme-border-light);
     margin: 30px 0;
 }

@@ -16,7 +16,7 @@
     box-shadow: none;
     overflow: visible;
     transition: background-color 0.2s ease;
-    border-bottom: 1px solid var(--color-gray-100);
+    border-bottom: 1px solid var(--theme-border-light);
 }
 
 .team-edit-item:last-child {
@@ -33,7 +33,7 @@
     user-select: none;
     font-size: 0.9rem;
     font-weight: 500;
-    color: var(--color-gray-700);
+    color: var(--theme-text-secondary);
     display: flex;
     align-items: center;
     transition: background-color 0.1s ease, color 0.1s ease;
@@ -42,13 +42,13 @@
 
 .team-edit-header:hover {
     background-color: rgba(0, 0, 0, 0.02);
-    color: var(--color-gray-900);
+    color: var(--theme-text-primary);
     padding-left: 4px;
 }
 
 .team-edit-indicator {
     margin-right: 4px;
-    color: var(--color-gray-400);
+    color: var(--theme-text-muted);
     font-weight: normal;
     font-family: monospace;
     font-size: 1em;
@@ -64,7 +64,7 @@
     display: none;
     margin-top: 4px;
     margin-bottom: var(--space-md);
-    border-left: 2px solid var(--color-gray-200);
+    border-left: 2px solid var(--theme-border-color);
     margin-left: 12px;
 }
 
@@ -81,7 +81,7 @@
     display: block;
     font-size: 0.85rem;
     font-weight: 500;
-    color: var(--color-gray-600);
+    color: var(--theme-text-secondary);
     margin-bottom: 4px;
 }
 
@@ -92,9 +92,9 @@
     padding: 6px 10px;
     font-size: 0.9rem;
     line-height: 1.4;
-    color: var(--color-gray-900);
-    background-color: #fff;
-    border: 1px solid var(--color-gray-300);
+    color: var(--theme-text-primary);
+    background-color: var(--theme-bg-primary);
+    border: 1px solid var(--theme-border-color);
     border-radius: var(--radius-sm);
     transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
@@ -115,15 +115,15 @@
 /* Nested Collapsible Sections */
 .team-edit-section {
     margin-top: var(--space-md);
-    border: 1px solid var(--color-gray-200);
+    border: 1px solid var(--theme-border-color);
     border-radius: var(--radius-sm);
-    background-color: rgba(255, 255, 255, 0.5);
+    background-color: var(--theme-bg-secondary);
     overflow: hidden;
 }
 
 .team-edit-section-header {
     padding: 8px 12px;
-    background-color: rgba(0, 0, 0, 0.02);
+    background-color: var(--theme-bg-tertiary);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -132,13 +132,13 @@
 }
 
 .team-edit-section-header:hover {
-    background-color: rgba(0, 0, 0, 0.04);
+    background-color: color-mix(in srgb, var(--theme-bg-tertiary), var(--theme-text-muted) 5%);
 }
 
 .team-edit-section-title {
     font-size: 0.85rem;
     font-weight: 600;
-    color: var(--color-gray-600);
+    color: var(--theme-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     margin: 0;
@@ -147,7 +147,7 @@
 .team-edit-section-content {
     display: none;
     padding: var(--space-md);
-    border-top: 1px solid var(--color-gray-200);
+    border-top: 1px solid var(--theme-border-light);
 }
 
 .team-edit-section-content.expanded {
@@ -158,9 +158,9 @@
 .away-team-list {
     max-height: 150px;
     overflow-y: auto;
-    border: 1px solid var(--color-gray-200);
+    border: 1px solid var(--theme-border-color);
     padding: var(--space-sm);
-    background: #fff;
+    background: var(--theme-bg-primary);
     margin-bottom: var(--space-sm);
 }
 
@@ -169,7 +169,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 4px 0;
-    border-bottom: 1px dashed var(--color-gray-100);
+    border-bottom: 1px dashed var(--theme-border-light);
     font-size: 0.9rem;
 }
 
@@ -190,35 +190,35 @@
 }
 
 .team-edit-btn-primary {
-    background-color: var(--color-primary);
-    color: #fff;
-    border-color: var(--color-primary);
+    background-color: var(--theme-primary);
+    color: var(--color-white);
+    border-color: var(--theme-primary);
 }
 
 .team-edit-btn-primary:hover {
-    background-color: var(--color-primary-dark);
+    background-color: var(--theme-primary-hover);
 }
 
 .team-edit-btn-danger {
     background-color: transparent;
-    color: var(--color-danger);
-    border-color: var(--color-danger);
+    color: var(--theme-danger);
+    border-color: var(--theme-danger);
 }
 
 .team-edit-btn-danger:hover {
-    background-color: var(--color-danger);
-    color: #fff;
+    background-color: var(--theme-danger);
+    color: var(--color-white);
 }
 
 .team-edit-btn-secondary {
-    background-color: #fff;
-    color: var(--color-gray-700);
-    border-color: var(--color-gray-300);
+    background-color: var(--theme-bg-primary);
+    color: var(--theme-text-secondary);
+    border-color: var(--theme-border-color);
 }
 
 .team-edit-btn-secondary:hover {
-    background-color: var(--color-gray-50);
-    border-color: var(--color-gray-400);
+    background-color: var(--theme-bg-secondary);
+    border-color: var(--theme-border-color);
 }
 
 .team-edit-actions {
@@ -235,7 +235,7 @@
     box-shadow: none;
     overflow: visible;
     transition: background-color 0.2s ease;
-    border-bottom: 1px solid var(--color-gray-100);
+    border-bottom: 1px solid var(--theme-border-light);
 }
 
 .team-edit-item:last-child {
@@ -252,7 +252,7 @@
     user-select: none;
     font-size: 0.9rem;
     font-weight: 500;
-    color: var(--color-gray-700);
+    color: var(--theme-text-secondary);
     display: flex;
     align-items: center;
     transition: background-color 0.1s ease, color 0.1s ease;
@@ -261,13 +261,13 @@
 
 .team-edit-header:hover {
     background-color: rgba(0, 0, 0, 0.02);
-    color: var(--color-gray-900);
+    color: var(--theme-text-primary);
     padding-left: 4px;
 }
 
 .team-edit-indicator {
     margin-right: 4px;
-    color: var(--color-gray-400);
+    color: var(--theme-text-muted);
     font-weight: normal;
     font-family: monospace;
     font-size: 1em;
@@ -283,7 +283,7 @@
     display: none;
     margin-top: 4px;
     margin-bottom: var(--space-md);
-    border-left: 2px solid var(--color-gray-200);
+    border-left: 2px solid var(--theme-border-color);
     margin-left: 12px;
 }
 
@@ -300,7 +300,7 @@
     display: block;
     font-size: 0.85rem;
     font-weight: 500;
-    color: var(--color-gray-600);
+    color: var(--theme-text-secondary);
     margin-bottom: 4px;
 }
 
@@ -311,9 +311,9 @@
     padding: 6px 10px;
     font-size: 0.9rem;
     line-height: 1.4;
-    color: var(--color-gray-900);
-    background-color: #fff;
-    border: 1px solid var(--color-gray-300);
+    color: var(--theme-text-primary);
+    background-color: var(--theme-bg-primary);
+    border: 1px solid var(--theme-border-color);
     border-radius: var(--radius-sm);
     transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
@@ -335,8 +335,8 @@
 .team-edit-subsection {
     margin-top: var(--space-md);
     padding: var(--space-md);
-    background-color: rgba(0, 0, 0, 0.02);
-    border: 1px solid var(--color-gray-200);
+    background-color: var(--theme-bg-tertiary);
+    border: 1px solid var(--theme-border-color);
     border-radius: var(--radius-sm);
 }
 
@@ -344,7 +344,7 @@
     font-size: 0.85rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--color-gray-500);
+    color: var(--theme-text-muted);
     margin-bottom: var(--space-sm);
     margin-top: 0;
 }
@@ -353,9 +353,9 @@
 .away-team-list {
     max-height: 150px;
     overflow-y: auto;
-    border: 1px solid var(--color-gray-200);
+    border: 1px solid var(--theme-border-color);
     padding: var(--space-sm);
-    background: #fff;
+    background: var(--theme-bg-primary);
     margin-bottom: var(--space-sm);
 }
 
@@ -364,7 +364,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 4px 0;
-    border-bottom: 1px dashed var(--color-gray-100);
+    border-bottom: 1px dashed var(--theme-border-light);
     font-size: 0.9rem;
 }
 
@@ -385,35 +385,35 @@
 }
 
 .team-edit-btn-primary {
-    background-color: var(--color-primary);
-    color: #fff;
-    border-color: var(--color-primary);
+    background-color: var(--theme-primary);
+    color: var(--color-white);
+    border-color: var(--theme-primary);
 }
 
 .team-edit-btn-primary:hover {
-    background-color: var(--color-primary-dark);
+    background-color: var(--theme-primary-hover);
 }
 
 .team-edit-btn-danger {
     background-color: transparent;
-    color: var(--color-danger);
-    border-color: var(--color-danger);
+    color: var(--theme-danger);
+    border-color: var(--theme-danger);
 }
 
 .team-edit-btn-danger:hover {
-    background-color: var(--color-danger);
-    color: #fff;
+    background-color: var(--theme-danger);
+    color: var(--color-white);
 }
 
 .team-edit-btn-secondary {
-    background-color: #fff;
-    color: var(--color-gray-700);
-    border-color: var(--color-gray-300);
+    background-color: var(--theme-bg-primary);
+    color: var(--theme-text-secondary);
+    border-color: var(--theme-border-color);
 }
 
 .team-edit-btn-secondary:hover {
-    background-color: var(--color-gray-50);
-    border-color: var(--color-gray-400);
+    background-color: var(--theme-bg-secondary);
+    border-color: var(--theme-border-color);
 }
 
 .team-edit-actions {

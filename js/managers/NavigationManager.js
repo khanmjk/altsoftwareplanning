@@ -325,6 +325,10 @@ class NavigationManager {
 
         // 7. Update AI-dependent UI elements
         AIService.updateAiDependentUI(SettingsService.get(), { skipPlanningRender: true });
+
+        // 8. Dispatch viewChanged event for components that need to react to navigation
+        // (e.g., ThemedSelect auto-upgrade)
+        document.dispatchEvent(new CustomEvent('viewChanged', { detail: { viewId } }));
     }
 
     /**

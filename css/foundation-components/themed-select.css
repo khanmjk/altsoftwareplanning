@@ -1,0 +1,250 @@
+/* ThemedSelect Component Styles */
+/* A fully theme-aware custom dropdown to replace native select styling */
+
+/* Container */
+.themed-select {
+    position: relative;
+    display: inline-block;
+    min-width: 150px;
+    width: 100%;
+    font-family: var(--font-family-base);
+}
+
+/* Trigger Button */
+.themed-select__trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    padding-right: 2.25rem;
+    font-size: 0.95rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--theme-text-primary);
+    background-color: var(--theme-bg-primary);
+    border: 1px solid var(--theme-border-color);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Custom dropdown arrow */
+.themed-select__trigger::after {
+    content: '';
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid var(--theme-text-muted);
+    transition: transform 0.2s ease;
+    pointer-events: none;
+}
+
+.themed-select--open .themed-select__trigger::after {
+    transform: translateY(-50%) rotate(180deg);
+}
+
+/* Placeholder state */
+.themed-select__trigger--placeholder {
+    color: var(--theme-text-muted);
+}
+
+/* Focus state */
+.themed-select__trigger:focus {
+    outline: none;
+    border-color: var(--theme-primary);
+    box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--theme-primary), transparent 75%);
+}
+
+/* Hover state */
+.themed-select__trigger:hover:not(:disabled) {
+    border-color: var(--theme-primary);
+}
+
+/* Disabled state */
+.themed-select--disabled .themed-select__trigger,
+.themed-select__trigger:disabled {
+    background-color: var(--theme-bg-tertiary);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Dropdown Panel */
+.themed-select__dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1050;
+    display: none;
+    max-height: 250px;
+    overflow-y: auto;
+    margin-top: 4px;
+    padding: 4px 0;
+    background-color: var(--theme-dropdown-bg);
+    border: 1px solid var(--theme-border-color);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.themed-select--open .themed-select__dropdown {
+    display: block;
+    animation: themedSelectFadeIn 0.15s ease-out;
+}
+
+@keyframes themedSelectFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Dropdown scrollbar styling */
+.themed-select__dropdown::-webkit-scrollbar {
+    width: 8px;
+}
+
+.themed-select__dropdown::-webkit-scrollbar-track {
+    background: var(--theme-bg-secondary);
+    border-radius: 4px;
+}
+
+.themed-select__dropdown::-webkit-scrollbar-thumb {
+    background-color: var(--theme-border-color);
+    border-radius: 4px;
+}
+
+.themed-select__dropdown::-webkit-scrollbar-thumb:hover {
+    background-color: var(--theme-text-muted);
+}
+
+.themed-select__dropdown {
+    scrollbar-width: thin;
+    scrollbar-color: var(--theme-border-color) var(--theme-bg-secondary);
+}
+
+/* Option Items */
+.themed-select__option {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.95rem;
+    color: var(--theme-text-primary);
+    cursor: pointer;
+    transition: background-color 0.1s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.themed-select__option:hover,
+.themed-select__option--highlighted {
+    background-color: color-mix(in srgb, var(--theme-primary), var(--theme-bg-primary) 85%);
+}
+
+/* Selected option */
+.themed-select__option--selected {
+    background-color: var(--theme-primary);
+    color: var(--color-white);
+    font-weight: 500;
+}
+
+.themed-select__option--selected:hover,
+.themed-select__option--selected.themed-select__option--highlighted {
+    background-color: var(--theme-primary-hover);
+}
+
+/* Disabled option */
+.themed-select__option--disabled {
+    color: var(--theme-text-muted);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.themed-select__option--disabled:hover {
+    background-color: transparent;
+}
+
+/* Option group header (for future use) */
+.themed-select__group-header {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--theme-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: default;
+}
+
+/* Divider (for future use) */
+.themed-select__divider {
+    height: 1px;
+    margin: 4px 0;
+    background-color: var(--theme-border-light);
+}
+
+/* No options message */
+.themed-select__no-options {
+    padding: 0.75rem;
+    text-align: center;
+    color: var(--theme-text-muted);
+    font-style: italic;
+}
+
+/* Size variants */
+.themed-select--sm .themed-select__trigger {
+    padding: 0.25rem 0.5rem;
+    padding-right: 2rem;
+    font-size: 0.85rem;
+}
+
+.themed-select--sm .themed-select__trigger::after {
+    right: 0.5rem;
+}
+
+.themed-select--sm .themed-select__option {
+    padding: 0.35rem 0.5rem;
+    font-size: 0.85rem;
+}
+
+.themed-select--lg .themed-select__trigger {
+    padding: 0.75rem 1rem;
+    padding-right: 2.5rem;
+    font-size: 1.1rem;
+}
+
+.themed-select--lg .themed-select__trigger::after {
+    right: 1rem;
+}
+
+.themed-select--lg .themed-select__option {
+    padding: 0.65rem 1rem;
+    font-size: 1.1rem;
+}
+
+/* Inline variant (fits in flow) */
+.themed-select--inline {
+    display: inline-block;
+    width: auto;
+    min-width: auto;
+}
+
+.themed-select--inline .themed-select__trigger {
+    width: auto;
+}
+
+.themed-select--inline .themed-select__dropdown {
+    min-width: 150px;
+}

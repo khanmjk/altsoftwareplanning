@@ -11,7 +11,7 @@
 
 /* Global Constraints Section */
 #globalConstraintsSection {
-    border: 1px solid #ccc;
+    border: 1px solid var(--theme-border-color);
     padding: 15px;
     margin-bottom: 20px;
 }
@@ -80,7 +80,7 @@
 
 .capacity-table tfoot td {
     font-weight: bold;
-    border-top: 2px solid #666;
+    border-top: 2px solid var(--theme-text-secondary);
 }
 
 /* Org Events Table */
@@ -230,17 +230,18 @@
 .standard-leave-table th:nth-child(3) {
     text-align: center;
 }
+
 /* Additional Capacity Tuning CSS */
 #capacityConfigView #globalConstraintsSection>h3,
 #capacityConfigView #teamConstraintsSection>h3,
 #capacityConfigView .team-constraint-container>h4 {
     font-size: 1.15rem;
     font-weight: 600;
-    color: #212529;
-    background-color: #f8f9fa;
+    color: var(--theme-text-primary);
+    background-color: var(--theme-bg-secondary);
     padding: 10px 15px;
     margin: -20px -20px 15px -20px;
-    border-bottom: 1px solid #dee2e6;
+    border-bottom: 1px solid var(--theme-border-color);
     border-top-left-radius: 6px;
     border-top-right-radius: 6px;
 }
@@ -253,8 +254,8 @@
 
 #capacityConfigView #globalConstraintsSection,
 #capacityConfigView #teamConstraintsSection {
-    background-color: #ffffff;
-    border: 1px solid #e0e0e0;
+    background-color: var(--theme-card-bg);
+    border: 1px solid var(--theme-card-border);
     border-radius: 4px;
     padding: 15px;
     margin-bottom: 20px;
@@ -271,6 +272,6 @@
 #capacityConfigView .team-constraint-container>h4:hover,
 #capacityConfigView #narrativeHeader:hover,
 #capacityConfigView #chartHeader:hover {
-    background-color: #e2e6ea;
-    color: #0056b3;
+    background-color: var(--theme-bg-tertiary);
+    color: var(--theme-primary);
 }
