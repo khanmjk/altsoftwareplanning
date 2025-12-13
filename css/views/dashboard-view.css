@@ -2,8 +2,11 @@
 
 .dashboard-view {
     padding: var(--space-xl);
-    max-width: 1400px;
-    margin: 0 auto;
+    /* max-width: 1400px; Removed to allow full width like other views, or keep max-width but remove auto margin for left align */
+    max-width: 1600px;
+    /* Optional: Keep some readability limit but align left */
+    margin: 0;
+    /* Left align */
 }
 
 /* Year Selector */
