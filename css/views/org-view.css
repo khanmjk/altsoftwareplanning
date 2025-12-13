@@ -142,6 +142,13 @@
     z-index: 1000;
 }
 
+/* D3 Link (connector lines) */
+.org-link {
+    fill: none;
+    stroke: var(--theme-border-color);
+    stroke-width: 1.5px;
+}
+
 /*** D3 Chart Styles - Fix for Black Box Issue ***/
 
 /* Base Node Rect Style */
@@ -168,21 +175,18 @@
 }
 
 .org-type-srMgr .org-node-rect {
-    fill: #e3f2fd;
-    /* Light Blue 50 */
-    stroke: #1e88e5;
+    fill: color-mix(in srgb, var(--theme-primary), var(--theme-bg-primary) 85%);
+    stroke: var(--theme-primary);
 }
 
 .org-type-sdm .org-node-rect {
-    fill: #e1f5fe;
-    /* Light Blue 50 variant */
-    stroke: #039be5;
+    fill: color-mix(in srgb, var(--theme-info), var(--theme-bg-primary) 85%);
+    stroke: var(--theme-info);
 }
 
 .org-type-team .org-node-rect {
-    fill: #e0f7fa;
-    /* Cyan 50 */
-    stroke: #00acc1;
+    fill: color-mix(in srgb, var(--theme-success), var(--theme-bg-primary) 85%);
+    stroke: var(--theme-success);
 }
 
 .org-type-engineer .org-node-rect {
