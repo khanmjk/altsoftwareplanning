@@ -1,5 +1,43 @@
 /* Notification System Styles */
 
+/* --- NOTIFICATIONS DROPDOWN PANEL --- */
+.notifications-dropdown {
+    right: 0;
+    left: auto;
+    width: 320px;
+    background: var(--theme-card-bg);
+    border: 1px solid var(--theme-border-color);
+    color: var(--theme-text-primary);
+    box-shadow: var(--shadow-lg);
+}
+
+.notifications-dropdown__header {
+    padding: 12px 15px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--theme-border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--theme-bg-secondary);
+}
+
+.notifications-dropdown__mark-read {
+    font-size: 0.75rem;
+    color: var(--theme-primary);
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.notifications-dropdown__mark-read:hover {
+    color: var(--theme-primary-hover);
+    text-decoration: underline;
+}
+
+.notifications-dropdown__content {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
 /* --- TOAST NOTIFICATIONS --- */
 .toast-container {
     position: fixed;
