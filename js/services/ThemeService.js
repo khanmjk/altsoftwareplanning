@@ -31,6 +31,7 @@ const THEME_DEFINITIONS = {
             warning: '#ffc107',
             danger: '#dc3545',
             info: '#17a2b8',
+            purple: '#9c27b0',
 
             cardBg: '#ffffff',
             cardBorder: '#e0e0e0',
@@ -69,6 +70,7 @@ const THEME_DEFINITIONS = {
             warning: '#ffca28',
             danger: '#ff5252',
             info: '#29b6f6',
+            purple: '#ce93d8',
 
             cardBg: '#16213e',
             cardBorder: '#2a2a3e',
@@ -107,6 +109,7 @@ const THEME_DEFINITIONS = {
             warning: '#fdcb6e',
             danger: '#ff7675',
             info: '#74b9ff',
+            purple: '#a29bfe',
 
             cardBg: '#ffffff',
             cardBorder: '#ffdab9',
@@ -145,6 +148,7 @@ const THEME_DEFINITIONS = {
             warning: '#ffcc00',
             danger: '#ff3b30',
             info: '#5ac8fa',
+            purple: '#5856d6',
 
             cardBg: '#ffffff',
             cardBorder: '#ffe699',
@@ -183,6 +187,7 @@ const THEME_DEFINITIONS = {
             warning: '#daa520',
             danger: '#cd5c5c',
             info: '#5f9ea0',
+            purple: '#9370db',
 
             cardBg: '#ffffff',
             cardBorder: '#d9a679',
@@ -221,6 +226,7 @@ const THEME_DEFINITIONS = {
             warning: '#f0e68c',
             danger: '#b0c4de',
             info: '#87ceeb',
+            purple: '#b39ddb',
 
             cardBg: '#ffffff',
             cardBorder: '#b3d9ff',
@@ -408,6 +414,7 @@ const ThemeService = {
             warning: hsl(45, 90, 60),
             danger: hsl(0, 70, 60),
             info: hsl(200, 70, 60),
+            purple: hsl(270, 70, 60),
 
             cardBg: hsl(baseHue, 25, 18),
             cardBorder: hsl(baseHue, 15, 25),
@@ -441,6 +448,7 @@ const ThemeService = {
             warning: hsl(45, 90, 50),
             danger: hsl(0, 70, 50),
             info: hsl(200, 70, 50),
+            purple: hsl(270, 70, 50),
 
             cardBg: '#ffffff',
             cardBorder: hsl(baseHue, 20, 85),
