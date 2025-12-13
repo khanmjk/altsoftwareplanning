@@ -61,6 +61,9 @@ class ThemedSelect {
         this.dropdown = null;
         this.hiddenInput = null;
 
+        // Register this instance for global management
+        ThemedSelect._instances.push(this);
+
         // Bind methods
         this._handleTriggerClick = this._handleTriggerClick.bind(this);
         this._handleKeyDown = this._handleKeyDown.bind(this);
@@ -347,6 +350,9 @@ class ThemedSelect {
     open() {
         if (this.disabled || this.isOpen) return;
 
+        // Close all other open dropdowns first
+        ThemedSelect.closeAllExcept(this);
+
         this.isOpen = true;
         this.container.classList.add('themed-select--open');
         this.trigger.setAttribute('aria-expanded', 'true');
@@ -600,7 +606,29 @@ class ThemedSelect {
     static getInstance(select) {
         return select._themedSelectInstance || null;
     }
+
+    /**
+     * Close all open ThemedSelect dropdowns except the specified one
+     * @param {ThemedSelect} [exceptInstance] - Instance to keep open
+     */
+    static closeAllExcept(exceptInstance = null) {
+        ThemedSelect._instances.forEach(instance => {
+            if (instance !== exceptInstance && instance.isOpen) {
+                instance.close();
+            }
+        });
+    }
+
+    /**
+     * Close all open ThemedSelect dropdowns
+     */
+    static closeAll() {
+        ThemedSelect.closeAllExcept(null);
+    }
 }
+
+// Static instances registry
+ThemedSelect._instances = [];
 
 // Export for module systems (optional)
 if (typeof module !== 'undefined' && module.exports) {
