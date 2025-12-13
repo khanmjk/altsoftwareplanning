@@ -8,7 +8,7 @@
     margin: 0;
     /* Left align */
     font-family: 'Inter', sans-serif;
-    color: var(--color-gray-800);
+    color: var(--theme-text-primary);
 }
 
 #editSystemForm {
@@ -29,21 +29,21 @@
 .system-edit-section-header {
     margin-top: var(--space-xl);
     margin-bottom: var(--space-md);
-    border-bottom: 2px solid var(--color-gray-200);
+    border-bottom: 2px solid var(--theme-border-color);
     padding-bottom: var(--space-sm);
 }
 
 .system-edit-section-header h3 {
     margin: 0;
     font-size: 1.2rem;
-    color: var(--color-gray-800);
+    color: var(--theme-text-primary);
     font-weight: 600;
 }
 
 .system-edit-footer-actions {
     margin-top: var(--space-xl);
     padding-top: var(--space-lg);
-    border-top: 1px solid var(--color-gray-200);
+    border-top: 1px solid var(--theme-border-color);
     display: flex;
     gap: var(--space-md);
 }
@@ -59,7 +59,7 @@
     box-shadow: none;
     overflow: visible;
     transition: background-color 0.2s ease;
-    border-bottom: 1px solid var(--color-gray-100);
+    border-bottom: 1px solid var(--theme-border-light);
     /* Separator between items */
 }
 
@@ -75,14 +75,14 @@
     padding: 4px 0;
     /* Minimal padding, removed left padding to fix indent */
     background-color: transparent;
-    border-bottom: 1px solid var(--color-gray-100);
+    border-bottom: 1px solid var(--theme-border-light);
     /* Keep separator */
     cursor: pointer;
     user-select: none;
     font-size: 0.9rem;
     /* Compact font size */
     font-weight: 500;
-    color: var(--color-gray-700);
+    color: var(--theme-text-secondary);
     display: flex;
     align-items: center;
     transition: background-color 0.1s ease, color 0.1s ease;
@@ -92,7 +92,7 @@
 .service-edit h4:hover,
 .team-edit h4:hover {
     background-color: rgba(0, 0, 0, 0.02);
-    color: var(--color-gray-900);
+    color: var(--theme-text-primary);
     padding-left: 4px;
     /* Add slight padding on hover for visual feedback */
 }
@@ -101,7 +101,7 @@
 .team-edit h4 span {
     margin-right: 4px;
     /* Tighter icon spacing */
-    color: var(--color-gray-400);
+    color: var(--theme-text-muted);
     font-weight: normal;
     font-family: monospace;
     font-size: 1em;
@@ -131,7 +131,7 @@ label {
     display: block;
     font-size: 0.85rem;
     font-weight: 500;
-    color: var(--color-gray-600);
+    color: var(--theme-text-secondary);
     margin-bottom: 4px;
     margin-top: var(--space-sm);
 }
@@ -146,10 +146,9 @@ select,
     /* Compact inputs */
     font-size: 0.9rem;
     line-height: 1.4;
-    color: var(--color-gray-900);
-    background-color: #fff;
-    /* Inputs stay white */
-    border: 1px solid var(--color-gray-300);
+    color: var(--theme-text-primary);
+    background-color: var(--theme-bg-primary);
+    border: 1px solid var(--theme-border-color);
     border-radius: var(--radius-sm);
     transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
@@ -173,7 +172,7 @@ textarea {
 .apis-container {
     margin-top: var(--space-md);
     padding-top: var(--space-sm);
-    border-top: 1px dashed var(--color-gray-200);
+    border-top: 1px dashed var(--theme-border-color);
     /* Lighter separation */
 }
 
@@ -181,14 +180,14 @@ textarea {
     font-size: 0.85rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--color-gray-500);
+    color: var(--theme-text-muted);
     margin-bottom: var(--space-sm);
 }
 
 .api-edit {
-    background-color: rgba(255, 255, 255, 0.5);
+    background-color: var(--theme-bg-secondary);
     /* Semi-transparent white */
-    border: 1px solid var(--color-gray-200);
+    border: 1px solid var(--theme-border-color);
     border-radius: var(--radius-sm);
     padding: var(--space-md);
     margin-bottom: var(--space-sm);
@@ -206,13 +205,13 @@ textarea {
 [id^="sdmSection_"] {
     background-color: rgba(0, 0, 0, 0.02);
     /* Very subtle background */
-    border: 1px solid var(--color-gray-200) !important;
+    border: 1px solid var(--theme-border-color) !important;
     border-radius: var(--radius-sm);
     padding: var(--space-md) !important;
 }
 
 [id^="sdmSection_"] h5 {
     margin-top: 0;
-    color: var(--color-gray-700);
+    color: var(--theme-text-secondary);
     font-size: 0.85rem;
 }
