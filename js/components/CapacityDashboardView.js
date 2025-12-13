@@ -517,4 +517,27 @@ class CapacityDashboardView {
         section.appendChild(body);
         parent.appendChild(section);
     }
+
+    /**
+     * Returns structured context data for AI Chat Panel integration
+     * Implements the AI_VIEW_REGISTRY contract
+     * @returns {Object} Context object with view-specific data
+     */
+    getAIContext() {
+        const metrics = this.capacityEngine?.calculateAllMetrics();
+        const data = this.currentChartTeamId === '__ORG_VIEW__'
+            ? metrics?.totals?.[this.currentScenario]
+            : metrics?.[this.currentChartTeamId]?.[this.currentScenario];
+
+        return {
+            viewTitle: 'Capacity Dashboard',
+            currentScenario: this.currentScenario,
+            currentTeamView: this.currentChartTeamId === '__ORG_VIEW__' ? 'Organization' : this.currentChartTeamId,
+            grossCapacity: data?.grossYrs?.toFixed(2),
+            netCapacity: data?.netYrs?.toFixed(2),
+            totalDeductions: data?.deductYrs?.toFixed(2),
+            aiProductivityGain: data?.deductionsBreakdown?.aiProductivityGainYrs?.toFixed(2),
+            teamCount: SystemService.getCurrentSystem()?.teams?.length || 0
+        };
+    }
 }
