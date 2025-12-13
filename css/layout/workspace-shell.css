@@ -99,6 +99,9 @@
     padding: 24px;
     /* Default padding for views */
     box-sizing: border-box;
+    /* Enforce left alignment by default for all views */
+    margin: 0;
+    text-align: left;
 }
 
 /* Workspace Card - A standard container for content blocks */
