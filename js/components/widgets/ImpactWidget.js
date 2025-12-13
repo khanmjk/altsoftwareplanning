@@ -67,36 +67,30 @@ class ImpactWidget {
         modeLabel.style.marginBottom = '0';
         controlsContainer.appendChild(modeLabel);
 
-        // Mode selector
-        this.modeSelect = document.createElement('select');
-        this.modeSelect.id = 'impact-view-mode-selector';
-        this.modeSelect.className = 'form-select form-select-sm';
-        this.modeSelect.style.width = 'auto';
-
+        // Mode selector with ThemedSelect
         const modes = [
-            { value: 'initiative', label: 'Initiative' },
-            { value: 'team', label: 'Team' },
-            { value: 'service', label: 'Service' }
+            { value: 'initiative', text: 'Initiative' },
+            { value: 'team', text: 'Team' },
+            { value: 'service', text: 'Service' }
         ];
 
-        modes.forEach(mode => {
-            const option = document.createElement('option');
-            option.value = mode.value;
-            option.textContent = mode.label;
-            this.modeSelect.appendChild(option);
+        this._modeSelect = new ThemedSelect({
+            options: modes,
+            value: 'initiative',
+            id: 'impact-view-mode-selector',
+            onChange: () => this.updateDynamicSelector()
         });
 
-        controlsContainer.appendChild(this.modeSelect);
+        controlsContainer.appendChild(this._modeSelect.render());
 
         // Dynamic selector container
         this.dynamicSelectContainer = document.createElement('div');
         this.dynamicSelectContainer.id = 'impact-dynamic-select-container';
         controlsContainer.appendChild(this.dynamicSelectContainer);
 
-        // Initialize and bind events
+        // Initialize
         if (SystemService.getCurrentSystem()) {
             this.updateDynamicSelector();
-            this.modeSelect.addEventListener('change', () => this.updateDynamicSelector());
         }
 
         return controlsContainer;
@@ -106,71 +100,67 @@ class ImpactWidget {
      * Update the dynamic selector based on view mode
      */
     updateDynamicSelector() {
-        const mode = this.modeSelect.value;
+        const mode = this._modeSelect?.getValue() || 'initiative';
         this.dynamicSelectContainer.innerHTML = '';
-
-        const select = document.createElement('select');
-        select.id = 'impact-item-selector';
-        select.className = 'form-select form-select-sm';
-        select.style.minWidth = '250px';
-        this.dynamicSelectContainer.appendChild(select);
 
         const systemData = SystemService.getCurrentSystem();
         let items = [];
+        let options = [];
         let renderFunc;
         let noItemsText = 'No items found.';
+        let defaultValue = '';
 
         switch (mode) {
             case 'initiative':
                 items = (systemData.yearlyInitiatives || [])
                     .sort((a, b) => a.title.localeCompare(b.title));
-                items.forEach(item => {
-                    const opt = document.createElement('option');
-                    opt.value = item.initiativeId;
-                    opt.textContent = item.title;
-                    select.appendChild(opt);
-                });
+                options = items.map(item => ({
+                    value: item.initiativeId,
+                    text: item.title
+                }));
                 renderFunc = (id) => this.generateInitiativeGraph(id);
                 noItemsText = 'No initiatives found.';
+                defaultValue = options.length > 0 ? options[0].value : '';
                 break;
 
             case 'team':
                 items = (systemData.teams || [])
                     .sort((a, b) => (a.teamIdentity || a.teamName).localeCompare(b.teamIdentity || b.teamName));
-
-                const allOption = document.createElement('option');
-                allOption.value = 'all';
-                allOption.textContent = 'All Teams';
-                select.appendChild(allOption);
-
+                options = [{ value: 'all', text: 'All Teams' }];
                 items.forEach(item => {
-                    const opt = document.createElement('option');
-                    opt.value = item.teamId;
-                    opt.textContent = item.teamIdentity || item.teamName;
-                    select.appendChild(opt);
+                    options.push({
+                        value: item.teamId,
+                        text: item.teamIdentity || item.teamName
+                    });
                 });
                 renderFunc = (id) => this.generateTeamGraph(id);
                 noItemsText = 'No teams found.';
+                defaultValue = 'all';
                 break;
 
             case 'service':
                 items = (systemData.services || [])
                     .sort((a, b) => a.serviceName.localeCompare(b.serviceName));
-                items.forEach(item => {
-                    const opt = document.createElement('option');
-                    opt.value = item.serviceName;
-                    opt.textContent = item.serviceName;
-                    select.appendChild(opt);
-                });
+                options = items.map(item => ({
+                    value: item.serviceName,
+                    text: item.serviceName
+                }));
                 renderFunc = (id) => this.generateServiceGraph(id);
                 noItemsText = 'No services found.';
+                defaultValue = options.length > 0 ? options[0].value : '';
                 break;
         }
 
-        select.onchange = (e) => renderFunc(e.target.value);
+        if (options.length > 0) {
+            this._itemSelect = new ThemedSelect({
+                options: options,
+                value: defaultValue,
+                id: 'impact-item-selector',
+                onChange: (value) => renderFunc(value)
+            });
 
-        if (select.options.length > 0) {
-            renderFunc(select.value);
+            this.dynamicSelectContainer.appendChild(this._itemSelect.render());
+            renderFunc(defaultValue);
         } else {
             this.svg.selectAll('*').remove();
             this.svg.append('text')

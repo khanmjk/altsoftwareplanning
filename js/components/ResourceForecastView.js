@@ -65,28 +65,26 @@ class ResourceForecastView {
         label.style.fontSize = '0.9rem';
         label.style.fontWeight = '500';
 
-        const select = document.createElement('select');
-        select.id = 'rf-team-select';
-        select.className = 'form-select form-select-sm';
-        select.style.minWidth = '200px';
-
-        const defaultOption = document.createElement('option');
-        defaultOption.value = '';
-        defaultOption.textContent = '-- Select a Team --';
-        select.appendChild(defaultOption);
-
+        // Build options for ThemedSelect
+        const teamOptions = [{ value: '', text: '-- Select a Team --' }];
         if (SystemService.getCurrentSystem() && SystemService.getCurrentSystem().teams) {
             SystemService.getCurrentSystem().teams.forEach(team => {
                 const name = team.teamIdentity || team.teamName || team.teamId;
-                const option = document.createElement('option');
-                option.value = team.teamId;
-                option.textContent = name;
-                select.appendChild(option);
+                teamOptions.push({ value: team.teamId, text: name });
             });
         }
 
+        // Create ThemedSelect instance
+        this.teamSelect = new ThemedSelect({
+            options: teamOptions,
+            value: '',
+            placeholder: '-- Select a Team --',
+            id: 'rf-team-select',
+            onChange: (value) => this._handleTeamChange(value)
+        });
+
         teamWrap.appendChild(label);
-        teamWrap.appendChild(select);
+        teamWrap.appendChild(this.teamSelect.render());
         toolbar.appendChild(teamWrap);
 
         // Spacer
@@ -230,12 +228,7 @@ class ResourceForecastView {
     }
 
     _attachListeners() {
-        const teamSelect = document.getElementById('rf-team-select');
         const generateBtn = document.getElementById('rf-generate-btn');
-
-        if (teamSelect) {
-            teamSelect.addEventListener('change', (e) => this._handleTeamChange(e.target.value));
-        }
 
         if (generateBtn) {
             generateBtn.addEventListener('click', () => this._generateForecast());

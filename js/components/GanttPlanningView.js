@@ -216,11 +216,18 @@ class GanttPlanningView {
         toolbar.style.flexWrap = 'wrap';
 
         // Year selector
-        const yearWrap = this.createLabeledControl('Year:', document.createElement('select'));
-        const yearSelect = yearWrap.querySelector('select');
-        yearSelect.id = 'ganttYearFilter';
-        yearSelect.className = 'form-select form-select-sm';
+        const yearWrap = document.createElement('div');
+        yearWrap.className = 'filter-item';
+        yearWrap.style.display = 'flex';
+        yearWrap.style.alignItems = 'center';
+        yearWrap.style.gap = '6px';
 
+        const yearLabel = document.createElement('span');
+        yearLabel.textContent = 'Year:';
+        yearLabel.style.fontWeight = '600';
+        yearWrap.appendChild(yearLabel);
+
+        // Build year options
         const years = Array.from(new Set(
             (SystemService.getCurrentSystem()?.yearlyInitiatives || [])
                 .map(init => init.attributes?.planningYear)
@@ -228,42 +235,56 @@ class GanttPlanningView {
         ));
         if (!years.includes(this.currentGanttYear)) years.push(this.currentGanttYear);
         years.sort();
-        years.forEach(y => {
-            const opt = document.createElement('option');
-            opt.value = y;
-            opt.textContent = y;
-            yearSelect.appendChild(opt);
+
+        const yearOptions = years.map(y => ({ value: y.toString(), text: y.toString() }));
+
+        this.yearSelect = new ThemedSelect({
+            options: yearOptions,
+            value: this.currentGanttYear.toString(),
+            id: 'ganttYearFilter',
+            onChange: (value) => {
+                this.currentGanttYear = parseInt(value, 10);
+                console.log('[GANTT] Year changed', this.currentGanttYear);
+                this.renderGanttTable();
+                renderGanttChart();
+            }
         });
-        yearSelect.value = this.currentGanttYear;
-        yearSelect.onchange = () => {
-            this.currentGanttYear = parseInt(yearSelect.value, 10);
-            console.log('[GANTT] Year changed', this.currentGanttYear);
-            this.renderGanttTable();
-            renderGanttChart(); // Still uses legacy temporarily
-        };
+
+        yearWrap.appendChild(this.yearSelect.render());
         toolbar.appendChild(yearWrap);
 
         // View By selector
-        const groupWrap = this.createLabeledControl('View By:', document.createElement('select'));
-        const groupSelect = groupWrap.querySelector('select');
-        groupSelect.id = 'ganttGroupBy';
-        groupSelect.className = 'form-select form-select-sm';
-        ['All Initiatives', 'Team'].forEach(val => {
-            const opt = document.createElement('option');
-            opt.value = val;
-            opt.textContent = `View by ${val}`;
-            groupSelect.appendChild(opt);
+        const groupWrap = document.createElement('div');
+        groupWrap.className = 'filter-item';
+        groupWrap.style.display = 'flex';
+        groupWrap.style.alignItems = 'center';
+        groupWrap.style.gap = '6px';
+
+        const groupLabel = document.createElement('span');
+        groupLabel.textContent = 'View By:';
+        groupLabel.style.fontWeight = '600';
+        groupWrap.appendChild(groupLabel);
+
+        const groupOptions = [
+            { value: 'All Initiatives', text: 'View by All Initiatives' },
+            { value: 'Team', text: 'View by Team' }
+        ];
+
+        this.groupSelect = new ThemedSelect({
+            options: groupOptions,
+            value: this.currentGanttGroupBy,
+            id: 'ganttGroupBy',
+            onChange: (value) => {
+                this.currentGanttGroupBy = value;
+                currentGanttGroupBy = this.currentGanttGroupBy;
+                console.log('[GANTT] View By changed', this.currentGanttGroupBy);
+                renderDynamicGroupFilter();
+                renderGanttChart();
+                this.renderGanttTable();
+            }
         });
-        groupSelect.value = this.currentGanttGroupBy;
-        groupSelect.onchange = () => {
-            this.currentGanttGroupBy = groupSelect.value;
-            // Sync class state to global for legacy functions
-            currentGanttGroupBy = this.currentGanttGroupBy;
-            console.log('[GANTT] View By changed', this.currentGanttGroupBy);
-            renderDynamicGroupFilter(); // Still uses legacy temporarily
-            renderGanttChart(); // Still uses legacy temporarily
-            this.renderGanttTable();
-        };
+
+        groupWrap.appendChild(this.groupSelect.render());
         toolbar.appendChild(groupWrap);
 
         // Dynamic Filter Placeholder

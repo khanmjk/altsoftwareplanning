@@ -16,7 +16,7 @@
     box-shadow: none;
     overflow: visible;
     transition: background-color 0.2s ease;
-    border-bottom: 1px solid var(--color-gray-100);
+    border-bottom: 1px solid var(--theme-border-light);
 }
 
 .theme-edit-item:last-child {
@@ -33,7 +33,7 @@
     user-select: none;
     font-size: 0.9rem;
     font-weight: 500;
-    color: var(--color-gray-700);
+    color: var(--theme-text-secondary);
     display: flex;
     align-items: center;
     transition: background-color 0.1s ease, color 0.1s ease;
@@ -42,13 +42,13 @@
 
 .theme-edit-header:hover {
     background-color: rgba(0, 0, 0, 0.02);
-    color: var(--color-gray-900);
+    color: var(--theme-text-primary);
     padding-left: 4px;
 }
 
 .theme-edit-indicator {
     margin-right: 4px;
-    color: var(--color-gray-400);
+    color: var(--theme-text-muted);
     font-weight: normal;
     font-family: monospace;
     font-size: 1em;
@@ -60,11 +60,11 @@
 .theme-edit-title {
     font-size: 0.9rem;
     font-weight: 500;
-    color: var(--color-gray-700);
+    color: var(--theme-text-secondary);
 }
 
 .theme-edit-header:hover .theme-edit-title {
-    color: var(--color-gray-900);
+    color: var(--theme-text-primary);
 }
 
 /* Details Area */
@@ -90,7 +90,7 @@
     display: block;
     font-size: 0.85rem;
     font-weight: 500;
-    color: var(--color-gray-600);
+    color: var(--theme-text-secondary);
     margin-bottom: 4px;
     margin-top: var(--space-sm);
 }
@@ -101,9 +101,9 @@
     padding: 6px 10px;
     font-size: 0.9rem;
     line-height: 1.4;
-    color: var(--color-gray-900);
-    background-color: #fff;
-    border: 1px solid var(--color-gray-300);
+    color: var(--theme-text-primary);
+    background-color: var(--theme-bg-primary);
+    border: 1px solid var(--theme-border-color);
     border-radius: var(--radius-sm);
     transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
@@ -129,7 +129,7 @@
 
 /* Empty State */
 .theme-edit-list-empty {
-    color: var(--color-gray-500);
+    color: var(--theme-text-muted);
     font-style: italic;
     padding: var(--space-md) 0;
 }

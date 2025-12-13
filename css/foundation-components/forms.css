@@ -72,3 +72,88 @@ label {
     gap: 0.5rem;
     margin-bottom: 1rem;
 }
+
+/* Select Dropdown Styling */
+select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236c757d' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 12px;
+    padding-right: 2.5rem;
+    cursor: pointer;
+}
+
+/* Style the dropdown options */
+select option {
+    background-color: var(--theme-bg-primary);
+    color: var(--theme-text-primary);
+    padding: 0.5rem;
+}
+
+select option:hover,
+select option:focus,
+select option:checked {
+    background-color: var(--theme-primary);
+    color: var(--color-white);
+}
+
+/* Color scheme for native dropdown popups in dark mode */
+select,
+input,
+textarea {
+    color-scheme: light dark;
+}
+
+/* Textarea Styling */
+textarea {
+    min-height: 80px;
+}
+
+/* Placeholder styling */
+input::placeholder,
+textarea::placeholder {
+    color: var(--theme-text-muted);
+    opacity: 0.7;
+}
+
+/* Disabled state */
+input:disabled,
+textarea:disabled,
+select:disabled {
+    background-color: var(--theme-bg-tertiary);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Read-only state */
+input:read-only,
+textarea:read-only {
+    background-color: var(--theme-bg-secondary);
+}
+
+/* Form control scrollbars (for textarea and multi-select) */
+textarea::-webkit-scrollbar,
+select[multiple]::-webkit-scrollbar {
+    width: 8px;
+}
+
+textarea::-webkit-scrollbar-track,
+select[multiple]::-webkit-scrollbar-track {
+    background: var(--theme-bg-secondary);
+    border-radius: 4px;
+}
+
+textarea::-webkit-scrollbar-thumb,
+select[multiple]::-webkit-scrollbar-thumb {
+    background-color: var(--theme-border-color);
+    border-radius: 4px;
+}
+
+textarea,
+select[multiple] {
+    scrollbar-width: thin;
+    scrollbar-color: var(--theme-border-color) var(--theme-bg-secondary);
+}

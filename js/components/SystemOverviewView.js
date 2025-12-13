@@ -196,16 +196,16 @@ class SystemOverviewView {
                 label.className = 'system-overview-filter-label';
                 label.textContent = 'Select Service:';
 
-                const select = document.createElement('select');
-                select.id = 'serviceSelection';
-                select.className = 'form-select system-overview-filter-select';
+                // Container for ThemedSelect (will be populated in render method)
+                const selectContainer = document.createElement('div');
+                selectContainer.id = 'serviceSelectionContainer';
 
                 const toggleBtn = document.createElement('button');
                 toggleBtn.id = 'togglePlatformComponentsService';
                 toggleBtn.className = 'btn btn-sm system-overview-toggle-btn';
                 toggleBtn.textContent = 'Hide Platforms';
 
-                controls.append(label, select, toggleBtn);
+                controls.append(label, selectContainer, toggleBtn);
 
                 const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
                 svg.setAttribute('id', 'serviceSvg');
@@ -228,16 +228,16 @@ class SystemOverviewView {
                 label.className = 'system-overview-filter-label';
                 label.textContent = 'Select Service:';
 
-                const select = document.createElement('select');
-                select.id = 'dependencyServiceSelection';
-                select.className = 'form-select system-overview-filter-select';
+                // Container for ThemedSelect (will be populated in render method)
+                const selectContainer = document.createElement('div');
+                selectContainer.id = 'dependencyServiceSelectionContainer';
 
                 const toggleBtn = document.createElement('button');
                 toggleBtn.id = 'togglePlatformComponentsDependency';
                 toggleBtn.className = 'btn btn-sm system-overview-toggle-btn';
                 toggleBtn.textContent = 'Hide Platforms';
 
-                controls.append(label, select, toggleBtn);
+                controls.append(label, selectContainer, toggleBtn);
 
                 const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
                 svg.setAttribute('id', 'dependencySvg');
@@ -286,11 +286,11 @@ class SystemOverviewView {
                 label.className = 'system-overview-filter-label';
                 label.textContent = 'Select Service:';
 
-                const select = document.createElement('select');
-                select.id = 'apiServiceSelection';
-                select.className = 'form-select system-overview-filter-select';
+                // Container for ThemedSelect (will be populated in render method)
+                const selectContainer = document.createElement('div');
+                selectContainer.id = 'apiServiceSelectionContainer';
 
-                controls.append(label, select);
+                controls.append(label, selectContainer);
 
                 const graphContainer = document.createElement('div');
                 graphContainer.id = 'mermaidApiGraph';
@@ -438,13 +438,13 @@ class SystemOverviewView {
     }
 
     renderMermaidApiDiagram() {
-        // Populate dropdown first only if empty
-        const select = document.getElementById('apiServiceSelection');
-        if (select && select.options.length === 0) {
+        // Populate ThemedSelect if not already created
+        const container = document.getElementById('apiServiceSelectionContainer');
+        if (container && container.children.length === 0) {
             this._populateApiServiceSelection();
         }
         // Render with current selection
-        const selectedService = select ? select.value : 'all';
+        const selectedService = this._apiSelectValue || 'all';
         this._renderMermaidApiDiagramImpl(selectedService);
     }
 
@@ -510,29 +510,33 @@ class SystemOverviewView {
     }
 
     _populateServiceSelection() {
-        const serviceSelection = document.getElementById('serviceSelection');
-        if (!serviceSelection) return;
+        const container = document.getElementById('serviceSelectionContainer');
+        if (!container) return;
 
-        // Preserve current selection
-        const previousValue = serviceSelection.value;
-        serviceSelection.innerHTML = '';
+        // Clear any previous instance
+        container.innerHTML = '';
 
-        const allServicesOption = document.createElement('option');
-        allServicesOption.value = 'all';
-        allServicesOption.text = 'All Services View';
-        serviceSelection.appendChild(allServicesOption);
-
+        // Build service options for ThemedSelect
+        const serviceOptions = [{ value: 'all', text: 'All Services View' }];
         SystemService.getCurrentSystem().services.forEach(service => {
-            const option = document.createElement('option');
-            option.value = service.serviceName;
-            option.text = service.serviceName;
-            serviceSelection.appendChild(option);
+            serviceOptions.push({
+                value: service.serviceName,
+                text: service.serviceName
+            });
         });
 
-        // Restore previous selection if it still exists
-        if (previousValue && [...serviceSelection.options].some(o => o.value === previousValue)) {
-            serviceSelection.value = previousValue;
-        }
+        // Create ThemedSelect instance
+        this._serviceSelect = new ThemedSelect({
+            options: serviceOptions,
+            value: this._serviceSelectValue || 'all',
+            id: 'serviceSelection',
+            onChange: (value) => {
+                this._serviceSelectValue = value;
+                this._updateServiceVisualization(value);
+            }
+        });
+
+        container.appendChild(this._serviceSelect.render());
     }
 
     _updateServiceVisualization(selectedService) {
@@ -557,41 +561,42 @@ class SystemOverviewView {
     }
 
     _populateDependencyServiceSelection() {
-        const serviceSelection = document.getElementById('dependencyServiceSelection');
-        if (!serviceSelection) return;
+        const container = document.getElementById('dependencyServiceSelectionContainer');
+        if (!container) return;
 
-        // Preserve current selection
-        const previousValue = serviceSelection.value;
-        serviceSelection.innerHTML = '';
+        // Clear any previous instance
+        container.innerHTML = '';
 
+        // Build service options for ThemedSelect
+        const serviceOptions = [];
         SystemService.getCurrentSystem().services.forEach(service => {
-            const option = document.createElement('option');
-            option.value = service.serviceName;
-            option.text = service.serviceName;
-            serviceSelection.appendChild(option);
+            serviceOptions.push({
+                value: service.serviceName,
+                text: service.serviceName
+            });
         });
 
-        // Restore previous selection if it still exists
-        if (previousValue && [...serviceSelection.options].some(o => o.value === previousValue)) {
-            serviceSelection.value = previousValue;
-        }
+        // Default to first service if no previous selection
+        const defaultValue = this._dependencySelectValue || (serviceOptions[0]?.value || '');
+
+        // Create ThemedSelect instance
+        this._dependencySelect = new ThemedSelect({
+            options: serviceOptions,
+            value: defaultValue,
+            id: 'dependencyServiceSelection',
+            onChange: (value) => {
+                this._dependencySelectValue = value;
+                this.getDependencyVisualization().render(value);
+            }
+        });
+
+        container.appendChild(this._dependencySelect.render());
     }
 
     _updateDependencyVisualization() {
-        const selectionEl = document.getElementById('dependencyServiceSelection');
-        if (!selectionEl) {
-            console.warn("Dependency service selection element not found.");
-            return;
-        }
-
-        const selectedServiceName = selectionEl.value;
         this._populateDependencyServiceSelection();
-
-        if (Array.from(selectionEl.options).some(opt => opt.value === selectedServiceName)) {
-            selectionEl.value = selectedServiceName;
-        }
-
-        this.getDependencyVisualization().render(selectionEl.value);
+        const selectedValue = this._dependencySelectValue || SystemService.getCurrentSystem().services[0]?.serviceName || '';
+        this.getDependencyVisualization().render(selectedValue);
     }
 
     async _renderMermaidDiagramImpl() {
@@ -630,27 +635,36 @@ class SystemOverviewView {
     }
 
     _populateApiServiceSelection() {
-        const select = document.getElementById('apiServiceSelection');
-        if (!select || !SystemService.getCurrentSystem() || !Array.isArray(SystemService.getCurrentSystem().services)) return;
-        select.innerHTML = '';
-        const allOption = document.createElement('option');
-        allOption.value = 'all';
-        allOption.textContent = 'All Services';
-        select.appendChild(allOption);
+        const container = document.getElementById('apiServiceSelectionContainer');
+        if (!container || !SystemService.getCurrentSystem() || !Array.isArray(SystemService.getCurrentSystem().services)) return;
 
+        // Clear any previous instance
+        container.innerHTML = '';
+
+        // Build service options for ThemedSelect
+        const serviceOptions = [{ value: 'all', text: 'All Services' }];
         SystemService.getCurrentSystem().services
             .slice()
             .sort((a, b) => (a.serviceName || '').localeCompare(b.serviceName || ''))
             .forEach(service => {
-                const opt = document.createElement('option');
-                opt.value = service.serviceName;
-                opt.textContent = service.serviceName;
-                select.appendChild(opt);
+                serviceOptions.push({
+                    value: service.serviceName,
+                    text: service.serviceName
+                });
             });
 
-        select.onchange = () => {
-            this._renderMermaidApiDiagramImpl(select.value);
-        };
+        // Create ThemedSelect instance
+        this._apiSelect = new ThemedSelect({
+            options: serviceOptions,
+            value: this._apiSelectValue || 'all',
+            id: 'apiServiceSelection',
+            onChange: (value) => {
+                this._apiSelectValue = value;
+                this._renderMermaidApiDiagramImpl(value);
+            }
+        });
+
+        container.appendChild(this._apiSelect.render());
     }
 
     async _renderMermaidApiDiagramImpl(serviceParam) {

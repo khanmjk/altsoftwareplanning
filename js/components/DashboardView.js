@@ -128,13 +128,20 @@ class DashboardView {
         yearLabel.style.fontWeight = '600';
         filterRow.appendChild(yearLabel);
 
-        const yearSelect = document.createElement('select');
-        yearSelect.id = 'dashboardYearSelector';
-        yearSelect.className = 'form-select form-select-sm';
-        yearSelect.style.width = '120px';
-        yearSelect.innerHTML = this.generateYearOptions();
-        yearSelect.onchange = (e) => this.handleYearChange(e.target.value);
-        filterRow.appendChild(yearSelect);
+        // Build year options for ThemedSelect
+        const yearOptions = this._buildYearOptions();
+
+        // Create ThemedSelect instance
+        this.yearSelect = new ThemedSelect({
+            options: yearOptions,
+            value: this.planningYear.toString(),
+            placeholder: 'All Years',
+            id: 'dashboardYearSelector',
+            className: 'form-select-sm',
+            onChange: (value) => this.handleYearChange(value)
+        });
+
+        filterRow.appendChild(this.yearSelect.render());
 
         // Contextual toolbar for widget-specific controls
         const contextToolbar = document.createElement('div');
@@ -180,7 +187,7 @@ class DashboardView {
     }
 
     /**
-     * Generate year filter options
+     * Generate year filter options (legacy HTML format)
      */
     generateYearOptions() {
         // Safety check for data
@@ -208,6 +215,34 @@ class DashboardView {
         ));
 
         return options.join('');
+    }
+
+    /**
+     * Build year options for ThemedSelect
+     * @returns {Array<{value: string, text: string}>}
+     */
+    _buildYearOptions() {
+        const options = [{ value: 'all', text: 'All Years' }];
+
+        if (!SystemService.getCurrentSystem() || !SystemService.getCurrentSystem().yearlyInitiatives) {
+            return options;
+        }
+
+        const allYears = [...new Set(
+            (SystemService.getCurrentSystem().yearlyInitiatives || [])
+                .map(init => init.attributes?.planningYear)
+                .filter(Boolean)
+        )].sort((a, b) => a - b);
+
+        if (allYears.length === 0) {
+            allYears.push(new Date().getFullYear());
+        }
+
+        allYears.forEach(year => {
+            options.push({ value: year.toString(), text: year.toString() });
+        });
+
+        return options;
     }
 
     /**

@@ -153,4 +153,3 @@ window.onload = async function () {
 
     navigationManager.navigateTo(initialView || 'welcomeView');
 };
-
