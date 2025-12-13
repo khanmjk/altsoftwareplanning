@@ -151,9 +151,9 @@
 }
 
 .documentation-content pre {
-    background-color: #1e293b;
-    /* Slate 800 */
-    color: #f1f5f9;
+    /* Intentionally using dark colors for code blocks - consistent across themes */
+    background-color: var(--theme-text-primary);
+    color: var(--theme-bg-primary);
     /* Slate 100 */
     padding: 1.5rem;
     border-radius: var(--radius-md);

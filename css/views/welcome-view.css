@@ -68,10 +68,8 @@
 }
 
 .action-card__icon-container--purple {
-    background: color-mix(in srgb, #a855f7, transparent 90%);
-    /* Keeping purple as accent */
-    color: #a855f7;
-    /* No variable for purple yet, keeping hex */
+    background: color-mix(in srgb, var(--theme-purple, #a855f7), transparent 90%);
+    color: var(--theme-purple, #a855f7);
 }
 
 .action-card__icon-container--gray {
