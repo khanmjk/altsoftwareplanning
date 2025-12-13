@@ -212,76 +212,75 @@
 }
 
 /* Column Colors (Quarterly) */
+/* Column Colors (Quarterly) - Theme Aware using color-mix */
 .roadmap-quarter-cell.column-Q1 {
-    background-color: #f8fbff;
+    background-color: color-mix(in srgb, var(--theme-info), transparent 92%);
 }
 
 .roadmap-quarter-cell.column-Q2 {
-    background-color: #f6fff8;
+    background-color: color-mix(in srgb, var(--theme-success), transparent 92%);
 }
 
 .roadmap-quarter-cell.column-Q3 {
-    background-color: var(--theme-bg-secondary);
+    background-color: color-mix(in srgb, var(--theme-warning), transparent 92%);
 }
 
 .roadmap-quarter-cell.column-Q4 {
-    background-color: #fdf6ff;
+    background-color: color-mix(in srgb, var(--theme-purple, #9c27b0), transparent 92%);
 }
 
 /* Header Colors (Quarterly) */
 .header-Q1 {
-    border-top: 3px solid #2196f3;
-    color: #1565c0;
+    border-top: 3px solid var(--theme-info);
+    color: var(--theme-info);
 }
 
 .header-Q2 {
-    border-top: 3px solid #4caf50;
-    color: #2e7d32;
+    border-top: 3px solid var(--theme-success);
+    color: var(--theme-success);
 }
 
 .header-Q3 {
-    border-top: 3px solid #ff9800;
-    color: #ef6c00;
+    border-top: 3px solid var(--theme-warning);
+    color: var(--theme-warning);
 }
 
 .header-Q4 {
-    border-top: 33px solid #9c27b0;
-    color: #7b1fa2;
+    border-top: 3px solid var(--theme-purple, #9c27b0);
+    color: var(--theme-purple, #9c27b0);
 }
 
 /* Column Colors (3YP) */
 .roadmap-quarter-cell.column-current-year {
-    background-color: #f8fbff;
+    background-color: color-mix(in srgb, var(--theme-info), transparent 92%);
 }
 
 /* Blue-ish (Same as Q1) */
 .roadmap-quarter-cell.column-next-year {
-    background-color: #f6fff8;
+    background-color: color-mix(in srgb, var(--theme-success), transparent 92%);
 }
 
 /* Green-ish (Same as Q2) */
 .roadmap-quarter-cell.column-future {
-    background-color: #fdf6ff;
+    background-color: color-mix(in srgb, var(--theme-purple, #9c27b0), transparent 92%);
 }
-
-/* Purple-ish (Same as Q4) */
 
 /* Purple-ish (Same as Q4) */
 
 /* Header Colors (3YP) */
 .header-current-year {
-    border-top: 3px solid #2196f3;
-    color: #1565c0;
+    border-top: 3px solid var(--theme-info);
+    color: var(--theme-info);
 }
 
 .header-next-year {
-    border-top: 3px solid #4caf50;
-    color: #2e7d32;
+    border-top: 3px solid var(--theme-success);
+    color: var(--theme-success);
 }
 
 .header-future {
-    border-top: 3px solid #9c27b0;
-    color: #7b1fa2;
+    border-top: 3px solid var(--theme-purple, #9c27b0);
+    color: var(--theme-purple, #9c27b0);
 }
 
 /* Content Row (Single Row for Columns) */
@@ -311,21 +310,21 @@
     border-right: none;
 }
 
-/* Column Backgrounds (Subtle) */
+/* Column Backgrounds (Subtle Gradient Overrides) */
 .column-Q1 {
-    background: linear-gradient(to bottom, #f5faff, #ffffff);
+    background: linear-gradient(to bottom, color-mix(in srgb, var(--theme-info), transparent 88%), var(--theme-card-bg));
 }
 
 .column-Q2 {
-    background: linear-gradient(to bottom, #f6fdf7, #ffffff);
+    background: linear-gradient(to bottom, color-mix(in srgb, var(--theme-success), transparent 88%), var(--theme-card-bg));
 }
 
 .column-Q3 {
-    background: linear-gradient(to bottom, #fff8f2, #ffffff);
+    background: linear-gradient(to bottom, color-mix(in srgb, var(--theme-warning), transparent 88%), var(--theme-card-bg));
 }
 
 .column-Q4 {
-    background: linear-gradient(to bottom, #faf5fb, #ffffff);
+    background: linear-gradient(to bottom, color-mix(in srgb, var(--theme-purple, #9c27b0), transparent 88%), var(--theme-card-bg));
 }
 
 .roadmap-quarter-cell:hover {
