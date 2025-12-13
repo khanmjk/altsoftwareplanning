@@ -476,24 +476,24 @@ function renderPlanningView() {
     const isExpanded = isSummaryTableExpanded;
 
     container.innerHTML = `
-        <div id="teamLoadSummarySection" style="margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px;">
-            <h4 onclick="toggleCollapsibleSection('teamLoadSummaryContent', 'teamLoadSummaryToggle')" style="cursor: pointer; margin: 0; padding: 10px; background-color: #e9ecef; border-bottom: 1px solid #ccc;" title="Click to expand/collapse team load summary">
+        <div id="teamLoadSummarySection" style="margin-bottom: 20px; border: 1px solid var(--theme-border-color); border-radius: 4px;">
+            <h4 onclick="toggleCollapsibleSection('teamLoadSummaryContent', 'teamLoadSummaryToggle')" style="cursor: pointer; margin: 0; padding: 10px; background-color: var(--theme-bg-secondary); border-bottom: 1px solid var(--theme-border-color); color: var(--theme-text-primary);" title="Click to expand/collapse team load summary">
                 <span id="teamLoadSummaryToggle" class="toggle-indicator">${isExpanded ? '(-)' : '(+)'} </span> Team Load Summary (for ATL Initiatives)
             </h4>
             <div id="teamLoadSummaryContent" style="display: ${isExpanded ? 'block' : 'none'}; padding: 10px;">
-                <p style="font-size: 0.9em; color: #555;">Shows team load based *only* on initiatives currently Above The Line (ATL) according to the selected scenario below.</p>
+                <p style="font-size: 0.9em; color: var(--theme-text-muted);">Shows team load based *only* on initiatives currently Above The Line (ATL) according to the selected scenario below.</p>
                 <table id="teamLoadSummaryTable" style="margin: 0 auto; border-collapse: collapse; font-size: 0.9em;">
                     <thead>
-                        <tr style="background-color: #f2f2f2;">
-                            <th style="border: 1px solid #ccc; padding: 5px;">Team Name</th>
-                            <th style="border: 1px solid #ccc; padding: 5px;" title="Finance Approved Budget">Funded HC</th>
-                            <th style="border: 1px solid #ccc; padding: 5px;" title="Actual Team Members">Team BIS</th>
-                            <th style="border: 1px solid #ccc; padding: 5px;" title="Borrowed/Away Members">Away BIS</th>
-                            <th style="border: 1px solid #ccc; padding: 5px;" title="Team BIS + Away BIS">Effective BIS</th>
-                            <th style="border: 1px solid #ccc; padding: 5px;" title="SDEs assigned to this team from ATL initiatives only">Assigned ATL SDEs</th>
-                            <th style="border: 1px solid #ccc; padding: 5px;" title="Team's capacity based on selected scenario button below">Scenario Capacity Limit</th>
-                            <th style="border: 1px solid #ccc; padding: 5px;" title="Scenario Capacity Limit - Assigned ATL SDEs">Remaining Capacity (ATL)</th>
-                            <th style="border: 1px solid #ccc; padding: 5px;" title="Load status for ATL work based on Scenario Capacity Limit">ATL Status</th>
+                        <tr style="background-color: var(--theme-bg-tertiary);">
+                            <th style="border: 1px solid var(--theme-border-color); padding: 5px; color: var(--theme-text-primary);">Team Name</th>
+                            <th style="border: 1px solid var(--theme-border-color); padding: 5px; color: var(--theme-text-primary);" title="Finance Approved Budget">Funded HC</th>
+                            <th style="border: 1px solid var(--theme-border-color); padding: 5px; color: var(--theme-text-primary);" title="Actual Team Members">Team BIS</th>
+                            <th style="border: 1px solid var(--theme-border-color); padding: 5px; color: var(--theme-text-primary);" title="Borrowed/Away Members">Away BIS</th>
+                            <th style="border: 1px solid var(--theme-border-color); padding: 5px; color: var(--theme-text-primary);" title="Team BIS + Away BIS">Effective BIS</th>
+                            <th style="border: 1px solid var(--theme-border-color); padding: 5px; color: var(--theme-text-primary);" title="SDEs assigned to this team from ATL initiatives only">Assigned ATL SDEs</th>
+                            <th style="border: 1px solid var(--theme-border-color); padding: 5px; color: var(--theme-text-primary);" title="Team's capacity based on selected scenario button below">Scenario Capacity Limit</th>
+                            <th style="border: 1px solid var(--theme-border-color); padding: 5px; color: var(--theme-text-primary);" title="Scenario Capacity Limit - Assigned ATL SDEs">Remaining Capacity (ATL)</th>
+                            <th style="border: 1px solid var(--theme-border-color); padding: 5px; color: var(--theme-text-primary);" title="Load status for ATL work based on Scenario Capacity Limit">ATL Status</th>
                         </tr>
                     </thead>
                     <tbody id="teamLoadSummaryTableBody"></tbody>

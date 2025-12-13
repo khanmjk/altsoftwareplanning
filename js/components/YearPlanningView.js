@@ -363,7 +363,7 @@ class YearPlanningView {
         // Table Header
         const thead = document.createElement('thead');
         const headerRow = document.createElement('tr');
-        // headerRow.style.backgroundColor = '#f2f2f2'; // Removed to use CSS theming
+        headerRow.style.backgroundColor = 'var(--theme-bg-tertiary)';
 
         const headers = [
             { text: 'Team Name', title: '' },
@@ -379,8 +379,9 @@ class YearPlanningView {
 
         headers.forEach(h => {
             const th = document.createElement('th');
-            th.style.border = '1px solid #ccc';
+            th.style.border = '1px solid var(--theme-border-color)';
             th.style.padding = '5px';
+            th.style.color = 'var(--theme-text-primary)';
             th.textContent = h.text;
             if (h.title) th.title = h.title;
             headerRow.appendChild(th);
@@ -519,11 +520,15 @@ class YearPlanningView {
 
         // Build header row
         const headerRow = summaryTableHead.insertRow();
+        headerRow.style.backgroundColor = 'var(--theme-bg-tertiary)';
         columns.forEach(col => {
             const th = document.createElement('th');
             th.textContent = col.header;
             th.title = col.title;
             th.style.textAlign = 'center';
+            th.style.border = '1px solid var(--theme-border-color)';
+            th.style.padding = '5px';
+            th.style.color = 'var(--theme-text-primary)';
             headerRow.appendChild(th);
         });
 
@@ -534,6 +539,9 @@ class YearPlanningView {
                 const cell = row.insertCell();
                 const value = col.getValue(rowData, isNetCapacityUsed);
                 cell.textContent = value;
+                cell.style.border = '1px solid var(--theme-border-color)';
+                cell.style.padding = '5px';
+                cell.style.color = 'var(--theme-text-primary)';
 
                 // Apply styling
                 if (col.getStyle) {
@@ -547,10 +555,14 @@ class YearPlanningView {
         // Build footer row
         const totals = summaryData.totals || {};
         const footerRow = summaryTableFoot.insertRow();
+        footerRow.style.backgroundColor = 'var(--theme-bg-secondary)';
         columns.forEach(col => {
             const cell = footerRow.insertCell();
             const value = col.getTotal ? col.getTotal(totals, isNetCapacityUsed) : '';
             cell.textContent = value;
+            cell.style.border = '1px solid var(--theme-border-color)';
+            cell.style.padding = '5px';
+            cell.style.color = 'var(--theme-text-primary)';
 
             // Apply styling
             if (col.getTotalStyle) {
@@ -708,16 +720,18 @@ class YearPlanningView {
 
         const thead = document.createElement('thead');
         const headerRow = document.createElement('tr');
+        headerRow.style.backgroundColor = 'var(--theme-bg-tertiary)';
 
         // Fixed headers
         const fixedHeaders = ['Protected', 'Title', 'ID', 'Description', 'Total SDE Years', 'Cumulative SDE Years', 'Capacity Status', 'ATL/BTL'];
         fixedHeaders.forEach(text => {
             const th = document.createElement('th');
             th.textContent = text;
-            th.style.border = '1px solid #ccc';
+            th.style.border = '1px solid var(--theme-border-color)';
             th.style.padding = '8px';
             th.style.textAlign = 'left';
             th.style.whiteSpace = 'nowrap';
+            th.style.color = 'var(--theme-text-primary)';
             headerRow.appendChild(th);
         });
 
@@ -736,8 +750,8 @@ class YearPlanningView {
             th.title = teamTitle;
             th.setAttribute('data-team-id', team.teamId);
             Object.assign(th.style, {
-                border: '1px solid #ccc', padding: '8px', textAlign: 'center', writingMode: 'vertical-lr',
-                textOrientation: 'mixed', whiteSpace: 'nowrap', minWidth: '35px', maxWidth: '35px'
+                border: '1px solid var(--theme-border-color)', padding: '8px', textAlign: 'center', writingMode: 'vertical-lr',
+                textOrientation: 'mixed', whiteSpace: 'nowrap', minWidth: '35px', maxWidth: '35px', color: 'var(--theme-text-primary)'
             });
             headerRow.appendChild(th);
             teamHeaderMap.set(fixedHeaders.length + index, team.teamId);
@@ -762,7 +776,7 @@ class YearPlanningView {
         tableData.forEach((initiative) => {
             const row = tbody.insertRow();
             row.setAttribute('data-initiative-id', initiative.initiativeId);
-            row.style.borderBottom = '1px solid #eee';
+            row.style.borderBottom = '1px solid var(--theme-border-color)';
             row.style.padding = '2px 0';
             row.setAttribute('draggable', !initiative.isProtected);
 
@@ -793,6 +807,7 @@ class YearPlanningView {
             const titleCell = row.insertCell();
             titleCell.textContent = initiative.title || 'No Title';
             titleCell.style.fontWeight = initiative.isProtected ? 'bold' : 'normal';
+            titleCell.style.color = 'var(--theme-text-primary)';
 
             // ID cell
             const idCell = row.insertCell();
@@ -805,6 +820,7 @@ class YearPlanningView {
             const descText = initiative.description || '';
             descCell.textContent = descText.length > 50 ? descText.substring(0, 47) + '...' : descText;
             descCell.title = descText;
+            descCell.style.color = 'var(--theme-text-secondary)';
 
             // Total SDE cell
             const totalSdeCell = row.insertCell();
