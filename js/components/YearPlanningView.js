@@ -798,7 +798,7 @@ class YearPlanningView {
             const idCell = row.insertCell();
             idCell.textContent = initiative.initiativeId;
             idCell.style.fontSize = '0.8em';
-            idCell.style.color = '#555';
+            idCell.style.color = 'var(--theme-text-muted)';
 
             // Description cell
             const descCell = row.insertCell();
@@ -825,15 +825,15 @@ class YearPlanningView {
             if (initiative.calculatedCumulativeSde <= totalTeamBIS) {
                 statusCell.textContent = '✅';
                 statusCell.title = `Within Team BIS (${totalTeamBIS.toFixed(2)})`;
-                statusCell.style.backgroundColor = '#d4edda';
+                statusCell.style.backgroundColor = 'rgba(var(--theme-success-rgb, 40,167,69), 0.15)';
             } else if (initiative.calculatedCumulativeSde <= totalFundedHC) {
                 statusCell.textContent = '⚠️';
                 statusCell.title = `Exceeds Team BIS, Within Funded HC (${totalFundedHC.toFixed(2)})`;
-                statusCell.style.backgroundColor = '#fff3cd';
+                statusCell.style.backgroundColor = 'rgba(var(--theme-warning-rgb, 255,193,7), 0.15)';
             } else {
                 statusCell.textContent = '🛑';
                 statusCell.title = `Exceeds Funded HC (${totalFundedHC.toFixed(2)})`;
-                statusCell.style.backgroundColor = '#f8d7da';
+                statusCell.style.backgroundColor = 'rgba(var(--theme-danger-rgb, 220,53,69), 0.15)';
             }
 
             // ATL/BTL cell
@@ -878,10 +878,10 @@ class YearPlanningView {
 
                 const currentTeamCumulative = teamCumulativeSde[teamId];
                 if (currentTeamCumulative <= teamLimit) {
-                    teamCell.style.backgroundColor = '#d4edda';
+                    teamCell.style.backgroundColor = 'rgba(var(--theme-success-rgb, 40,167,69), 0.15)';
                     teamCell.title = `Cumulative: ${currentTeamCumulative.toFixed(2)} / Limit: ${teamLimit.toFixed(2)} - OK`;
                 } else {
-                    teamCell.style.backgroundColor = '#f8d7da';
+                    teamCell.style.backgroundColor = 'rgba(var(--theme-danger-rgb, 220,53,69), 0.15)';
                     teamCell.title = `Cumulative: ${currentTeamCumulative.toFixed(2)} / Limit: ${teamLimit.toFixed(2)} - Overloaded`;
                 }
             });
@@ -890,9 +890,9 @@ class YearPlanningView {
             row.querySelectorAll('td').forEach((cell, idx) => {
                 if (idx < fixedHeaders.length) {
                     if (initiative.isProtected) {
-                        cell.style.backgroundColor = '#f8f9fa';
+                        cell.style.backgroundColor = 'var(--theme-bg-secondary)';
                     } else if (initiative.isBTL) {
-                        cell.style.backgroundColor = '#ffeeee';
+                        cell.style.backgroundColor = 'rgba(var(--theme-danger-rgb, 220,53,69), 0.1)';
                     }
                 }
             });

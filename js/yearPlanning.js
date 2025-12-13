@@ -621,7 +621,7 @@ function generatePlanningToolbar() {
             btn.className = `btn btn-sm ${planningCapacityScenario === sc.id ? 'btn-primary' : 'btn-light'}`;
             btn.style.border = '1px solid #ccc'; // Fallback style
             if (planningCapacityScenario === sc.id) {
-                btn.style.backgroundColor = '#007bff';
+                btn.style.backgroundColor = 'var(--theme-primary)';
                 btn.style.color = 'white';
             }
 

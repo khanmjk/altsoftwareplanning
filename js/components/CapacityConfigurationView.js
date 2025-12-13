@@ -402,7 +402,7 @@ class CapacityConfigurationView {
             const noEng = document.createElement('div');
             noEng.textContent = 'No engineers assigned to this team.';
             noEng.style.padding = '15px';
-            noEng.style.color = '#999';
+            noEng.style.color = 'var(--theme-text-muted)';
             noEng.style.fontStyle = 'italic';
             engLeaveContainer.appendChild(noEng);
         } else {
