@@ -274,8 +274,8 @@ class SettingsView {
 
         const options = [
             { value: 'google-gemini', text: 'Google (Gemini Pro)' },
-            { value: 'openai-gpt4o', text: 'OpenAI (GPT-4o) - Coming Soon' },
-            { value: 'anthropic-claude35', text: 'Anthropic (Claude 3.5 Sonnet) - Coming Soon' }
+            { value: 'openai-gpt4o', text: 'OpenAI (GPT-4o) - Coming Soon', disabled: true },
+            { value: 'anthropic-claude35', text: 'Anthropic (Claude 3.5 Sonnet) - Coming Soon', disabled: true }
         ];
 
         this._providerSelect = new ThemedSelect({

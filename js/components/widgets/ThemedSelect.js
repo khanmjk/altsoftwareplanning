@@ -111,6 +111,9 @@ class ThemedSelect {
         this.trigger.addEventListener('keydown', this._handleKeyDown);
         this.dropdown.addEventListener('keydown', this._handleKeyDown);
 
+        // Prevent scroll propagation when scrolling inside dropdown
+        this.dropdown.addEventListener('wheel', this._handleDropdownWheel.bind(this), { passive: false });
+
         return this.container;
     }
 
@@ -275,6 +278,40 @@ class ThemedSelect {
         if (newIndex >= 0 && newIndex < this.options.length) {
             this._highlightOption(newIndex);
         }
+    }
+
+    /**
+     * Handle wheel events on dropdown to prevent page scroll
+     * Only scrolls the dropdown content, never the page
+     */
+    _handleDropdownWheel(e) {
+        if (!this.isOpen) return;
+
+        const dropdown = this.dropdown;
+        const scrollTop = dropdown.scrollTop;
+        const scrollHeight = dropdown.scrollHeight;
+        const clientHeight = dropdown.clientHeight;
+        const deltaY = e.deltaY;
+
+        // Check if content is scrollable
+        const isScrollable = scrollHeight > clientHeight;
+
+        if (!isScrollable) {
+            // Content fits, no need to scroll at all - prevent page scroll
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
+
+        // If scrolling up and at top, or scrolling down and at bottom, prevent page scroll
+        const atTop = scrollTop <= 0 && deltaY < 0;
+        const atBottom = scrollTop + clientHeight >= scrollHeight && deltaY > 0;
+
+        if (atTop || atBottom) {
+            e.preventDefault();
+        }
+
+        e.stopPropagation();
     }
 
     /**
