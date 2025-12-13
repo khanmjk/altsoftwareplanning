@@ -356,6 +356,24 @@ class GanttTableView {
                 event: e
             });
         });
+
+        // ThemedSelect custom event bridge
+        // ThemedSelect doesn't bubble 'change' natively, so we listen for our custom event
+        this.tbody.addEventListener('themed-select-change', (e) => {
+            const target = e.target; // The container element that dispatched the event
+            const { value, text } = e.detail;
+
+            this._emitEvent('fieldChange', {
+                kind: target.dataset.kind,
+                field: target.dataset.field,
+                id: target.dataset.id,
+                wpId: target.dataset.wpId,
+                initiativeId: target.dataset.initiativeId,
+                teamId: target.dataset.teamId,
+                value: value,
+                target: target
+            });
+        });
     }
 
     /**

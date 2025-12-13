@@ -131,31 +131,37 @@ class AssignmentRow {
             .filter(a => a.teamId !== assign.teamId);
 
         if (otherAssignments.length > 0) {
-            const select = document.createElement('select');
-            select.dataset.kind = 'wp-assign';
-            select.dataset.field = 'predecessorTeamId';
-            select.dataset.wpId = wp.workPackageId;
-            select.dataset.initiativeId = wp.initiativeId;
-            select.dataset.teamId = assign.teamId || '';
-
-            // None option
-            const noneOption = document.createElement('option');
-            noneOption.value = '';
-            noneOption.textContent = 'None';
-            select.appendChild(noneOption);
-
-            // Other assignments as options
+            // Build options
+            const options = [{ value: '', text: 'None' }];
             otherAssignments.forEach(other => {
-                const option = document.createElement('option');
-                option.value = other.teamId;
-                option.textContent = this._getTeamName(other.teamId, []);
-                if (assign.predecessorTeamId === other.teamId) {
-                    option.selected = true;
-                }
-                select.appendChild(option);
+                options.push({
+                    value: other.teamId,
+                    text: this._getTeamName(other.teamId, [])
+                });
             });
 
-            cell.appendChild(select);
+            // Create ThemedSelect
+            const themedSelect = new ThemedSelect({
+                options: options,
+                value: assign.predecessorTeamId || '',
+                className: 'themed-select--compact',
+                onChange: (value, text) => {
+                    const event = new CustomEvent('themed-select-change', {
+                        bubbles: true,
+                        detail: { value, text }
+                    });
+                    selectContainer.dispatchEvent(event);
+                }
+            });
+
+            const selectContainer = themedSelect.render();
+            selectContainer.dataset.kind = 'wp-assign';
+            selectContainer.dataset.field = 'predecessorTeamId';
+            selectContainer.dataset.wpId = wp.workPackageId;
+            selectContainer.dataset.initiativeId = wp.initiativeId;
+            selectContainer.dataset.teamId = assign.teamId || '';
+
+            cell.appendChild(selectContainer);
         } else {
             // No dependencies available
             const span = document.createElement('span');
