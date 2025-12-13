@@ -14,10 +14,10 @@
 }
 
 .roadmap-modal-content {
-    background-color: #fefefe;
+    background-color: var(--theme-card-bg);
     margin: 5% auto;
     padding: 0;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--theme-border-color);
     border-radius: 8px;
     width: 70%;
     max-width: 900px;
@@ -39,11 +39,11 @@
 
 .roadmap-modal-header {
     padding: 20px 25px;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--theme-border-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #f8fafc;
+    background-color: var(--theme-bg-secondary);
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
 }
@@ -51,12 +51,12 @@
 .roadmap-modal-title {
     margin: 0;
     font-size: 1.25rem;
-    color: #1e293b;
+    color: var(--theme-text-primary);
     font-weight: 600;
 }
 
 .roadmap-modal-close {
-    color: #94a3b8;
+    color: var(--theme-text-muted);
     font-size: 1.5rem;
     font-weight: bold;
     cursor: pointer;
@@ -68,7 +68,7 @@
 }
 
 .roadmap-modal-close:hover {
-    color: #ef4444;
+    color: var(--theme-danger);
 }
 
 .roadmap-modal-body {
@@ -79,11 +79,11 @@
 
 .roadmap-modal-footer {
     padding: 15px 25px;
-    border-top: 1px solid #e2e8f0;
+    border-top: 1px solid var(--theme-border-color);
     display: flex;
     justify-content: flex-end;
     gap: 10px;
-    background-color: #f8fafc;
+    background-color: var(--theme-bg-secondary);
     border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;
 }
@@ -107,7 +107,7 @@
     display: block;
     margin-bottom: 5px;
     font-weight: 500;
-    color: #475569;
+    color: var(--theme-text-secondary);
     font-size: 0.9rem;
 }
 
@@ -116,7 +116,7 @@
 .roadmap-textarea {
     width: 100%;
     padding: 8px 12px;
-    border: 1px solid #cbd5e1;
+    border: 1px solid var(--theme-border-color);
     border-radius: 4px;
     font-size: 0.95rem;
     transition: border-color 0.2s;
@@ -126,7 +126,7 @@
 .roadmap-select:focus,
 .roadmap-textarea:focus {
     outline: none;
-    border-color: #3b82f6;
+    border-color: var(--theme-primary);
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 
@@ -134,16 +134,16 @@
     margin-top: 20px;
     margin-bottom: 15px;
     padding-bottom: 5px;
-    border-bottom: 1px solid #e2e8f0;
-    color: #334155;
+    border-bottom: 1px solid var(--theme-border-color);
+    color: var(--theme-text-primary);
     font-size: 1.1rem;
     font-weight: 600;
 }
 
 /* Assignments Section */
 .assignments-container {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    background: var(--theme-bg-secondary);
+    border: 1px solid var(--theme-border-color);
     border-radius: 6px;
     padding: 15px;
 }
@@ -157,8 +157,8 @@
     justify-content: space-between;
     align-items: center;
     padding: 8px;
-    background: white;
-    border: 1px solid #e2e8f0;
+    background: var(--theme-bg-primary);
+    border: 1px solid var(--theme-border-color);
     border-radius: 4px;
     margin-bottom: 5px;
     animation: fadeIn 0.3s;

@@ -95,7 +95,7 @@
     font-size: 0.9rem;
     line-height: 1.4;
     color: var(--color-gray-900);
-    background-color: #fff;
+    background-color: var(--theme-bg-primary);
     border: 1px solid var(--color-gray-300);
     border-radius: var(--radius-sm);
     transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
@@ -157,7 +157,7 @@
 
 /* API Section Specifics */
 .service-edit-api-item {
-    background-color: #fff;
+    background-color: var(--theme-bg-primary);
     border: 1px solid var(--color-gray-200);
     border-radius: var(--radius-sm);
     padding: var(--space-md);
@@ -178,7 +178,7 @@
 
 .service-edit-btn-primary {
     background-color: var(--color-primary);
-    color: #fff;
+    color: var(--color-white);
     border-color: var(--color-primary);
 }
 
@@ -194,11 +194,11 @@
 
 .service-edit-btn-danger:hover {
     background-color: var(--color-danger);
-    color: #fff;
+    color: var(--color-white);
 }
 
 .service-edit-btn-secondary {
-    background-color: #fff;
+    background-color: var(--theme-bg-primary);
     color: var(--color-gray-700);
     border-color: var(--color-gray-300);
 }
@@ -302,7 +302,7 @@
     font-size: 0.9rem;
     line-height: 1.4;
     color: var(--color-gray-900);
-    background-color: #fff;
+    background-color: var(--theme-bg-primary);
     border: 1px solid var(--color-gray-300);
     border-radius: var(--radius-sm);
     transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
@@ -357,7 +357,7 @@
 
 .service-edit-btn-primary {
     background-color: var(--color-primary);
-    color: #fff;
+    color: var(--color-white);
     border-color: var(--color-primary);
 }
 
@@ -373,11 +373,11 @@
 
 .service-edit-btn-danger:hover {
     background-color: var(--color-danger);
-    color: #fff;
+    color: var(--color-white);
 }
 
 .service-edit-btn-secondary {
-    background-color: #fff;
+    background-color: var(--theme-bg-primary);
     color: var(--color-gray-700);
     border-color: var(--color-gray-300);
 }

@@ -60,7 +60,7 @@
 
 #aiChatLog .user-message {
     background-color: var(--theme-primary);
-    color: #ffffff;
+    color: var(--color-white);
     margin-left: auto;
     border-bottom-right-radius: 4px;
 }
