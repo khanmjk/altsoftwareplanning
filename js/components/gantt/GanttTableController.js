@@ -230,6 +230,11 @@ class GanttTableController {
                 console.warn('GanttTableController: Unknown field kind', kind);
         }
 
+        // Mark the view as having unsaved changes
+        if (typeof ganttPlanningViewInstance !== 'undefined' && ganttPlanningViewInstance) {
+            ganttPlanningViewInstance.markDirty();
+        }
+
         // Always sync to Frappe after field changes to keep chart in sync
         this._syncToFrappe();
     }

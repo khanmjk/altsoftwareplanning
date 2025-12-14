@@ -46,6 +46,10 @@ class GanttPlanningView {
         // Chart renderer instance
         this.chartRenderer = null;
 
+        // Dirty state tracking for Save button
+        this._isDirty = false;
+        this._saveBtn = null;
+
         // Constants
         this.GANTT_TABLE_WIDTH_KEY = 'ganttTableWidthPct';
         this.GANTT_STATUS_OPTIONS = ['Backlog', 'Defined', 'Committed', 'In Progress', 'Done', 'Blocked'];
@@ -367,6 +371,17 @@ class GanttPlanningView {
         statusFilterWrap.id = 'ganttStatusFilter';
         statusFilterWrap.className = 'filter-item';
         toolbar.appendChild(statusFilterWrap);
+
+        // Save Button
+        const saveBtn = document.createElement('button');
+        saveBtn.textContent = 'Save';
+        saveBtn.className = 'btn btn-success btn-sm';
+        saveBtn.title = 'Save changes to system';
+        saveBtn.style.opacity = '0.5';
+        saveBtn.style.cursor = 'default';
+        saveBtn.onclick = () => this._save();
+        this._saveBtn = saveBtn;
+        toolbar.appendChild(saveBtn);
 
         // Refresh Button
         const refreshBtn = document.createElement('button');
@@ -1092,6 +1107,51 @@ class GanttPlanningView {
             expandedInitiatives: this.ganttExpandedInitiatives.size,
             statusFilters: Array.from(this.ganttStatusFilter)
         };
+    }
+
+    /**
+     * Marks the view as having unsaved changes.
+     * Enables and highlights the Save button.
+     */
+    markDirty() {
+        if (this._isDirty) return; // Already dirty
+
+        this._isDirty = true;
+
+        if (this._saveBtn) {
+            this._saveBtn.style.opacity = '1';
+            this._saveBtn.style.cursor = 'pointer';
+            this._saveBtn.classList.add('btn-pulse'); // Optional animation class
+        }
+    }
+
+    /**
+     * Saves the current system and clears dirty state.
+     */
+    _save() {
+        if (!this._isDirty) return; // Nothing to save
+
+        const success = SystemService.save();
+
+        if (success) {
+            this._isDirty = false;
+
+            if (this._saveBtn) {
+                this._saveBtn.style.opacity = '0.5';
+                this._saveBtn.style.cursor = 'default';
+                this._saveBtn.classList.remove('btn-pulse');
+            }
+
+            // Show success feedback
+            if (typeof ToastComponent !== 'undefined') {
+                ToastComponent.show('Changes saved successfully', 'success');
+            }
+        } else {
+            // Show error feedback
+            if (typeof ToastComponent !== 'undefined') {
+                ToastComponent.show('Failed to save changes', 'error');
+            }
+        }
     }
 }
 
