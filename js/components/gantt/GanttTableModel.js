@@ -227,11 +227,7 @@ class GanttTableModel extends EventTarget {
      * @returns {string}
      */
     normalizeId(value) {
-        if (typeof GanttService !== 'undefined' && GanttService.normalizeGanttId) {
-            return GanttService.normalizeGanttId(value);
-        }
-        if (!value) return '';
-        return String(value).toLowerCase().replace(/[^a-z0-9-]/g, '-');
+        return GanttService.normalizeGanttId(value);
     }
 
     // =========================================================================

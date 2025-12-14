@@ -712,18 +712,16 @@ class GanttPlanningView {
         const normalizedInitiatives = this.model.getNormalizedData(initiatives, allSystemWPs);
 
         // Build tasks using the gantt adapter with normalized data
-        const tasks = (typeof ganttAdapter !== 'undefined' && ganttAdapter)
-            ? ganttAdapter.buildTasksFromInitiatives({
-                initiatives: normalizedInitiatives,
-                workPackages: SystemService.getCurrentSystem().workPackages || [],
-                viewBy: this.currentGanttGroupBy,
-                filters: { status: this.ganttStatusFilter },
-                year: this.currentGanttYear,
-                selectedTeam: selectedTeam,
-                expandedInitiativeIds: this.ganttExpandedInitiatives,
-                expandedWorkPackageIds: this.ganttExpandedWorkPackages
-            })
-            : [];
+        const tasks = ganttAdapter.buildTasksFromInitiatives({
+            initiatives: normalizedInitiatives,
+            workPackages: SystemService.getCurrentSystem().workPackages || [],
+            viewBy: this.currentGanttGroupBy,
+            filters: { status: this.ganttStatusFilter },
+            year: this.currentGanttYear,
+            selectedTeam: selectedTeam,
+            expandedInitiativeIds: this.ganttExpandedInitiatives,
+            expandedWorkPackageIds: this.ganttExpandedWorkPackages
+        });
 
         // Use Factory to get the correct renderer
         if (!this.chartRenderer) {
@@ -1113,14 +1111,10 @@ class GanttPlanningView {
             }
 
             // Show success feedback
-            if (typeof ToastComponent !== 'undefined') {
-                ToastComponent.show('Changes saved successfully', 'success');
-            }
+            ToastComponent.show('Changes saved successfully', 'success');
         } else {
             // Show error feedback
-            if (typeof ToastComponent !== 'undefined') {
-                ToastComponent.show('Failed to save changes', 'error');
-            }
+            ToastComponent.show('Failed to save changes', 'error');
         }
     }
 }

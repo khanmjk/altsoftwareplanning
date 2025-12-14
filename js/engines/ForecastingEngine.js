@@ -125,20 +125,16 @@ class ForecastingEngine {
                 const globalLeaveTypes = capacityConfig.leaveTypes || [];
 
                 // Use CapacityService for capacity calculations
-                if (typeof CapacityService !== 'undefined') {
-                    const stdLeave_days_per_sde = CapacityService.calculateTotalStandardLeaveDaysPerSDE(team, globalLeaveTypes, capacityConfig);
-                    const holidays_days_per_sde = capacityConfig.globalConstraints?.publicHolidays || 0;
-                    const orgEvents_days_per_sde = CapacityService.calculateOrgEventDaysPerSDE(capacityConfig);
-                    const overhead_days_per_sde = CapacityService.calculateOverheadDaysPerSDE(team, workingDaysPerYear);
-                    const teamActivityImpacts = CapacityService.calculateTeamActivityImpacts(team);
-                    const teamActivity_days_per_sde = teamActivityImpacts.daysPerSDE;
+                const stdLeave_days_per_sde = CapacityService.calculateTotalStandardLeaveDaysPerSDE(team, globalLeaveTypes, capacityConfig);
+                const holidays_days_per_sde = capacityConfig.globalConstraints?.publicHolidays || 0;
+                const orgEvents_days_per_sde = CapacityService.calculateOrgEventDaysPerSDE(capacityConfig);
+                const overhead_days_per_sde = CapacityService.calculateOverheadDaysPerSDE(team, workingDaysPerYear);
+                const teamActivityImpacts = CapacityService.calculateTeamActivityImpacts(team);
+                const teamActivity_days_per_sde = teamActivityImpacts.daysPerSDE;
 
-                    const totalPerSdeDeductionDays = stdLeave_days_per_sde + holidays_days_per_sde + orgEvents_days_per_sde + overhead_days_per_sde + teamActivity_days_per_sde;
-                    const netProjectDaysPerSdePerYear = Math.max(0, workingDaysPerYear - totalPerSdeDeductionDays);
-                    netAvailableDaysPerWeekPerSDE = (netProjectDaysPerSdePerYear / workingDaysPerYear) * 5;
-                } else {
-                    console.warn("ForecastingEngine: CapacityService not found. Using default capacity.");
-                }
+                const totalPerSdeDeductionDays = stdLeave_days_per_sde + holidays_days_per_sde + orgEvents_days_per_sde + overhead_days_per_sde + teamActivity_days_per_sde;
+                const netProjectDaysPerSdePerYear = Math.max(0, workingDaysPerYear - totalPerSdeDeductionDays);
+                netAvailableDaysPerWeekPerSDE = (netProjectDaysPerSdePerYear / workingDaysPerYear) * 5;
             }
         }
 

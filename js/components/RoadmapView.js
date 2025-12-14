@@ -155,9 +155,7 @@ class RoadmapView {
             SystemService.getCurrentSystem().yearlyInitiatives.push(initiativeData);
         }
 
-        if (typeof SystemService !== 'undefined' && SystemService.save) {
-            SystemService.save();
-        }
+        SystemService.save();
         this.refreshActiveView();
     }
 
@@ -168,9 +166,7 @@ class RoadmapView {
         if (await notificationManager.confirm(`Are you sure you want to delete initiative "${title}"?`, 'Delete Initiative', { confirmStyle: 'danger' })) {
             const success = InitiativeService.deleteInitiative(SystemService.getCurrentSystem(), initiativeId);
             if (success) {
-                if (typeof SystemService !== 'undefined' && SystemService.save) {
-                    SystemService.save();
-                }
+                SystemService.save();
                 this.refreshActiveView();
                 notificationManager.showToast('Initiative deleted', 'success');
             } else {

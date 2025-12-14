@@ -253,46 +253,19 @@ class WorkPackageRow {
     // =========================================================================
 
     _formatWorkPackageTeams(wp, teams, selectedTeam) {
-        if (typeof GanttService !== 'undefined' && GanttService.formatWorkPackageTeams) {
-            return GanttService.formatWorkPackageTeams(wp, teams, selectedTeam);
-        }
-
-        // Fallback
-        const assigns = wp.impactedTeamAssignments || [];
-        const teamNames = assigns.map(a => {
-            const team = teams.find(t => t.teamId === a.teamId);
-            return team ? (team.teamIdentity || team.teamName) : a.teamId;
-        });
-        return teamNames.join(', ');
+        return GanttService.formatWorkPackageTeams(wp, teams, selectedTeam);
     }
 
     _computeWorkPackageSdeYears(wp, workingDaysPerYear, selectedTeam) {
-        if (typeof GanttService !== 'undefined' && GanttService.computeWorkPackageSdeYears) {
-            return GanttService.computeWorkPackageSdeYears(wp, workingDaysPerYear, selectedTeam);
-        }
-
-        // Fallback
-        let assigns = wp.impactedTeamAssignments || [];
-        if (selectedTeam && selectedTeam !== 'all') {
-            assigns = assigns.filter(a => a.teamId === selectedTeam);
-        }
-        const totalDays = assigns.reduce((sum, a) => sum + (a.sdeDays || 0), 0);
-        return (totalDays / workingDaysPerYear).toFixed(2);
+        return GanttService.computeWorkPackageSdeYears(wp, workingDaysPerYear, selectedTeam);
     }
 
     _wouldCreateCycle(fromWpId, toWpId, allWorkPackages) {
-        if (typeof GanttService !== 'undefined' && GanttService.wouldCreateDependencyCycle) {
-            return GanttService.wouldCreateDependencyCycle(fromWpId, toWpId, allWorkPackages);
-        }
-        return false;
+        return GanttService.wouldCreateDependencyCycle(fromWpId, toWpId, allWorkPackages);
     }
 
     _truncateLabel(text, maxLen) {
-        if (typeof GanttService !== 'undefined' && GanttService.truncateLabel) {
-            return GanttService.truncateLabel(text, maxLen);
-        }
-        if (!text) return '';
-        return text.length > maxLen ? text.substring(0, maxLen - 1) + '…' : text;
+        return GanttService.truncateLabel(text, maxLen);
     }
 }
 

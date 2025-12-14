@@ -236,39 +236,15 @@ class InitiativeRow {
     // =========================================================================
 
     _getTeamsForInitiative(init, teams) {
-        if (typeof GanttService !== 'undefined' && GanttService.getTeamsForInitiative) {
-            return GanttService.getTeamsForInitiative(init, teams);
-        }
-
-        // Fallback
-        const teamIds = new Set();
-        (init.assignments || []).forEach(a => {
-            if (a.teamId) teamIds.add(a.teamId);
-        });
-
-        return Array.from(teamIds).map(id => {
-            const team = teams.find(t => t.teamId === id);
-            return team ? (team.teamIdentity || team.teamName) : id;
-        });
+        return GanttService.getTeamsForInitiative(init, teams);
     }
 
     _computeSdeEstimate(init) {
-        if (typeof GanttService !== 'undefined' && GanttService.computeSdeEstimate) {
-            return GanttService.computeSdeEstimate(init);
-        }
-
-        // Fallback
-        const total = (init.assignments || []).reduce((sum, a) => sum + (a.sdeYears || 0), 0);
-        return total.toFixed(2);
+        return GanttService.computeSdeEstimate(init);
     }
 
     _truncateLabel(text, maxLen) {
-        if (typeof GanttService !== 'undefined' && GanttService.truncateLabel) {
-            return GanttService.truncateLabel(text, maxLen);
-        }
-
-        if (!text) return '';
-        return text.length > maxLen ? text.substring(0, maxLen - 1) + '…' : text;
+        return GanttService.truncateLabel(text, maxLen);
     }
 
     /**
