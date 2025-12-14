@@ -101,6 +101,7 @@ class GanttTableController {
         // Context for row renderers
         const context = {
             allInitiatives: initiatives,
+            filteredInitiatives: filtered,
             allWorkPackages: workPackages,
             teams
         };
@@ -321,7 +322,8 @@ class GanttTableController {
     // =========================================================================
 
     _updateInitiativeField(initiativeId, field, value) {
-        InitiativeService.updateInitiative(this.systemData, initiativeId, { [field]: value });
+        let updates = { [field]: value };
+        InitiativeService.updateInitiative(this.systemData, initiativeId, updates);
 
         // Trigger date propagation if date changed
         if (['startDate', 'targetDueDate'].includes(field)) {
@@ -545,10 +547,17 @@ class GanttTableController {
     _handleModelChange(event) {
         const { type, payload } = event.detail;
 
-        // Most changes trigger re-render
-        // Focus changes might just update CSS classes
-        if (type === 'focus') {
-            // Could optimize to just update focus styles
+        // Handle filter changes (trigger re-render)
+        if (type === 'filter') {
+            this.render();
+            // Also sync chart expansion/visibility as filtering might change which rows are visible
+            this._syncExpansionToChart();
+        }
+
+        // Focus changes might just update CSS classes or require scroll
+        // Currently handled by direct calls in _handleRowClick, but good to have hook here
+        else if (type === 'focus') {
+            // Optional: visual updates if needed
         }
     }
 

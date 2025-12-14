@@ -140,10 +140,16 @@ const ganttAdapter = (function () {
                                 status: wp.status || 'active',
                                 type: 'assignment',
                                 dependencies: (() => {
-                                    const assignmentDeps = Array.isArray(assign.dependencies) && assign.dependencies.length
-                                        ? assign.dependencies
-                                        : (wp.dependencies || []);
-                                    return (assignmentDeps || []).map(sanitizeId).join(',');
+                                    // Support both predecessorAssignmentIds (Service) and dependencies (Generic)
+                                    // Use set to avoid duplicates
+                                    const deps = new Set([
+                                        ...(assign.predecessorAssignmentIds || []),
+                                        ...(Array.isArray(assign.dependencies) ? assign.dependencies : [])
+                                    ]);
+
+                                    // Map to sanitized IDs. Note: Data model must store IDs that match the chart's 
+                                    // constructed ID format (wpId-teamId) for this to link correctly.
+                                    return Array.from(deps).map(sanitizeId).join(',');
                                 })(),
                                 // Metadata for updates
                                 initiativeId: init.initiativeId,

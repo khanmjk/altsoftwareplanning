@@ -8,7 +8,7 @@
  */
 
 const InitiativeService = {
-    STATUSES: ['Backlog', 'Defined', 'Committed', 'Completed'],
+    STATUSES: ['Backlog', 'Defined', 'Committed', 'In Progress', 'Done', 'Blocked'],
 
     /**
      * Adds a new initiative to systemData.yearlyInitiatives.
