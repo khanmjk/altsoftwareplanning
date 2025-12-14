@@ -414,15 +414,13 @@ class YearPlanningView {
      * Ensure data consistency before rendering
      */
     ensureDataConsistency() {
-        if (typeof WorkPackageService !== 'undefined') {
-            WorkPackageService.ensureWorkPackagesForInitiatives(SystemService.getCurrentSystem(), this.currentYear);
-            const initiatives = SystemService.getCurrentSystem()?.yearlyInitiatives || [];
-            initiatives
-                .filter(init => init.attributes?.planningYear == this.currentYear)
-                .forEach(init => {
-                    WorkPackageService.syncInitiativeTotals(init.initiativeId, SystemService.getCurrentSystem());
-                });
-        }
+        WorkPackageService.ensureWorkPackagesForInitiatives(SystemService.getCurrentSystem(), this.currentYear);
+        const initiatives = SystemService.getCurrentSystem()?.yearlyInitiatives || [];
+        initiatives
+            .filter(init => init.attributes?.planningYear == this.currentYear)
+            .forEach(init => {
+                WorkPackageService.syncInitiativeTotals(init.initiativeId, SystemService.getCurrentSystem());
+            });
     }
 
     /**
@@ -980,9 +978,7 @@ class YearPlanningView {
                 WorkPackageService.syncInitiativeTotals(init.initiativeId, SystemService.getCurrentSystem());
             });
 
-            if (typeof SystemService !== 'undefined' && SystemService.save) {
-                SystemService.save();
-            }
+            SystemService.save();
             notificationManager?.showToast(`Plan for ${this.currentYear} saved successfully.`, "success");
             this.render();
         } catch (error) {

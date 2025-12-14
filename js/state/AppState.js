@@ -102,20 +102,18 @@ class AppState {
         console.log("AppState: Closing current system session.");
 
         // Clear system state via SystemService
-        if (typeof SystemService !== 'undefined') {
-            SystemService.setCurrentSystem(null);
-        }
+        SystemService.setCurrentSystem(null);
 
         // Also clear local state (AppState is notified by SystemService.setCurrentSystem)
         this._state.currentSystem = null;
 
         // Update sidebar state
-        if (typeof sidebarComponent !== 'undefined' && sidebarComponent) {
+        if (sidebarComponent) {
             sidebarComponent.updateState();
         }
 
         // Navigate to welcome view
-        if (typeof navigationManager !== 'undefined' && navigationManager) {
+        if (navigationManager) {
             navigationManager.navigateTo('welcomeView');
         }
     }

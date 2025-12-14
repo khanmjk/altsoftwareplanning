@@ -208,13 +208,11 @@ class AssignmentRow {
             return team.teamIdentity || team.teamName || teamId;
         }
 
-        // Fallback to SystemService if available
-        if (typeof SystemService !== 'undefined' && SystemService.getCurrentSystem) {
-            const allTeams = SystemService.getCurrentSystem()?.teams || [];
-            const foundTeam = allTeams.find(t => t.teamId === teamId);
-            if (foundTeam) {
-                return foundTeam.teamIdentity || foundTeam.teamName || teamId;
-            }
+        // Fallback to SystemService
+        const allTeams = SystemService.getCurrentSystem()?.teams || [];
+        const foundTeam = allTeams.find(t => t.teamId === teamId);
+        if (foundTeam) {
+            return foundTeam.teamIdentity || foundTeam.teamName || teamId;
         }
 
         return teamId;

@@ -1138,9 +1138,7 @@ class OrgView {
         const engineer = (SystemService.getCurrentSystem().allKnownEngineers || []).find(e => e.name === engineerName);
         if (engineer) {
             engineer.level = newLevel;
-            if (typeof SystemService !== 'undefined' && SystemService.save) {
-                SystemService.save();
-            }
+            SystemService.save();
             // Recalculate capacity metrics (pure data, no UI refresh needed here)
             CapacityEngine.recalculate(SystemService.getCurrentSystem());
             console.log(`Updated ${engineerName} to L${newLevel}`);
@@ -1165,9 +1163,7 @@ class OrgView {
             throw err;
         }
 
-        if (typeof SystemService !== 'undefined' && SystemService.save) {
-            SystemService.save();
-        }
+        SystemService.save();
         this.generateEngineerTable();
         notificationManager?.showToast(`Moved ${engineerName} to ${newTeamId ? 'new team' : 'Unallocated'}`, 'success');
     }

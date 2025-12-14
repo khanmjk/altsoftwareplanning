@@ -356,9 +356,7 @@ const InitiativeService = {
         // Trigger goal refresh if initiative is linked to a goal
         if (initiative.primaryGoalId || initiative.goalId) {
             const goalId = initiative.primaryGoalId || initiative.goalId;
-            if (typeof GoalService !== 'undefined' && GoalService.refreshGoalDates) {
-                GoalService.refreshGoalDates(systemData, goalId);
-            }
+            GoalService.refreshGoalDates(systemData, goalId);
         }
 
         return initiative;

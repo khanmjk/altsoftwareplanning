@@ -212,13 +212,11 @@ const CapacityService = {
                 if ((team.sdmId || '').toLowerCase() === ident.toLowerCase()) return true;
 
                 // Check via SDM resolution
-                if (typeof OrgService !== 'undefined' && OrgService._resolveSdmIdentifier) {
-                    const resolvedSdmId = OrgService._resolveSdmIdentifier(systemData, ident);
-                    if (resolvedSdmId && team.sdmId && team.sdmId.toLowerCase() === resolvedSdmId.toLowerCase()) return true;
-                }
+                const resolvedSdmId = OrgService._resolveSdmIdentifier(systemData, ident);
+                if (resolvedSdmId && team.sdmId && team.sdmId.toLowerCase() === resolvedSdmId.toLowerCase()) return true;
 
                 // Check via Senior Manager
-                if (systemData?.sdms && typeof OrgService !== 'undefined' && OrgService._resolveSeniorManagerIdentifier) {
+                if (systemData?.sdms) {
                     const teamSdm = (systemData.sdms || []).find(s => s.sdmId === team.sdmId);
                     const resolvedSrMgrId = OrgService._resolveSeniorManagerIdentifier(systemData, ident);
                     if (resolvedSrMgrId && teamSdm?.seniorManagerId === resolvedSrMgrId) return true;

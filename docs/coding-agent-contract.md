@@ -393,6 +393,20 @@ border-left-color: #0052cc;
 | `GanttTableController.js` | Defensive function checks | ✅ Uses viewInstance property |
 | `WorkspaceComponent.js` | Inline HTML templates | ✅ Refactored to DOM APIs |
 | `RoadmapComponent.js` | Inline HTML templates | ✅ Refactored to DOM APIs with _createRoadmapCard helper |
+| `RoadmapView.js` | Defensive typeof SystemService checks | ✅ Removed 2 checks, trusts service layer |
+| `CapacityPlanningView.js` | Defensive typeof SystemService check | ✅ Removed, calls SystemService directly |
+| `OrgView.js` | Defensive typeof SystemService checks | ✅ Removed 2 checks |
+| `YearPlanningView.js` | Defensive typeof WorkPackageService/SystemService | ✅ Removed 2 checks |
+| `ResourceForecastView.js` | Defensive typeof SystemService check | ✅ Removed 1 check |
+| `GanttPlanningView.js` | Defensive typeof ganttAdapter/ToastComponent | ✅ Removed 3 checks |
+| `InitiativeRow.js` | Defensive typeof GanttService checks | ✅ Removed 3 checks, calls service directly |
+| `WorkPackageRow.js` | Defensive typeof GanttService checks | ✅ Removed 4 checks |
+| `AssignmentRow.js` | Defensive typeof SystemService check | ✅ Removed 1 check |
+| `CapacityService.js` | Defensive typeof OrgService checks | ✅ Removed 2 checks |
+| `InitiativeService.js` | Defensive typeof GoalService check | ✅ Removed 1 check |
+| `GanttTableModel.js` | Defensive typeof GanttService check | ✅ Removed 1 check |
+| `AppState.js` | Defensive typeof checks for SystemService/components | ✅ Removed 3 checks |
+| `ForecastingEngine.js` | Defensive typeof CapacityService check | ✅ Removed 1 check |
 
 ### Theming Violations (CSS/JS hardcoded colors)
 
