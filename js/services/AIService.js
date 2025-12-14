@@ -55,22 +55,20 @@ const AIService = {
         if (chatContainer) {
             if (aiEnabled) {
                 chatContainer.style.display = 'block';
-                // Check if global aiChatAssistant is available for finer control
-                if (!(typeof aiChatAssistant !== 'undefined' && aiChatAssistant.isAiChatPanelOpen && aiChatAssistant.isAiChatPanelOpen())) {
+                // Check if AI chat panel is already open
+                if (!(aiChatAssistant.isAiChatPanelOpen && aiChatAssistant.isAiChatPanelOpen())) {
                     chatContainer.style.width = chatContainer.style.width || '0';
                     if (chatHandle) chatHandle.style.display = 'none';
                 }
             } else {
-                if (typeof aiChatAssistant !== 'undefined' && aiChatAssistant.closeAiChatPanel) {
-                    aiChatAssistant.closeAiChatPanel();
-                }
+                aiChatAssistant.closeAiChatPanel();
                 chatContainer.style.display = 'none';
                 if (chatHandle) chatHandle.style.display = 'none';
             }
         }
 
-        if (!skipPlanningRender && typeof navigationManager !== 'undefined' && navigationManager.currentViewId === 'planningView') {
-            if (typeof renderPlanningView === 'function') renderPlanningView();
+        if (!skipPlanningRender && navigationManager.currentViewId === 'planningView') {
+            renderPlanningView();
         }
     },
 
@@ -157,28 +155,28 @@ ${systemPromptSummary}`.trim();
                     return await _generateSystemWithGemini(systemPrompt, userPrompt, apiKey, spinnerP);
                 case 'openai-gpt4o':
                     console.warn("OpenAI generation not yet implemented.");
-                    if (typeof notificationManager !== 'undefined') notificationManager.showToast("AI provider 'OpenAI (GPT-4o)' is not yet implemented.", 'warning');
+                    notificationManager.showToast("AI provider 'OpenAI (GPT-4o)' is not yet implemented.", 'warning');
                     return { data: null, stats: null };
                 case 'anthropic-claude35':
                     console.warn("Anthropic generation not yet implemented.");
-                    if (typeof notificationManager !== 'undefined') notificationManager.showToast("AI provider 'Anthropic (Claude 3.5 Sonnet)' is not yet implemented.", 'warning');
+                    notificationManager.showToast("AI provider 'Anthropic (Claude 3.5 Sonnet)' is not yet implemented.", 'warning');
                     return { data: null, stats: null };
                 case 'mistral-large':
                     console.warn("Mistral generation not yet implemented.");
-                    if (typeof notificationManager !== 'undefined') notificationManager.showToast("AI provider 'Mistral (Large 2)' is not yet implemented.", 'warning');
+                    notificationManager.showToast("AI provider 'Mistral (Large 2)' is not yet implemented.", 'warning');
                     return { data: null, stats: null };
                 case 'cohere-command-r':
                     console.warn("Cohere generation not yet implemented.");
-                    if (typeof notificationManager !== 'undefined') notificationManager.showToast("AI provider 'Cohere (Command R)' is not yet implemented.", 'warning');
+                    notificationManager.showToast("AI provider 'Cohere (Command R)' is not yet implemented.", 'warning');
                     return { data: null, stats: null };
                 default:
                     console.error(`Unknown AI provider: ${provider}`);
-                    if (typeof notificationManager !== 'undefined') notificationManager.showToast(`AI System Generation for "${provider}" is not yet supported.`, 'warning');
+                    notificationManager.showToast(`AI System Generation for "${provider}" is not yet supported.`, 'warning');
                     return { data: null, stats: null };
             }
         } catch (error) {
             console.error(`Error during AI generation with ${provider}:`, error);
-            if (typeof notificationManager !== 'undefined') notificationManager.showToast(`An error occurred while communicating with the AI. Check the console.\nError: ${error.message}`, 'error');
+            notificationManager.showToast(`An error occurred while communicating with the AI. Check the console.\nError: ${error.message}`, 'error');
             return { data: null, stats: null };
         }
     },

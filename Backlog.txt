@@ -194,6 +194,26 @@ IN PROGRESS
 - Year Planning modernization
 - Transform editSystem.js to the workspace-canvas-contract.md - create view related files
 
+------------
+PARKED TECH DEBT (Dec 2024 Compliance Session)
+------------
+- [TECH DEBT] Refactor main.js to be a pure bootstrap component
+  * main.js currently has view-specific knowledge (AI Chat Panel fallback HTML, loadHtmlComponent helper)
+  * Should move fallback HTML templates to TemplateService or respective components
+  * Should move loadHtmlComponent to TemplateLoader or WorkspaceComponent
+  * WorkspaceComponent should own AI Chat Panel initialization as part of canvas layout
+  * main.js should only handle: service init, manager init, shell components, routing
+  * See workspace-canvas-contract.md for separation of concerns guidelines
+
+- [TECH DEBT] Refactor ganttPlanning.js - 17 module-level globals, 8 innerHTML usages, inline onclick handlers
+  * Consolidate globals into a class-based structure
+  * Replace innerHTML with DOM APIs or templating
+  * Legacy file with significant contract violations
+
+- [TECH DEBT] Refactor yearPlanning.js - 8 module-level globals, innerHTML usages, inline onclick
+  * Same refactoring approach as ganttPlanning.js
+  * Both files are legacy and need dedicated refactoring effort
+
 
 -- Start building out detailed planning features
 -- [AI] extend the diagram agents to support mermaid generation of gantt charts, organograms

@@ -122,7 +122,7 @@ class SystemVisualization extends BaseVisualization {
                         this.nodes.push({
                             id: platform,
                             type: 'platform',
-                            color: '#a04040'
+                            color: ThemeService.getThemeColors().danger || '#a04040'
                         });
                         nodeMap[platform] = { id: platform, type: 'platform' };
                     }
@@ -221,7 +221,7 @@ class SystemVisualization extends BaseVisualization {
         }));
 
         if (this.showPlatformComponents) {
-            legendData.push({ label: 'Platform Dependency', color: '#a04040' });
+            legendData.push({ label: 'Platform Dependency', color: ThemeService.getThemeColors().danger || '#a04040' });
         }
 
         this.renderLegend(legendData);

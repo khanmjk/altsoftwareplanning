@@ -43,13 +43,14 @@ class ServiceVisualization extends BaseVisualization {
         this.createSimulation();
 
         // Note: Links are appended after nodes to get correct reference
+        const colors = ThemeService.getThemeColors();
         const node = this.graphGroup.append('g')
             .selectAll('circle')
             .data(this.nodes)
             .join('circle')
             .attr('r', d => d.isSelected ? 25 : 20)
             .attr('fill', d => d.color)
-            .attr('stroke', d => d.isSelected ? 'red' : '#fff')
+            .attr('stroke', d => d.isSelected ? (colors.danger || 'red') : (colors.bgPrimary || '#fff'))
             .attr('stroke-width', d => d.isSelected ? 4 : 2)
             .call(this.createDragBehavior());
 
@@ -64,7 +65,7 @@ class ServiceVisualization extends BaseVisualization {
             .text(d => d.id);
 
         const link = this.graphGroup.append('g')
-            .attr('stroke', '#aaa')
+            .attr('stroke', colors.textMuted || '#aaa')
             .selectAll('line')
             .data(this.links)
             .join('line')
@@ -123,7 +124,7 @@ class ServiceVisualization extends BaseVisualization {
                             this.nodes.push({
                                 id: platform,
                                 type: 'platform',
-                                color: '#a04040',
+                                color: ThemeService.getThemeColors().danger || '#a04040',
                                 isSelected: false
                             });
                             nodeMap[platform] = { id: platform, type: 'platform' };

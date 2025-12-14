@@ -29,8 +29,29 @@ function showSystemEditForm(systemData, container) {
     // Inject the template
     container.innerHTML = systemEditFormTemplate;
 
+    // Attach event listeners (replacing inline onclick handlers per contract)
+    _attachSystemEditEventListeners();
+
     // Populate the form
     populateSystemEditForm(systemData);
+}
+
+/**
+ * Attaches event listeners to the System Edit Form buttons.
+ * This replaces the inline onclick handlers per workspace-canvas-contract.
+ */
+function _attachSystemEditEventListeners() {
+    const saveDetailsBtn = document.getElementById('saveSystemDetailsBtn');
+    const addServiceBtn = document.getElementById('addNewServiceBtn');
+    const addTeamBtn = document.getElementById('addNewTeamBtn');
+    const saveAllBtn = document.getElementById('saveAllChangesBtn');
+    const cancelBtn = document.getElementById('cancelEditBtn');
+
+    if (saveDetailsBtn) saveDetailsBtn.addEventListener('click', saveSystemDetails);
+    if (addServiceBtn) addServiceBtn.addEventListener('click', addNewService);
+    if (addTeamBtn) addTeamBtn.addEventListener('click', addNewTeam);
+    if (saveAllBtn) saveAllBtn.addEventListener('click', saveAllChanges);
+    if (cancelBtn) cancelBtn.addEventListener('click', exitEditMode);
 }
 
 // Template for the System Edit Form
@@ -52,7 +73,7 @@ const systemEditFormTemplate = `
                     <textarea id="systemDescriptionInput" class="form-control"></textarea>
                 </div>
                 <div class="system-edit-actions">
-                    <button type="button" class="btn btn-primary" onclick="saveSystemDetails()">Save System Details</button>
+                    <button type="button" id="saveSystemDetailsBtn" class="btn btn-primary">Save System Details</button>
                 </div>
             </form>
 
@@ -61,7 +82,7 @@ const systemEditFormTemplate = `
             </div>
             <div id="editServicesManagement"></div>
             <div class="system-edit-actions">
-                <button type="button" class="btn btn-primary" onclick="addNewService()">Add New Service</button>
+                <button type="button" id="addNewServiceBtn" class="btn btn-primary">Add New Service</button>
             </div>
 
             <div class="system-edit-section-header">
@@ -69,12 +90,12 @@ const systemEditFormTemplate = `
             </div>
             <div id="teamsManagement"></div>
             <div class="system-edit-actions">
-                <button id="addNewTeamButton" type="button" class="btn btn-primary" onclick="addNewTeam()">Add New Team</button>
+                <button id="addNewTeamBtn" type="button" class="btn btn-primary">Add New Team</button>
             </div>
 
             <div class="system-edit-footer-actions">
-                <button type="button" class="btn btn-success" onclick="saveAllChanges()">Save All Changes</button>
-                <button type="button" class="btn btn-danger" onclick="exitEditMode()">Cancel</button>
+                <button type="button" id="saveAllChangesBtn" class="btn btn-success">Save All Changes</button>
+                <button type="button" id="cancelEditBtn" class="btn btn-danger">Cancel</button>
             </div>
         </div>
     `;
@@ -259,11 +280,7 @@ function exitEditMode() {
     console.log("Exiting edit mode...");
     // If we were creating a new system, return to home or load the new system
     if (SystemService.getCurrentSystem() && SystemService.getCurrentSystem().systemName) {
-        if (typeof SystemService !== 'undefined' && SystemService.loadAndActivate) {
-            SystemService.loadAndActivate(SystemService.getCurrentSystem().systemName);
-        } else {
-            appState.closeCurrentSystem();
-        }
+        SystemService.loadAndActivate(SystemService.getCurrentSystem().systemName);
     } else {
         appState.closeCurrentSystem();
     }

@@ -56,6 +56,12 @@ function initializeAiChatPanel() {
         return;
     }
 
+    // Attach close button listener (replaces inline onclick per contract)
+    const closeButton = document.getElementById('aiChatCloseButton');
+    if (closeButton) {
+        closeButton.addEventListener('click', closeAiChatPanel);
+    }
+
     aiChatInput.dataset.imageRequest = 'false';
 
     const submitHandler = () => {

@@ -16,7 +16,7 @@ const HTML_COMPONENT_FALLBACKS = {
 <div id="aiChatPanel">
     <div class="modal-header">
         <h3 id="aiChatTitle">AI Assistant</h3>
-        <span class="close-button" onclick="closeAiChatPanel()">&times;</span>
+        <span id="aiChatCloseButton" class="close-button">&times;</span>
     </div>
     <div id="aiChatLog">
         <div class="chat-message ai-message">Hello! How can I help you analyze the current system?</div>

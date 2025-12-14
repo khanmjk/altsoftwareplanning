@@ -9,6 +9,11 @@ const ganttAdapter = (function () {
     const sanitizeId = (id) => GanttService.normalizeGanttId(id);
     const computeSdeEstimate = (init, filterTeamId) => GanttService.computeSdeEstimate(init, filterTeamId);
 
+    // Helper to get working days
+    const getWorkingDaysPerYear = () => {
+        return SystemService.getCurrentSystem()?.capacityConfiguration?.workingDaysPerYear || 261;
+    };
+
     function buildTasksFromInitiatives({ initiatives = [], workPackages = [], viewBy = 'All Initiatives', filters = {}, year, selectedTeam, expandedInitiativeIds = new Set(), expandedWorkPackageIds = new Set() }) {
         if (SystemService.getCurrentSystem()) {
             WorkPackageService.ensureWorkPackagesForInitiatives(SystemService.getCurrentSystem(), year);
@@ -45,9 +50,10 @@ const ganttAdapter = (function () {
             const hasWorkPackages = wpList.length > 0;
 
             // Level 1: Initiative Summary (Always Render)
-            const initDates = getComputedInitiativeDates(init, selectedTeam);
-            const initStart = initDates.startDate || defaultStart;
-            const initEnd = initDates.endDate || defaultEnd;
+            // Use displayStart/displayEnd from normalized table data (table is master)
+            // Fallback to stored dates or defaults only if normalized data not present
+            const initStart = init.displayStart || init.attributes?.startDate || defaultStart;
+            const initEnd = init.displayEnd || init.targetDueDate || defaultEnd;
             const initiativeLabel = buildInitiativeLabel(init, initEnd);
             tasks.push({
                 id: sanitizeId(init.initiativeId),

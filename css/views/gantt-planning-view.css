@@ -279,6 +279,8 @@
 /* Row States */
 .gantt-init-row {
     background: var(--theme-bg-primary);
+    position: relative;
+    /* Required for focus arrow indicator */
 }
 
 .gantt-init-row:hover {
@@ -287,6 +289,8 @@
 
 .gantt-wp-row {
     background: var(--theme-bg-tertiary);
+    position: relative;
+    /* Required for focus arrow indicator */
 }
 
 .gantt-wp-row:hover {
@@ -295,19 +299,35 @@
 
 .gantt-wp-assign-row {
     background: var(--theme-bg-secondary);
+    position: relative;
+    /* Required for focus arrow indicator */
 }
 
 .gantt-wp-assign-row:hover {
     background: var(--theme-bg-tertiary);
 }
 
-/* Focus States */
+/* Focus States - Visible border styling */
 .gantt-focus-row {
-    background: color-mix(in srgb, var(--theme-warning), transparent 85%) !important;
+    background: var(--theme-selection-bg, rgba(59, 130, 246, 0.12)) !important;
+    outline: 3px solid var(--theme-primary, #3b82f6) !important;
+    outline-offset: -3px;
+    scroll-margin-top: 60px;
+    position: relative;
+}
+
+.gantt-focus-row td:first-child {
+    border-left: 5px solid var(--theme-primary, #3b82f6) !important;
 }
 
 .gantt-focus-initiative {
-    border-left: 3px solid var(--theme-primary);
+    background: var(--theme-selection-bg, rgba(111, 66, 193, 0.12)) !important;
+    outline: 3px solid var(--theme-primary, #6f42c1) !important;
+    outline-offset: -3px;
+}
+
+.gantt-focus-initiative td:first-child {
+    border-left: 5px solid var(--theme-primary, #6f42c1) !important;
 }
 
 /* Chart Container */

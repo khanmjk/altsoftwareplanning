@@ -11,6 +11,17 @@
  * - No window.* assignments (state encapsulated in class)
  * - Delegates business logic to GanttService
  */
+
+// Module-level globals for chart↔table sync (set by NavigationManager)
+let ganttPlanningViewInstance = null;
+
+// Expansion state - shared between table and chart for synchronization
+let ganttExpandedInitiatives = new Set();
+let ganttExpandedWorkPackages = new Set();
+
+// View state for filtering (used by ganttAdapter)
+let currentGanttGroupBy = 'All Initiatives';
+
 class GanttPlanningView {
     constructor(containerId) {
         this.containerId = containerId;
@@ -31,6 +42,9 @@ class GanttPlanningView {
 
         // MVC Controller instance (new architecture)
         this.tableController = null;
+
+        // Chart renderer instance
+        this.chartRenderer = null;
 
         // Constants
         this.GANTT_TABLE_WIDTH_KEY = 'ganttTableWidthPct';
@@ -88,7 +102,7 @@ class GanttPlanningView {
 
         // 3. Create Content Layout using DOM creation
         if (!document.getElementById('ganttSplitPane')) {
-            ganttChartInstance = null;
+            this.chartRenderer = null;
 
             // Clear container
             while (this.container.firstChild) {
@@ -131,15 +145,15 @@ class GanttPlanningView {
         }
 
         // 4. Initialize Filters & Render Views
-        renderDynamicGroupFilter(); // Still uses legacy function temporarily
+        this.renderDynamicGroupFilter();
         this.renderStatusFilter();
-        setupGanttRendererToggle(); // Still uses legacy function temporarily
+        this.setupGanttRendererToggle();
 
         // Defer table render to after browser layout completes
         // Container has 0 dimensions until flex layout is calculated
         requestAnimationFrame(() => {
             this.renderGanttTable();
-            renderGanttChart(); // Still uses legacy function temporarily
+            this.renderGanttChart();
             this.setupScrollSync(); // Sync vertical scroll between table and chart
         });
     }
@@ -246,7 +260,7 @@ class GanttPlanningView {
                 this.currentGanttYear = parseInt(value, 10);
                 console.log('[GANTT] Year changed', this.currentGanttYear);
                 this.renderGanttTable();
-                renderGanttChart();
+                this.renderGanttChart();
             }
         });
 
@@ -276,10 +290,13 @@ class GanttPlanningView {
             id: 'ganttGroupBy',
             onChange: (value) => {
                 this.currentGanttGroupBy = value;
-                currentGanttGroupBy = this.currentGanttGroupBy;
+                // Sync to legacy global for chart compatibility
+                if (typeof currentGanttGroupBy !== 'undefined') {
+                    currentGanttGroupBy = this.currentGanttGroupBy;
+                }
                 console.log('[GANTT] View By changed', this.currentGanttGroupBy);
-                renderDynamicGroupFilter();
-                renderGanttChart();
+                this.renderDynamicGroupFilter();
+                this.renderGanttChart();
                 this.renderGanttTable();
             }
         });
@@ -305,7 +322,7 @@ class GanttPlanningView {
         refreshBtn.className = 'btn btn-primary btn-sm';
         refreshBtn.onclick = () => {
             this.renderGanttTable();
-            renderGanttChart(); // Still uses legacy temporarily
+            this.renderGanttChart();
         };
         toolbar.appendChild(refreshBtn);
 
@@ -318,7 +335,7 @@ class GanttPlanningView {
         rendererBtn.type = 'button';
         rendererBtn.className = 'btn btn-secondary btn-sm';
         rendererBtn.title = 'Switch between Mermaid and Frappe Gantt renderers';
-        rendererBtn.textContent = getRendererButtonLabel(); // Uses legacy function temporarily
+        rendererBtn.textContent = this.getRendererButtonLabel();
         rendererWrap.appendChild(rendererBtn);
         toolbar.appendChild(rendererWrap);
 
@@ -418,13 +435,517 @@ class GanttPlanningView {
         // The full method would be added in subsequent edits
     }
 
+    /**
+     * Sets up the resizable split pane between table and chart
+     */
     setupGanttResizer() {
-        // Resizer setup logic to be implemented
-        setupGanttResizer(); // Temporary delegation to legacy
+        const resizer = document.getElementById('ganttSplitResizer');
+        const split = document.getElementById('ganttSplitPane');
+        if (!resizer || !split) return;
+
+        if (resizer.dataset.bound) {
+            this.applyGanttSplitWidth();
+            return;
+        }
+        resizer.dataset.bound = 'true';
+
+        let isDragging = false;
+        let startX = 0;
+        let startPct = this.ganttTableWidthPct;
+
+        const stopDrag = () => {
+            if (!isDragging) return;
+            isDragging = false;
+            document.body.style.userSelect = '';
+            document.removeEventListener('mousemove', onDrag);
+            document.removeEventListener('mouseup', stopDrag);
+            document.removeEventListener('mouseleave', stopDrag);
+            try {
+                localStorage.setItem(this.GANTT_TABLE_WIDTH_KEY, String(this.ganttTableWidthPct));
+            } catch (err) {
+                console.warn('[GANTT] Failed to persist split width', err);
+            }
+        };
+
+        const onDrag = (e) => {
+            if (!isDragging) return;
+            const rect = split.getBoundingClientRect();
+            const delta = e.clientX - startX;
+            const startPx = (startPct / 100) * rect.width;
+            const newPx = startPx + delta;
+            if (rect.width <= 0) return;
+            this.ganttTableWidthPct = (newPx / rect.width) * 100;
+            this.applyGanttSplitWidth();
+        };
+
+        resizer.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.clientX;
+            startPct = this.ganttTableWidthPct;
+            document.body.style.userSelect = 'none';
+            document.addEventListener('mousemove', onDrag);
+            document.addEventListener('mouseup', stopDrag);
+            document.addEventListener('mouseleave', stopDrag);
+        });
+
+        window.addEventListener('resize', () => this.applyGanttSplitWidth());
     }
 
+    /**
+     * Applies the current table/chart split width
+     */
     applyGanttSplitWidth() {
-        applyGanttSplitWidth(); // Temporary delegation to legacy
+        const split = document.getElementById('ganttSplitPane');
+        const table = document.getElementById('ganttPlanningTableContainer');
+        const chart = document.getElementById('ganttChartWrapper');
+        if (!split) return;
+
+        const clamped = Math.min(85, Math.max(5, this.ganttTableWidthPct));
+        this.ganttTableWidthPct = clamped;
+        const chartPct = 100 - clamped;
+
+        // Primary layout: CSS grid columns
+        split.style.gridTemplateColumns = `${clamped}% 8px ${chartPct}%`;
+
+        // Fallback for older layouts (flex)
+        if (table) {
+            table.style.flexBasis = `${clamped}%`;
+        }
+        if (chart) {
+            chart.style.flexBasis = `${chartPct}%`;
+        }
+    }
+
+    /**
+     * Gets the renderer toggle button label
+     */
+    getRendererButtonLabel() {
+        const current = FeatureFlags.getRenderer();
+        return current === 'mermaid' ? 'Switch to Frappe' : 'Switch to Mermaid';
+    }
+
+    /**
+     * Sets up the Mermaid/Frappe renderer toggle button
+     */
+    setupGanttRendererToggle() {
+        const btn = document.getElementById('ganttRendererToggle');
+        if (!btn || typeof FeatureFlags === 'undefined') return;
+
+        const updateLabel = () => {
+            btn.textContent = this.getRendererButtonLabel();
+        };
+
+        if (btn.dataset.bound === 'true') {
+            updateLabel();
+            return;
+        }
+
+        btn.dataset.bound = 'true';
+        btn.addEventListener('click', () => {
+            const current = FeatureFlags.getRenderer();
+            const next = current === 'mermaid' ? 'frappe' : 'mermaid';
+            FeatureFlags.setRenderer(next);
+            updateLabel();
+
+            // Update legend visibility
+            const legend = document.getElementById('ganttLegendContainer');
+            if (legend) {
+                legend.style.display = next === 'frappe' ? 'flex' : 'none';
+            }
+
+            this.chartRenderer = null; // Force re-create with new renderer
+            this.renderGanttChart();
+        });
+
+        updateLabel();
+    }
+
+    /**
+     * Renders the dynamic group filter (Team filter when View By Team is selected)
+     */
+    renderDynamicGroupFilter() {
+        const wrap = document.getElementById('ganttDynamicFilter');
+        if (!wrap) return;
+        wrap.innerHTML = '';
+
+        if (this.currentGanttGroupBy === 'Team') {
+            // Build team options for ThemedSelect
+            const teamOptions = [{ value: 'all', text: 'All Teams' }];
+            (SystemService.getCurrentSystem().teams || [])
+                .slice()
+                .sort((a, b) => (a.teamIdentity || a.teamName).localeCompare(b.teamIdentity || b.teamName))
+                .forEach(team => {
+                    teamOptions.push({
+                        value: team.teamId,
+                        text: team.teamIdentity || team.teamName
+                    });
+                });
+
+            const teamSelect = new ThemedSelect({
+                options: teamOptions,
+                value: 'all',
+                id: 'ganttGroupValue',
+                onChange: () => {
+                    this.renderGanttTable();
+                    this.renderGanttChart();
+                }
+            });
+
+            // Create label wrapper
+            const labelWrap = document.createElement('div');
+            labelWrap.className = 'filter-item';
+            labelWrap.style.display = 'flex';
+            labelWrap.style.alignItems = 'center';
+            labelWrap.style.gap = '6px';
+
+            const label = document.createElement('span');
+            label.textContent = 'Team:';
+            label.style.fontWeight = '600';
+            labelWrap.appendChild(label);
+            labelWrap.appendChild(teamSelect.render());
+
+            wrap.appendChild(labelWrap);
+        } else {
+            // No extra filter for All Initiatives or other modes
+            const placeholder = document.createElement('div');
+            placeholder.textContent = '';
+            wrap.appendChild(placeholder);
+        }
+        // Ensure table/chart refresh after rebuild
+        this.renderGanttTable();
+        this.renderGanttChart();
+    }
+
+    /**
+     * Renders the Gantt chart using the configured renderer (Mermaid or Frappe)
+     */
+    async renderGanttChart() {
+        const container = document.getElementById('ganttChartContainer');
+        if (!container) return;
+
+        // Sync expansion state from globals (updated by table controller)
+        // This ensures chart reflects table's current expansion state
+        if (typeof ganttExpandedInitiatives !== 'undefined') {
+            this.ganttExpandedInitiatives = new Set(ganttExpandedInitiatives);
+        }
+        if (typeof ganttExpandedWorkPackages !== 'undefined') {
+            this.ganttExpandedWorkPackages = new Set(ganttExpandedWorkPackages);
+        }
+
+        WorkPackageService.ensureWorkPackagesForInitiatives(SystemService.getCurrentSystem(), this.currentGanttYear);
+
+        const focus = this.getGanttFocusContext();
+        const selectedTeam = (this.currentGanttGroupBy === 'Team') ? (document.getElementById('ganttGroupValue')?.value || 'all') : null;
+        const initiatives = this.getGanttFilteredInitiatives();
+
+        if (!initiatives || initiatives.length === 0) {
+            container.textContent = 'No initiatives to display.';
+            return;
+        }
+
+        // Helper to get normalized data from model (Single Source of Truth)
+        const allSystemWPs = SystemService.getCurrentSystem().workPackages || [];
+        // The model computes displayStart/displayEnd based on WP rollup
+        const normalizedInitiatives = this.model.getNormalizedData(initiatives, allSystemWPs);
+
+        // Build tasks using the gantt adapter with normalized data
+        const tasks = (typeof ganttAdapter !== 'undefined' && ganttAdapter)
+            ? ganttAdapter.buildTasksFromInitiatives({
+                initiatives: normalizedInitiatives,
+                workPackages: SystemService.getCurrentSystem().workPackages || [],
+                viewBy: this.currentGanttGroupBy,
+                filters: { status: this.ganttStatusFilter },
+                year: this.currentGanttYear,
+                selectedTeam: selectedTeam,
+                expandedInitiativeIds: this.ganttExpandedInitiatives,
+                expandedWorkPackageIds: this.ganttExpandedWorkPackages
+            })
+            : [];
+
+        // Use Factory to get the correct renderer
+        if (!this.chartRenderer) {
+            this.chartRenderer = GanttFactory.createRenderer(container);
+        } else {
+            // If renderer type changed, recreate instance
+            const currentType = FeatureFlags.getRenderer();
+            const isMermaid = this.chartRenderer instanceof MermaidGanttRenderer;
+            const isFrappe = this.chartRenderer instanceof FrappeGanttRenderer;
+
+            if ((currentType === 'mermaid' && !isMermaid) || (currentType === 'frappe' && !isFrappe)) {
+                this.chartRenderer = GanttFactory.createRenderer(container);
+            }
+        }
+
+        container.style.minHeight = '600px'; // Set a reasonable minimum base
+
+        // Update container reference in case it changed
+        this.chartRenderer.container = container;
+
+        await this.chartRenderer.render(tasks, {
+            title: `Detailed Plan - ${this.currentGanttYear}`,
+            year: this.currentGanttYear,
+            metaInitiativeCount: initiatives.length,
+            focus,
+            onUpdate: (update) => {
+                this.handleGanttUpdate(update);
+            },
+            onItemDoubleClick: (task) => {
+                this.handleGanttToggleFromChart(task);
+            }
+        });
+
+        this.scrollToGanttFocusTask();
+    }
+
+    /**
+     * Gets the current focus context for highlighting
+     */
+    getGanttFocusContext() {
+        return {
+            taskId: this.lastGanttFocusTaskId ? this.normalizeGanttId(this.lastGanttFocusTaskId) : null,
+            taskType: this.lastGanttFocusTaskType || null,
+            initiativeId: this.lastGanttFocusInitiativeId ? this.normalizeGanttId(this.lastGanttFocusInitiativeId) : null
+        };
+    }
+
+    /**
+     * Sets the last focus for scroll preservation
+     */
+    setLastGanttFocus({ taskId, taskType, initiativeId }) {
+        if (!taskId) return;
+        this.lastGanttFocusTaskId = this.normalizeGanttId(taskId);
+        this.lastGanttFocusTaskType = taskType || null;
+        this.lastGanttFocusInitiativeId = initiativeId ? this.normalizeGanttId(initiativeId) : null;
+    }
+
+    /**
+     * Handles toggle (expand/collapse) from chart double-click
+     */
+    handleGanttToggleFromChart(task) {
+        if (!task || !task.type) return;
+
+        if (task.type === 'initiative') {
+            const id = task.initiativeId;
+            if (!id) return;
+            // Show only this initiative, collapse others and all WPs
+            if (this.ganttExpandedInitiatives.has(id)) {
+                this.ganttExpandedInitiatives.clear();
+            } else {
+                this.ganttExpandedInitiatives.clear();
+                const hasWPs = (SystemService.getCurrentSystem().workPackages || []).some(wp => wp.initiativeId === id);
+                if (hasWPs) {
+                    this.ganttExpandedInitiatives.add(id);
+                }
+            }
+            this.ganttExpandedWorkPackages.clear();
+        } else if (task.type === 'workPackage') {
+            const wpId = task.workPackageId;
+            if (!wpId) return;
+            // Ensure only this initiative and this WP are expanded
+            if (task.initiativeId) {
+                this.ganttExpandedInitiatives.clear();
+                this.ganttExpandedInitiatives.add(task.initiativeId);
+            }
+            if (this.ganttExpandedWorkPackages.has(wpId)) {
+                this.ganttExpandedWorkPackages.clear();
+            } else {
+                this.ganttExpandedWorkPackages.clear();
+                this.ganttExpandedWorkPackages.add(wpId);
+            }
+        } else if (task.type === 'assignment') {
+            // Toggle parent WP if present
+            const wpId = task.workPackageId;
+            if (wpId) {
+                if (task.initiativeId) {
+                    this.ganttExpandedInitiatives.clear();
+                    this.ganttExpandedInitiatives.add(task.initiativeId);
+                }
+                this.ganttExpandedWorkPackages.clear();
+                this.ganttExpandedWorkPackages.add(wpId);
+            }
+        }
+
+        this.setLastGanttFocus({
+            taskId: task.id || null,
+            taskType: task.type || null,
+            initiativeId: task.initiativeId || null
+        });
+
+        // Sync to legacy globals for chart↔table sync
+        this.syncExpansionToGlobals();
+
+        // Re-render table and chart to reflect toggles
+        this.renderGanttTable();
+        this.renderGanttChart();
+
+        // Scroll table to show the focused row
+        this.scrollToTableFocusRow(task);
+    }
+
+    /**
+     * Scrolls the table to show the focused row
+     */
+    scrollToTableFocusRow(task) {
+        if (!task) return;
+        // Use setTimeout to wait for table to finish rendering after re-render
+        setTimeout(() => {
+            const tableContainer = document.getElementById('ganttPlanningTableContainer');
+            if (!tableContainer) return;
+
+            // Find the scrollable wrapper
+            const scrollWrapper = tableContainer.querySelector('.gantt-table-wrapper');
+
+            let focusRow = null;
+
+            if (task.type === 'initiative' && task.initiativeId) {
+                // Try to find the initiative row
+                focusRow = tableContainer.querySelector(`tr[data-initiative-id="${task.initiativeId}"]`);
+            } else if (task.type === 'workPackage' && task.workPackageId) {
+                focusRow = tableContainer.querySelector(`tr[data-wp-id="${task.workPackageId}"]`);
+            } else if (task.type === 'assignment' && task.workPackageId && task.teamId) {
+                focusRow = tableContainer.querySelector(`tr[data-wp-id="${task.workPackageId}"][data-team-id="${task.teamId}"]`);
+            }
+
+            if (focusRow && scrollWrapper) {
+                console.log('[GANTT] Scrolling to focused row:', focusRow);
+                // Calculate scroll position to center the row in the wrapper
+                const rowRect = focusRow.getBoundingClientRect();
+                const wrapperRect = scrollWrapper.getBoundingClientRect();
+                const rowOffsetTop = focusRow.offsetTop;
+                const wrapperHeight = scrollWrapper.clientHeight;
+                const targetScroll = rowOffsetTop - (wrapperHeight / 2) + (rowRect.height / 2);
+
+                scrollWrapper.scrollTo({
+                    top: Math.max(0, targetScroll),
+                    behavior: 'smooth'
+                });
+            } else if (focusRow) {
+                // Fallback to scrollIntoView
+                focusRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                console.warn('[GANTT] Could not find focus row for task:', task);
+            }
+        }, 150); // Wait for table render to complete
+    }
+
+    /**
+     * Handles update events from Frappe chart drag
+     */
+    handleGanttUpdate({ task, start, end }) {
+        console.log('[GANTT] Update received:', task, start, end);
+
+        if (task) {
+            this.setLastGanttFocus({
+                taskId: task.id || task.workPackageId || task.initiativeId || null,
+                taskType: task.type || null,
+                initiativeId: task.initiativeId || null
+            });
+        }
+
+        const hasWPs = (id) => (SystemService.getCurrentSystem().workPackages || []).some(wp => wp.initiativeId === id);
+
+        if (task.type === 'initiative') {
+            const initId = task.initiativeId;
+            const init = (SystemService.getCurrentSystem().yearlyInitiatives || []).find(i => i.initiativeId === initId);
+            if (!init) return;
+
+            // Check if has WPs - if so, warn and revert (re-render)
+            if (hasWPs(initId)) {
+                console.warn('Initiative dates locked: work packages exist.');
+                this.renderGanttChart(); // Revert UI
+                return;
+            }
+
+            init.attributes = init.attributes || {};
+            init.attributes.startDate = start;
+            init.targetDueDate = end;
+
+        } else if (task.type === 'workPackage') {
+            const wpId = task.workPackageId;
+            const wp = (SystemService.getCurrentSystem().workPackages || []).find(w => w.workPackageId === wpId);
+            if (!wp) return;
+
+            const assignments = wp.impactedTeamAssignments || [];
+            if (assignments.length > 1) {
+                console.warn('Work package dates locked: multiple tasks present.');
+                this.renderGanttChart();
+                return;
+            }
+
+            wp.startDate = start;
+            wp.endDate = end;
+
+            // If only one assignment, align it to the WP change
+            (assignments || []).forEach(assign => {
+                assign.startDate = start;
+                assign.endDate = end;
+            });
+
+            // Cascade initiative dates: sync totals to update initiative start/end
+            const initId = wp.initiativeId || task.initiativeId;
+            if (initId) {
+                WorkPackageService.syncInitiativeTotals(initId, SystemService.getCurrentSystem());
+            }
+
+        } else if (task.type === 'assignment') {
+            const wpId = task.workPackageId;
+            const teamId = task.teamId;
+            const wp = (SystemService.getCurrentSystem().workPackages || []).find(w => w.workPackageId === wpId);
+            if (!wp) return;
+
+            const assign = (wp.impactedTeamAssignments || []).find(a => a.teamId === teamId);
+            if (!assign) return;
+
+            assign.startDate = start;
+            assign.endDate = end;
+
+            // Recalculate WP dates
+            WorkPackageService.recalculateWorkPackageDates(wp);
+            // Keep initiative rollup in sync
+            if (task.initiativeId) {
+                WorkPackageService.syncInitiativeTotals(task.initiativeId, SystemService.getCurrentSystem());
+            }
+        }
+
+        // Sync totals and save
+        if (task.initiativeId) {
+            WorkPackageService.syncInitiativeTotals(task.initiativeId, SystemService.getCurrentSystem());
+        }
+        SystemService.save();
+
+        // Refresh table and chart to show new dates/rollups
+        this.renderGanttTable();
+        this.renderGanttChart();
+    }
+
+    /**
+     * Scrolls to the focused task in the chart
+     */
+    scrollToGanttFocusTask() {
+        if (!this.lastGanttFocusTaskId) return;
+        const focusId = this.normalizeGanttId(this.lastGanttFocusTaskId);
+        if (!focusId) return;
+        const container = document.getElementById('ganttChartContainer');
+        if (!container) return;
+        const target = Array.from(container.querySelectorAll('.bar-wrapper'))
+            .find(el => this.normalizeGanttId(el.getAttribute('data-id')) === focusId);
+        if (target) {
+            target.scrollIntoView({ block: 'center', behavior: 'instant' });
+        }
+    }
+
+    /**
+     * Syncs expansion state to legacy globals for chart↔table sync
+     */
+    syncExpansionToGlobals() {
+        if (typeof ganttExpandedInitiatives !== 'undefined') {
+            ganttExpandedInitiatives.clear();
+            this.ganttExpandedInitiatives.forEach(id => ganttExpandedInitiatives.add(id));
+        }
+        if (typeof ganttExpandedWorkPackages !== 'undefined') {
+            ganttExpandedWorkPackages.clear();
+            this.ganttExpandedWorkPackages.forEach(id => ganttExpandedWorkPackages.add(id));
+        }
     }
 
     renderGanttTable() {
@@ -439,11 +960,12 @@ class GanttPlanningView {
         // Container is recreated on each view render, so cached controller has stale reference
         this.tableController = new GanttTableController({
             container: tableContainer,
-            frappeRenderer: typeof ganttChartInstance !== 'undefined' ? ganttChartInstance : null
+            frappeRenderer: this.chartRenderer || null
         });
 
         // Sync MVC model with view state
-        const model = this.tableController.model;
+        this.model = this.tableController.model;
+        const model = this.model;
         model.setFilter('year', this.currentGanttYear);
         model.setFilter('groupBy', this.currentGanttGroupBy);
         model.setFilter('statusFilter', this.ganttStatusFilter);
@@ -463,6 +985,15 @@ class GanttPlanningView {
         // Also sync view's local state from globals (for consistency)
         this.ganttExpandedInitiatives = new Set(model.expandedInitiatives);
         this.ganttExpandedWorkPackages = new Set(model.expandedWorkPackages);
+
+        // Sync focus state to model so table rows get focus class
+        if (this.lastGanttFocusTaskId || this.lastGanttFocusInitiativeId) {
+            model.setFocus({
+                taskType: this.lastGanttFocusTaskType || null,
+                taskId: this.lastGanttFocusTaskId ? this.normalizeGanttId(this.lastGanttFocusTaskId) : null,
+                initiativeId: this.lastGanttFocusInitiativeId ? this.normalizeGanttId(this.lastGanttFocusInitiativeId) : null
+            });
+        }
 
         // Render with controller
         const systemData = SystemService.getCurrentSystem();

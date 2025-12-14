@@ -196,7 +196,27 @@ class GanttTableModel extends EventTarget {
                 };
             }
 
-            return { ...init, workPackages: wps };
+            // Compute displayStart/displayEnd from WP dates (project management rollup)
+            // Initiative start = earliest WP start, Initiative end = latest WP end
+            let displayStart = null;
+            let displayEnd = null;
+
+            wps.forEach(wp => {
+                if (wp.startDate) {
+                    if (!displayStart || wp.startDate < displayStart) displayStart = wp.startDate;
+                }
+                if (wp.endDate) {
+                    if (!displayEnd || wp.endDate > displayEnd) displayEnd = wp.endDate;
+                }
+            });
+
+            return {
+                ...init,
+                workPackages: wps,
+                // Computed dates from WP rollup (priority over stored dates if WPs exist)
+                displayStart: wps.length > 0 ? displayStart : (init.attributes?.startDate || init.startDate),
+                displayEnd: wps.length > 0 ? displayEnd : init.targetDueDate
+            };
         });
     }
 
