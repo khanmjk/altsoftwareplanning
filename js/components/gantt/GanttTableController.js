@@ -29,6 +29,7 @@ class GanttTableController {
 
         // Data context
         this.systemData = null;
+        this.initialized = false; // Guards against premature renders from model changes
 
         // Bind view events
         this.view.setEventHandler(this._handleViewEvent.bind(this));
@@ -54,6 +55,7 @@ class GanttTableController {
     init(systemData, options = {}) {
         this.systemData = systemData;
         this.view.updateOptions(options);
+        this.initialized = true; // Now safe to respond to model changes
         this.render();
     }
 
@@ -545,6 +547,9 @@ class GanttTableController {
      * Handles model state changes
      */
     _handleModelChange(event) {
+        // Don't process model changes until fully initialized
+        if (!this.initialized) return;
+
         const { type, payload } = event.detail;
 
         // Handle filter changes (trigger re-render)

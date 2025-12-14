@@ -1034,12 +1034,13 @@ class GanttPlanningView {
         this.model = this.tableController.model;
         const model = this.model;
 
+        // Set filters BEFORE init - the initialized guard prevents premature renders
         const selectedTeam = document.getElementById('ganttGroupValue')?.value || null;
         model.setFilter('year', this.currentGanttYear);
         model.setFilter('groupBy', this.currentGanttGroupBy);
         model.setFilter('groupValue', selectedTeam);
 
-        // Ensure status filter is synced from the view's current selection state if table controller didn't have it
+        // Ensure status filter is synced from the view's current selection state
         if (this.ganttStatusFilter) {
             model.setFilter('statusFilter', this.ganttStatusFilter);
         }
@@ -1069,9 +1070,8 @@ class GanttPlanningView {
             });
         }
 
-        // Render with controller
+        // Initialize with system data - this sets initialized=true and calls render()
         const systemData = SystemService.getCurrentSystem();
-        // selectedTeam already declared above
 
         this.tableController.init(systemData, {
             selectedTeam,

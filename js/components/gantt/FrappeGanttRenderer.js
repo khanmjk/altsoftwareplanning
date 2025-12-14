@@ -177,17 +177,19 @@ class FrappeGanttRenderer extends GanttRenderer {
 
     _markLockedBars(wrapper, tasks) {
         if (!wrapper || !tasks || !tasks.length) return;
-        const map = new Map(tasks.map(t => [t.id, t]));
+        // Use normalized IDs for consistent lookup
+        const map = new Map(tasks.map(t => [this._normalizeId(t.id), t]));
         const bars = wrapper.querySelectorAll('.bar-wrapper');
         bars.forEach(bar => {
             const id = bar.getAttribute('data-id');
-            const task = map.get(id);
+            const normId = this._normalizeId(id);
+            const task = map.get(normId);
             if (!task) return;
             let lockedReason = null;
             if (task.type === 'initiative' && task.hasWorkPackages) {
-                lockedReason = 'Edit at work package level';
+                lockedReason = 'Drag disabled - edit at work package level. Double-click to expand.';
             } else if (task.type === 'workPackage' && (task.assignmentCount || 0) > 1) {
-                lockedReason = 'Edit dates at task level (multiple tasks)';
+                lockedReason = 'Drag disabled - edit dates at task level. Double-click to expand.';
             }
             if (lockedReason) {
                 bar.classList.add('locked-task');
@@ -210,13 +212,16 @@ class FrappeGanttRenderer extends GanttRenderer {
         const cb = options.onItemDoubleClick;
         if (!cb) return;
 
-        const taskMap = new Map(tasks.map(t => [t.id, t]));
+        // Build map with normalized IDs for consistent lookup
+        const taskMap = new Map(tasks.map(t => [this._normalizeId(t.id), t]));
         const handler = (e) => {
             const bar = e.target.closest('.bar-wrapper');
             if (!bar) return;
             const id = bar.getAttribute('data-id');
             if (!id) return;
-            const task = taskMap.get(id);
+            // Normalize the DOM ID for lookup
+            const normId = this._normalizeId(id);
+            const task = taskMap.get(normId);
             if (task) cb(task);
         };
         wrapper.addEventListener('dblclick', handler);
