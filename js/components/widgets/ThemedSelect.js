@@ -21,7 +21,7 @@ class ThemedSelect {
     /**
      * @param {object} options
      * @param {Array<{value: string, text: string, disabled?: boolean}>} options.options - Dropdown options
-     * @param {string} [options.value] - Initial selected value
+     * @param {string|string[]} [options.value] - Initial selected value(s)
      * @param {string} [options.placeholder='Select...'] - Placeholder text
      * @param {function} [options.onChange] - Callback when value changes (receives value, text)
      * @param {string} [options.className] - Additional CSS class for container
@@ -29,6 +29,7 @@ class ThemedSelect {
      * @param {string} [options.name] - Name attribute for form submission
      * @param {boolean} [options.disabled=false] - Disabled state
      * @param {boolean} [options.searchable=false] - Enable search/filter (future)
+     * @param {boolean} [options.multiple=false] - Enable multiple selection
      * @param {HTMLSelectElement} [options.originalSelect] - Original select element (for auto-upgrade)
      */
     constructor({
@@ -41,10 +42,15 @@ class ThemedSelect {
         name = '',
         disabled = false,
         searchable = false,
+        multiple = false,
         originalSelect = null
     } = {}) {
         this.options = options;
-        this.value = value;
+        this.multiple = multiple;
+        // Ensure value is appropriate type
+        this.value = this.multiple
+            ? (Array.isArray(value) ? value : (value ? [value] : []))
+            : value;
         this.placeholder = placeholder;
         this.onChange = onChange;
         this.className = className;
@@ -82,13 +88,16 @@ class ThemedSelect {
         if (this.disabled) {
             this.container.classList.add('themed-select--disabled');
         }
+        if (this.multiple) {
+            this.container.classList.add('themed-select--multiple');
+        }
 
         // Hidden input for form submission
         this.hiddenInput = document.createElement('input');
         this.hiddenInput.type = 'hidden';
         this.hiddenInput.id = this.id;
         this.hiddenInput.name = this.name;
-        this.hiddenInput.value = this.value;
+        this.hiddenInput.value = this.multiple ? JSON.stringify(this.value) : this.value;
         this.container.appendChild(this.hiddenInput);
 
         // Trigger button
@@ -106,6 +115,9 @@ class ThemedSelect {
         this.dropdown.className = 'themed-select__dropdown';
         this.dropdown.setAttribute('role', 'listbox');
         this.dropdown.setAttribute('aria-labelledby', this.id);
+        if (this.multiple) {
+            this.dropdown.setAttribute('aria-multiselectable', 'true');
+        }
         this._renderOptions();
         this.container.appendChild(this.dropdown);
 
@@ -132,11 +144,33 @@ class ThemedSelect {
             option.setAttribute('role', 'option');
             option.setAttribute('data-value', opt.value);
             option.setAttribute('data-index', index);
-            option.textContent = opt.text;
 
-            if (opt.value === this.value) {
-                option.classList.add('themed-select__option--selected');
-                option.setAttribute('aria-selected', 'true');
+            // Build option content
+            if (this.multiple) {
+                // Checkbox for multi-select
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'themed-select__checkbox';
+                checkbox.checked = this.value.includes(opt.value);
+                checkbox.tabIndex = -1; // Prevent tab focus, let container handle it
+                checkbox.style.marginRight = '8px';
+                checkbox.style.pointerEvents = 'none'; // Click handled by option
+
+                option.appendChild(checkbox);
+                const span = document.createElement('span');
+                span.textContent = opt.text;
+                option.appendChild(span);
+
+                if (checkbox.checked) {
+                    option.classList.add('themed-select__option--selected');
+                    option.setAttribute('aria-selected', 'true');
+                }
+            } else {
+                option.textContent = opt.text;
+                if (opt.value === this.value) {
+                    option.classList.add('themed-select__option--selected');
+                    option.setAttribute('aria-selected', 'true');
+                }
             }
 
             if (opt.disabled) {
@@ -157,19 +191,42 @@ class ThemedSelect {
 
             this.dropdown.appendChild(option);
         });
+
+        // Done button removed based on user feedback (click outside to close)
     }
 
     /**
      * Update trigger button text
      */
     _updateTriggerText() {
-        const selected = this.options.find(opt => opt.value === this.value);
-        if (selected) {
-            this.trigger.textContent = selected.text;
-            this.trigger.classList.remove('themed-select__trigger--placeholder');
+        if (this.multiple) {
+            if (this.value.length === 0) {
+                this.trigger.textContent = this.placeholder;
+                this.trigger.classList.add('themed-select__trigger--placeholder');
+            } else {
+                // Find texts for selected values
+                const selectedTexts = this.value.map(val => {
+                    const opt = this.options.find(o => o.value === val);
+                    return opt ? opt.text : val;
+                });
+
+                // Truncate if too many
+                if (selectedTexts.length > 2) {
+                    this.trigger.textContent = `${selectedTexts.length} selected`;
+                } else {
+                    this.trigger.textContent = selectedTexts.join(', ');
+                }
+                this.trigger.classList.remove('themed-select__trigger--placeholder');
+            }
         } else {
-            this.trigger.textContent = this.placeholder;
-            this.trigger.classList.add('themed-select__trigger--placeholder');
+            const selected = this.options.find(opt => opt.value === this.value);
+            if (selected) {
+                this.trigger.textContent = selected.text;
+                this.trigger.classList.remove('themed-select__trigger--placeholder');
+            } else {
+                this.trigger.textContent = this.placeholder;
+                this.trigger.classList.add('themed-select__trigger--placeholder');
+            }
         }
     }
 
@@ -195,9 +252,13 @@ class ThemedSelect {
             case ' ':
                 e.preventDefault();
                 if (this.isOpen && this.highlightedIndex >= 0) {
-                    const opt = this.options[this.highlightedIndex];
-                    if (opt && !opt.disabled) {
-                        this._selectOption(opt.value, opt.text);
+                    const optionElements = this.dropdown.querySelectorAll('.themed-select__option');
+                    // Skip action buttons (Done) if index is out of options range
+                    if (this.highlightedIndex < this.options.length) {
+                        const opt = this.options[this.highlightedIndex];
+                        if (opt && !opt.disabled) {
+                            this._selectOption(opt.value, opt.text);
+                        }
                     }
                 } else if (!this.isOpen) {
                     this.open();
@@ -242,6 +303,7 @@ class ThemedSelect {
             case 'End':
                 if (this.isOpen) {
                     e.preventDefault();
+                    // Go to last option
                     this._highlightOption(this.options.length - 1);
                 }
                 break;
@@ -269,16 +331,19 @@ class ThemedSelect {
      */
     _highlightNextOption(direction) {
         let newIndex = this.highlightedIndex + direction;
+        const maxIndex = this.options.length - 1;
 
         // Skip disabled options
-        while (newIndex >= 0 && newIndex < this.options.length) {
-            if (!this.options[newIndex].disabled) {
-                break;
+        while (newIndex >= 0 && newIndex <= maxIndex) {
+            if (newIndex < this.options.length) {
+                if (!this.options[newIndex].disabled) {
+                    break;
+                }
             }
             newIndex += direction;
         }
 
-        if (newIndex >= 0 && newIndex < this.options.length) {
+        if (newIndex >= 0 && newIndex <= maxIndex) {
             this._highlightOption(newIndex);
         }
     }
@@ -322,25 +387,70 @@ class ThemedSelect {
      */
     _selectOption(value, text) {
         const previousValue = this.value;
-        this.value = value;
-        this.hiddenInput.value = value;
+        let newValue;
 
-        // Update UI
-        this._updateTriggerText();
-        this._renderOptions();
-        this.close();
-        this.trigger.focus();
+        if (this.multiple) {
+            newValue = [...this.value];
+            const index = newValue.indexOf(value);
+            if (index === -1) {
+                newValue.push(value);
+            } else {
+                newValue.splice(index, 1);
+            }
+            // Update internal state
+            this.value = newValue;
+            this.hiddenInput.value = JSON.stringify(newValue);
+
+            // Re-render to update checkboxes
+            this._renderOptions();
+            this._updateTriggerText();
+            // Do NOT close on click for multi-select
+
+        } else {
+            newValue = value;
+            this.value = newValue;
+            this.hiddenInput.value = newValue;
+
+            // Update UI
+            this._updateTriggerText();
+            this._renderOptions();
+            this.close();
+            this.trigger.focus();
+        }
 
         // Update original select if exists
         if (this.originalSelect) {
-            this.originalSelect.value = value;
+            if (this.multiple) {
+                // Update Multi-select native element
+                Array.from(this.originalSelect.options).forEach(opt => {
+                    opt.selected = this.value.includes(opt.value);
+                });
+            } else {
+                this.originalSelect.value = value;
+            }
             // Dispatch change event on original select
             this.originalSelect.dispatchEvent(new Event('change', { bubbles: true }));
         }
 
         // Call onChange callback
-        if (this.onChange && previousValue !== value) {
-            this.onChange(value, text);
+        if (this.onChange) {
+            // Check for change
+            let hasChanged = false;
+            if (this.multiple) {
+                // Compare arrays
+                if (previousValue.length !== newValue.length) hasChanged = true;
+                else {
+                    const sortedPrev = [...previousValue].sort();
+                    const sortedNew = [...newValue].sort();
+                    hasChanged = sortedPrev.some((val, i) => val !== sortedNew[i]);
+                }
+            } else {
+                hasChanged = previousValue !== newValue;
+            }
+
+            if (hasChanged) {
+                this.onChange(newValue, text);
+            }
         }
     }
 
@@ -358,7 +468,13 @@ class ThemedSelect {
         this.trigger.setAttribute('aria-expanded', 'true');
 
         // Highlight current selection
-        const currentIndex = this.options.findIndex(opt => opt.value === this.value);
+        let currentIndex = 0;
+        if (!this.multiple) {
+            currentIndex = this.options.findIndex(opt => opt.value === this.value);
+        } else if (this.value.length > 0) {
+            // For multiple, highlight first selected
+            currentIndex = this.options.findIndex(opt => opt.value === this.value[0]);
+        }
         this._highlightOption(currentIndex >= 0 ? currentIndex : 0);
 
         // Add click outside listener
@@ -397,7 +513,7 @@ class ThemedSelect {
 
     /**
      * Get current value
-     * @returns {string}
+     * @returns {string|string[]}
      */
     getValue() {
         return this.value;
@@ -405,12 +521,19 @@ class ThemedSelect {
 
     /**
      * Set value programmatically
-     * @param {string} value
+     * @param {string|string[]} value
      */
     setValue(value) {
-        const opt = this.options.find(o => o.value === value);
-        if (opt) {
-            this._selectOption(opt.value, opt.text);
+        if (this.multiple) {
+            this.value = Array.isArray(value) ? value : (value ? [value] : []);
+            this.hiddenInput.value = JSON.stringify(this.value);
+            this._updateTriggerText();
+            this._renderOptions();
+        } else {
+            const opt = this.options.find(o => o.value === value);
+            if (opt) {
+                this._selectOption(opt.value, opt.text);
+            }
         }
     }
 
@@ -423,9 +546,17 @@ class ThemedSelect {
         this._renderOptions();
 
         // Reset value if current value not in new options
-        if (!options.find(o => o.value === this.value)) {
-            this.value = '';
-            this._updateTriggerText();
+        if (this.multiple) {
+            const validValues = this.value.filter(val => options.some(o => o.value === val));
+            if (validValues.length !== this.value.length) {
+                this.value = validValues;
+                this._updateTriggerText();
+            }
+        } else {
+            if (!options.find(o => o.value === this.value)) {
+                this.value = '';
+                this._updateTriggerText();
+            }
         }
     }
 
@@ -553,11 +684,14 @@ class ThemedSelect {
         }));
 
         // Get current value
-        const value = select.value;
+        const isMultiple = select.multiple;
+        let value = isMultiple
+            ? Array.from(select.selectedOptions).map(opt => opt.value)
+            : select.value;
 
         // Get placeholder from first empty option or data attribute
         let placeholder = select.getAttribute('data-placeholder') || 'Select...';
-        if (select.options[0] && select.options[0].value === '' && select.options[0].text) {
+        if (!isMultiple && select.options[0] && select.options[0].value === '' && select.options[0].text) {
             placeholder = select.options[0].text;
         }
 
@@ -569,6 +703,7 @@ class ThemedSelect {
             id: select.id || undefined,
             name: select.name || undefined,
             disabled: select.disabled,
+            multiple: isMultiple,
             className: select.className.replace('themed-select-auto', '').trim(),
             originalSelect: select
         });
@@ -587,8 +722,25 @@ class ThemedSelect {
 
         // Sync changes from native select (for programmatic updates)
         select.addEventListener('change', () => {
-            if (select.value !== instance.getValue()) {
-                instance.setValue(select.value);
+            // For multiple, determining exact change is harder without comparing arrays
+            // For now, trust manual programmatic checks or re-sync if needed
+            const currentValue = instance.getValue();
+            const nativeValue = isMultiple
+                ? Array.from(select.selectedOptions).map(opt => opt.value)
+                : select.value;
+
+            // Simple equality check
+            let equal = false;
+            if (isMultiple) {
+                if (currentValue.length === nativeValue.length) {
+                    equal = currentValue.every(v => nativeValue.includes(v));
+                }
+            } else {
+                equal = currentValue === nativeValue;
+            }
+
+            if (!equal) {
+                instance.setValue(nativeValue);
             }
         });
 

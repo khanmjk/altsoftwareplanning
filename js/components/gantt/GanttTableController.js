@@ -29,6 +29,7 @@ class GanttTableController {
 
         // Data context
         this.systemData = null;
+        this.initialized = false; // Guards against premature renders from model changes
 
         // Bind view events
         this.view.setEventHandler(this._handleViewEvent.bind(this));
@@ -54,6 +55,7 @@ class GanttTableController {
     init(systemData, options = {}) {
         this.systemData = systemData;
         this.view.updateOptions(options);
+        this.initialized = true; // Now safe to respond to model changes
         this.render();
     }
 
@@ -101,6 +103,7 @@ class GanttTableController {
         // Context for row renderers
         const context = {
             allInitiatives: initiatives,
+            filteredInitiatives: filtered,
             allWorkPackages: workPackages,
             teams
         };
@@ -321,7 +324,8 @@ class GanttTableController {
     // =========================================================================
 
     _updateInitiativeField(initiativeId, field, value) {
-        InitiativeService.updateInitiative(this.systemData, initiativeId, { [field]: value });
+        let updates = { [field]: value };
+        InitiativeService.updateInitiative(this.systemData, initiativeId, updates);
 
         // Trigger date propagation if date changed
         if (['startDate', 'targetDueDate'].includes(field)) {
@@ -457,11 +461,36 @@ class GanttTableController {
      * Syncs table changes to Frappe chart by re-rendering the chart
      */
     _syncToFrappe() {
-        // Use direct renderer refresh if available
-        if (this.frappeRenderer && typeof this.frappeRenderer.refresh === 'function') {
+        // Trigger full chart re-render via view instance
+        // This ensures structural changes (dependencies, new rows) are reflected
+        if (typeof ganttPlanningViewInstance !== 'undefined' && ganttPlanningViewInstance) {
+            // Save current focus state before re-render
+            const savedFocus = this.model.getFocus();
+
+            // Re-render the chart
+            ganttPlanningViewInstance.renderGanttChart();
+
+            // Restore focus state after re-render
+            if (savedFocus && (savedFocus.taskId || savedFocus.initiativeId)) {
+                // Restore to model
+                this.model.setFocus(savedFocus);
+
+                // Restore to view
+                ganttPlanningViewInstance.setLastGanttFocus({
+                    taskId: savedFocus.taskId,
+                    taskType: savedFocus.taskType,
+                    initiativeId: savedFocus.initiativeId
+                });
+
+                // Scroll to focused task
+                if (typeof ganttPlanningViewInstance.scrollToGanttFocusTask === 'function') {
+                    ganttPlanningViewInstance.scrollToGanttFocusTask();
+                }
+            }
+        } else if (this.frappeRenderer && typeof this.frappeRenderer.refresh === 'function') {
+            // Fallback to shallow refresh if view instance not available
             this.frappeRenderer.refresh();
         }
-        // Note: Chart will be fully re-rendered when user takes action that triggers view.renderGanttChart()
     }
 
     /**
@@ -543,12 +572,22 @@ class GanttTableController {
      * Handles model state changes
      */
     _handleModelChange(event) {
+        // Don't process model changes until fully initialized
+        if (!this.initialized) return;
+
         const { type, payload } = event.detail;
 
-        // Most changes trigger re-render
-        // Focus changes might just update CSS classes
-        if (type === 'focus') {
-            // Could optimize to just update focus styles
+        // Handle filter changes (trigger re-render)
+        if (type === 'filter') {
+            this.render();
+            // Also sync chart expansion/visibility as filtering might change which rows are visible
+            this._syncExpansionToChart();
+        }
+
+        // Focus changes might just update CSS classes or require scroll
+        // Currently handled by direct calls in _handleRowClick, but good to have hook here
+        else if (type === 'focus') {
+            // Optional: visual updates if needed
         }
     }
 

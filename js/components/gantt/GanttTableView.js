@@ -152,7 +152,7 @@ class GanttTableView {
      */
     _renderRows(normalizedData, model, context) {
         const focus = model.getFocus();
-        const { allInitiatives = [], allWorkPackages = [], teams = [] } = context;
+        const { allInitiatives = [], filteredInitiatives = [], allWorkPackages = [], teams = [] } = context;
 
         normalizedData.forEach(init => {
             const isExpanded = model.isInitiativeExpanded(init.initiativeId);
@@ -169,6 +169,7 @@ class GanttTableView {
                 hasWorkPackages,
                 showManagerTeams: this.options.showManagerTeams,
                 allInitiatives,
+                filteredInitiatives,
                 teams,
                 filterYear: model.getFilters().year
             });

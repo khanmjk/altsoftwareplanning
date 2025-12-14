@@ -246,26 +246,78 @@ class GanttPlanningView {
             (SystemService.getCurrentSystem()?.yearlyInitiatives || [])
                 .map(init => init.attributes?.planningYear)
                 .filter(y => y)
-        ));
+        )).sort().reverse();
         if (!years.includes(this.currentGanttYear)) years.push(this.currentGanttYear);
-        years.sort();
 
-        const yearOptions = years.map(y => ({ value: y.toString(), text: y.toString() }));
-
+        // Year select (using ThemedSelect)
         this.yearSelect = new ThemedSelect({
-            options: yearOptions,
-            value: this.currentGanttYear.toString(),
-            id: 'ganttYearFilter',
-            onChange: (value) => {
-                this.currentGanttYear = parseInt(value, 10);
-                console.log('[GANTT] Year changed', this.currentGanttYear);
-                this.renderGanttTable();
-                this.renderGanttChart();
+            options: years.map(y => ({ value: y, text: y.toString() })),
+            value: this.currentGanttYear,
+            className: 'themed-select--sm',
+            onChange: (val) => {
+                this.handleGanttYearChange(parseInt(val));
+            }
+        });
+        yearWrap.appendChild(this.yearSelect.render());
+        toolbar.appendChild(yearWrap);
+
+        // Status Filter
+        const statusWrap = document.createElement('div');
+        statusWrap.className = 'filter-item';
+        statusWrap.style.display = 'flex';
+        statusWrap.style.alignItems = 'center';
+        statusWrap.style.gap = '6px';
+        statusWrap.style.minWidth = '200px';
+
+        const statusLabel = document.createElement('span');
+        statusLabel.textContent = 'Status:';
+        statusLabel.style.fontWeight = '600';
+        statusWrap.appendChild(statusLabel);
+
+        // Use canonical statuses from service if available, otherwise derive from data
+        const systemStatuses = InitiativeService.STATUSES || [];
+
+        // Also include any data-derived statuses that might not be in the canonical list (legacy support)
+        const rawInitiatives = SystemService.getCurrentSystem()?.yearlyInitiatives || [];
+        const dataStatuses = Array.from(new Set(
+            rawInitiatives
+                .map(i => i.status ? String(i.status).trim() : 'Backlog')
+                .filter(s => s.length > 0) // Filter out empty strings
+        ));
+
+        // Merge and dedupe, preferring canonical order
+        const uniqueStatuses = Array.from(new Set([...systemStatuses, ...dataStatuses]));
+        const validStatusSet = new Set(uniqueStatuses);
+
+        // Default to all selected if filter empty, or use current filter
+        const currentFilter = this.tableController?.model.getFilters().statusFilter;
+
+        // Ensure we only use values that are actually valid options
+        const validCurrentFilter = currentFilter
+            ? Array.from(currentFilter).filter(s => validStatusSet.has(s))
+            : [];
+
+        const initialValue = validCurrentFilter.length > 0
+            ? validCurrentFilter
+            : uniqueStatuses;
+
+        const statusSelect = new ThemedSelect({
+            options: uniqueStatuses.map(s => ({ value: s, text: s })),
+            value: initialValue,
+            multiple: true,
+            placeholder: 'Filter Status',
+            className: 'themed-select--sm',
+            onChange: (val) => {
+                // val is array of selected statuses
+                const newFilter = new Set(val);
+                if (this.tableController) {
+                    this.tableController.model.setFilter('statusFilter', newFilter);
+                }
             }
         });
 
-        yearWrap.appendChild(this.yearSelect.render());
-        toolbar.appendChild(yearWrap);
+        statusWrap.appendChild(statusSelect.render());
+        toolbar.appendChild(statusWrap);
 
         // View By selector
         const groupWrap = document.createElement('div');
@@ -389,6 +441,21 @@ class GanttPlanningView {
      * Gets filtered initiatives based on current filters
      */
     getGanttFilteredInitiatives() {
+        // PER USER REQUEST: The Gantt Chart must be driven by the state of the Gantt Table (Model)
+        if (this.tableController && this.tableController.model) {
+            const filters = this.tableController.model.getFilters();
+            return GanttService.getFilteredInitiatives({
+                initiatives: SystemService.getCurrentSystem()?.yearlyInitiatives || [],
+                year: filters.year || this.currentGanttYear,
+                statusFilter: filters.statusFilter, // Use model's status filter
+                groupBy: filters.groupBy || this.currentGanttGroupBy,
+                groupValue: filters.groupValue || document.getElementById('ganttGroupValue')?.value || 'all',
+                teams: SystemService.getCurrentSystem()?.teams || [],
+                sdms: SystemService.getCurrentSystem()?.sdms || []
+            });
+        }
+
+        // Fallback for initial load only
         let initiatives = SystemService.getCurrentSystem()?.yearlyInitiatives ?
             [...SystemService.getCurrentSystem().yearlyInitiatives] : [];
 
@@ -966,9 +1033,17 @@ class GanttPlanningView {
         // Sync MVC model with view state
         this.model = this.tableController.model;
         const model = this.model;
+
+        // Set filters BEFORE init - the initialized guard prevents premature renders
+        const selectedTeam = document.getElementById('ganttGroupValue')?.value || null;
         model.setFilter('year', this.currentGanttYear);
         model.setFilter('groupBy', this.currentGanttGroupBy);
-        model.setFilter('statusFilter', this.ganttStatusFilter);
+        model.setFilter('groupValue', selectedTeam);
+
+        // Ensure status filter is synced from the view's current selection state
+        if (this.ganttStatusFilter) {
+            model.setFilter('statusFilter', this.ganttStatusFilter);
+        }
 
         // Sync expansion states from GLOBAL legacy variables for chart↔table sync
         // The chart updates these globals, so we read from them to stay in sync
@@ -995,9 +1070,8 @@ class GanttPlanningView {
             });
         }
 
-        // Render with controller
+        // Initialize with system data - this sets initialized=true and calls render()
         const systemData = SystemService.getCurrentSystem();
-        const selectedTeam = document.getElementById('ganttGroupValue')?.value || null;
 
         this.tableController.init(systemData, {
             selectedTeam,

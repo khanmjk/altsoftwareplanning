@@ -143,7 +143,9 @@ class AssignmentRow {
             // Create ThemedSelect
             const themedSelect = new ThemedSelect({
                 options: options,
-                value: assign.predecessorTeamId || '',
+                value: assign.predecessorAssignmentIds || [],
+                multiple: true,
+                placeholder: 'None',
                 className: 'themed-select--compact',
                 onChange: (value, text) => {
                     const event = new CustomEvent('themed-select-change', {
@@ -156,7 +158,7 @@ class AssignmentRow {
 
             const selectContainer = themedSelect.render();
             selectContainer.dataset.kind = 'wp-assign';
-            selectContainer.dataset.field = 'predecessorTeamId';
+            selectContainer.dataset.field = 'predecessorAssignmentIds';
             selectContainer.dataset.wpId = wp.workPackageId;
             selectContainer.dataset.initiativeId = wp.initiativeId;
             selectContainer.dataset.teamId = assign.teamId || '';

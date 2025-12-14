@@ -55,7 +55,7 @@ class InitiativeRow {
         tr.appendChild(this._createSdeCell(init, hasWorkPackages));
 
         // Dependencies Cell
-        tr.appendChild(this._createDependenciesCell(init, allInitiatives));
+        tr.appendChild(this._createDependenciesCell(init, options));
 
         // Actions Cell
         tr.appendChild(this._createActionsCell(init));
@@ -166,16 +166,20 @@ class InitiativeRow {
     /**
      * Creates the dependencies selector cell
      */
-    _createDependenciesCell(init, allInitiatives) {
+    _createDependenciesCell(init, options) {
         const cell = document.createElement('td');
         cell.className = 'gantt-table__cell gantt-table__cell--initiative';
         cell.style.overflow = 'visible'; // Allow dropdown to overflow
 
+        // Context passed from controller contains allInitiatives and optionally filteredInitiatives
+        // Use filteredInitiatives if available to respect active filters
+        const candidates = options.filteredInitiatives || options.allInitiatives;
+
         // Build options
-        const options = [{ value: '', text: 'None' }];
-        allInitiatives.forEach(other => {
+        const selectOptions = [{ value: '', text: 'None' }];
+        candidates.forEach(other => {
             if (other.initiativeId !== init.initiativeId) {
-                options.push({
+                selectOptions.push({
                     value: other.initiativeId,
                     text: this._truncateLabel(other.title, 25)
                 });
@@ -184,8 +188,10 @@ class InitiativeRow {
 
         // Create ThemedSelect
         const themedSelect = new ThemedSelect({
-            options: options,
-            value: init.predecessorId || '',
+            options: selectOptions,
+            value: init.dependencies || [],
+            multiple: true,
+            placeholder: 'None',
             className: 'themed-select--compact',
             onChange: (value, text) => {
                 // Dispatch bubbling custom event for delegation
@@ -201,7 +207,7 @@ class InitiativeRow {
 
         // Attach data attributes for delegation handler
         selectContainer.dataset.kind = 'initiative';
-        selectContainer.dataset.field = 'predecessorId';
+        selectContainer.dataset.field = 'dependencies';
         selectContainer.dataset.id = init.initiativeId;
 
         cell.appendChild(selectContainer);

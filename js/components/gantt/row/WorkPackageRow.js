@@ -171,41 +171,49 @@ class WorkPackageRow {
         }
 
         // Multi-select for WP dependencies (can select multiple predecessor WPs)
-        const select = document.createElement('select');
-        select.multiple = true;
-        select.dataset.kind = 'work-package';
-        select.dataset.field = 'dependencies';
-        select.dataset.wpId = wp.workPackageId;
-        select.dataset.initiativeId = wp.initiativeId;
-        select.size = Math.min(siblingWPs.length, 3);
-        select.style.minWidth = '120px';
-        select.title = 'Select sibling work packages that must complete before this one can start';
-
         const currentDeps = wp.dependencies || [];
 
-        // Add only sibling WPs as options
-        siblingWPs.forEach(other => {
-            // Check for cycle
+        const options = siblingWPs.map(other => {
             const wouldCycle = this._wouldCreateCycle(wp.workPackageId, other.workPackageId, allWorkPackages);
-
-            const option = document.createElement('option');
-            option.value = other.workPackageId;
-            option.textContent = this._truncateLabel(other.title, 20);
-            option.selected = currentDeps.includes(other.workPackageId);
-            option.disabled = wouldCycle;
-
-            if (wouldCycle) {
-                option.title = 'Would create dependency cycle';
-            }
-
-            select.appendChild(option);
+            return {
+                value: other.workPackageId,
+                text: this._truncateLabel(other.title, 20),
+                disabled: wouldCycle,
+                // Note: ThemedSelect handles 'selected' state via the 'value' prop passed to constructor,
+                // but we can add title/tooltip logic if ThemedSelect supports it or via custom render if needed.
+                // For now, ThemedSelect renders standard options.
+            };
         });
 
+        const themedSelect = new ThemedSelect({
+            options: options,
+            value: currentDeps,
+            multiple: true,
+            placeholder: 'None',
+            className: 'themed-select--compact',
+            onChange: (value, text) => {
+                // Dispatch bubbling custom event for delegation
+                // Value is array of strings
+                const event = new CustomEvent('themed-select-change', {
+                    bubbles: true,
+                    detail: { value, text }
+                });
+                selectContainer.dispatchEvent(event);
+            }
+        });
+
+        const selectContainer = themedSelect.render();
+        selectContainer.style.minWidth = '120px';
+        selectContainer.dataset.kind = 'work-package';
+        selectContainer.dataset.field = 'dependencies';
+        selectContainer.dataset.wpId = wp.workPackageId;
+        selectContainer.dataset.initiativeId = wp.initiativeId;
+
         if (wp.isImplicit) {
-            select.disabled = true;
+            themedSelect.setDisabled(true);
         }
 
-        cell.appendChild(select);
+        cell.appendChild(selectContainer);
         return cell;
     }
 
