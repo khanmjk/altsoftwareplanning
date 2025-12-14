@@ -32,9 +32,7 @@ const SystemService = {
         _currentSystem = systemData;
 
         // Sync to AppState for change notification subscribers
-        if (typeof appState !== 'undefined') {
-            appState.currentSystem = systemData;
-        }
+        appState.currentSystem = systemData;
 
         console.log(`[SystemService] Current system set to: ${systemData?.systemName || 'null'}`);
     },
@@ -447,9 +445,7 @@ const SystemService = {
         navigationManager.navigateTo('visualizationCarousel');
 
         // Update sidebar
-        if (typeof sidebarComponent !== 'undefined' && sidebarComponent) {
-            sidebarComponent.updateState();
-        }
+        sidebarComponent.updateState();
 
         console.log(`[SystemService] System "${systemName}" loaded and activated.`);
         return true;
@@ -484,7 +480,7 @@ const SystemService = {
 
         const success = this.saveSystem(currentSystem);
 
-        if (success && typeof sidebarComponent !== 'undefined' && sidebarComponent) {
+        if (success) {
             sidebarComponent.updateState();
         }
 
