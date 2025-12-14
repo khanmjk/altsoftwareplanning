@@ -1,7 +1,7 @@
 # Coding Agent Contract for SMT Platform
 
-> **Version**: 1.0  
-> **Last Updated**: 2025-12-07  
+> **Version**: 1.1  
+> **Last Updated**: 2025-12-14  
 > **Purpose**: System instructions for AI coding agents working on this codebase
 
 ---
@@ -346,16 +346,44 @@ Before submitting any code change, verify:
 
 > [!WARNING]
 > The following files have known violations and are scheduled for refactoring.
+> **Last Audit**: 2025-12-14
 
-| File | Issue | Priority |
-|------|-------|----------|
-| `yearPlanning.js` | Module-level globals, inline HTML | High |
-| `visualizations.js` | window.* assignments | High |
-| `ganttPlanning.js` | Inline HTML templates | Medium |
-| `aiViewRegistry.js` | Defensive duck-typing | Medium |
-| `ganttAdapter.js` | Defensive function checks | Low |
+| File | Issue | Priority | Notes |
+|------|-------|----------|-------|
+| `yearPlanning.js` | Module-level globals (lines 5-16), inline HTML (line 478-506) | High | Contains 7 module-level `let` declarations |
+| `WorkspaceComponent.js` | Inline HTML templates | Medium | 6+ `innerHTML` assignments, but acceptable for shell component |
+| `RoadmapComponent.js` | Inline HTML templates | Medium | 4+ `innerHTML` usages in renderGrid methods |
+| `DashboardView.js` | Inline HTML (container clearing) | Low | Mostly uses `innerHTML = ''` for clearing |
+| `enhancedTableWidget.js` | Defensive options callbacks | Low | Checks if options callbacks are functions (acceptable for external API) |
+
+### Recently Resolved (since last audit)
+
+| File | Previous Issue | Resolution |
+|------|----------------|------------|
+| `visualizations.js` | window.* assignments | ✅ Refactored to 12-line init file |
+| `aiViewRegistry.js` | Defensive duck-typing | ✅ Now trusts all views implement `getAIContext()` |
+| `ganttPlanning.js` | Inline HTML templates | ✅ Refactored to `GanttPlanningView.js` class |
+| `GanttPlanningView.js` | Module-level globals | ✅ Deprecated globals, uses viewInstance DI |
+| `GanttTableController.js` | Defensive function checks | ✅ Uses viewInstance property, no typeof checks |
+
+### Theming Violations (CSS/JS hardcoded colors)
+
+> [!NOTE]
+> The following files contain hardcoded color values that should use theme variables.
+
+**CSS Files** (144+ instances found):
+- `css/views/roadmap-view.css` - 20+ hardcoded colors (status indicators, timeline)
+- `css/views/goals-view.css` - Progress bar colors
+- `css/views/dashboard-view.css` - Card header colors (`#ffffff`)
+- `css/foundation-components/buttons.css` - Danger/success colors
+
+**JS Files** (acceptable fallbacks in ThemeService):
+- `js/services/MermaidService.js` - Theme fallback colors (acceptable)
+- `js/services/ThemeService.js` - Theme definition constants (acceptable)
+- `js/services/D3Service.js` - 1 hardcoded `#fff` in tooltip (should fix)
 
 ---
 
 **Owner**: SMT Platform Engineering Team  
 **Enforcement**: All pull requests must pass this contract checklist
+
