@@ -218,16 +218,6 @@ class NavigationManager {
             this.viewInstances.set(viewId, instance);
         }
 
-        // Backwards compatibility: set global yearPlanningView for legacy yearPlanning.js
-        if (viewId === 'planningView') {
-            yearPlanningView = instance;
-        }
-
-        // Backwards compatibility: set global ganttPlanningViewInstance for legacy ganttPlanning.js
-        if (viewId === 'ganttPlanningView') {
-            ganttPlanningViewInstance = instance;
-        }
-
         return instance;
     }
 

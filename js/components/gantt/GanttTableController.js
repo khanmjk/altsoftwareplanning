@@ -18,10 +18,12 @@ class GanttTableController {
      * @param {object} options
      * @param {HTMLElement} options.container - Table container element
      * @param {object} options.frappeRenderer - FrappeGanttRenderer instance (optional)
+     * @param {GanttPlanningView} options.viewInstance - Parent GanttPlanningView instance for chart sync
      */
     constructor(options = {}) {
         this.container = options.container;
         this.frappeRenderer = options.frappeRenderer || null;
+        this.viewInstance = options.viewInstance || null; // Per coding contract: direct reference, no globals
 
         // MVC components
         this.model = new GanttTableModel();
@@ -231,8 +233,8 @@ class GanttTableController {
         }
 
         // Mark the view as having unsaved changes
-        if (typeof ganttPlanningViewInstance !== 'undefined' && ganttPlanningViewInstance) {
-            ganttPlanningViewInstance.markDirty();
+        if (this.viewInstance) {
+            this.viewInstance.markDirty();
         }
 
         // Always sync to Frappe after field changes to keep chart in sync
@@ -450,16 +452,17 @@ class GanttTableController {
     _setupFrappeSync() {
         if (!this.frappeRenderer) return;
 
-        // Listen for Frappe drag events
-        if (typeof this.frappeRenderer.addEventListener === 'function') {
-            this.frappeRenderer.addEventListener('task:dateChange', (e) => {
-                this._handleFrappeDateChange(e.detail);
-            });
+        // FrappeGanttRenderer is an external library - defensive check is appropriate here
+        // Per coding contract Rule 2.1: defensive checks allowed for external dependencies
+        if (typeof this.frappeRenderer.addEventListener !== 'function') return;
 
-            this.frappeRenderer.addEventListener('task:click', (e) => {
-                this._handleFrappeTaskClick(e.detail);
-            });
-        }
+        this.frappeRenderer.addEventListener('task:dateChange', (e) => {
+            this._handleFrappeDateChange(e.detail);
+        });
+
+        this.frappeRenderer.addEventListener('task:click', (e) => {
+            this._handleFrappeTaskClick(e.detail);
+        });
     }
 
     /**
@@ -468,12 +471,12 @@ class GanttTableController {
     _syncToFrappe() {
         // Trigger full chart re-render via view instance
         // This ensures structural changes (dependencies, new rows) are reflected
-        if (typeof ganttPlanningViewInstance !== 'undefined' && ganttPlanningViewInstance) {
+        if (this.viewInstance) {
             // Save current focus state before re-render
             const savedFocus = this.model.getFocus();
 
             // Re-render the chart
-            ganttPlanningViewInstance.renderGanttChart();
+            this.viewInstance.renderGanttChart();
 
             // Restore focus state after re-render
             if (savedFocus && (savedFocus.taskId || savedFocus.initiativeId)) {
@@ -481,18 +484,16 @@ class GanttTableController {
                 this.model.setFocus(savedFocus);
 
                 // Restore to view
-                ganttPlanningViewInstance.setLastGanttFocus({
+                this.viewInstance.setLastGanttFocus({
                     taskId: savedFocus.taskId,
                     taskType: savedFocus.taskType,
                     initiativeId: savedFocus.initiativeId
                 });
 
-                // Scroll to focused task
-                if (typeof ganttPlanningViewInstance.scrollToGanttFocusTask === 'function') {
-                    ganttPlanningViewInstance.scrollToGanttFocusTask();
-                }
+                // Scroll to focused task (per contract: assume method exists)
+                this.viewInstance.scrollToGanttFocusTask();
             }
-        } else if (this.frappeRenderer && typeof this.frappeRenderer.refresh === 'function') {
+        } else if (this.frappeRenderer) {
             // Fallback to shallow refresh if view instance not available
             this.frappeRenderer.refresh();
         }
@@ -502,7 +503,8 @@ class GanttTableController {
      * Syncs focus to Frappe chart
      */
     _syncFocusToFrappe(context) {
-        if (this.frappeRenderer && typeof this.frappeRenderer.highlightTask === 'function') {
+        // Per coding contract: assume FrappeGanttRenderer implements highlightTask
+        if (this.frappeRenderer) {
             this.frappeRenderer.highlightTask(context.taskId);
         }
     }
@@ -512,27 +514,24 @@ class GanttTableController {
      * This ensures the Gantt chart shows/hides rows matching the table expansion.
      */
     _syncExpansionToChart() {
-        // Sync MVC model state to globals so chart can read them
-        if (typeof ganttExpandedInitiatives !== 'undefined') {
-            ganttExpandedInitiatives.clear();
-            this.model.expandedInitiatives.forEach(id => ganttExpandedInitiatives.add(id));
-        }
-        if (typeof ganttExpandedWorkPackages !== 'undefined') {
-            ganttExpandedWorkPackages.clear();
-            this.model.expandedWorkPackages.forEach(id => ganttExpandedWorkPackages.add(id));
-        }
+        // Sync MVC model state to viewInstance for chart rendering
+        if (this.viewInstance) {
+            this.viewInstance.syncExpansionState(
+                this.model.expandedInitiatives,
+                this.model.expandedWorkPackages
+            );
 
-        // Sync focus to globals for chart highlighting
-        const focus = this.model.getFocus();
-        if (focus && typeof ganttPlanningViewInstance !== 'undefined' && ganttPlanningViewInstance) {
-            ganttPlanningViewInstance.setLastGanttFocus({
-                taskId: focus.taskId,
-                taskType: focus.taskType,
-                initiativeId: focus.initiativeId
-            });
-            // Trigger chart re-render via the view instance
-            ganttPlanningViewInstance.renderGanttChart();
-        } else if (this.frappeRenderer && typeof this.frappeRenderer.refresh === 'function') {
+            // Sync focus and trigger chart re-render
+            const focus = this.model.getFocus();
+            if (focus) {
+                this.viewInstance.setLastGanttFocus({
+                    taskId: focus.taskId,
+                    taskType: focus.taskType,
+                    initiativeId: focus.initiativeId
+                });
+            }
+            this.viewInstance.renderGanttChart();
+        } else if (this.frappeRenderer) {
             // Fallback to Frappe refresh
             this.frappeRenderer.refresh();
         }

@@ -19,7 +19,7 @@ const AI_VIEW_REGISTRY = {
     // P1 - High Priority
     ganttPlanningView: {
         displayName: 'Detailed Planning (Gantt)',
-        fallbackGlobals: ['currentGanttYear', 'currentGanttGroupBy']
+        fallbackGlobals: []  // No module-level globals - all state in viewInstance
     },
 
     capacityConfigView: {

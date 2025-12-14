@@ -9,18 +9,9 @@
  * - Uses workspaceComponent.setToolbar() for controls
  * - Implements getAIContext() for AI integration
  * - No window.* assignments (state encapsulated in class)
+ * - No module-level globals (all state in class instance)
  * - Delegates business logic to GanttService
  */
-
-// Module-level globals for chart↔table sync (set by NavigationManager)
-let ganttPlanningViewInstance = null;
-
-// Expansion state - shared between table and chart for synchronization
-let ganttExpandedInitiatives = new Set();
-let ganttExpandedWorkPackages = new Set();
-
-// View state for filtering (used by ganttAdapter)
-let currentGanttGroupBy = 'All Initiatives';
 
 class GanttPlanningView {
     constructor(containerId) {
@@ -346,10 +337,6 @@ class GanttPlanningView {
             id: 'ganttGroupBy',
             onChange: (value) => {
                 this.currentGanttGroupBy = value;
-                // Sync to legacy global for chart compatibility
-                if (typeof currentGanttGroupBy !== 'undefined') {
-                    currentGanttGroupBy = this.currentGanttGroupBy;
-                }
                 console.log('[GANTT] View By changed', this.currentGanttGroupBy);
                 this.renderDynamicGroupFilter();
                 this.renderGanttChart();
@@ -705,14 +692,8 @@ class GanttPlanningView {
         const container = document.getElementById('ganttChartContainer');
         if (!container) return;
 
-        // Sync expansion state from globals (updated by table controller)
-        // This ensures chart reflects table's current expansion state
-        if (typeof ganttExpandedInitiatives !== 'undefined') {
-            this.ganttExpandedInitiatives = new Set(ganttExpandedInitiatives);
-        }
-        if (typeof ganttExpandedWorkPackages !== 'undefined') {
-            this.ganttExpandedWorkPackages = new Set(ganttExpandedWorkPackages);
-        }
+        // Expansion state is synced via syncExpansionState() from controller
+        // No need to read from globals - viewInstance is the source of truth
 
         WorkPackageService.ensureWorkPackagesForInitiatives(SystemService.getCurrentSystem(), this.currentGanttYear);
 
@@ -801,6 +782,18 @@ class GanttPlanningView {
     }
 
     /**
+     * Syncs expansion state from GanttTableController.
+     * Called by controller when expansion changes need to propagate to chart.
+     * 
+     * @param {Set<string>} expandedInitiatives - Set of expanded initiative IDs
+     * @param {Set<string>} expandedWorkPackages - Set of expanded work package IDs
+     */
+    syncExpansionState(expandedInitiatives, expandedWorkPackages) {
+        this.ganttExpandedInitiatives = new Set(expandedInitiatives);
+        this.ganttExpandedWorkPackages = new Set(expandedWorkPackages);
+    }
+
+    /**
      * Handles toggle (expand/collapse) from chart double-click
      */
     handleGanttToggleFromChart(task) {
@@ -852,9 +845,6 @@ class GanttPlanningView {
             taskType: task.type || null,
             initiativeId: task.initiativeId || null
         });
-
-        // Sync to legacy globals for chart↔table sync
-        this.syncExpansionToGlobals();
 
         // Re-render table and chart to reflect toggles
         this.renderGanttTable();
@@ -1016,19 +1006,7 @@ class GanttPlanningView {
         }
     }
 
-    /**
-     * Syncs expansion state to legacy globals for chart↔table sync
-     */
-    syncExpansionToGlobals() {
-        if (typeof ganttExpandedInitiatives !== 'undefined') {
-            ganttExpandedInitiatives.clear();
-            this.ganttExpandedInitiatives.forEach(id => ganttExpandedInitiatives.add(id));
-        }
-        if (typeof ganttExpandedWorkPackages !== 'undefined') {
-            ganttExpandedWorkPackages.clear();
-            this.ganttExpandedWorkPackages.forEach(id => ganttExpandedWorkPackages.add(id));
-        }
-    }
+
 
     renderGanttTable() {
         // Always use MVC controller (legacy is deprecated)
@@ -1042,7 +1020,8 @@ class GanttPlanningView {
         // Container is recreated on each view render, so cached controller has stale reference
         this.tableController = new GanttTableController({
             container: tableContainer,
-            frappeRenderer: this.chartRenderer || null
+            frappeRenderer: this.chartRenderer || null,
+            viewInstance: this  // Per coding contract: pass reference, not global
         });
 
         // Sync MVC model with view state
@@ -1060,21 +1039,12 @@ class GanttPlanningView {
             model.setFilter('statusFilter', this.ganttStatusFilter);
         }
 
-        // Sync expansion states from GLOBAL legacy variables for chart↔table sync
-        // The chart updates these globals, so we read from them to stay in sync
+        // Sync expansion states from viewInstance (not globals)
+        // The chart and controller use viewInstance directly now
         model.expandedInitiatives.clear();
         model.expandedWorkPackages.clear();
-
-        if (typeof ganttExpandedInitiatives !== 'undefined') {
-            ganttExpandedInitiatives.forEach(id => model.expandedInitiatives.add(id));
-        }
-        if (typeof ganttExpandedWorkPackages !== 'undefined') {
-            ganttExpandedWorkPackages.forEach(id => model.expandedWorkPackages.add(id));
-        }
-
-        // Also sync view's local state from globals (for consistency)
-        this.ganttExpandedInitiatives = new Set(model.expandedInitiatives);
-        this.ganttExpandedWorkPackages = new Set(model.expandedWorkPackages);
+        this.ganttExpandedInitiatives.forEach(id => model.expandedInitiatives.add(id));
+        this.ganttExpandedWorkPackages.forEach(id => model.expandedWorkPackages.add(id));
 
         // Sync focus state to model so table rows get focus class
         if (this.lastGanttFocusTaskId || this.lastGanttFocusInitiativeId) {

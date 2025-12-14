@@ -348,11 +348,10 @@ Before submitting a new view or refactoring an existing one, verify:
 - ✅ `js/components/ManagementView.js` - Component composition, pill nav
 - ✅ `js/components/RoadmapView.js` - Clean class pattern
 - ✅ `js/components/CapacityDashboardView.js` - Service layer pattern
+- ✅ `js/components/GanttPlanningView.js` - Complex hierarchical view, MVC pattern with GanttTableController
 
-**To Be Refactored**:
-- ⚠️ `js/yearPlanning.js` - Inline HTML, mixed concerns
-- ⚠️ `js/ganttPlanning.js` - Complex, needs service extraction
-- ⚠️ `js/visualizations.js` - Inline HTML, no pill nav
+**To Be Refactored (as of 2025-12-14)**:
+- ⚠️ `js/yearPlanning.js` - Module-level globals, inline HTML, mixed concerns
 
 ---
 
@@ -544,29 +543,38 @@ window.runYearPlanOptimizer = async function(options) {
 };
 ```
 
+
 ### 11.7 Views with AI Context Implemented
+
+> **Last Audit**: 2025-12-14
 
 | View | Class Instance | Status |
 |------|----------------|--------|
-| `planningView` | `window.yearPlanningView` | ✅ |
-| `managementView` | `window.managementViewInstance` | ✅ |
-| `capacityConfigView` | `window.capacityPlanningViewInstance` | ✅ |
-| `visualizationCarousel` | `window.systemOverviewViewInstance` | ✅ |
-| `organogramView` | `window.orgViewInstance` | ✅ |
-| `roadmapView` | `window.roadmapViewInstance` | ✅ |
-| `dashboardView` | `window.dashboardViewInstance` | ✅ |
-| `settingsView` | `window.settingsViewInstance` | ✅ |
-| `sdmForecastingView` | `window.resourceForecastViewInstance` | ✅ |
-| `systemsView` | `window.systemsViewInstance` | ✅ |
-| `ganttPlanningView` | *(legacy)* | ⚠️ Uses fallback |
-| `welcomeView` | *(static)* | ✅ Static |
-| `helpView` | *(static)* | ✅ Static |
+| `planningView` | `YearPlanningView` | ✅ |
+| `managementView` | `ManagementView` | ✅ |
+| `capacityConfigView` | `CapacityConfigurationView` | ✅ |
+| `capacityDashboardView` | `CapacityDashboardView` | ✅ |
+| `visualizationCarousel` | `SystemOverviewView` | ✅ |
+| `organogramView` | `OrgView` | ✅ |
+| `roadmapView` | `RoadmapView` | ✅ |
+| `dashboardView` | `DashboardView` | ✅ |
+| `settingsView` | `SettingsView` | ✅ |
+| `sdmForecastingView` | `ResourceForecastView` | ✅ |
+| `systemsView` | `SystemsView` | ✅ |
+| `ganttPlanningView` | `GanttPlanningView` | ✅ (line 1101) |
+| `systemEditForm` | `SystemEditView` | ✅ |
+| `capacityPlanningView` | `CapacityPlanningView` | ✅ |
+| `welcomeView` | `WelcomeView` | ✅ Static |
+| `helpView` | `HelpView` | ✅ Static |
+
+**Total Views with AI Context: 17**
 
 ---
 
-**Last Updated**: 2025-12-06  
-**Version**: 2.1  
+**Last Updated**: 2025-12-14  
+**Version**: 2.3  
 **Owner**: SMT Platform Engineering Team
+
 
 ---
 
