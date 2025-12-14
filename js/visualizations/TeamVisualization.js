@@ -44,8 +44,9 @@ class TeamVisualization extends BaseVisualization {
 
         const link = this.drawLinks({ strokeWidth: 2 });
 
+        const colors = ThemeService.getThemeColors();
         const node = this.graphGroup.append('g')
-            .attr('stroke', '#fff')
+            .attr('stroke', colors.bgPrimary || '#fff')
             .attr('stroke-width', 2)
             .selectAll('circle')
             .data(this.nodes)

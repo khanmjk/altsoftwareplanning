@@ -153,9 +153,7 @@ const WorkPackageService = {
         initiative.workPackageIds.push(newWpId);
 
         // Refresh parent initiative dates based on WP dates
-        if (typeof InitiativeService !== 'undefined' && InitiativeService.refreshInitiativeDates) {
-            InitiativeService.refreshInitiativeDates(systemData, initiativeId);
-        }
+        InitiativeService.refreshInitiativeDates(systemData, initiativeId);
 
         return newWp;
     },
@@ -451,9 +449,7 @@ const WorkPackageService = {
         this.recalculateWorkPackageDates(wp);
 
         // Trigger initiative date refresh
-        if (typeof InitiativeService !== 'undefined' && InitiativeService.refreshInitiativeDates) {
-            InitiativeService.refreshInitiativeDates(systemData, wp.initiativeId);
-        }
+        InitiativeService.refreshInitiativeDates(systemData, wp.initiativeId);
 
         return assignment;
     },

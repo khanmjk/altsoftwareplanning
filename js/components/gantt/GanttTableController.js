@@ -116,22 +116,15 @@ class GanttTableController {
     _getFilteredInitiatives(initiatives) {
         const filters = this.model.getFilters();
 
-        if (typeof GanttService !== 'undefined' && GanttService.getFilteredInitiatives) {
-            return GanttService.getFilteredInitiatives({
-                initiatives,
-                year: filters.year,
-                statusFilter: filters.statusFilter,
-                groupBy: filters.groupBy,
-                groupValue: filters.groupValue,
-                teams: this.systemData?.teams || [],
-                sdms: this.systemData?.sdms || []
-            });
-        }
-
-        // Fallback: basic filtering
-        return initiatives.filter(init => {
-            const year = new Date(init.targetDueDate).getFullYear();
-            return year === filters.year && filters.statusFilter.has(init.status);
+        // Use GanttService for filtering (always available per coding contract)
+        return GanttService.getFilteredInitiatives({
+            initiatives,
+            year: filters.year,
+            statusFilter: filters.statusFilter,
+            groupBy: filters.groupBy,
+            groupValue: filters.groupValue,
+            teams: this.systemData?.teams || [],
+            sdms: this.systemData?.sdms || []
         });
     }
 
@@ -271,66 +264,56 @@ class GanttTableController {
     // =========================================================================
 
     _addWorkPackage(initiativeId) {
-        if (typeof WorkPackageService !== 'undefined' && WorkPackageService.addWorkPackage) {
-            // Service signature: addWorkPackage(systemData, initiativeId, wpData)
-            const newWp = WorkPackageService.addWorkPackage(this.systemData, initiativeId, {
-                title: 'New Work Package',
-                startDate: '',
-                endDate: ''
-            });
-            if (newWp) {
-                this.model.expandedInitiatives.add(initiativeId); // Ensure expanded
-                this.render();
-                this._syncToFrappe();
-            }
-        } else {
-            console.warn('WorkPackageService not available');
+        // Service signature: addWorkPackage(systemData, initiativeId, wpData)
+        const newWp = WorkPackageService.addWorkPackage(this.systemData, initiativeId, {
+            title: 'New Work Package',
+            startDate: '',
+            endDate: ''
+        });
+        if (newWp) {
+            this.model.expandedInitiatives.add(initiativeId); // Ensure expanded
+            this.render();
+            this._syncToFrappe();
         }
     }
 
     _deleteWorkPackage(wpId, initiativeId) {
-        if (typeof WorkPackageService !== 'undefined' && WorkPackageService.deleteWorkPackage) {
-            if (confirm('Delete this work package and all its assignments?')) {
-                WorkPackageService.deleteWorkPackage(this.systemData, wpId);
-                this._propagateDates(initiativeId); // Refresh initiative dates
-                this.render();
-                this._syncToFrappe();
-            }
+        if (confirm('Delete this work package and all its assignments?')) {
+            WorkPackageService.deleteWorkPackage(this.systemData, wpId);
+            this._propagateDates(initiativeId); // Refresh initiative dates
+            this.render();
+            this._syncToFrappe();
         }
     }
 
     _addTask(wpId, initiativeId) {
-        if (typeof WorkPackageService !== 'undefined' && WorkPackageService.addAssignment) {
-            // Get first available team
-            const teams = this.systemData?.teams || [];
-            const wp = (this.systemData?.workPackages || []).find(w => w.workPackageId === wpId);
-            const existingTeamIds = (wp?.impactedTeamAssignments || []).map(a => a.teamId);
-            const availableTeam = teams.find(t => !existingTeamIds.includes(t.teamId));
+        // Get first available team
+        const teams = this.systemData?.teams || [];
+        const wp = (this.systemData?.workPackages || []).find(w => w.workPackageId === wpId);
+        const existingTeamIds = (wp?.impactedTeamAssignments || []).map(a => a.teamId);
+        const availableTeam = teams.find(t => !existingTeamIds.includes(t.teamId));
 
-            if (availableTeam) {
-                WorkPackageService.addAssignment(this.systemData, wpId, {
-                    teamId: availableTeam.teamId,
-                    sdeDays: 0,
-                    startDate: wp?.startDate || '',
-                    endDate: wp?.endDate || ''
-                });
-                this.model.expandedWorkPackages.add(wpId); // Ensure expanded
-                this._propagateDates(initiativeId, wpId); // Cascade dates up
-                this.render();
-                this._syncToFrappe();
-            } else {
-                alert('All teams are already assigned to this work package.');
-            }
+        if (availableTeam) {
+            WorkPackageService.addAssignment(this.systemData, wpId, {
+                teamId: availableTeam.teamId,
+                sdeDays: 0,
+                startDate: wp?.startDate || '',
+                endDate: wp?.endDate || ''
+            });
+            this.model.expandedWorkPackages.add(wpId); // Ensure expanded
+            this._propagateDates(initiativeId, wpId); // Cascade dates up
+            this.render();
+            this._syncToFrappe();
+        } else {
+            alert('All teams are already assigned to this work package.');
         }
     }
 
     _deleteTask(wpId, initiativeId, teamId) {
-        if (typeof WorkPackageService !== 'undefined' && WorkPackageService.removeAssignment) {
-            WorkPackageService.removeAssignment(this.systemData, wpId, teamId);
-            this._propagateDates(initiativeId, wpId); // Cascade dates up
-            this.render();
-            this._syncToFrappe();
-        }
+        WorkPackageService.removeAssignment(this.systemData, wpId, teamId);
+        this._propagateDates(initiativeId, wpId); // Cascade dates up
+        this.render();
+        this._syncToFrappe();
     }
 
     // =========================================================================
@@ -338,45 +321,39 @@ class GanttTableController {
     // =========================================================================
 
     _updateInitiativeField(initiativeId, field, value) {
-        if (typeof InitiativeService !== 'undefined' && InitiativeService.updateInitiative) {
-            InitiativeService.updateInitiative(this.systemData, initiativeId, { [field]: value });
+        InitiativeService.updateInitiative(this.systemData, initiativeId, { [field]: value });
 
-            // Trigger date propagation if date changed
-            if (['startDate', 'targetDueDate'].includes(field)) {
-                this._propagateDates(initiativeId);
-            }
+        // Trigger date propagation if date changed
+        if (['startDate', 'targetDueDate'].includes(field)) {
+            this._propagateDates(initiativeId);
         }
     }
 
     _updateWorkPackageField(wpId, initiativeId, field, value) {
-        if (typeof WorkPackageService !== 'undefined' && WorkPackageService.updateWorkPackage) {
-            WorkPackageService.updateWorkPackage(this.systemData, wpId, { [field]: value });
+        WorkPackageService.updateWorkPackage(this.systemData, wpId, { [field]: value });
 
-            // Propagate dates up
-            if (['startDate', 'endDate'].includes(field)) {
-                this._propagateDates(initiativeId);
-            }
+        // Propagate dates up
+        if (['startDate', 'endDate'].includes(field)) {
+            this._propagateDates(initiativeId);
         }
     }
 
     _updateAssignmentField(wpId, initiativeId, teamId, field, value) {
-        if (typeof WorkPackageService !== 'undefined' && WorkPackageService.updateAssignment) {
-            // Convert sdeYears to sdeDays if needed
-            let updates = { [field]: value };
-            if (field === 'sdeYears') {
-                const workingDays = this.view.options.workingDaysPerYear || 261;
-                updates = { sdeDays: parseFloat(value) * workingDays };
-            }
-
-            WorkPackageService.updateAssignment(this.systemData, wpId, teamId, updates);
-
-            // Propagate dates up: Task → WP → Initiative → Goal
-            if (['startDate', 'endDate'].includes(field)) {
-                this._propagateDates(initiativeId, wpId);
-                this.render(); // Re-render to show updated WP/Init dates
-            }
-            // Note: _syncToFrappe is called by parent _handleFieldChange
+        // Convert sdeYears to sdeDays if needed
+        let updates = { [field]: value };
+        if (field === 'sdeYears') {
+            const workingDays = this.view.options.workingDaysPerYear || 261;
+            updates = { sdeDays: parseFloat(value) * workingDays };
         }
+
+        WorkPackageService.updateAssignment(this.systemData, wpId, teamId, updates);
+
+        // Propagate dates up: Task → WP → Initiative → Goal
+        if (['startDate', 'endDate'].includes(field)) {
+            this._propagateDates(initiativeId, wpId);
+            this.render(); // Re-render to show updated WP/Init dates
+        }
+        // Note: _syncToFrappe is called by parent _handleFieldChange
     }
 
     // =========================================================================
@@ -391,7 +368,7 @@ class GanttTableController {
      */
     _propagateDates(initiativeId, wpId = null) {
         // Step 1: If WP is specified, recalculate WP dates from its tasks/assignments
-        if (wpId && typeof WorkPackageService !== 'undefined' && WorkPackageService.recalculateWorkPackageDates) {
+        if (wpId) {
             const wp = (this.systemData?.workPackages || []).find(w => w.workPackageId === wpId);
             if (wp) {
                 WorkPackageService.recalculateWorkPackageDates(wp);
@@ -399,9 +376,7 @@ class GanttTableController {
         }
 
         // Step 2: Refresh initiative dates from all its WPs (also triggers Goal refresh)
-        if (typeof InitiativeService !== 'undefined' && InitiativeService.refreshInitiativeDates) {
-            InitiativeService.refreshInitiativeDates(this.systemData, initiativeId);
-        }
+        InitiativeService.refreshInitiativeDates(this.systemData, initiativeId);
     }
 
     // =========================================================================

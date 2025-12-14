@@ -83,6 +83,7 @@ class DependencyVisualization extends BaseVisualization {
      * Define arrow markers for links
      */
     defineArrowheads() {
+        const colors = ThemeService.getThemeColors();
         const defs = this.svg.append('defs');
         defs.selectAll('marker')
             .data(['service-dependency', 'platform-dependency'])
@@ -96,7 +97,7 @@ class DependencyVisualization extends BaseVisualization {
             .attr('orient', 'auto')
             .append('path')
             .attr('d', 'M0,-5L10,0L0,5')
-            .attr('fill', '#999');
+            .attr('fill', colors.textMuted || '#999');
     }
 
     /**
@@ -104,6 +105,7 @@ class DependencyVisualization extends BaseVisualization {
      * @returns {d3.Selection}
      */
     drawDependencyLinks() {
+        const colors = ThemeService.getThemeColors();
         const linksGroup = this.graphGroup.append('g').attr('class', 'links');
 
         return linksGroup.selectAll('line')
@@ -111,7 +113,7 @@ class DependencyVisualization extends BaseVisualization {
             .join('line')
             .attr('stroke-width', 2)
             .attr('marker-end', d => `url(#arrow-${d.type})`)
-            .attr('stroke', '#999')
+            .attr('stroke', colors.textMuted || '#999')
             .attr('stroke-opacity', 0.6)
             .attr('stroke-dasharray', d => d.type === 'platform-dependency' ? '5,5' : '0');
     }
@@ -121,9 +123,14 @@ class DependencyVisualization extends BaseVisualization {
      * @returns {d3.Selection}
      */
     drawDependencyNodes() {
+        const colors = ThemeService.getThemeColors();
+        const serviceColor = colors.primary || '#1f77b4';
+        const platformColor = colors.warning || '#ff7f0e';
+        const selectedColor = colors.danger || 'red';
+
         const color = this.d3.scaleOrdinal()
             .domain(['service', 'platform'])
-            .range(['#1f77b4', '#ff7f0e']);
+            .range([serviceColor, platformColor]);
 
         const nodesGroup = this.graphGroup.append('g').attr('class', 'nodes');
 
@@ -131,8 +138,8 @@ class DependencyVisualization extends BaseVisualization {
             .data(this.nodes, d => d.id)
             .join('circle')
             .attr('r', d => d.id === this.selectedServiceName ? 15 : 10)
-            .attr('fill', d => d.id === this.selectedServiceName ? 'red' : color(d.type))
-            .attr('stroke', '#fff')
+            .attr('fill', d => d.id === this.selectedServiceName ? selectedColor : color(d.type))
+            .attr('stroke', colors.bgPrimary || '#fff')
             .attr('stroke-width', d => d.id === this.selectedServiceName ? 3 : 1.5)
             .call(this.createDragBehavior())
             .on('mouseover', (event, d) => this.handleMouseOver(event, d))
@@ -203,21 +210,23 @@ class DependencyVisualization extends BaseVisualization {
             }
         });
 
+        const colors = ThemeService.getThemeColors();
         this.nodeSelection.style('opacity', n => this.highlightedNodes.has(n.id) ? 1 : 0.1);
         this.labelSelection.style('opacity', n => this.highlightedNodes.has(n.id) ? 1 : 0.1);
         this.linkSelection
             .style('opacity', l => this.highlightedLinks.has(l.index) ? 0.9 : 0.1)
-            .attr('stroke', l => this.highlightedLinks.has(l.index) ? '#555' : '#999');
+            .attr('stroke', l => this.highlightedLinks.has(l.index) ? (colors.textSecondary || '#555') : (colors.textMuted || '#999'));
     }
 
     /**
      * Handle mouseout event to remove highlighting
      */
     handleMouseOut() {
+        const colors = ThemeService.getThemeColors();
         D3Service.hideTooltip();
         this.nodeSelection.style('opacity', 1);
         this.labelSelection.style('opacity', 1);
-        this.linkSelection.style('opacity', 0.6).attr('stroke', '#999');
+        this.linkSelection.style('opacity', 0.6).attr('stroke', colors.textMuted || '#999');
         this.highlightedNodes.clear();
         this.highlightedLinks.clear();
     }
@@ -248,14 +257,15 @@ class DependencyVisualization extends BaseVisualization {
      * Render legend inside the SVG
      */
     renderDependencyLegend() {
+        const colors = ThemeService.getThemeColors();
         const legendGroup = this.svg.append('g')
             .attr('class', 'legend-group')
             .attr('transform', 'translate(10, 10)');
 
         const legendItems = [
-            { label: 'Service', color: '#1f77b4', shape: 'circle' },
-            { label: 'Platform', color: '#ff7f0e', shape: 'circle' },
-            { label: 'Selected', color: 'red', shape: 'circle' }
+            { label: 'Service', color: colors.primary || '#1f77b4', shape: 'circle' },
+            { label: 'Platform', color: colors.warning || '#ff7f0e', shape: 'circle' },
+            { label: 'Selected', color: colors.danger || 'red', shape: 'circle' }
         ];
 
         let yOffset = 0;

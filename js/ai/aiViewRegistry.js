@@ -91,10 +91,8 @@ const AI_VIEW_REGISTRY = {
  * @returns {Object|null} View instance or null
  */
 function getViewInstance(viewId) {
-    if (typeof navigationManager !== 'undefined' && navigationManager.getViewInstance) {
-        return navigationManager.getViewInstance(viewId);
-    }
-    return null;
+    // Per coding contract: assume navigationManager exists (initialized in main.js)
+    return navigationManager.getViewInstance(viewId);
 }
 
 /**
@@ -108,8 +106,10 @@ function getAIContextForView(viewId) {
     if (!config) return null;
 
     // Try class instance from NavigationManager
+    // Per coding contract Rule 2.9: Assume all views implement getAIContext()
+    // If a view doesn't, that's a bug to be fixed, not defended against
     const instance = getViewInstance(viewId);
-    if (instance && instance.getAIContext) {
+    if (instance) {
         return {
             source: 'class',
             viewId: viewId,
@@ -140,6 +140,7 @@ function hasClassContextProvider(viewId) {
     const config = AI_VIEW_REGISTRY[viewId];
     if (!config) return false;
 
+    // Per coding contract Rule 2.9: All registered views implement getAIContext()
     const instance = getViewInstance(viewId);
-    return instance && instance.getAIContext;
+    return !!instance;
 }

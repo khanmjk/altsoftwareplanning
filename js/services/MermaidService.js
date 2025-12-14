@@ -54,8 +54,8 @@ const MermaidService = {
      * @private
      */
     _getMermaidThemeConfig() {
-        const isDark = typeof ThemeService !== 'undefined' && ThemeService.isDarkTheme();
-        const colors = typeof ThemeService !== 'undefined' ? ThemeService.getThemeColors() : null;
+        const isDark = ThemeService.isDarkTheme();
+        const colors = ThemeService.getThemeColors();
 
         if (isDark) {
             const bgSecondary = colors?.bgSecondary || '#16213e';
@@ -150,8 +150,8 @@ const MermaidService = {
      * @returns {Object} Object containing classDef strings
      */
     _getThemeClassDefs() {
-        const isDark = typeof ThemeService !== 'undefined' && ThemeService.isDarkTheme();
-        const colors = typeof ThemeService !== 'undefined' ? ThemeService.getThemeColors() : null;
+        const isDark = ThemeService.isDarkTheme();
+        const colors = ThemeService.getThemeColors();
 
         if (isDark) {
             // Dark theme colors

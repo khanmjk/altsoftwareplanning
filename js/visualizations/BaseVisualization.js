@@ -147,8 +147,9 @@ class BaseVisualization {
      * @returns {d3.Selection}
      */
     drawLinks(options = {}) {
+        const colors = ThemeService.getThemeColors();
         const {
-            strokeColor = '#aaa',
+            strokeColor = colors.textMuted || '#aaa',
             strokeWidth = 1.5,
             strokeDasharray = null
         } = options;
@@ -175,9 +176,10 @@ class BaseVisualization {
      * @returns {d3.Selection}
      */
     drawNodes(colorFn, radiusFn = 10) {
+        const colors = ThemeService.getThemeColors();
         const node = this.graphGroup.append('g')
             .attr('class', 'nodes')
-            .attr('stroke', '#fff')
+            .attr('stroke', colors.bgPrimary || '#fff')
             .attr('stroke-width', 1.5)
             .selectAll('circle')
             .data(this.nodes)

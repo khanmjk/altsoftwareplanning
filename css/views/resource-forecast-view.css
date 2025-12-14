@@ -15,7 +15,7 @@
     background-color: var(--bg-secondary);
     padding: var(--spacing-lg);
     border-radius: var(--radius-md);
-    border: 1px solid var(--border-color);
+    /* No outer border - content flows as part of the workspace canvas */
     margin-bottom: var(--spacing-xl);
     max-width: 1200px;
     /* Optional: keep grid from getting too wide on huge screens */
@@ -35,7 +35,7 @@
 
 .forecast-input-group input {
     padding: 8px 12px;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--theme-border-color);
     border-radius: var(--radius-sm);
     font-size: var(--font-size-md);
     background-color: var(--bg-primary);
@@ -44,7 +44,7 @@
 }
 
 .forecast-input-group input:focus {
-    border-color: var(--primary-color);
+    border-color: var(--theme-primary);
     outline: none;
 }
 
@@ -73,7 +73,7 @@
     background-color: var(--bg-primary);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
-    border: 1px solid var(--border-color);
+    /* No outer border - content flows as part of the workspace canvas */
     height: 450px;
     position: relative;
 }
@@ -82,7 +82,13 @@
     background-color: var(--bg-secondary);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
-    border-left: 4px solid var(--primary-color);
+    border-left: 4px solid var(--theme-primary);
+}
+
+/* Override workspace-card border within resource forecast view - content flows as part of the page */
+.resource-forecast-container .workspace-card {
+    border: none;
+    box-shadow: none;
 }
 
 .forecast-summary-text {
@@ -106,7 +112,7 @@
 .forecast-table-wrapper {
     background-color: var(--bg-primary);
     border-radius: var(--radius-md);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--theme-border-color);
     overflow: hidden;
 }
 
@@ -114,7 +120,7 @@
     background-color: var(--bg-secondary);
     padding: var(--spacing-sm) var(--spacing-md);
     font-weight: 600;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--theme-border-color);
 }
 
 .forecast-data-table {
@@ -127,7 +133,7 @@
 .forecast-data-table td {
     padding: var(--spacing-sm) var(--spacing-md);
     text-align: left;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--theme-border-color);
 }
 
 .forecast-data-table th {
@@ -143,7 +149,7 @@
 /* --- FAQ Section (System Edit Style) --- */
 .forecast-faq-section {
     margin-top: var(--spacing-xxl);
-    border-top: 2px solid var(--border-color);
+    border-top: 2px solid var(--theme-border-color);
     /* Thicker divider like System Edit */
     padding-top: var(--spacing-md);
     max-width: 1200px;
@@ -159,7 +165,7 @@
 .forecast-faq-item {
     background: transparent;
     border: none;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--theme-border-color);
     margin-bottom: 0;
     border-radius: 0;
 }
@@ -250,7 +256,7 @@
 
 #rf-faq-container details {
     margin-bottom: 0;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--theme-border-color);
 }
 
 #rf-faq-container details:last-child {
@@ -271,7 +277,7 @@
 }
 
 #rf-faq-container summary:hover {
-    color: var(--primary-color);
+    color: var(--theme-primary);
 }
 
 /* Custom marker */
