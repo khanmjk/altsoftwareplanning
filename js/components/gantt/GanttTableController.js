@@ -457,14 +457,11 @@ class GanttTableController {
      * Syncs table changes to Frappe chart by re-rendering the chart
      */
     _syncToFrappe() {
-        // Call the legacy renderGanttChart function which rebuilds the entire chart
-        // This ensures the chart reflects all data changes from the table
-        if (typeof renderGanttChart === 'function') {
-            renderGanttChart();
-        } else if (this.frappeRenderer && typeof this.frappeRenderer.refresh === 'function') {
-            // Fallback to renderer refresh if available
+        // Use direct renderer refresh if available
+        if (this.frappeRenderer && typeof this.frappeRenderer.refresh === 'function') {
             this.frappeRenderer.refresh();
         }
+        // Note: Chart will be fully re-rendered when user takes action that triggers view.renderGanttChart()
     }
 
     /**
@@ -481,7 +478,7 @@ class GanttTableController {
      * This ensures the Gantt chart shows/hides rows matching the table expansion.
      */
     _syncExpansionToChart() {
-        // Sync MVC model state to legacy globals so renderGanttChart can read them
+        // Sync MVC model state to globals so chart can read them
         if (typeof ganttExpandedInitiatives !== 'undefined') {
             ganttExpandedInitiatives.clear();
             this.model.expandedInitiatives.forEach(id => ganttExpandedInitiatives.add(id));
@@ -491,27 +488,19 @@ class GanttTableController {
             this.model.expandedWorkPackages.forEach(id => ganttExpandedWorkPackages.add(id));
         }
 
-        // Sync focus to legacy globals for chart highlighting
+        // Sync focus to globals for chart highlighting
         const focus = this.model.getFocus();
-        if (focus && typeof setLastGanttFocus === 'function') {
-            setLastGanttFocus({
+        if (focus && typeof ganttPlanningViewInstance !== 'undefined' && ganttPlanningViewInstance) {
+            ganttPlanningViewInstance.setLastGanttFocus({
                 taskId: focus.taskId,
                 taskType: focus.taskType,
                 initiativeId: focus.initiativeId
             });
-        }
-
-        // Call the legacy renderGanttChart if available
-        if (typeof renderGanttChart === 'function') {
-            renderGanttChart();
+            // Trigger chart re-render via the view instance
+            ganttPlanningViewInstance.renderGanttChart();
         } else if (this.frappeRenderer && typeof this.frappeRenderer.refresh === 'function') {
             // Fallback to Frappe refresh
             this.frappeRenderer.refresh();
-        }
-
-        // Scroll chart to focused bar
-        if (typeof scrollToGanttFocusTask === 'function') {
-            setTimeout(() => scrollToGanttFocusTask(), 100);
         }
     }
 

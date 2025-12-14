@@ -372,6 +372,16 @@ class FrappeGanttRenderer extends GanttRenderer {
             const task = taskMap.get(idNorm);
             const taskInit = this._normalizeId(task?.initiativeId);
 
+            // Get bar element for styling
+            const barEl = bar.querySelector('.bar');
+
+            // Reset focus styles
+            if (barEl) {
+                barEl.style.removeProperty('stroke');
+                barEl.style.removeProperty('stroke-width');
+                barEl.style.removeProperty('filter');
+            }
+
             if (focusInitiativeId && taskInit && taskInit === focusInitiativeId) {
                 bar.classList.add('focus-initiative');
             }
@@ -380,6 +390,12 @@ class FrappeGanttRenderer extends GanttRenderer {
             const isInitFocus = focusType === 'initiative' && focusInitiativeId && idNorm === focusInitiativeId;
             if (isExactFocus || isInitFocus) {
                 bar.classList.add('focus-row');
+                // Apply prominent inline styles for visibility
+                if (barEl) {
+                    barEl.style.setProperty('stroke', '#3b82f6', 'important');
+                    barEl.style.setProperty('stroke-width', '3px', 'important');
+                    barEl.style.setProperty('filter', 'drop-shadow(0 0 6px rgba(59, 130, 246, 0.7))', 'important');
+                }
             }
         });
     }
