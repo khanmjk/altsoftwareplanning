@@ -407,46 +407,46 @@
 }
 
 .pill-theme {
-    background-color: #e3f2fd;
-    color: #1565c0;
-    border: 1px solid #bbdefb;
+    background-color: color-mix(in srgb, var(--theme-info, #1565c0), transparent 85%);
+    color: var(--theme-info, #1565c0);
+    border: 1px solid color-mix(in srgb, var(--theme-info, #1565c0), transparent 70%);
 }
 
 .pill-sde {
-    background-color: #f3e5f5;
-    color: #7b1fa2;
-    border: 1px solid #e1bee7;
+    background-color: color-mix(in srgb, var(--theme-purple, #7b1fa2), transparent 85%);
+    color: var(--theme-purple, #7b1fa2);
+    border: 1px solid color-mix(in srgb, var(--theme-purple, #7b1fa2), transparent 70%);
 }
 
 .pill-team {
-    background-color: #eceff1;
-    color: #455a64;
-    border: 1px solid #cfd8dc;
+    background-color: var(--theme-bg-tertiary, #eceff1);
+    color: var(--theme-text-secondary, #455a64);
+    border: 1px solid var(--theme-border-color, #cfd8dc);
 }
 
-/* Status Colors */
+/* Status Colors - Using theme semantic colors with fallbacks */
 .roadmap-card.status-backlog {
-    border-left-color: #dfe1e6;
+    border-left-color: var(--theme-border-color, #dfe1e6);
 }
 
 .roadmap-card.status-defined {
-    border-left-color: #42526e;
+    border-left-color: var(--theme-text-secondary, #42526e);
 }
 
 .roadmap-card.status-in-progress {
-    border-left-color: #0052cc;
+    border-left-color: var(--theme-primary, #0052cc);
 }
 
 .roadmap-card.status-completed {
-    border-left-color: #00875a;
+    border-left-color: var(--theme-success, #00875a);
 }
 
 .roadmap-card.status-at-risk {
-    border-left-color: #de350b;
+    border-left-color: var(--theme-danger, #de350b);
 }
 
 .roadmap-card.status-deferred {
-    border-left-color: #ff991f;
+    border-left-color: var(--theme-warning, #ff991f);
 }
 
 /* Toolbar Alignment Fix */

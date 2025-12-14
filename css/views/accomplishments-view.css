@@ -10,7 +10,7 @@
 /* Empty State */
 .accomplishments-container__empty {
     text-align: center;
-    color: #777;
+    color: var(--theme-text-secondary, #777);
     margin-top: 20px;
 }
 

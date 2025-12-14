@@ -67,7 +67,7 @@
 .dashboard-carousel__btn {
     padding: var(--space-sm) var(--space-lg);
     background: var(--theme-primary);
-    color: #ffffff;
+    color: var(--theme-bg-primary, #ffffff);
     border: none;
     border-radius: var(--radius-md);
     font-weight: 600;
@@ -150,7 +150,7 @@
 
 .investment-table thead {
     background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-info) 100%);
-    color: #ffffff;
+    color: var(--theme-bg-primary, #ffffff);
 }
 
 .investment-table th {

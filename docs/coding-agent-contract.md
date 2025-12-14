@@ -323,6 +323,34 @@ Before submitting any code change, verify:
 - [ ] No inline HTML templates
 - [ ] No cross-view updates
 - [ ] Module-level state encapsulated in class
+- [ ] CSS uses theme variables (see theming rule below)
+
+### Theming Compliance
+
+**Rule**: CSS colors MUST use theme variables. Standalone hardcoded colors are violations.
+
+✅ **Compliant patterns** (NOT violations):
+```css
+/* Using theme variable with hardcoded fallback - GOOD */
+color: var(--theme-text-primary, #212529);
+background: var(--theme-success, #28a745);
+
+/* Using color-mix with theme variable - GOOD */
+background: color-mix(in srgb, var(--theme-info), transparent 85%);
+```
+
+❌ **Violations** (must fix):
+```css
+/* Standalone hardcoded color - BAD */
+color: #777;
+background-color: #e3f2fd;
+border-left-color: #0052cc;
+```
+
+**Excluded from audits** (acceptable):
+- `ThemeService.js` - Theme definition constants
+- `MermaidService.js` - Library configuration colors
+- `variables.css` - CSS variable definitions
 
 ### Workspace Integration
 - [ ] Uses `workspaceComponent.setPageMetadata()` for headers
@@ -369,18 +397,19 @@ Before submitting any code change, verify:
 ### Theming Violations (CSS/JS hardcoded colors)
 
 > [!NOTE]
-> The following files contain hardcoded color values that should use theme variables.
+> CSS view files have been converted to use theme variables with fallbacks.
 
-**CSS Files** (144+ instances found):
-- `css/views/roadmap-view.css` - 20+ hardcoded colors (status indicators, timeline)
-- `css/views/goals-view.css` - Progress bar colors
-- `css/views/dashboard-view.css` - Card header colors (`#ffffff`)
-- `css/foundation-components/buttons.css` - Danger/success colors
+**Resolved CSS Files**:
+- ✅ `css/views/roadmap-view.css` - Converted 15 hardcoded colors (pills, status indicators)
+- ✅ `css/views/goals-view.css` - Converted 4 colors (progress bar, theme pill)
+- ✅ `css/views/dashboard-view.css` - Converted 2 colors (button/table text)
+- ✅ `css/views/roadmap-table-view.css` - Converted 1 color (empty state)
+- ✅ `css/views/accomplishments-view.css` - Converted 1 color (empty state)
 
-**JS Files** (acceptable fallbacks in ThemeService):
+**Remaining (Acceptable)**:
 - `js/services/MermaidService.js` - Theme fallback colors (acceptable)
 - `js/services/ThemeService.js` - Theme definition constants (acceptable)
-- `js/services/D3Service.js` - 1 hardcoded `#fff` in tooltip (should fix)
+- `css/foundation-components/buttons.css` - Uses proper var() fallbacks
 
 ---
 

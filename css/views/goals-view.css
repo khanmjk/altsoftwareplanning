@@ -147,7 +147,7 @@
 
 .progress-bar-fill {
     height: 100%;
-    background: linear-gradient(90deg, #28a745, #20c997);
+    background: linear-gradient(90deg, var(--theme-success, #28a745), color-mix(in srgb, var(--theme-success, #28a745), var(--theme-info, #17a2b8) 50%));
     transition: width 0.3s ease;
 }
 
@@ -189,8 +189,8 @@
 .theme-pill {
     display: inline-block;
     padding: 4px 12px;
-    background: #fbbf24;
-    color: #78350f;
+    background: var(--theme-warning, #fbbf24);
+    color: var(--theme-text-primary, #78350f);
     font-size: 0.75rem;
     font-weight: 600;
     border-radius: 12px;
@@ -260,7 +260,7 @@
 }
 
 .mini-initiative-card.btl {
-    background: #fff8e6;
+    background: color-mix(in srgb, var(--theme-warning, #fbbf24), transparent 85%);
 }
 
 .mini-card-main-row {
