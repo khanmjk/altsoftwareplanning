@@ -351,8 +351,6 @@ Before submitting any code change, verify:
 | File | Issue | Priority | Notes |
 |------|-------|----------|-------|
 | `yearPlanning.js` | Module-level globals (lines 5-16), inline HTML (line 478-506) | High | Contains 7 module-level `let` declarations |
-| `WorkspaceComponent.js` | Inline HTML templates | Medium | 6+ `innerHTML` assignments, but acceptable for shell component |
-| `RoadmapComponent.js` | Inline HTML templates | Medium | 4+ `innerHTML` usages in renderGrid methods |
 | `DashboardView.js` | Inline HTML (container clearing) | Low | Mostly uses `innerHTML = ''` for clearing |
 | `enhancedTableWidget.js` | Defensive options callbacks | Low | Checks if options callbacks are functions (acceptable for external API) |
 
@@ -363,8 +361,10 @@ Before submitting any code change, verify:
 | `visualizations.js` | window.* assignments | ✅ Refactored to 12-line init file |
 | `aiViewRegistry.js` | Defensive duck-typing | ✅ Now trusts all views implement `getAIContext()` |
 | `ganttPlanning.js` | Inline HTML templates | ✅ Refactored to `GanttPlanningView.js` class |
-| `GanttPlanningView.js` | Module-level globals | ✅ Deprecated globals, uses viewInstance DI |
-| `GanttTableController.js` | Defensive function checks | ✅ Uses viewInstance property, no typeof checks |
+| `GanttPlanningView.js` | Module-level globals | ✅ Removed globals, uses viewInstance DI |
+| `GanttTableController.js` | Defensive function checks | ✅ Uses viewInstance property |
+| `WorkspaceComponent.js` | Inline HTML templates | ✅ Refactored to DOM APIs |
+| `RoadmapComponent.js` | Inline HTML templates | ✅ Refactored to DOM APIs with _createRoadmapCard helper |
 
 ### Theming Violations (CSS/JS hardcoded colors)
 

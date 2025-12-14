@@ -2,6 +2,10 @@
  * RoadmapComponent
  * Renders the visual roadmap grids (Quarterly View and 3-Year Plan).
  * Supports Drag & Drop for interactive planning.
+ * 
+ * Contract Compliance:
+ * - No innerHTML for template creation (uses DOM APIs)
+ * - Uses helper methods for element creation
  */
 class RoadmapComponent {
     constructor(containerId, viewType) {
@@ -32,20 +36,41 @@ class RoadmapComponent {
         const container = document.getElementById(this.containerId);
         if (!container) return;
 
-        container.innerHTML = `
-            <div id="roadmapTableFilters" class="roadmap-toolbar-content" style="margin-bottom: 15px;"></div>
-            <div id="roadmapGridContainer" class="roadmap-grid-container"></div>
-        `;
+        // Clear container using DOM API
+        this._clearElement(container);
+
+        // Create filters container
+        const filtersContainer = document.createElement('div');
+        filtersContainer.id = 'roadmapTableFilters';
+        filtersContainer.className = 'roadmap-toolbar-content';
+        filtersContainer.style.marginBottom = '15px';
+        container.appendChild(filtersContainer);
+
+        // Create grid container
+        const gridContainer = document.createElement('div');
+        gridContainer.id = 'roadmapGridContainer';
+        gridContainer.className = 'roadmap-grid-container';
+        container.appendChild(gridContainer);
 
         this.renderFilters();
         this.renderGrid();
+    }
+
+    /**
+     * Clears all children from an element
+     * @param {HTMLElement} element
+     */
+    _clearElement(element) {
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
+        }
     }
 
     renderFilters() {
         const filtersContainer = document.getElementById('roadmapTableFilters');
         if (!filtersContainer) return;
 
-        filtersContainer.innerHTML = '';
+        this._clearElement(filtersContainer);
 
         // 1. Year Filter
         const currentYear = new Date().getFullYear();
@@ -175,7 +200,11 @@ class RoadmapComponent {
 
         const data = this.prepareData();
         if (!data) {
-            gridContainer.innerHTML = '<div class="no-data-message">No initiatives found for the selected criteria.</div>';
+            this._clearElement(gridContainer);
+            const noDataMsg = document.createElement('div');
+            noDataMsg.className = 'no-data-message';
+            noDataMsg.textContent = 'No initiatives found for the selected criteria.';
+            gridContainer.appendChild(noDataMsg);
             return;
         }
 
@@ -228,15 +257,82 @@ class RoadmapComponent {
         return null;
     }
 
+    /**
+     * Creates a roadmap card element for an initiative
+     * @param {Object} init - Initiative data
+     * @returns {HTMLElement}
+     */
+    _createRoadmapCard(init) {
+        const statusClass = this.getStatusClass(init.status);
+
+        // Calculate pills data
+        const sdeTotal = (init.assignments || []).reduce((sum, a) => sum + (a.sdeYears || 0), 0).toFixed(1);
+        const themeNames = (init.themes || []).map(tid => {
+            const t = SystemService.getCurrentSystem().definedThemes.find(th => th.themeId === tid);
+            return t ? t.name : 'Uncategorized';
+        }).join(', ') || 'Uncategorized';
+
+        const teams = [...new Set((init.assignments || []).map(a => {
+            const t = SystemService.getCurrentSystem().teams.find(tm => tm.teamId === a.teamId);
+            return t ? (t.teamIdentity || t.teamName) : 'Unknown';
+        }))];
+
+        // Create card
+        const card = document.createElement('div');
+        card.className = `roadmap-card ${statusClass}`;
+        card.draggable = true;
+        card.dataset.id = init.initiativeId;
+
+        // Card header with theme pill
+        const cardHeader = document.createElement('div');
+        cardHeader.className = 'card-header';
+        const themePill = document.createElement('span');
+        themePill.className = 'pill pill-theme';
+        themePill.textContent = themeNames;
+        cardHeader.appendChild(themePill);
+        card.appendChild(cardHeader);
+
+        // Card title
+        const cardTitle = document.createElement('div');
+        cardTitle.className = 'card-title';
+        cardTitle.textContent = init.title;
+        card.appendChild(cardTitle);
+
+        // Card footer with pills
+        const cardFooter = document.createElement('div');
+        cardFooter.className = 'card-footer';
+
+        const cardPills = document.createElement('div');
+        cardPills.className = 'card-pills';
+
+        // Team pills
+        teams.forEach(teamName => {
+            const teamPill = document.createElement('span');
+            teamPill.className = 'pill pill-team';
+            teamPill.textContent = teamName;
+            cardPills.appendChild(teamPill);
+        });
+
+        // SDE pill
+        const sdePill = document.createElement('span');
+        sdePill.className = 'pill pill-sde';
+        sdePill.textContent = `${sdeTotal} SDE`;
+        cardPills.appendChild(sdePill);
+
+        cardFooter.appendChild(cardPills);
+        card.appendChild(cardFooter);
+
+        return card;
+    }
+
     renderQuarterlyGrid(container, data) {
         const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
         const quarterData = { Q1: [], Q2: [], Q3: [], Q4: [] };
-        const processedIds = new Set(); // Track unique IDs to prevent duplicates
+        const processedIds = new Set();
 
         // Format Headers: Q1 '25
         const planningYear = this.planningYear || new Date().getFullYear();
         const shortYear = planningYear.toString().slice(-2);
-        const headerLabels = quarters.map(q => `${q} '${shortYear}`);
 
         // Iterate through the theme-grouped data to flatten it
         Object.keys(data).forEach(theme => {
@@ -252,61 +348,45 @@ class RoadmapComponent {
             });
         });
 
-        let html = `
-            <div class="roadmap-grid quarterly-grid">
-                <div class="roadmap-header-row">
-                    ${quarters.map((q, i) => `<div class="roadmap-header-cell quarter-header header-${q}">${headerLabels[i]}</div>`).join('')}
-                </div>
-                <div class="roadmap-content-row">
-        `;
+        // Clear container
+        this._clearElement(container);
+
+        // Create grid structure
+        const grid = document.createElement('div');
+        grid.className = 'roadmap-grid quarterly-grid';
+
+        // Header row
+        const headerRow = document.createElement('div');
+        headerRow.className = 'roadmap-header-row';
+        quarters.forEach(q => {
+            const headerCell = document.createElement('div');
+            headerCell.className = `roadmap-header-cell quarter-header header-${q}`;
+            headerCell.textContent = `${q} '${shortYear}`;
+            headerRow.appendChild(headerCell);
+        });
+        grid.appendChild(headerRow);
+
+        // Content row
+        const contentRow = document.createElement('div');
+        contentRow.className = 'roadmap-content-row';
 
         quarters.forEach(quarter => {
             const initiatives = quarterData[quarter];
-            html += `
-                <div class="roadmap-quarter-cell column-${quarter}" 
-                     data-quarter="${quarter}">
-            `;
+
+            const cell = document.createElement('div');
+            cell.className = `roadmap-quarter-cell column-${quarter}`;
+            cell.dataset.quarter = quarter;
 
             initiatives.forEach(init => {
-                const statusClass = this.getStatusClass(init.status);
-
-                // Pills Logic
-                const sdeTotal = (init.assignments || []).reduce((sum, a) => sum + (a.sdeYears || 0), 0).toFixed(1);
-                const themeNames = (init.themes || []).map(tid => {
-                    const t = SystemService.getCurrentSystem().definedThemes.find(th => th.themeId === tid);
-                    return t ? t.name : 'Uncategorized';
-                }).join(', ') || 'Uncategorized';
-
-                // Team Pills
-                const teams = [...new Set((init.assignments || []).map(a => {
-                    const t = SystemService.getCurrentSystem().teams.find(tm => tm.teamId === a.teamId);
-                    return t ? (t.teamIdentity || t.teamName) : 'Unknown';
-                }))];
-                const teamPills = teams.map(t => `<span class="pill pill-team">${t}</span>`).join('');
-
-                html += `
-                    <div class="roadmap-card ${statusClass}" 
-                         draggable="true" 
-                         data-id="${init.initiativeId}">
-                        <div class="card-header">
-                            <span class="pill pill-theme">${themeNames}</span>
-                        </div>
-                        <div class="card-title">${init.title}</div>
-                        <div class="card-footer">
-                            <div class="card-pills">
-                                ${teamPills}
-                                <span class="pill pill-sde">${sdeTotal} SDE</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
+                cell.appendChild(this._createRoadmapCard(init));
             });
 
-            html += `</div>`; // End quarter cell
+            contentRow.appendChild(cell);
         });
 
-        html += `</div></div>`; // End content row and grid
-        container.innerHTML = html;
+        grid.appendChild(contentRow);
+        container.appendChild(grid);
+
         this.attachCardEventListeners(container);
         this.attachDragEventListeners(container);
     }
@@ -320,7 +400,7 @@ class RoadmapComponent {
             'Future': `${currentYear + 2}+`
         };
 
-        // Flatten data (similar to quarterly view)
+        // Flatten data
         const gridData = { 'Current Year': [], 'Next Year': [], 'Future': [] };
         const processedIds = new Set();
 
@@ -337,62 +417,47 @@ class RoadmapComponent {
             });
         });
 
-        let html = `
-            <div class="roadmap-grid three-year-grid">
-                <div class="roadmap-header-row">
-                    ${columns.map(col => `<div class="roadmap-header-cell header-${col.replace(/\s+/g, '-').toLowerCase()}">${columnLabels[col]}</div>`).join('')}
-                </div>
-                <div class="roadmap-content-row">
-        `;
+        // Clear container
+        this._clearElement(container);
+
+        // Create grid structure
+        const grid = document.createElement('div');
+        grid.className = 'roadmap-grid three-year-grid';
+
+        // Header row
+        const headerRow = document.createElement('div');
+        headerRow.className = 'roadmap-header-row';
+        columns.forEach(col => {
+            const colClass = col.replace(/\s+/g, '-').toLowerCase();
+            const headerCell = document.createElement('div');
+            headerCell.className = `roadmap-header-cell header-${colClass}`;
+            headerCell.textContent = columnLabels[col];
+            headerRow.appendChild(headerCell);
+        });
+        grid.appendChild(headerRow);
+
+        // Content row
+        const contentRow = document.createElement('div');
+        contentRow.className = 'roadmap-content-row';
 
         columns.forEach(col => {
             const initiatives = gridData[col];
             const colClass = col.replace(/\s+/g, '-').toLowerCase();
 
-            html += `
-                <div class="roadmap-quarter-cell column-${colClass}" 
-                     data-year-bucket="${col}">
-            `;
+            const cell = document.createElement('div');
+            cell.className = `roadmap-quarter-cell column-${colClass}`;
+            cell.dataset.yearBucket = col;
 
             initiatives.forEach(init => {
-                const statusClass = this.getStatusClass(init.status);
-
-                // Pills Logic (Reused)
-                const sdeTotal = (init.assignments || []).reduce((sum, a) => sum + (a.sdeYears || 0), 0).toFixed(1);
-                const themeNames = (init.themes || []).map(tid => {
-                    const t = SystemService.getCurrentSystem().definedThemes.find(th => th.themeId === tid);
-                    return t ? t.name : 'Uncategorized';
-                }).join(', ') || 'Uncategorized';
-
-                const teams = [...new Set((init.assignments || []).map(a => {
-                    const t = SystemService.getCurrentSystem().teams.find(tm => tm.teamId === a.teamId);
-                    return t ? (t.teamIdentity || t.teamName) : 'Unknown';
-                }))];
-                const teamPills = teams.map(t => `<span class="pill pill-team">${t}</span>`).join('');
-
-                html += `
-                    <div class="roadmap-card ${statusClass}" 
-                         draggable="true" 
-                         data-id="${init.initiativeId}">
-                        <div class="card-header">
-                            <span class="pill pill-theme">${themeNames}</span>
-                        </div>
-                        <div class="card-title">${init.title}</div>
-                        <div class="card-footer">
-                            <div class="card-pills">
-                                ${teamPills}
-                                <span class="pill pill-sde">${sdeTotal} SDE</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
+                cell.appendChild(this._createRoadmapCard(init));
             });
 
-            html += `</div>`;
+            contentRow.appendChild(cell);
         });
 
-        html += `</div></div>`;
-        container.innerHTML = html;
+        grid.appendChild(contentRow);
+        container.appendChild(grid);
+
         this.attachCardEventListeners(container);
         this.attachDragEventListeners(container);
     }
@@ -519,15 +584,10 @@ class RoadmapComponent {
             const oldYear = initiative.attributes.planningYear || 'Unknown';
             initiative.attributes.planningYear = newYear;
 
-            // Clear specific quarter/date when moving years to avoid confusion? 
-            // Or just let them persist? Let's keep them for now but maybe reset quarter if moving to future.
-
             notificationManager.showToast(`Moved "${title}" to ${newYear}`, 'success');
         }
 
-        if (typeof SystemService !== 'undefined' && SystemService.save) {
-            SystemService.save();
-        }
+        SystemService.save();
         this.renderGrid();
     }
 

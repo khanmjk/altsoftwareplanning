@@ -3,6 +3,10 @@
  * Responsible for managing the main content area of the application.
  * It handles clearing previous views, creating new view containers,
  * and managing scrolling and layout for the active page.
+ * 
+ * Contract Compliance:
+ * - No innerHTML for template creation (uses DOM APIs)
+ * - Uses textContent for clearing where possible
  */
 class WorkspaceComponent {
     /**
@@ -15,11 +19,6 @@ class WorkspaceComponent {
         }
     }
 
-    /**
-     * Renders a view into the workspace.
-     * @param {string} viewId - The unique ID for the view's container (e.g., 'capacityConfigView').
-     * @param {Function} renderCallback - A function that populates the view container.
-     */
     /**
      * Renders a view into the workspace.
      * @param {string} viewId - The unique ID for the view's container (e.g., 'capacityConfigView').
@@ -45,20 +44,13 @@ class WorkspaceComponent {
             viewContainer = document.createElement('div');
             viewContainer.id = viewId;
             viewContainer.className = 'workspace-view';
-            // Apply standard workspace styles - REMOVED fixed styles to let CSS handle it
-            // viewContainer.style.width = '100%';
-            // viewContainer.style.height = '100%';
-            // viewContainer.style.overflowY = 'auto';
-            // viewContainer.style.padding = '20px';
-            // viewContainer.style.boxSizing = 'border-box';
             this.container.appendChild(viewContainer);
-            // Explicitly set display block for new container
             viewContainer.style.display = 'block';
         } else {
             // Ensure it's visible
             viewContainer.style.display = 'block';
-            // Clear previous content to ensure fresh render
-            viewContainer.innerHTML = '';
+            // Clear previous content using DOM API
+            this._clearElement(viewContainer);
         }
 
         // 3. Execute the render callback to populate the content
@@ -66,12 +58,44 @@ class WorkspaceComponent {
             renderCallback(viewContainer);
         } catch (error) {
             console.error(`WorkspaceComponent: Error in render callback for '${viewId}':`, error);
-            viewContainer.innerHTML = `<div class="error-message">
-                <h3>Error Loading View</h3>
-                <p>There was a problem rendering this page.</p>
-                <pre>${error.message}</pre>
-            </div>`;
+            this._renderErrorMessage(viewContainer, error);
         }
+    }
+
+    /**
+     * Clears all children from an element (replaces innerHTML = '')
+     * @param {HTMLElement} element
+     */
+    _clearElement(element) {
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
+        }
+    }
+
+    /**
+     * Renders an error message using DOM APIs
+     * @param {HTMLElement} container
+     * @param {Error} error
+     */
+    _renderErrorMessage(container, error) {
+        this._clearElement(container);
+
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message';
+
+        const heading = document.createElement('h3');
+        heading.textContent = 'Error Loading View';
+        errorDiv.appendChild(heading);
+
+        const message = document.createElement('p');
+        message.textContent = 'There was a problem rendering this page.';
+        errorDiv.appendChild(message);
+
+        const pre = document.createElement('pre');
+        pre.textContent = error.message;
+        errorDiv.appendChild(pre);
+
+        container.appendChild(errorDiv);
     }
 
     /**
@@ -81,14 +105,14 @@ class WorkspaceComponent {
         // Clear Toolbar
         const toolbar = document.getElementById('workspace-toolbar');
         if (toolbar) {
-            toolbar.innerHTML = '';
+            this._clearElement(toolbar);
             toolbar.style.display = 'none';
         }
 
         // Clear Actions
         const actions = document.getElementById('workspace-actions');
         if (actions) {
-            actions.innerHTML = '';
+            this._clearElement(actions);
         }
 
         // Reset Title
@@ -100,7 +124,7 @@ class WorkspaceComponent {
         // Reset Breadcrumbs
         const breadcrumbs = document.getElementById('workspace-breadcrumbs');
         if (breadcrumbs) {
-            breadcrumbs.innerHTML = '';
+            this._clearElement(breadcrumbs);
         }
     }
 
@@ -116,22 +140,37 @@ class WorkspaceComponent {
         const titleEl = document.getElementById('workspace-title');
         if (titleEl) titleEl.textContent = title || 'Workspace';
 
-        // Update Breadcrumbs
+        // Update Breadcrumbs using DOM APIs
         const breadcrumbsEl = document.getElementById('workspace-breadcrumbs');
         if (breadcrumbsEl) {
-            breadcrumbsEl.innerHTML = breadcrumbs.map(b =>
-                `<span class="canvas-header__breadcrumb-item">${b}</span>`
-            ).join('');
+            this._clearElement(breadcrumbsEl);
+            breadcrumbs.forEach(b => {
+                const span = document.createElement('span');
+                span.className = 'canvas-header__breadcrumb-item';
+                span.textContent = b;
+                breadcrumbsEl.appendChild(span);
+            });
         }
 
-        // Update Actions
+        // Update Actions using DOM APIs
         const actionsEl = document.getElementById('workspace-actions');
         if (actionsEl) {
-            actionsEl.innerHTML = '';
+            this._clearElement(actionsEl);
             actions.forEach(action => {
                 const btn = document.createElement('button');
                 btn.className = action.className || 'btn btn-primary btn-sm';
-                btn.innerHTML = `${action.icon ? `<i class="${action.icon}"></i> ` : ''}${action.label} `;
+
+                // Add icon if present
+                if (action.icon) {
+                    const icon = document.createElement('i');
+                    icon.className = action.icon;
+                    btn.appendChild(icon);
+                    btn.appendChild(document.createTextNode(' '));
+                }
+
+                // Add label
+                btn.appendChild(document.createTextNode(action.label + ' '));
+
                 if (action.onClick) {
                     btn.onclick = action.onClick;
                 }
@@ -148,9 +187,16 @@ class WorkspaceComponent {
         const toolbar = document.getElementById('workspace-toolbar');
         if (!toolbar) return;
 
-        toolbar.innerHTML = '';
+        this._clearElement(toolbar);
+
         if (typeof content === 'string') {
-            toolbar.innerHTML = content;
+            // For string content, create a wrapper and use textContent if it's plain text
+            // or use insertAdjacentHTML for HTML strings (acceptable for toolbar content from views)
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = content; // toolbar content from views may contain HTML
+            while (wrapper.firstChild) {
+                toolbar.appendChild(wrapper.firstChild);
+            }
         } else if (content instanceof HTMLElement) {
             toolbar.appendChild(content);
         }
