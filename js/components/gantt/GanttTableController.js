@@ -461,11 +461,36 @@ class GanttTableController {
      * Syncs table changes to Frappe chart by re-rendering the chart
      */
     _syncToFrappe() {
-        // Use direct renderer refresh if available
-        if (this.frappeRenderer && typeof this.frappeRenderer.refresh === 'function') {
+        // Trigger full chart re-render via view instance
+        // This ensures structural changes (dependencies, new rows) are reflected
+        if (typeof ganttPlanningViewInstance !== 'undefined' && ganttPlanningViewInstance) {
+            // Save current focus state before re-render
+            const savedFocus = this.model.getFocus();
+
+            // Re-render the chart
+            ganttPlanningViewInstance.renderGanttChart();
+
+            // Restore focus state after re-render
+            if (savedFocus && (savedFocus.taskId || savedFocus.initiativeId)) {
+                // Restore to model
+                this.model.setFocus(savedFocus);
+
+                // Restore to view
+                ganttPlanningViewInstance.setLastGanttFocus({
+                    taskId: savedFocus.taskId,
+                    taskType: savedFocus.taskType,
+                    initiativeId: savedFocus.initiativeId
+                });
+
+                // Scroll to focused task
+                if (typeof ganttPlanningViewInstance.scrollToGanttFocusTask === 'function') {
+                    ganttPlanningViewInstance.scrollToGanttFocusTask();
+                }
+            }
+        } else if (this.frappeRenderer && typeof this.frappeRenderer.refresh === 'function') {
+            // Fallback to shallow refresh if view instance not available
             this.frappeRenderer.refresh();
         }
-        // Note: Chart will be fully re-rendered when user takes action that triggers view.renderGanttChart()
     }
 
     /**

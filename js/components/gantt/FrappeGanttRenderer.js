@@ -196,12 +196,12 @@ class FrappeGanttRenderer extends GanttRenderer {
                 const barEl = bar.querySelector('.bar');
                 if (barEl) {
                     barEl.setAttribute('title', lockedReason);
-                    barEl.style.cursor = 'not-allowed';
+                    barEl.style.cursor = 'pointer';
                 }
                 const label = bar.querySelector('.bar-label');
                 if (label) {
                     label.setAttribute('title', lockedReason);
-                    label.style.cursor = 'not-allowed';
+                    label.style.cursor = 'pointer';
                 }
             }
         });
@@ -517,7 +517,9 @@ class FrappeGanttRenderer extends GanttRenderer {
 
     _styleDependencies(wrapper) {
         if (!wrapper) return;
-        const arrowHeadColor = '#6b7ea4';
+
+        // Styling is handled via CSS classes to support theme variables
+        // We add classes here and let CSS (.dep-initiative, .dep-task) handle colors
         const arrowRecords = (this.gantt && Array.isArray(this.gantt.arrows)) ? this.gantt.arrows : [];
 
         // Style and annotate from the source of truth (gantt.arrows)
@@ -527,11 +529,23 @@ class FrappeGanttRenderer extends GanttRenderer {
             const path = el.tagName?.toLowerCase() === 'path' ? el : el.querySelector('path') || el;
             const targetEl = path;
 
-            // Apply visual styling
-            targetEl.style.stroke = arrowHeadColor;
-            targetEl.style.strokeWidth = '1.2px';
-            targetEl.style.strokeDasharray = '5 4';
-            targetEl.style.opacity = '0.6';
+            // Determine dependency type based on from/to task types
+            const fromType = rec.from_task?.type || null;
+            const toType = rec.to_task?.type || null;
+
+            // Initiative dependency: both are initiatives
+            const isInitiativeDep = fromType === 'initiative' && toType === 'initiative';
+            // Task dependency: either is assignment (within a WP)
+            const isTaskDep = fromType === 'assignment' || toType === 'assignment';
+
+            // Add class for CSS targeting (CSS handles colors via theme variables)
+            if (isInitiativeDep) {
+                targetEl.classList.add('dep-initiative');
+            } else if (isTaskDep) {
+                targetEl.classList.add('dep-task');
+            }
+
+            // Base styling - colors come from CSS for theme compliance
             targetEl.style.fill = 'none';
             targetEl.style.cursor = 'help';
 
@@ -560,10 +574,9 @@ class FrappeGanttRenderer extends GanttRenderer {
             targetEl.addEventListener('mouseleave', hideBadge);
         });
 
-        // Style any arrow heads present
+        // Style any arrow heads present (using CSS variables via class)
         const heads = wrapper.querySelectorAll('.arrow-head');
         heads.forEach(head => {
-            head.style.fill = arrowHeadColor;
             head.style.opacity = '0.65';
         });
     }

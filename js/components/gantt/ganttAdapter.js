@@ -141,14 +141,19 @@ const ganttAdapter = (function () {
                                 type: 'assignment',
                                 dependencies: (() => {
                                     // Support both predecessorAssignmentIds (Service) and dependencies (Generic)
-                                    // Use set to avoid duplicates
-                                    const deps = new Set([
-                                        ...(assign.predecessorAssignmentIds || []),
-                                        ...(Array.isArray(assign.dependencies) ? assign.dependencies : [])
-                                    ]);
+                                    // predecessorAssignmentIds stores teamIds, need to convert to full task ID format (wpId-teamId)
+                                    const predecessorTeamIds = assign.predecessorAssignmentIds || [];
+                                    const predecessorTaskIds = predecessorTeamIds.map(teamId =>
+                                        `${wp.workPackageId}-${teamId}`
+                                    );
 
-                                    // Map to sanitized IDs. Note: Data model must store IDs that match the chart's 
-                                    // constructed ID format (wpId-teamId) for this to link correctly.
+                                    // Also support generic dependencies array (already in correct format)
+                                    const genericDeps = Array.isArray(assign.dependencies) ? assign.dependencies : [];
+
+                                    // Combine and deduplicate
+                                    const deps = new Set([...predecessorTaskIds, ...genericDeps]);
+
+                                    // Map to sanitized IDs for Frappe Gantt
                                     return Array.from(deps).map(sanitizeId).join(',');
                                 })(),
                                 // Metadata for updates
