@@ -1036,8 +1036,3 @@ async function _getAnalysisWithGemini(chatHistory, apiKey) {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = AIService;
 }
-
-// Expose to window for current architecture
-if (typeof window !== 'undefined') {
-    window.AIService = AIService;
-}

@@ -856,9 +856,6 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
         setCurrentView: (viewId) => {
             console.log(`[AI CHAT] AI Chat Panel - input context changed to screen [${viewId}]`);
             currentViewId = viewId;
-            if (typeof window !== 'undefined') {
-                window.currentViewId = viewId;
-            }
             renderSuggestionsForCurrentView();
         }
     };
