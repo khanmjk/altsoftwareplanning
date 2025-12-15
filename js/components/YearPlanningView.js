@@ -519,14 +519,8 @@ class YearPlanningView {
             applyConstraints: this.applyConstraints
         });
 
-        // Update original initiative objects for persistence
-        calculatedData.forEach(calcInit => {
-            const originalInit = (SystemService.getCurrentSystem().yearlyInitiatives || [])
-                .find(i => i.initiativeId === calcInit.initiativeId);
-            if (originalInit) {
-                originalInit.attributes.planningStatusFundedHc = calcInit.calculatedAtlBtlStatus;
-            }
-        });
+        // Note: planningStatusFundedHc is persisted only when user explicitly saves
+        // via PlanningService.commitPlanningChanges(), not during render
 
         return calculatedData;
     }
