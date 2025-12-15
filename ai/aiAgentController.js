@@ -691,13 +691,15 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
         try {
             switch (currentView) {
                 case 'planningView':
+                    // Get data from class instance via navigationManager
+                    const planViewInstance = navigationManager?.getViewInstance?.('planningView');
                     contextData.data = {
                         viewTitle: "Year Plan",
-                        planningYear: currentPlanningYear,
-                        scenario: planningCapacityScenario,
-                        constraintsEnabled: applyCapacityConstraintsToggle,
-                        teamLoadSummary: currentYearPlanSummaryData,
-                        planningTable: currentYearPlanTableData
+                        planningYear: planViewInstance?.currentYear || new Date().getFullYear(),
+                        scenario: planViewInstance?.scenario || 'effective',
+                        constraintsEnabled: planViewInstance?.applyConstraints || false,
+                        teamLoadSummary: planViewInstance?.summaryData || null,
+                        planningTable: planViewInstance?.tableData || null
                     };
                     break;
                 case 'ganttPlanningView':

@@ -122,6 +122,40 @@ const OrgService = {
     },
 
     /**
+     * Deletes an engineer from the roster.
+     * Also removes them from any team they are assigned to.
+     * @param {object} systemData
+     * @param {string} engineerName
+     * @returns {object} The deleted engineer object
+     */
+    deleteEngineer(systemData, engineerName) {
+        if (!systemData) throw new Error("OrgService: systemData is required.");
+        if (!engineerName || !engineerName.trim()) throw new Error("OrgService: Engineer name is required.");
+
+        const engineers = systemData.allKnownEngineers || [];
+        const engineerIndex = engineers.findIndex(e => e.name === engineerName);
+        if (engineerIndex === -1) {
+            throw new Error(`OrgService: Engineer "${engineerName}" not found in roster.`);
+        }
+
+        const engineer = engineers[engineerIndex];
+
+        // Remove engineer from their current team if assigned
+        if (engineer.currentTeamId) {
+            const team = (systemData.teams || []).find(t => t.teamId === engineer.currentTeamId);
+            if (team && Array.isArray(team.engineers)) {
+                team.engineers = team.engineers.filter(name => name !== engineerName);
+            }
+        }
+
+        // Remove from roster
+        engineers.splice(engineerIndex, 1);
+        console.log(`OrgService: Deleted engineer ${engineerName}`);
+
+        return engineer;
+    },
+
+    /**
      * Adds a new senior manager.
      * @param {object} systemData
      * @param {string} name

@@ -1020,6 +1020,23 @@ class OrgView {
                 headerFilter: "list",
                 headerFilterParams: () => this.getManagerFilterParams('seniorManagers', 'seniorManagerName'),
                 headerFilterFunc: "="
+            },
+            {
+                title: "Actions",
+                field: "actions",
+                width: 80,
+                hozAlign: "center",
+                headerSort: false,
+                formatter: (cell) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn btn-danger btn-sm';
+                    btn.textContent = '🗑️';
+                    btn.title = 'Delete Engineer';
+                    btn.style.padding = '2px 8px';
+                    btn.style.fontSize = '0.8em';
+                    return btn;
+                },
+                cellClick: (e, cell) => this.handleDeleteEngineer(cell)
             }
         ];
     }
@@ -1168,6 +1185,32 @@ class OrgView {
         notificationManager?.showToast(`Moved ${engineerName} to ${newTeamId ? 'new team' : 'Unallocated'}`, 'success');
     }
 
+    /**
+     * Handle engineer deletion from table
+     * Uses OrgService.deleteEngineer and recalculates capacity
+     */
+    async handleDeleteEngineer(cell) {
+        const engineerName = cell.getRow().getData().name;
+
+        const confirmed = await notificationManager?.confirm(
+            `Are you sure you want to delete "${engineerName}" from the roster? This action cannot be undone.`,
+            'Delete Engineer',
+            { confirmStyle: 'danger' }
+        );
+
+        if (!confirmed) return;
+
+        try {
+            OrgService.deleteEngineer(SystemService.getCurrentSystem(), engineerName);
+            CapacityEngine.recalculate(SystemService.getCurrentSystem());
+            SystemService.save();
+            this.generateEngineerTable();
+            notificationManager?.showToast(`Deleted ${engineerName} from roster`, 'success');
+        } catch (err) {
+            console.error('Error deleting engineer:', err);
+            notificationManager?.showToast(`Failed to delete engineer: ${err.message}`, 'error');
+        }
+    }
 
     /**
      * Returns structured context data for AI Chat Panel integration

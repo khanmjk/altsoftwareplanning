@@ -601,7 +601,10 @@ class TeamEditComponent {
         }
 
         systemRepository.saveSystem(this.systemData.systemName, this.systemData);
-        notificationManager.showToast('Team changes saved.', 'success');
 
+        // Recalculate capacity metrics so Year Plan picks up changes immediately
+        CapacityEngine.recalculate(this.systemData);
+
+        notificationManager.showToast('Team changes saved.', 'success');
     }
 }

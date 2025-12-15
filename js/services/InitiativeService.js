@@ -397,6 +397,87 @@ const InitiativeService = {
         });
 
         return minStartDate || initiative.attributes?.startDate || initiative.startDate || null;
+    },
+
+    // =========================================================================
+    // YEAR PLANNING SERVICE COMMANDS (mutating operations)
+    // =========================================================================
+
+    /**
+     * Sets the protected status of an initiative.
+     * Service command - mutates systemData in place.
+     * 
+     * @param {object} systemData - The global system data object.
+     * @param {string} initiativeId - The initiative ID.
+     * @param {boolean} isProtected - The new protected status.
+     * @returns {object|null} The updated initiative or null if not found.
+     */
+    setProtected(systemData, initiativeId, isProtected) {
+        if (!systemData || !Array.isArray(systemData.yearlyInitiatives)) {
+            console.error("InitiativeService.setProtected: Invalid systemData");
+            return null;
+        }
+
+        const initiative = systemData.yearlyInitiatives.find(init => init.initiativeId === initiativeId);
+        if (!initiative) {
+            console.error(`InitiativeService.setProtected: Initiative ${initiativeId} not found`);
+            return null;
+        }
+
+        initiative.isProtected = isProtected;
+        console.log(`InitiativeService: Set protected=${isProtected} for initiative ${initiativeId}`);
+        return initiative;
+    },
+
+    /**
+     * Sets or removes a team assignment's SDE years for an initiative.
+     * Service command - mutates systemData in place.
+     * 
+     * If sdeYears > 0: upserts the assignment { teamId, sdeYears }
+     * If sdeYears <= 0 or NaN: removes the assignment
+     * 
+     * @param {object} systemData - The global system data object.
+     * @param {string} initiativeId - The initiative ID.
+     * @param {string} teamId - The team ID.
+     * @param {number} sdeYears - The SDE years value (0 or negative removes the assignment).
+     * @returns {object|null} The updated initiative or null if not found.
+     */
+    setTeamAssignmentSdeYears(systemData, initiativeId, teamId, sdeYears) {
+        if (!systemData || !Array.isArray(systemData.yearlyInitiatives)) {
+            console.error("InitiativeService.setTeamAssignmentSdeYears: Invalid systemData");
+            return null;
+        }
+
+        const initiative = systemData.yearlyInitiatives.find(init => init.initiativeId === initiativeId);
+        if (!initiative) {
+            console.error(`InitiativeService.setTeamAssignmentSdeYears: Initiative ${initiativeId} not found`);
+            return null;
+        }
+
+        // Ensure assignments array exists
+        if (!initiative.assignments) {
+            initiative.assignments = [];
+        }
+
+        const assignmentIndex = initiative.assignments.findIndex(a => a.teamId === teamId);
+        const validatedValue = (!isNaN(sdeYears) && sdeYears > 0) ? sdeYears : 0;
+
+        if (validatedValue > 0) {
+            if (assignmentIndex > -1) {
+                // Update existing assignment
+                initiative.assignments[assignmentIndex].sdeYears = validatedValue;
+            } else {
+                // Add new assignment
+                initiative.assignments.push({ teamId, sdeYears: validatedValue });
+            }
+        } else {
+            // Remove assignment if value is 0 or invalid
+            if (assignmentIndex > -1) {
+                initiative.assignments.splice(assignmentIndex, 1);
+            }
+        }
+
+        return initiative;
     }
 
 };

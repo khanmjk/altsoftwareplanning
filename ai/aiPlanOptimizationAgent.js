@@ -52,26 +52,55 @@ const aiPlanOptimizationAgent = (() => {
             // 1. ANALYZE (The "Before" Narrative)
             postMessageCallback(md.render("Starting plan optimization..."));
 
-            let originalPlanData = parsedContext?.data?.planningTable || window.currentYearPlanTableData;
-            let originalSummaryData = parsedContext?.data?.teamLoadSummary || window.currentYearPlanSummaryData;
+            let originalPlanData = parsedContext?.data?.planningTable;
+            let originalSummaryData = parsedContext?.data?.teamLoadSummary;
+
+            // Try to get data from the active view instance
+            const yearPlanView = navigationManager?.getViewInstance?.('planningView');
+            if (!originalPlanData && yearPlanView?.tableData) {
+                originalPlanData = yearPlanView.tableData;
+            }
+            if (!originalSummaryData && yearPlanView?.summaryData) {
+                originalSummaryData = yearPlanView.summaryData;
+            }
 
             if (!originalPlanData || !originalSummaryData) {
                 console.warn("[OptimizeAgent] Plan data unavailable. Attempting to refresh planning view...");
                 updateProgress('🤖 Refreshing Year Plan view to gather data...');
-                window.renderPlanningView();
-                originalPlanData = window.currentYearPlanTableData;
-                originalSummaryData = window.currentYearPlanSummaryData;
+                if (yearPlanView?.render) {
+                    yearPlanView.render();
+                    originalPlanData = yearPlanView.tableData;
+                    originalSummaryData = yearPlanView.summaryData;
+                }
             }
 
             if (!originalPlanData || !originalSummaryData) {
-                console.warn("[OptimizeAgent] Plan data still missing after render. Calculating directly...");
+                console.warn("[OptimizeAgent] Plan data still missing. Using PlanningService directly...");
                 updateProgress('🤖 Calculating plan data directly...');
-                // Assuming these functions are always available globally after initial setup
-                // and that they update window.currentYearPlanTableData/SummaryData
-                window.calculatePlanningTableData();
-                window.calculateTeamLoadSummaryData();
-                originalPlanData = window.currentYearPlanTableData;
-                originalSummaryData = window.currentYearPlanSummaryData;
+                // Calculate using PlanningService with current system data
+                const systemData = SystemService.getCurrentSystem();
+                if (systemData?.yearlyInitiatives && systemData?.calculatedCapacityMetrics) {
+                    const planningYear = yearPlanView?.currentYear || new Date().getFullYear();
+                    const scenario = yearPlanView?.scenario || 'effective';
+                    const applyConstraints = yearPlanView?.applyConstraints || false;
+                    const initiativesForYear = systemData.yearlyInitiatives.filter(
+                        init => init.attributes?.planningYear == planningYear && init.status !== 'Completed'
+                    );
+                    originalPlanData = PlanningService.calculatePlanningTableData({
+                        initiatives: initiativesForYear,
+                        calculatedMetrics: systemData.calculatedCapacityMetrics,
+                        scenario,
+                        applyConstraints
+                    });
+                    originalSummaryData = PlanningService.calculateTeamLoadSummary({
+                        teams: systemData.teams || [],
+                        initiatives: initiativesForYear,
+                        calculatedMetrics: systemData.calculatedCapacityMetrics,
+                        scenario,
+                        applyConstraints,
+                        allKnownEngineers: systemData.allKnownEngineers || []
+                    });
+                }
             }
 
             if (!originalPlanData || !originalSummaryData) {
@@ -178,8 +207,10 @@ ${changesNarrative}
         // Wait for view to be ready
         await new Promise(resolve => setTimeout(resolve, 500));
 
-        if (window.renderPlanningView) {
-            window.renderPlanningView();
+        // Render via the view instance
+        const yearPlanView = navigationManager?.getViewInstance?.('planningView');
+        if (yearPlanView?.render) {
+            yearPlanView.render();
         }
 
         postMessageCallback(md.render("✅ **Plan applied.** The Year Plan has been updated and saved."));

@@ -158,6 +158,7 @@ class ForecastingEngine {
         // New Hire Tracking
         let newHiresRampedUpCount = 0;
         let totalNewHireSdeWeeks = 0;
+        let totalRampUpSinkSdeWeeks = 0; // Track capacity lost during ramp-up
 
         // Week to Month Mapping (Standard 52 week year)
         const simpleWeekToMonth = [
@@ -252,9 +253,13 @@ class ForecastingEngine {
             const weeklyAvailabilityMultiplier = netAvailableDaysPerWeekPerSDE / 5;
             const effectiveEngineers = totalRampedUpEngineers * weeklyAvailabilityMultiplier;
 
-            // Calculate New Hire Specific Capacity
+            // Calculate New Hire Specific Capacity (productive new hires)
             const newHireEffectiveCapacity = newHiresRampedUpCount * weeklyAvailabilityMultiplier;
             totalNewHireSdeWeeks += newHireEffectiveCapacity;
+
+            // Calculate Ramp-up Sink: capacity lost from engineers currently ramping
+            const currentlyRampingCount = rampingEngineers.reduce((sum, r) => sum + r.count, 0);
+            totalRampUpSinkSdeWeeks += currentlyRampingCount * weeklyAvailabilityMultiplier;
 
             // 6. Store Results
             productiveEngineersLocal.push(effectiveEngineers);
@@ -290,7 +295,8 @@ class ForecastingEngine {
             cumulativeAttritionArray: cumulativeAttritionArrayLocal,
             monthlyData: monthlyDataLocal,
             calculatedNetAvailableDaysPerWeek: netAvailableDaysPerWeekPerSDE,
-            newHireCapacityGainSdeYears: totalNewHireSdeWeeks / 52 // Return Gain in Years
+            newHireCapacityGainSdeYears: totalNewHireSdeWeeks / 52,
+            newHireRampUpSinkSdeYears: totalRampUpSinkSdeWeeks / 52 // Capacity lost during ramp-up
         };
     }
 }

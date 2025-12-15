@@ -11,9 +11,7 @@ const AI_VIEW_REGISTRY = {
     // P0 - Critical
     planningView: {
         displayName: 'Year Plan',
-        fallbackGlobals: ['currentPlanningYear', 'planningCapacityScenario',
-            'applyCapacityConstraintsToggle', 'currentYearPlanSummaryData',
-            'currentYearPlanTableData']
+        fallbackGlobals: []  // No module-level globals - all state in viewInstance via getContext()
     },
 
     // P1 - High Priority

@@ -222,7 +222,7 @@ class CapacityDashboardView {
 
         const bd = data.deductionsBreakdown;
 
-        const labels = ['Gross Capacity', 'Std Leave', 'Var Leave', 'Specific Leave', 'Holidays', 'Org Events', 'Team Activities', 'Overhead', 'AI Gain'];
+        const labels = ['Gross Capacity', 'Std Leave', 'Var Leave', 'Specific Leave', 'Holidays', 'Org Events', 'Team Activities', 'Overhead'];
         const values = [
             data.grossYrs,
             -bd.stdLeaveYrs,
@@ -231,20 +231,30 @@ class CapacityDashboardView {
             -bd.holidayYrs,
             -bd.orgEventYrs,
             -bd.teamActivityYrs,
-            -bd.overheadYrs,
-            bd.aiProductivityGainYrs
+            -bd.overheadYrs
         ];
         const bgColors = [
             '#6c757d', // Gross (Grey)
-            '#dc3545', '#dc3545', '#dc3545', '#d63384', '#dc3545', '#dc3545', '#dc3545', '#dc3545', // Deductions
-            '#28a745' // AI Gain (Green)
+            '#dc3545', '#dc3545', '#dc3545', '#d63384', '#dc3545', '#dc3545', '#dc3545' // Deductions
         ];
 
-        // Conditional New Hire Gain (Only for FundedHC)
-        if (this.currentScenario === 'FundedHC') {
+        // Conditional Hire Ramp-up Sink (Only for FundedHC with values)
+        if (this.currentScenario === 'FundedHC' && (bd.newHireRampUpSinkYrs || 0) > 0) {
+            labels.push('Hire Ramp-up');
+            values.push(-(bd.newHireRampUpSinkYrs || 0));
+            bgColors.push('#fd7e14'); // Orange for Ramp-up Sink
+        }
+
+        // AI Gain
+        labels.push('AI Gain');
+        values.push(bd.aiProductivityGainYrs);
+        bgColors.push('#28a745'); // Green for AI Gain
+
+        // Conditional New Hire Gain (Only for FundedHC with values)
+        if (this.currentScenario === 'FundedHC' && (bd.newHireGainYrs || 0) > 0) {
             labels.push('New Hires');
             values.push(bd.newHireGainYrs || 0);
-            bgColors.push('#20c997'); // Teal for New Hires
+            bgColors.push('#20c997'); // Teal for New Hire Gain
         }
 
         labels.push('Net Capacity');

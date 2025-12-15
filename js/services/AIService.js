@@ -68,7 +68,13 @@ const AIService = {
         }
 
         if (!skipPlanningRender && navigationManager.currentViewId === 'planningView') {
-            renderPlanningView();
+            // Dispatch event so views can subscribe to settings changes
+            document.dispatchEvent(new CustomEvent('settings:changed', { detail: { aiEnabled: aiEnabled } }));
+            // Also refresh active view if it has a render method
+            const activeView = navigationManager?.getViewInstance?.('planningView');
+            if (activeView?.render) {
+                activeView.render();
+            }
         }
     },
 
