@@ -136,7 +136,7 @@ const aiPlanOptimizationAgent = (() => {
             const changesNarrative = proposedChanges.map((change, idx) => {
                 const init = SystemService.getCurrentSystem().yearlyInitiatives.find(i => i.initiativeId === change.initiativeId);
                 const oldSde = (init.assignments.find(a => a.teamId === change.teamId)?.sdeYears || 0);
-                const teamName = getTeamNameById(change.teamId);
+                const teamName = OrgService.getTeamNameById(SystemService.getCurrentSystem(), change.teamId);
                 return `- **${idx + 1}. ${init.title} – ${teamName}:** Reduce from \`${oldSde.toFixed(2)}\` to \`${change.newSdeYears.toFixed(2)}\` SDEs.\n  - *Justification:* ${change.justification}`;
             }).join('\n');
 
