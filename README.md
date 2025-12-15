@@ -467,4 +467,4 @@ Mermaid-based diagrams are available across the app and via the AI Assistant.
 *   [ ] **Architecture Diagrams**: Expanded auto-generation of system maps.
 
 ---
-*Created by [Your Name] | Powered by Antigravity*
+*Created by khanmjk | Powered by Antigravity*
