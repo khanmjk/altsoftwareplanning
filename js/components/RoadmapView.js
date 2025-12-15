@@ -156,9 +156,11 @@ class RoadmapView {
         if (isEdit) {
             // Use Service for Update
             InitiativeService.updateInitiative(system, initiativeData.initiativeId, initiativeData);
+            notificationManager.showToast(`Updated initiative "${initiativeData.title}"`, 'success');
         } else {
             // Use Service for Add
             InitiativeService.addInitiative(system, initiativeData);
+            notificationManager.showToast(`Added initiative "${initiativeData.title}"`, 'success');
         }
 
         SystemService.save();

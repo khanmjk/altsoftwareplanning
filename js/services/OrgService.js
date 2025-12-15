@@ -510,6 +510,78 @@ const OrgService = {
         return { deleted: true, seniorManager: deletedSrMgr };
     },
 
+    /**
+     * Adds a new project manager.
+     * @param {object} systemData
+     * @param {string} name
+     * @param {object} attributes
+     */
+    addProjectManager(systemData, name, attributes = {}) {
+        if (!systemData) throw new Error("OrgService: systemData is required.");
+        if (!name || !name.trim()) throw new Error("OrgService: Project Manager name is required.");
+
+        const normalizedName = name.trim();
+        if (!Array.isArray(systemData.projectManagers)) {
+            systemData.projectManagers = [];
+        }
+        if (systemData.projectManagers.some(pm => (pm.pmName || '').toLowerCase() === normalizedName.toLowerCase())) {
+            throw new Error(`Project Manager "${normalizedName}" already exists.`);
+        }
+
+        const newPm = {
+            pmId: this._generateIncrementalId(systemData.projectManagers, 'pmId', 'pm'),
+            pmName: normalizedName,
+            attributes: attributes
+        };
+
+        systemData.projectManagers.push(newPm);
+        console.log(`OrgService: Added Project Manager ${newPm.pmId}`);
+        return newPm;
+    },
+
+    /**
+     * Updates a project manager.
+     * @param {object} systemData
+     * @param {string} pmId
+     * @param {object} updates
+     */
+    updateProjectManager(systemData, pmId, updates = {}) {
+        if (!systemData || !Array.isArray(systemData.projectManagers)) throw new Error("OrgService: Project Manager data is not loaded.");
+        if (!pmId) throw new Error("OrgService: pmId is required.");
+
+        const pm = systemData.projectManagers.find(p => p.pmId === pmId);
+        if (!pm) throw new Error(`OrgService: Project Manager with ID "${pmId}" not found.`);
+
+        if (updates.pmName) {
+            const normalizedName = updates.pmName.trim();
+            if (systemData.projectManagers.some(p => p.pmId !== pmId && (p.pmName || '').toLowerCase() === normalizedName.toLowerCase())) {
+                throw new Error(`Project Manager "${normalizedName}" already exists.`);
+            }
+            updates.pmName = normalizedName;
+        }
+
+        Object.assign(pm, updates);
+        console.log(`OrgService: Updated Project Manager ${pmId}`);
+        return pm;
+    },
+
+    /**
+     * Deletes a project manager.
+     * @param {object} systemData
+     * @param {string} pmId
+     */
+    deleteProjectManager(systemData, pmId) {
+        if (!systemData || !Array.isArray(systemData.projectManagers)) throw new Error("OrgService: Project Manager data is not loaded.");
+        if (!pmId) throw new Error("OrgService: pmId is required.");
+
+        const index = systemData.projectManagers.findIndex(p => p.pmId === pmId);
+        if (index === -1) throw new Error(`OrgService: Project Manager with ID "${pmId}" not found.`);
+
+        const deletedPm = systemData.projectManagers.splice(index, 1)[0];
+        console.log(`OrgService: Deleted Project Manager ${pmId}`);
+        return deletedPm;
+    },
+
     // --- Private / Internal Helpers ---
 
     _generateIncrementalId(collection = [], idField, prefix) {

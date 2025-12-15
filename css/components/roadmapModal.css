@@ -116,10 +116,31 @@
 .roadmap-textarea {
     width: 100%;
     padding: 8px 12px;
+    background-color: var(--theme-bg-primary);
+    color: var(--theme-text-primary);
     border: 1px solid var(--theme-border-color);
     border-radius: 4px;
     font-size: 0.95rem;
     transition: border-color 0.2s;
+}
+
+/* Scrollbar Theming */
+.roadmap-modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.roadmap-modal-body::-webkit-scrollbar-track {
+    background: var(--theme-bg-secondary);
+    border-radius: 4px;
+}
+
+.roadmap-modal-body::-webkit-scrollbar-thumb {
+    background: var(--theme-border-color);
+    border-radius: 4px;
+}
+
+.roadmap-modal-body::-webkit-scrollbar-thumb:hover {
+    background: var(--theme-text-muted);
 }
 
 .roadmap-input:focus,

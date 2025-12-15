@@ -1,6 +1,7 @@
 /**
  * RoadmapInitiativeModal
  * Handles the creation and editing of roadmap initiatives.
+ * Refactored to use ThemedSelect for consistent UI and correct Project Manager sourcing.
  */
 class RoadmapInitiativeModal {
     constructor() {
@@ -8,184 +9,237 @@ class RoadmapInitiativeModal {
         this.assignments = [];
         this.currentInitiativeId = null;
         this.onSave = null; // Callback function
+
+        // Store references to ThemedSelect instances
+        this.selects = new Map();
+
         this.render();
     }
 
     render() {
-        // Check if modal already exists
         if (document.getElementById(this.modalId)) return;
 
-        const modalHtml = `
-            <div id="${this.modalId}" class="roadmap-modal-overlay">
-                <div class="roadmap-modal-content">
-                    <div class="roadmap-modal-header">
-                        <h2 id="roadmapModalTitle" class="roadmap-modal-title">Add New Initiative</h2>
-                        <button class="roadmap-modal-close" data-action="close">&times;</button>
-                    </div>
-                    <div class="roadmap-modal-body">
-                        <form id="roadmapInitiativeForm">
-                            <div class="roadmap-form-group">
-                                <label class="roadmap-label">Title *</label>
-                                <input type="text" name="title" class="roadmap-input" required>
-                            </div>
-                            
-                            <div class="roadmap-form-group">
-                                <label class="roadmap-label">Description</label>
-                                <textarea name="description" class="roadmap-textarea" rows="3"></textarea>
-                            </div>
+        // --- 1. Create Overlay ---
+        const overlay = document.createElement('div');
+        overlay.id = this.modalId;
+        overlay.className = 'roadmap-modal-overlay';
 
-                            <div class="roadmap-form-grid">
-                                <div class="roadmap-form-group">
-                                    <label class="roadmap-label">Status</label>
-                                    <select name="status" class="roadmap-select">
-                                        <option value="Backlog">Backlog</option>
-                                        <option value="Defined">Defined</option>
-                                        <option value="Committed">Committed</option>
-                                        <option value="In Progress">In Progress</option>
-                                        <option value="Completed">Completed</option>
-                                    </select>
-                                </div>
-                                <div class="roadmap-form-group">
-                                    <label class="roadmap-label">Target Due Date *</label>
-                                    <input type="date" name="targetDueDate" class="roadmap-input" required>
-                                </div>
-                            </div>
+        // --- 2. Create Content Container ---
+        const content = document.createElement('div');
+        content.className = 'roadmap-modal-content';
 
-                            <div class="roadmap-form-group">
-                                <label class="roadmap-label">PM Capacity/Team Notes</label>
-                                <textarea name="pmNotes" class="roadmap-textarea" rows="2" placeholder="Notes on PM capacity or allocation"></textarea>
-                            </div>
+        // --- 3. Header ---
+        const header = document.createElement('div');
+        header.className = 'roadmap-modal-header';
 
-                            <h3 class="roadmap-section-title">Strategic Alignment</h3>
-                            <div class="roadmap-form-group">
-                                <label class="roadmap-label">Themes</label>
-                                <select name="themes" class="roadmap-select" multiple size="4" id="roadmapModalThemesSelect">
-                                    <!-- Populated dynamically -->
-                                </select>
-                                <small style="color: #64748b; display: block; margin-top: 5px;">Hold Ctrl/Cmd to select multiple</small>
-                            </div>
+        const title = document.createElement('h2');
+        title.id = 'roadmapModalTitle';
+        title.className = 'roadmap-modal-title';
+        title.textContent = 'Add New Initiative';
+        header.appendChild(title);
 
-                            <div class="roadmap-form-grid">
-                                <div class="roadmap-form-group">
-                                    <label class="roadmap-label">Primary Goal</label>
-                                    <select name="primaryGoalId" class="roadmap-select" id="roadmapModalGoalSelect">
-                                        <option value="">-- None --</option>
-                                        <!-- Populated dynamically -->
-                                    </select>
-                                </div>
-                                <div class="roadmap-form-group">
-                                    <label class="roadmap-label">Owner</label>
-                                    <select name="owner" class="roadmap-select" id="roadmapModalOwnerSelect">
-                                        <option value="">-- Select Owner --</option>
-                                        <!-- Populated dynamically -->
-                                    </select>
-                                </div>
-                            </div>
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'roadmap-modal-close';
+        closeBtn.innerHTML = '&times;';
+        closeBtn.dataset.action = 'close';
+        header.appendChild(closeBtn);
 
-                            <div class="roadmap-form-group">
-                                <label class="roadmap-label">Project Manager</label>
-                                <select name="projectManager" class="roadmap-select" id="roadmapModalProjectManagerSelect">
-                                    <option value="">-- Select Project Manager --</option>
-                                    <!-- Populated dynamically -->
-                                </select>
-                            </div>
+        content.appendChild(header);
 
-                            <h3 class="roadmap-section-title">Team Assignments & Capacity</h3>
-                            <div class="assignments-container">
-                                <div id="roadmapModalAssignmentsList" class="assignments-list">
-                                    <em>No teams assigned yet.</em>
-                                </div>
-                                <div class="assignment-controls">
-                                    <div style="flex-grow: 1;">
-                                        <select id="roadmapModalTeamSelect" class="roadmap-select">
-                                            <option value="">-- Select Team --</option>
-                                            <!-- Populated dynamically -->
-                                        </select>
-                                    </div>
-                                    <div style="width: 120px;">
-                                        <input type="number" id="roadmapModalSdeYears" class="roadmap-input" placeholder="SDE Years" step="0.1" min="0">
-                                    </div>
-                                    <button type="button" class="btn-secondary btn-sm" data-action="add-assignment">Add</button>
-                                </div>
-                            </div>
+        // --- 4. Body (Form) ---
+        const body = document.createElement('div');
+        body.className = 'roadmap-modal-body';
 
-                            <h3 class="roadmap-section-title">ROI Details</h3>
-                            <div class="roadmap-form-grid">
-                                <div class="roadmap-form-group">
-                                    <label class="roadmap-label">Category</label>
-                                    <input type="text" name="roiCategory" class="roadmap-input" list="roiCategoriesList">
-                                    <datalist id="roiCategoriesList">
-                                        <option value="Revenue Generation">
-                                        <option value="Cost Reduction">
-                                        <option value="Risk Mitigation">
-                                        <option value="Compliance">
-                                        <option value="Strategic Alignment">
-                                        <option value="Innovation">
-                                        <option value="Tech Debt">
-                                        <option value="Productivity/Efficiency">
-                                        <option value="User Experience">
-                                    </datalist>
-                                </div>
-                                <div class="roadmap-form-group">
-                                    <label class="roadmap-label">Value Type</label>
-                                    <input type="text" name="roiValueType" class="roadmap-input" placeholder="e.g. Hard Savings">
-                                </div>
-                            </div>
-                            
-                            <div class="roadmap-form-grid">
-                                <div class="roadmap-form-group">
-                                    <label class="roadmap-label">Estimated Value</label>
-                                    <input type="text" name="roiValue" class="roadmap-input" placeholder="e.g. 500k">
-                                </div>
-                                <div class="roadmap-form-group">
-                                    <label class="roadmap-label">Currency</label>
-                                    <input type="text" name="roiCurrency" class="roadmap-input" placeholder="e.g. USD">
-                                </div>
-                            </div>
+        const form = document.createElement('form');
+        form.id = 'roadmapInitiativeForm';
 
-                            <div class="roadmap-form-grid">
-                                <div class="roadmap-form-group">
-                                    <label class="roadmap-label">Time Horizon (Months)</label>
-                                    <input type="number" name="roiTimeHorizon" class="roadmap-input" placeholder="e.g. 12">
-                                </div>
-                                <div class="roadmap-form-group">
-                                    <label class="roadmap-label">Confidence Level</label>
-                                    <input type="text" name="roiConfidenceLevel" class="roadmap-input" placeholder="e.g. High">
-                                </div>
-                            </div>
+        // Title
+        form.appendChild(this._createFormGroup('Title *', 'text', 'title', null, true));
 
-                            <div class="roadmap-form-group">
-                                <label class="roadmap-label">Calculation Methodology</label>
-                                <textarea name="roiCalculationMethodology" class="roadmap-textarea" rows="2"></textarea>
-                            </div>
+        // Description
+        form.appendChild(this._createFormGroup('Description', 'textarea', 'description', null, false, 3));
 
-                            <div class="roadmap-form-group">
-                                <label class="roadmap-label">Business Case Link (URL)</label>
-                                <input type="url" name="roiBusinessCaseLink" class="roadmap-input" placeholder="https://...">
-                            </div>
+        // Grid: Status & Date
+        const grid1 = document.createElement('div');
+        grid1.className = 'roadmap-form-grid';
 
-                            <div class="roadmap-form-group">
-                                <label class="roadmap-label">Override Justification</label>
-                                <textarea name="roiOverrideJustification" class="roadmap-textarea" rows="2"></textarea>
-                            </div>
+        // Status Select
+        grid1.appendChild(this._createThemedSelect('Status', 'status', 'roadmapModalStatusSelect', [
+            { value: 'Backlog', text: 'Backlog' },
+            { value: 'Defined', text: 'Defined' },
+            { value: 'Committed', text: 'Committed' },
+            { value: 'In Progress', text: 'In Progress' },
+            { value: 'Completed', text: 'Completed' }
+        ]));
 
-                        </form>
-                    </div>
-                    <div class="roadmap-modal-footer">
-                        <button class="btn-secondary" data-action="close">Cancel</button>
-                        <button class="btn-primary" data-action="save">Save Initiative</button>
-                    </div>
-                </div>
-            </div>
-        `;
+        grid1.appendChild(this._createFormGroup('Target Due Date *', 'date', 'targetDueDate', null, true));
+        form.appendChild(grid1);
 
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        // PM Notes
+        const notesGroup = this._createFormGroup('PM Capacity/Team Notes', 'textarea', 'pmNotes', null, false, 2);
+        notesGroup.querySelector('textarea').placeholder = 'Notes on PM capacity or allocation';
+        form.appendChild(notesGroup);
+
+        // Strategic Alignment
+        const stratTitle = document.createElement('h3');
+        stratTitle.className = 'roadmap-section-title';
+        stratTitle.textContent = 'Strategic Alignment';
+        form.appendChild(stratTitle);
+
+        // Themes (Multi-Select)
+        form.appendChild(this._createThemedSelect('Themes', 'themes', 'roadmapModalThemesSelect', [], true));
+
+        // Grid: Goal & Owner
+        const grid2 = document.createElement('div');
+        grid2.className = 'roadmap-form-grid';
+        grid2.appendChild(this._createThemedSelect('Primary Goal', 'primaryGoalId', 'roadmapModalGoalSelect'));
+        grid2.appendChild(this._createThemedSelect('Owner', 'owner', 'roadmapModalOwnerSelect'));
+        form.appendChild(grid2);
+
+        // Project Manager
+        form.appendChild(this._createThemedSelect('Project Manager', 'projectManager', 'roadmapModalProjectManagerSelect'));
+
+        // Assignments
+        const assignTitle = document.createElement('h3');
+        assignTitle.className = 'roadmap-section-title';
+        assignTitle.textContent = 'Team Assignments & Capacity';
+        form.appendChild(assignTitle);
+
+        const assignContainer = document.createElement('div');
+        assignContainer.className = 'assignments-container';
+
+        const assignList = document.createElement('div');
+        assignList.id = 'roadmapModalAssignmentsList';
+        assignList.className = 'assignments-list';
+        assignList.innerHTML = '<em>No teams assigned yet.</em>';
+        assignContainer.appendChild(assignList);
+
+        const assignControls = document.createElement('div');
+        assignControls.className = 'assignment-controls';
+
+        // Team Select Wrapper (Using ThemedSelect)
+        const teamWrap = document.createElement('div');
+        teamWrap.style.flexGrow = '1';
+
+        // We handle this one manually/separately as it's not part of the main form map necessarily, 
+        // but let's use the helper and not add it to the main `this.selects` map if we want custom handling,
+        // or just add it and handle it manually.
+        // Actually, let's create it manually to avoid key collision or just give it a unique key.
+        const teamSelect = new ThemedSelect({
+            options: [{ value: '', text: '-- Select Team --' }],
+            value: '',
+            id: 'roadmapModalTeamSelect',
+        });
+        this.selects.set('assignmentTeam', teamSelect);
+        teamWrap.appendChild(teamSelect.render());
+        assignControls.appendChild(teamWrap);
+
+        // SDE Input Wrapper
+        const sdeWrap = document.createElement('div');
+        sdeWrap.style.width = '120px';
+        const sdeInput = document.createElement('input');
+        sdeInput.type = 'number';
+        sdeInput.id = 'roadmapModalSdeYears';
+        sdeInput.className = 'roadmap-input';
+        sdeInput.placeholder = 'SDE Years';
+        sdeInput.step = '0.1';
+        sdeInput.min = '0';
+        sdeWrap.appendChild(sdeInput);
+        assignControls.appendChild(sdeWrap);
+
+        // Add Button
+        const addBtn = document.createElement('button');
+        addBtn.type = 'button';
+        addBtn.className = 'btn-secondary btn-sm';
+        addBtn.dataset.action = 'add-assignment';
+        addBtn.textContent = 'Add';
+        assignControls.appendChild(addBtn);
+
+        assignContainer.appendChild(assignControls);
+        form.appendChild(assignContainer);
+
+        // ROI Details
+        const roiTitle = document.createElement('h3');
+        roiTitle.className = 'roadmap-section-title';
+        roiTitle.textContent = 'ROI Details';
+        form.appendChild(roiTitle);
+
+        // ROI Grid 1
+        const roiGrid1 = document.createElement('div');
+        roiGrid1.className = 'roadmap-form-grid';
+        const catGroup = this._createFormGroup('Category', 'text', 'roiCategory', null, false);
+        const catInput = catGroup.querySelector('input');
+        catInput.setAttribute('list', 'roiCategoriesList');
+        const datalist = document.createElement('datalist');
+        datalist.id = 'roiCategoriesList';
+        ['Revenue Generation', 'Cost Reduction', 'Risk Mitigation', 'Compliance', 'Strategic Alignment', 'Innovation', 'Tech Debt', 'Productivity/Efficiency', 'User Experience'].forEach(cat => {
+            const opt = document.createElement('option');
+            opt.value = cat;
+            datalist.appendChild(opt);
+        });
+        catGroup.appendChild(datalist);
+        roiGrid1.appendChild(catGroup);
+        const valTypeGroup = this._createFormGroup('Value Type', 'text', 'roiValueType', null, false);
+        valTypeGroup.querySelector('input').placeholder = 'e.g. Hard Savings';
+        roiGrid1.appendChild(valTypeGroup);
+        form.appendChild(roiGrid1);
+
+        // ROI Grid 2
+        const roiGrid2 = document.createElement('div');
+        roiGrid2.className = 'roadmap-form-grid';
+        const valGroup = this._createFormGroup('Estimated Value', 'text', 'roiValue', null, false);
+        valGroup.querySelector('input').placeholder = 'e.g. 500k';
+        roiGrid2.appendChild(valGroup);
+        const curGroup = this._createFormGroup('Currency', 'text', 'roiCurrency', null, false);
+        curGroup.querySelector('input').placeholder = 'e.g. USD';
+        roiGrid2.appendChild(curGroup);
+        form.appendChild(roiGrid2);
+
+        // ROI Grid 3
+        const roiGrid3 = document.createElement('div');
+        roiGrid3.className = 'roadmap-form-grid';
+        const horizonGroup = this._createFormGroup('Time Horizon (Months)', 'number', 'roiTimeHorizon', null, false);
+        horizonGroup.querySelector('input').placeholder = 'e.g. 12';
+        roiGrid3.appendChild(horizonGroup);
+        const confGroup = this._createFormGroup('Confidence Level', 'text', 'roiConfidenceLevel', null, false);
+        confGroup.querySelector('input').placeholder = 'e.g. High';
+        roiGrid3.appendChild(confGroup);
+        form.appendChild(roiGrid3);
+
+        // ROI Textareas
+        form.appendChild(this._createFormGroup('Calculation Methodology', 'textarea', 'roiCalculationMethodology', null, false, 2));
+        const bcLinkGroup = this._createFormGroup('Business Case Link (URL)', 'url', 'roiBusinessCaseLink', null, false);
+        bcLinkGroup.querySelector('input').placeholder = 'https://...';
+        form.appendChild(bcLinkGroup);
+        form.appendChild(this._createFormGroup('Override Justification', 'textarea', 'roiOverrideJustification', null, false, 2));
+
+        body.appendChild(form);
+        content.appendChild(body);
+
+        // --- 5. Footer ---
+        const footer = document.createElement('div');
+        footer.className = 'roadmap-modal-footer';
+
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'btn-secondary';
+        cancelBtn.dataset.action = 'close';
+        cancelBtn.textContent = 'Cancel';
+        footer.appendChild(cancelBtn);
+
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'btn-primary';
+        saveBtn.dataset.action = 'save';
+        saveBtn.textContent = 'Save Initiative';
+        footer.appendChild(saveBtn);
+
+        content.appendChild(footer);
+        overlay.appendChild(content);
+
+        // Attach to DOM
+        document.body.appendChild(overlay);
         this.attachEventListeners();
     }
 
-    /**
-     * Attach event listeners using event delegation
-     */
     attachEventListeners() {
         const modal = document.getElementById(this.modalId);
         if (!modal) return;
@@ -217,6 +271,58 @@ class RoadmapInitiativeModal {
         });
     }
 
+    _createFormGroup(labelText, inputType, inputName, existingValue, isRequired, rows = 1) {
+        const group = document.createElement('div');
+        group.className = 'roadmap-form-group';
+
+        const label = document.createElement('label');
+        label.className = 'roadmap-label';
+        label.textContent = labelText;
+        group.appendChild(label);
+
+        let input;
+        if (inputType === 'textarea') {
+            input = document.createElement('textarea');
+            input.rows = rows;
+            input.className = 'roadmap-textarea';
+        } else {
+            input = document.createElement('input');
+            input.type = inputType;
+            input.className = 'roadmap-input';
+        }
+        input.name = inputName;
+        if (existingValue) input.value = existingValue;
+        if (isRequired) input.required = true;
+
+        group.appendChild(input);
+        return group;
+    }
+
+    _createThemedSelect(labelText, selectName, elementId, initialOptions = [], isMultiple = false) {
+        const group = document.createElement('div');
+        group.className = 'roadmap-form-group';
+
+        const label = document.createElement('label');
+        label.className = 'roadmap-label';
+        label.textContent = labelText;
+        group.appendChild(label);
+
+        const selectOptions = initialOptions.length > 0 ? initialOptions : [{ value: '', text: 'Loading...' }];
+
+        const select = new ThemedSelect({
+            options: selectOptions,
+            value: isMultiple ? [] : '',
+            id: elementId,
+            multiple: isMultiple
+        });
+
+        this.selects.set(selectName, select);
+        group.appendChild(select.render());
+
+        return group;
+    }
+
+
     open(initiativeId = null) {
         this.currentInitiativeId = initiativeId;
         const modal = document.getElementById(this.modalId);
@@ -235,6 +341,16 @@ class RoadmapInitiativeModal {
             this.loadInitiativeData(initiativeId);
         } else {
             title.textContent = 'Add New Initiative';
+
+            // Explicitly reset all ThemedSelect instances
+            this.selects.forEach(select => {
+                if (select.multiple) {
+                    select.setValue([]);
+                } else {
+                    select.setValue('');
+                }
+            });
+
             this.renderAssignments();
         }
 
@@ -251,40 +367,48 @@ class RoadmapInitiativeModal {
         if (!SystemService.getCurrentSystem()) return;
 
         // Themes
-        const themesSelect = document.getElementById('roadmapModalThemesSelect');
-        themesSelect.innerHTML = (SystemService.getCurrentSystem().definedThemes || []).map(t =>
-            `<option value="${t.themeId}">${t.name}</option>`
-        ).join('');
+        const themeSelect = this.selects.get('themes');
+        const themes = (SystemService.getCurrentSystem().definedThemes || []).map(t => ({
+            value: t.themeId,
+            text: t.name
+        }));
+        themeSelect.setOptions(themes);
 
         // Goals
-        const goalSelect = document.getElementById('roadmapModalGoalSelect');
+        const goalSelect = this.selects.get('primaryGoalId');
         const goals = [
             ...(SystemService.getCurrentSystem().goals || []),
             ...(SystemService.getCurrentSystem().subGoals || [])
-        ];
-        goalSelect.innerHTML = '<option value="">-- None --</option>' +
-            goals.map(g => `<option value="${g.goalId}">${g.name || g.goalId}</option>`).join('');
+        ].map(g => ({
+            value: g.goalId,
+            text: g.name || g.goalId
+        }));
+        goalSelect.setOptions([{ value: '', text: '-- None --' }, ...goals]);
 
         // Owners (SDMs, PMTs, Sr Mgrs)
-        const ownerSelect = document.getElementById('roadmapModalOwnerSelect');
+        const ownerSelect = this.selects.get('owner');
         const owners = [
-            ...(SystemService.getCurrentSystem().sdms || []).map(p => ({ id: `sdm:${p.sdmId}`, name: `${p.sdmName} (SDM)` })),
-            ...(SystemService.getCurrentSystem().pmts || []).map(p => ({ id: `pmt:${p.pmtId}`, name: `${p.pmtName} (PMT)` })),
-            ...(SystemService.getCurrentSystem().seniorManagers || []).map(p => ({ id: `seniorManager:${p.seniorManagerId}`, name: `${p.seniorManagerName} (Sr Mgr)` }))
+            ...(SystemService.getCurrentSystem().sdms || []).map(p => ({ value: `sdm:${p.sdmId}`, text: `${p.sdmName} (SDM)` })),
+            ...(SystemService.getCurrentSystem().pmts || []).map(p => ({ value: `pmt:${p.pmtId}`, text: `${p.pmtName} (PMT)` })),
+            ...(SystemService.getCurrentSystem().seniorManagers || []).map(p => ({ value: `seniorManager:${p.seniorManagerId}`, text: `${p.seniorManagerName} (Sr Mgr)` }))
         ];
-        ownerSelect.innerHTML = '<option value="">-- Select Owner --</option>' +
-            owners.map(o => `<option value="${o.id}">${o.name}</option>`).join('');
+        ownerSelect.setOptions([{ value: '', text: '-- Select Owner --' }, ...owners]);
 
-        // Project Managers (TPMs)
-        const pmSelect = document.getElementById('roadmapModalProjectManagerSelect');
-        const tpms = (SystemService.getCurrentSystem().tpms || []).map(p => ({ id: `tpm:${p.tpmId}`, name: `${p.tpmName} (TPM)` }));
-        pmSelect.innerHTML = '<option value="">-- Select Project Manager --</option>' +
-            tpms.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+        // Project Managers (TPMs / PgMs) - CORRECT SOURCE system.projectManagers
+        const pmSelect = this.selects.get('projectManager');
+        const pms = (SystemService.getCurrentSystem().projectManagers || []).map(p => ({
+            value: `projectManager:${p.pmId}`,
+            text: `${p.pmName} (PgM)`
+        }));
+        pmSelect.setOptions([{ value: '', text: '-- Select Project Manager --' }, ...pms]);
 
-        // Teams
-        const teamSelect = document.getElementById('roadmapModalTeamSelect');
-        teamSelect.innerHTML = '<option value="">-- Select Team --</option>' +
-            (SystemService.getCurrentSystem().teams || []).map(t => `<option value="${t.teamId}">${t.teamIdentity || t.teamName}</option>`).join('');
+        // Teams (Data for assignments)
+        const teamSelect = this.selects.get('assignmentTeam');
+        const teams = (SystemService.getCurrentSystem().teams || []).map(t => ({
+            value: t.teamId,
+            text: t.teamIdentity || t.teamName
+        }));
+        teamSelect.setOptions([{ value: '', text: '-- Select Team --' }, ...teams]);
     }
 
     loadInitiativeData(initiativeId) {
@@ -295,17 +419,29 @@ class RoadmapInitiativeModal {
 
         form.elements['title'].value = initiative.title || '';
         form.elements['description'].value = initiative.description || '';
-        form.elements['status'].value = initiative.status || 'Backlog';
+
+        // Status (ThemedSelect)
+        this.selects.get('status').setValue(initiative.status || 'Backlog');
+
         form.elements['targetDueDate'].value = initiative.targetDueDate || '';
-        form.elements['primaryGoalId'].value = initiative.primaryGoalId || '';
+
+        // Goal (ThemedSelect)
+        this.selects.get('primaryGoalId').setValue(initiative.primaryGoalId || '');
+
         form.elements['pmNotes'].value = initiative.pmNotes || '';
 
+        // Owner (ThemedSelect)
         if (initiative.owner) {
-            form.elements['owner'].value = `${initiative.owner.type}:${initiative.owner.id}`;
+            this.selects.get('owner').setValue(`${initiative.owner.type}:${initiative.owner.id}`);
+        } else {
+            this.selects.get('owner').setValue('');
         }
 
+        // Project Manager (ThemedSelect)
         if (initiative.projectManager) {
-            form.elements['projectManager'].value = `${initiative.projectManager.type}:${initiative.projectManager.id}`;
+            this.selects.get('projectManager').setValue(`${initiative.projectManager.type}:${initiative.projectManager.id}`);
+        } else {
+            this.selects.get('projectManager').setValue('');
         }
 
         // ROI
@@ -321,12 +457,9 @@ class RoadmapInitiativeModal {
             form.elements['roiOverrideJustification'].value = initiative.roi.overrideJustification || '';
         }
 
-        // Themes
-        const themesSelect = document.getElementById('roadmapModalThemesSelect');
+        // Themes (Multi-Select)
         const initiativeThemes = initiative.themes || [];
-        Array.from(themesSelect.options).forEach(opt => {
-            opt.selected = initiativeThemes.includes(opt.value);
-        });
+        this.selects.get('themes').setValue(initiativeThemes);
 
         // Assignments
         this.assignments = initiative.assignments ? JSON.parse(JSON.stringify(initiative.assignments)) : [];
@@ -334,10 +467,10 @@ class RoadmapInitiativeModal {
     }
 
     addAssignment() {
-        const teamSelect = document.getElementById('roadmapModalTeamSelect');
+        const teamSelect = this.selects.get('assignmentTeam');
         const sdeInput = document.getElementById('roadmapModalSdeYears');
 
-        const teamId = teamSelect.value;
+        const teamId = teamSelect.getValue();
         const sdeYears = parseFloat(sdeInput.value);
 
         if (!teamId) {
@@ -357,7 +490,7 @@ class RoadmapInitiativeModal {
         }
 
         this.renderAssignments();
-        teamSelect.value = '';
+        teamSelect.setValue('');
         sdeInput.value = '';
     }
 
@@ -398,18 +531,22 @@ class RoadmapInitiativeModal {
             return;
         }
 
-        // Construct Data Object
-        const selectedThemes = Array.from(form.elements['themes'].selectedOptions).map(opt => opt.value);
+        // Construct Data Object. Using ThemedSelect getValue()
+        const selectedThemes = this.selects.get('themes').getValue(); // returns array
+        const status = this.selects.get('status').getValue();
+        const primaryGoalId = this.selects.get('primaryGoalId').getValue();
 
         let ownerObj = null;
-        if (form.elements['owner'].value) {
-            const [type, id] = form.elements['owner'].value.split(':');
+        const ownerVal = this.selects.get('owner').getValue();
+        if (ownerVal) {
+            const [type, id] = ownerVal.split(':');
             ownerObj = { type, id };
         }
 
         let pmObj = null;
-        if (form.elements['projectManager'].value) {
-            const [type, id] = form.elements['projectManager'].value.split(':');
+        const pmVal = this.selects.get('projectManager').getValue();
+        if (pmVal) {
+            const [type, id] = pmVal.split(':');
             pmObj = { type, id };
         }
 
@@ -417,10 +554,10 @@ class RoadmapInitiativeModal {
             initiativeId: this.currentInitiativeId || `init_${Date.now()}`,
             title: form.elements['title'].value.trim(),
             description: form.elements['description'].value.trim(),
-            status: form.elements['status'].value,
+            status: status,
             targetDueDate: form.elements['targetDueDate'].value,
             themes: selectedThemes,
-            primaryGoalId: form.elements['primaryGoalId'].value || null,
+            primaryGoalId: primaryGoalId || null,
             pmNotes: form.elements['pmNotes'].value.trim(),
             owner: ownerObj,
             projectManager: pmObj,

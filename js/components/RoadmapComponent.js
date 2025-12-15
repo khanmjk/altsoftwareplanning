@@ -554,22 +554,24 @@ class RoadmapComponent {
 
         const initiative = SystemService.getCurrentSystem().yearlyInitiatives[initiativeIndex];
         const title = initiative.title;
+        const updates = {};
+        let toastMessage = '';
 
         if (this.viewType === 'quarterly') {
             // Quarterly View Update
             const newQuarter = target;
             const oldQuarter = initiative.targetQuarter || RoadmapService.getQuarterFromDate(initiative.targetDueDate) || 'Backlog';
 
-            initiative.targetQuarter = newQuarter;
+            updates.targetQuarter = newQuarter;
 
             const year = this.planningYear && this.planningYear !== 'all'
                 ? parseInt(this.planningYear)
                 : (initiative.attributes.planningYear || new Date().getFullYear());
 
             const newDueDate = RoadmapService.getEndDateForQuarter(newQuarter, year);
-            if (newDueDate) initiative.targetDueDate = newDueDate;
+            if (newDueDate) updates.targetDueDate = newDueDate;
 
-            notificationManager.showToast(`Moved "${title}" from ${oldQuarter} to ${newQuarter}`, 'success');
+            toastMessage = `Moved "${title}" from ${oldQuarter} to ${newQuarter}`;
 
         } else if (this.viewType === '3yp') {
             // 3YP View Update
@@ -581,14 +583,20 @@ class RoadmapComponent {
             else if (newBucket === 'Next Year') newYear = currentYear + 1;
             else if (newBucket === 'Future') newYear = currentYear + 2;
 
-            const oldYear = initiative.attributes.planningYear || 'Unknown';
-            initiative.attributes.planningYear = newYear;
-
-            notificationManager.showToast(`Moved "${title}" to ${newYear}`, 'success');
+            updates.attributes = { ...(initiative.attributes || {}), planningYear: newYear };
+            toastMessage = `Moved "${title}" to ${newYear}`;
         }
 
-        SystemService.save();
-        this.renderGrid();
+        // Use Service Layer for mutation
+        const success = InitiativeService.updateInitiative(SystemService.getCurrentSystem(), initiativeId, updates);
+
+        if (success) {
+            SystemService.save();
+            this.renderGrid();
+            notificationManager.showToast(toastMessage, 'success');
+        } else {
+            notificationManager.showToast('Failed to update initiative.', 'error');
+        }
     }
 
     generateToolbarControls() {
