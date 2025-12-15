@@ -350,7 +350,13 @@ class InitiativeEditComponent {
 
                 const item = document.createElement('div');
                 item.className = 'initiative-assignment-item';
-                item.innerHTML = `<span><strong>${teamName}</strong>: ${a.sdeYears} SDE Years</span>`;
+
+                const infoSpan = document.createElement('span');
+                const teamStrong = document.createElement('strong');
+                teamStrong.textContent = teamName;
+                infoSpan.appendChild(teamStrong);
+                infoSpan.appendChild(document.createTextNode(`: ${a.sdeYears} SDE Years`));
+                item.appendChild(infoSpan);
 
                 const removeBtn = document.createElement('button');
                 removeBtn.className = 'btn btn-danger btn-sm';
@@ -364,7 +370,9 @@ class InitiativeEditComponent {
                 list.appendChild(item);
             });
             if (!init.assignments || init.assignments.length === 0) {
-                list.innerHTML = '<em>No teams assigned.</em>';
+                const emptyMsg = document.createElement('em');
+                emptyMsg.textContent = 'No teams assigned.';
+                list.appendChild(emptyMsg);
             }
         };
         renderList();

@@ -164,7 +164,9 @@ ${changesNarrative}
             confirmContainer.style.cssText = 'display: flex; flex-direction: column; gap: 10px;';
 
             const promptText = document.createElement('p');
-            promptText.innerHTML = '<strong>Would you like to apply these changes?</strong>';
+            const strong = document.createElement('strong');
+            strong.textContent = 'Would you like to apply these changes?';
+            promptText.appendChild(strong);
             confirmContainer.appendChild(promptText);
 
             const buttonRow = document.createElement('div');
@@ -172,13 +174,19 @@ ${changesNarrative}
 
             const applyBtn = document.createElement('button');
             applyBtn.className = 'btn-primary';
-            applyBtn.innerHTML = '<i class="fas fa-check"></i> Apply Changes';
+            const applyIcon = document.createElement('i');
+            applyIcon.className = 'fas fa-check';
+            applyBtn.appendChild(applyIcon);
+            applyBtn.appendChild(document.createTextNode(' Apply Changes'));
             applyBtn.addEventListener('click', () => aiAgentController.confirmPrebuiltAgent(true));
             buttonRow.appendChild(applyBtn);
 
             const discardBtn = document.createElement('button');
             discardBtn.className = 'btn-secondary';
-            discardBtn.innerHTML = '<i class="fas fa-times"></i> Discard';
+            const discardIcon = document.createElement('i');
+            discardIcon.className = 'fas fa-times';
+            discardBtn.appendChild(discardIcon);
+            discardBtn.appendChild(document.createTextNode(' Discard'));
             discardBtn.addEventListener('click', () => aiAgentController.confirmPrebuiltAgent(false));
             buttonRow.appendChild(discardBtn);
 
@@ -186,25 +194,20 @@ ${changesNarrative}
 
             const statusDiv = document.createElement('div');
             statusDiv.className = 'agent-confirmation-status';
-            statusDiv.style.cssText = 'font-size: 0.9em; color: #555;';
+            statusDiv.style.cssText = 'font-size: 0.9em; color: var(--theme-text-secondary, #555);';
             confirmContainer.appendChild(statusDiv);
 
-            // Post the DOM element (or its HTML if postMessageCallback expects string)
-            if (typeof postMessageCallback === 'function') {
-                // If the callback can handle DOM elements, pass directly
-                // Otherwise, we need to append to the chat container
-                const chatMessages = document.getElementById('ai-chat-messages');
-                if (chatMessages) {
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'ai-message';
-                    wrapper.appendChild(confirmContainer);
-                    chatMessages.appendChild(wrapper);
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
-                }
+            // Post confirmation UI via the chat assistant's message API
+            const messageEl = aiChatAssistant.postAgentMessageToView('');
+            if (messageEl) {
+                messageEl.appendChild(confirmContainer);
             }
 
             if (progressMessageEl && typeof progressMessageEl.innerHTML !== 'undefined') {
-                progressMessageEl.innerHTML = '<em>🤖 Optimization complete.</em>';
+                const completeEm = document.createElement('em');
+                completeEm.textContent = '🤖 Optimization complete.';
+                progressMessageEl.innerHTML = '';
+                progressMessageEl.appendChild(completeEm);
             }
 
         } catch (error) {
@@ -461,10 +464,15 @@ If you cannot find a good change, respond with null.
     }
 
     // Public API for the agent
+    function getLastConfirmationContainerId() {
+        return lastConfirmationContainerId;
+    }
+
     return {
         runOptimization,
         applyPendingChanges,
         discardPendingChanges,
         hasPendingChanges,
+        getLastConfirmationContainerId,
     }
 })();

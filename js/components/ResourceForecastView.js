@@ -205,23 +205,61 @@ class ResourceForecastView {
 
         // If fetch failed (e.g., CORS on file:// protocol), show fallback content
         if (htmlContent.includes('Could not load content')) {
-            container.innerHTML = `
-                <h3>FAQ & Model Insights</h3>
-                <p><em>Full FAQ documentation is available when running via a local server. 
-                   See <code>docs/sdmResourceForecastingFAQ.md</code> for details.</em></p>
-                <details>
-                    <summary><strong>Quick Reference: Key Metrics</strong></summary>
-                    <ul>
-                        <li><strong>Effective Engineers:</strong> Ramped-up engineers × (Net Available Days / 5)</li>
-                        <li><strong>SDE-Weeks:</strong> Sum of weekly Effective Engineers for a month</li>
-                        <li><strong>SDE-Days:</strong> Sum of (Effective Engineers × Net Available Days/Week) for a month</li>
-                    </ul>
-                </details>
-                <details>
-                    <summary><strong>How to Run with Full Docs</strong></summary>
-                    <p>Start a local server: <code>python3 -m http.server 8000</code> or use VS Code Live Server</p>
-                </details>
-            `;
+            container.innerHTML = ''; // Clear first
+
+            const h3 = document.createElement('h3');
+            h3.textContent = 'FAQ & Model Insights';
+            container.appendChild(h3);
+
+            const notice = document.createElement('p');
+            const em = document.createElement('em');
+            em.textContent = 'Full FAQ documentation is available when running via a local server. See ';
+            const code = document.createElement('code');
+            code.textContent = 'docs/sdmResourceForecastingFAQ.md';
+            em.appendChild(code);
+            em.appendChild(document.createTextNode(' for details.'));
+            notice.appendChild(em);
+            container.appendChild(notice);
+
+            // Quick Reference details
+            const details1 = document.createElement('details');
+            const summary1 = document.createElement('summary');
+            const strong1 = document.createElement('strong');
+            strong1.textContent = 'Quick Reference: Key Metrics';
+            summary1.appendChild(strong1);
+            details1.appendChild(summary1);
+            const ul = document.createElement('ul');
+            const metrics = [
+                { label: 'Effective Engineers:', desc: 'Ramped-up engineers × (Net Available Days / 5)' },
+                { label: 'SDE-Weeks:', desc: 'Sum of weekly Effective Engineers for a month' },
+                { label: 'SDE-Days:', desc: 'Sum of (Effective Engineers × Net Available Days/Week) for a month' }
+            ];
+            metrics.forEach(m => {
+                const li = document.createElement('li');
+                const b = document.createElement('strong');
+                b.textContent = m.label;
+                li.appendChild(b);
+                li.appendChild(document.createTextNode(' ' + m.desc));
+                ul.appendChild(li);
+            });
+            details1.appendChild(ul);
+            container.appendChild(details1);
+
+            // How to Run details
+            const details2 = document.createElement('details');
+            const summary2 = document.createElement('summary');
+            const strong2 = document.createElement('strong');
+            strong2.textContent = 'How to Run with Full Docs';
+            summary2.appendChild(strong2);
+            details2.appendChild(summary2);
+            const p2 = document.createElement('p');
+            p2.textContent = 'Start a local server: ';
+            const code2 = document.createElement('code');
+            code2.textContent = 'python3 -m http.server 8000';
+            p2.appendChild(code2);
+            p2.appendChild(document.createTextNode(' or use VS Code Live Server'));
+            details2.appendChild(p2);
+            container.appendChild(details2);
         } else {
             container.innerHTML = htmlContent;
         }

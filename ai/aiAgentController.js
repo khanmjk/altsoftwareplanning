@@ -163,9 +163,8 @@ ${toolsetDescription}`;
     }
 
     function renderSuggestionsForCurrentView() {
-        const currentView = (typeof window !== 'undefined' && window.currentViewId) ? window.currentViewId : 'default';
-        // Use internal state if available, otherwise fallback to window (though we should rely on internal now)
-        const effectiveViewId = currentViewId || currentView;
+        // Use internal state (currentViewId is module-scoped)
+        const effectiveViewId = currentViewId || 'default';
 
         const suggestions = SUGGESTED_QUESTIONS[effectiveViewId] || SUGGESTED_QUESTIONS.default;
         console.log(`[AI CHAT] sample questions for this screen:`, suggestions.map(s => s.text));
@@ -679,7 +678,7 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
 
         // [NEW] Try class-based view context first via AI_VIEW_REGISTRY
         if (currentView) {
-            const classContext = window.getAIContextForView(currentView);
+            const classContext = getAIContextForView(currentView);
             if (classContext && classContext.source === 'class') {
                 console.log(`[AI CHAT] Using class-based context from ${currentView}`);
                 contextData.data = classContext;

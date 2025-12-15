@@ -162,22 +162,43 @@ class NotificationManager {
             const overlay = document.createElement('div');
             overlay.className = 'notification-modal-overlay';
 
-            overlay.innerHTML = `
-                <div class="notification-modal">
-                    <div class="notification-modal-header">
-                        <h3 class="notification-modal-title">${title}</h3>
-                        <button class="toast-close" id="modalCloseBtn">&times;</button>
-                    </div>
-                    <div class="notification-modal-body">
-                        ${message}
-                    </div>
-                    <div class="notification-modal-footer">
-                        <button class="notification-btn notification-btn-secondary" id="modalCancelBtn">${cancelText}</button>
-                        <button class="notification-btn notification-btn-${confirmStyle}" id="modalConfirmBtn">${confirmText}</button>
-                    </div>
-                </div>
-            `;
+            // Create modal using DOM
+            const modal = document.createElement('div');
+            modal.className = 'notification-modal';
 
+            // Header
+            const header = document.createElement('div');
+            header.className = 'notification-modal-header';
+            const titleEl = document.createElement('h3');
+            titleEl.className = 'notification-modal-title';
+            titleEl.textContent = title;
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'toast-close';
+            closeBtn.innerHTML = '&times;';
+            header.appendChild(titleEl);
+            header.appendChild(closeBtn);
+
+            // Body
+            const body = document.createElement('div');
+            body.className = 'notification-modal-body';
+            body.textContent = message;
+
+            // Footer
+            const footer = document.createElement('div');
+            footer.className = 'notification-modal-footer';
+            const cancelBtn = document.createElement('button');
+            cancelBtn.className = 'notification-btn notification-btn-secondary';
+            cancelBtn.textContent = cancelText;
+            const confirmBtn = document.createElement('button');
+            confirmBtn.className = `notification-btn notification-btn-${confirmStyle}`;
+            confirmBtn.textContent = confirmText;
+            footer.appendChild(cancelBtn);
+            footer.appendChild(confirmBtn);
+
+            modal.appendChild(header);
+            modal.appendChild(body);
+            modal.appendChild(footer);
+            overlay.appendChild(modal);
             document.body.appendChild(overlay);
 
             const close = (result) => {
@@ -185,14 +206,14 @@ class NotificationManager {
                 resolve(result);
             };
 
-            document.getElementById('modalConfirmBtn').onclick = () => close(true);
-            document.getElementById('modalCancelBtn').onclick = () => close(false);
-            document.getElementById('modalCloseBtn').onclick = () => close(false);
+            confirmBtn.addEventListener('click', () => close(true));
+            cancelBtn.addEventListener('click', () => close(false));
+            closeBtn.addEventListener('click', () => close(false));
 
             // Close on click outside
-            overlay.onclick = (e) => {
+            overlay.addEventListener('click', (e) => {
                 if (e.target === overlay) close(false);
-            };
+            });
         });
     }
 
@@ -208,26 +229,54 @@ class NotificationManager {
             const overlay = document.createElement('div');
             overlay.className = 'notification-modal-overlay';
 
-            overlay.innerHTML = `
-                <div class="notification-modal">
-                    <div class="notification-modal-header">
-                        <h3 class="notification-modal-title">${title}</h3>
-                        <button class="toast-close" id="modalCloseBtn">&times;</button>
-                    </div>
-                    <div class="notification-modal-body">
-                        <label style="display:block; margin-bottom:5px;">${message}</label>
-                        <input type="text" class="notification-modal-input" id="modalInput" value="${defaultValue}">
-                    </div>
-                    <div class="notification-modal-footer">
-                        <button class="notification-btn notification-btn-secondary" id="modalCancelBtn">Cancel</button>
-                        <button class="notification-btn notification-btn-primary" id="modalConfirmBtn">OK</button>
-                    </div>
-                </div>
-            `;
+            // Create modal using DOM
+            const modal = document.createElement('div');
+            modal.className = 'notification-modal';
 
+            // Header
+            const header = document.createElement('div');
+            header.className = 'notification-modal-header';
+            const titleEl = document.createElement('h3');
+            titleEl.className = 'notification-modal-title';
+            titleEl.textContent = title;
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'toast-close';
+            closeBtn.innerHTML = '&times;';
+            header.appendChild(titleEl);
+            header.appendChild(closeBtn);
+
+            // Body
+            const body = document.createElement('div');
+            body.className = 'notification-modal-body';
+            const label = document.createElement('label');
+            label.style.display = 'block';
+            label.style.marginBottom = '5px';
+            label.textContent = message;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'notification-modal-input';
+            input.value = defaultValue;
+            body.appendChild(label);
+            body.appendChild(input);
+
+            // Footer
+            const footer = document.createElement('div');
+            footer.className = 'notification-modal-footer';
+            const cancelBtn = document.createElement('button');
+            cancelBtn.className = 'notification-btn notification-btn-secondary';
+            cancelBtn.textContent = 'Cancel';
+            const confirmBtn = document.createElement('button');
+            confirmBtn.className = 'notification-btn notification-btn-primary';
+            confirmBtn.textContent = 'OK';
+            footer.appendChild(cancelBtn);
+            footer.appendChild(confirmBtn);
+
+            modal.appendChild(header);
+            modal.appendChild(body);
+            modal.appendChild(footer);
+            overlay.appendChild(modal);
             document.body.appendChild(overlay);
 
-            const input = document.getElementById('modalInput');
             input.focus();
             input.select();
 
@@ -236,19 +285,19 @@ class NotificationManager {
                 resolve(result);
             };
 
-            document.getElementById('modalConfirmBtn').onclick = () => close(input.value);
-            document.getElementById('modalCancelBtn').onclick = () => close(null);
-            document.getElementById('modalCloseBtn').onclick = () => close(null);
+            confirmBtn.addEventListener('click', () => close(input.value));
+            cancelBtn.addEventListener('click', () => close(null));
+            closeBtn.addEventListener('click', () => close(null));
 
             // Handle Enter key
-            input.onkeydown = (e) => {
+            input.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') close(input.value);
                 if (e.key === 'Escape') close(null);
-            };
+            });
 
-            overlay.onclick = (e) => {
+            overlay.addEventListener('click', (e) => {
                 if (e.target === overlay) close(null);
-            };
+            });
         });
     }
 }
