@@ -435,6 +435,12 @@ class RoadmapInitiativeModal {
                 calculationMethodology: form.elements['roiCalculationMethodology'].value.trim(),
                 businessCaseLink: form.elements['roiBusinessCaseLink'].value.trim(),
                 overrideJustification: form.elements['roiOverrideJustification'].value.trim()
+            },
+            attributes: {
+                // Calculate planning year from target due date, defaulting to current year
+                planningYear: form.elements['targetDueDate'].value ?
+                    new Date(form.elements['targetDueDate'].value).getFullYear() :
+                    new Date().getFullYear()
             }
         };
 

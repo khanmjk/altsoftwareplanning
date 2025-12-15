@@ -144,15 +144,21 @@ class RoadmapView {
     }
 
     handleSave(initiativeData, isEdit) {
-        if (!SystemService.getCurrentSystem().yearlyInitiatives) SystemService.getCurrentSystem().yearlyInitiatives = [];
+        const system = SystemService.getCurrentSystem();
+
+        // Ensure planningYear is preserved or derived
+        if (!initiativeData.attributes) initiativeData.attributes = {};
+        if (!initiativeData.attributes.planningYear && initiativeData.targetDueDate) {
+            const d = new Date(initiativeData.targetDueDate);
+            if (!isNaN(d.getTime())) initiativeData.attributes.planningYear = d.getFullYear();
+        }
 
         if (isEdit) {
-            const index = SystemService.getCurrentSystem().yearlyInitiatives.findIndex(i => i.initiativeId === initiativeData.initiativeId);
-            if (index > -1) {
-                SystemService.getCurrentSystem().yearlyInitiatives[index] = { ...SystemService.getCurrentSystem().yearlyInitiatives[index], ...initiativeData };
-            }
+            // Use Service for Update
+            InitiativeService.updateInitiative(system, initiativeData.initiativeId, initiativeData);
         } else {
-            SystemService.getCurrentSystem().yearlyInitiatives.push(initiativeData);
+            // Use Service for Add
+            InitiativeService.addInitiative(system, initiativeData);
         }
 
         SystemService.save();
