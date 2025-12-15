@@ -492,28 +492,64 @@ class TeamEditComponent {
         form.style.display = 'flex';
         form.style.gap = '10px';
         form.style.alignItems = 'flex-end';
-        form.innerHTML = `
-            <div style="flex: 2;">
-                <label class="team-edit-label">Name</label>
-                <input type="text" id="newAwayName_${index}" class="team-edit-input" placeholder="Name">
-            </div>
-            <div style="flex: 1;">
-                <label class="team-edit-label">Level</label>
-                <input type="number" id="newAwayLevel_${index}" class="team-edit-input" min="1" max="7" placeholder="Lvl">
-            </div>
-            <div style="flex: 2;">
-                <label class="team-edit-label">Source</label>
-                <input type="text" id="newAwaySource_${index}" class="team-edit-input" placeholder="Source Team">
-            </div>
-            <button type="button" id="addAwayBtn_${index}" class="btn btn-secondary">Add</button>
-        `;
-        section.appendChild(form);
 
-        // Bind click event after appending
-        setTimeout(() => {
-            const btn = section.querySelector(`#addAwayBtn_${index}`);
-            if (btn) btn.onclick = () => this._addAwayMember(index);
-        }, 0);
+        // Name field
+        const nameDiv = document.createElement('div');
+        nameDiv.style.flex = '2';
+        const nameLabel = document.createElement('label');
+        nameLabel.className = 'team-edit-label';
+        nameLabel.textContent = 'Name';
+        const nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.id = `newAwayName_${index}`;
+        nameInput.className = 'team-edit-input';
+        nameInput.placeholder = 'Name';
+        nameDiv.appendChild(nameLabel);
+        nameDiv.appendChild(nameInput);
+
+        // Level field
+        const levelDiv = document.createElement('div');
+        levelDiv.style.flex = '1';
+        const levelLabel = document.createElement('label');
+        levelLabel.className = 'team-edit-label';
+        levelLabel.textContent = 'Level';
+        const levelInput = document.createElement('input');
+        levelInput.type = 'number';
+        levelInput.id = `newAwayLevel_${index}`;
+        levelInput.className = 'team-edit-input';
+        levelInput.min = '1';
+        levelInput.max = '7';
+        levelInput.placeholder = 'Lvl';
+        levelDiv.appendChild(levelLabel);
+        levelDiv.appendChild(levelInput);
+
+        // Source field
+        const sourceDiv = document.createElement('div');
+        sourceDiv.style.flex = '2';
+        const sourceLabel = document.createElement('label');
+        sourceLabel.className = 'team-edit-label';
+        sourceLabel.textContent = 'Source';
+        const sourceInput = document.createElement('input');
+        sourceInput.type = 'text';
+        sourceInput.id = `newAwaySource_${index}`;
+        sourceInput.className = 'team-edit-input';
+        sourceInput.placeholder = 'Source Team';
+        sourceDiv.appendChild(sourceLabel);
+        sourceDiv.appendChild(sourceInput);
+
+        // Add button
+        const addBtn = document.createElement('button');
+        addBtn.type = 'button';
+        addBtn.id = `addAwayBtn_${index}`;
+        addBtn.className = 'btn btn-secondary';
+        addBtn.textContent = 'Add';
+        addBtn.addEventListener('click', () => this._addAwayMember(index));
+
+        form.appendChild(nameDiv);
+        form.appendChild(levelDiv);
+        form.appendChild(sourceDiv);
+        form.appendChild(addBtn);
+        section.appendChild(form);
 
         return section;
     }

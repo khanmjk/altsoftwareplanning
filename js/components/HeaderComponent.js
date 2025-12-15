@@ -130,30 +130,59 @@ class HeaderComponent {
 
     renderNotificationsList(items = [], listEl, badgeEl) {
         if (!listEl) return;
+        listEl.innerHTML = ''; // Clear existing content
+
         if (!Array.isArray(items) || items.length === 0) {
-            listEl.innerHTML = `
-                <div class="notifications-empty">
-                    <div class="notifications-empty__icon"><i class="far fa-bell-slash"></i></div>
-                    <p>No notifications yet</p>
-                </div>
-            `;
+            // Create empty state using DOM
+            const emptyDiv = document.createElement('div');
+            emptyDiv.className = 'notifications-empty';
+            const iconDiv = document.createElement('div');
+            iconDiv.className = 'notifications-empty__icon';
+            const icon = document.createElement('i');
+            icon.className = 'far fa-bell-slash';
+            iconDiv.appendChild(icon);
+            const msg = document.createElement('p');
+            msg.textContent = 'No notifications yet';
+            emptyDiv.appendChild(iconDiv);
+            emptyDiv.appendChild(msg);
+            listEl.appendChild(emptyDiv);
         } else {
-            listEl.innerHTML = items.map(item => {
+            items.forEach(item => {
                 const ts = new Date(item.timestamp);
                 const timeLabel = isNaN(ts) ? '' : ts.toLocaleString();
-                return `
-                    <div class="notification-item ${item.read ? 'notification-item--read' : ''}">
-                        <div class="notification-item__icon notification-item__icon--${item.type || 'info'}">
-                            <i class="fas ${this.iconForType(item.type)}"></i>
-                        </div>
-                        <div class="notification-item__content">
-                            <div class="notification-item__message">${item.message}</div>
-                            <div class="notification-item__meta">${timeLabel}</div>
-                        </div>
-                        <button class="notification-item__remove" data-action="remove-notification" data-id="${item.id}" title="Remove notification">&times;</button>
-                    </div>
-                `;
-            }).join('');
+
+                const itemDiv = document.createElement('div');
+                itemDiv.className = `notification-item ${item.read ? 'notification-item--read' : ''}`;
+
+                const iconDiv = document.createElement('div');
+                iconDiv.className = `notification-item__icon notification-item__icon--${item.type || 'info'}`;
+                const iconEl = document.createElement('i');
+                iconEl.className = `fas ${this.iconForType(item.type)}`;
+                iconDiv.appendChild(iconEl);
+
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'notification-item__content';
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'notification-item__message';
+                messageDiv.textContent = item.message;
+                const metaDiv = document.createElement('div');
+                metaDiv.className = 'notification-item__meta';
+                metaDiv.textContent = timeLabel;
+                contentDiv.appendChild(messageDiv);
+                contentDiv.appendChild(metaDiv);
+
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'notification-item__remove';
+                removeBtn.setAttribute('data-action', 'remove-notification');
+                removeBtn.setAttribute('data-id', item.id);
+                removeBtn.title = 'Remove notification';
+                removeBtn.innerHTML = '&times;';
+
+                itemDiv.appendChild(iconDiv);
+                itemDiv.appendChild(contentDiv);
+                itemDiv.appendChild(removeBtn);
+                listEl.appendChild(itemDiv);
+            });
         }
 
         if (badgeEl) {
