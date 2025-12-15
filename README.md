@@ -1,55 +1,61 @@
-# Software Management & Planning Tool - MVP
+# Software Management & Planning Tool (SMT) - v2.0
 
 **Welcome to the Software Management & Planning Tool!** This application is designed to help software engineering leaders and managers model, visualize, and plan their software systems, organizational structures, and yearly initiatives.
 
+> **v2.0 "Engineered" Release**: This codebase has moved from a prototype to a robust **Service-Based Architecture**. While the UI remains familiar, the underlying engine is now governed by strict Contracts.
+
+---
+
 ## Table of Contents
 
-1.  [Purpose](#purpose)
-2.  [Getting Started](#getting-started)
-    * [AI Assistant Settings](#ai-assistant-settings)
-    * [AI Assistant](#ai-assistant)
-    * [Loading a Saved System](#loading-a-saved-system)
-    * [Creating a New System](#creating-a-new-system)
-    * [Creating a New System with AI](#creating-a-new-system-with-ai)
-    * [Deleting a System](#deleting-a-system)
-    * [Resetting to Defaults](#resetting-to-defaults)
-3.  [Core Concepts & Data Model](#core-concepts--data-model)
-    * [System](#system)
-    * [Services & APIs](#services--apis)
-    * [Teams (2-Pizza Teams)](#teams-2-pizza-teams)
-    * [Engineers (`allKnownEngineers`)](#engineers-allknownengineers)
-    * [Away-Team Members](#away-team-members)
-    * [Managers (SDMs, Senior Managers, Project Managers)](#managers-sdms-senior-managers-project-managers)
-    * [Platform Dependencies](#platform-dependencies)
-    * [Yearly Initiatives](#yearly-initiatives)
-    * [Capacity Configuration](#capacity-configuration)
-    * [Goals](#goals)
-    * [Defined Themes](#defined-themes)
-    * [Work Packages](#work-packages)
-    * [Archived Yearly Plans](#archived-yearly-plans)
-4.  [Key Features](#key-features)
-    * [AI Assistant](#ai-assistant)
-    * [System Navigation](#system-navigation)
-    * [Strategic Dashboard](#strategic-dashboard)
-        * [Dashboard Carousel](#dashboard-carousel)
-        * [Strategic Goals Dashboard](#strategic-goals-dashboard)
-        * [Accomplishments View](#accomplishments-view)
-        * [Investment Distribution by Theme](#investment-distribution-by-theme)
-        * [Investment Trend Over Time](#investment-trend-over-time)
-        * [Roadmap by Quarter & 3-Year Plan](#roadmap-by-quarter--3-year-plan)
-    * [System Overview & Visualizations](#system-overview--visualizations)
-    * [Diagramming (Mermaid)](#diagramming-mermaid)
-    * [Editing System Data](#editing-system-data)
-    * [Organizational Views](#organizational-views)
-    * [Tune Capacity Constraints](#tune-capacity-constraints)
-    * [Roadmap & Backlog Management](#roadmap--backlog-management)
-    * [Yearly Planning](#yearly-planning)
-    * [SDM Resource Forecasting Model](#sdm-resource-forecasting-model)
-    * [Tool Documentation (Home Page)](#tool-documentation-home-page)
-5.  [Basic Workflow Example](#basic-workflow-example)
-6.  [Tips & Best Practices](#tips--best-practices)
-7.  [Known Limitations (MVP)](#known-limitation-mvp)
-8.  [Future Enhancements (Backlog Highlights)](#future-enhancements-backlog-highlights)
+1.  [Technical Architecture (v2.0)](#technical-architecture)
+2.  [AI-First Development (Contracts)](#ai-first-development)
+3.  [Purpose](#purpose)
+4.  [Getting Started](#getting-started)
+5.  [Core Concepts & Data Model](#core-concepts--data-model)
+6.  [Key Features](#key-features)
+    *   [Detailed Planning & Gantt](#detailed-planning--gantt)
+    *   [AI Assistant](#ai-assistant-1)
+    *   [Strategic Dashboard](#strategic-dashboard)
+7.  [Basic Workflow Example](#basic-workflow-example)
+8.  [Tips & Best Practices](#tips--best-practices)
+9.  [Known Limitations](#known-limitations)
+10. [Future Roadmap](#future-roadmap)
+
+---
+
+## 🏗️ Technical Architecture
+
+SMT v2.0 is built with a **"Vanilla JS + Service Architecture"** approach, designed for durability and AI-assistability.
+
+### Directory Structure
+```text
+/root
+├── ai/                 # Agentic Controllers & Toolsets (The "Brain")
+├── docs/               # AI Contracts & Governance (READ THESE)
+├── css/
+│   ├── components/     # Scoped component styles
+│   └── themes/         # CSS Variables for Dark/Light modes
+└── js/
+    ├── services/       # Business Logic (Singleton Services)
+    ├── components/     # UI Components (View Layer)
+    ├── managers/       # State Management
+    └── main.js         # Application Bootstrapper
+```
+
+### Key Patterns
+1.  **Service Layer**: All business logic resides in `js/services`.
+2.  **No Globals**: We strictly avoid `window` pollution.
+3.  **Event-Driven**: Components update via state subscribers.
+
+---
+
+## 🤖 AI-First Development
+
+This project is maintained with the **Antigravity** workflow. Contributors using AI agents **MUST** load the contracts first.
+
+*   **`docs/coding-agent-contract.md`**: Technical rules (file structure, variables).
+*   **`docs/workspace-canvas-contract.md`**: UI/UX rules (theming, colors).
 
 ---
 
@@ -66,32 +72,6 @@ This tool provides a unified platform to:
 * **Gain Strategic Insights:** Use the dashboard to visualize investment allocation, track strategic trends over time, and monitor progress towards business goals.
 * **Forecast Team Growth:** Model SDE hiring, ramp-up, and attrition, factoring in detailed capacity constraints to predict resource availability.
 * **Accelerate Modeling with AI:** Use a powerful AI Assistant to generate entire, realistic sample systems and roadmaps from a single text prompt.
-
----
-
-## Detailed Planning (WIP)
-We’ve introduced a new “Detailed Planning” page with a hierarchical table and Gantt chart for initiatives and work packages. It’s actively evolving and has known rough edges.
-
-What’s included:
-- Hierarchical table (Initiative → Work Package → Team assignments) with inline editing of dates, estimates, and predecessor links.
-- Gantt chart (Mermaid) with larger bars, wider left padding, and a blue/gray theme.
-- Work package dependencies (including cross-initiative) and initiative-level predecessor selection.
-- Filters for year/team and a resizable split between table and chart.
-
-### Gantt renderer feature flag & Frappe WIP
-- A renderer toggle (Mermaid ↔ Frappe) is available in the Detailed Planning header; Mermaid remains the default.
-- Status/year filters are applied identically to the table and the chart so rows stay aligned.
-- Double-click to drill: initiative → shows WPs; double-click a WP → shows its tasks; expansions stay in sync between table and chart.
-- Edit locks: initiatives with WPs, and WPs with multiple tasks, are marked locked with “not allowed” cursors/tooltips; valid edits roll up dates to parents.
-- Label tweaks: long labels are truncated with tooltips; extra spacing reduces overlap. This is still a work in progress—visual glitches (e.g., occasional label overflow or timeline span beyond the year) may occur.
-
-Known issues:
-- Styling is still being consolidated; some inline/UI polish is pending.
-- Mermaid can fail to render on malformed data; dependencies aren’t visualized yet.
-- AI-generated diagrams may need manual cleanup if Mermaid parsing fails.
-- Performance on very large data sets isn’t optimized yet.
-
-The ultimate goal is to enable better-informed decision-making for software delivery, resource allocation, and strategic planning.
 
 ---
 
@@ -287,6 +267,17 @@ Understanding these core entities is key to using the tool effectively. Most ent
 
 ## 4. Key Features
 
+### Detailed Planning & Gantt
+
+We’ve introduced a new “Detailed Planning” page with a hierarchical table and Gantt chart for initiatives and work packages.
+
+What’s included:
+- **Hierarchical Table**: (Initiative → Work Package → Team assignments) with inline editing of dates, estimates, and predecessor links.
+- **Gantt Chart**: A visual timeline using Mermaid/Frappe (configurable) to show work duration and dependencies.
+- **Dependency Management**: Work package dependencies and cross-initiative predecessor selection.
+- **Filtering**: View data by Year, Team, or Goal.
+- **Drill-Down**: Double-click initiatives to reveal Work Packages, and Work Packages to reveal underlying tasks.
+
 ### AI Assistant
 
 The AI Assistant has been refactored into a powerful, stateful **Action Agent** with a clean "Controller" (`ai/aiAgentController.js`) and "Toolset" (`ai/aiAgentToolset.js`) architecture.
@@ -413,7 +404,7 @@ Mermaid-based diagrams are available across the app and via the AI Assistant.
 
 *   Click **"Org Design"** to see the org chart (Block, List, Table layouts) and manage the engineer roster.
 
-### Tune Capacity Constraints (Planning)
+### Tuning Capacity Constraints (Planning)
 
 *   Click **"Capacity Tuning"**.
 *   Define global and team-specific constraints (holidays, leave, overhead) to calculate **Net Project SDE Years**.
@@ -428,28 +419,52 @@ Mermaid-based diagrams are available across the app and via the AI Assistant.
 *   Click **"Year Plan"**.
 *   **Plan & Track:** Assign estimates and monitor capacity (ATL/BTL).
 *   **AI Optimization:** Use the **🤖 Optimize This Plan** button to have the AI analyze and propose scope adjustments.
-* [AI] - Ability to export the year plan, showing ATL/BTL logic, etc. to Excel - the excel model must be generated using LLM so that formulaes in the code are applied to the excel generation
-* Now that we have a goals dashboard view, we need to think about introducing an interface to manage the lifecycle of goals
-* Utilities
-    * Now that we've got export to excel, csv and json working, we need a utlity to generate these files from other places: planning table, overall system data dump, etc.
-    * [AI] Explore generating architecture diagramming options, apart from the app's 3d node graphs
-* UX
-    * Ability to export the system to JSON, CSV and Excel, from top level menu "Export System" [leveraging Tabular library's export functionality]
-* Year Planning
-    * View planning by teams - for individual manager team planning.
-    * Add versioning when saving plans (up to 5 previous versions) - need to update data model structure
-    * Add ability to export the plan to CSV or Excel
-* Team Editing
-    * We support away team only from an incoming perspective (i.e. help provided to the team), but we could also consider concept of outgoing away team (I.e. the team lends engineers to other teams)
-* AI enhancements
-    * Use AI to generate a delivery plan - classic ganntt chart using the year plan as input, work out a plan per team for the year
-    * Use AI to set-up recurring tasks to collect status updates for initiatives (detailed work package tracking feature)
-    * USe AI to generate graphs / views the webapp pages don't currently render - like a pie chart showing disribution of initiatives by themes
-    * Use AI to create a new system from a visual software architecture diagram
-    * Use AI to optimise detail planning
-* TODO: Work with other LLM providers
-* TODO: Add backend proxy for AI image generation (securely store user-provided API keys and enable browser clients hosted on GitHub Pages to call Imagen without exposing secrets)
-* Bugs / Missing features
-    * [UX] Add ability remove an engineer from Engineer List table to account for attrition (the engineer must be removed from the main engineer list and all associate objects where engineer is associated with a team)
-* [UX] Include a Delete Resource section in the Organization view, make the Add and Delete resource sections collapsible.
-* [Feature] - In Service Dependency Visualization, use different colours for upstream and downstream dependent nodes
+
+### Dynamic Theming (UX)
+
+*   **Dark & Light Modes:** Fully supported, high-contrast system themes.
+*   **Seasonal Themes:** Automatic updates for holidays (e.g., "Spooky" for Halloween, "Winter" for Christmas).
+*   **Random Theme Generator:** Feeling adventurous? Use the "Random Theme" button in Settings to generate a unique, mathematically harmonious color palette.
+*   **Contract-Driven:** All themes adhere to the strict semantic color variables defined in `docs/workspace-canvas-contract.md`.
+
+---
+
+## 5. Basic Workflow Example
+
+1.  **Create/Load a System:** Start with a sample or generate one with AI.
+2.  **Define Strategy:** Go to **Dashboard** or **Edit System** to set Goals and Themes.
+3.  **Build Roster:** Use **Org Design** to add engineers and teams.
+4.  **Tune Capacity:** Use **Capacity Tuning** to set holiday schedules and overheads.
+5.  **Create Initiatives:** Use **Roadmap & Backlog** to define work.
+6.  **Year Planning:** Go to **Year Plan**, drag initiatives to "Committed", and assign team effort. Watch the ATL/BTL lines.
+7.  **Optimize:** Use the AI to check for bottlenecks or suggest optimizations.
+8.  **Visualize:** Use **Detailed Planning** (Gantt) to schedule specific work packages.
+
+---
+
+## 6. Tips & Best Practices
+
+*   **Save Frequently:** The app saves to local storage, but explicitly clicking "Save" is good practice.
+*   **Use AI for Grunt Work:** Don't manually type out 50 initiatives. Ask the AI: "Generate 20 initiatives for a crypto exchange."
+*   **Monitor Capacity:** If a team is "Red" in the Year Plan, they are overbooked. Adjust estimates or move work to BTL.
+*   **Check Contracts:** When developing, always refer to `docs/coding-agent-contract.md` to ensure your code is clean and modular.
+
+---
+
+## 7. Known Limitations (MVP)
+
+*   **Local Storage Only:** Data persists in your browser. Clearing cache wipes data.
+*   **Single User:** No real-time collaboration (yet).
+*   **AI Rate Limits:** Dependent on your Google Gemini API quota.
+
+---
+
+## 8. Future Roadmap
+
+*   [ ] **Unit Testing Suite**: Implementing a TDD framework for Services.
+*   [ ] **Export/Import**: Full JSON/CSV export for all data models.
+*   [ ] **Visual Editors**: Enhanced drag-and-drop for Org Charts.
+*   [ ] **Architecture Diagrams**: Expanded auto-generation of system maps.
+
+---
+*Created by [Your Name] | Powered by Antigravity*
