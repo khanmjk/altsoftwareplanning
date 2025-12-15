@@ -185,19 +185,18 @@ bar graph per quarter to see team load/demand impact
 [Done] - [TECH DEBT] - cleanup occurrences of this pattern if (window.X) { window.X.[OPERATION]...
 [Done] - [TECH DEBT] - code cleanup - busted utils.js!
 [Done] - [TECH DEBT] - Abstract 3p libraries like markdown, mermaid, frappe, d3js
+[Done] - [TECH DEBT] - Year Planning modernization
+[Done] - [TECH DEBT] - Transform editSystem.js to the workspace-canvas-contract.md - create view related files
+[Done] - - [TECH DEBT] Refactor ganttPlanning.js - 17 module-level globals, 8 innerHTML usages, inline onclick handlers
+  * Consolidate globals into a class-based structure
+  * Replace innerHTML with DOM APIs or templating
+  * Legacy file with significant contract violations
 
-------------
-IN PROGRESS
-------------
-- cleanup index.html - move a bunch of html to a view file for main content or the workspace canvas files
-- ensure AI tooling agents have the right function calls to reference with the introduction of the service layer
-- Year Planning modernization
-- Transform editSystem.js to the workspace-canvas-contract.md - create view related files
+[Done] - [TECH DEBT] Refactor yearPlanning.js - 8 module-level globals, innerHTML usages, inline onclick
+  * Same refactoring approach as ganttPlanning.js
+  * Both files are legacy and need dedicated refactoring effort
 
-------------
-PARKED TECH DEBT (Dec 2024 Compliance Session)
-------------
-- [TECH DEBT] Refactor main.js to be a pure bootstrap component
+[Done] - - [TECH DEBT] Refactor main.js to be a pure bootstrap component
   * main.js currently has view-specific knowledge (AI Chat Panel fallback HTML, loadHtmlComponent helper)
   * Should move fallback HTML templates to TemplateService or respective components
   * Should move loadHtmlComponent to TemplateLoader or WorkspaceComponent
@@ -205,16 +204,14 @@ PARKED TECH DEBT (Dec 2024 Compliance Session)
   * main.js should only handle: service init, manager init, shell components, routing
   * See workspace-canvas-contract.md for separation of concerns guidelines
 
-- [TECH DEBT] Refactor ganttPlanning.js - 17 module-level globals, 8 innerHTML usages, inline onclick handlers
-  * Consolidate globals into a class-based structure
-  * Replace innerHTML with DOM APIs or templating
-  * Legacy file with significant contract violations
-
-- [TECH DEBT] Refactor yearPlanning.js - 8 module-level globals, innerHTML usages, inline onclick
-  * Same refactoring approach as ganttPlanning.js
-  * Both files are legacy and need dedicated refactoring effort
+[Done] - [UX] Add ability remove an engineer from Engineer List table to account for attrition (the engineer must be removed from the main engineer list and all associate objects where engineer is associated with a team)
 
 
+------------
+IN PROGRESS
+------------
+- cleanup index.html - move a bunch of html to a view file for main content or the workspace canvas files
+- ensure AI tooling agents have the right function calls to reference with the introduction of the service layer
 -- Start building out detailed planning features
 -- [AI] extend the diagram agents to support mermaid generation of gantt charts, organograms
 - [AI Feature] Create an AI agent that can perform actions on the system with access to the code
@@ -254,6 +251,7 @@ the gitgub issues tracker to keep track of user feedback requests
 [TODO] Capacity Tuning - Show Hiring Gap as a KPI card in dashboard AND ensure capacity sink calculation does not include full bench strength for teams with an open hiring gap
 [TODO] Fix org chart visual - enhance it to display by depth
 [TODO] - Bug fix - update roadmap and 3yp if new initiative added using the modal
+[TODO] - Bug fix - UI is not being refreshed when AI agent runs tools and makes changes to system
 
 ------
 TO DO
@@ -264,16 +262,9 @@ TO DO
 - [AI] - Ability to export the year plan, showing ATL/BTL logic, etc. to Excel - the excel model must be generated using LLM so that formulaes in the code are applied to the excel generation
 - Now that we have a goals dashboard view, we need to think about introducing an interface to manage the lifecycle of goals
 - Working on creating a reusable modern table widget leveraging tabular library
-Moving Filtering to EnhancedTableWidget:
-Now that the immediate filter display issues in the Engineer List (using direct Tabulator configuration) are resolved, the next logical 
-step for the widget itself is to abstract that filtering logic.
-When we resume work on the EnhancedTableWidget, we will:
-Define an API on the widget for how columns specify their filter type and options (e.g., columnDef.headerFilterType = 'select', columnDef.headerFilterOptions = [{label:'All', value:''}, ...]).
-Implement the logic within EnhancedTableWidget to take these definitions and correctly configure Tabulator's headerFilter and headerFilterParams for each column.
-This will include dynamically populating select lists from column data if specified.
+
 Utilities
 - Now that we've got export to excel, csv and json working, we need a utlity to generate these files from other places: planning table, overall system data dump, etc.
-
 
 UX
 -- Ability to export the system to JSON, CSV and Excel, from top level menu "Export System" [leveraging Tabular library's export functionality]
@@ -306,9 +297,8 @@ AI enhancements
 TODO: Work with other LLM providers
 TODO: Add backend proxy for AI image generation (securely store user-provided API keys and enable browser clients hosted on GitHub Pages to call Imagen without exposing secrets)
 
-
 Bugs / Missing features
-- [UX] Add ability remove an engineer from Engineer List table to account for attrition (the engineer must be removed from the main engineer list and all associate objects where engineer is associated with a team)
+
 - [UX] Include a Delete Resource section in the Organization view, make the Add and Delete resource sections collapsible.
 Remember to regenerate the team breakdown table to reflect changes.
 - [Feature] - In Service Dependency Visualization, use different colours for upstream and downstream dependent nodes
@@ -342,41 +332,6 @@ Identify other UI patterns that are repeated (e.g., dual-list selectors, collaps
 Impact: Further reduces code duplication, ensures UI consistency, and speeds up development of new views.
 
 ==== MAJOR REFACTOR TASKS ===
-Here’s a phased path:
-
-* Formalize a State Layer
-Create state/store.js that owns currentSystemData, globalSettings, etc.
-Provide getters/setters + simple event hooks (subscribe('aiSettings', cb)), so views just react to state changes.
-When you migrate, this store becomes your Redux/Zustand/MobX slice or Rails service object.
-Separate Pure Logic from UI
-
-* Extract “calculation” modules (planning/calculations.js, capacity/calculations.js).
-Keep DOM rendering functions separate (planning/view.js), consuming those pure modules.
-This lets you drop the same logic into React components later without rewriting algorithms.
-Modularize Domains
-
-* Move CRUD helpers into domain files (data/teams.js, data/initiatives.js).
-Eventually these become API services (Rails controllers or Next.js API routes), but even in vanilla they reduce cross-file dependencies.
-Component-Style Builders
-
-* Replace large innerHTML strings with small factory functions (createScenarioControls({ state, onSave, onOptimize })).
-These can render DOM nodes now, and later map directly to React components with the same props.
-Agent Layer Abstraction
-
-* Treat each specialist agent as a node-compatible service: accept explicit dependencies (state snapshot, context provider) instead of hitting globals.
-Build a small “agent runtime” that logs actions and returns structured results. Later you can expose it via an API route or background job.
-Routing & View Registry
-
-* Instead of switchView calling random global functions, create a view registry (views/index.js) that registers show, hide, getContext.
-This mirrors React Router / Next.js pages and makes it easier to port each view incrementally.
-Asset / Style organization
-
-* Begin grouping styles alongside modules (e.g., planning/planning.css) to mirror component-scoped styles. When you move to CSS modules or Tailwind, the grouping persists.
-Testing Harness
-
-* Add minimal Jest (or similar) tests for the pure logic modules. That suite will move with you to Node/React, ensuring behavior parity during the migration.
-
-By adopting this structure now, the eventual stack shift is just re-implementing the view layer and wiring the same modules into a new runtime. Each step is incremental and keeps the current app stable while paving the way for React/Next.js or Rails.
 
 ==== Post MVP ===
 UX enhancements
@@ -399,3 +354,30 @@ Instructions for coding agents to follow. In addition to applying best, clean co
 - all features that consist of view/model/control must respect the design rules as stated in docs/workspace-canvas-contract.md
 - Remove global variables as far as possible except for the global singletons allowed to be accessible across the app
 - always ensure the code is easily portable
+# Expert Software Engineering Rules & Guidelines
+
+**Role and Persona:** The agent is a software architect and lead engineer with 25 years of experience in shipping industrial-grade software products, trained on classic O'Reilly texts, C/C++ best practices, and Object-Oriented Programming (OOP) principles. Correctness, simplicity, and clarity are prioritized.
+
+**Goal:** The primary goal is to act as a thoughtful, collaborative partner, ensuring all generated solutions adhere to high-level architectural standards and avoid common pitfalls like technical debt. The agent must **think at a system level first** and create an implementation plan before writing any code.
+
+## Core Architectural Principles (Guardrails)
+
+*   **Avoid Monoliths:** Design systems with modularity and clear service boundaries. Strive for microservices or well-defined modules, not single, massive applications.
+*   **Embrace Abstraction & Functions:** Structure code around well-defined functions and abstractions. Hide implementation details and minimize global or shared mutable data.
+*   **Separation of Concerns (SoC):** Strictly enforce SoC at all levels (system, component, class, function).
+    *   **Business Logic:** Isolate business logic from presentation, data access, and infrastructure concerns.
+    *   **Design Patterns:** Apply classic patterns like MVC, Domain-Driven Design (DDD), and others (Factory, Strategy, Observer, etc.) when appropriate.
+*   **Avoid Global Variables:** Minimize or eliminate the use of global or static mutable data. Use dependency injection or encapsulation instead.
+*   **Proper Error Handling/Defensive Coding:**
+    *   **Guaranteed Objects:** Avoid unnecessary defensive coding for objects that are guaranteed to exist (e.g., after initial validation). Focus defensive efforts on input validation and external system interactions.
+    *   **Robustness:** Implement clear guardrails, input validation, output format specifications, and error handling expectations.
+*   **Memory Management (C/C++ Context):** For relevant languages, use RAII (Resource Acquisition Is Initialization) and smart pointers (e.g., `std::unique_ptr`, `std::shared_ptr`) for robust memory management.
+*   **Testing:** Generate unit tests for all new code components and ensure they cover potential points of failure (white-box testing).
+*   **Coding Style:** Adhere strictly to the relevant community standard (e.g., PEP 8 for Python, Google C++ Style Guide). Enforce clean compilation at high warning levels.
+
+## Operational Directives
+
+*   **Plan First:** Before any coding request, analyze the requirements, break down the task, and produce a detailed **Artifact** outlining the implementation plan and task list. Await user approval on the plan if the change is significant or touches multiple files.
+*   **Communicate Architecture:** When proposing a solution, describe the architectural choices (e.g., design patterns, separation layers) and justify why they prevent technical debt.
+*   **Iterate and Refine:** Approach all tasks iteratively, focusing on an initial cohesive design and then refining for encapsulation, delegation, and loose coupling.
+*   **Self-Validate:** Autonomously test and validate work (via terminal commands or browser testing) before presenting results to the user.
