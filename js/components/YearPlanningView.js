@@ -887,21 +887,23 @@ class YearPlanningView {
             // Capacity Status cell
             const statusCell = row.insertCell();
             statusCell.classList.add('year-plan-cell--center');
-            const totalTeamBIS = calculatedMetrics.totals?.TeamBIS?.totalHeadcount || 0;
-            const totalFundedHC = calculatedMetrics.totals?.FundedHC?.humanHeadcount || 0;
 
-            if (initiative.calculatedCumulativeSde <= totalTeamBIS) {
+            // Use the currently selected scenario's total capacity
+            const selectedScenarioKey = this.scenario === 'funded' ? 'FundedHC' :
+                (this.scenario === 'team_bis' ? 'TeamBIS' : 'EffectiveBIS');
+            const scenarioCapacity = isNetCapacityUsed
+                ? calculatedMetrics.totals?.[selectedScenarioKey]?.netYrs
+                : calculatedMetrics.totals?.[selectedScenarioKey]?.grossYrs;
+            const totalCapacity = scenarioCapacity || 0;
+
+            if (initiative.calculatedCumulativeSde <= totalCapacity) {
                 statusCell.textContent = '✅';
-                statusCell.title = `Within Team BIS (${totalTeamBIS.toFixed(2)})`;
+                statusCell.title = `Within ${selectedScenarioKey} capacity (${totalCapacity.toFixed(2)})`;
                 statusCell.classList.add('year-plan-capacity--ok');
-            } else if (initiative.calculatedCumulativeSde <= totalFundedHC) {
-                statusCell.textContent = '⚠️';
-                statusCell.title = `Exceeds Team BIS, Within Funded HC (${totalFundedHC.toFixed(2)})`;
-                statusCell.classList.add('year-plan-capacity--warning');
             } else {
-                statusCell.textContent = '🛑';
-                statusCell.title = `Exceeds Funded HC (${totalFundedHC.toFixed(2)})`;
-                statusCell.classList.add('year-plan-capacity--danger');
+                statusCell.textContent = '⚠️';
+                statusCell.title = `Exceeds ${selectedScenarioKey} capacity (${totalCapacity.toFixed(2)})`;
+                statusCell.classList.add('year-plan-capacity--warning');
             }
 
             // ATL/BTL cell
