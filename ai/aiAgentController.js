@@ -404,15 +404,14 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
 
         // Save changes via SystemService
         try {
-            if (typeof SystemService !== 'undefined') {
-                SystemService.save();
-            }
+            SystemService.save();
         } catch (error) {
             console.error('SystemService.save failed:', error);
         }
-        // if (window.navigationManager && window.navigationManager.refresh) {
-        //     try { window.navigationManager.refresh(); } catch (error) { console.error('navigationManager.refresh failed:', error); }
-        // }
+
+        // Fix: Refresh the UI to show changes
+        console.log('[AI Agent Controller] Refreshing UI after tool execution.');
+        navigationManager.refresh();
 
         if (view) {
             let summaryHtml = '<b>Agent plan finished.</b> UI has been refreshed.';

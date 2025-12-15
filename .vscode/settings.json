@@ -1,3 +1,10 @@
 {
-    "chatgpt.openOnStartup": true
+    "liveServer.settings.ignore": [
+        "**/.vscode/**",
+        "**/.git/**",
+        "**/.DS_Store",
+        "**/*.sqlite",
+        "**/*.sqlite-journal",
+        "Backlog.txt"
+    ]
 }
