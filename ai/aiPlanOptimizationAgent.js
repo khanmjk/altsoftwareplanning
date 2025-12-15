@@ -202,7 +202,7 @@ ${changesNarrative}
             SystemService.save();
         }
         // Navigate to Planning View
-        navigationManager.navigateTo('planning');
+        navigationManager.navigateTo('planningView');
 
         // Wait for view to be ready
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -399,8 +399,30 @@ If you cannot find a good change, respond with null.
         const originalData = SystemService.getCurrentSystem();
         SystemService.setCurrentSystem(tempSystemData); // Temporarily set global
 
-        const tempSummaryData = calculateTeamLoadSummaryData();
-        const tempPlanTableData = calculatePlanningTableData();
+        // Recalculate capacity metrics for the temp data
+        CapacityEngine.recalculate(tempSystemData);
+
+        // Get initiatives for current planning year
+        const planningYear = new Date().getFullYear();
+        const initiativesForYear = (tempSystemData.yearlyInitiatives || [])
+            .filter(init => init.attributes?.planningYear == planningYear && init.status !== 'Completed');
+
+        // Use PlanningService to calculate summary and planning table data
+        const tempSummaryData = PlanningService.calculateTeamLoadSummary({
+            teams: tempSystemData.teams,
+            initiatives: initiativesForYear,
+            calculatedMetrics: tempSystemData.calculatedCapacityMetrics,
+            scenario: 'funded',
+            applyConstraints: true,
+            allKnownEngineers: tempSystemData.allKnownEngineers || []
+        });
+
+        const tempPlanTableData = PlanningService.calculatePlanningTableData({
+            initiatives: initiativesForYear,
+            calculatedMetrics: tempSystemData.calculatedCapacityMetrics,
+            scenario: 'funded',
+            applyConstraints: true
+        });
 
         SystemService.setCurrentSystem(originalData); // Restore global data
 
