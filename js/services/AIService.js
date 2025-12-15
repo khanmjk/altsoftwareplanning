@@ -68,7 +68,13 @@ const AIService = {
         }
 
         if (!skipPlanningRender && navigationManager.currentViewId === 'planningView') {
-            renderPlanningView();
+            // Dispatch event so views can subscribe to settings changes
+            document.dispatchEvent(new CustomEvent('settings:changed', { detail: { aiEnabled: aiEnabled } }));
+            // Also refresh active view if it has a render method
+            const activeView = navigationManager?.getViewInstance?.('planningView');
+            if (activeView?.render) {
+                activeView.render();
+            }
         }
     },
 
@@ -1029,9 +1035,4 @@ async function _getAnalysisWithGemini(chatHistory, apiKey) {
 // Export for ES modules
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = AIService;
-}
-
-// Expose to window for current architecture
-if (typeof window !== 'undefined') {
-    window.AIService = AIService;
 }

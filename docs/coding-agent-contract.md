@@ -374,11 +374,10 @@ border-left-color: #0052cc;
 
 > [!WARNING]
 > The following files have known violations and are scheduled for refactoring.
-> **Last Audit**: 2025-12-14
+> **Last Audit**: 2025-12-15
 
 | File | Issue | Priority | Notes |
 |------|-------|----------|-------|
-| `yearPlanning.js` | Module-level globals (lines 5-16), inline HTML (line 478-506) | High | Contains 7 module-level `let` declarations |
 | `DashboardView.js` | Inline HTML (container clearing) | Low | Mostly uses `innerHTML = ''` for clearing |
 | `enhancedTableWidget.js` | Defensive options callbacks | Low | Checks if options callbacks are functions (acceptable for external API) |
 
@@ -386,18 +385,18 @@ border-left-color: #0052cc;
 
 | File | Previous Issue | Resolution |
 |------|----------------|------------|
+| `yearPlanning.js` | Module-level globals (lines 5-16), inline HTML | ✅ **DELETED** - All functionality migrated to `YearPlanningView.js` class |
+| `YearPlanningView.js` | Legacy compatibility layer, inline styles | ✅ Full refactor: added 7 handler methods, uses service commands, removed globals |
+| `aiPlanOptimizationAgent.js` | `window.renderPlanningView`, `window.currentYearPlanTableData` | ✅ Uses `navigationManager.getViewInstance('planningView')` |
+| `aiAgentController.js` | `currentPlanningYear` global in fallback | ✅ Uses class instance via `navigationManager` |
+| `AIService.js` | Direct `renderPlanningView()` call | ✅ Dispatches `settings:changed` event instead |
+| `aiViewRegistry.js` | Fallback globals for planningView | ✅ Removed - all state in viewInstance |
 | `visualizations.js` | window.* assignments | ✅ Refactored to 12-line init file |
-| `aiViewRegistry.js` | Defensive duck-typing | ✅ Now trusts all views implement `getAIContext()` |
 | `ganttPlanning.js` | Inline HTML templates | ✅ Refactored to `GanttPlanningView.js` class |
 | `GanttPlanningView.js` | Module-level globals | ✅ Removed globals, uses viewInstance DI |
 | `GanttTableController.js` | Defensive function checks | ✅ Uses viewInstance property |
 | `WorkspaceComponent.js` | Inline HTML templates | ✅ Refactored to DOM APIs |
 | `RoadmapComponent.js` | Inline HTML templates | ✅ Refactored to DOM APIs with _createRoadmapCard helper |
-| `RoadmapView.js` | Defensive typeof SystemService checks | ✅ Removed 2 checks, trusts service layer |
-| `CapacityPlanningView.js` | Defensive typeof SystemService check | ✅ Removed, calls SystemService directly |
-| `OrgView.js` | Defensive typeof SystemService checks | ✅ Removed 2 checks |
-| `YearPlanningView.js` | Defensive typeof WorkPackageService/SystemService | ✅ Removed 2 checks |
-| `ResourceForecastView.js` | Defensive typeof SystemService check | ✅ Removed 1 check |
 | `GanttPlanningView.js` | Defensive typeof ganttAdapter/ToastComponent | ✅ Removed 3 checks |
 | `InitiativeRow.js` | Defensive typeof GanttService checks | ✅ Removed 3 checks, calls service directly |
 | `WorkPackageRow.js` | Defensive typeof GanttService checks | ✅ Removed 4 checks |

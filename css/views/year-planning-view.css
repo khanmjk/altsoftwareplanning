@@ -130,3 +130,209 @@
     border-top: 3px solid var(--theme-primary);
     box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.2);
 }
+
+/* ============================================
+   Toolbar Layout Classes
+   ============================================ */
+
+.year-plan-toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.year-plan-toolbar-group--right {
+    margin-left: auto;
+}
+
+.year-plan-toolbar-label {
+    font-weight: 600;
+    color: var(--theme-text-primary);
+}
+
+.year-plan-toggle-label {
+    cursor: pointer;
+    user-select: none;
+    color: var(--theme-text-primary);
+}
+
+/* ============================================
+   Row Type Classes
+   ============================================ */
+
+/* Protected initiatives - top of list, styled distinctly */
+#planningTableBody tr.year-plan-row--protected {
+    background-color: var(--theme-bg-secondary);
+}
+
+#planningTableBody tr.year-plan-row--protected td:nth-child(2) {
+    font-weight: bold;
+}
+
+/* BTL initiatives - below the line */
+#planningTableBody tr.year-plan-row--btl {
+    background-color: rgba(var(--theme-warning-rgb, 255, 193, 7), 0.05);
+}
+
+/* Draggable cursor */
+#planningTableBody tr[draggable="true"] {
+    cursor: move;
+}
+
+#planningTableBody tr[draggable="false"] {
+    cursor: default;
+}
+
+/* ============================================
+   Cell Type Classes
+   ============================================ */
+
+.year-plan-cell--center {
+    text-align: center;
+}
+
+.year-plan-cell--right {
+    text-align: right;
+}
+
+.year-plan-cell--left {
+    text-align: left;
+}
+
+.year-plan-cell--id {
+    font-size: 0.8em;
+    color: var(--theme-text-muted);
+}
+
+.year-plan-cell--description {
+    color: var(--theme-text-secondary);
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.year-plan-cell--bold {
+    font-weight: bold;
+}
+
+/* ============================================
+   ATL/BTL Status Classes
+   ============================================ */
+
+.year-plan-atl-status {
+    font-weight: bold;
+    text-align: center;
+}
+
+.year-plan-atl-status--atl {
+    color: var(--theme-success, #28a745);
+}
+
+.year-plan-atl-status--btl {
+    color: var(--theme-danger, #dc3545);
+}
+
+/* ============================================
+   Capacity Status Classes
+   ============================================ */
+
+.year-plan-capacity--ok {
+    background-color: rgba(var(--theme-success-rgb, 40, 167, 69), 0.15);
+}
+
+.year-plan-capacity--warning {
+    background-color: rgba(var(--theme-warning-rgb, 255, 193, 7), 0.15);
+}
+
+.year-plan-capacity--danger {
+    background-color: rgba(var(--theme-danger-rgb, 220, 53, 69), 0.15);
+}
+
+/* ============================================
+   Team Estimate Cell Classes
+   ============================================ */
+
+.year-plan-team-cell {
+    text-align: center;
+    padding: 2px !important;
+}
+
+.year-plan-team-cell--ok {
+    background-color: rgba(var(--theme-success-rgb, 40, 167, 69), 0.15);
+}
+
+.year-plan-team-cell--over {
+    background-color: rgba(var(--theme-danger-rgb, 220, 53, 69), 0.15);
+}
+
+.year-plan-estimate-input {
+    width: 60px;
+    text-align: right;
+    border: none;
+    background-color: transparent;
+    color: var(--theme-text-primary);
+    font-size: inherit;
+    padding: 2px 4px;
+}
+
+.year-plan-estimate-input:focus {
+    outline: 2px solid var(--theme-primary, #007bff);
+    border-radius: 2px;
+}
+
+/* ============================================
+   Team Header (Vertical Text)
+   ============================================ */
+
+.year-plan-team-header {
+    text-align: center;
+    writing-mode: vertical-lr;
+    text-orientation: mixed;
+    white-space: nowrap;
+    min-width: 35px;
+    max-width: 35px;
+}
+
+/* ============================================
+   Summary Table Value Classes
+   ============================================ */
+
+.year-plan-value--positive {
+    color: var(--theme-success, #28a745);
+}
+
+.year-plan-value--negative {
+    color: var(--theme-danger, #dc3545);
+}
+
+.year-plan-status-text--ok {
+    color: var(--theme-success, #28a745);
+    font-weight: bold;
+}
+
+.year-plan-status-text--warning {
+    color: var(--theme-warning-alt, darkorange);
+    font-weight: bold;
+}
+
+.year-plan-status-text--danger {
+    color: var(--theme-danger, #dc3545);
+    font-weight: bold;
+}
+
+/* ============================================
+   Scenario Buttons
+   ============================================ */
+
+.year-plan-scenario-btn {
+    border: 1px solid var(--theme-border-color);
+}
+
+/* ============================================
+   Checkbox Styling
+   ============================================ */
+
+.year-plan-checkbox {
+    cursor: pointer;
+}

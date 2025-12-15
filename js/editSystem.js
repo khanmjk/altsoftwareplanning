@@ -260,6 +260,9 @@ async function saveAllChanges() {
         const saved = systemRepository.saveSystem(finalSystemName, SystemService.getCurrentSystem());
 
         if (saved) {
+            // Recalculate capacity metrics so Year Plan picks up changes
+            CapacityEngine.recalculate(SystemService.getCurrentSystem());
+
             notificationManager.showToast(`System "${finalSystemName}" saved successfully!`, 'success');
 
 

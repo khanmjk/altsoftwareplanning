@@ -62,7 +62,8 @@ const PlanningService = {
         let summaryRows = [];
         let totals = {
             fundedHCGross: 0, teamBISHumans: 0, awayBISHumans: 0, aiEngineers: 0,
-            sinks: 0, productivityGain: 0, scenarioCapacity: 0, assignedAtlSde: 0
+            sinks: 0, hiringRampUpSink: 0, newHireGain: 0, productivityGain: 0,
+            scenarioCapacity: 0, assignedAtlSde: 0
         };
 
         const sortedTeams = [...teams].sort((a, b) => (a?.teamName || '').localeCompare(b?.teamName || ''));
@@ -85,6 +86,8 @@ const PlanningService = {
             const effectiveBISHumans = teamMetrics.EffectiveBIS.humanHeadcount;
             const awayBISHumans = effectiveBISHumans - teamBISHumans;
             const sinks = isNetCapacityUsed ? (teamMetrics[scenarioKey].deductYrs || 0) : 0;
+            const hiringRampUpSink = isNetCapacityUsed ? (teamMetrics[scenarioKey].deductionsBreakdown?.newHireRampUpSinkYrs || 0) : 0;
+            const newHireGain = isNetCapacityUsed ? (teamMetrics[scenarioKey].deductionsBreakdown?.newHireGainYrs || 0) : 0;
             const productivityGain = teamMetrics[scenarioKey].deductionsBreakdown.aiProductivityGainYrs || 0;
             const productivityPercent = team.teamCapacityAdjustments?.aiProductivityGainPercent || 0;
             const scenarioCapacity = isNetCapacityUsed ? teamMetrics[scenarioKey].netYrs : teamMetrics[scenarioKey].grossYrs;
@@ -103,6 +106,8 @@ const PlanningService = {
                 awayBISHumans,
                 aiEngineers,
                 sinks,
+                hiringRampUpSink,
+                newHireGain,
                 productivityGain,
                 productivityPercent,
                 scenarioCapacity,
@@ -117,6 +122,8 @@ const PlanningService = {
             totals.awayBISHumans += awayBISHumans;
             totals.aiEngineers += aiEngineers;
             totals.sinks += sinks;
+            totals.hiringRampUpSink += hiringRampUpSink;
+            totals.newHireGain += newHireGain;
             totals.productivityGain += productivityGain;
             totals.scenarioCapacity += scenarioCapacity;
             totals.assignedAtlSde += assignedAtlSde;
@@ -256,6 +263,138 @@ const PlanningService = {
      */
     getScenarioKey(scenario) {
         return scenario === 'funded' ? 'FundedHC' : (scenario === 'team_bis' ? 'TeamBIS' : 'EffectiveBIS');
+    },
+
+    // =========================================================================
+    // YEAR PLANNING SERVICE COMMANDS (mutating operations)
+    // =========================================================================
+
+    /**
+     * Reorders initiatives in place based on drag-drop operation.
+     * Service command - mutates systemData.yearlyInitiatives in place.
+     * 
+     * Enforces constraints:
+     * - Cannot drag a protected initiative
+     * - Cannot drop onto a protected initiative
+     * - Cannot move an item above the protected block
+     * 
+     * @param {object} systemData - The global system data object.
+     * @param {string} draggedId - ID of the dragged initiative.
+     * @param {string} targetId - ID of the drop target initiative.
+     * @param {boolean} insertBefore - If true, insert before target; else after.
+     * @returns {boolean} True if reorder was successful, false if blocked by constraints.
+     */
+    reorderInitiativesInPlace(systemData, draggedId, targetId, insertBefore) {
+        if (!systemData || !Array.isArray(systemData.yearlyInitiatives)) {
+            console.error("PlanningService.reorderInitiativesInPlace: Invalid systemData");
+            return false;
+        }
+
+        const initiatives = systemData.yearlyInitiatives;
+        const draggedIndex = initiatives.findIndex(init => init.initiativeId === draggedId);
+        const targetIndex = initiatives.findIndex(init => init.initiativeId === targetId);
+
+        if (draggedIndex === -1 || targetIndex === -1) {
+            console.error("PlanningService.reorderInitiativesInPlace: Invalid initiative IDs");
+            return false;
+        }
+
+        const draggedInitiative = initiatives[draggedIndex];
+        const targetInitiative = initiatives[targetIndex];
+
+        // Constraint 0: Cannot drag a protected item
+        if (draggedInitiative.isProtected) {
+            console.warn("PlanningService: Cannot drag a protected initiative");
+            return false;
+        }
+
+        // Constraint 1: Cannot drop ONTO a protected row
+        if (targetInitiative.isProtected) {
+            console.warn("PlanningService: Cannot drop onto a protected initiative");
+            return false;
+        }
+
+        // Constraint 2: Cannot move above the protected block
+        const firstNonProtectedIndex = initiatives.findIndex(init => !init.isProtected);
+        if (targetIndex < firstNonProtectedIndex && firstNonProtectedIndex !== -1) {
+            console.warn("PlanningService: Cannot move item above the protected block");
+            return false;
+        }
+
+        // Perform reorder
+        const [movedItem] = initiatives.splice(draggedIndex, 1);
+        const newTargetIndex = initiatives.findIndex(init => init.initiativeId === targetId);
+
+        if (insertBefore) {
+            initiatives.splice(newTargetIndex, 0, movedItem);
+        } else {
+            initiatives.splice(newTargetIndex + 1, 0, movedItem);
+        }
+
+        console.log(`PlanningService: Reordered initiative ${draggedId} ${insertBefore ? 'before' : 'after'} ${targetId}`);
+        return true;
+    },
+
+    /**
+     * Commits plan statuses in place based on ATL/BTL from the computed table data.
+     * Service command - mutates systemData.yearlyInitiatives in place.
+     * 
+     * Status transitions:
+     * - Completed: unchanged
+     * - ATL + (Backlog|Defined) → Committed
+     * - BTL + (Committed|In Progress) → Backlog
+     * 
+     * @param {object} systemData - The global system data object.
+     * @param {object} options - Options object.
+     * @param {number} options.planningYear - The planning year to filter.
+     * @param {Array} options.planningTable - The computed table data from calculatePlanningTableData.
+     * @returns {object} Summary of status changes { updated: number, changes: [] }.
+     */
+    commitPlanStatusesInPlace(systemData, { planningYear, planningTable }) {
+        if (!systemData || !Array.isArray(systemData.yearlyInitiatives)) {
+            console.error("PlanningService.commitPlanStatusesInPlace: Invalid systemData");
+            return { updated: 0, changes: [] };
+        }
+
+        const changes = [];
+
+        // Build lookup from planningTable
+        const statusLookup = new Map();
+        (planningTable || []).forEach(item => {
+            statusLookup.set(item.initiativeId, item.calculatedAtlBtlStatus || (item.isBTL ? 'BTL' : 'ATL'));
+        });
+
+        // Filter to planning year and apply status transitions
+        systemData.yearlyInitiatives
+            .filter(init => init.attributes?.planningYear == planningYear)
+            .forEach(initiative => {
+                const planningStatus = statusLookup.get(initiative.initiativeId);
+                const oldStatus = initiative.status;
+
+                if (initiative.status === "Completed") {
+                    // Do nothing - completed stays completed
+                    return;
+                }
+
+                if (planningStatus === 'ATL') {
+                    if (initiative.status === "Backlog" || initiative.status === "Defined") {
+                        initiative.status = "Committed";
+                        changes.push({ initiativeId: initiative.initiativeId, from: oldStatus, to: "Committed" });
+                    }
+                } else if (planningStatus === 'BTL') {
+                    if (initiative.status === "Committed" || initiative.status === "In Progress") {
+                        initiative.status = "Backlog";
+                        changes.push({ initiativeId: initiative.initiativeId, from: oldStatus, to: "Backlog" });
+                    }
+                }
+
+                // Also store the planning status on the initiative for reference
+                if (!initiative.attributes) initiative.attributes = {};
+                initiative.attributes.planningStatusFundedHc = planningStatus;
+            });
+
+        console.log(`PlanningService: Committed ${changes.length} status changes for year ${planningYear}`);
+        return { updated: changes.length, changes };
     }
 };
 

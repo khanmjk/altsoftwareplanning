@@ -22,12 +22,80 @@ class YearPlanningView {
         this.summaryData = null;
         this.tableData = null;
 
-        // Drag state
+        // Drag state (migrated from yearPlanning.js globals)
         this.draggedInitiativeId = null;
         this.draggedRowElement = null;
 
+        // Focus restore state (enables continuous editing after rerender)
+        this.lastEditedCell = null; // { initiativeId, teamId }
+
         // UI state
         this.isSummaryExpanded = false;
+
+        // Settings subscription - bind handler for proper cleanup
+        this._onSettingsChanged = this._onSettingsChanged.bind(this);
+        document.addEventListener('settings:changed', this._onSettingsChanged);
+    }
+
+    /**
+     * Handle settings:changed event - re-render toolbar to show/hide AI button
+     * @private
+     */
+    _onSettingsChanged(event) {
+        // Only re-render toolbar if this view is currently active
+        if (navigationManager?.currentViewId === 'planningView') {
+            console.log('[YearPlanningView] Settings changed, re-rendering toolbar');
+            this.setToolbar();
+        }
+    }
+
+    /**
+     * Toggle the Team Load Summary collapsible section
+     * @private
+     */
+    _toggleSummarySection() {
+        const contentDiv = document.getElementById('teamLoadSummaryContent');
+        const indicatorSpan = document.getElementById('teamLoadSummaryToggle');
+
+        if (!contentDiv || !indicatorSpan) {
+            console.error('[YearPlanningView] Cannot toggle summary section: Missing elements');
+            return;
+        }
+
+        const isHidden = contentDiv.style.display === 'none' || contentDiv.style.display === '';
+        contentDiv.style.display = isHidden ? 'block' : 'none';
+        indicatorSpan.textContent = isHidden ? '(-) ' : '(+) ';
+
+        // Update internal state
+        this.isSummaryExpanded = isHidden;
+
+        // Adjust table height after toggle
+        this._adjustPlanningTableHeight();
+    }
+
+    /**
+     * Dynamically adjusts the max-height of the planning table scroll wrapper
+     * @private
+     */
+    _adjustPlanningTableHeight() {
+        const tableWrapper = document.getElementById('planningTableWrapper');
+        if (!tableWrapper) return;
+
+        const viewportHeight = window.innerHeight;
+        const tableWrapperTop = tableWrapper.getBoundingClientRect().top;
+        const availableSpace = viewportHeight - tableWrapperTop;
+        const bottomMargin = 60;
+        const minHeight = 200;
+
+        let calculatedMaxHeight = Math.max(minHeight, availableSpace - bottomMargin);
+        tableWrapper.style.maxHeight = `${calculatedMaxHeight}px`;
+    }
+
+    /**
+     * Cleanup method - called when view is destroyed
+     */
+    destroy() {
+        document.removeEventListener('settings:changed', this._onSettingsChanged);
     }
 
     /**
@@ -91,9 +159,10 @@ class YearPlanningView {
      * Refresh capacity metrics before rendering
      */
     refreshCapacityMetrics() {
-        if (SystemService.getCurrentSystem()) {
-            const capacityEngine = new CapacityEngine(SystemService.getCurrentSystem());
-            SystemService.getCurrentSystem().calculatedCapacityMetrics = capacityEngine.calculateAllMetrics();
+        const system = SystemService.getCurrentSystem();
+        if (system) {
+            const capacityEngine = new CapacityEngine(system);
+            system.calculatedCapacityMetrics = capacityEngine.calculateAllMetrics();
         }
     }
 
@@ -130,9 +199,7 @@ class YearPlanningView {
 
         // Left side - controls
         const leftGroup = document.createElement('div');
-        leftGroup.style.display = 'flex';
-        leftGroup.style.alignItems = 'center';
-        leftGroup.style.gap = '20px';
+        leftGroup.className = 'year-plan-toolbar-group';
 
         // Year Selector
         leftGroup.appendChild(this.createYearSelector());
@@ -145,10 +212,7 @@ class YearPlanningView {
 
         // Right side - actions
         const rightGroup = document.createElement('div');
-        rightGroup.style.display = 'flex';
-        rightGroup.style.alignItems = 'center';
-        rightGroup.style.gap = '10px';
-        rightGroup.style.marginLeft = 'auto';
+        rightGroup.className = 'year-plan-toolbar-group year-plan-toolbar-group--right';
 
         // Constraints Toggle
         const toggleGroup = this.createConstraintsToggle();
@@ -157,7 +221,10 @@ class YearPlanningView {
         // Save Plan Button
         const saveBtn = document.createElement('button');
         saveBtn.className = 'btn btn-danger btn-sm';
-        saveBtn.innerHTML = `<i class="fas fa-save"></i> Save Plan for ${this.currentYear}`;
+        const saveIcon = document.createElement('i');
+        saveIcon.className = 'fas fa-save';
+        saveBtn.appendChild(saveIcon);
+        saveBtn.appendChild(document.createTextNode(` Save Plan for ${this.currentYear}`));
         saveBtn.addEventListener('click', () => this.handleSavePlan());
         rightGroup.appendChild(saveBtn);
 
@@ -165,7 +232,10 @@ class YearPlanningView {
         if (SettingsService.get()?.ai?.isEnabled) {
             const optimizeBtn = document.createElement('button');
             optimizeBtn.className = 'btn btn-info btn-sm';
-            optimizeBtn.innerHTML = '<i class="fas fa-robot"></i> Optimize Plan';
+            const aiIcon = document.createElement('i');
+            aiIcon.className = 'fas fa-robot';
+            optimizeBtn.appendChild(aiIcon);
+            optimizeBtn.appendChild(document.createTextNode(' Optimize Plan'));
             optimizeBtn.addEventListener('click', () => this.runOptimizer());
             rightGroup.appendChild(optimizeBtn);
         }
@@ -182,11 +252,10 @@ class YearPlanningView {
         const availableYears = this.getAvailableYears();
 
         const yearGroup = document.createElement('div');
-        yearGroup.style.display = 'flex';
-        yearGroup.style.alignItems = 'center';
-        yearGroup.style.gap = '8px';
+        yearGroup.className = 'year-plan-toolbar-group';
 
         const yearLabel = document.createElement('strong');
+        yearLabel.className = 'year-plan-toolbar-label';
         yearLabel.textContent = 'Planning Year:';
         yearGroup.appendChild(yearLabel);
 
@@ -241,11 +310,10 @@ class YearPlanningView {
         if (!metrics) return null;
 
         const scenarioGroup = document.createElement('div');
-        scenarioGroup.style.display = 'flex';
-        scenarioGroup.style.alignItems = 'center';
-        scenarioGroup.style.gap = '8px';
+        scenarioGroup.className = 'year-plan-toolbar-group';
 
         const label = document.createElement('strong');
+        label.className = 'year-plan-toolbar-label';
         label.textContent = 'Calculate ATL/BTL using:';
         scenarioGroup.appendChild(label);
 
@@ -258,8 +326,7 @@ class YearPlanningView {
         scenarios.forEach(sc => {
             const btn = document.createElement('button');
             btn.textContent = sc.label;
-            btn.className = `btn btn-sm ${this.scenario === sc.id ? 'btn-primary' : 'btn-light'}`;
-            btn.style.border = '1px solid #ccc';
+            btn.className = `btn btn-sm year-plan-scenario-btn ${this.scenario === sc.id ? 'btn-primary' : 'btn-light'}`;
             if (this.scenario === sc.id) {
                 // btn-primary class handles the style
             }
@@ -284,23 +351,19 @@ class YearPlanningView {
         if (!metrics) return null;
 
         const toggleGroup = document.createElement('div');
-        toggleGroup.style.display = 'flex';
-        toggleGroup.style.alignItems = 'center';
-        toggleGroup.style.gap = '6px';
-        toggleGroup.style.marginLeft = 'auto';
+        toggleGroup.className = 'year-plan-toolbar-group';
 
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.id = 'applyConstraintsToggle';
         checkbox.checked = this.applyConstraints;
-        checkbox.style.cursor = 'pointer';
+        checkbox.className = 'year-plan-checkbox';
         checkbox.addEventListener('change', (e) => this.setApplyConstraints(e.target.checked));
 
         const toggleLabel = document.createElement('label');
         toggleLabel.htmlFor = 'applyConstraintsToggle';
         toggleLabel.textContent = 'Apply Constraints & AI Gains (Net)';
-        toggleLabel.style.cursor = 'pointer';
-        toggleLabel.style.userSelect = 'none';
+        toggleLabel.className = 'year-plan-toggle-label';
         toggleLabel.title = "Toggling this ON applies all configured capacity constraints.";
 
         toggleGroup.appendChild(checkbox);
@@ -332,9 +395,7 @@ class YearPlanningView {
         // Summary Header (collapsible) - styling in CSS
         const summaryHeader = document.createElement('h4');
         summaryHeader.title = 'Click to expand/collapse team load summary';
-        summaryHeader.addEventListener('click', () => {
-            toggleCollapsibleSection('teamLoadSummaryContent', 'teamLoadSummaryToggle');
-        });
+        summaryHeader.addEventListener('click', () => this._toggleSummarySection());
 
         const toggleIndicator = document.createElement('span');
         toggleIndicator.id = 'teamLoadSummaryToggle';
@@ -360,10 +421,9 @@ class YearPlanningView {
         const summaryTable = document.createElement('table');
         summaryTable.id = 'teamLoadSummaryTable';
 
-        // Table Header
+        // Table Header (styles in year-planning-view.css)
         const thead = document.createElement('thead');
         const headerRow = document.createElement('tr');
-        headerRow.style.backgroundColor = 'var(--theme-bg-tertiary)';
 
         const headers = [
             { text: 'Team Name', title: '' },
@@ -379,9 +439,7 @@ class YearPlanningView {
 
         headers.forEach(h => {
             const th = document.createElement('th');
-            th.style.border = '1px solid var(--theme-border-color)';
-            th.style.padding = '5px';
-            th.style.color = 'var(--theme-text-primary)';
+            // Styles handled by #teamLoadSummaryTable thead th in CSS
             th.textContent = h.text;
             if (h.title) th.title = h.title;
             headerRow.appendChild(th);
@@ -394,10 +452,9 @@ class YearPlanningView {
         tbody.id = 'teamLoadSummaryTableBody';
         summaryTable.appendChild(tbody);
 
-        // Table Footer
+        // Table Footer (styles in CSS)
         const tfoot = document.createElement('tfoot');
         tfoot.id = 'teamLoadSummaryTableFoot';
-        tfoot.style.fontWeight = 'bold';
         summaryTable.appendChild(tfoot);
 
         summaryContent.appendChild(summaryTable);
@@ -462,14 +519,8 @@ class YearPlanningView {
             applyConstraints: this.applyConstraints
         });
 
-        // Update original initiative objects for persistence
-        calculatedData.forEach(calcInit => {
-            const originalInit = (SystemService.getCurrentSystem().yearlyInitiatives || [])
-                .find(i => i.initiativeId === calcInit.initiativeId);
-            if (originalInit) {
-                originalInit.attributes.planningStatusFundedHc = calcInit.calculatedAtlBtlStatus;
-            }
-        });
+        // Note: planningStatusFundedHc is persisted only when user explicitly saves
+        // via PlanningService.commitPlanningChanges(), not during render
 
         return calculatedData;
     }
@@ -516,17 +567,13 @@ class YearPlanningView {
         // Build context-aware column configuration
         const columns = this._buildSummaryColumns(scenarioKey, isNetCapacityUsed);
 
-        // Build header row
+        // Build header row (styles handled by CSS)
         const headerRow = summaryTableHead.insertRow();
-        headerRow.style.backgroundColor = 'var(--theme-bg-tertiary)';
         columns.forEach(col => {
             const th = document.createElement('th');
             th.textContent = col.header;
-            th.title = col.title;
-            th.style.textAlign = 'center';
-            th.style.border = '1px solid var(--theme-border-color)';
-            th.style.padding = '5px';
-            th.style.color = 'var(--theme-text-primary)';
+            th.title = col.title || '';
+            if (col.align === 'left') th.classList.add('year-plan-cell--left');
             headerRow.appendChild(th);
         });
 
@@ -537,37 +584,30 @@ class YearPlanningView {
                 const cell = row.insertCell();
                 const value = col.getValue(rowData, isNetCapacityUsed);
                 cell.textContent = value;
-                cell.style.border = '1px solid var(--theme-border-color)';
-                cell.style.padding = '5px';
-                cell.style.color = 'var(--theme-text-primary)';
 
-                // Apply styling
-                if (col.getStyle) {
-                    const style = col.getStyle(rowData, isNetCapacityUsed);
-                    Object.assign(cell.style, style);
+                // Apply CSS class instead of inline style
+                if (col.getCssClass) {
+                    const cssClass = col.getCssClass(rowData, isNetCapacityUsed);
+                    if (cssClass) cell.classList.add(cssClass);
                 }
-                cell.style.textAlign = col.align || 'center';
+                if (col.align === 'left') cell.classList.add('year-plan-cell--left');
             });
         });
 
         // Build footer row
         const totals = summaryData.totals || {};
         const footerRow = summaryTableFoot.insertRow();
-        footerRow.style.backgroundColor = 'var(--theme-bg-secondary)';
         columns.forEach(col => {
             const cell = footerRow.insertCell();
             const value = col.getTotal ? col.getTotal(totals, isNetCapacityUsed) : '';
             cell.textContent = value;
-            cell.style.border = '1px solid var(--theme-border-color)';
-            cell.style.padding = '5px';
-            cell.style.color = 'var(--theme-text-primary)';
 
-            // Apply styling
-            if (col.getTotalStyle) {
-                const style = col.getTotalStyle(totals, isNetCapacityUsed);
-                Object.assign(cell.style, style);
+            // Apply CSS class instead of inline style
+            if (col.getTotalCssClass) {
+                const cssClass = col.getTotalCssClass(totals, isNetCapacityUsed);
+                if (cssClass) cell.classList.add(cssClass);
             }
-            cell.style.textAlign = col.align || 'center';
+            if (col.align === 'left') cell.classList.add('year-plan-cell--left');
         });
     }
 
@@ -634,16 +674,33 @@ class YearPlanningView {
                 title: 'Total deductions from leave, overhead, etc.',
                 getValue: (row) => `-${row.sinks.toFixed(2)}`,
                 getTotal: (totals) => `-${(totals.sinks ?? 0).toFixed(2)}`,
-                getStyle: () => ({ color: '#dc3545' }),
-                getTotalStyle: () => ({ color: '#dc3545' })
+                getCssClass: () => 'year-plan-value--negative',
+                getTotalCssClass: () => 'year-plan-value--negative'
+            });
+            // Hiring Ramp-up columns (only show if any team has values)
+            columns.push({
+                header: '(-) Hire Ramp-up',
+                title: 'Capacity lost while new hires ramp up to full productivity.',
+                getValue: (row) => (row.hiringRampUpSink > 0) ? `-${row.hiringRampUpSink.toFixed(2)}` : '0.00',
+                getTotal: (totals) => (totals.hiringRampUpSink > 0) ? `-${(totals.hiringRampUpSink ?? 0).toFixed(2)}` : '0.00',
+                getCssClass: (row) => (row.hiringRampUpSink > 0) ? 'year-plan-value--negative' : '',
+                getTotalCssClass: (totals) => ((totals.hiringRampUpSink ?? 0) > 0) ? 'year-plan-value--negative' : ''
+            });
+            columns.push({
+                header: '(+) New Hire Gain',
+                title: 'Capacity gained from new hires after ramp-up completes.',
+                getValue: (row) => (row.newHireGain > 0) ? `+${row.newHireGain.toFixed(2)}` : '0.00',
+                getTotal: (totals) => (totals.newHireGain > 0) ? `+${(totals.newHireGain ?? 0).toFixed(2)}` : '0.00',
+                getCssClass: (row) => (row.newHireGain > 0) ? 'year-plan-value--positive' : '',
+                getTotalCssClass: (totals) => ((totals.newHireGain ?? 0) > 0) ? 'year-plan-value--positive' : ''
             });
             columns.push({
                 header: '(+) AI Productivity Gain',
                 title: 'The effective SDE/Year capacity gained from AI tooling.',
                 getValue: (row) => `+${row.productivityGain.toFixed(2)}`,
                 getTotal: (totals) => `+${(totals.productivityGain ?? 0).toFixed(2)}`,
-                getStyle: () => ({ color: '#28a745' }),
-                getTotalStyle: () => ({ color: '#28a745' })
+                getCssClass: () => 'year-plan-value--positive',
+                getTotalCssClass: () => 'year-plan-value--positive'
             });
             columns.push({
                 header: 'AI Gain %',
@@ -676,21 +733,20 @@ class YearPlanningView {
             title: 'Scenario Capacity minus Assigned ATL SDEs.',
             getValue: (row) => row.remainingCapacity.toFixed(2),
             getTotal: (totals) => (totals.remainingCapacity ?? 0).toFixed(2),
-            getStyle: (row) => ({ color: row.remainingCapacity < 0 ? 'red' : 'green' }),
-            getTotalStyle: (totals) => ({ color: (totals.remainingCapacity ?? 0) < 0 ? 'red' : 'green' })
+            getCssClass: (row) => row.remainingCapacity < 0 ? 'year-plan-value--negative' : 'year-plan-value--positive',
+            getTotalCssClass: (totals) => (totals.remainingCapacity ?? 0) < 0 ? 'year-plan-value--negative' : 'year-plan-value--positive'
         });
 
-        // 8. ATL Status (always)
         columns.push({
             header: 'ATL Status',
             title: 'Indicates if team is overloaded based on ATL work.',
             getValue: (row) => row.status,
             getTotal: () => '',
-            getStyle: (row) => ({
-                color: row.status === '🛑 Overloaded' ? 'red' :
-                    (row.status === '⚠️ Near Limit' ? 'darkorange' : 'green'),
-                fontWeight: 'bold'
-            })
+            getCssClass: (row) => {
+                if (row.status === '🛑 Overloaded') return 'year-plan-status-text--danger';
+                if (row.status === '⚠️ Near Limit') return 'year-plan-status-text--warning';
+                return 'year-plan-status-text--ok';
+            }
         });
 
         return columns;
@@ -712,24 +768,18 @@ class YearPlanningView {
         tableWrapper.id = 'planningTableWrapper';
 
         const table = document.createElement('table');
-        table.style.width = '100%';
-        table.style.borderCollapse = 'collapse';
         table.id = 'planningTable';
+        // Table styling handled by #planningTable in CSS
 
         const thead = document.createElement('thead');
         const headerRow = document.createElement('tr');
-        headerRow.style.backgroundColor = 'var(--theme-bg-tertiary)';
+        // Header row styling handled by CSS
 
-        // Fixed headers
+        // Fixed headers (styles in CSS via #planningTable th)
         const fixedHeaders = ['Protected', 'Title', 'ID', 'Description', 'Total SDE Years', 'Cumulative SDE Years', 'Capacity Status', 'ATL/BTL'];
         fixedHeaders.forEach(text => {
             const th = document.createElement('th');
             th.textContent = text;
-            th.style.border = '1px solid var(--theme-border-color)';
-            th.style.padding = '8px';
-            th.style.textAlign = 'left';
-            th.style.whiteSpace = 'nowrap';
-            th.style.color = 'var(--theme-text-primary)';
             headerRow.appendChild(th);
         });
 
@@ -747,10 +797,7 @@ class YearPlanningView {
             th.textContent = teamDisplayIdentity;
             th.title = teamTitle;
             th.setAttribute('data-team-id', team.teamId);
-            Object.assign(th.style, {
-                border: '1px solid var(--theme-border-color)', padding: '8px', textAlign: 'center', writingMode: 'vertical-lr',
-                textOrientation: 'mixed', whiteSpace: 'nowrap', minWidth: '35px', maxWidth: '35px', color: 'var(--theme-text-primary)'
-            });
+            th.classList.add('year-plan-team-header');
             headerRow.appendChild(th);
             teamHeaderMap.set(fixedHeaders.length + index, team.teamId);
         });
@@ -774,98 +821,101 @@ class YearPlanningView {
         tableData.forEach((initiative) => {
             const row = tbody.insertRow();
             row.setAttribute('data-initiative-id', initiative.initiativeId);
-            row.style.borderBottom = '1px solid var(--theme-border-color)';
-            row.style.padding = '2px 0';
             row.setAttribute('draggable', !initiative.isProtected);
 
-            // Legacy drag handlers (still in yearPlanning.js)
-            row.addEventListener('dragover', handleDragOver);
-            row.addEventListener('dragleave', handleDragLeave);
-            row.addEventListener('drop', handleDrop);
-            row.addEventListener('dragend', handleDragEnd);
+            // Add row type classes
+            if (initiative.isProtected) {
+                row.classList.add('year-plan-row--protected');
+            }
+            if (initiative.isBTL) {
+                row.classList.add('year-plan-row--btl');
+            }
+
+            // Drag handlers (use arrow functions to preserve 'this' context)
+            row.addEventListener('dragover', (e) => this._handleDragOver(e));
+            row.addEventListener('dragleave', (e) => this._handleDragLeave(e));
+            row.addEventListener('drop', (e) => this._handleDrop(e));
+            row.addEventListener('dragend', (e) => this._handleDragEnd(e));
             if (!initiative.isProtected) {
-                row.addEventListener('dragstart', handleDragStart);
-                row.style.cursor = 'move';
-            } else {
-                row.style.cursor = 'default';
+                row.addEventListener('dragstart', (e) => this._handleDragStart(e));
             }
 
             // Protected checkbox cell
             const protectedCell = row.insertCell();
+            protectedCell.classList.add('year-plan-cell--center');
             const protectedCheckbox = document.createElement('input');
             protectedCheckbox.type = 'checkbox';
             protectedCheckbox.checked = initiative.isProtected;
             protectedCheckbox.setAttribute('data-initiative-id', initiative.initiativeId);
-            protectedCheckbox.style.cursor = 'pointer';
-            protectedCheckbox.onchange = handleProtectedChange; // Legacy handler
+            protectedCheckbox.classList.add('year-plan-checkbox');
+            protectedCheckbox.addEventListener('change', (e) => this._handleProtectedChange(e));
             protectedCell.appendChild(protectedCheckbox);
-            protectedCell.style.textAlign = 'center';
 
             // Title cell
             const titleCell = row.insertCell();
             titleCell.textContent = initiative.title || 'No Title';
-            titleCell.style.fontWeight = initiative.isProtected ? 'bold' : 'normal';
-            titleCell.style.color = 'var(--theme-text-primary)';
+            if (initiative.isProtected) titleCell.classList.add('year-plan-cell--bold');
 
             // ID cell
             const idCell = row.insertCell();
             idCell.textContent = initiative.initiativeId;
-            idCell.style.fontSize = '0.8em';
-            idCell.style.color = 'var(--theme-text-muted)';
+            idCell.classList.add('year-plan-cell--id');
 
             // Description cell
             const descCell = row.insertCell();
             const descText = initiative.description || '';
             descCell.textContent = descText.length > 50 ? descText.substring(0, 47) + '...' : descText;
             descCell.title = descText;
-            descCell.style.color = 'var(--theme-text-secondary)';
+            descCell.classList.add('year-plan-cell--description');
 
             // Total SDE cell
             const totalSdeCell = row.insertCell();
-            totalSdeCell.style.textAlign = 'right';
+            totalSdeCell.classList.add('year-plan-cell--right');
             totalSdeCell.textContent = initiative.calculatedInitiativeTotalSde.toFixed(2);
 
             // Cumulative SDE cell
             const cumSdeCell = row.insertCell();
-            cumSdeCell.style.textAlign = 'right';
+            cumSdeCell.classList.add('year-plan-cell--right');
             cumSdeCell.textContent = initiative.calculatedCumulativeSde.toFixed(2);
 
             // Capacity Status cell
             const statusCell = row.insertCell();
-            statusCell.style.textAlign = 'center';
-            const totalTeamBIS = calculatedMetrics.totals?.TeamBIS?.totalHeadcount || 0;
-            const totalFundedHC = calculatedMetrics.totals?.FundedHC?.humanHeadcount || 0;
+            statusCell.classList.add('year-plan-cell--center');
 
-            if (initiative.calculatedCumulativeSde <= totalTeamBIS) {
+            // Use the currently selected scenario's total capacity
+            const selectedScenarioKey = this.scenario === 'funded' ? 'FundedHC' :
+                (this.scenario === 'team_bis' ? 'TeamBIS' : 'EffectiveBIS');
+            const scenarioCapacity = isNetCapacityUsed
+                ? calculatedMetrics.totals?.[selectedScenarioKey]?.netYrs
+                : calculatedMetrics.totals?.[selectedScenarioKey]?.grossYrs;
+            const totalCapacity = scenarioCapacity || 0;
+
+            if (initiative.calculatedCumulativeSde <= totalCapacity) {
                 statusCell.textContent = '✅';
-                statusCell.title = `Within Team BIS (${totalTeamBIS.toFixed(2)})`;
-                statusCell.style.backgroundColor = 'rgba(var(--theme-success-rgb, 40,167,69), 0.15)';
-            } else if (initiative.calculatedCumulativeSde <= totalFundedHC) {
-                statusCell.textContent = '⚠️';
-                statusCell.title = `Exceeds Team BIS, Within Funded HC (${totalFundedHC.toFixed(2)})`;
-                statusCell.style.backgroundColor = 'rgba(var(--theme-warning-rgb, 255,193,7), 0.15)';
+                statusCell.title = `Within ${selectedScenarioKey} capacity (${totalCapacity.toFixed(2)})`;
+                statusCell.classList.add('year-plan-capacity--ok');
             } else {
-                statusCell.textContent = '🛑';
-                statusCell.title = `Exceeds Funded HC (${totalFundedHC.toFixed(2)})`;
-                statusCell.style.backgroundColor = 'rgba(var(--theme-danger-rgb, 220,53,69), 0.15)';
+                statusCell.textContent = '⚠️';
+                statusCell.title = `Exceeds ${selectedScenarioKey} capacity (${totalCapacity.toFixed(2)})`;
+                statusCell.classList.add('year-plan-capacity--warning');
             }
 
             // ATL/BTL cell
             const atlBtlCell = row.insertCell();
-            atlBtlCell.style.fontWeight = 'bold';
-            atlBtlCell.style.textAlign = 'center';
+            atlBtlCell.classList.add('year-plan-atl-status');
             if (!initiative.isBTL) {
                 atlBtlCell.textContent = 'ATL';
-                atlBtlCell.style.color = 'green';
+                atlBtlCell.classList.add('year-plan-atl-status--atl');
             } else {
                 atlBtlCell.textContent = 'BTL';
-                atlBtlCell.style.color = 'red';
+                atlBtlCell.classList.add('year-plan-atl-status--btl');
             }
 
             // Team estimate cells
             const assignmentsMap = new Map((initiative.assignments || []).map(a => [a.teamId, a.sdeYears]));
             teamHeaderMap.forEach((teamId) => {
                 const teamCell = row.insertCell();
+                teamCell.classList.add('year-plan-team-cell');
                 const currentEstimate = assignmentsMap.get(teamId) || 0;
                 if (!initiative.isBTL) {
                     teamCumulativeSde[teamId] += currentEstimate;
@@ -878,47 +928,34 @@ class YearPlanningView {
                 estimateInput.value = currentEstimate > 0 ? currentEstimate.toFixed(2) : '';
                 estimateInput.setAttribute('data-initiative-id', initiative.initiativeId);
                 estimateInput.setAttribute('data-team-id', teamId);
-                Object.assign(estimateInput.style, {
-                    width: '60px', textAlign: 'right', border: 'none', backgroundColor: 'transparent'
-                });
-                estimateInput.addEventListener('change', handleEstimateChange); // Legacy handler
+                estimateInput.classList.add('year-plan-estimate-input');
+                estimateInput.addEventListener('change', (e) => this._handleEstimateChange(e));
                 teamCell.appendChild(estimateInput);
-                teamCell.style.textAlign = 'center';
 
-                // Color code based on capacity
+                // Color code based on capacity using CSS classes
                 let teamLimit = isNetCapacityUsed
                     ? calculatedMetrics[teamId]?.[scenarioKey]?.netYrs ?? 0
                     : calculatedMetrics[teamId]?.[scenarioKey]?.grossYrs ?? 0;
 
                 const currentTeamCumulative = teamCumulativeSde[teamId];
                 if (currentTeamCumulative <= teamLimit) {
-                    teamCell.style.backgroundColor = 'rgba(var(--theme-success-rgb, 40,167,69), 0.15)';
+                    teamCell.classList.add('year-plan-team-cell--ok');
                     teamCell.title = `Cumulative: ${currentTeamCumulative.toFixed(2)} / Limit: ${teamLimit.toFixed(2)} - OK`;
                 } else {
-                    teamCell.style.backgroundColor = 'rgba(var(--theme-danger-rgb, 220,53,69), 0.15)';
+                    teamCell.classList.add('year-plan-team-cell--over');
                     teamCell.title = `Cumulative: ${currentTeamCumulative.toFixed(2)} / Limit: ${teamLimit.toFixed(2)} - Overloaded`;
                 }
             });
 
-            // Apply row styling based on status
-            row.querySelectorAll('td').forEach((cell, idx) => {
-                if (idx < fixedHeaders.length) {
-                    if (initiative.isProtected) {
-                        cell.style.backgroundColor = 'var(--theme-bg-secondary)';
-                    } else if (initiative.isBTL) {
-                        cell.style.backgroundColor = 'rgba(var(--theme-danger-rgb, 220,53,69), 0.1)';
-                    }
-                }
-            });
+            // Row styling now handled by CSS classes (year-plan-row--protected, year-plan-row--btl)
         });
 
         table.appendChild(tbody);
         tableWrapper.appendChild(table);
         tableContainer.appendChild(tableWrapper);
 
-        // Adjust height (legacy helper)
-        // Adjust height (legacy helper)
-        adjustPlanningTableHeight();
+        // Adjust table height for viewport
+        this._adjustPlanningTableHeight();
     }
 
     // ==================== State Setters ====================
@@ -946,38 +983,31 @@ class YearPlanningView {
     handleSavePlan() {
         console.log(`Saving plan for year ${this.currentYear}...`);
 
-        if (!SystemService.getCurrentSystem()?.systemName) {
+        const systemData = SystemService.getCurrentSystem();
+        if (!systemData?.systemName) {
             notificationManager?.showToast("Cannot save: No system data loaded.", "error");
             return;
         }
 
-        const initiativesForYear = (SystemService.getCurrentSystem().yearlyInitiatives || [])
-            .filter(init => init.attributes?.planningYear == this.currentYear);
-
-        initiativesForYear.forEach(initiative => {
-            const planningStatus = initiative.attributes?.planningStatusFundedHc;
-
-            if (initiative.status === "Completed") return;
-
-            if (planningStatus === 'ATL') {
-                if (initiative.status === "Backlog" || initiative.status === "Defined") {
-                    initiative.status = "Committed";
-                }
-            } else if (planningStatus === 'BTL') {
-                if (initiative.status === "Committed" || initiative.status === "In Progress") {
-                    initiative.status = "Backlog";
-                }
-            }
-        });
-
         try {
-            // Use WorkPackageService directly (Guaranteed by Service Layer)
-            WorkPackageService.ensureWorkPackagesForInitiatives(SystemService.getCurrentSystem(), this.currentYear);
-            initiativesForYear.forEach(init => {
-                WorkPackageService.syncWorkPackagesFromInitiative(init, SystemService.getCurrentSystem());
-                WorkPackageService.syncInitiativeTotals(init.initiativeId, SystemService.getCurrentSystem());
+            // Use PlanningService to commit status changes via service command
+            const result = PlanningService.commitPlanStatusesInPlace(systemData, {
+                planningYear: this.currentYear,
+                planningTable: this.tableData
             });
 
+            console.log(`Plan save: ${result.updated} status changes applied`);
+
+            // Sync Work Packages
+            WorkPackageService.ensureWorkPackagesForInitiatives(systemData, this.currentYear);
+            (systemData.yearlyInitiatives || [])
+                .filter(init => init.attributes?.planningYear == this.currentYear)
+                .forEach(init => {
+                    WorkPackageService.syncWorkPackagesFromInitiative(init, systemData);
+                    WorkPackageService.syncInitiativeTotals(init.initiativeId, systemData);
+                });
+
+            // Persist
             SystemService.save();
             notificationManager?.showToast(`Plan for ${this.currentYear} saved successfully.`, "success");
             this.render();
@@ -993,6 +1023,188 @@ class YearPlanningView {
         } else {
             notificationManager?.showToast("AI Controller not available.", "error");
         }
+    }
+
+    // ==================== Event Handlers (migrated from yearPlanning.js) ====================
+
+    /**
+     * Handles changes to the Protected checkbox.
+     * Uses InitiativeService.setProtected to mutate data.
+     */
+    _handleProtectedChange(event) {
+        const checkbox = event.target;
+        const initiativeId = checkbox.dataset.initiativeId;
+        const isChecked = checkbox.checked;
+
+        if (!initiativeId) {
+            console.error("YearPlanningView: Missing initiative ID on protected checkbox");
+            return;
+        }
+
+        const systemData = SystemService.getCurrentSystem();
+        InitiativeService.setProtected(systemData, initiativeId, isChecked);
+        this.render();
+    }
+
+    /**
+     * Handles changes to team estimate inputs.
+     * Uses InitiativeService and WorkPackageService to mutate data.
+     */
+    _handleEstimateChange(event) {
+        const input = event.target;
+        const initiativeId = input.dataset.initiativeId;
+        const teamId = input.dataset.teamId;
+        const newValue = parseFloat(input.value);
+
+        if (!initiativeId || !teamId) {
+            console.error("YearPlanningView: Missing initiative or team ID on estimate input");
+            return;
+        }
+
+        const validatedValue = (!isNaN(newValue) && newValue > 0) ? newValue : 0;
+        const systemData = SystemService.getCurrentSystem();
+
+        // Update initiative assignments via service
+        InitiativeService.setTeamAssignmentSdeYears(systemData, initiativeId, teamId, validatedValue);
+
+        // Sync to Work Packages to prevent reversion
+        WorkPackageService.applyInitiativeTeamEstimateFromYearPlan(systemData, initiativeId, teamId, validatedValue);
+
+        // Track for focus restoration
+        this.lastEditedCell = { initiativeId, teamId };
+
+        // Re-render and restore focus
+        this.render();
+        this._restoreFocus();
+    }
+
+    /**
+     * Restores focus to the last edited cell after rerender.
+     */
+    _restoreFocus() {
+        if (!this.lastEditedCell) return;
+
+        const { initiativeId, teamId } = this.lastEditedCell;
+
+        // Find the input using data attributes
+        setTimeout(() => {
+            const newInput = document.querySelector(
+                `input[data-initiative-id="${initiativeId}"][data-team-id="${teamId}"]`
+            );
+            if (newInput) {
+                newInput.focus();
+            }
+        }, 0);
+    }
+
+    /**
+     * Handles the start of a drag operation.
+     */
+    _handleDragStart(event) {
+        const initiativeId = event.target.dataset.initiativeId;
+        const systemData = SystemService.getCurrentSystem();
+        const initiative = systemData.yearlyInitiatives.find(init => init.initiativeId === initiativeId);
+
+        // Do not allow dragging protected items
+        if (!initiative || initiative.isProtected) {
+            console.log(`YearPlanningView: Preventing drag of protected item ${initiativeId}`);
+            event.preventDefault();
+            return;
+        }
+
+        this.draggedInitiativeId = initiativeId;
+        this.draggedRowElement = event.target;
+        event.dataTransfer.setData('text/plain', initiativeId);
+        event.dataTransfer.effectAllowed = 'move';
+
+        // Add visual feedback (defer to allow drag image to render)
+        setTimeout(() => {
+            if (this.draggedRowElement) {
+                this.draggedRowElement.classList.add('dragging');
+            }
+        }, 0);
+    }
+
+    /**
+     * Handles dragging over a potential drop target.
+     */
+    _handleDragOver(event) {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+
+        const targetRow = event.target.closest('tr');
+        if (!targetRow || targetRow === this.draggedRowElement) return;
+
+        targetRow.classList.add('drag-over');
+    }
+
+    /**
+     * Handles leaving a potential drop target.
+     */
+    _handleDragLeave(event) {
+        const targetRow = event.target.closest('tr');
+        if (targetRow) {
+            targetRow.classList.remove('drag-over');
+        }
+    }
+
+    /**
+     * Handles the drop operation.
+     * Uses PlanningService.reorderInitiativesInPlace for the actual reorder.
+     */
+    _handleDrop(event) {
+        event.preventDefault();
+        const targetRow = event.target.closest('tr');
+        if (targetRow) targetRow.classList.remove('drag-over');
+
+        if (!targetRow || !this.draggedInitiativeId) {
+            return;
+        }
+
+        const targetInitiativeId = targetRow.dataset.initiativeId;
+        if (!targetInitiativeId || targetInitiativeId === this.draggedInitiativeId) {
+            return;
+        }
+
+        // Determine insert position based on cursor Y vs target row midpoint
+        const rect = targetRow.getBoundingClientRect();
+        const dropY = event.clientY;
+        const insertBefore = dropY < rect.top + rect.height / 2;
+
+        const systemData = SystemService.getCurrentSystem();
+        const success = PlanningService.reorderInitiativesInPlace(
+            systemData,
+            this.draggedInitiativeId,
+            targetInitiativeId,
+            insertBefore
+        );
+
+        if (!success) {
+            // Service will have logged the constraint violation
+            notificationManager?.showToast("Cannot reorder: Protected block constraint.", "warning");
+        }
+
+        // Re-render regardless (drag state will be cleaned up in _handleDragEnd)
+        this.render();
+    }
+
+    /**
+     * Handles the end of a drag operation (dropped or cancelled).
+     */
+    _handleDragEnd(event) {
+        // Remove dragging class
+        if (this.draggedRowElement) {
+            this.draggedRowElement.classList.remove('dragging');
+        }
+
+        // Clean up any lingering drag-over styles
+        document.querySelectorAll('#planningTableBody tr.drag-over').forEach(row => {
+            row.classList.remove('drag-over');
+        });
+
+        // Reset drag state
+        this.draggedInitiativeId = null;
+        this.draggedRowElement = null;
     }
 
     // ==================== AI Integration ====================
@@ -1018,18 +1230,4 @@ class YearPlanningView {
     }
 }
 
-// ==================== Global Instance & Compatibility ====================
-
-// Global instance
-yearPlanningView = null;
-
-// Compatibility layer - delegates to instance or uses legacy functions
-renderPlanningView = function () {
-    // Use new class if instance exists, otherwise fall back to legacy
-    if (yearPlanningView) {
-        yearPlanningView.render();
-    } else {
-        // Legacy fallback - will be removed after full migration
-        console.warn("YearPlanningView: Using legacy renderPlanningView");
-    }
-};
+// No legacy global needed - NavigationManager creates and manages the instance

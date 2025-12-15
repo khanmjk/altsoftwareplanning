@@ -459,6 +459,82 @@ const WorkPackageService = {
      */
     removeAssignment(systemData, workPackageId, teamId) {
         return this.deleteAssignment(systemData, workPackageId, teamId);
+    },
+
+    // =========================================================================
+    // YEAR PLANNING SERVICE COMMANDS (mutating operations)
+    // =========================================================================
+
+    /**
+     * Applies a team estimate from Year Plan to Work Packages.
+     * Service command - mutates systemData in place.
+     * 
+     * This prevents the "reversion" issue where syncInitiativeTotals overwrites
+     * manual Year Plan edits. By syncing changes to WPs first, the bottom-up
+     * sync will preserve the intended values.
+     * 
+     * Strategy:
+     * - If no WPs exist for the initiative: no-op (initiative assignments are the source)
+     * - If WPs exist: update/insert/remove the assignment in the FIRST WP
+     * - Then call syncInitiativeTotals to ensure consistency
+     * 
+     * @param {object} systemData - The global system data object.
+     * @param {string} initiativeId - The initiative ID.
+     * @param {string} teamId - The team ID.
+     * @param {number} sdeYears - The SDE years value from Year Plan.
+     * @returns {boolean} True if WP was updated, false if no action needed.
+     */
+    applyInitiativeTeamEstimateFromYearPlan(systemData, initiativeId, teamId, sdeYears) {
+        if (!systemData || !initiativeId || !teamId) {
+            console.error("WorkPackageService.applyInitiativeTeamEstimateFromYearPlan: Missing required params");
+            return false;
+        }
+
+        const workingDays = systemData.capacityConfiguration?.workingDaysPerYear || 261;
+        const wps = (systemData.workPackages || []).filter(wp => wp.initiativeId === initiativeId);
+
+        // If no WPs exist, no action needed - initiative assignments will be used directly
+        if (wps.length === 0) {
+            return false;
+        }
+
+        // Use first WP (same strategy as legacy yearPlanning.js)
+        const targetWp = wps[0];
+
+        if (!targetWp.impactedTeamAssignments) {
+            targetWp.impactedTeamAssignments = [];
+        }
+
+        const wpAssignIndex = targetWp.impactedTeamAssignments.findIndex(a => a.teamId === teamId);
+        const validatedValue = (!isNaN(sdeYears) && sdeYears > 0) ? sdeYears : 0;
+
+        if (validatedValue > 0) {
+            const newDays = validatedValue * workingDays;
+            if (wpAssignIndex > -1) {
+                // Update existing assignment
+                targetWp.impactedTeamAssignments[wpAssignIndex].sdeDays = newDays;
+            } else {
+                // Add new assignment
+                targetWp.impactedTeamAssignments.push({
+                    teamId: teamId,
+                    sdeDays: newDays,
+                    startDate: targetWp.startDate,
+                    endDate: targetWp.endDate
+                });
+            }
+        } else {
+            // Remove assignment if value is 0
+            if (wpAssignIndex > -1) {
+                targetWp.impactedTeamAssignments.splice(wpAssignIndex, 1);
+            }
+        }
+
+        console.log(`WorkPackageService: Updated WP ${targetWp.workPackageId} for team ${teamId} (${validatedValue} SDE-years)`);
+
+        // Re-sync initiative totals from WPs to maintain consistency
+        this.syncInitiativeTotals(initiativeId, systemData);
+
+        return true;
     }
 };
 

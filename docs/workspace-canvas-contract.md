@@ -349,9 +349,10 @@ Before submitting a new view or refactoring an existing one, verify:
 - ✅ `js/components/RoadmapView.js` - Clean class pattern
 - ✅ `js/components/CapacityDashboardView.js` - Service layer pattern
 - ✅ `js/components/GanttPlanningView.js` - Complex hierarchical view, MVC pattern with GanttTableController
+- ✅ `js/components/YearPlanningView.js` - Full refactor example: service commands, state encapsulation, no globals
 
-**To Be Refactored (as of 2025-12-14)**:
-- ⚠️ `js/yearPlanning.js` - Module-level globals, inline HTML, mixed concerns
+**No longer in refactor queue** (as of 2025-12-15):
+- ✅ `yearPlanning.js` - DELETED, functionality migrated to `YearPlanningView.js`
 
 ---
 

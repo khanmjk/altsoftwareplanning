@@ -324,7 +324,8 @@ class ResourceForecastView {
             if (team) {
                 if (!team.attributes) team.attributes = {};
                 team.attributes.newHireProductiveCapacityGain = results.newHireCapacityGainSdeYears || 0;
-                console.log(`Stored newHireProductiveCapacityGain for team ${team.teamId}: ${team.attributes.newHireProductiveCapacityGain}`);
+                team.attributes.newHireRampUpSink = results.newHireRampUpSinkSdeYears || 0;
+                console.log(`Stored forecast for team ${team.teamId}: gain=${team.attributes.newHireProductiveCapacityGain}, sink=${team.attributes.newHireRampUpSink}`);
 
                 // [PERSISTENCE FIX] Save changes to SystemRepository
                 SystemService.save();
