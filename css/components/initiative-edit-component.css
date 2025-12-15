@@ -85,7 +85,7 @@
 .initiative-edit-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: var(--space-md);
+    gap: var(--space-lg);
     margin-bottom: var(--space-md);
 }
 
@@ -109,7 +109,7 @@
     padding: 6px 10px;
     font-size: 0.9rem;
     line-height: 1.4;
-    color: var(--color-gray-900);
+    color: var(--theme-text-primary);
     background-color: var(--theme-bg-primary);
     border: 1px solid var(--color-gray-300);
     border-radius: var(--radius-sm);
@@ -132,10 +132,10 @@
 /* Collapsible Sections (ROI, etc) */
 .initiative-edit-section {
     margin-top: var(--space-md);
-    border: 1px solid var(--color-gray-200);
+    border: 1px solid var(--theme-border-color);
     border-radius: var(--radius-sm);
-    background-color: rgba(255, 255, 255, 0.5);
-    overflow: hidden;
+    background-color: var(--theme-bg-secondary);
+    /* overflow: visible;  Default, but important to NOT be hidden for dropdowns */
 }
 
 .initiative-edit-section-header {
@@ -174,6 +174,12 @@
 /* Assignments List */
 .initiative-assignments-list {
     margin-bottom: var(--space-sm);
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid var(--theme-border-color);
+    border-radius: var(--radius-sm);
+    padding: 4px;
+    background-color: var(--theme-bg-secondary);
 }
 
 .initiative-assignment-item {
@@ -182,16 +188,18 @@
     align-items: center;
     padding: 6px 10px;
     background: var(--theme-bg-primary);
-    border: 1px solid var(--color-gray-200);
+    border: 1px solid var(--theme-border-color);
     border-radius: var(--radius-sm);
     margin-bottom: 4px;
     font-size: 0.9rem;
+    color: var(--theme-text-primary);
 }
 
 .initiative-assignment-controls {
     display: flex;
     gap: 8px;
     align-items: center;
+    margin-top: 8px;
 }
 
 /* Actions */

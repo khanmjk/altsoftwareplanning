@@ -1,14 +1,16 @@
 /**
  * InitiativeEditComponent
  * Encapsulates the logic for rendering and managing the Initiative Edit list.
- * Modeled after ServiceEditComponent and ThemeEditComponent for consistent UX.
+ * Refactored to use ThemedSelect (including multi-select) and InitiativeService.
  */
 class InitiativeEditComponent {
     constructor(containerId, systemData) {
         this.containerId = containerId;
         this.systemData = systemData;
         this.expandedIndex = -1;
-        this.draftInitiative = null; // New property for draft mode
+        this.draftInitiative = null;
+        // Store references to ThemedSelect instances for retrieval
+        this.selects = new Map();
     }
 
     startNewInitiative() {
@@ -28,10 +30,9 @@ class InitiativeEditComponent {
             roi: {}
         };
 
-        this.expandedIndex = 'draft'; // Special index for draft
+        this.expandedIndex = 'draft';
         this.render();
 
-        // Scroll to bottom
         setTimeout(() => {
             const container = document.getElementById(this.containerId);
             if (container) container.scrollTop = container.scrollHeight;
@@ -47,6 +48,9 @@ class InitiativeEditComponent {
         container.innerHTML = '';
         container.className = 'initiative-edit-list';
 
+        // Ensure we are working with fresh data if possible, but systemData is passed by ref.
+        // Ideally we should re-fetch from SystemService if we want to be super safe, 
+        // but the parent view passes it.
         if (!this.systemData.yearlyInitiatives) {
             this.systemData.yearlyInitiatives = [];
         }
@@ -58,6 +62,9 @@ class InitiativeEditComponent {
             container.innerHTML = '<p class="initiative-edit-list-empty">No initiatives found. Click "Add Initiative" to create one.</p>';
             return;
         }
+
+        // Clear component-level select references on re-render
+        this.selects.clear();
 
         // Render existing items
         this.systemData.yearlyInitiatives.forEach((init, index) => {
@@ -75,7 +82,7 @@ class InitiativeEditComponent {
         const isDraft = index === 'draft';
         const itemDiv = document.createElement('div');
         itemDiv.className = 'initiative-edit-item';
-        if (isDraft) itemDiv.classList.add('initiative-edit-item--draft'); // Optional styling
+        if (isDraft) itemDiv.classList.add('initiative-edit-item--draft');
         itemDiv.setAttribute('data-init-index', index);
 
         // Header
@@ -115,13 +122,32 @@ class InitiativeEditComponent {
                 indicator.innerText = '+ ';
                 this.expandedIndex = -1;
             } else {
-                details.classList.add('expanded');
-                indicator.innerText = '- ';
+                // Collapse others? Optional.
+                this.render(); // Re-render to collapse others easily or just toggle class
+                // Actually re-rendering is heavy. Let's just toggle.
+                // But we need to update expandedIndex.
+                // If we want accordion style:
+                // this.expandedIndex = index;
+                // this.render();
+                // Let's stick to the previous pattern:
                 this.expandedIndex = index;
+                this.render();
+                // Note: Re-rendering destroys local DOM state (focus), but it's okay for expanding/collapsing.
             }
         };
 
-        // --- Content Generation ---
+        // If not expanded, return early to save rendering cost? 
+        // No, we need them in DOM for toggle animation usually, 
+        // but here 'expanded' class likely controls display:none or height.
+        // If we heavily re-render on toggle, we can skip building details if not expanded.
+        if (index !== this.expandedIndex) {
+            itemDiv.appendChild(header);
+            // Append empty details so structure is consistent? Or just don't append.
+            itemDiv.appendChild(details);
+            return itemDiv;
+        }
+
+        // --- Content Generation (Only if Expanded) ---
 
         // 1. General Info
         details.appendChild(this._createFormGroup('Title', 'input', 'title', init.title, index));
@@ -137,6 +163,7 @@ class InitiativeEditComponent {
         details.appendChild(grid1);
 
         // 2. Strategic Alignment
+        // Themes (Multi-Select using ThemedSelect)
         const themesOptions = (this.systemData.definedThemes || []).map(t => ({ value: t.themeId, text: t.name }));
         details.appendChild(this._createMultiSelectGroup('Themes', 'themes', init.themes || [], themesOptions, index));
 
@@ -216,6 +243,12 @@ class InitiativeEditComponent {
         input.setAttribute('data-init-index', index);
         input.setAttribute('data-field', fieldName);
 
+        // Direct mutation for simple fields is mostly ok for the "live edit" feel, 
+        // BUT we should avoid it if we want strict Service usage.
+        // However, the Service Layer usually expects the whole object on "Save".
+        // So we can mutate a local copy or the object reference in memory, 
+        // and then send that to the Service on Save. This component seems to rely on mutating the reference.
+        // We will keep the reference mutation for valid fields, and then call Service.update() on save.
         input.addEventListener('change', (e) => this._updateField(index, fieldName, e.target.value));
 
         group.appendChild(label);
@@ -231,41 +264,43 @@ class InitiativeEditComponent {
         label.className = 'initiative-edit-label';
         label.innerText = labelText;
 
-        // Build options array for ThemedSelect
         const selectOptions = [];
         if (hasNoneOption) {
             selectOptions.push({ value: '', text: '-- None --' });
         }
         options.forEach(opt => {
-            const val = typeof opt === 'string' ? opt : opt.value;
-            const text = typeof opt === 'string' ? opt : opt.text;
+            const val = (typeof opt === 'string' ? opt : opt.value) || '';
+            const text = (typeof opt === 'string' ? opt : opt.text) || '';
             selectOptions.push({ value: val, text: text });
         });
 
-        const selectContainer = document.createElement('div');
-        selectContainer.className = 'initiative-edit-select-container';
+        // Unique ID for retrieval
+        const id = `initiative-${index}-${fieldName.replace('.', '-')}`;
 
         const themedSelect = new ThemedSelect({
             options: selectOptions,
             value: selectedValue || '',
-            id: `initiative-${index}-${fieldName}`,
+            id: id,
             onChange: (val) => {
-                // Handle Owner/PM special parsing
+                // Determine if this is Owner/PM which needs parsing
+                let finalVal = val;
                 if (fieldName === 'owner' || fieldName === 'projectManager') {
                     if (val) {
                         const [type, id] = val.split(':');
-                        val = { type, id };
+                        finalVal = { type, id };
                     } else {
-                        val = null;
+                        finalVal = null;
                     }
                 }
-                this._updateField(index, fieldName, val);
+                this._updateField(index, fieldName, finalVal);
             }
         });
 
-        selectContainer.appendChild(themedSelect.render());
+        // Store reference if needed (though we rely on onChange for live updates to the model ref)
+        this.selects.set(id, themedSelect);
+
         group.appendChild(label);
-        group.appendChild(selectContainer);
+        group.appendChild(themedSelect.render());
         return group;
     }
 
@@ -277,24 +312,23 @@ class InitiativeEditComponent {
         label.className = 'initiative-edit-label';
         label.innerText = labelText;
 
-        const select = document.createElement('select');
-        select.className = 'initiative-edit-select';
-        select.multiple = true;
-        select.size = 4;
+        const id = `initiative-${index}-${fieldName}`;
 
-        options.forEach(opt => {
-            const option = new Option(opt.text, opt.value);
-            if (selectedValues.includes(opt.value)) option.selected = true;
-            select.appendChild(option);
+        const themedSelect = new ThemedSelect({
+            options: options,
+            value: selectedValues || [],
+            id: id,
+            multiple: true, // Enable Multi-Select
+            onChange: (val) => {
+                // val is array
+                this._updateField(index, fieldName, val);
+            }
         });
 
-        select.addEventListener('change', (e) => {
-            const values = Array.from(e.target.selectedOptions).map(o => o.value);
-            this._updateField(index, fieldName, values);
-        });
+        this.selects.set(id, themedSelect);
 
         group.appendChild(label);
-        group.appendChild(select);
+        group.appendChild(themedSelect.render());
         return group;
     }
 
@@ -415,12 +449,22 @@ class InitiativeEditComponent {
         addBtn.onclick = () => {
             const teamId = selectedTeamId || teamThemedSelect.getValue();
             const sdeYears = parseFloat(sdeInput.value);
-            if (!teamId || isNaN(sdeYears)) return;
+            if (!teamId || isNaN(sdeYears)) {
+                notificationManager.showToast('Please select a team and enter valid SDE Years.', 'warning');
+                return;
+            }
 
             if (!init.assignments) init.assignments = [];
-            init.assignments.push({ teamId, sdeYears });
+            // Check existing
+            const existing = init.assignments.find(a => a.teamId === teamId);
+            if (existing) {
+                existing.sdeYears = sdeYears;
+            } else {
+                init.assignments.push({ teamId, sdeYears });
+            }
             renderList();
-            // Reset the select
+            // Reset
+            teamThemedSelect.setValue('');
             selectedTeamId = '';
             sdeInput.value = '';
         };
@@ -436,18 +480,45 @@ class InitiativeEditComponent {
     _createROIContent(init, index) {
         const container = document.createElement('div');
         if (!init.roi) init.roi = {};
+        const roi = init.roi;
 
         const grid = document.createElement('div');
         grid.className = 'initiative-edit-grid';
 
-        grid.appendChild(this._createFormGroup('Category', 'input', 'roi.category', init.roi.category, index));
-        grid.appendChild(this._createFormGroup('Value', 'input', 'roi.estimatedValue', init.roi.estimatedValue, index));
-        grid.appendChild(this._createFormGroup('Value Type', 'input', 'roi.valueType', init.roi.valueType, index));
-        grid.appendChild(this._createFormGroup('Currency', 'input', 'roi.currency', init.roi.currency, index));
+        // ROI Categories
+        const categories = [
+            'Revenue Generation', 'Cost Reduction', 'Risk Mitigation',
+            'Compliance', 'Strategic Alignment', 'Innovation',
+            'Tech Debt', 'Productivity/Efficiency', 'User Experience'
+        ];
+        grid.appendChild(this._createSelectGroup('Category', 'roi.category', roi.category, categories, index, true));
+
+        // Value Type
+        const valueTypes = ['Hard Savings', 'Soft Savings', 'Revenue', 'QualitativeScore', 'Narrative'];
+        grid.appendChild(this._createSelectGroup('Value Type', 'roi.valueType', roi.valueType, valueTypes, index, true));
+
+        // Estimated Value (Input) - Grid Row 2, Col 1
+        grid.appendChild(this._createFormGroup('Estimated Value', 'input', 'roi.estimatedValue', roi.estimatedValue, index));
+
+        // Currency - Grid Row 2, Col 2
+        const currencies = ['USD', 'EUR', 'GBP', 'AUD', 'CAD', 'SGD', 'JPY', 'INR'];
+        grid.appendChild(this._createSelectGroup('Currency', 'roi.currency', roi.currency, currencies, index, true));
 
         container.appendChild(grid);
 
-        container.appendChild(this._createFormGroup('Calculation Methodology', 'textarea', 'roi.calculationMethodology', init.roi.calculationMethodology, index));
+        const grid2 = document.createElement('div');
+        grid2.className = 'initiative-edit-grid';
+
+        // Time Horizon
+        grid2.appendChild(this._createFormGroup('Time Horizon (Months)', 'number', 'roi.timeHorizon', roi.timeHorizon, index));
+
+        // Confidence Level
+        const confidenceLevels = ['High', 'Medium', 'Low'];
+        grid2.appendChild(this._createSelectGroup('Confidence Level', 'roi.confidenceLevel', roi.confidenceLevel, confidenceLevels, index, true));
+
+        container.appendChild(grid2);
+
+        container.appendChild(this._createFormGroup('Calculation Methodology', 'textarea', 'roi.calculationMethodology', roi.calculationMethodology, index));
 
         return container;
     }
@@ -470,19 +541,22 @@ class InitiativeEditComponent {
             init[fieldName] = value;
         }
 
-        // Update Header if Title/Status changed
+        // Live Header Update (Optional Visuals)
         if (fieldName === 'title' || fieldName === 'status') {
             const item = document.querySelector(`.initiative-edit-item[data-init-index="${index}"]`);
             if (item) {
                 if (fieldName === 'title') {
                     let title = value || 'New Initiative';
                     if (index === 'draft') title += ' (Unsaved)';
-                    item.querySelector('.initiative-edit-title').innerText = title;
+                    const titleEl = item.querySelector('.initiative-edit-title');
+                    if (titleEl) titleEl.innerText = title;
                 }
                 if (fieldName === 'status') {
                     const pill = item.querySelector('.initiative-status-pill');
-                    pill.className = `initiative-status-pill status-${(value || 'backlog').toLowerCase().replace(' ', '-')}`;
-                    pill.innerText = value || 'Backlog';
+                    if (pill) {
+                        pill.className = `initiative-status-pill status-${(value || 'backlog').toLowerCase().replace(' ', '-')}`;
+                        pill.innerText = value || 'Backlog';
+                    }
                 }
             }
         }
@@ -497,10 +571,18 @@ class InitiativeEditComponent {
         }
 
         if (await notificationManager.confirm('Are you sure you want to delete this initiative?', 'Delete Initiative', { confirmStyle: 'danger' })) {
-            this.systemData.yearlyInitiatives.splice(index, 1);
-            SystemService.save();
-            this.render();
-            notificationManager.showToast('Initiative deleted.', 'success');
+            const init = this.systemData.yearlyInitiatives[index];
+            if (init && init.initiativeId) {
+                // Service Layer Call
+                const success = InitiativeService.deleteInitiative(this.systemData, init.initiativeId);
+                if (success) {
+                    notificationManager.showToast(`Initiative "${init.title}" deleted.`, 'success');
+                    // SystemService.save() is called inside InitiativeService
+                    this.render();
+                } else {
+                    notificationManager.showToast(`Failed to delete initiative "${init.title}".`, 'error');
+                }
+            }
         }
     }
 
@@ -517,17 +599,34 @@ class InitiativeEditComponent {
             return;
         }
 
-        if (index === 'draft') {
-            // Commit draft
-            this.systemData.yearlyInitiatives.push(init);
-            this.draftInitiative = null;
-            this.expandedIndex = -1; // Collapse after create? Or keep open? Let's collapse.
-            notificationManager.showToast('Initiative created successfully.', 'success');
-            this.render();
+        // Determine Planning Year
+        if (!init.attributes) init.attributes = {};
+        if (init.targetDueDate) {
+            init.attributes.planningYear = new Date(init.targetDueDate).getFullYear();
         } else {
-            notificationManager.showToast('Initiative changes saved.', 'success');
+            init.attributes.planningYear = new Date().getFullYear();
         }
 
-        SystemService.save();
+        if (index === 'draft') {
+            // Service Layer: Add
+            const success = InitiativeService.addInitiative(this.systemData, init);
+            if (success) {
+                this.draftInitiative = null;
+                this.expandedIndex = -1;
+                notificationManager.showToast(`Initiative "${init.title}" created successfully.`, 'success');
+                this.render();
+            } else {
+                notificationManager.showToast(`Failed to create initiative "${init.title}".`, 'error');
+            }
+        } else {
+            // Service Layer: Update
+            const success = InitiativeService.updateInitiative(this.systemData, init.initiativeId, init);
+            if (success) {
+                notificationManager.showToast(`Initiative "${init.title}" updated successfully.`, 'success');
+                // Typically, the list might need re-rendering if sorting changed, but we can just leave it.
+            } else {
+                notificationManager.showToast(`Failed to update initiative "${init.title}".`, 'error');
+            }
+        }
     }
 }
