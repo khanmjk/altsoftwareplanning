@@ -104,6 +104,19 @@ const AboutService = {
     _extractSummary(htmlContent) {
         const temp = document.createElement('div');
         temp.innerHTML = htmlContent;
+
+        // Remove script and style tags to prevent code leakage
+        const scripts = temp.getElementsByTagName('script');
+        const styles = temp.getElementsByTagName('style');
+
+        // Remove strictly, iterating backwards
+        for (let i = scripts.length - 1; i >= 0; i--) {
+            scripts[i].remove();
+        }
+        for (let i = styles.length - 1; i >= 0; i--) {
+            styles[i].remove();
+        }
+
         const text = temp.textContent || temp.innerText || '';
         return text.substring(0, 150).trim() + (text.length > 150 ? '...' : '');
     },
