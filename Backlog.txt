@@ -222,6 +222,10 @@ IN PROGRESS
 ------
 TO DO
 ------  
+[UX BUG] - On Roadmap & Backlog page, clicking Manage Themes goes to blank page "Workspace" - should go to Management -> Themes view
+[TECH DEBT] - Revisit StorageService and System Service - refactor or enhance the factory pattern with introducting localStorageDriver for local storage, CloudDB (Cloudflare db) drivers for cloud DB, etc.
+[TECH DEBT / FEATURE] - Login/Registration features using Cloudflare?
+
 -- Start building out detailed planning features
 -- [AI] extend the diagram agents to support mermaid generation of gantt charts, organograms
 - [AI Feature] Create an AI agent that can perform actions on the system with access to the code
