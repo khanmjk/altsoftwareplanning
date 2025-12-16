@@ -48,6 +48,7 @@
 <link rel="stylesheet" href="css/views/management-view.css?v=2">
 <link rel="stylesheet" href="css/views/documentation-view.css">
 <link rel="stylesheet" href="css/components/Modal.css">
+<link rel="stylesheet" href="css/components/feedback-modal.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css">
 
 
@@ -146,6 +147,10 @@
                 <a href="#" class="nav-item" data-view="helpView">
                     <div class="nav-icon"><i class="fas fa-book"></i></div>
                     <div class="nav-text">How to Guide</div>
+                </a>
+                <a href="#" class="nav-item" id="feedback-nav-item">
+                    <div class="nav-icon"><i class="fas fa-comment-alt"></i></div>
+                    <div class="nav-text">Provide Feedback</div>
                 </a>
             </div>
             <!-- 
@@ -357,6 +362,7 @@
     <script src="js/services/MermaidService.js"></script>
     <script src="js/services/FrappeGanttService.js"></script>
     <script src="js/services/D3Service.js"></script>
+    <script src="js/services/FeedbackService.js"></script>
 
     <!-- Wrapper View Classes (must load before NavigationManager for VIEW_REGISTRY) -->
     <script src="js/components/WelcomeView.js"></script>
@@ -441,6 +447,7 @@
     <script src="js/components/SystemsView.js"></script>
     <script src="js/components/AIGenProgressOverlayView.js"></script>
     <script src="js/components/RoadmapInitiativeModal.js"></script>
+    <script src="js/components/FeedbackModal.js"></script>
     <script src="js/components/WorkspaceComponent.js"></script>
     <script src="js/main.js?v=2"></script>
 </body>

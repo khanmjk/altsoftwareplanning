@@ -105,6 +105,15 @@ class SidebarComponent {
                 AIGenProgressOverlayView.getInstance().startGenerationFlow();
             });
         }
+
+        // Provide Feedback Button
+        const feedbackBtn = this.container.querySelector('#feedback-nav-item');
+        if (feedbackBtn) {
+            feedbackBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                FeedbackModal.getInstance().open();
+            });
+        }
     }
 
     setActive(viewId) {

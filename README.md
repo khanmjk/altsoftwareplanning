@@ -48,6 +48,24 @@ SMT v2.0 is built with a **"Vanilla JS + Service Architecture"** approach, desig
 2.  **No Globals**: We strictly avoid `window` pollution.
 3.  **Event-Driven**: Components update via state subscribers.
 
+### Backend Services (Cloudflare Workers)
+
+SMT is primarily a client-side application, but uses **Cloudflare Workers** for secure server-side operations:
+
+```text
+smt-feedback-worker/
+├── src/index.js      # Worker entry point
+├── wrangler.toml     # Cloudflare configuration
+└── README.md         # Deployment instructions
+```
+
+**Feedback Submission Flow:**
+```
+User → FeedbackModal → FeedbackService → Cloudflare Worker → GitHub Issues API
+```
+
+The worker acts as a secure proxy, holding the GitHub API token server-side so users never need to authenticate or store credentials. This "Backend for Frontend" pattern keeps sensitive tokens secure while allowing seamless in-app feedback submission.
+
 ---
 
 ## 🤖 AI-First Development
@@ -352,6 +370,7 @@ Once a system is loaded, a **Sidebar** appears on the left, organizing all major
 
 #### **Help**
 *   **How to Guide:** Access this documentation.
+*   **Provide Feedback:** Submit bug reports, feature requests, or general feedback directly to GitHub Issues.
 
 ---
 
@@ -426,6 +445,17 @@ Mermaid-based diagrams are available across the app and via the AI Assistant.
 *   **Seasonal Themes:** Automatic updates for holidays (e.g., "Spooky" for Halloween, "Winter" for Christmas).
 *   **Random Theme Generator:** Feeling adventurous? Use the "Random Theme" button in Settings to generate a unique, mathematically harmonious color palette.
 *   **Contract-Driven:** All themes adhere to the strict semantic color variables defined in `docs/workspace-canvas-contract.md`.
+
+### Provide Feedback (Help)
+
+*   Click **"Provide Feedback"** in the sidebar (under **Help**).
+*   Submit bug reports, feature requests, or general feedback directly to the project's GitHub Issues.
+*   **Features:**
+    *   **Feedback Types:** Bug Report, Feature Request, General Feedback, or Other.
+    *   **Optional Email:** Provide your email for follow-up (completely optional).
+    *   **App Context:** Optionally include debugging context (current view, theme, system name) to help diagnose issues.
+*   **Privacy:** No sensitive data (API keys, user data) is ever shared. Only basic app state is included if you opt-in.
+*   **Architecture:** Submissions are routed through a Cloudflare Worker that securely holds the GitHub API token, so you never need to authenticate.
 
 ---
 

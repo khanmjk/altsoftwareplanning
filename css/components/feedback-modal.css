@@ -1,0 +1,96 @@
+/* Feedback Modal Styling */
+
+/* Modal wrapper - inherits from Modal.css */
+.feedback-modal__wrapper {
+    max-width: 500px;
+}
+
+/* Body */
+.feedback-modal__body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Form groups */
+.feedback-modal__form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.feedback-modal__label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--theme-text-secondary);
+}
+
+.feedback-modal__required {
+    color: var(--theme-danger, #dc3545);
+}
+
+/* Textarea */
+.feedback-modal__textarea {
+    padding: 12px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    border: 1px solid var(--theme-border-color);
+    border-radius: 6px;
+    background-color: var(--theme-bg-primary);
+    color: var(--theme-text-primary);
+    resize: vertical;
+    min-height: 120px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.feedback-modal__textarea::placeholder {
+    color: var(--theme-text-muted);
+}
+
+.feedback-modal__textarea:focus {
+    outline: none;
+    border-color: var(--theme-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-primary), transparent 85%);
+}
+
+/* Input */
+.feedback-modal__input {
+    padding: 10px 12px;
+    font-size: 0.95rem;
+    border: 1px solid var(--theme-border-color);
+    border-radius: 6px;
+    background-color: var(--theme-bg-primary);
+    color: var(--theme-text-primary);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.feedback-modal__input::placeholder {
+    color: var(--theme-text-muted);
+}
+
+.feedback-modal__input:focus {
+    outline: none;
+    border-color: var(--theme-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-primary), transparent 85%);
+}
+
+/* Checkbox group */
+.feedback-modal__checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.feedback-modal__checkbox-group input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--theme-primary);
+    cursor: pointer;
+}
+
+.feedback-modal__checkbox-group label {
+    font-size: 0.9rem;
+    color: var(--theme-text-secondary);
+    cursor: pointer;
+}

@@ -32,3 +32,6 @@ SMT-Antigravity*
 
 # Gemini Agent
 .gemini/
+
+# Cloudflare Workers
+.wrangler/

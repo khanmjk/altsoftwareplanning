@@ -208,6 +208,9 @@ bar graph per quarter to see team load/demand impact
 [Done] - Bug fix - UI is not being refreshed when AI agent runs tools and makes changes to system
 [Done] - Bug fix - update roadmap and 3yp if new initiative added using the modal
 [Done] - Fix ROI fields in initiatives management view
+[Done] - [Feature] Add a feedback workflow to the app, similar to antivgravity "Provide Feedback" in side panel. Feedback must push to
+the gitgub issues tracker to keep track of user feedback requests
+
 
 ------------
 IN PROGRESS
@@ -244,8 +247,7 @@ The goals dashboard cards status must align with the product management view pag
 
 [Goals Management] Show pills on goals list just like the initiative lists that shows status of the initiative
 
-[Feature] Add a feedback workflow to the app, similar to antivgravity "Provide Feedback" in side panel. Feedback must push to
-the gitgub issues tracker to keep track of user feedback requests
+
 
 [TODO] Add goals drop down filter to quarterly roadmap and 3YP
 [TODO] Add backlog status filter to initiatives in quarterly roadmap and 3YP

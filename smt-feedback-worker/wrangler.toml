@@ -1,0 +1,6 @@
+name = "smt-feedback-worker"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+# The GITHUB_TOKEN secret is added via: wrangler secret put GITHUB_TOKEN
+# Do NOT put secrets in this file!
