@@ -474,9 +474,22 @@ class AboutView {
     getAIContext() {
         return {
             viewTitle: 'About',
-            description: 'Displays author information, AI-related blog articles, and YouTube videos',
-            postCount: this.posts.length,
-            videoCount: this.videos.length
+            author: {
+                name: 'Mo Khan',
+                tagline: 'Software & Engineering Leader | AI-First Development Advocate',
+                bio: 'Building SMT with AI-assisted development practices. Exploring the intersection of traditional software engineering and modern AI tooling.',
+                links: {
+                    blog: this.blogUrl,
+                    youtube: this.youtubeChannelUrl,
+                    github: 'https://github.com/khanmjk',
+                    linkedin: 'https://www.linkedin.com/in/khanmjk/'
+                }
+            },
+            content: {
+                blogPosts: this.posts.slice(0, 5).map(p => ({ title: p.title, date: p.date })),
+                videos: this.videos.slice(0, 5).map(v => ({ title: v.title, date: v.date }))
+            },
+            description: 'Displays author information, AI-related blog articles, and YouTube videos. Use this context to answer questions about the developer and their content.'
         };
     }
 }

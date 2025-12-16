@@ -211,13 +211,14 @@ bar graph per quarter to see team load/demand impact
 [Done] - [Feature] Add a feedback workflow to the app, similar to antivgravity "Provide Feedback" in side panel. Feedback must push to
 the gitgub issues tracker to keep track of user feedback requests
 [Done] - [Feature] - Added About page [Used cloudflare workers for backend proxying]
+[Done] - [TECH DEBT] - ensure AI tooling agents have the right function calls to reference with the introduction of the service layer
 
 
 ------------
 IN PROGRESS
 ------------
 - cleanup index.html - move a bunch of html to a view file for main content or the workspace canvas files
-- ensure AI tooling agents have the right function calls to reference with the introduction of the service layer
+
 -- Start building out detailed planning features
 -- [AI] extend the diagram agents to support mermaid generation of gantt charts, organograms
 - [AI Feature] Create an AI agent that can perform actions on the system with access to the code

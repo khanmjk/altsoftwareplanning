@@ -88,6 +88,12 @@ const aiAgentController = (() => {
             { text: "What happens if I reset to defaults?" },
             { text: "Explain the difference between Gemini and GPT-4o." }
         ],
+        aboutView: [
+            { text: "Who developed this platform?" },
+            { text: "What topics does the author write about?" },
+            { text: "Summarize the latest blog post." },
+            { text: "Show me the most recent YouTube video." }
+        ],
         default: [
             { text: "What is this system about?" },
             { text: "How many teams are there?" },
@@ -604,6 +610,11 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
      * from a specialist agent's proposal.
      * @param {boolean} didConfirm - True if "Apply" was clicked, false if "Discard".
      */
+    /**
+     * [NEW] Handles the user's "Apply" or "Discard" response
+     * from a specialist agent's proposal.
+     * @param {boolean} didConfirm - True if "Apply" was clicked, false if "Discard".
+     */
     function confirmPrebuiltAgent(didConfirm) {
         console.log(`[AI Agent Controller] Received agent confirmation: ${didConfirm}`);
         const view = aiChatAssistant;
@@ -625,14 +636,11 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
                 actionHandled = true;
             }
         }
-        else if (aiOrgChangeAgent && aiOrgChangeAgent.hasPendingChanges()) {
-            // [Handling pending org changes]
-        }
-        //     // Logic for other agents will go here
-        // } 
+        // Future agents can be added here
         else {
             console.warn("Agent confirmation received, but no agent had pending changes.");
-            view.postAgentMessageToView("Could not find the pending changes to apply. Please try running the agent again.", true);
+            // Only show error if we expected something (this might just be a UI artifact or stray click)
+            // view.postAgentMessageToView("Could not find the pending changes to apply. Please try running the agent again.", true);
             outcomeText = 'No pending changes found.';
         }
 
@@ -643,22 +651,17 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
 
     function _waitForAnalysisFunction(maxAttempts = 5, delayMs = 200) {
         // Direct return of the service method
-        if (typeof AIService !== 'undefined' && AIService.getAnalysisFromPrompt) {
-            return AIService.getAnalysisFromPrompt;
-        }
-        return null;
+        return AIService.getAnalysisFromPrompt;
     }
 
     function _resolveImageGenerationFunction() {
-        if (typeof AIService !== 'undefined' && AIService.generateImageFromPrompt) {
-            return AIService.generateImageFromPrompt;
-        }
-        return null;
+        return AIService.generateImageFromPrompt;
     }
 
     function scrapeCurrentViewContext() {
-        // Use internal state if available, otherwise fallback to window (though we should rely on internal now)
-        const currentView = currentViewId || ((typeof window !== 'undefined' && window.currentViewId) ? window.currentViewId : null);
+        // Use internal state or ask NavigationManager for current view
+        const currentView = currentViewId || navigationManager.currentViewId;
+
         let contextData = {
             view: currentView,
             timestamp: new Date().toISOString()
@@ -675,187 +678,51 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
         contextData.systemName = SystemService.getCurrentSystem().systemName;
         contextData.systemDescription = SystemService.getCurrentSystem().systemDescription;
 
-        // [NEW] Try class-based view context first via AI_VIEW_REGISTRY
-        if (currentView) {
-            const classContext = getAIContextForView(currentView);
-            if (classContext && classContext.source === 'class') {
-                console.log(`[AI CHAT] Using class-based context from ${currentView}`);
-                contextData.data = classContext;
-                return JSON.stringify(contextData, null, 2);
-            }
+        // Use AI_VIEW_REGISTRY to get context
+        const viewContext = getAIContextForView(currentView || 'default');
+        if (viewContext) {
+            contextData.data = viewContext;
+            return JSON.stringify(contextData, null, 2);
         }
 
-        // Legacy fallback: switch on view ID
-        try {
-            switch (currentView) {
-                case 'planningView':
-                    // Get data from class instance via navigationManager
-                    const planViewInstance = navigationManager?.getViewInstance?.('planningView');
-                    contextData.data = {
-                        viewTitle: "Year Plan",
-                        planningYear: planViewInstance?.currentYear || new Date().getFullYear(),
-                        scenario: planViewInstance?.scenario || 'effective',
-                        constraintsEnabled: planViewInstance?.applyConstraints || false,
-                        teamLoadSummary: planViewInstance?.summaryData || null,
-                        planningTable: planViewInstance?.tableData || null
-                    };
-                    break;
-                case 'ganttPlanningView':
-                    contextData.data = {
-                        viewTitle: "Detailed Planning (Gantt)",
-                        currentYear: currentGanttYear,
-                        groupBy: currentGanttGroupBy,
-                        workPackages: SystemService.getCurrentSystem().workPackages || [],
-                        initiatives: (SystemService.getCurrentSystem().yearlyInitiatives || []).filter(i =>
-                            (i.attributes?.planningYear || '').toString() === (currentGanttYear || '').toString()
-                        ).map(i => ({
-                            id: i.initiativeId,
-                            title: i.title,
-                            startDate: i.attributes?.startDate,
-                            endDate: i.targetDueDate,
-                            workPackageIds: i.workPackageIds
-                        }))
-                    };
-                    break;
-                case 'capacityConfigView':
-                    contextData.data = {
-                        metrics: SystemService.getCurrentSystem().calculatedCapacityMetrics,
-                        config: SystemService.getCurrentSystem().capacityConfiguration
-                    };
-                    break;
-                case 'organogramView':
-                    contextData.data = {
-                        seniorManagers: SystemService.getCurrentSystem().seniorManagers,
-                        sdms: SystemService.getCurrentSystem().sdms,
-                        teams: SystemService.getCurrentSystem().teams.map(t => ({
-                            teamId: t.teamId,
-                            teamName: t.teamName,
-                            teamIdentity: t.teamIdentity,
-                            engineerNames: t.engineers
-                        })),
-                        allKnownEngineers: SystemService.getCurrentSystem().allKnownEngineers
-                    };
-                    break;
-                case 'dashboardView':
-                    const currentWidget = dashboardItems[currentDashboardIndex];
-                    contextData.data = {
-                        currentWidgetTitle: currentWidget.title,
-                        dashboardYearFilter: dashboardPlanningYear
-                    };
-                    try {
-                        switch (currentWidget.id) {
-                            case 'strategicGoalsWidget':
-                                contextData.data.widgetData = prepareGoalData(system);
-                                break;
-                            case 'accomplishmentsWidget':
-                                contextData.data.widgetData = prepareAccomplishmentsData(system);
-                                break;
-                            case 'investmentDistributionWidget':
-                                try {
-                                    contextData.data.widgetData = processInvestmentData(system);
-                                } catch (e) {
-                                    console.warn('ProcessInvestmentData failed', e);
-                                }
-                                break;
-                        }
-                    } catch (error) {
-                        console.warn('Dashboard widget context error:', error);
-                    }
-                    break;
-                case 'visualizationCarousel':
-                    contextData.data = {
-                        services: SystemService.getCurrentSystem().services,
-                        dependencies: SystemService.getCurrentSystem().serviceDependencies,
-                        platformDependencies: SystemService.getCurrentSystem().platformDependencies,
-                        serviceDependenciesTable: typeof window !== 'undefined' ? (window.currentServiceDependenciesTableData || []) : []
-                    };
-                    break;
-                case 'roadmapView':
-                    contextData.data = {
-                        initiatives: SystemService.getCurrentSystem().yearlyInitiatives,
-                        goals: SystemService.getCurrentSystem().goals,
-                        themes: SystemService.getCurrentSystem().definedThemes
-                    };
-                    break;
-                    break;
-                case 'managementView':
-                    contextData.data = {
-                        viewTitle: "Product Management",
-                        themes: SystemService.getCurrentSystem().definedThemes || [],
-                        initiatives: (SystemService.getCurrentSystem().yearlyInitiatives || []).map(i => ({
-                            title: i.title,
-                            themeId: i.attributes?.themeId
-                        }))
-                    };
-                    break;
-                case 'welcomeView':
-                    contextData.data = {
-                        viewTitle: "Welcome / Home",
-                        description: "The landing page of the SMT Platform.",
-                        availableActions: ["Load Existing System", "Create New System", "Create with AI", "View Documentation"],
-                        platformSummary: "SMT Platform is a comprehensive workspace for Software Managers to plan roadmaps, visualize architecture, forecast resources, and manage team capacity."
-                    };
-                    break;
-                case 'helpView':
-                    // Try to get the active documentation section if possible
-                    let activeDocSection = "General Help";
-                    const docTitleEl = document.querySelector('#documentationContent h2');
-                    if (docTitleEl) activeDocSection = docTitleEl.innerText;
-
-                    contextData.data = {
-                        viewTitle: "Documentation & Help",
-                        currentSection: activeDocSection,
-                        summary: "This view contains the user guide and documentation for the SMT Platform. It covers topics like System Modeling, Org Design, Capacity Planning, and Roadmap Management."
-                    };
-                    break;
-                default:
-                    contextData.data = SystemService.getCurrentSystem();
-                    break;
-            }
-        } catch (error) {
-            console.error('Error while scraping context:', error);
-            contextData.data = { error: error.message };
-        }
+        // Fallback for unauthorized/unknown views
+        contextData.data = {
+            note: "This view has not implemented the AI context provider interface.",
+            viewId: currentView
+        };
 
         return JSON.stringify(contextData, null, 2);
     }
 
-    function _markAgentConfirmationHandled(statusText) {
-        const containerId = (aiPlanOptimizationAgent && typeof aiPlanOptimizationAgent.getLastConfirmationContainerId === 'function')
-            ? aiPlanOptimizationAgent.getLastConfirmationContainerId()
-            : null;
-        if (!containerId) return;
-        const container = document.getElementById(containerId);
-        if (!container) return;
-        container.querySelectorAll('button').forEach(btn => {
-            btn.disabled = true;
-            btn.style.opacity = '0.6';
-            btn.style.cursor = 'not-allowed';
-        });
-        const statusEl = container.querySelector('.agent-confirmation-status');
-        if (statusEl) {
-            statusEl.textContent = statusText || 'Handled.';
-        } else if (statusText) {
-            const div = document.createElement('div');
-            div.className = 'agent-confirmation-status';
-            div.textContent = statusText;
-            container.appendChild(div);
+
+    function _markAgentConfirmationHandled(outcomeText) {
+        if (!lastConfirmationContainerId) return;
+        const container = document.getElementById(lastConfirmationContainerId);
+        if (container) {
+            container.replaceChildren(); // Clear existing content
+            const p = document.createElement('p');
+            p.style.color = 'var(--theme-text-secondary)';
+            p.style.fontStyle = 'italic';
+            p.textContent = outcomeText;
+            container.appendChild(p);
         }
     }
 
+    // Exposed API
     return {
         startSession,
         handleUserChatSubmit,
-        renderSuggestionsForCurrentView,
         getAvailableTools,
-        runPrebuiltAgent,        // [NEW]
-        confirmPrebuiltAgent,     // [NEW]
-        _waitForAnalysisFunction,  // [NEW] Expose helper for specialist agents
+        renderSuggestionsForCurrentView,
+        runPrebuiltAgent,
+        confirmPrebuiltAgent,
+        // [NEW] API for NavigationManager to update state
         setCurrentView: (viewId) => {
-            console.log(`[AI CHAT] AI Chat Panel - input context changed to screen [${viewId}]`);
             currentViewId = viewId;
             renderSuggestionsForCurrentView();
-        }
+        },
+        // For testing/debugging
+        _waitForAnalysisFunction
     };
 })();
 

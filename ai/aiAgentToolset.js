@@ -75,6 +75,14 @@ const aiAgentTools = [
         ]
     },
     {
+        command: "deleteSdm",
+        description: "Deletes an SDM and optionally reassigns their teams to another SDM.",
+        parameters: [
+            { name: "sdmId", type: "string", description: "The ID of the SDM to delete.", required: true },
+            { name: "reassignTeamsToSdmId", type: "string", description: "Optional. The ID of another SDM to reassign teams to.", required: false }
+        ]
+    },
+    {
         command: "updateSdm",
         description: "Updates the properties of an existing SDM. Used to change their reporting line.",
         parameters: [
@@ -193,7 +201,6 @@ async function executeTool(command, payload = {}) {
             const newInitiative = InitiativeService.addInitiative(system, payload);
             if (!newInitiative) throw new Error('Failed to add initiative.');
             SystemService.save();
-            _smartRefreshInitiative(newInitiative);
             return newInitiative;
         }
         case 'updateInitiative': {
@@ -202,7 +209,6 @@ async function executeTool(command, payload = {}) {
             const updated = InitiativeService.updateInitiative(system, payload.initiativeId, updates);
             if (!updated) throw new Error('Failed to update initiative.');
             SystemService.save();
-            _smartRefreshInitiative(updated);
             return updated;
         }
         case 'deleteInitiative': {
@@ -210,9 +216,6 @@ async function executeTool(command, payload = {}) {
             const success = InitiativeService.deleteInitiative(system, payload.initiativeId);
             if (!success) throw new Error('Failed to delete initiative.');
             SystemService.save();
-            if (typeof currentEditingInitiativeId !== 'undefined' && currentEditingInitiativeId === payload.initiativeId) {
-                currentEditingInitiativeId = null;
-            }
             return { deleted: true, initiativeId: payload.initiativeId };
         }
         case 'addNewTeam': {
@@ -258,6 +261,12 @@ async function executeTool(command, payload = {}) {
                 throw new Error('updateSdm: updates object is required.');
             }
             const result = OrgService.updateSdm(system, payload.sdmId, payload.updates);
+            SystemService.save();
+            return result;
+        }
+        case 'deleteSdm': {
+            if (!payload.sdmId) throw new Error('deleteSdm: sdmId is required.');
+            const result = OrgService.deleteSdm(system, payload.sdmId, payload.reassignTeamsToSdmId || null);
             SystemService.save();
             return result;
         }
@@ -335,10 +344,7 @@ async function executeTool(command, payload = {}) {
     }
 }
 
-function _smartRefreshInitiative(initiative) {
-    if (!initiative || typeof currentEditingInitiativeId === 'undefined') return;
-    // Removed legacy modal update logic
-}
+
 
 
 const aiAgentToolset = {

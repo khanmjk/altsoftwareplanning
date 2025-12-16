@@ -429,11 +429,9 @@ If you cannot find a good change, respond with null.
         });
 
         // Now, we must re-calculate the plan based on this temp data.
-        // We'll *temporarily* swap out the global data to use our calculation functions.
-        const originalData = SystemService.getCurrentSystem();
-        SystemService.setCurrentSystem(tempSystemData); // Temporarily set global
+        // We perform pure calculations on the temp object without touching global state.
 
-        // Recalculate capacity metrics for the temp data
+        // Recalculate capacity metrics for the temp data (mutates tempSystemData only)
         CapacityEngine.recalculate(tempSystemData);
 
         // Get initiatives for current planning year
@@ -442,6 +440,7 @@ If you cannot find a good change, respond with null.
             .filter(init => init.attributes?.planningYear == planningYear && init.status !== 'Completed');
 
         // Use PlanningService to calculate summary and planning table data
+        // Explicitly passing data from tempSystemData ensures we don't read from global
         const tempSummaryData = PlanningService.calculateTeamLoadSummary({
             teams: tempSystemData.teams,
             initiatives: initiativesForYear,
@@ -457,8 +456,6 @@ If you cannot find a good change, respond with null.
             scenario: 'funded',
             applyConstraints: true
         });
-
-        SystemService.setCurrentSystem(originalData); // Restore global data
 
         return { tempSystemData, tempPlanTableData, tempSummaryData };
     }

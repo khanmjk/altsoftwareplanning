@@ -84,7 +84,7 @@ const AI_VIEW_REGISTRY = {
 
     aboutView: {
         displayName: 'About',
-        isStatic: true
+        fallbackGlobals: []
     }
 };
 

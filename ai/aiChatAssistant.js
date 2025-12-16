@@ -465,17 +465,35 @@ function openDiagramModal(code, title = 'Generated Diagram') {
     contentEl.textContent = sanitized;
     contentEl.removeAttribute('data-processed');
     modal.style.display = 'block';
-    if (typeof mermaid !== 'undefined') {
-        try {
-            mermaid.init(undefined, contentEl);
-        } catch (err) {
-            console.error("Mermaid init failed for diagram modal:", err);
-            // Fallback: show the raw code so the user is not left hanging
-            contentEl.innerHTML = `<pre style="white-space:pre-wrap; padding:10px; background:#f8f9fa; border:1px solid #eee;">${sanitized}</pre>
-<div style="color:#c00; margin-top:6px;">Mermaid could not render this diagram. Try simplifying the request or removing special characters.</div>`;
+    // Wrap in detailed error handler for robust rendering
+    try {
+        // Check if mermaid is actually ready
+        if (!mermaid.init) {
+            console.warn("Mermaid.init is not available. Is the library loaded?");
+            throw new Error("Mermaid library not loaded");
         }
+
+        // Using await if mermaid.init returns a promise (it often does in newer versions)
+        Promise.resolve(mermaid.init(undefined, contentEl))
+            .catch(err => {
+                console.error("Mermaid async render failed:", err);
+                contentEl.innerHTML = `<div style="padding:10px; background:#fff0f0; border:1px solid #ffcccc; color:#d32f2f;">
+                        <strong>Diagram Render Error</strong><br>
+                        <small>${err.message}</small>
+                        <pre style="margin-top:10px; white-space:pre-wrap; font-size:11px; color:#333;">${sanitized}</pre>
+                    </div>`;
+            });
+
+    } catch (err) {
+        console.error("Mermaid sync render failed:", err);
+        contentEl.innerHTML = `<div style="padding:10px; background:#fff0f0; border:1px solid #ffcccc; color:#d32f2f;">
+                <strong>Diagram Render Error</strong><br>
+                <small>${err.message}</small>
+                <pre style="margin-top:10px; white-space:pre-wrap; font-size:11px; color:#333;">${sanitized}</pre>
+            </div>`;
     }
 }
+
 
 function closeDiagramModal() {
     const modal = document.getElementById('diagramModal');

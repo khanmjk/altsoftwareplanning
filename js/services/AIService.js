@@ -266,7 +266,7 @@ ${systemPromptSummary}`.trim();
         }
 
         // Reuse Mermaid text generation for diagramming instead of mocked images
-        const diagramResult = await this.generateDiagramFromPrompt(userPrompt, contextJson, apiKey, provider);
+        const diagramResult = await AIService.generateDiagramFromPrompt(userPrompt, contextJson, apiKey, provider);
         return {
             isImage: false,
             ...diagramResult

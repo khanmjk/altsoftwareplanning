@@ -383,6 +383,41 @@ const OrgService = {
     },
 
     /**
+     * Deletes an SDM.
+     * @param {object} systemData
+     * @param {string} sdmId
+     * @param {string|null} reassignTeamsToSdmId
+     */
+    deleteSdm(systemData, sdmId, reassignTeamsToSdmId = null) {
+        if (!systemData) throw new Error("OrgService: systemData is required.");
+        if (!sdmId) throw new Error("OrgService: sdmId is required.");
+
+        const sdms = systemData.sdms || [];
+        const index = sdms.findIndex(s => s.sdmId === sdmId);
+        if (index === -1) throw new Error(`OrgService: SDM with ID "${sdmId}" not found.`);
+
+        if (reassignTeamsToSdmId) {
+            const targetSdm = this._resolveSdmIdentifier(systemData, reassignTeamsToSdmId);
+            if (!targetSdm) {
+                throw new Error(`OrgService: Cannot reassign teams to non-existent sdmId "${reassignTeamsToSdmId}".`);
+            }
+            reassignTeamsToSdmId = targetSdm;
+        }
+
+        const deletedSdm = sdms.splice(index, 1)[0];
+
+        // Reassign or orphan teams
+        (systemData.teams || []).forEach(team => {
+            if (team.sdmId === sdmId) {
+                team.sdmId = reassignTeamsToSdmId || null;
+            }
+        });
+
+        console.log(`OrgService: Deleted SDM ${sdmId}`);
+        return { deleted: true, sdm: deletedSdm };
+    },
+
+    /**
      * Reassigns a team to a new SDM.
      * @param {object} systemData
      * @param {string} teamIdentifier
