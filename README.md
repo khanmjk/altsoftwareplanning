@@ -64,7 +64,17 @@ smt-feedback-worker/
 User → FeedbackModal → FeedbackService → Cloudflare Worker → GitHub Issues API
 ```
 
-The worker acts as a secure proxy, holding the GitHub API token server-side so users never need to authenticate or store credentials. This "Backend for Frontend" pattern keeps sensitive tokens secure while allowing seamless in-app feedback submission.
+The worker acts as a secure proxy, holding the GitHub API token server-side so users never need to authenticate or store credentials.
+
+**YouTube API Proxy Flow:**
+```
+User → About View → Cloudflare Worker (/youtube) → YouTube Data API
+```
+The same worker also proxies requests to the YouTube Data API. This allows the application to fetch video data without exposing the YouTube API Key in the client-side code. The key is stored securely as a Cloudflare Secret (`YOUTUBE_API_KEY`).
+
+### External Integrations
+1.  **Blogger API**: Used in the "About" view to fetch AI-related blog posts. Implemented via client-side JSONP to bypass CORS restrictions during local development.
+2.  **YouTube Data API**: Used in the "About" view to fetch channel videos. Proxied via Cloudflare Worker to secure the API key.
 
 ---
 
@@ -371,6 +381,7 @@ Once a system is loaded, a **Sidebar** appears on the left, organizing all major
 #### **Help**
 *   **How to Guide:** Access this documentation.
 *   **Provide Feedback:** Submit bug reports, feature requests, or general feedback directly to GitHub Issues.
+*   **About:** View author information, see the latest AI & Development blog posts (fetched dynamically from Blogger), and watch recent videos from the author's YouTube channel (fetched via secure proxy).
 
 ---
 

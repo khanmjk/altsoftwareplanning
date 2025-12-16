@@ -210,6 +210,7 @@ bar graph per quarter to see team load/demand impact
 [Done] - Fix ROI fields in initiatives management view
 [Done] - [Feature] Add a feedback workflow to the app, similar to antivgravity "Provide Feedback" in side panel. Feedback must push to
 the gitgub issues tracker to keep track of user feedback requests
+[Done] - [Feature] - Added About page [Used cloudflare workers for backend proxying]
 
 
 ------------

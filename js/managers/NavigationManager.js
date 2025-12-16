@@ -123,6 +123,14 @@ const VIEW_REGISTRY = {
         singleton: true,
         requiresSystem: false,
         selfManaged: false
+    },
+    aboutView: {
+        className: 'AboutView',
+        title: 'About',
+        breadcrumbs: ['Help', 'About'],
+        singleton: true,
+        requiresSystem: false,
+        selfManaged: true
     }
 };
 
@@ -149,7 +157,8 @@ function getClassMap() {
         DashboardView,
         HelpView,
         SettingsView,
-        SystemsView
+        SystemsView,
+        AboutView
     };
     return CLASS_MAP;
 }
@@ -339,7 +348,8 @@ class NavigationManager {
             'helpView': 'How to Guide',
             'settingsView': 'Settings',
             'systemsView': 'My Systems',
-            'welcomeView': 'Welcome'
+            'welcomeView': 'Welcome',
+            'aboutView': 'About'
         };
         return titles[viewId] || 'Workspace';
     }

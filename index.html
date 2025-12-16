@@ -49,6 +49,7 @@
 <link rel="stylesheet" href="css/views/documentation-view.css">
 <link rel="stylesheet" href="css/components/Modal.css">
 <link rel="stylesheet" href="css/components/feedback-modal.css">
+<link rel="stylesheet" href="css/views/about-view.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css">
 
 
@@ -151,6 +152,10 @@
                 <a href="#" class="nav-item" id="feedback-nav-item">
                     <div class="nav-icon"><i class="fas fa-comment-alt"></i></div>
                     <div class="nav-text">Provide Feedback</div>
+                </a>
+                <a href="#" class="nav-item" data-view="aboutView">
+                    <div class="nav-icon"><i class="fas fa-info-circle"></i></div>
+                    <div class="nav-text">About</div>
                 </a>
             </div>
             <!-- 
@@ -368,6 +373,9 @@
     <script src="js/components/WelcomeView.js"></script>
     <script src="js/components/GanttPlanningView.js"></script>
     <script src="js/components/HelpView.js"></script>
+    <!-- Services -->
+    <script src="js/services/AboutService.js"></script>
+    <script src="js/components/AboutView.js"></script>
     <script src="js/components/SystemEditView.js"></script>
     <script src="js/managers/NavigationManager.js?v=3"></script>
     <script src="js/managers/NotificationManager.js"></script>

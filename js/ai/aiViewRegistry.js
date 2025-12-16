@@ -80,6 +80,11 @@ const AI_VIEW_REGISTRY = {
     systemEditForm: {
         displayName: 'Edit System',
         fallbackGlobals: []
+    },
+
+    aboutView: {
+        displayName: 'About',
+        isStatic: true
     }
 };
 
