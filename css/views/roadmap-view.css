@@ -9,6 +9,25 @@
     background: transparent;
 }
 
+/* Toolbar */
+.roadmap-main-toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--theme-border-color);
+}
+
+.roadmap-actions-row {
+    display: flex;
+    gap: 10px;
+}
+
+.roadmap-view-controls {
+    width: 100%;
+}
+
 /* Toolbar Controls */
 .roadmap-toolbar-content {
     display: flex;

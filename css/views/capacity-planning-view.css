@@ -136,6 +136,29 @@
     background-color: color-mix(in srgb, var(--theme-danger), transparent 85%);
 }
 
+/* --- Narrative --- */
+.capacity-narrative-content {
+    padding: 20px;
+    line-height: 1.6;
+    color: var(--theme-text-primary);
+}
+
+.capacity-narrative-heading {
+    margin: 0 0 15px;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.capacity-narrative-divider {
+    margin: 25px 0;
+    border: none;
+    border-top: 1px solid var(--theme-border-light);
+}
+
+.capacity-narrative-team-paragraph {
+    margin-bottom: 10px;
+}
+
 /* --- Configuration --- */
 .capacity-configuration-view {
     padding: 20px;

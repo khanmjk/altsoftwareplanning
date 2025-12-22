@@ -218,22 +218,14 @@ class GanttPlanningView {
     generateGanttToolbar() {
         const toolbar = document.createElement('div');
         toolbar.className = 'gantt-toolbar';
-        toolbar.style.display = 'flex';
-        toolbar.style.alignItems = 'center';
-        toolbar.style.gap = '16px';
-        toolbar.style.width = '100%';
-        toolbar.style.flexWrap = 'wrap';
 
         // Year selector
         const yearWrap = document.createElement('div');
         yearWrap.className = 'filter-item';
-        yearWrap.style.display = 'flex';
-        yearWrap.style.alignItems = 'center';
-        yearWrap.style.gap = '6px';
 
         const yearLabel = document.createElement('span');
         yearLabel.textContent = 'Year:';
-        yearLabel.style.fontWeight = '600';
+        yearLabel.className = 'gantt-toolbar__label';
         yearWrap.appendChild(yearLabel);
 
         // Build year options
@@ -258,15 +250,11 @@ class GanttPlanningView {
 
         // Status Filter
         const statusWrap = document.createElement('div');
-        statusWrap.className = 'filter-item';
-        statusWrap.style.display = 'flex';
-        statusWrap.style.alignItems = 'center';
-        statusWrap.style.gap = '6px';
-        statusWrap.style.minWidth = '200px';
+        statusWrap.className = 'filter-item gantt-toolbar__status';
 
         const statusLabel = document.createElement('span');
         statusLabel.textContent = 'Status:';
-        statusLabel.style.fontWeight = '600';
+        statusLabel.className = 'gantt-toolbar__label';
         statusWrap.appendChild(statusLabel);
 
         // Use canonical statuses from service if available, otherwise derive from data
@@ -317,13 +305,10 @@ class GanttPlanningView {
         // View By selector
         const groupWrap = document.createElement('div');
         groupWrap.className = 'filter-item';
-        groupWrap.style.display = 'flex';
-        groupWrap.style.alignItems = 'center';
-        groupWrap.style.gap = '6px';
 
         const groupLabel = document.createElement('span');
         groupLabel.textContent = 'View By:';
-        groupLabel.style.fontWeight = '600';
+        groupLabel.className = 'gantt-toolbar__label';
         groupWrap.appendChild(groupLabel);
 
         const groupOptions = [
@@ -362,10 +347,8 @@ class GanttPlanningView {
         // Save Button
         const saveBtn = document.createElement('button');
         saveBtn.textContent = 'Save';
-        saveBtn.className = 'btn btn-success btn-sm';
+        saveBtn.className = 'btn btn-success btn-sm gantt-save-btn';
         saveBtn.title = 'Save changes to system';
-        saveBtn.style.opacity = '0.5';
-        saveBtn.style.cursor = 'default';
         saveBtn.onclick = () => this._save();
         this._saveBtn = saveBtn;
         toolbar.appendChild(saveBtn);
@@ -382,8 +365,7 @@ class GanttPlanningView {
 
         // Renderer Toggle
         const rendererWrap = document.createElement('div');
-        rendererWrap.style.display = 'flex';
-        rendererWrap.style.alignItems = 'center';
+        rendererWrap.className = 'gantt-toolbar__renderer';
         const rendererBtn = document.createElement('button');
         rendererBtn.id = 'ganttRendererToggle';
         rendererBtn.type = 'button';
@@ -396,11 +378,10 @@ class GanttPlanningView {
         // Legend (Frappe only)
         const legendDiv = document.createElement('div');
         legendDiv.id = 'ganttLegendContainer';
-        legendDiv.className = 'gantt-legend';
-        legendDiv.style.marginLeft = 'auto';
+        legendDiv.className = 'gantt-legend gantt-legend--toolbar';
 
         const currentRenderer = FeatureFlags.getRenderer();
-        legendDiv.style.display = currentRenderer === 'frappe' ? 'flex' : 'none';
+        legendDiv.classList.toggle('gantt-legend--hidden', currentRenderer !== 'frappe');
 
         // Create legend items using DOM creation
         const legendItems = [
@@ -619,7 +600,7 @@ class GanttPlanningView {
             // Update legend visibility
             const legend = document.getElementById('ganttLegendContainer');
             if (legend) {
-                legend.style.display = next === 'frappe' ? 'flex' : 'none';
+                legend.classList.toggle('gantt-legend--hidden', next !== 'frappe');
             }
 
             this.chartRenderer = null; // Force re-create with new renderer
@@ -663,13 +644,10 @@ class GanttPlanningView {
             // Create label wrapper
             const labelWrap = document.createElement('div');
             labelWrap.className = 'filter-item';
-            labelWrap.style.display = 'flex';
-            labelWrap.style.alignItems = 'center';
-            labelWrap.style.gap = '6px';
 
             const label = document.createElement('span');
             label.textContent = 'Team:';
-            label.style.fontWeight = '600';
+            label.className = 'gantt-toolbar__label';
             labelWrap.appendChild(label);
             labelWrap.appendChild(teamSelect.render());
 
@@ -681,6 +659,24 @@ class GanttPlanningView {
             wrap.appendChild(placeholder);
         }
         // Ensure table/chart refresh after rebuild
+        this.renderGanttTable();
+        this.renderGanttChart();
+    }
+
+    /**
+     * Handles year changes from the toolbar selector.
+     */
+    handleGanttYearChange(year) {
+        if (!Number.isFinite(year)) return;
+        if (year === this.currentGanttYear) return;
+
+        this.currentGanttYear = year;
+        WorkPackageService.ensureWorkPackagesForInitiatives(SystemService.getCurrentSystem(), this.currentGanttYear);
+
+        if (this.model) {
+            this.model.setFilter('year', this.currentGanttYear);
+        }
+
         this.renderGanttTable();
         this.renderGanttChart();
     }
@@ -736,8 +732,6 @@ class GanttPlanningView {
                 this.chartRenderer = GanttFactory.createRenderer(container);
             }
         }
-
-        container.style.minHeight = '600px'; // Set a reasonable minimum base
 
         // Update container reference in case it changed
         this.chartRenderer.container = container;
@@ -1087,9 +1081,7 @@ class GanttPlanningView {
         this._isDirty = true;
 
         if (this._saveBtn) {
-            this._saveBtn.style.opacity = '1';
-            this._saveBtn.style.cursor = 'pointer';
-            this._saveBtn.classList.add('btn-pulse'); // Optional animation class
+            this._saveBtn.classList.add('gantt-save-btn--active', 'btn-pulse'); // Optional animation class
         }
     }
 
@@ -1105,9 +1097,7 @@ class GanttPlanningView {
             this._isDirty = false;
 
             if (this._saveBtn) {
-                this._saveBtn.style.opacity = '0.5';
-                this._saveBtn.style.cursor = 'default';
-                this._saveBtn.classList.remove('btn-pulse');
+                this._saveBtn.classList.remove('gantt-save-btn--active', 'btn-pulse');
             }
 
             // Show success feedback
@@ -1118,4 +1108,3 @@ class GanttPlanningView {
         }
     }
 }
-

@@ -45,12 +45,6 @@ class RoadmapView {
     setupToolbar() {
         const toolbarContainer = document.createElement('div');
         toolbarContainer.className = 'roadmap-main-toolbar';
-        toolbarContainer.style.display = 'flex';
-        toolbarContainer.style.flexDirection = 'column'; // Stacked layout
-        toolbarContainer.style.gap = '15px';
-        toolbarContainer.style.width = '100%';
-        toolbarContainer.style.paddingBottom = '10px';
-        toolbarContainer.style.borderBottom = '1px solid var(--border-color)';
 
         // Row 1: Pills
         const pillsRow = document.createElement('div');
@@ -65,8 +59,6 @@ class RoadmapView {
         // Row 2: Actions
         const actionsRow = document.createElement('div');
         actionsRow.className = 'roadmap-actions-row';
-        actionsRow.style.display = 'flex';
-        actionsRow.style.gap = '10px';
 
         const addBtn = document.createElement('button');
         addBtn.className = 'btn btn-secondary btn-sm';
@@ -87,7 +79,7 @@ class RoadmapView {
         // Row 3: View-Specific Filters
         const controlsContainer = document.createElement('div');
         controlsContainer.id = 'roadmapViewControls';
-        controlsContainer.style.width = '100%';
+        controlsContainer.className = 'roadmap-view-controls';
         toolbarContainer.appendChild(controlsContainer);
 
         workspaceComponent.setToolbar(toolbarContainer);

@@ -384,7 +384,6 @@ class CapacityDashboardView {
                         const nhCell = row.insertCell();
                         nhCell.textContent = `+${(m.deductionsBreakdown.newHireGainYrs || 0).toFixed(2)}`;
                         nhCell.className = 'capacity-summary-gain';
-                        nhCell.style.color = 'var(--theme-success)'; // Use theme success color
                     }
 
                     const netCell = row.insertCell();
@@ -413,17 +412,11 @@ class CapacityDashboardView {
 
                 const wrapper = document.createElement('div');
                 wrapper.className = 'capacity-narrative-content';
-                wrapper.style.padding = '20px';
-                wrapper.style.lineHeight = '1.6';
-                wrapper.style.color = 'var(--theme-text-primary)';
 
                 // 1. Overall Summary
                 const h4 = document.createElement('h4');
                 h4.textContent = `Overall Capacity Summary (${scenarioName})`;
-                h4.style.marginTop = '0';
-                h4.style.marginBottom = '15px';
-                h4.style.fontSize = '1.1rem';
-                h4.style.fontWeight = '600';
+                h4.className = 'capacity-narrative-heading';
                 wrapper.appendChild(h4);
 
                 const p1 = document.createElement('p');
@@ -453,15 +446,12 @@ class CapacityDashboardView {
 
                 // 2. Team Breakdown
                 const hr = document.createElement('hr');
-                hr.style.margin = '25px 0';
-                hr.style.borderTop = '1px solid #eee';
+                hr.className = 'capacity-narrative-divider';
                 wrapper.appendChild(hr);
 
                 const h4Team = document.createElement('h4');
                 h4Team.textContent = `Team-Specific Breakdown (${scenarioName} Scenario)`;
-                h4Team.style.marginBottom = '15px';
-                h4Team.style.fontSize = '1.1rem';
-                h4Team.style.fontWeight = '600';
+                h4Team.className = 'capacity-narrative-heading';
                 wrapper.appendChild(h4Team);
 
                 const teams = SystemService.getCurrentSystem().teams || [];
@@ -478,7 +468,7 @@ class CapacityDashboardView {
                     }
 
                     const pTeam = document.createElement('p');
-                    pTeam.style.marginBottom = '10px';
+                    pTeam.className = 'capacity-narrative-team-paragraph';
                     pTeam.innerHTML = `<strong>${team.teamIdentity || team.teamName}</strong>: Starts with a Gross Capacity of <strong>${m.grossYrs.toFixed(2)} SDE Years</strong>. From this, <strong>${m.deductYrs.toFixed(2)} SDE Years</strong> are deducted for human-centric sinks (leave, overhead, etc.). An estimated <strong>${tGain.toFixed(2)} SDE Years</strong> are then regained through AI tooling productivity enhancements.${nhText} This results in a final Net Project Capacity of <strong>${m.netYrs.toFixed(2)} SDE Years</strong> for this team.`;
                     wrapper.appendChild(pTeam);
                 });
@@ -511,13 +501,16 @@ class CapacityDashboardView {
 
         const body = document.createElement('div');
         body.className = 'capacity-collapsible-body';
-        body.style.display = isCollapsed ? 'none' : 'block';
+        if (!isCollapsed) {
+            body.classList.add('capacity-collapsible-body--visible');
+        }
 
         header.onclick = () => {
-            const isHidden = body.style.display === 'none' || body.style.display === '';
-            body.style.display = isHidden ? 'block' : 'none';
-            icon.className = `fas fa-chevron-${isHidden ? 'up' : 'down'} capacity-collapsible-icon`;
-            header.classList.toggle('capacity-collapsible-header--active', isHidden);
+            const isVisible = body.classList.contains('capacity-collapsible-body--visible');
+            const nextVisible = !isVisible;
+            body.classList.toggle('capacity-collapsible-body--visible', nextVisible);
+            icon.className = `fas fa-chevron-${nextVisible ? 'up' : 'down'} capacity-collapsible-icon`;
+            header.classList.toggle('capacity-collapsible-header--active', nextVisible);
         };
 
         section.appendChild(header);

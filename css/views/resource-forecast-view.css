@@ -91,6 +91,45 @@
     box-shadow: none;
 }
 
+.forecast-narrative-box {
+    display: none;
+    margin-top: 20px;
+}
+
+.forecast-narrative-box--visible {
+    display: block;
+}
+
+.forecast-narrative__headline {
+    margin-top: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--theme-text-primary);
+}
+
+.forecast-narrative__list-title {
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.forecast-narrative__list {
+    margin-top: 0;
+    margin-bottom: 16px;
+    padding-left: 24px;
+}
+
+.forecast-narrative__explanation {
+    line-height: 1.5;
+    color: var(--theme-text-primary);
+}
+
+.forecast-narrative__footer {
+    margin-top: 16px;
+    font-style: italic;
+    font-size: 0.9rem;
+    color: var(--theme-text-muted);
+}
+
 .forecast-summary-text {
     font-size: var(--font-size-md);
     line-height: 1.5;
@@ -240,6 +279,20 @@
 }
 
 /* --- Toolbar Specifics --- */
+.resource-forecast-toolbar {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 16px;
+}
+
+.resource-forecast-toolbar__label {
+    margin-right: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
 .forecast-toolbar-gap {
     flex-grow: 1;
 }

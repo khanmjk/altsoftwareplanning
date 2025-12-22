@@ -55,12 +55,6 @@ class CapacityPlanningView {
         // Left: Pill Navigation
         const leftGroup = document.createElement('div');
         leftGroup.className = 'capacity-planning-toolbar__left';
-        leftGroup.style.display = 'flex'; // Helper utility or class? Keeping minimal inline for layout if specific class not defined, but better to use class.
-        // Actually, let's use the class defined in CSS: .capacity-planning-toolbar handles the flex.
-        // But leftGroup needs flex too.
-        leftGroup.style.display = 'flex';
-        leftGroup.style.alignItems = 'center';
-        leftGroup.style.gap = '10px';
 
         this.pillNav = new PillNavigationComponent({
             items: this.viewConfigs,

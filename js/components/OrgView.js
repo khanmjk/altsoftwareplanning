@@ -57,9 +57,8 @@ class OrgView {
 
         if (!SystemService.getCurrentSystem()) {
             const errorMsg = document.createElement('div');
-            errorMsg.className = 'workspace-empty-state';
+            errorMsg.className = 'workspace-empty-state org-error-text';
             errorMsg.textContent = 'No system data loaded';
-            errorMsg.style.color = 'red'; // Keep simple inline for critical error fallback
             this.container.appendChild(errorMsg);
             return;
         }
@@ -362,7 +361,7 @@ class OrgView {
             if (container) {
                 container.innerHTML = '';
                 const p = document.createElement('p');
-                p.style.color = 'red';
+                p.className = 'org-error-text';
                 p.textContent = 'Could not generate D3 organogram data.';
                 container.appendChild(p);
             }
@@ -733,14 +732,17 @@ class OrgView {
 
         const gapFormatter = (cell) => {
             const value = cell.getValue();
+            const el = cell.getElement();
+            el.classList.remove('org-gap--needs-hiring', 'org-gap--overstaffed', 'org-gap--balanced');
             if (value > 0) {
-                cell.getElement().style.color = "orange";
-                cell.getElement().title = `Need to hire ${value}`;
+                el.classList.add('org-gap--needs-hiring');
+                el.title = `Need to hire ${value}`;
             } else if (value < 0) {
-                cell.getElement().style.color = "blue";
-                cell.getElement().title = `Over-hired by ${Math.abs(value)}`;
+                el.classList.add('org-gap--overstaffed');
+                el.title = `Over-hired by ${Math.abs(value)}`;
             } else {
-                cell.getElement().style.color = "green";
+                el.classList.add('org-gap--balanced');
+                el.removeAttribute('title');
             }
             return value;
         };
@@ -875,7 +877,6 @@ class OrgView {
 
         // Remove old tooltip title as the text is now self-explanatory
         heading.removeAttribute('title');
-        heading.style.color = '';
     }
 
     /**
@@ -1029,11 +1030,9 @@ class OrgView {
                 headerSort: false,
                 formatter: (cell) => {
                     const btn = document.createElement('button');
-                    btn.className = 'btn btn-danger btn-sm';
+                    btn.className = 'btn btn-danger btn-sm org-engineer-delete-btn';
                     btn.textContent = '🗑️';
                     btn.title = 'Delete Engineer';
-                    btn.style.padding = '2px 8px';
-                    btn.style.fontSize = '0.8em';
                     return btn;
                 },
                 cellClick: (e, cell) => this.handleDeleteEngineer(cell)

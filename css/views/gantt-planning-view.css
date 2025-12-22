@@ -22,6 +22,52 @@
     align-items: center;
 }
 
+/* Toolbar */
+.gantt-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    flex-wrap: wrap;
+}
+
+.gantt-toolbar .filter-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.gantt-toolbar__status {
+    min-width: 200px;
+}
+
+.gantt-toolbar__label {
+    font-weight: 600;
+}
+
+.gantt-toolbar__renderer {
+    display: flex;
+    align-items: center;
+}
+
+.gantt-save-btn {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.gantt-save-btn--active {
+    opacity: 1;
+    cursor: pointer;
+}
+
+.gantt-legend--toolbar {
+    margin-left: auto;
+}
+
+.gantt-legend.gantt-legend--hidden {
+    display: none;
+}
+
 /* Legend */
 .gantt-legend {
     display: flex;
@@ -339,6 +385,10 @@
     width: 100%;
     box-sizing: border-box;
     flex: 1;
+}
+
+#ganttChartContainer {
+    min-height: 600px;
 }
 
 /* Input Fields in Table */

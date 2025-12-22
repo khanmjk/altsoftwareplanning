@@ -47,11 +47,7 @@ class ResourceForecastView {
         if (!workspaceComponent) return;
 
         const toolbar = document.createElement('div');
-        toolbar.className = 'canvas-toolbar__content';
-        toolbar.style.display = 'flex';
-        toolbar.style.width = '100%';
-        toolbar.style.alignItems = 'center';
-        toolbar.style.gap = '16px';
+        toolbar.className = 'canvas-toolbar__content resource-forecast-toolbar';
 
         // Team Selector
         const teamWrap = document.createElement('div');
@@ -61,9 +57,7 @@ class ResourceForecastView {
         // Keeping standard label + select for now, but ensuring alignment
         const label = document.createElement('label');
         label.textContent = 'Select Team:';
-        label.style.marginRight = '8px';
-        label.style.fontSize = '0.9rem';
-        label.style.fontWeight = '500';
+        label.className = 'resource-forecast-toolbar__label';
 
         // Build options for ThemedSelect
         const teamOptions = [{ value: '', text: '-- Select a Team --' }];
@@ -173,10 +167,7 @@ class ResourceForecastView {
         // Narrative Summary Box (Below Chart)
         const narrativeBox = document.createElement('div');
         narrativeBox.id = 'rf-narrative-box';
-        narrativeBox.className = 'workspace-card';
-        narrativeBox.style.display = 'none';
-        narrativeBox.style.marginTop = '20px';
-        narrativeBox.style.marginTop = '20px';
+        narrativeBox.className = 'workspace-card forecast-narrative-box';
 
         outputSection.appendChild(narrativeBox);
 
@@ -322,7 +313,7 @@ class ResourceForecastView {
     _clearOutputs() {
         const narrativeBox = document.getElementById('rf-narrative-box');
         if (narrativeBox) {
-            narrativeBox.style.display = 'none';
+            narrativeBox.classList.remove('forecast-narrative-box--visible');
             narrativeBox.innerHTML = '';
         }
 
@@ -386,7 +377,7 @@ class ResourceForecastView {
         const box = document.getElementById('rf-narrative-box');
         if (!box) return;
 
-        box.style.display = 'block';
+        box.classList.add('forecast-narrative-box--visible');
         box.innerHTML = '';
 
         let team = null;
@@ -413,24 +404,18 @@ class ResourceForecastView {
 
         // 1. Headline
         const headline = document.createElement('h3');
-        headline.style.marginTop = '0';
-        headline.style.fontSize = '1.1rem';
-        headline.style.fontWeight = '600';
-        headline.style.color = 'var(--theme-text-primary)';
+        headline.className = 'forecast-narrative__headline';
         headline.textContent = `For ${teamDisplayName}, to reach the funded team size of ${fundedSize} by Week ${targetWeek}, the required hiring rate is approximately ${hiringRate.toFixed(2)} engineers per week.`;
         box.appendChild(headline);
 
         // 2. Parameters List
         const listTitle = document.createElement('p');
-        listTitle.style.fontWeight = '600';
-        listTitle.style.marginBottom = '8px';
+        listTitle.className = 'forecast-narrative__list-title';
         listTitle.textContent = 'This forecast considers:';
         box.appendChild(listTitle);
 
         const ul = document.createElement('ul');
-        ul.style.marginTop = '0';
-        ul.style.marginBottom = '16px';
-        ul.style.paddingLeft = '24px';
+        ul.className = 'forecast-narrative__list';
 
         const params = [
             `Avg. Hiring Time: ${hiringTime} weeks`,
@@ -447,8 +432,7 @@ class ResourceForecastView {
 
         // 3. Effective Engineers Explanation
         const explanation = document.createElement('p');
-        explanation.style.lineHeight = '1.5';
-        explanation.style.color = 'var(--theme-text-primary)';
+        explanation.className = 'forecast-narrative__explanation';
 
         const boldText = document.createElement('strong');
         boldText.textContent = "The 'Effective Engineers' shown reflect the ramped-up engineers adjusted for their actual productive time. ";
@@ -461,10 +445,7 @@ class ResourceForecastView {
 
         // 4. Footer Note
         const footer = document.createElement('p');
-        footer.style.marginTop = '16px';
-        footer.style.fontStyle = 'italic';
-        footer.style.fontSize = '0.9rem';
-        footer.style.color = 'var(--theme-text-muted)';
+        footer.className = 'forecast-narrative__footer';
         footer.textContent = 'Note: Manual forecast parameters (hiring time, ramp-up, attrition) are not currently saved per team.';
         box.appendChild(footer);
     }
