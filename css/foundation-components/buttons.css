@@ -38,7 +38,7 @@ button:focus,
 button.btn-primary,
 .button.btn-primary,
 .btn-primary {
-    color: #fff;
+    color: var(--theme-text-on-accent);
     background-color: var(--theme-primary);
     border-color: var(--theme-primary);
 }
@@ -66,7 +66,7 @@ button.btn-primary:hover,
 button.btn-danger,
 .button.btn-danger,
 .btn-danger {
-    color: #fff;
+    color: var(--theme-text-on-accent);
     background-color: var(--theme-danger);
     border-color: var(--theme-danger);
 }
@@ -74,8 +74,8 @@ button.btn-danger,
 button.btn-danger:hover,
 .button.btn-danger:hover,
 .btn-danger:hover {
-    background-color: #c82333;
-    border-color: #bd2130;
+    background-color: var(--theme-danger-hover);
+    border-color: var(--theme-danger-hover-border);
 }
 
 /* Link-style button */
@@ -112,14 +112,14 @@ button.btn-small,
 
 /* Success button */
 .btn-success {
-    color: #fff;
+    color: var(--theme-text-on-accent);
     background-color: var(--theme-success);
     border-color: var(--theme-success);
 }
 
 .btn-success:hover {
-    background-color: #218838;
-    border-color: #1e7e34;
+    background-color: var(--theme-success-hover);
+    border-color: var(--theme-success-hover-border);
 }
 
 /* Warning button */
@@ -130,8 +130,8 @@ button.btn-small,
 }
 
 .btn-warning:hover {
-    background-color: #e0a800;
-    border-color: #d39e00;
+    background-color: var(--theme-warning-hover);
+    border-color: var(--theme-warning-hover-border);
 }
 
 /* BEM-style button modifiers (for Systems View and other components) */
@@ -139,13 +139,13 @@ button.btn-small,
     display: inline-block;
     font-weight: 500;
     line-height: 1.5;
-    color: #212529;
+    color: var(--theme-text-primary);
     text-align: center;
     vertical-align: middle;
     cursor: pointer;
     user-select: none;
-    background-color: #f8f9fa;
-    border: 1px solid #ced4da;
+    background-color: var(--theme-bg-secondary);
+    border: 1px solid var(--theme-button-border);
     padding: 0.375rem 0.75rem;
     font-size: 0.95rem;
     border-radius: 0.25rem;
@@ -155,7 +155,7 @@ button.btn-small,
 }
 
 .btn--primary {
-    color: #ffffff;
+    color: var(--theme-text-on-accent);
     background-color: var(--theme-primary);
     border-color: var(--theme-primary);
 }
@@ -166,13 +166,13 @@ button.btn-small,
 }
 
 .btn--gradient {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--theme-gradient-primary-start) 0%, var(--theme-gradient-primary-end) 100%);
     border: none;
-    color: #fff;
+    color: var(--theme-text-on-accent);
 }
 
 .btn--gradient:hover {
-    background: linear-gradient(135deg, #5568d3 0%, #63408a 100%);
+    background: linear-gradient(135deg, var(--theme-gradient-primary-hover-start) 0%, var(--theme-gradient-primary-hover-end) 100%);
 }
 
 .btn i {

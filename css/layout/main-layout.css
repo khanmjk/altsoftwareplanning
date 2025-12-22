@@ -45,23 +45,6 @@ body {
     gap: 10px;
 }
 
-/* Page Header (H1 + Desc) */
-.page-header-container {
-    margin-bottom: 30px;
-}
-
-.page-title {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: #0f172a;
-    margin: 0 0 10px 0;
-}
-
-.page-desc {
-    color: #64748b;
-    margin: 0;
-}
-
 /* Utility classes for the new layout */
 .card {
     background: var(--theme-card-bg);

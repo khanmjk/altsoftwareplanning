@@ -282,7 +282,7 @@
 }
 
 .notification-btn-danger:hover {
-    background: #dc2626;
+    background: var(--theme-notification-danger-hover);
 }
 
 @keyframes fade-in {

@@ -55,17 +55,14 @@ a:hover {
 }
 
 /* Content headers - specific to main views */
-#systemEditForm>h2,
-#organogramView>div>h2,
-#engineerTableView>h2,
 #serviceDependenciesTable>h2 {
     font-size: 1.5rem;
     font-weight: 600;
-    color: #16191f;
+    color: var(--theme-heading-primary);
     padding-bottom: 0.75rem;
     margin-top: 0;
     margin-bottom: 1.5rem;
-    border-bottom: 1px solid #eaeded;
+    border-bottom: 1px solid var(--theme-heading-border);
 }
 
 /* Sub-section headers */

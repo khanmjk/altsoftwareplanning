@@ -22,6 +22,57 @@
     --theme-warning: #ffc107;
     --theme-danger: #dc3545;
     --theme-info: #17a2b8;
+    --theme-text-on-accent: #ffffff;
+
+    --theme-danger-hover: #c82333;
+    --theme-danger-hover-border: #bd2130;
+    --theme-success-hover: #218838;
+    --theme-success-hover-border: #1e7e34;
+    --theme-warning-hover: #e0a800;
+    --theme-warning-hover-border: #d39e00;
+
+    --theme-button-border: #ced4da;
+
+    --theme-gradient-primary-start: #667eea;
+    --theme-gradient-primary-end: #764ba2;
+    --theme-gradient-primary-hover-start: #5568d3;
+    --theme-gradient-primary-hover-end: #63408a;
+
+    --theme-code-block-bg: #212529;
+    --theme-code-block-text: #f8f9fa;
+
+    --theme-gantt-locked-stroke: #d9534f;
+    --theme-gantt-focus-initiative-stroke: #7a9cff;
+    --theme-gantt-focus-initiative-text: #234db9;
+    --theme-gantt-focus-row-stroke: #ff9800;
+    --theme-gantt-focus-row-text: #c56200;
+    --theme-gantt-initiative: #6f42c1;
+    --theme-gantt-workpackage: #0366d6;
+    --theme-gantt-assignment: #2ea44f;
+    --theme-gantt-status-done: #a0c4ff;
+    --theme-gantt-status-risk: #ff6b6b;
+    --theme-gantt-today-marker: #cf222e;
+
+    --theme-notification-danger-hover: #dc2626;
+
+    --theme-status-backlog-bg: #f1f5f9;
+    --theme-status-backlog-text: #475569;
+    --theme-status-backlog-border: #cbd5e1;
+    --theme-status-defined-bg: #e0f2fe;
+    --theme-status-defined-text: #0284c7;
+    --theme-status-defined-border: #bae6fd;
+    --theme-status-committed-bg: #dcfce7;
+    --theme-status-committed-text: #16a34a;
+    --theme-status-committed-border: #86efac;
+    --theme-status-in-progress-bg: #fef9c3;
+    --theme-status-in-progress-text: #ca8a04;
+    --theme-status-in-progress-border: #fde047;
+    --theme-status-completed-bg: #d1fae5;
+    --theme-status-completed-text: #059669;
+    --theme-status-completed-border: #6ee7b7;
+
+    --theme-heading-primary: #16191f;
+    --theme-heading-border: #eaeded;
 
     --theme-card-bg: #ffffff;
     --theme-card-border: #e0e0e0;

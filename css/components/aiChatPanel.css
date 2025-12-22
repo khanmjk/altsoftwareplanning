@@ -181,9 +181,9 @@
 }
 
 .ai-message pre {
-    background-color: #212529;
+    background-color: var(--theme-code-block-bg);
     /* Keep code blocks dark */
-    color: #f8f9fa;
+    color: var(--theme-code-block-text);
     padding: 10px;
     border-radius: 4px;
     overflow-x: auto;

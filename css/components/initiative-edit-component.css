@@ -228,31 +228,31 @@
 }
 
 .status-backlog {
-    background-color: #f1f5f9;
-    color: #475569;
-    border-color: #cbd5e1;
+    background-color: var(--theme-status-backlog-bg);
+    color: var(--theme-status-backlog-text);
+    border-color: var(--theme-status-backlog-border);
 }
 
 .status-defined {
-    background-color: #e0f2fe;
-    color: #0284c7;
-    border-color: #bae6fd;
+    background-color: var(--theme-status-defined-bg);
+    color: var(--theme-status-defined-text);
+    border-color: var(--theme-status-defined-border);
 }
 
 .status-committed {
-    background-color: #dcfce7;
-    color: #16a34a;
-    border-color: #86efac;
+    background-color: var(--theme-status-committed-bg);
+    color: var(--theme-status-committed-text);
+    border-color: var(--theme-status-committed-border);
 }
 
 .status-in-progress {
-    background-color: #fef9c3;
-    color: #ca8a04;
-    border-color: #fde047;
+    background-color: var(--theme-status-in-progress-bg);
+    color: var(--theme-status-in-progress-text);
+    border-color: var(--theme-status-in-progress-border);
 }
 
 .status-completed {
-    background-color: #d1fae5;
-    color: #059669;
-    border-color: #6ee7b7;
+    background-color: var(--theme-status-completed-bg);
+    color: var(--theme-status-completed-text);
+    border-color: var(--theme-status-completed-border);
 }

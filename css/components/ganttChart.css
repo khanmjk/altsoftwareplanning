@@ -220,7 +220,7 @@
 .gantt .bar-wrapper.locked-task .bar,
 .gantt .bar-wrapper.locked-task .bar-progress {
     cursor: pointer;
-    stroke: #d9534f;
+    stroke: var(--theme-gantt-locked-stroke);
     stroke-width: 1.5px;
 }
 
@@ -230,25 +230,25 @@
 
 .gantt .bar-wrapper.focus-initiative .bar,
 .gantt .bar-wrapper.focus-initiative .bar-progress {
-    stroke: #7a9cff;
+    stroke: var(--theme-gantt-focus-initiative-stroke);
     stroke-width: 2px;
     opacity: 0.35;
 }
 
 .gantt .bar-wrapper.focus-initiative .bar-label {
-    fill: #234db9;
+    fill: var(--theme-gantt-focus-initiative-text);
     font-weight: 700;
 }
 
 .gantt .bar-wrapper.focus-row .bar,
 .gantt .bar-wrapper.focus-row .bar-progress {
-    stroke: #ff9800;
+    stroke: var(--theme-gantt-focus-row-stroke);
     stroke-width: 2.5px;
     opacity: 0.45;
 }
 
 .gantt .bar-wrapper.focus-row .bar-label {
-    fill: #c56200;
+    fill: var(--theme-gantt-focus-row-text);
     font-weight: 700;
 }
 
@@ -437,11 +437,11 @@
 
 /* Initiative: Thicker, Purple, Bold */
 .gantt .bar-wrapper.gantt-initiative .bar-progress {
-    fill: #6f42c1 !important;
+    fill: var(--theme-gantt-initiative) !important;
 }
 
 .gantt .bar-wrapper.gantt-initiative .bar {
-    fill: #6f42c1 !important;
+    fill: var(--theme-gantt-initiative) !important;
     opacity: 0.35 !important;
 }
 
@@ -453,11 +453,11 @@
 
 /* Work Package: Standard, Blue */
 .gantt .bar-wrapper.gantt-work-package .bar-progress {
-    fill: #0366d6 !important;
+    fill: var(--theme-gantt-workpackage) !important;
 }
 
 .gantt .bar-wrapper.gantt-work-package .bar {
-    fill: #0366d6 !important;
+    fill: var(--theme-gantt-workpackage) !important;
     opacity: 0.35 !important;
 }
 
@@ -469,11 +469,11 @@
 
 /* Assignment: Thinner, Green, Italic */
 .gantt .bar-wrapper.gantt-assignment .bar-progress {
-    fill: #2ea44f !important;
+    fill: var(--theme-gantt-assignment) !important;
 }
 
 .gantt .bar-wrapper.gantt-assignment .bar {
-    fill: #2ea44f !important;
+    fill: var(--theme-gantt-assignment) !important;
     opacity: 0.35 !important;
 }
 
@@ -487,17 +487,17 @@
 /* Status Colors Override - Ensure specificity */
 .gantt .bar-wrapper.status-done .bar-progress,
 .gantt .bar-wrapper.status-complete .bar-progress {
-    fill: #a0c4ff !important;
+    fill: var(--theme-gantt-status-done) !important;
 }
 
 .gantt .bar-wrapper.status-risk .bar-progress,
 .gantt .bar-wrapper.status-blocked .bar-progress {
-    fill: #ff6b6b !important;
+    fill: var(--theme-gantt-status-risk) !important;
 }
 
 /* Today Marker Visibility */
 .gantt .today-highlight {
-    stroke: #cf222e !important;
+    stroke: var(--theme-gantt-today-marker) !important;
     stroke-width: 2px !important;
     opacity: 0.8 !important;
 }
