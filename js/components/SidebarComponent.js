@@ -53,11 +53,7 @@ class SidebarComponent {
         // But we might want to disable "Delete System" if no system is loaded.
         const deleteSystemBtn = this.container.querySelector('.dropdown-item.danger');
         if (deleteSystemBtn) {
-            if (!hasSystem) {
-                deleteSystemBtn.style.display = 'none';
-            } else {
-                deleteSystemBtn.style.display = 'block';
-            }
+            deleteSystemBtn.classList.toggle('is-hidden', !hasSystem);
         }
     }
 

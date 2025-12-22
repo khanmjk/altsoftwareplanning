@@ -1,5 +1,20 @@
 /* Notification System Styles */
 
+.notification-wrapper {
+    position: relative;
+}
+
+.notification-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 8px;
+    height: 8px;
+    background: var(--theme-danger);
+    border-radius: 50%;
+    border: 1px solid var(--theme-bg-primary);
+}
+
 /* --- NOTIFICATIONS DROPDOWN PANEL --- */
 .notifications-dropdown {
     right: 0;

@@ -103,23 +103,12 @@ class HeaderComponent {
     }
 
     updateAiButtonVisibility(btn) {
-        if (!btn) return;
+        const targetBtn = btn || this.container?.querySelector?.('#header-ai-btn');
+        if (!targetBtn) return;
         const isEnabled = SettingsService.get() && SettingsService.get().ai && SettingsService.get().ai.isEnabled;
 
-        // Show always, but style differently if disabled
-        btn.style.display = 'inline-flex';
-
-        if (isEnabled) {
-            btn.style.opacity = '1';
-            btn.style.filter = 'none';
-            btn.style.cursor = 'pointer';
-            btn.title = 'Open AI Assistant';
-        } else {
-            btn.style.opacity = '0.5';
-            btn.style.filter = 'grayscale(100%)';
-            btn.style.cursor = 'not-allowed';
-            btn.title = 'AI Assistant (Disabled)';
-        }
+        targetBtn.classList.toggle('header-btn--disabled', !isEnabled);
+        targetBtn.title = isEnabled ? 'Open AI Assistant' : 'AI Assistant (Disabled)';
     }
 
     update(viewId, systemName) {
@@ -187,7 +176,7 @@ class HeaderComponent {
 
         if (badgeEl) {
             const unread = items.filter(n => !n.read).length;
-            badgeEl.style.display = unread > 0 ? 'block' : 'none';
+            badgeEl.classList.toggle('is-hidden', unread === 0);
         }
     }
 

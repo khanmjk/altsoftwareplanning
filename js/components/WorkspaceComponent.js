@@ -34,7 +34,7 @@ class WorkspaceComponent {
 
         // 1. Hide all existing children (Hybrid Mode support)
         Array.from(this.container.children).forEach(child => {
-            child.style.display = 'none';
+            child.classList.add('is-hidden');
         });
 
         // 2. Get or Create the view container
@@ -45,13 +45,13 @@ class WorkspaceComponent {
             viewContainer.id = viewId;
             viewContainer.className = 'workspace-view';
             this.container.appendChild(viewContainer);
-            viewContainer.style.display = 'block';
         } else {
             // Ensure it's visible
-            viewContainer.style.display = 'block';
+            viewContainer.classList.remove('is-hidden');
             // Clear previous content using DOM API
             this._clearElement(viewContainer);
         }
+        viewContainer.classList.remove('is-hidden');
 
         // 3. Execute the render callback to populate the content
         try {
@@ -106,7 +106,7 @@ class WorkspaceComponent {
         const toolbar = document.getElementById('workspace-toolbar');
         if (toolbar) {
             this._clearElement(toolbar);
-            toolbar.style.display = 'none';
+            toolbar.classList.add('is-hidden');
         }
 
         // Clear Actions
@@ -201,6 +201,6 @@ class WorkspaceComponent {
             toolbar.appendChild(content);
         }
 
-        toolbar.style.display = 'flex';
+        toolbar.classList.remove('is-hidden');
     }
 }

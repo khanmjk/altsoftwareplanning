@@ -183,11 +183,10 @@
                     </div>
 
                     <!-- Notification Dropdown (Existing) -->
-                    <div class="notification-wrapper" style="position: relative;">
+                    <div class="notification-wrapper">
                         <button id="header-notifications-btn" class="header-btn" title="Notifications">
                             <i class="fas fa-bell"></i>
-                            <span id="notification-badge"
-                                style="display: none; position: absolute; top: 0; right: 0; width: 8px; height: 8px; background: #ef4444; border-radius: 50%; border: 1px solid white;"></span>
+                            <span id="notification-badge" class="notification-badge is-hidden"></span>
                         </button>
                         <div id="notifications-dropdown" class="dropdown-menu notifications-dropdown">
                             <div class="notifications-dropdown__header">
@@ -206,7 +205,7 @@
             </header>
 
             <!-- 2. Canvas Toolbar (Optional, Sticky) -->
-            <div id="workspace-toolbar" class="canvas-toolbar" style="display: none;">
+            <div id="workspace-toolbar" class="canvas-toolbar is-hidden">
                 <!-- Toolbar content injected by JS -->
             </div>
 

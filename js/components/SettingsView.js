@@ -337,7 +337,11 @@ class SettingsView {
         alert.appendChild(alertP);
         configCard.appendChild(alert);
 
-        // Actions
+        configWrapper.appendChild(configCard);
+        form.appendChild(configWrapper);
+
+        // Actions (always visible, even when AI is disabled)
+        const actionsCard = this.createSettingsCard();
         const actionsDiv = document.createElement('div');
         actionsDiv.className = 'settings-actions';
         const submitBtn = document.createElement('button');
@@ -345,10 +349,9 @@ class SettingsView {
         submitBtn.className = 'btn btn-primary';
         submitBtn.textContent = 'Save Changes';
         actionsDiv.appendChild(submitBtn);
-        configCard.appendChild(actionsDiv);
+        actionsCard.appendChild(actionsDiv);
+        form.appendChild(actionsCard);
 
-        configWrapper.appendChild(configCard);
-        form.appendChild(configWrapper);
         section.appendChild(form);
         container.appendChild(section);
     }
@@ -555,6 +558,7 @@ class SettingsView {
 
         // Update UI
         headerComponent.updateAiButtonVisibility();
+        AIService.updateAiDependentUI(SettingsService.get());
 
         notificationManager.showToast('AI Settings saved successfully!', 'success');
     }

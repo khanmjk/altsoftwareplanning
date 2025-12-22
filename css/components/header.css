@@ -59,9 +59,17 @@
     padding: 5px;
     border-radius: 4px;
     transition: color 0.2s, background 0.2s;
+    display: inline-flex;
+    align-items: center;
 }
 
 .header-btn:hover {
     color: var(--theme-text-primary);
     background-color: var(--theme-bg-secondary);
+}
+
+.header-btn--disabled {
+    opacity: 0.5;
+    filter: grayscale(100%);
+    cursor: not-allowed;
 }
