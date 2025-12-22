@@ -553,8 +553,10 @@ class GanttPlanningView {
         const chartPct = 100 - clamped;
 
         // Primary layout: CSS variables drive grid and flex fallback
-        split.style.setProperty('--gantt-table-pct', `${clamped}%`);
-        split.style.setProperty('--gantt-chart-pct', `${chartPct}%`);
+        styleVars.set(split, {
+            '--gantt-table-pct': `${clamped}%`,
+            '--gantt-chart-pct': `${chartPct}%`
+        });
     }
 
     /**

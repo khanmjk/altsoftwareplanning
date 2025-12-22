@@ -88,7 +88,9 @@ class YearPlanningView {
         const minHeight = 200;
 
         let calculatedMaxHeight = Math.max(minHeight, availableSpace - bottomMargin);
-        tableWrapper.style.setProperty('--planning-table-max-height', `${calculatedMaxHeight}px`);
+        styleVars.set(tableWrapper, {
+            '--planning-table-max-height': `${calculatedMaxHeight}px`
+        });
     }
 
     /**

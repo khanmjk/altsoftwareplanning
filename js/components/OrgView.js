@@ -482,10 +482,10 @@ class OrgView {
                         tooltip.classed('d3-org-tooltip--visible', true);
                         tooltip.html(info);
                         const tooltipNode = tooltip.node();
-                        if (tooltipNode) {
-                            tooltipNode.style.setProperty('--tooltip-x', `${event.pageX + 15}px`);
-                            tooltipNode.style.setProperty('--tooltip-y', `${event.pageY - 28}px`);
-                        }
+                        styleVars.set(tooltipNode, {
+                            '--tooltip-x': `${event.pageX + 15}px`,
+                            '--tooltip-y': `${event.pageY - 28}px`
+                        });
                     })
                     .on("mouseout", () => {
                         tooltip.classed('d3-org-tooltip--visible', false);
