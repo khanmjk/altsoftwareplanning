@@ -120,11 +120,11 @@ const SystemService = {
 
         // Aggregate sample data from potential globals if main object is missing
         if (Object.keys(_sampleSystemsData).length === 0) {
-            if (typeof sampleSystemDataStreamView !== 'undefined') _sampleSystemsData['StreamView'] = sampleSystemDataStreamView;
-            if (typeof sampleSystemDataContactCenter !== 'undefined') _sampleSystemsData['ConnectPro'] = sampleSystemDataContactCenter;
-            if (typeof sampleSystemDataShopSphere !== 'undefined') _sampleSystemsData['ShopSphere'] = sampleSystemDataShopSphere;
-            if (typeof sampleSystemDataInsightAI !== 'undefined') _sampleSystemsData['InsightAI'] = sampleSystemDataInsightAI;
-            if (typeof sampleSystemDataFinSecure !== 'undefined') _sampleSystemsData['FinSecure'] = sampleSystemDataFinSecure;
+            _sampleSystemsData['StreamView'] = sampleSystemDataStreamView;
+            _sampleSystemsData['ConnectPro'] = sampleSystemDataContactCenter;
+            _sampleSystemsData['ShopSphere'] = sampleSystemDataShopSphere;
+            _sampleSystemsData['InsightAI'] = sampleSystemDataInsightAI;
+            _sampleSystemsData['FinSecure'] = sampleSystemDataFinSecure;
         }
 
         if (Object.keys(_sampleSystemsData).length === 0) {
