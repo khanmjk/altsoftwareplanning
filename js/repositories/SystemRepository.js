@@ -1,26 +1,45 @@
 /**
  * SystemRepository
- * Handles all data access operations for systems (CRUD operations with localStorage)
+ * Handles all data access operations for systems (CRUD operations via a storage driver)
  */
 class SystemRepository {
-    constructor() {
+    constructor(options = {}) {
         const DEFAULT_STORAGE_KEY = 'architectureVisualization_systems_v11';
-        const mode = (typeof window !== 'undefined' && window.APP_STORAGE_MODE) || 'local';
-        this.storageMode = mode;
-        this.storageKey = (typeof window !== 'undefined' && window.LOCAL_STORAGE_KEY) || DEFAULT_STORAGE_KEY;
-        this.driver = this._createDriver();
-        this.sampleSystemKeys = ['StreamView', 'ConnectPro', 'ShopSphere', 'InsightAI', 'FinSecure'];
+        this.storageMode = options.storageMode || 'local';
+        this.storageKey = options.storageKey || DEFAULT_STORAGE_KEY;
+        this.driver = options.driver || this._createDriver(this.storageMode, this.storageKey);
     }
 
     /**
-     * Storage driver factory
+     * Configure storage behavior (e.g., inject a different driver).
+     * @param {Object} options
+     * @param {string} [options.storageKey]
+     * @param {string} [options.storageMode]
+     * @param {Object} [options.driver]
      */
-    _createDriver() {
-        if (this.storageMode === 'local') {
-            return new LocalStorageDriver(this.storageKey);
+    configure(options = {}) {
+        const nextStorageKey = options.storageKey || this.storageKey;
+        const nextStorageMode = options.storageMode || this.storageMode || 'local';
+        const hasStorageKeyChange = nextStorageKey !== this.storageKey;
+        const hasStorageModeChange = nextStorageMode !== this.storageMode;
+        const nextDriver = options.driver || ((hasStorageKeyChange || hasStorageModeChange) ? this._createDriver(nextStorageMode, nextStorageKey) : this.driver);
+        this.storageKey = nextStorageKey;
+        this.storageMode = nextStorageMode;
+        this.driver = nextDriver;
+    }
+
+    /**
+     * Storage driver factory (kept local to the repository).
+     * @param {string} storageMode
+     * @param {string} storageKey
+     * @returns {Object}
+     */
+    _createDriver(storageMode, storageKey) {
+        if (storageMode === 'local') {
+            return new LocalStorageDriver(storageKey);
         }
-        console.warn(`Unsupported storage mode "${this.storageMode}", falling back to local storage.`);
-        return new LocalStorageDriver(this.storageKey);
+        console.warn(`Unsupported storage mode "${storageMode}", falling back to local storage.`);
+        return new LocalStorageDriver(storageKey);
     }
 
     /**
@@ -47,50 +66,11 @@ class SystemRepository {
     }
 
     /**
-     * Get all systems from localStorage
-     * @returns {Array<Object>} Array of system objects with id, name, description, lastModified
+     * Get a snapshot of all systems from storage.
+     * @returns {Object} Map of systemId -> systemData
      */
-    getAllSystems() {
-        const systemsMap = this._loadSystemsMap();
-        return Object.entries(systemsMap).map(([key, data]) => ({
-            id: key,
-            name: data.systemName || key,
-            description: data.systemDescription || '',
-            lastModified: data.lastModified || null,
-            // Include the full data for advanced usage
-            data: data
-        })).sort((a, b) => {
-            // Sort by last modified descending
-            const dateA = a.lastModified ? new Date(a.lastModified) : new Date(0);
-            const dateB = b.lastModified ? new Date(b.lastModified) : new Date(0);
-            return dateB - dateA;
-        });
-    }
-
-    /**
-     * Get user-created systems (non-sample systems)
-     * @returns {Array<Object>} Array of user system objects
-     */
-    getUserSystems() {
-        return this.getAllSystems().filter(sys => !this.sampleSystemKeys.includes(sys.id));
-    }
-
-    /**
-     * Get sample systems
-     * @returns {Array<Object>} Array of sample system objects
-     */
-    getSampleSystems() {
-        return this.getAllSystems().filter(sys => this.sampleSystemKeys.includes(sys.id));
-    }
-
-    /**
-     * Get a specific system by ID
-     * @param {string} systemId - The system ID to retrieve
-     * @returns {Object|null} The system object or null if not found
-     */
-    getSystemById(systemId) {
-        const systems = this.getAllSystems();
-        return systems.find(sys => sys.id === systemId) || null;
+    getAllSystemsMap() {
+        return this._loadSystemsMap();
     }
 
     /**
@@ -104,16 +84,7 @@ class SystemRepository {
     }
 
     /**
-     * Check if a system is a sample system
-     * @param {string} systemId - The system ID to check
-     * @returns {boolean} True if it's a sample system
-     */
-    isSampleSystem(systemId) {
-        return this.sampleSystemKeys.includes(systemId);
-    }
-
-    /**
-     * Delete a system from localStorage
+     * Delete a system from storage
      * @param {string} systemId - The system ID to delete
      * @returns {boolean} True if deleted successfully, false otherwise
      */
@@ -136,7 +107,7 @@ class SystemRepository {
     }
 
     /**
-     * Save or update a system in localStorage
+     * Save or update a system in storage
      * @param {string} systemId - The system ID
      * @param {Object} systemData - The system data to save
      * @returns {boolean} True if saved successfully
@@ -157,22 +128,6 @@ class SystemRepository {
             console.error('Error saving system to storage:', e);
             return false;
         }
-    }
-
-    /**
-     * Check if any systems exist
-     * @returns {boolean} True if at least one system exists
-     */
-    hasAnySystems() {
-        return this.getAllSystems().length > 0;
-    }
-
-    /**
-     * Check if any user systems exist
-     * @returns {boolean} True if at least one user system exists
-     */
-    hasUserSystems() {
-        return this.getUserSystems().length > 0;
     }
 }
 

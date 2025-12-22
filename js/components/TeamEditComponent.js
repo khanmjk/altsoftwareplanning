@@ -636,7 +636,7 @@ class TeamEditComponent {
             return;
         }
 
-        systemRepository.saveSystem(this.systemData.systemName, this.systemData);
+        SystemService.saveSystem(this.systemData);
 
         // Recalculate capacity metrics so Year Plan picks up changes immediately
         CapacityEngine.recalculate(this.systemData);

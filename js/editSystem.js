@@ -201,8 +201,12 @@ async function saveSystemDetails() {
     SystemService.getCurrentSystem().systemName = newSystemName;
     SystemService.getCurrentSystem().systemDescription = systemDescriptionTextarea.value.trim();
 
-    systemRepository.saveSystem(newSystemName, SystemService.getCurrentSystem());
-    notificationManager.showToast('System details saved.', 'success');
+    const saved = SystemService.saveSystem(SystemService.getCurrentSystem(), newSystemName);
+    if (saved) {
+        notificationManager.showToast('System details saved.', 'success');
+    } else {
+        notificationManager.showToast('Failed to save system details.', 'error');
+    }
 
 
 }
@@ -250,14 +254,19 @@ async function saveAllChanges() {
         // if (oldSystemNameKey && oldSystemNameKey !== finalSystemName) { ... } // DELETED
 
         // Check for Overwrite: If new name exists (and it's not the same as old name)
-        if (systemRepository.getSystemData(finalSystemName) && oldSystemNameKey !== finalSystemName) {
+        if (SystemService.systemExists(finalSystemName) && oldSystemNameKey !== finalSystemName) {
             if (!await notificationManager.confirm(`A system named "${finalSystemName}" already exists. Overwrite it?`, 'Overwrite System', { confirmStyle: 'danger' })) {
-                systemRepository.saveSystem(newSystemName, SystemService.getCurrentSystem());
+                SystemService.getCurrentSystem().systemName = oldSystemNameKey;
+                const fallbackSaved = SystemService.saveSystem(SystemService.getCurrentSystem(), oldSystemNameKey);
+                if (!fallbackSaved) {
+                    notificationManager.showToast('Failed to save system. Please try again.', 'error');
+                }
+                return;
             }
         }
 
         // Perform Save
-        const saved = systemRepository.saveSystem(finalSystemName, SystemService.getCurrentSystem());
+        const saved = SystemService.saveSystem(SystemService.getCurrentSystem(), finalSystemName);
 
         if (saved) {
             // Recalculate capacity metrics so Year Plan picks up changes
@@ -388,5 +397,4 @@ function validateEngineerAssignments() {
     }
     return true;
 }
-
 

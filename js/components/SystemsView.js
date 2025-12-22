@@ -1,12 +1,11 @@
 /**
  * SystemsView Component
  * Displays user systems and sample systems in a grid layout
- * Uses template loading, event delegation, and repository pattern
+ * Uses template loading, event delegation, and service layer access
  */
 class SystemsView {
     constructor(containerId) {
         this.container = document.getElementById(containerId);
-        this.repository = systemRepository;
         this._boundClickHandler = this.handleClick.bind(this);
         this._eventsBound = false;
     }
@@ -127,8 +126,8 @@ class SystemsView {
         const grid = document.getElementById('systemsGrid');
         if (!grid) return;
 
-        const userSystems = this.repository.getUserSystems();
-        const sampleSystems = this.repository.getSampleSystems();
+        const userSystems = SystemService.getUserSystems();
+        const sampleSystems = SystemService.getSampleSystems();
 
         let html = '';
 
@@ -297,8 +296,8 @@ class SystemsView {
      * @returns {Object} Context object with view-specific data
      */
     getAIContext() {
-        const userSystems = this.repository?.getUserSystems() || [];
-        const sampleSystems = this.repository?.getSampleSystems() || [];
+        const userSystems = SystemService.getUserSystems();
+        const sampleSystems = SystemService.getSampleSystems();
 
         return {
             viewTitle: 'Systems',

@@ -481,7 +481,7 @@ class ServiceEditComponent {
         // The original code re-read from DOM here. Since we use direct data binding in callbacks, 
         // we might not need to re-read everything, but let's be safe and trust the callbacks.
 
-        systemRepository.saveSystem(this.systemData.systemName, this.systemData);
+        SystemService.saveSystem(this.systemData);
         notificationManager.showToast('Service changes saved.', 'success');
     }
 }

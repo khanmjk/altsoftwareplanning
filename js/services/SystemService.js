@@ -13,6 +13,9 @@ let _currentSystem = null;
 // Private state - aggregate sample data
 let _sampleSystemsData = {};
 
+// Default sample system keys (used when sample data isn't loaded yet)
+const DEFAULT_SAMPLE_SYSTEM_KEYS = ['StreamView', 'ConnectPro', 'ShopSphere', 'InsightAI', 'FinSecure'];
+
 const SystemService = {
 
     /**
@@ -46,6 +49,69 @@ const SystemService = {
     },
 
     /**
+     * Configure storage behavior (driver injection, mode, storage key).
+     * @param {Object} options
+     */
+    configureStorage(options = {}) {
+        systemRepository.configure(options);
+    },
+
+    /**
+     * Get all systems as a list with basic metadata.
+     * @returns {Array<Object>}
+     */
+    getAllSystems() {
+        const systemsMap = systemRepository.getAllSystemsMap();
+        return Object.entries(systemsMap).map(([key, data]) => ({
+            id: key,
+            name: data.systemName || key,
+            description: data.systemDescription || '',
+            lastModified: data.lastModified || null,
+            data: data
+        })).sort((a, b) => {
+            const dateA = a.lastModified ? new Date(a.lastModified) : new Date(0);
+            const dateB = b.lastModified ? new Date(b.lastModified) : new Date(0);
+            return dateB - dateA;
+        });
+    },
+
+    /**
+     * Get user-created systems (non-sample systems).
+     * @returns {Array<Object>}
+     */
+    getUserSystems() {
+        const sampleKeys = this._getSampleSystemKeys();
+        return this.getAllSystems().filter(sys => !sampleKeys.includes(sys.id));
+    },
+
+    /**
+     * Get sample systems.
+     * @returns {Array<Object>}
+     */
+    getSampleSystems() {
+        const sampleKeys = this._getSampleSystemKeys();
+        return this.getAllSystems().filter(sys => sampleKeys.includes(sys.id));
+    },
+
+    /**
+     * Check whether a system exists in storage.
+     * @param {string} systemId
+     * @returns {boolean}
+     */
+    systemExists(systemId) {
+        return !!systemRepository.getSystemData(systemId);
+    },
+
+    /**
+     * Check if a system is a sample system.
+     * @param {string} systemId
+     * @returns {boolean}
+     */
+    isSampleSystem(systemId) {
+        return this._getSampleSystemKeys().includes(systemId);
+    },
+
+    /**
      * Initialize default sample systems if they don't exist.
      * @param {object} options - { forceOverwrite: boolean }
      */
@@ -66,9 +132,6 @@ const SystemService = {
             return;
         }
 
-        // We use the repository to check/save
-
-
         Object.keys(_sampleSystemsData).forEach(key => {
             const sampleData = _sampleSystemsData[key];
             if (!sampleData) return;
@@ -77,7 +140,7 @@ const SystemService = {
             const systemId = sampleData.systemName || key;
 
             // Check if it already exists to avoid overwriting user changes unless forced
-            const existing = systemRepository.getSystemById(systemId);
+            const existing = this.systemExists(systemId);
 
             if (forceOverwrite || !existing) {
                 systemRepository.saveSystem(systemId, sampleData);
@@ -140,7 +203,7 @@ const SystemService = {
         // 1. Try Repository
         let systemData = systemRepository.getSystemData(systemId);
 
-        // 2. Fallback: Check sampleSystemsData global (in case LocalStorage was cleared but app didn't reload)
+        // 2. Fallback: Check sampleSystemsData global (in case storage was cleared but app didn't reload)
         if (!systemData && _sampleSystemsData && _sampleSystemsData[systemId]) {
             console.log(`SystemService: System '${systemId}' not in storage, loading from default samples.`);
             systemData = _sampleSystemsData[systemId];
@@ -183,6 +246,19 @@ const SystemService = {
 
         console.log(`SystemService: Loaded system '${systemId}'.`);
         return systemData;
+    },
+
+    /**
+     * Resolve the set of sample system IDs.
+     * @private
+     * @returns {Array<string>}
+     */
+    _getSampleSystemKeys() {
+        const sampleIds = Object.entries(_sampleSystemsData).map(([key, data]) => data?.systemName || key);
+        if (sampleIds.length > 0) {
+            return sampleIds;
+        }
+        return DEFAULT_SAMPLE_SYSTEM_KEYS.slice();
     },
 
     /**
@@ -504,7 +580,7 @@ const SystemService = {
 
         try {
             systemRepository.clearAllSystems();
-            console.log('[SystemService] Cleared user systems from localStorage.');
+            console.log('[SystemService] Cleared user systems from storage.');
         } catch (error) {
             console.error('[SystemService] Failed to clear storage:', error);
             notificationManager.showToast('Unable to reset: storage could not be cleared.', 'error');
@@ -535,7 +611,7 @@ const SystemService = {
         const systemName = currentSystem.systemName;
 
         // Protection for sample systems
-        if (systemRepository.isSampleSystem(systemName)) {
+        if (this.isSampleSystem(systemName)) {
             notificationManager.showToast(`Cannot delete built-in sample system: "${systemName}".`, 'error');
             return { success: false, reason: 'sample_system' };
         }

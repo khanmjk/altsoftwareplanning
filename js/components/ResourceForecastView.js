@@ -365,7 +365,7 @@ class ResourceForecastView {
                 team.attributes.newHireRampUpSink = results.newHireRampUpSinkSdeYears || 0;
                 console.log(`Stored forecast for team ${team.teamId}: gain=${team.attributes.newHireProductiveCapacityGain}, sink=${team.attributes.newHireRampUpSink}`);
 
-                // [PERSISTENCE FIX] Save changes to SystemRepository
+                // [PERSISTENCE FIX] Save changes via SystemService
                 SystemService.save();
                 notificationManager.showToast('Forecast capacity gain saved to system.', 'success');
 

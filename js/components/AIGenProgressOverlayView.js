@@ -147,12 +147,12 @@ class AIGenProgressOverlayView {
             SystemService.setCurrentSystem(newSystemData);
 
             let finalSystemName = newSystemData.systemName;
-            if (systemRepository.getSystemData(finalSystemName)) {
+            if (SystemService.systemExists(finalSystemName)) {
                 finalSystemName = `${finalSystemName} (AI ${Date.now().toString().slice(-5)})`;
                 newSystemData.systemName = finalSystemName;
             }
 
-            systemRepository.saveSystem(finalSystemName, newSystemData);
+            SystemService.saveSystem(newSystemData, finalSystemName);
 
             if (stats && AIService.showStatsModal) {
                 AIService.showStatsModal(stats);

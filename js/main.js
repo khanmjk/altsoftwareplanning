@@ -108,6 +108,21 @@ window.onload = async function () {
     // Initialize Theme (must be after Settings)
     ThemeService.init();
 
+    // Configure system storage (only main.js reads window.* config)
+    const storageConfig = {};
+    if (window.LOCAL_STORAGE_KEY) {
+        storageConfig.storageKey = window.LOCAL_STORAGE_KEY;
+    }
+    if (window.APP_STORAGE_MODE) {
+        storageConfig.storageMode = window.APP_STORAGE_MODE;
+    }
+    if (window.APP_STORAGE_DRIVER) {
+        storageConfig.driver = window.APP_STORAGE_DRIVER;
+    }
+    if (Object.keys(storageConfig).length > 0) {
+        SystemService.configureStorage(storageConfig);
+    }
+
     // Initialize Managers
     window.navigationManager = new NavigationManager();
 
