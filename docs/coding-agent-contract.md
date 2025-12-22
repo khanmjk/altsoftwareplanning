@@ -84,6 +84,8 @@ window.headerComponent = new HeaderComponent('main-header');
 window.workspaceComponent = new WorkspaceComponent('main-content-area');
 ```
 
+**Clarification**: This rule targets app-specific globals. Standard browser API usage is allowed in any file (e.g., `window.addEventListener`, `window.location`, `window.history`, `window.open`, `window.getComputedStyle`).
+
 ---
 
 ### 2.3 No Service Layer Duplication
@@ -223,6 +225,14 @@ Services must:
 - Export pure functions (no DOM access)
 - Accept data as parameters, return transformed data
 - Be testable in isolation
+
+**Exceptions (approved DOM access in services)**:
+- `ThemeService` (theme application to document root)
+- `AIService` (chat panel integration hooks)
+- `AboutService` (JSONP and HTML decoding helpers)
+- `MermaidService` (render error UI for external library)
+
+If another service needs DOM access, add it to this allowlist with a brief justification.
 
 Views must:
 - Implement `getAIContext()` method for AI integration
@@ -428,4 +438,3 @@ border-left-color: #0052cc;
 
 **Owner**: SMT Platform Engineering Team  
 **Enforcement**: All pull requests must pass this contract checklist
-

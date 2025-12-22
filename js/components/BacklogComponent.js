@@ -323,9 +323,11 @@ class BacklogComponent {
             if (!btn) return;
             const initiativeId = btn.dataset.initiativeId;
             if (btn.dataset.action === 'edit') {
-                if (roadmapViewInstance) roadmapViewInstance.openModalForEdit(initiativeId);
+                const roadmapView = navigationManager.getViewInstance('roadmapView');
+                roadmapView.openModalForEdit(initiativeId);
             } else if (btn.dataset.action === 'delete') {
-                if (roadmapViewInstance) roadmapViewInstance.handleDelete(initiativeId);
+                const roadmapView = navigationManager.getViewInstance('roadmapView');
+                roadmapView.handleDelete(initiativeId);
             }
         });
     }

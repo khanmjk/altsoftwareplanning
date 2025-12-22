@@ -2,9 +2,6 @@
  * RoadmapView - Roadmap & Backlog View Orchestrator
  * Manages the sub-views: Backlog (List), Quarterly Roadmap, and 3-Year Plan.
  */
-// Singleton Instance
-let roadmapViewInstance = null;
-
 class RoadmapView {
     constructor() {
         this.currentView = 'backlog'; // default

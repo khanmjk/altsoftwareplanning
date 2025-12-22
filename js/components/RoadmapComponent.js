@@ -470,9 +470,9 @@ class RoadmapComponent {
             const card = e.target.closest('.roadmap-card');
             if (card) {
                 const initiativeId = card.dataset.id;
-                if (initiativeId && window.openRoadmapModalForEdit) {
-                    window.openRoadmapModalForEdit(initiativeId);
-                }
+                if (!initiativeId) return;
+                const roadmapView = navigationManager.getViewInstance('roadmapView');
+                roadmapView.openModalForEdit(initiativeId);
             }
         });
     }
