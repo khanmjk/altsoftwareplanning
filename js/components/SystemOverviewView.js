@@ -152,7 +152,6 @@ class SystemOverviewView {
         const section = document.createElement('div');
         section.id = viewId;
         section.className = 'workspace-view__section carousel-item'; // Keep carousel-item for CSS compatibility
-        section.style.display = 'none';
 
         // Create view-specific content using DOM creation (compliant with §2.6)
         switch (viewId) {
@@ -263,8 +262,7 @@ class SystemOverviewView {
 
                 container.append(heading, host);
                 section.appendChild(container);
-                section.style.height = '100%';
-                section.style.overflowY = 'auto';
+                section.classList.add('system-overview__section--full', 'system-overview__section--scroll');
                 break;
             }
 
@@ -273,7 +271,7 @@ class SystemOverviewView {
                 container.id = 'mermaidGraph';
                 container.className = 'system-overview-mermaid-container';
                 section.appendChild(container);
-                section.style.overflowY = 'auto';
+                section.classList.add('system-overview__section--scroll');
                 break;
             }
 
@@ -297,7 +295,7 @@ class SystemOverviewView {
                 graphContainer.className = 'system-overview-mermaid-container';
 
                 section.append(controls, graphContainer);
-                section.style.overflowY = 'auto';
+                section.classList.add('system-overview__section--scroll');
                 break;
             }
         }
@@ -319,13 +317,13 @@ class SystemOverviewView {
         // Hide all views
         this.viewConfigs.forEach(v => {
             const el = document.getElementById(v.id);
-            if (el) el.style.display = 'none';
+            if (el) el.classList.remove('active');
         });
 
         // Show selected view
         const targetView = document.getElementById(viewId);
         if (targetView) {
-            targetView.style.display = 'block';
+            targetView.classList.add('active');
             this.currentView = viewId;
 
             // Update pill navigation
@@ -725,8 +723,7 @@ class SystemOverviewView {
             const value = cell.getValue();
             const display = (value && value !== '') ? value : defaultText;
             const el = cell.getElement();
-            el.style.whiteSpace = 'normal';
-            el.style.lineHeight = '1.3';
+            el.classList.add('system-overview-table-cell--wrap');
             return display;
         };
 

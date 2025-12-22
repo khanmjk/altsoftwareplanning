@@ -82,14 +82,12 @@ class OrgView {
 
         const tableContainer = document.createElement('div');
         tableContainer.id = 'teamBreakdown';
-        tableContainer.className = 'org-content-area';
-        tableContainer.style.display = 'none';
+        tableContainer.className = 'org-content-area is-hidden';
         wrapper.appendChild(tableContainer);
 
         const engineerListContainer = document.createElement('div');
         engineerListContainer.id = 'orgEngineerListView';
-        engineerListContainer.className = 'org-content-area';
-        engineerListContainer.style.display = 'none';
+        engineerListContainer.className = 'org-content-area is-hidden';
         wrapper.appendChild(engineerListContainer);
 
         this.container.appendChild(wrapper);
@@ -109,26 +107,26 @@ class OrgView {
         }
 
         // Hide all containers first
-        chartContainer.style.display = 'none';
-        tableContainer.style.display = 'none';
-        engineerListContainer.style.display = 'none';
+        chartContainer.classList.add('is-hidden');
+        tableContainer.classList.add('is-hidden');
+        engineerListContainer.classList.add('is-hidden');
 
         // Show appropriate view
         switch (this.currentMode) {
             case 'd3':
-                chartContainer.style.display = 'block';
+                chartContainer.classList.remove('is-hidden');
                 this.renderD3OrgChart(chartContainer);
                 break;
             case 'list':
-                chartContainer.style.display = 'block';
+                chartContainer.classList.remove('is-hidden');
                 this.renderHtmlOrgList(chartContainer);
                 break;
             case 'table':
-                tableContainer.style.display = 'block';
+                tableContainer.classList.remove('is-hidden');
                 this.generateTeamTable();
                 break;
             case 'engineerList':
-                engineerListContainer.style.display = 'block';
+                engineerListContainer.classList.remove('is-hidden');
                 this.generateEngineerTable();
                 break;
         }
@@ -390,12 +388,11 @@ class OrgView {
                 .attr("width", "100%")
                 .attr("height", height)
                 .attr("viewBox", [0, 0, width, height])
-                .style("overflow", "auto");
+                .attr("class", "org-chart-svg");
 
             // Use d3-org-tooltip class for style compliance
-            const tooltip = d3.select("body").selectAll(".tooltip").data([null]).join("div")
-                .attr("class", "d3-org-tooltip")
-                .style("opacity", 0);
+            const tooltip = d3.select("body").selectAll(".d3-org-tooltip").data([null]).join("div")
+                .attr("class", "d3-org-tooltip");
 
             const g = svg.append("g");
 
@@ -457,7 +454,7 @@ class OrgView {
                 const nodeEnter = node.enter().append("g")
                     .attr("class", d => `org-node org-type-${d.data.type}`)
                     .attr("transform", d => `translate(${source.x0 || source.x},${source.y0 || source.y})`)
-                    .style("opacity", 0)
+                    .attr("opacity", 0)
                     .on("click", (event, d) => {
                         if (d.data.type === 'engineer') return;
                         if (d.children) {
@@ -477,18 +474,21 @@ class OrgView {
                             case 'sdm': info = `<strong>SDM:</strong> ${d.data.name}`; break;
                             case 'team':
                                 info = `<strong>Team:</strong> ${d.data.name}<br><strong>Details:</strong> ${d.data.details}`;
-                                if (d.data.awayTeamCount > 0) info += `<br><strong style='color: #dc3545;'>Away:</strong> +${d.data.awayTeamCount} (${d.data.awaySourceSummary})`;
+                                if (d.data.awayTeamCount > 0) info += `<br><span class="org-tooltip-away">Away:</span> +${d.data.awayTeamCount} (${d.data.awaySourceSummary})`;
                                 break;
                             case 'engineer': info = `<strong>Engineer:</strong> ${d.data.name}`; break;
                             default: info = d.data.name;
                         }
-                        tooltip.transition().duration(200).style("opacity", .9);
-                        tooltip.html(info)
-                            .style("left", (event.pageX + 15) + "px")
-                            .style("top", (event.pageY - 28) + "px");
+                        tooltip.classed('d3-org-tooltip--visible', true);
+                        tooltip.html(info);
+                        const tooltipNode = tooltip.node();
+                        if (tooltipNode) {
+                            tooltipNode.style.setProperty('--tooltip-x', `${event.pageX + 15}px`);
+                            tooltipNode.style.setProperty('--tooltip-y', `${event.pageY - 28}px`);
+                        }
                     })
                     .on("mouseout", () => {
-                        tooltip.transition().duration(500).style("opacity", 0);
+                        tooltip.classed('d3-org-tooltip--visible', false);
                     });
 
                 nodeEnter.append("rect")
@@ -499,14 +499,15 @@ class OrgView {
                     .attr("y", -nodeHeight / 2)
                     .attr("rx", 4)
                     .attr("ry", 4)
-                    .style("cursor", d => d.data.type !== 'engineer' ? "pointer" : "default");
+                    .classed("org-node-rect--interactive", d => d.data.type !== 'engineer')
+                    .classed("org-node-rect--static", d => d.data.type === 'engineer');
 
                 const fo = nodeEnter.append("foreignObject")
                     .attr("x", -nodeWidth / 2)
                     .attr("y", -nodeHeight / 2)
                     .attr("width", nodeWidth)
                     .attr("height", nodeHeight)
-                    .style("pointer-events", "none");
+                    .attr("class", "org-node-foreign");
 
                 const div = fo.append("xhtml:div")
                     .attr("xmlns", "http://www.w3.org/1999/xhtml")
@@ -535,7 +536,7 @@ class OrgView {
 
                 node.merge(nodeEnter).transition().duration(duration)
                     .attr("transform", d => `translate(${d.x},${d.y})`)
-                    .style("opacity", 1);
+                    .attr("opacity", 1);
 
                 node.merge(nodeEnter).select(".org-node-toggle")
                     .text(d => {
@@ -545,7 +546,7 @@ class OrgView {
 
                 node.exit().transition().duration(duration)
                     .attr("transform", d => `translate(${source.x},${source.y})`)
-                    .style("opacity", 0)
+                    .attr("opacity", 0)
                     .remove();
 
                 nodes.forEach(d => {

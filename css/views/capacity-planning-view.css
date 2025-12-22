@@ -320,10 +320,24 @@
     border-top: 1px solid var(--theme-border-color);
 }
 
+.capacity-team-body--visible {
+    display: block;
+}
+
 .capacity-team-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 30px;
+}
+
+.capacity-engineer-empty {
+    padding: 15px;
+    color: var(--theme-text-muted);
+    font-style: italic;
+}
+
+.capacity-subsection-title--spaced {
+    margin-top: 20px;
 }
 
 /* Variable Leave Section */

@@ -149,9 +149,15 @@
     font-size: 0.8em;
 }
 
+.org-chart-svg {
+    overflow: auto;
+}
+
 /*** D3 Tooltip override/integration ***/
 .d3-org-tooltip {
     position: absolute;
+    top: 0;
+    left: 0;
     text-align: left;
     padding: 10px;
     font: 12px sans-serif;
@@ -161,6 +167,30 @@
     pointer-events: none;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     z-index: 1000;
+    opacity: 0;
+    transform: translate(var(--tooltip-x, 0px), var(--tooltip-y, 0px));
+    transition: opacity 0.2s ease;
+}
+
+.d3-org-tooltip--visible {
+    opacity: 0.9;
+}
+
+.org-tooltip-away {
+    color: var(--theme-danger);
+    font-weight: 600;
+}
+
+.org-node-rect--interactive {
+    cursor: pointer;
+}
+
+.org-node-rect--static {
+    cursor: default;
+}
+
+.org-node-foreign {
+    pointer-events: none;
 }
 
 /* D3 Link (connector lines) */

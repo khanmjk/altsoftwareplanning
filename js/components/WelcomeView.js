@@ -26,7 +26,7 @@ class WelcomeView {
         const staticWelcome = document.getElementById('welcomeViewContent');
         if (staticWelcome) {
             this.container.innerHTML = staticWelcome.innerHTML;
-            this.container.style.display = 'block';
+            this.container.classList.remove('is-hidden');
         } else {
             this.container.innerHTML = '<h1>Welcome</h1><p>Welcome content not found.</p>';
         }

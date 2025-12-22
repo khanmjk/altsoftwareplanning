@@ -79,9 +79,10 @@ class CapacityConfigurationView {
         body.className = 'capacity-collapsible-body';
 
         header.onclick = () => {
-            const isHidden = body.style.display === 'none' || body.style.display === '';
-            body.style.display = isHidden ? 'block' : 'none';
-            header.classList.toggle('capacity-collapsible-header--active', isHidden);
+            const isVisible = body.classList.contains('capacity-collapsible-body--visible');
+            const nextVisible = !isVisible;
+            body.classList.toggle('capacity-collapsible-body--visible', nextVisible);
+            header.classList.toggle('capacity-collapsible-header--active', nextVisible);
         };
 
         section.appendChild(header);
@@ -288,10 +289,11 @@ class CapacityConfigurationView {
             body.className = 'capacity-team-body';
 
             header.onclick = () => {
-                const isHidden = body.style.display === 'none' || body.style.display === '';
-                body.style.display = isHidden ? 'block' : 'none';
-                icon.className = isHidden ? 'fas fa-chevron-up capacity-team-icon' : 'fas fa-chevron-down capacity-team-icon';
-                item.classList.toggle('capacity-team-item--active', isHidden);
+                const isVisible = body.classList.contains('capacity-team-body--visible');
+                const nextVisible = !isVisible;
+                body.classList.toggle('capacity-team-body--visible', nextVisible);
+                icon.className = nextVisible ? 'fas fa-chevron-up capacity-team-icon' : 'fas fa-chevron-down capacity-team-icon';
+                item.classList.toggle('capacity-team-item--active', nextVisible);
             };
 
             item.appendChild(header);
@@ -400,10 +402,8 @@ class CapacityConfigurationView {
         const engineers = team.engineers || [];
         if (engineers.length === 0) {
             const noEng = document.createElement('div');
+            noEng.className = 'capacity-engineer-empty';
             noEng.textContent = 'No engineers assigned to this team.';
-            noEng.style.padding = '15px';
-            noEng.style.color = 'var(--theme-text-muted)';
-            noEng.style.fontStyle = 'italic';
             engLeaveContainer.appendChild(noEng);
         } else {
             engineers.forEach(engName => {
@@ -438,8 +438,7 @@ class CapacityConfigurationView {
         // Team Activities
         const actTitle = document.createElement('h5');
         actTitle.textContent = 'Team Activities';
-        actTitle.className = 'capacity-subsection-title';
-        actTitle.style.marginTop = '20px';
+        actTitle.className = 'capacity-subsection-title capacity-subsection-title--spaced';
         right.appendChild(actTitle);
 
         const actTable = document.createElement('table');

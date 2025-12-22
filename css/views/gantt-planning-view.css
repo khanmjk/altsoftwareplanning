@@ -105,7 +105,9 @@
 /* Split Pane Layout */
 .gantt-split {
     display: grid;
-    grid-template-columns: 36% 8px 64%;
+    --gantt-table-pct: 36%;
+    --gantt-chart-pct: 64%;
+    grid-template-columns: var(--gantt-table-pct) 8px var(--gantt-chart-pct);
     grid-template-rows: 1fr;
     flex: 1;
     overflow: hidden;
@@ -120,6 +122,14 @@
     flex-direction: column;
     min-width: 0;
     min-height: 0;
+}
+
+#ganttPlanningTableContainer {
+    flex-basis: var(--gantt-table-pct);
+}
+
+#ganttChartWrapper {
+    flex-basis: var(--gantt-chart-pct);
 }
 
 .gantt-resizer {

@@ -46,20 +46,17 @@ class SettingsView {
         // Create tab containers
         const generalTabContainer = document.createElement('div');
         generalTabContainer.id = 'general';
-        generalTabContainer.className = 'settings-tab-content';
-        generalTabContainer.style.display = 'none';
+        generalTabContainer.className = 'settings-tab-content is-hidden';
         wrapper.appendChild(generalTabContainer);
 
         const aiTabContainer = document.createElement('div');
         aiTabContainer.id = 'ai';
-        aiTabContainer.className = 'settings-tab-content';
-        aiTabContainer.style.display = 'none';
+        aiTabContainer.className = 'settings-tab-content is-hidden';
         wrapper.appendChild(aiTabContainer);
 
         const appearanceTabContainer = document.createElement('div');
         appearanceTabContainer.id = 'appearance';
-        appearanceTabContainer.className = 'settings-tab-content';
-        appearanceTabContainer.style.display = 'none';
+        appearanceTabContainer.className = 'settings-tab-content is-hidden';
         wrapper.appendChild(appearanceTabContainer);
 
         this.container.appendChild(wrapper);
@@ -83,12 +80,12 @@ class SettingsView {
     switchTab(tabId) {
         // Hide all tabs
         const allTabs = this.container.querySelectorAll('.settings-tab-content');
-        allTabs.forEach(tab => tab.style.display = 'none');
+        allTabs.forEach(tab => tab.classList.add('is-hidden'));
 
         // Show active tab
         const activeContent = this.container.querySelector(`#${tabId}`);
         if (activeContent) {
-            activeContent.style.display = 'block';
+            activeContent.classList.remove('is-hidden');
             this.activeTab = tabId;
             if (this.pillNav) {
                 this.pillNav.setActive(tabId);
@@ -236,7 +233,7 @@ class SettingsView {
         // Enable toggle card
         const toggleCard = this.createSettingsCard();
         const toggleGroup = this.createFormGroup();
-        toggleGroup.style.marginBottom = '0';
+        toggleGroup.classList.add('settings-form-group--flush');
 
         const toggleLabel = document.createElement('label');
         toggleLabel.className = 'toggle-switch';
@@ -420,8 +417,6 @@ class SettingsView {
         // Actions
         const actionsDiv = document.createElement('div');
         actionsDiv.className = 'settings-actions';
-        actionsDiv.style.display = 'flex';
-        actionsDiv.style.gap = '10px';
 
         const applyBtn = document.createElement('button');
         applyBtn.type = 'submit';

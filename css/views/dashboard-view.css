@@ -9,6 +9,39 @@
     /* Left align */
 }
 
+/* Toolbar */
+.dashboard-toolbar-global {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.dashboard-toolbar__pill-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.dashboard-toolbar__filter-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dashboard-toolbar__label {
+    font-weight: 600;
+}
+
+.dashboard-context-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-left: 20px;
+    padding-left: 20px;
+    border-left: 1px solid var(--theme-border-color);
+}
+
 /* Year Selector */
 .dashboard-filter-bar {
     display: flex;

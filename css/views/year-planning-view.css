@@ -102,6 +102,10 @@
     padding: 10px;
 }
 
+#teamLoadSummaryContent.is-hidden {
+    display: none;
+}
+
 #teamLoadSummaryContent>p {
     font-size: 0.9em;
     color: var(--theme-text-muted);
@@ -112,6 +116,11 @@
 #teamLoadSummaryTable {
     margin: 0 auto;
     border-collapse: collapse;
+}
+
+#planningTableWrapper {
+    max-height: var(--planning-table-max-height, 600px);
+    overflow-y: auto;
 }
 
 /* ============================================

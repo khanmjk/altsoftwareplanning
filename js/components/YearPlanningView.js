@@ -62,8 +62,8 @@ class YearPlanningView {
             return;
         }
 
-        const isHidden = contentDiv.style.display === 'none' || contentDiv.style.display === '';
-        contentDiv.style.display = isHidden ? 'block' : 'none';
+        const isHidden = contentDiv.classList.contains('is-hidden');
+        contentDiv.classList.toggle('is-hidden', !isHidden);
         indicatorSpan.textContent = isHidden ? '(-) ' : '(+) ';
 
         // Update internal state
@@ -88,7 +88,7 @@ class YearPlanningView {
         const minHeight = 200;
 
         let calculatedMaxHeight = Math.max(minHeight, availableSpace - bottomMargin);
-        tableWrapper.style.maxHeight = `${calculatedMaxHeight}px`;
+        tableWrapper.style.setProperty('--planning-table-max-height', `${calculatedMaxHeight}px`);
     }
 
     /**
@@ -379,7 +379,7 @@ class YearPlanningView {
         // Capture current expanded state before re-rendering
         const existingSummaryContent = document.getElementById('teamLoadSummaryContent');
         if (existingSummaryContent) {
-            this.isSummaryExpanded = existingSummaryContent.style.display !== 'none';
+            this.isSummaryExpanded = !existingSummaryContent.classList.contains('is-hidden');
         }
 
         const isExpanded = this.isSummaryExpanded;
@@ -410,7 +410,7 @@ class YearPlanningView {
         const summaryContent = document.createElement('div');
         summaryContent.id = 'teamLoadSummaryContent';
         // Dynamic display state (not in CSS)
-        summaryContent.style.display = isExpanded ? 'block' : 'none';
+        summaryContent.classList.toggle('is-hidden', !isExpanded);
 
         // Note paragraph - styling in CSS
         const summaryNote = document.createElement('p');

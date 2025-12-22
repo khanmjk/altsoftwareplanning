@@ -506,7 +506,7 @@ class GanttPlanningView {
         const stopDrag = () => {
             if (!isDragging) return;
             isDragging = false;
-            document.body.style.userSelect = '';
+            document.body.classList.remove('is-resizing');
             document.removeEventListener('mousemove', onDrag);
             document.removeEventListener('mouseup', stopDrag);
             document.removeEventListener('mouseleave', stopDrag);
@@ -532,7 +532,7 @@ class GanttPlanningView {
             isDragging = true;
             startX = e.clientX;
             startPct = this.ganttTableWidthPct;
-            document.body.style.userSelect = 'none';
+            document.body.classList.add('is-resizing');
             document.addEventListener('mousemove', onDrag);
             document.addEventListener('mouseup', stopDrag);
             document.addEventListener('mouseleave', stopDrag);
@@ -546,24 +546,15 @@ class GanttPlanningView {
      */
     applyGanttSplitWidth() {
         const split = document.getElementById('ganttSplitPane');
-        const table = document.getElementById('ganttPlanningTableContainer');
-        const chart = document.getElementById('ganttChartWrapper');
         if (!split) return;
 
         const clamped = Math.min(85, Math.max(5, this.ganttTableWidthPct));
         this.ganttTableWidthPct = clamped;
         const chartPct = 100 - clamped;
 
-        // Primary layout: CSS grid columns
-        split.style.gridTemplateColumns = `${clamped}% 8px ${chartPct}%`;
-
-        // Fallback for older layouts (flex)
-        if (table) {
-            table.style.flexBasis = `${clamped}%`;
-        }
-        if (chart) {
-            chart.style.flexBasis = `${chartPct}%`;
-        }
+        // Primary layout: CSS variables drive grid and flex fallback
+        split.style.setProperty('--gantt-table-pct', `${clamped}%`);
+        split.style.setProperty('--gantt-chart-pct', `${chartPct}%`);
     }
 
     /**

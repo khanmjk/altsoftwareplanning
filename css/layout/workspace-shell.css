@@ -130,3 +130,12 @@
     margin-bottom: 16px;
     color: var(--color-gray-300);
 }
+
+/* Utility States */
+.is-hidden {
+    display: none !important;
+}
+
+body.is-resizing {
+    user-select: none;
+}

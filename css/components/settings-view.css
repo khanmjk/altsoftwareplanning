@@ -70,6 +70,11 @@
     display: none;
 }
 
+/* Tab Content */
+.settings-tab-content.is-hidden {
+    display: none;
+}
+
 /* Settings Rows */
 .settings-row {
     display: flex;
@@ -102,6 +107,15 @@
 /* Form Elements */
 .settings-form-group {
     margin-bottom: var(--space-lg);
+}
+
+.settings-form-group--flush {
+    margin-bottom: 0;
+}
+
+.settings-actions {
+    display: flex;
+    gap: 10px;
 }
 
 .settings-label {

@@ -88,17 +88,11 @@ class DashboardView {
     generateDashboardToolbar() {
         const toolbar = document.createElement('div');
         toolbar.className = 'dashboard-toolbar-global';
-        toolbar.style.display = 'flex';
-        toolbar.style.flexDirection = 'column';
-        toolbar.style.gap = '12px';
         toolbar.id = 'dashboardGlobalToolbar';
 
         // First row: Widget pills
         const pillRow = document.createElement('div');
-        pillRow.style.display = 'flex';
-        pillRow.style.alignItems = 'center';
-        pillRow.style.gap = '8px';
-        pillRow.style.flexWrap = 'wrap';
+        pillRow.className = 'dashboard-toolbar__pill-row';
 
         this.pillNav = new PillNavigationComponent({
             items: this.widgets.map(w => ({
@@ -119,13 +113,11 @@ class DashboardView {
         // Second row: Year filter (conditionally visible)
         const filterRow = document.createElement('div');
         filterRow.id = 'dashboardYearFilterRow';
-        filterRow.style.display = 'flex';
-        filterRow.style.alignItems = 'center';
-        filterRow.style.gap = '10px';
+        filterRow.className = 'dashboard-toolbar__filter-row';
 
         const yearLabel = document.createElement('span');
         yearLabel.textContent = 'Year:';
-        yearLabel.style.fontWeight = '600';
+        yearLabel.className = 'dashboard-toolbar__label';
         filterRow.appendChild(yearLabel);
 
         // Build year options for ThemedSelect
@@ -146,12 +138,7 @@ class DashboardView {
         // Contextual toolbar for widget-specific controls
         const contextToolbar = document.createElement('div');
         contextToolbar.id = 'dashboardContextToolbar';
-        contextToolbar.style.display = 'flex';
-        contextToolbar.style.alignItems = 'center';
-        contextToolbar.style.gap = '15px';
-        contextToolbar.style.marginLeft = '20px';
-        contextToolbar.style.paddingLeft = '20px';
-        contextToolbar.style.borderLeft = '1px solid var(--color-gray-300)';
+        contextToolbar.className = 'dashboard-context-toolbar';
         filterRow.appendChild(contextToolbar);
 
         toolbar.appendChild(filterRow);
@@ -305,7 +292,7 @@ class DashboardView {
         // Update year filter visibility (hide for 3-Year Plan)
         const yearFilterRow = document.getElementById('dashboardYearFilterRow');
         if (yearFilterRow) {
-            yearFilterRow.style.display = widget.id === 'threeYearPlanWidget' ? 'none' : 'flex';
+            yearFilterRow.classList.toggle('is-hidden', widget.id === 'threeYearPlanWidget');
         }
 
         // Update Pill Navigation State
@@ -814,5 +801,3 @@ class DashboardView {
         };
     }
 }
-
-
