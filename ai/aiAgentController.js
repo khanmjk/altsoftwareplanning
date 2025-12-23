@@ -6,6 +6,23 @@ const aiAgentController = (() => {
     const USE_FULL_SYSTEM_CONTEXT_TOGGLE = true;
     const md = window.markdownit();
 
+    function buildGreetingMessage(systemName) {
+        const message = document.createElement('div');
+        message.className = 'chat-message ai-message';
+        message.append('Hello! I have loaded the full context for ');
+        const strong = document.createElement('strong');
+        strong.textContent = systemName || 'the system';
+        message.appendChild(strong);
+        message.append('. How can I help you analyze it?');
+        message.append(document.createElement('br'), document.createElement('br'));
+        message.append('You can now ask me to perform actions (including bulk actions!) using simple English OR Type ');
+        const bold = document.createElement('b');
+        bold.textContent = '/';
+        message.appendChild(bold);
+        message.append(' to see a list of available commands.');
+        return message;
+    }
+
     const SUGGESTED_QUESTIONS = {
         planningView: [
             { text: "Which teams are overloaded in this plan?" },
@@ -140,7 +157,11 @@ ${toolsetDescription}`;
         console.log("[AI CHAT] Starting agent session. Clearing history and UI.");
         const chatLog = document.getElementById('aiChatLog');
         if (chatLog) {
-            chatLog.innerHTML = '<div class="chat-message ai-message">Hello! I have loaded the full context for <strong>' + (SystemService.getCurrentSystem()?.systemName || 'the system') + '</strong>. How can I help you analyze it?<br><br>You can now ask me to perform actions (including bulk actions!) using simple English OR Type <b>/</b> to see a list of available commands.</div>';
+            while (chatLog.firstChild) {
+                chatLog.removeChild(chatLog.firstChild);
+            }
+            const systemName = SystemService.getCurrentSystem()?.systemName || 'the system';
+            chatLog.appendChild(buildGreetingMessage(systemName));
         }
         aiChatAssistant.setTokenCount(0);
         aiChatAssistant.clearChatInput();
@@ -725,7 +746,6 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
         _waitForAnalysisFunction
     };
 })();
-
 
 
 

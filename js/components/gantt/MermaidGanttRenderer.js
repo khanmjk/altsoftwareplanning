@@ -39,6 +39,36 @@ class MermaidGanttRenderer extends GanttRenderer {
         };
     }
 
+    _appendSvgToContainer(svgMarkup) {
+        if (!this.container || !svgMarkup) return false;
+        const parser = new DOMParser();
+        const parsed = parser.parseFromString(svgMarkup, 'image/svg+xml');
+        const svgEl = parsed.documentElement;
+        if (!svgEl || svgEl.nodeName.toLowerCase() !== 'svg') {
+            return false;
+        }
+        const doc = this.container.ownerDocument || document;
+        this.container.appendChild(doc.importNode(svgEl, true));
+        return true;
+    }
+
+    _renderErrorMessage(message) {
+        if (!this.container) return;
+        const doc = this.container.ownerDocument || document;
+        const wrapper = doc.createElement('div');
+        wrapper.className = 'mermaid-error';
+        const strong = doc.createElement('strong');
+        strong.textContent = 'Error rendering Gantt chart.';
+        wrapper.appendChild(strong);
+        if (message) {
+            wrapper.appendChild(doc.createElement('br'));
+            const detail = doc.createElement('small');
+            detail.textContent = message;
+            wrapper.appendChild(detail);
+        }
+        this.container.appendChild(wrapper);
+    }
+
     async render(tasks, options = {}) {
         if (!this.container) return;
         if (!tasks || tasks.length === 0) {
@@ -57,15 +87,15 @@ class MermaidGanttRenderer extends GanttRenderer {
         try {
             this.clear();
             const result = await this.mermaid.render(renderId, syntax);
-            this.container.innerHTML = result.svg;
+            const appended = this._appendSvgToContainer(result.svg);
+            if (!appended) {
+                this._renderErrorMessage('Unable to parse diagram output.');
+                return;
+            }
             this._applyEnhancements(tasks);
         } catch (err) {
             console.error("MermaidGanttRenderer render failed:", err);
-            this.container.innerHTML = `
-                <div style="color: #721c24; background-color: #f8d7da; padding: 10px; border: 1px solid #f5c6cb; border-radius: 4px;">
-                    <strong>Error rendering Gantt chart.</strong><br>
-                    <small>${err.message}</small>
-                </div>`;
+            this._renderErrorMessage(err.message);
         }
     }
 
@@ -126,8 +156,11 @@ class MermaidGanttRenderer extends GanttRenderer {
         const svg = this.container.querySelector('svg');
         if (svg) {
             svg.style.width = '100%';
-            svg.style.height = 'auto';
+            svg.style.height = '100%';
+            svg.style.minWidth = '100%';
+            svg.style.minHeight = '100%';
             svg.style.maxWidth = 'none';
+            svg.style.maxHeight = 'none';
         }
         // Add tooltips
         const taskGroups = this.container.querySelectorAll('.task');

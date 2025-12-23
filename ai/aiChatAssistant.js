@@ -12,6 +12,30 @@ let chatInputResizeObserver = null;
 let chatInputFallbackEvents = [];
 let chatInputFallbackTarget = null;
 
+function clearElement(element) {
+    if (!element) return;
+    while (element.firstChild) {
+        element.removeChild(element.firstChild);
+    }
+}
+
+function appendHtmlContent(container, htmlContent) {
+    if (!container || !htmlContent) return;
+    const parser = new DOMParser();
+    const parsed = parser.parseFromString(htmlContent, 'text/html');
+    while (parsed.body.firstChild) {
+        container.appendChild(parsed.body.firstChild);
+    }
+}
+
+function setButtonIcon(button, iconClass) {
+    if (!button) return;
+    clearElement(button);
+    const icon = document.createElement('i');
+    icon.className = iconClass;
+    button.appendChild(icon);
+}
+
 function cleanupChatInputHeightWatchers() {
     if (chatInputResizeObserver) {
         chatInputResizeObserver.disconnect();
@@ -107,10 +131,10 @@ function isAiChatPanelOpen() {
 function postAgentMessageToView(htmlContent, isError = false) {
     const messageDiv = addChatMessage('', 'ai');
     if (!messageDiv) return null;
-    messageDiv.innerHTML = htmlContent || '';
+    clearElement(messageDiv);
+    appendHtmlContent(messageDiv, htmlContent || '');
     if (isError) {
         messageDiv.classList.add('ai-chat-error');
-        messageDiv.style.color = '#c62828';
     }
     return messageDiv;
 }
@@ -125,28 +149,29 @@ function showAgentLoadingIndicator() {
 
 function hideAgentLoadingIndicator(loadingMessageEl, htmlContent) {
     if (!loadingMessageEl) return;
-    loadingMessageEl.innerHTML = '';
+    clearElement(loadingMessageEl);
     loadingMessageEl.classList.remove('loading');
 
     const contentDiv = document.createElement('div');
     contentDiv.className = 'chat-content-container';
-    contentDiv.innerHTML = htmlContent || '';
+    contentDiv.dataset.rawHtml = htmlContent || '';
+    appendHtmlContent(contentDiv, htmlContent || '');
 
     const copyButton = document.createElement('button');
     copyButton.className = 'chat-copy-button';
-    copyButton.innerHTML = '<i class="fas fa-copy"></i>';
+    setButtonIcon(copyButton, 'fas fa-copy');
     copyButton.title = 'Copy response';
     copyButton.onclick = (e) => {
         e.stopPropagation();
         try {
-            const htmlToCopy = contentDiv.innerHTML;
+            const htmlToCopy = contentDiv.dataset.rawHtml || '';
             const textToCopy = contentDiv.textContent;
             const htmlBlob = new Blob([htmlToCopy], { type: 'text/html' });
             const textBlob = new Blob([textToCopy], { type: 'text/plain' });
             const data = [new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': textBlob })];
             navigator.clipboard.write(data).then(() => {
-                copyButton.innerHTML = '<i class="fas fa-check"></i>';
-                setTimeout(() => { copyButton.innerHTML = '<i class="fas fa-copy"></i>'; }, 2000);
+                setButtonIcon(copyButton, 'fas fa-check');
+                setTimeout(() => { setButtonIcon(copyButton, 'fas fa-copy'); }, 2000);
             }).catch(err => {
                 console.error('Failed to copy rich text, falling back to plain text.', err);
                 navigator.clipboard.writeText(textToCopy);
@@ -166,19 +191,22 @@ function setSuggestionPills(suggestions = []) {
     if (!suggestionsContainer) return;
 
     if (!Array.isArray(suggestions) || suggestions.length === 0) {
-        suggestionsContainer.innerHTML = '';
+        clearElement(suggestionsContainer);
         suggestionsContainer.style.display = 'none';
         return;
     }
 
     suggestionsContainer.style.display = 'flex';
-    suggestionsContainer.innerHTML = '';
+    clearElement(suggestionsContainer);
 
     suggestions.forEach((suggestion) => {
         const pill = document.createElement('div');
         pill.className = 'suggestion-pill';
         if (suggestion.isImageRequest) {
-            pill.innerHTML = `<i class="fas fa-image"></i> ${suggestion.text}`;
+            const icon = document.createElement('i');
+            icon.className = 'fas fa-image';
+            pill.appendChild(icon);
+            pill.appendChild(document.createTextNode(` ${suggestion.text}`));
         } else {
             pill.textContent = suggestion.text;
         }
@@ -242,7 +270,7 @@ function addChatMessage(text, sender, isLoading = false) {
         if (text) {
             messageDiv.textContent = text;
         } else {
-            messageDiv.innerHTML = '';
+            clearElement(messageDiv);
         }
     } else {
         messageDiv.textContent = text;
@@ -325,17 +353,21 @@ function handleDocumentClickForCommands(e) {
 
 function buildCommandPopup(tools) {
     if (!aiChatCommandPopup) return;
-    aiChatCommandPopup.innerHTML = '';
+    clearElement(aiChatCommandPopup);
     commandPopupOptions = [];
     commandPopupIndex = -1;
     setCommandPopupKeyboardNav(false);
     tools.forEach((tool, idx) => {
         const option = document.createElement('div');
         option.className = 'ai-command-option';
-        option.innerHTML = `
-            <span class="command-name">/${tool.command}</span>
-            <span class="command-desc">${tool.description || ''}</span>
-        `;
+        const name = document.createElement('span');
+        name.className = 'command-name';
+        name.textContent = `/${tool.command}`;
+        const desc = document.createElement('span');
+        desc.className = 'command-desc';
+        desc.textContent = tool.description || '';
+        option.appendChild(name);
+        option.appendChild(desc);
         option.onclick = () => applyCommandSelection(tool.command);
         aiChatCommandPopup.appendChild(option);
         commandPopupOptions.push({ element: option, command: tool.command });
@@ -346,14 +378,14 @@ function buildCommandPopup(tools) {
 function hideCommandPopup() {
     if (!aiChatCommandPopup) return;
     aiChatCommandPopup.style.display = 'none';
-    aiChatCommandPopup.innerHTML = '';
+    clearElement(aiChatCommandPopup);
     commandPopupOptions = [];
     commandPopupIndex = -1;
     setCommandPopupKeyboardNav(false);
 }
 
 function isCommandPopupVisible() {
-    return !!(aiChatCommandPopup && aiChatCommandPopup.style.display !== 'none' && aiChatCommandPopup.innerHTML);
+    return !!(aiChatCommandPopup && aiChatCommandPopup.style.display !== 'none' && aiChatCommandPopup.childElementCount > 0);
 }
 
 function highlightCommandOption(newIndex) {
@@ -537,7 +569,7 @@ function closeDiagramModal() {
     const modal = document.getElementById('diagramModal');
     const contentEl = document.getElementById('diagramModalContent');
     if (modal) modal.style.display = 'none';
-    if (contentEl) contentEl.innerHTML = '';
+    clearElement(contentEl);
 }
 
 function postDiagramWidget(title, code) {
@@ -545,7 +577,10 @@ function postDiagramWidget(title, code) {
     const message = document.createElement('div');
     message.classList.add('chat-message', 'ai-message');
     const summary = document.createElement('div');
-    summary.innerHTML = `<strong>Diagram Generated:</strong> ${title || 'Untitled'}`;
+    const strong = document.createElement('strong');
+    strong.textContent = 'Diagram Generated:';
+    summary.appendChild(strong);
+    summary.appendChild(document.createTextNode(` ${title || 'Untitled'}`));
     const button = document.createElement('button');
     button.className = 'btn-primary';
     button.style.marginTop = '8px';

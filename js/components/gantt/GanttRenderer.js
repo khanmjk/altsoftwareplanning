@@ -23,8 +23,9 @@ class GanttRenderer {
      * Clear the chart container.
      */
     clear() {
-        if (this.container) {
-            this.container.innerHTML = '';
+        if (!this.container) return;
+        while (this.container.firstChild) {
+            this.container.removeChild(this.container.firstChild);
         }
     }
 }

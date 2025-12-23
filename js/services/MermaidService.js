@@ -146,6 +146,44 @@ const MermaidService = {
     },
 
     /**
+     * Append an SVG string into a container without using innerHTML.
+     * @private
+     */
+    _appendSvgToContainer(container, svgMarkup) {
+        if (!container || !svgMarkup) return false;
+        const parser = new DOMParser();
+        const parsed = parser.parseFromString(svgMarkup, 'image/svg+xml');
+        const svgEl = parsed.documentElement;
+        if (!svgEl || svgEl.nodeName.toLowerCase() !== 'svg') {
+            return false;
+        }
+        const doc = container.ownerDocument || document;
+        container.appendChild(doc.importNode(svgEl, true));
+        return true;
+    },
+
+    /**
+     * Render a themed error message into the container.
+     * @private
+     */
+    _renderErrorToContainer(container, message) {
+        if (!container) return;
+        const doc = container.ownerDocument || document;
+        const wrapper = doc.createElement('div');
+        wrapper.className = 'mermaid-error';
+        const strong = doc.createElement('strong');
+        strong.textContent = 'Error rendering diagram.';
+        wrapper.appendChild(strong);
+        if (message) {
+            wrapper.appendChild(doc.createElement('br'));
+            const detail = doc.createElement('small');
+            detail.textContent = message;
+            wrapper.appendChild(detail);
+        }
+        container.appendChild(wrapper);
+    },
+
+    /**
      * Get theme-aware classDef statements for Mermaid diagrams
      * @returns {Object} Object containing classDef strings
      */
@@ -258,15 +296,16 @@ const MermaidService = {
             }
 
             const result = await this.render(id, syntax, container);
-            container.innerHTML = result.svg;
+            const appended = this._appendSvgToContainer(container, result.svg);
+            if (!appended) {
+                this._renderErrorToContainer(container, 'Unable to parse diagram output.');
+                return false;
+            }
             container.style.display = 'block';
             return true;
         } catch (error) {
             console.error('MermaidService: Render error:', error);
-            container.innerHTML = `<div style="color: #721c24; background-color: #f8d7da; padding: 10px; border: 1px solid #f5c6cb; border-radius: 4px;">
-                <strong>Error rendering diagram.</strong><br>
-                <small>${error.message}</small>
-            </div>`;
+            this._renderErrorToContainer(container, error.message);
             return false;
         }
     },
