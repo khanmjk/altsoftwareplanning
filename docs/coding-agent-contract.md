@@ -407,7 +407,7 @@ border-left-color: #0052cc;
 | `aiAgentController.js` | `currentPlanningYear` global in fallback | ✅ Uses class instance via `navigationManager` |
 | `AIService.js` | Direct `renderPlanningView()` call | ✅ Dispatches `settings:changed` event instead |
 | `aiViewRegistry.js` | Fallback globals for planningView | ✅ Removed - all state in viewInstance |
-| `visualizations.js` | window.* assignments | ✅ Refactored to 12-line init file |
+| `visualizations.js` | Legacy Mermaid init stub | ✅ **DELETED** - MermaidService initializes lazily |
 | `ganttPlanning.js` | Inline HTML templates | ✅ Refactored to `GanttPlanningView.js` class |
 | `GanttPlanningView.js` | Module-level globals | ✅ Removed globals, uses viewInstance DI |
 | `GanttTableController.js` | Defensive function checks | ✅ Uses viewInstance property |
