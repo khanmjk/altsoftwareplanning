@@ -294,17 +294,13 @@ class SidebarComponent {
             const action = actionItem.getAttribute('data-action');
             switch (action) {
                 case 'load-system':
-                    if (window.navigationManager) {
-                        window.navigationManager.navigateTo('systemsView');
-                    }
+                    navigationManager.navigateTo('systemsView');
                     break;
                 case 'new-system':
                     SystemService.createAndActivate();
                     break;
                 case 'close-system':
-                    if (typeof appState !== 'undefined') {
-                        appState.closeCurrentSystem();
-                    }
+                    appState.closeCurrentSystem();
                     break;
                 default:
                     break;

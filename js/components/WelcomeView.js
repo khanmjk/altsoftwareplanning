@@ -50,9 +50,7 @@ class WelcomeView {
             iconClass: 'fas fa-folder-open',
             iconModifier: 'action-card__icon-container--blue',
             onClick: () => {
-                if (window.navigationManager) {
-                    window.navigationManager.navigateTo('systemsView');
-                }
+                navigationManager.navigateTo('systemsView');
             }
         });
 
@@ -81,9 +79,7 @@ class WelcomeView {
             iconClass: 'fas fa-book',
             iconModifier: 'action-card__icon-container--gray',
             onClick: () => {
-                if (window.navigationManager) {
-                    window.navigationManager.navigateTo('helpView');
-                }
+                navigationManager.navigateTo('helpView');
             }
         });
 
