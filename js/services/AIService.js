@@ -24,8 +24,14 @@ RULES:
    - Use 'dateFormat YYYY-MM-DD'.
    - Group tasks into 'section' blocks (e.g., by Initiative or Team).
    - Ensure dates are valid.
-6. Use valid IDs (no spaces/special chars without quotes).
-7. Base relationships strictly on the provided JSON context.
+6. Use valid IDs (no spaces/special chars). Use labels via brackets or parentheses, e.g. node_id["Label"].
+7. Use only one direction declaration (graph TD/LR). Do NOT use 'direction' inside subgraphs.
+8. Subgraphs must have explicit IDs: subgraph sg_frontend["Frontend"]. Never use quoted labels as subgraph IDs.
+9. Do NOT connect edges to subgraph labels. Edges must connect node IDs only. If you need a group connector, create a node for it.
+10. Every node line must start with an ID. Do not output bare labels.
+11. Close every subgraph with 'end' and keep each directive on its own line.
+12. Avoid colons in labels; use hyphens instead.
+13. Base relationships strictly on the provided JSON context.
 `;
 
 const AIService = {
@@ -135,7 +141,73 @@ ${systemPromptSummary}`.trim();
 
         const headerRegex = /^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|journey|gantt|mindmap|timeline|quadrantChart)\b/i;
         let headerLine = '';
+        let headerHasDirection = false;
         const bodyLines = [];
+        const subgraphLabelMap = new Map();
+        const usedSubgraphIds = new Set();
+        let subgraphDepth = 0;
+
+        const createSubgraphId = (label) => {
+            const base = `sg_${label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '')}` || 'sg';
+            let id = base === 'sg_' ? 'sg' : base;
+            let index = 1;
+            while (usedSubgraphIds.has(id)) {
+                index += 1;
+                id = `${base}_${index}`;
+            }
+            usedSubgraphIds.add(id);
+            return id;
+        };
+
+        const normalizeSubgraphLine = (line) => {
+            const match = line.match(/^subgraph\s+(.+)$/i);
+            if (!match) return line;
+
+            const rest = match[1].trim();
+            if (!rest) return line;
+
+            const hasLabelWrapper = /[\[\(]/.test(rest);
+            if (hasLabelWrapper) {
+                return line;
+            }
+
+            const isQuoted = rest.startsWith('"') || rest.startsWith("'");
+            const labelText = isQuoted ? rest.replace(/^['"]|['"]$/g, '') : rest;
+            const hasSpaces = /\s/.test(labelText);
+            if (!isQuoted && !hasSpaces) {
+                return line;
+            }
+
+            const label = labelText.trim();
+            if (!label) return line;
+
+            const existing = subgraphLabelMap.get(label);
+            const id = existing || createSubgraphId(label);
+            subgraphLabelMap.set(label, id);
+            return `subgraph ${id}["${label}"]`;
+        };
+
+        const replaceSubgraphLabelTokens = (line) => {
+            let updated = line;
+            subgraphLabelMap.forEach((id, label) => {
+                const token = `"${label}"`;
+                let startIndex = 0;
+                let nextIndex = updated.indexOf(token, startIndex);
+                while (nextIndex !== -1) {
+                    const before = updated[nextIndex - 1];
+                    const after = updated[nextIndex + token.length];
+                    const isWrapped = (before === '[' || before === '(') && (after === ']' || after === ')');
+                    if (!isWrapped) {
+                        updated = `${updated.slice(0, nextIndex)}${id}${updated.slice(nextIndex + token.length)}`;
+                        startIndex = nextIndex + id.length;
+                    } else {
+                        startIndex = nextIndex + token.length;
+                    }
+                    nextIndex = updated.indexOf(token, startIndex);
+                }
+            });
+            return updated;
+        };
 
         normalized.split('\n').forEach((line) => {
             let trimmed = line.trim();
@@ -143,6 +215,11 @@ ${systemPromptSummary}`.trim();
 
             if (!headerLine && headerRegex.test(trimmed)) {
                 headerLine = trimmed;
+                const headerParts = trimmed.split(/\s+/);
+                if (headerParts.length >= 2) {
+                    const maybeDirection = headerParts[1].toUpperCase();
+                    headerHasDirection = ['TB', 'TD', 'BT', 'RL', 'LR'].includes(maybeDirection);
+                }
                 return;
             }
 
@@ -158,6 +235,9 @@ ${systemPromptSummary}`.trim();
                 if (!['TB', 'TD', 'BT', 'RL', 'LR'].includes(dir)) {
                     return;
                 }
+                if (subgraphDepth > 0 || headerHasDirection) {
+                    return;
+                }
             }
 
             if (aggressive) {
@@ -165,12 +245,21 @@ ${systemPromptSummary}`.trim();
                 if (!looksLikeMermaid) return;
             }
 
-            bodyLines.push(trimmed);
+            const normalizedLine = normalizeSubgraphLine(trimmed);
+            bodyLines.push(normalizedLine);
+
+            if (/^subgraph\b/i.test(normalizedLine)) {
+                subgraphDepth += 1;
+            } else if (/^end\b/i.test(normalizedLine)) {
+                subgraphDepth = Math.max(0, subgraphDepth - 1);
+            }
         });
 
         const outputLines = [];
         outputLines.push(headerLine || 'graph TD');
-        outputLines.push(...bodyLines);
+        bodyLines.forEach((line) => {
+            outputLines.push(replaceSubgraphLabelTokens(line));
+        });
 
         const subgraphCount = outputLines.filter(line => /^subgraph\b/i.test(line)).length;
         const endCount = outputLines.filter(line => /^end\b/i.test(line)).length;

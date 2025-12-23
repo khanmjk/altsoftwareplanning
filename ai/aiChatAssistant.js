@@ -423,6 +423,68 @@ function openDiagramModal(code, title = 'Generated Diagram') {
         contentEl.appendChild(wrapper);
     };
 
+    const extractErrorLine = (error) => {
+        const message = (error && (error.str || error.message)) ? String(error.str || error.message) : '';
+        const match = message.match(/line\s+(\d+)/i);
+        if (!match) return null;
+        const line = parseInt(match[1], 10);
+        return Number.isNaN(line) ? null : line;
+    };
+
+    const buildNumberedCode = (source) => {
+        const lines = source.split('\n');
+        const pad = String(lines.length || 1).length;
+        return lines.map((line, idx) => `${String(idx + 1).padStart(pad, ' ')} | ${line}`).join('\n');
+    };
+
+    const buildErrorContext = (source, errorLine) => {
+        if (!errorLine) return '';
+        const lines = source.split('\n');
+        if (lines.length === 0) return '';
+        const pad = String(lines.length).length;
+        const start = Math.max(1, errorLine - 3);
+        const end = Math.min(lines.length, errorLine + 3);
+        const context = [];
+        for (let i = start; i <= end; i += 1) {
+            const marker = i === errorLine ? '>' : ' ';
+            context.push(`${marker} ${String(i).padStart(pad, ' ')} | ${lines[i - 1]}`);
+        }
+        return context.join('\n');
+    };
+
+    const logMermaidDebug = (label, source, error) => {
+        const errorLine = extractErrorLine(error);
+        const context = buildErrorContext(source, errorLine);
+        const numberedCode = buildNumberedCode(source);
+        const debugPayload = {
+            label: label,
+            lineCount: source ? source.split('\n').length : 0,
+            errorLine: errorLine,
+            errorMessage: error && error.message ? error.message : '',
+            errorDetail: error && error.str ? error.str : ''
+        };
+
+        if (typeof AIService !== 'undefined') {
+            if (!AIService.lastDiagramDebug) {
+                AIService.lastDiagramDebug = {};
+            }
+            AIService.lastDiagramDebug[label] = {
+                ...debugPayload,
+                context: context,
+                code: source,
+                numberedCode: numberedCode
+            };
+        }
+
+        console.groupCollapsed(`[AI-DIAGRAM] Mermaid render debug (${label})`);
+        console.debug(debugPayload);
+        if (context) {
+            console.debug('Context:\n' + context);
+        }
+        console.debug('Mermaid code (numbered):\n' + numberedCode);
+        console.groupEnd();
+    };
+
     const getSanitizedCode = (rawCode, aggressive = false) => {
         if (typeof AIService !== 'undefined' && AIService.sanitizeMermaidCode) {
             return AIService.sanitizeMermaidCode(rawCode, { aggressive: aggressive });
@@ -445,10 +507,12 @@ function openDiagramModal(code, title = 'Generated Diagram') {
         const baseCode = getSanitizedCode(code, false);
         renderMermaid(baseCode).catch(err => {
             console.error("Mermaid async render failed:", err);
+            logMermaidDebug('base', baseCode, err);
             const aggressiveCode = getSanitizedCode(code, true);
             if (aggressiveCode && aggressiveCode !== baseCode) {
                 renderMermaid(aggressiveCode).catch(innerErr => {
                     console.error("Mermaid async render failed after sanitize:", innerErr);
+                    logMermaidDebug('aggressive', aggressiveCode, innerErr);
                     renderDiagramError(innerErr, aggressiveCode);
                 });
                 return;
@@ -458,7 +522,9 @@ function openDiagramModal(code, title = 'Generated Diagram') {
 
     } catch (err) {
         console.error("Mermaid sync render failed:", err);
-        renderDiagramError(err, getSanitizedCode(code, true));
+        const fallbackCode = getSanitizedCode(code, true);
+        logMermaidDebug('sync', fallbackCode, err);
+        renderDiagramError(err, fallbackCode);
     }
 }
 
