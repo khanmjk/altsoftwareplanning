@@ -10,7 +10,8 @@ This document defines the architectural contract that all pages/views in the SMT
 
 ### 1.1 Canvas Layers
 
-Every view operates within the **Workspace Shell**, which consists of three layers:
+Every view operates within the **Workspace Shell**, which consists of three layers
+plus an optional right-rail extension panel:
 
 ```
 ┌─────────────────────────────────────────────┐
@@ -35,6 +36,7 @@ Every view operates within the **Workspace Shell**, which consists of three laye
 - Manages the main content area (`#main-content-area`)
 - Creates/shows/hides view containers
 - Provides APIs for setting page metadata and toolbar content
+- Manages right-rail extensions (open/close/resize and width variable)
 
 **APIs**:
 ```javascript
@@ -50,6 +52,14 @@ workspaceComponent.setToolbar(htmlStringOrElement);
 
 // Render a view
 workspaceComponent.render(viewId, renderCallback);
+
+// Extension framework
+workspaceComponent.initExtensions();
+workspaceComponent.registerExtension(new MyExtension());
+workspaceComponent.openExtension('myExtension');
+workspaceComponent.closeExtension('myExtension');
+workspaceComponent.toggleExtension('myExtension');
+workspaceComponent.setExtensionEnabled('myExtension', true);
 ```
 
 #### Views
@@ -65,6 +75,45 @@ workspaceComponent.render(viewId, renderCallback);
 - Generate inline HTML strings in JavaScript (use DOM creation or templates)
 - Apply inline styles (use CSS classes)
 - Bypass workspace shell (no full-page takeovers)
+
+### 1.3 Workspace Extensions (Right Rail)
+
+Extensions are global, right-rail panels that live alongside the workspace canvas.
+They are **not** views and must not participate in navigation. Use them for
+cross-view utilities like AI chat, inspectors, or assistants that need access
+to the current view context.
+
+**Structure (Shell-owned)**:
+- Container: `#workspace-extension-container`
+- Resize handle: `#workspace-extension-handle`
+- Width variable: `--workspace-extension-width`
+
+**Rules**:
+- Register extensions in `main.js` during bootstrap.
+- Build UI with DOM APIs (no inline HTML strings).
+- Do not call `workspaceComponent.render()` from an extension.
+- Extensions should react to view changes via `onViewChange(viewId)`.
+- Use `workspaceComponent.setExtensionEnabled()` for settings-based toggles.
+
+**Extension interface** (minimum):
+```javascript
+class MyExtension {
+    constructor() {
+        this.id = 'myExtension';
+        this.defaultWidth = 400;
+        this.minWidth = 280;
+        this.maxWidth = 600; // optional
+    }
+
+    render(container) {
+        // Build DOM content inside the provided container.
+    }
+
+    onOpen() {}
+    onClose() {}
+    onViewChange(viewId) {}
+}
+```
 
 ---
 
@@ -322,6 +371,7 @@ Before submitting a new view or refactoring an existing one, verify:
 - [ ] No carousel prev/next buttons
 - [ ] Scrolling works correctly (canvas-level or view-level)
 - [ ] Registered in `NavigationManager.navigateTo()`
+- [ ] Extensions (if any) are registered via `workspaceComponent.registerExtension()`
 
 **Theming & Design System**:
 - [ ] No hardcoded colors (`#fff`, `black`, `rgb(...)`) - use `var(--theme-*)`
@@ -334,6 +384,7 @@ Before submitting a new view or refactoring an existing one, verify:
 - [ ] No inline `onclick` attributes (use `addEventListener`)
 - [ ] Business logic extracted to Service module (see Section 10)
 - [ ] Global functions exposed on `window` for AI integration
+- [ ] Right-rail panels use the extension framework (no ad-hoc fixed panels)
 
 **AI Integration**:
 - [ ] Page context function implemented for chat panel (see Section 11)
@@ -350,6 +401,7 @@ Before submitting a new view or refactoring an existing one, verify:
 - ✅ `js/components/CapacityDashboardView.js` - Service layer pattern
 - ✅ `js/components/GanttPlanningView.js` - Complex hierarchical view, MVC pattern with GanttTableController
 - ✅ `js/components/YearPlanningView.js` - Full refactor example: service commands, state encapsulation, no globals
+- ✅ `js/components/AIChatPanelExtension.js` - Right-rail extension panel pattern
 
 **No longer in refactor queue** (as of 2025-12-15):
 - ✅ `yearPlanning.js` - DELETED, functionality migrated to `YearPlanningView.js`

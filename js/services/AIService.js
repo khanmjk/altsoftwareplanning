@@ -50,22 +50,7 @@ const AIService = {
             createWithAiCard.style.display = aiEnabled ? 'block' : 'none';
         }
 
-        const chatContainer = document.getElementById('aiChatPanelContainer');
-        const chatHandle = document.getElementById('chatResizeHandle');
-        if (chatContainer) {
-            if (aiEnabled) {
-                chatContainer.style.display = 'block';
-                // Check if AI chat panel is already open
-                if (!(aiChatAssistant.isAiChatPanelOpen && aiChatAssistant.isAiChatPanelOpen())) {
-                    chatContainer.style.width = chatContainer.style.width || '0';
-                    if (chatHandle) chatHandle.style.display = 'none';
-                }
-            } else {
-                aiChatAssistant.closeAiChatPanel();
-                chatContainer.style.display = 'none';
-                if (chatHandle) chatHandle.style.display = 'none';
-            }
-        }
+        workspaceComponent.setExtensionEnabled('aiChat', aiEnabled);
 
         if (!skipPlanningRender && navigationManager.currentViewId === 'planningView') {
             // Dispatch event so views can subscribe to settings changes

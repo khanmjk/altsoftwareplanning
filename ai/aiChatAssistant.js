@@ -11,7 +11,6 @@ let commandPopupKeyboardNav = false;
 let chatInputResizeObserver = null;
 let chatInputFallbackEvents = [];
 let chatInputFallbackTarget = null;
-let chatPanelIsOpen = false;
 
 function cleanupChatInputHeightWatchers() {
     if (chatInputResizeObserver) {
@@ -88,40 +87,21 @@ function initializeAiChatPanel() {
 
     monitorChatInputHeight();
 
-    initializeChatResizer();
-
     console.log("AI Chat Assistant view initialized.");
 }
 
 function openAiChatPanel() {
-    if (!aiChatPanel) return;
-    const panel = document.getElementById('aiChatPanelContainer');
-    const handle = document.getElementById('chatResizeHandle');
-    if (panel) {
-        panel.style.display = 'block';
-        panel.style.width = '400px';
-        setChatLayoutWidth(panel.style.width);
-    }
-    if (handle) {
-        handle.style.display = 'block';
-        handle.style.right = panel ? panel.style.width : '0';
-    }
-    chatPanelIsOpen = true;
+    workspaceComponent.openExtension('aiChat');
     aiAgentController.renderSuggestionsForCurrentView();
     if (aiChatInput) aiChatInput.focus();
 }
 
 function closeAiChatPanel() {
-    const panel = document.getElementById('aiChatPanelContainer');
-    const handle = document.getElementById('chatResizeHandle');
-    if (panel) panel.style.width = '0';
-    if (handle) handle.style.display = 'none';
-    setChatLayoutWidth('0px');
-    chatPanelIsOpen = false;
+    workspaceComponent.closeExtension('aiChat');
 }
 
 function isAiChatPanelOpen() {
-    return chatPanelIsOpen;
+    return workspaceComponent.isExtensionOpen('aiChat');
 }
 
 function postAgentMessageToView(htmlContent, isError = false) {
@@ -400,54 +380,6 @@ function setCommandPopupKeyboardNav(isActive) {
         aiChatCommandPopup.classList.add('keyboard-nav');
     } else {
         aiChatCommandPopup.classList.remove('keyboard-nav');
-    }
-}
-
-let isChatResizing = false;
-
-function initializeChatResizer() {
-    const handle = document.getElementById('chatResizeHandle');
-    if (!handle) {
-        console.error("Chat resize handle not found");
-        return;
-    }
-    handle.addEventListener('mousedown', onChatResizeMouseDown);
-    console.log("Chat resize handle initialized.");
-}
-
-function onChatResizeMouseDown(e) {
-    e.preventDefault();
-    isChatResizing = true;
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
-    document.addEventListener('mousemove', onChatResizeMouseMove);
-    document.addEventListener('mouseup', onChatResizeMouseUp);
-}
-
-function onChatResizeMouseMove(e) {
-    if (!isChatResizing) return;
-    const panel = document.getElementById('aiChatPanelContainer');
-    const handle = document.getElementById('chatResizeHandle');
-    if (!panel) return;
-    let newWidth = window.innerWidth - e.clientX;
-    if (newWidth < 300) newWidth = 300;
-    if (newWidth > window.innerWidth / 2) newWidth = window.innerWidth / 2;
-    panel.style.width = newWidth + 'px';
-    if (handle) handle.style.right = panel.style.width;
-    setChatLayoutWidth(panel.style.width);
-}
-
-function onChatResizeMouseUp() {
-    isChatResizing = false;
-    document.body.style.cursor = 'default';
-    document.body.style.userSelect = 'auto';
-    document.removeEventListener('mousemove', onChatResizeMouseMove);
-    document.removeEventListener('mouseup', onChatResizeMouseUp);
-}
-
-function setChatLayoutWidth(widthValue) {
-    if (typeof document !== 'undefined') {
-        document.documentElement.style.setProperty('--chat-panel-width', widthValue || '0px');
     }
 }
 

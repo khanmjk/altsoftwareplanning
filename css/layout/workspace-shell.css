@@ -138,4 +138,5 @@
 
 body.is-resizing {
     user-select: none;
+    cursor: col-resize;
 }
