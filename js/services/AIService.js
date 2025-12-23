@@ -47,7 +47,7 @@ const AIService = {
         // Toggle the new "Create with AI" card in the welcome view
         const createWithAiCard = document.getElementById('createWithAiCard');
         if (createWithAiCard) {
-            createWithAiCard.style.display = aiEnabled ? 'block' : 'none';
+            createWithAiCard.classList.toggle('is-hidden', !aiEnabled);
         }
 
         workspaceComponent.setExtensionEnabled('aiChat', aiEnabled);
@@ -92,14 +92,6 @@ ${systemPromptSummary}`.trim();
      * @param {object} stats 
      */
     showStatsModal(stats) {
-        const modal = document.getElementById('aiGenerationStatsModal');
-        const content = document.getElementById('aiGenerationStatsContent');
-
-        if (!modal || !content) {
-            console.warn("AIService: AI Stats modal elements not found.");
-            return;
-        }
-
         if (stats) {
             this.lastGenerationStats = stats;
         }
@@ -109,18 +101,84 @@ ${systemPromptSummary}`.trim();
             return;
         }
 
-        content.textContent = this.formatAiStats(this.lastGenerationStats);
-        modal.style.display = 'block';
+        if (typeof AIGenerationStatsModal === 'undefined') {
+            console.warn("AIService: AIGenerationStatsModal is not available.");
+            return;
+        }
+
+        AIGenerationStatsModal.getInstance().open(this.formatAiStats(this.lastGenerationStats));
     },
 
     /**
      * Hides the AI stats modal.
      */
     closeStatsModal() {
-        const modal = document.getElementById('aiGenerationStatsModal');
-        if (modal) {
-            modal.style.display = 'none';
+        if (typeof AIGenerationStatsModal === 'undefined') return;
+        AIGenerationStatsModal.getInstance().close();
+    },
+
+    /**
+     * Sanitizes Mermaid code to reduce common AI output errors.
+     * @param {string} rawCode
+     * @param {object} options
+     * @param {boolean} options.aggressive - Apply stricter cleanup rules.
+     * @returns {string}
+     */
+    sanitizeMermaidCode(rawCode, options = {}) {
+        const { aggressive = false } = options;
+        if (!rawCode || typeof rawCode !== 'string') return '';
+
+        const normalized = rawCode
+            .replace(/```mermaid/gi, '')
+            .replace(/```/g, '')
+            .replace(/\r\n?/g, '\n');
+
+        const headerRegex = /^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|journey|gantt|mindmap|timeline|quadrantChart)\b/i;
+        let headerLine = '';
+        const bodyLines = [];
+
+        normalized.split('\n').forEach((line) => {
+            let trimmed = line.trim();
+            if (!trimmed) return;
+
+            if (!headerLine && headerRegex.test(trimmed)) {
+                headerLine = trimmed;
+                return;
+            }
+
+            trimmed = trimmed.replace(/^\d+[\).]\s+/, '');
+            trimmed = trimmed.replace(/^[-*+]\s+/, '');
+            trimmed = trimmed.replace(/:/g, ' -');
+
+            if (!trimmed) return;
+
+            if (/^direction\b/i.test(trimmed)) {
+                const parts = trimmed.split(/\s+/);
+                const dir = (parts[1] || '').toUpperCase();
+                if (!['TB', 'TD', 'BT', 'RL', 'LR'].includes(dir)) {
+                    return;
+                }
+            }
+
+            if (aggressive) {
+                const looksLikeMermaid = /(-->|---|==>|<--|<->|subgraph\b|end\b|classDef\b|class\b|style\b|linkStyle\b|click\b|direction\b|note\b|[\[\(])/i.test(trimmed);
+                if (!looksLikeMermaid) return;
+            }
+
+            bodyLines.push(trimmed);
+        });
+
+        const outputLines = [];
+        outputLines.push(headerLine || 'graph TD');
+        outputLines.push(...bodyLines);
+
+        const subgraphCount = outputLines.filter(line => /^subgraph\b/i.test(line)).length;
+        const endCount = outputLines.filter(line => /^end\b/i.test(line)).length;
+        for (let i = endCount; i < subgraphCount; i += 1) {
+            outputLines.push('end');
         }
+
+        return outputLines.join('\n').trim();
     },
 
     // --- Core AI Logic (Migrated from ai/aiService.js) ---
@@ -168,7 +226,8 @@ ${systemPromptSummary}`.trim();
         } catch (error) {
             console.error(`Error during AI generation with ${provider}:`, error);
             notificationManager.showToast(`An error occurred while communicating with the AI. Check the console.\nError: ${error.message}`, 'error');
-            return { data: null, stats: null };
+            const stats = error && error.stats ? error.stats : null;
+            return { data: null, stats: stats };
         }
     },
 
@@ -231,7 +290,8 @@ ${systemPromptSummary}`.trim();
             if (!cleaned) {
                 throw new Error("AI did not return any diagram content. Please try again or adjust your request.");
             }
-            return { code: cleaned, title: userPrompt };
+            const sanitized = AIService.sanitizeMermaidCode(cleaned);
+            return { code: sanitized, title: userPrompt };
         } catch (error) {
             console.error("[AI-DIAGRAM] Diagram generation failed:", error);
             throw error;
@@ -528,7 +588,7 @@ ${systemPromptSummary}`.trim();
             } else if (init.workPackageIds.length > 0) {
                 for (const wpId of init.workPackageIds) {
                     if (!workPackageIds.has(wpId)) {
-                        errors.push(`Initiative "${init.title}" links to a non-existent workPackageId: ${wpId}`);
+                        warnings.push(`Initiative "${init.title}" links to a non-existent workPackageId: ${wpId}`);
                     }
                 }
             }
@@ -538,12 +598,12 @@ ${systemPromptSummary}`.trim();
         console.log(`[AI-VALIDATE] ... checking ${systemData.workPackages.length} Work Packages (links back to initiatives)...`);
         systemData.workPackages.forEach(wp => {
             if (!wp.initiativeId || !systemData.yearlyInitiatives.some(i => i.initiativeId === wp.initiativeId)) {
-                errors.push(`WorkPackage "${wp.workPackageId}" has an invalid or missing "initiativeId": ${wp.initiativeId}`);
+                warnings.push(`WorkPackage "${wp.workPackageId}" has an invalid or missing "initiativeId": ${wp.initiativeId}`);
             }
 
             const parentInit = systemData.yearlyInitiatives.find(i => i.initiativeId === wp.initiativeId);
             if (parentInit && (!parentInit.workPackageIds || !parentInit.workPackageIds.includes(wp.workPackageId))) {
-                errors.push(`Data inconsistency: WorkPackage "${wp.workPackageId}" links to initiative "${parentInit.title}", but the initiative does not link back to it in its "workPackageIds" array.`);
+                warnings.push(`Data inconsistency: WorkPackage "${wp.workPackageId}" links to initiative "${parentInit.title}", but the initiative does not link back to it in its "workPackageIds" array.`);
             }
         });
 
@@ -916,28 +976,32 @@ async function _generateSystemWithGemini(systemPrompt, userPrompt, apiKey, spinn
 
     const responseData = await response.json();
 
-    if (!responseData.candidates || !responseData.candidates[0].content.parts[0].text) {
+    const usage = responseData.usageMetadata || {};
+    const stats = {
+        inputChars: systemPrompt.length + userPrompt.length,
+        outputChars: 0,
+        outputTokens: usage.candidatesTokenCount || 'N/A',
+        totalTokens: usage.totalTokenCount || 'N/A',
+        systemPromptSummary: systemPrompt.substring(0, 200) + "..."
+    };
+
+    const candidateText = responseData?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!candidateText) {
         console.error("[AI-DEBUG] Invalid response structure from Gemini:", responseData);
-        throw new Error("Received an invalid response from the AI.");
+        const error = new Error("Received an invalid response from the AI.");
+        error.stats = stats;
+        throw error;
     }
 
-    const jsonString = responseData.candidates[0].content.parts[0].text;
+    const jsonString = candidateText;
     console.log(`[AI-DEBUG] _generateSystemWithGemini: Received raw response string (${jsonString.length} chars).`);
 
     const cleanedJsonString = jsonString.replace(/^```json\n/, '').replace(/\n```$/, '');
+    stats.outputChars = cleanedJsonString.length;
 
     try {
         const parsedJson = JSON.parse(cleanedJsonString);
         console.log("[AI-DEBUG] _generateSystemWithGemini: JSON parsed successfully.");
-
-        const usage = responseData.usageMetadata || {};
-        const stats = {
-            inputChars: systemPrompt.length + userPrompt.length,
-            outputChars: cleanedJsonString.length,
-            outputTokens: usage.candidatesTokenCount || 'N/A',
-            totalTokens: usage.totalTokenCount || 'N/A',
-            systemPromptSummary: systemPrompt.substring(0, 200) + "..."
-        };
         console.log("[AI-DEBUG] Collected generation stats:", stats);
 
         return { data: parsedJson, stats: stats };
@@ -945,7 +1009,9 @@ async function _generateSystemWithGemini(systemPrompt, userPrompt, apiKey, spinn
     } catch (e) {
         console.error("[AI-DEBUG] _generateSystemWithGemini: FAILED to parse JSON response.", e);
         console.error("Raw AI response:", jsonString);
-        throw new Error("The AI returned invalid JSON. Please try again.");
+        const error = new Error("The AI returned invalid JSON. Please try again.");
+        error.stats = stats;
+        throw error;
     }
 }
 

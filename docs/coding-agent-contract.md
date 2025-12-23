@@ -1,7 +1,7 @@
 # Coding Agent Contract for SMT Platform
 
-> **Version**: 1.1  
-> **Last Updated**: 2025-12-14  
+> **Version**: 1.2  
+> **Last Updated**: 2025-12-23  
 > **Purpose**: System instructions for AI coding agents working on this codebase
 
 ---
@@ -79,8 +79,12 @@ class OrgView {
 **main.js is the ONLY place** that should contain:
 ```javascript
 // main.js - OK to use window.* here
+const workspaceShell = new WorkspaceShellComponent('app-root');
+workspaceShell.render();
+
 window.navigationManager = new NavigationManager();
-window.headerComponent = new HeaderComponent('main-header');
+window.headerComponent = new HeaderComponent('workspace-header');
+window.sidebarComponent = new SidebarComponent('sidebar', window.navigationManager);
 window.workspaceComponent = new WorkspaceComponent('main-content-area');
 ```
 
@@ -175,6 +179,7 @@ class DashboardView {
 ### 2.6 No Inline HTML in JavaScript
 
 **Rule**: Do NOT use template literals with `innerHTML` for generating HTML. Use DOM creation APIs instead.
+TemplateLoader and HTML template files are no longer allowed for view markup.
 
 ❌ **Prohibited**:
 ```javascript
@@ -207,7 +212,6 @@ container.appendChild(wrapper);
 
 **Exceptions**:
 - `main.js` template fallbacks for file:// protocol compatibility
-- HTML template files loaded via `fetch()` (e.g., `html/components/*.html`)
 
 ---
 
@@ -331,6 +335,7 @@ Before submitting any code change, verify:
 - [ ] No defensive coding for internal functions
 - [ ] No `window.*` assignments (unless in main.js)
 - [ ] No inline HTML templates
+- [ ] No HTML template files or TemplateLoader usage
 - [ ] No cross-view updates
 - [ ] Module-level state encapsulated in class
 - [ ] CSS uses theme variables (see theming rule below)
@@ -363,6 +368,7 @@ border-left-color: #0052cc;
 - `variables.css` - CSS variable definitions
 
 ### Workspace Integration
+- [ ] `WorkspaceShellComponent` renders the layout before UI components initialize
 - [ ] Uses `workspaceComponent.setPageMetadata()` for headers
 - [ ] Uses `workspaceComponent.setToolbar()` for controls
 - [ ] Registered in `NavigationManager` if new view

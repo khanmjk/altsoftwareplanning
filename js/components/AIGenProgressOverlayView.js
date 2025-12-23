@@ -124,6 +124,10 @@ class AIGenProgressOverlayView {
             const newSystemData = result.data;
             const stats = result.stats;
 
+            if (stats && AIService.showStatsModal) {
+                AIService.showStatsModal(stats);
+            }
+
             if (!newSystemData) {
                 return; // Error handled in service (usually)
             }
@@ -153,10 +157,6 @@ class AIGenProgressOverlayView {
             }
 
             SystemService.saveSystem(newSystemData, finalSystemName);
-
-            if (stats && AIService.showStatsModal) {
-                AIService.showStatsModal(stats);
-            }
 
             notificationManager.showToast(`Successfully created: "${finalSystemName}"!`, "success");
 

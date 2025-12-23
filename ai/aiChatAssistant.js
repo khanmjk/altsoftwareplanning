@@ -384,6 +384,9 @@ function setCommandPopupKeyboardNav(isActive) {
 }
 
 function openDiagramModal(code, title = 'Generated Diagram') {
+    if (typeof DiagramModal !== 'undefined') {
+        DiagramModal.getInstance().render();
+    }
     const modal = document.getElementById('diagramModal');
     const titleEl = document.getElementById('diagramModalTitle');
     const contentEl = document.getElementById('diagramModalContent');
@@ -392,42 +395,79 @@ function openDiagramModal(code, title = 'Generated Diagram') {
         return;
     }
     if (titleEl) titleEl.textContent = title || 'Generated Diagram';
-    // Basic sanitization to reduce Mermaid parse errors (colons often break mindmap/gantt)
-    const sanitized = (code || '').replace(/:/g, ' -');
-    contentEl.textContent = sanitized;
-    contentEl.removeAttribute('data-processed');
     modal.style.display = 'block';
-    // Wrap in detailed error handler for robust rendering
+
+    const renderDiagramError = (error, source) => {
+        while (contentEl.firstChild) {
+            contentEl.removeChild(contentEl.firstChild);
+        }
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'diagram-modal__error';
+
+        const heading = document.createElement('div');
+        heading.className = 'diagram-modal__error-title';
+        heading.textContent = 'Diagram Render Error';
+
+        const message = document.createElement('div');
+        message.className = 'diagram-modal__error-message';
+        message.textContent = error && error.message ? error.message : 'Unknown error';
+
+        const pre = document.createElement('pre');
+        pre.className = 'diagram-modal__error-code';
+        pre.textContent = source || '';
+
+        wrapper.appendChild(heading);
+        wrapper.appendChild(message);
+        wrapper.appendChild(pre);
+        contentEl.appendChild(wrapper);
+    };
+
+    const getSanitizedCode = (rawCode, aggressive = false) => {
+        if (typeof AIService !== 'undefined' && AIService.sanitizeMermaidCode) {
+            return AIService.sanitizeMermaidCode(rawCode, { aggressive: aggressive });
+        }
+        return (rawCode || '').replace(/:/g, ' -');
+    };
+
+    const renderMermaid = (source) => {
+        contentEl.textContent = source;
+        contentEl.removeAttribute('data-processed');
+        return Promise.resolve(mermaid.init(undefined, contentEl));
+    };
+
     try {
-        // Check if mermaid is actually ready
-        if (!mermaid.init) {
+        if (!mermaid || !mermaid.init) {
             console.warn("Mermaid.init is not available. Is the library loaded?");
             throw new Error("Mermaid library not loaded");
         }
 
-        // Using await if mermaid.init returns a promise (it often does in newer versions)
-        Promise.resolve(mermaid.init(undefined, contentEl))
-            .catch(err => {
-                console.error("Mermaid async render failed:", err);
-                contentEl.innerHTML = `<div style="padding:10px; background:#fff0f0; border:1px solid #ffcccc; color:#d32f2f;">
-                        <strong>Diagram Render Error</strong><br>
-                        <small>${err.message}</small>
-                        <pre style="margin-top:10px; white-space:pre-wrap; font-size:11px; color:#333;">${sanitized}</pre>
-                    </div>`;
-            });
+        const baseCode = getSanitizedCode(code, false);
+        renderMermaid(baseCode).catch(err => {
+            console.error("Mermaid async render failed:", err);
+            const aggressiveCode = getSanitizedCode(code, true);
+            if (aggressiveCode && aggressiveCode !== baseCode) {
+                renderMermaid(aggressiveCode).catch(innerErr => {
+                    console.error("Mermaid async render failed after sanitize:", innerErr);
+                    renderDiagramError(innerErr, aggressiveCode);
+                });
+                return;
+            }
+            renderDiagramError(err, baseCode);
+        });
 
     } catch (err) {
         console.error("Mermaid sync render failed:", err);
-        contentEl.innerHTML = `<div style="padding:10px; background:#fff0f0; border:1px solid #ffcccc; color:#d32f2f;">
-                <strong>Diagram Render Error</strong><br>
-                <small>${err.message}</small>
-                <pre style="margin-top:10px; white-space:pre-wrap; font-size:11px; color:#333;">${sanitized}</pre>
-            </div>`;
+        renderDiagramError(err, getSanitizedCode(code, true));
     }
 }
 
 
 function closeDiagramModal() {
+    if (typeof DiagramModal !== 'undefined') {
+        DiagramModal.getInstance().close();
+        return;
+    }
     const modal = document.getElementById('diagramModal');
     const contentEl = document.getElementById('diagramModalContent');
     if (modal) modal.style.display = 'none';

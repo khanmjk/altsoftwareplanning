@@ -84,6 +84,68 @@
     gap: 10px;
 }
 
+/* Diagram Modal Layout */
+.modal-content-wrapper--diagram {
+    width: 95%;
+    height: 95%;
+    max-width: none;
+}
+
+.modal-body--diagram {
+    overflow: hidden;
+    background-color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+}
+
+.diagram-modal__content {
+    flex-grow: 1;
+    overflow: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.diagram-modal__error {
+    margin: 24px;
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid color-mix(in srgb, var(--theme-danger), transparent 70%);
+    background: color-mix(in srgb, var(--theme-danger), var(--theme-bg-primary) 92%);
+}
+
+.diagram-modal__error-title {
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--theme-danger);
+}
+
+.diagram-modal__error-message {
+    color: var(--theme-text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+}
+
+.diagram-modal__error-code {
+    background-color: var(--theme-bg-primary);
+    border: 1px solid var(--theme-border-color);
+    border-radius: 6px;
+    padding: 10px;
+    margin: 0;
+    white-space: pre-wrap;
+    font-size: 0.8rem;
+}
+
+.ai-stats-pre {
+    background-color: var(--theme-bg-primary);
+    border: 1px solid var(--theme-border-color);
+    border-radius: 8px;
+    padding: 16px;
+    margin: 0;
+    white-space: pre-wrap;
+}
+
 /* Buttons */
 .btn-primary {
     background-color: var(--theme-primary);

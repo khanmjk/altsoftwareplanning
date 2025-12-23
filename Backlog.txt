@@ -212,18 +212,19 @@ bar graph per quarter to see team load/demand impact
 the gitgub issues tracker to keep track of user feedback requests
 [Done] - [Feature] - Added About page [Used cloudflare workers for backend proxying]
 [Done] - [TECH DEBT] - ensure AI tooling agents have the right function calls to reference with the introduction of the service layer
-
+[Done] - [TECH DEBT] - cleanup index.html - move a bunch of html to a view file for main content or the workspace canvas files
+[DONE] - [TECH DEBT] - Revisit StorageService and System Service - refactor or enhance the factory pattern with introducting localStorageDriver for local storage, CloudDB (Cloudflare db) drivers for cloud DB, etc.
 
 ------------
 IN PROGRESS
 ------------
-- cleanup index.html - move a bunch of html to a view file for main content or the workspace canvas files
+
 
 ------
 TO DO
 ------  
 [UX BUG] - On Roadmap & Backlog page, clicking Manage Themes goes to blank page "Workspace" - should go to Management -> Themes view
-[TECH DEBT] - Revisit StorageService and System Service - refactor or enhance the factory pattern with introducting localStorageDriver for local storage, CloudDB (Cloudflare db) drivers for cloud DB, etc.
+
 [TECH DEBT / FEATURE] - Login/Registration features using Cloudflare?
 
 -- Start building out detailed planning features

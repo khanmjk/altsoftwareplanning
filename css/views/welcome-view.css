@@ -95,8 +95,3 @@
     color: var(--theme-text-secondary);
     font-size: 0.95rem;
 }
-
-/* Hidden template container */
-.template-hidden {
-    display: none !important;
-}

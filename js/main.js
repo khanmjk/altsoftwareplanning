@@ -46,8 +46,12 @@ window.onload = function () {
     // Initialize Managers
     window.navigationManager = new NavigationManager();
 
+    // Build Workspace Shell (layout + header/toolbar/content containers)
+    const workspaceShell = new WorkspaceShellComponent('app-root');
+    workspaceShell.render();
+
     // Initialize Components
-    window.headerComponent = new HeaderComponent('main-header');
+    window.headerComponent = new HeaderComponent('workspace-header');
     window.sidebarComponent = new SidebarComponent('sidebar', window.navigationManager);
     window.workspaceComponent = new WorkspaceComponent('main-content-area');
     workspaceComponent.initExtensions();

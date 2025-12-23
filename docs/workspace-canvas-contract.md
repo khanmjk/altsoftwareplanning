@@ -11,7 +11,9 @@ This document defines the architectural contract that all pages/views in the SMT
 ### 1.1 Canvas Layers
 
 Every view operates within the **Workspace Shell**, which consists of three layers
-plus an optional right-rail extension panel:
+plus an optional right-rail extension panel. The shell is created by
+`WorkspaceShellComponent` at bootstrap, and `index.html` only provides a root
+mount (`#app-root`).
 
 ```
 ┌─────────────────────────────────────────────┐
@@ -29,6 +31,23 @@ plus an optional right-rail extension panel:
 **Defined in**: `css/layout/workspace-shell.css`
 
 ### 1.2 Component Responsibilities
+
+#### WorkspaceShellComponent (`js/components/WorkspaceShellComponent.js`)
+
+**Responsibilities**:
+- Builds the core layout containers using DOM APIs (no inline HTML strings)
+- Creates the sidebar container, header, toolbar, content area, and extension rail
+- Owns the IDs required by HeaderComponent, SidebarComponent, and WorkspaceComponent
+
+**Bootstrap usage**:
+```javascript
+const workspaceShell = new WorkspaceShellComponent('app-root');
+workspaceShell.render();
+
+window.headerComponent = new HeaderComponent('workspace-header');
+window.sidebarComponent = new SidebarComponent('sidebar', window.navigationManager);
+window.workspaceComponent = new WorkspaceComponent('main-content-area');
+```
 
 #### WorkspaceComponent (`js/components/WorkspaceComponent.js`)
 
@@ -70,11 +89,14 @@ workspaceComponent.setExtensionEnabled('myExtension', true);
 - Use `workspaceComponent.setToolbar()` for sticky controls
 - Apply `.workspace-view` class to main container
 - Use view-specific CSS files (no inline styles)
+ - Assume the shell is already mounted by `WorkspaceShellComponent`
 
 **Must Not**:
-- Generate inline HTML strings in JavaScript (use DOM creation or templates)
+- Generate inline HTML strings in JavaScript (use DOM creation)
+- Depend on HTML template files or TemplateLoader for view markup
 - Apply inline styles (use CSS classes)
 - Bypass workspace shell (no full-page takeovers)
+- Insert persistent layout containers into `index.html`
 
 ### 1.3 Workspace Extensions (Right Rail)
 
@@ -94,6 +116,7 @@ to the current view context.
 - Do not call `workspaceComponent.render()` from an extension.
 - Extensions should react to view changes via `onViewChange(viewId)`.
 - Use `workspaceComponent.setExtensionEnabled()` for settings-based toggles.
+- The extension rail is mounted by `WorkspaceShellComponent`.
 
 **Extension interface** (minimum):
 ```javascript
@@ -315,12 +338,29 @@ else if (viewId === 'myView') {
 container.innerHTML = `<div class="view">...</div>`;
 ```
 
-✅ **DOM Creation or Templates**
+✅ **DOM Creation**
 ```javascript
 // GOOD
 const view = document.createElement('div');
 view.className = 'workspace-view';
 container.appendChild(view);
+```
+
+---
+
+❌ **HTML Template Injection**
+```javascript
+// BAD
+TemplateLoader.load('some-template.html').then(html => {
+    container.innerHTML = html;
+});
+```
+
+✅ **Component-Owned DOM**
+```javascript
+// GOOD
+const shell = new WorkspaceShellComponent('app-root');
+shell.render();
 ```
 
 ---
@@ -364,6 +404,8 @@ render(container) {
 Before submitting a new view or refactoring an existing one, verify:
 
 **Workspace Integration**:
+- [ ] `index.html` is a minimal shell (root mount only)
+- [ ] `WorkspaceShellComponent` renders the layout before UI components init
 - [ ] Uses `workspaceComponent.setPageMetadata()` for title/breadcrumbs
 - [ ] Uses `workspaceComponent.setToolbar()` for controls (if multi-view)
 - [ ] Container uses `.workspace-view` class
@@ -380,6 +422,7 @@ Before submitting a new view or refactoring an existing one, verify:
 
 **Code Quality (Migration Readiness)**:
 - [ ] No inline HTML strings (use DOM creation)
+- [ ] No HTML template files or TemplateLoader usage
 - [ ] No inline CSS (use view-specific CSS file in `css/views/`)
 - [ ] No inline `onclick` attributes (use `addEventListener`)
 - [ ] Business logic extracted to Service module (see Section 10)
@@ -402,6 +445,8 @@ Before submitting a new view or refactoring an existing one, verify:
 - ✅ `js/components/GanttPlanningView.js` - Complex hierarchical view, MVC pattern with GanttTableController
 - ✅ `js/components/YearPlanningView.js` - Full refactor example: service commands, state encapsulation, no globals
 - ✅ `js/components/AIChatPanelExtension.js` - Right-rail extension panel pattern
+- ✅ `js/components/WorkspaceShellComponent.js` - DOM-built workspace shell
+- ✅ `js/components/AIGenerationStatsModal.js` - DOM-built modal pattern
 
 **No longer in refactor queue** (as of 2025-12-15):
 - ✅ `yearPlanning.js` - DELETED, functionality migrated to `YearPlanningView.js`
