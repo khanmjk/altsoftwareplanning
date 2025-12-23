@@ -10,89 +10,88 @@
  * 5. Handles initial routing and view navigation.
  */
 
-// Fallback HTML snippets for components when fetch is unavailable (e.g., file:// protocol)
-const HTML_COMPONENT_FALLBACKS = {
-    'html/components/aiChatPanel.html': `
-<div id="aiChatPanel">
-    <div class="modal-header">
-        <h3 id="aiChatTitle">AI Assistant</h3>
-        <span id="aiChatCloseButton" class="close-button">&times;</span>
-    </div>
-    <div id="aiChatLog">
-        <div class="chat-message ai-message">Hello! How can I help you analyze the current system?</div>
-    </div>
-    <div id="aiChatSuggestions"></div>
-    <div id="aiChatUsageDisplay">Session Tokens: 0</div>
-    <div id="aiChatInputContainer">
-        <div id="aiChatCommandPopup"></div>
-        <textarea id="aiChatInput" placeholder="Ask about the current view..."></textarea>
-        <button id="aiChatSendButton" class="btn-primary">Send</button>
-    </div>
-</div>`
-};
+function clearContainer(element) {
+    while (element.firstChild) {
+        element.removeChild(element.firstChild);
+    }
+}
 
-// Inline template fallbacks for TemplateLoader consumers
-window.TEMPLATE_FALLBACKS = {
-    'html/components/systems-view-template.html': `
-<div class="systems-view">
-    <div class="systems-view__header">
-        <h1 class="systems-view__title">
-            <i class="fas fa-server systems-view__icon"></i>
-            My Systems
-        </h1>
-        <div class="systems-view__actions">
-            <button id="createWithAiBtn" class="btn btn--primary btn--gradient" data-action="create-ai">
-                <i class="fas fa-magic"></i> Create with AI
-            </button>
-            <button id="createSystemBtn" class="btn btn--primary" data-action="create-new">
-                <i class="fas fa-plus"></i> Create New System
-            </button>
-        </div>
-    </div>
+function buildAiChatPanel() {
+    const panel = document.createElement('div');
+    panel.id = 'aiChatPanel';
 
-    <div id="systemsGrid" class="systems-grid">
-        <p>Loading systems...</p>
-    </div>
-</div>
-`
-};
+    const header = document.createElement('div');
+    header.className = 'modal-header';
 
-/**
- * Helper to load HTML components from files into target containers.
- */
-async function loadHtmlComponent(url, targetId) {
-    try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
-        }
-        const html = await response.text();
-        const target = document.getElementById(targetId);
-        if (target) {
-            target.innerHTML = html;
-            return true;
-        } else {
-            console.warn(`HTML load target '${targetId}' not found in DOM.`);
-            return false;
-        }
-    } catch (error) {
-        console.error(`Failed to load component ${url}:`, error);
-        const fallbackHtml = HTML_COMPONENT_FALLBACKS[url];
-        const target = document.getElementById(targetId);
-        if (fallbackHtml && target) {
-            console.warn(`Injecting fallback HTML for component '${url}'.`);
-            target.innerHTML = fallbackHtml;
-            return true;
-        }
+    const title = document.createElement('h3');
+    title.id = 'aiChatTitle';
+    title.textContent = 'AI Assistant';
+    header.appendChild(title);
+
+    const closeButton = document.createElement('span');
+    closeButton.id = 'aiChatCloseButton';
+    closeButton.className = 'close-button';
+    closeButton.textContent = String.fromCharCode(215);
+    header.appendChild(closeButton);
+
+    const log = document.createElement('div');
+    log.id = 'aiChatLog';
+    const greeting = document.createElement('div');
+    greeting.className = 'chat-message ai-message';
+    greeting.textContent = 'Hello! How can I help you analyze the current system?';
+    log.appendChild(greeting);
+
+    const suggestions = document.createElement('div');
+    suggestions.id = 'aiChatSuggestions';
+
+    const usage = document.createElement('div');
+    usage.id = 'aiChatUsageDisplay';
+    usage.textContent = 'Session Tokens: 0';
+
+    const inputContainer = document.createElement('div');
+    inputContainer.id = 'aiChatInputContainer';
+
+    const commandPopup = document.createElement('div');
+    commandPopup.id = 'aiChatCommandPopup';
+    inputContainer.appendChild(commandPopup);
+
+    const input = document.createElement('textarea');
+    input.id = 'aiChatInput';
+    input.placeholder = 'Ask about the current view...';
+    inputContainer.appendChild(input);
+
+    const sendButton = document.createElement('button');
+    sendButton.id = 'aiChatSendButton';
+    sendButton.className = 'btn-primary';
+    sendButton.textContent = 'Send';
+    inputContainer.appendChild(sendButton);
+
+    panel.appendChild(header);
+    panel.appendChild(log);
+    panel.appendChild(suggestions);
+    panel.appendChild(usage);
+    panel.appendChild(inputContainer);
+
+    return panel;
+}
+
+function renderAiChatPanel(targetId) {
+    const target = document.getElementById(targetId);
+    if (!target) {
+        console.warn(`AI chat panel target '${targetId}' not found in DOM.`);
         return false;
     }
+
+    clearContainer(target);
+    target.appendChild(buildAiChatPanel());
+    return true;
 }
 
 
 
 // Global Component Instances
 
-window.onload = async function () {
+window.onload = function () {
 
     // ============================================================================
     // GLOBAL CLASS/OBJECT REGISTRATIONS
@@ -144,12 +143,9 @@ window.onload = async function () {
     window.sidebarComponent.init();
     window.headerComponent.init();
 
-    // Load HTML components before wiring up listeners
-    try {
-        await loadHtmlComponent('html/components/aiChatPanel.html', 'aiChatPanelContainer');
-        // Additional shared components can be added here in the future.
-    } catch (e) {
-        console.error("Failed to load essential HTML components on startup.", e);
+    // Render shared components before wiring up listeners
+    if (!renderAiChatPanel('aiChatPanelContainer')) {
+        console.error('Failed to render essential UI components on startup.');
     }
 
     // Initialize the chat panel's internal listeners (Required for Header AI Button)

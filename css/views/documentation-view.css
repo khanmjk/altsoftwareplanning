@@ -210,6 +210,15 @@
     margin: 3rem 0;
 }
 
+/* Error State */
+.documentation-error {
+    padding: var(--space-lg);
+    color: var(--theme-danger);
+    background-color: color-mix(in srgb, var(--theme-danger), transparent 92%);
+    border: 1px solid color-mix(in srgb, var(--theme-danger), transparent 70%);
+    border-radius: var(--radius-md);
+}
+
 /* Loading State */
 .loading-state {
     display: flex;

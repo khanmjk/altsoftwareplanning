@@ -187,3 +187,8 @@
     gap: var(--space-md);
     justify-content: center;
 }
+
+.systems-view__error {
+    color: var(--theme-danger);
+    padding: var(--space-lg);
+}

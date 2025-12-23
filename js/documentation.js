@@ -11,7 +11,6 @@ function renderHelpView(container) {
     }
 
     // Set Workspace Metadata
-    // Set Workspace Metadata
     workspaceComponent.setPageMetadata({
         title: 'Documentation',
         breadcrumbs: ['Help', 'Documentation'],
@@ -20,23 +19,63 @@ function renderHelpView(container) {
     // Clear toolbar
     workspaceComponent.setToolbar(null);
 
-    // Create the content wrapper if it doesn't exist
-    // This wrapper allows us to control scrolling and padding independent of the main container
-    // Load template
-    templateLoader.load('html/views/documentation-view.html')
-        .then(html => {
-            container.innerHTML = html;
-            loadAndDisplayDocumentation();
-        })
-        .catch(err => {
-            console.error('Failed to load documentation template:', err);
-            container.innerHTML = '<div class="error-state">Failed to load documentation template.</div>';
-        });
+    clearElement(container);
 
-    // Trigger the load - moved to inside template load callback
-    // loadAndDisplayDocumentation();
+    const wrapper = document.createElement('div');
+    wrapper.className = 'documentation-wrapper';
+
+    const content = document.createElement('div');
+    content.id = 'documentationContent';
+    content.className = 'documentation-content';
+    content.appendChild(buildDocumentationLoadingState());
+
+    wrapper.appendChild(content);
+    container.appendChild(wrapper);
+
+    loadAndDisplayDocumentation();
 }
 
+function clearElement(element) {
+    while (element.firstChild) {
+        element.removeChild(element.firstChild);
+    }
+}
+
+function buildDocumentationLoadingState() {
+    const loading = document.createElement('div');
+    loading.className = 'loading-state';
+
+    const icon = document.createElement('i');
+    icon.className = 'fas fa-spinner fa-spin';
+    loading.appendChild(icon);
+    loading.appendChild(document.createTextNode(' Loading documentation...'));
+
+    return loading;
+}
+
+function renderDocumentationError(contentDiv, message) {
+    if (!contentDiv) return;
+    clearElement(contentDiv);
+
+    const error = document.createElement('div');
+    error.className = 'documentation-error';
+    error.textContent = message;
+    contentDiv.appendChild(error);
+}
+
+function renderDocumentationHtml(contentDiv, htmlContent) {
+    if (!contentDiv) return;
+    clearElement(contentDiv);
+
+    const parsed = new DOMParser().parseFromString(htmlContent, 'text/html');
+    const fragment = document.createDocumentFragment();
+
+    while (parsed.body.firstChild) {
+        fragment.appendChild(parsed.body.firstChild);
+    }
+
+    contentDiv.appendChild(fragment);
+}
 
 /**
  * Fetches README.md, converts Markdown to HTML, displays it,
@@ -56,6 +95,7 @@ async function loadAndDisplayDocumentation() {
     // Use MarkdownService for rendering with anchor support
     if (!MarkdownService.isAvailable()) {
         console.error("LAD_SLUGIFY: MarkdownService not available");
+        renderDocumentationError(contentDiv, 'Markdown rendering is unavailable.');
         return;
     }
 
@@ -77,18 +117,10 @@ async function loadAndDisplayDocumentation() {
         markdownText = markdownText.replace(/^\s*#\s+[^\n]+(\n|\r\n)*/, '');
 
         const htmlContent = MarkdownService.renderWithAnchors(markdownText, customSlugify);
-        contentDiv.innerHTML = htmlContent;
+        renderDocumentationHtml(contentDiv, htmlContent);
         console.log("LAD_SLUGIFY: Documentation rendered.");
 
         // Re-attach internal link listeners
-        // Note: We attach to the container provided by WorkspaceComponent if possible, 
-        // but here we are inside the contentDiv. 
-        // We need to scroll the *scrollable parent*. 
-        // In WorkspaceComponent, the container passed to render() is usually the scrollable one, 
-        // or its parent. 
-        // Let's find the nearest scrollable parent.
-        const scrollableParent = contentDiv.closest('.workspace-view-container') || document.getElementById('main-content-area') || window;
-
         const internalLinks = contentDiv.querySelectorAll('a[href^="#"]');
         internalLinks.forEach(link => {
             link.addEventListener('click', function (event) {
@@ -106,7 +138,10 @@ async function loadAndDisplayDocumentation() {
 
     } catch (error) {
         console.error("LAD_SLUGIFY: Failed to load or render documentation:", error);
-        contentDiv.innerHTML = `<p style="color:red;">Could not load documentation. Details: ${error.message}</p>`;
+        const message = error && error.message
+            ? `Could not load documentation. Details: ${error.message}`
+            : 'Could not load documentation.';
+        renderDocumentationError(contentDiv, message);
     }
 }
 
@@ -118,6 +153,7 @@ function customSlugify(str) {
     const AMPERSAND_PLACEHOLDER = '_AMPERSANDREPLACEMENT_';
 
     let s = str.toString().trim().toLowerCase()
+        .replace(/\s*\([^)]*\)\s*/g, ' ')
         .replace(/^\d+(\.\d+)*\.\s*/, '')
         .replace(/\s*&\s*/g, AMPERSAND_PLACEHOLDER)
         .replace(/&/g, AMPERSAND_PLACEHOLDER)
