@@ -202,6 +202,10 @@
     margin-top: 8px;
 }
 
+.initiative-assignment-sde {
+    width: 100px;
+}
+
 /* Actions */
 .initiative-edit-actions {
     margin-top: var(--space-md);
@@ -227,31 +231,31 @@
     border: 1px solid transparent;
 }
 
-.status-backlog {
+.initiative-status-pill.status-backlog {
     background-color: var(--theme-status-backlog-bg);
     color: var(--theme-status-backlog-text);
     border-color: var(--theme-status-backlog-border);
 }
 
-.status-defined {
+.initiative-status-pill.status-defined {
     background-color: var(--theme-status-defined-bg);
     color: var(--theme-status-defined-text);
     border-color: var(--theme-status-defined-border);
 }
 
-.status-committed {
+.initiative-status-pill.status-committed {
     background-color: var(--theme-status-committed-bg);
     color: var(--theme-status-committed-text);
     border-color: var(--theme-status-committed-border);
 }
 
-.status-in-progress {
+.initiative-status-pill.status-in-progress {
     background-color: var(--theme-status-in-progress-bg);
     color: var(--theme-status-in-progress-text);
     border-color: var(--theme-status-in-progress-border);
 }
 
-.status-completed {
+.initiative-status-pill.status-completed {
     background-color: var(--theme-status-completed-bg);
     color: var(--theme-status-completed-text);
     border-color: var(--theme-status-completed-border);

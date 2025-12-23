@@ -25,13 +25,16 @@ const aiPlanOptimizationAgent = (() => {
         const { contextJson = null, primingHistory = [] } = options || {};
 
         const progressMessageEl = uiHooks.postMessage
-            ? uiHooks.postMessage('<em>🤖 Optimization agent is analyzing your plan...</em>')
+            ? uiHooks.postMessage('')
             : null;
         const updateProgress = (text) => {
-            if (progressMessageEl && typeof progressMessageEl.innerHTML !== 'undefined') {
-                progressMessageEl.innerHTML = `<em>${text}</em>`;
+            if (progressMessageEl && typeof progressMessageEl.appendChild === 'function') {
+                _clearElement(progressMessageEl);
+                const em = document.createElement('em');
+                em.textContent = text;
+                progressMessageEl.appendChild(em);
             } else if (uiHooks.postMessage) {
-                uiHooks.postMessage(`<em>${text}</em>`);
+                uiHooks.postMessage(text);
             } else {
                 console.log(text);
             }
@@ -161,7 +164,6 @@ ${changesNarrative}
             const confirmContainer = document.createElement('div');
             confirmContainer.id = lastConfirmationContainerId;
             confirmContainer.className = 'agent-confirmation-controls';
-            confirmContainer.style.cssText = 'display: flex; flex-direction: column; gap: 10px;';
 
             const promptText = document.createElement('p');
             const strong = document.createElement('strong');
@@ -170,7 +172,7 @@ ${changesNarrative}
             confirmContainer.appendChild(promptText);
 
             const buttonRow = document.createElement('div');
-            buttonRow.style.cssText = 'display: flex; gap: 10px; flex-wrap: wrap;';
+            buttonRow.className = 'agent-confirmation-controls__actions';
 
             const applyBtn = document.createElement('button');
             applyBtn.className = 'btn-primary';
@@ -194,7 +196,6 @@ ${changesNarrative}
 
             const statusDiv = document.createElement('div');
             statusDiv.className = 'agent-confirmation-status';
-            statusDiv.style.cssText = 'font-size: 0.9em; color: var(--theme-text-secondary, #555);';
             confirmContainer.appendChild(statusDiv);
 
             // Post confirmation UI via the chat assistant's message API
@@ -203,10 +204,10 @@ ${changesNarrative}
                 messageEl.appendChild(confirmContainer);
             }
 
-            if (progressMessageEl && typeof progressMessageEl.innerHTML !== 'undefined') {
+            if (progressMessageEl && typeof progressMessageEl.appendChild === 'function') {
                 const completeEm = document.createElement('em');
                 completeEm.textContent = '🤖 Optimization complete.';
-                progressMessageEl.innerHTML = '';
+                _clearElement(progressMessageEl);
                 progressMessageEl.appendChild(completeEm);
             }
 
@@ -214,6 +215,13 @@ ${changesNarrative}
             console.error("[OptimizeAgent] Error:", error);
             postMessageCallback(`An error occurred during optimization: ${error.message}`, true);
             updateProgress(`⚠️ Optimization failed: ${error.message}`);
+        }
+    }
+
+    function _clearElement(element) {
+        if (!element) return;
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
         }
     }
 

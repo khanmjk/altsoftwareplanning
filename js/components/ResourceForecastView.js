@@ -20,7 +20,7 @@ class ResourceForecastView {
         }
 
         this.container = container;
-        this.container.innerHTML = '';
+        this._clearElement(this.container);
         // Use standard workspace-view class for inheritance, plus specific class for overrides if needed
         this.container.className = 'workspace-view resource-forecast-container';
 
@@ -183,7 +183,9 @@ class ResourceForecastView {
         faqContainer.id = 'rf-faq-container';
 
         // Add a loading state
-        faqContainer.innerHTML = '<p>Loading FAQ...</p>';
+        const loading = document.createElement('p');
+        loading.textContent = 'Loading FAQ...';
+        faqContainer.appendChild(loading);
 
         this.container.appendChild(faqContainer);
 
@@ -195,8 +197,8 @@ class ResourceForecastView {
         const htmlContent = await MarkdownService.fetchAndRender(faqUrl);
 
         // If fetch failed (e.g., CORS on file:// protocol), show fallback content
-        if (htmlContent.includes('Could not load content')) {
-            container.innerHTML = ''; // Clear first
+        if (!htmlContent) {
+            this._clearElement(container);
 
             const h3 = document.createElement('h3');
             h3.textContent = 'FAQ & Model Insights';
@@ -252,7 +254,8 @@ class ResourceForecastView {
             details2.appendChild(p2);
             container.appendChild(details2);
         } else {
-            container.innerHTML = htmlContent;
+            this._clearElement(container);
+            this._appendHtmlContent(container, htmlContent);
         }
     }
 
@@ -314,7 +317,7 @@ class ResourceForecastView {
         const narrativeBox = document.getElementById('rf-narrative-box');
         if (narrativeBox) {
             narrativeBox.classList.remove('forecast-narrative-box--visible');
-            narrativeBox.innerHTML = '';
+            this._clearElement(narrativeBox);
         }
 
         if (this.chartInstance) {
@@ -378,7 +381,7 @@ class ResourceForecastView {
         if (!box) return;
 
         box.classList.add('forecast-narrative-box--visible');
-        box.innerHTML = '';
+        this._clearElement(box);
 
         let team = null;
         if (this.currentTeamId && SystemService.getCurrentSystem() && SystemService.getCurrentSystem().teams) {
@@ -448,6 +451,22 @@ class ResourceForecastView {
         footer.className = 'forecast-narrative__footer';
         footer.textContent = 'Note: Manual forecast parameters (hiring time, ramp-up, attrition) are not currently saved per team.';
         box.appendChild(footer);
+    }
+
+    _appendHtmlContent(container, htmlContent) {
+        if (!container || !htmlContent) return;
+        const parser = new DOMParser();
+        const parsed = parser.parseFromString(htmlContent, 'text/html');
+        while (parsed.body.firstChild) {
+            container.appendChild(parsed.body.firstChild);
+        }
+    }
+
+    _clearElement(element) {
+        if (!element) return;
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
+        }
     }
 
     _renderChart(results, fundedSize) {

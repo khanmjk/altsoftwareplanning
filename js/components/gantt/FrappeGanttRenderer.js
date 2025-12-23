@@ -16,14 +16,13 @@ class FrappeGanttRenderer extends GanttRenderer {
         this.tasks = tasks; // Store for view mode switching
 
         // Ensure container stretches to available height for consistent scrolling
-        this.container.style.display = 'block';
-        this.container.style.height = '100%';
-        this.container.style.minHeight = '0';
-        // Allow the container to scroll when content exceeds available height
-        this.container.style.overflow = 'auto';
+        this.container.classList.add('frappe-gantt-renderer');
 
         if (!tasks || tasks.length === 0) {
-            this.container.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">No initiatives to display.</div>';
+            const empty = document.createElement('div');
+            empty.className = 'gantt-empty-state';
+            empty.textContent = 'No initiatives to display.';
+            this.container.appendChild(empty);
             return;
         }
 
@@ -35,11 +34,7 @@ class FrappeGanttRenderer extends GanttRenderer {
         const wrapperId = `frappe-gantt-${Date.now()}`;
         const wrapper = document.createElement('div');
         wrapper.id = wrapperId;
-        wrapper.style.overflow = 'hidden';
-        wrapper.style.height = '100%'; // Ensure it fills container
-        wrapper.style.minHeight = '100%';
-        wrapper.style.width = '100%';
-        wrapper.style.position = 'relative';
+        wrapper.className = 'frappe-gantt-wrapper';
         this.container.appendChild(wrapper);
 
         const frappeTasks = this._transformTasks(clampedTasks || []);
@@ -72,32 +67,8 @@ class FrappeGanttRenderer extends GanttRenderer {
                 start: startDateObj,
                 end: endDateObj,
                 custom_popup_html: (task) => {
-                    // Rich Tooltip Implementation
-                    const start = task._start.toISOString().split('T')[0];
-                    const end = task._end.toISOString().split('T')[0];
-                    let typeLabel = 'Task';
-                    let details = '';
-
-                    if (task.type === 'initiative') {
-                        typeLabel = 'Initiative';
-                        details = `<p style="margin: 5px 0 0 0; font-size: 11px; color: #666;">Status: <strong>${task.status || 'N/A'}</strong></p>`;
-                    } else if (task.type === 'workPackage') {
-                        typeLabel = 'Work Package';
-                        details = `<p style="margin: 5px 0 0 0; font-size: 11px; color: #666;">Parent Initiative ID: ${task.initiativeId}</p>`;
-                    } else if (task.type === 'assignment') {
-                        typeLabel = 'Team Assignment';
-                        details = `<p style="margin: 5px 0 0 0; font-size: 11px; color: #666;">Team ID: ${task.teamId}</p>`;
-                    }
-
-                    return `
-                        <div class="details-container" style="width: 240px; padding: 10px;">
-                            <h5 style="margin: 0 0 5px 0; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 4px;">${task.name}</h5>
-                            <span style="font-size: 10px; background: #eee; padding: 2px 6px; border-radius: 4px; color: #555;">${typeLabel}</span>
-                            <p style="margin: 8px 0 0 0; font-size: 12px;">${start} to ${end}</p>
-                            <p style="margin: 2px 0 0 0; font-size: 12px; color: #666;">Progress: ${task.progress}%</p>
-                            ${details}
-                        </div>
-                    `;
+                    const tooltip = this._buildTooltipNode(task);
+                    return tooltip ? tooltip.outerHTML : '';
                 },
                 on_date_change: (task, start, end) => {
                     if (options.onUpdate) {
@@ -132,11 +103,19 @@ class FrappeGanttRenderer extends GanttRenderer {
 
         } catch (err) {
             console.error("FrappeGanttRenderer render failed:", err);
-            this.container.innerHTML = `
-                <div style="color: #721c24; background-color: #f8d7da; padding: 10px; border: 1px solid #f5c6cb; border-radius: 4px;">
-                    <strong>Error rendering Frappe Gantt.</strong><br>
-                    <small>${err.message}</small>
-                </div>`;
+            this.clear();
+            const errorWrap = document.createElement('div');
+            errorWrap.className = 'gantt-error';
+            const strong = document.createElement('strong');
+            strong.textContent = 'Error rendering Frappe Gantt.';
+            errorWrap.appendChild(strong);
+            if (err && err.message) {
+                errorWrap.appendChild(document.createElement('br'));
+                const detail = document.createElement('small');
+                detail.textContent = err.message;
+                errorWrap.appendChild(detail);
+            }
+            this.container.appendChild(errorWrap);
         }
     }
 
@@ -145,6 +124,79 @@ class FrappeGanttRenderer extends GanttRenderer {
             this.currentViewMode = mode;
             this.gantt.change_view_mode(mode);
         }
+    }
+
+    _buildTooltipNode(task) {
+        if (!task) return null;
+        const start = task._start.toISOString().split('T')[0];
+        const end = task._end.toISOString().split('T')[0];
+        let typeLabel = 'Task';
+
+        if (task.type === 'initiative') {
+            typeLabel = 'Initiative';
+        } else if (task.type === 'workPackage') {
+            typeLabel = 'Work Package';
+        } else if (task.type === 'assignment') {
+            typeLabel = 'Team Assignment';
+        }
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'frappe-gantt-tooltip';
+
+        const title = document.createElement('h5');
+        title.className = 'frappe-gantt-tooltip__title';
+        title.textContent = task.name || '';
+        wrapper.appendChild(title);
+
+        const badge = document.createElement('span');
+        badge.className = 'frappe-gantt-tooltip__badge';
+        badge.textContent = typeLabel;
+        wrapper.appendChild(badge);
+
+        const timeline = document.createElement('p');
+        timeline.className = 'frappe-gantt-tooltip__line';
+        timeline.textContent = `${start} to ${end}`;
+        wrapper.appendChild(timeline);
+
+        const progress = document.createElement('p');
+        progress.className = 'frappe-gantt-tooltip__line';
+        progress.textContent = `Progress: ${task.progress}%`;
+        wrapper.appendChild(progress);
+
+        const detail = this._buildTooltipDetail(task);
+        if (detail) {
+            wrapper.appendChild(detail);
+        }
+
+        return wrapper;
+    }
+
+    _buildTooltipDetail(task) {
+        if (!task) return null;
+        const detail = document.createElement('p');
+        detail.className = 'frappe-gantt-tooltip__detail';
+
+        if (task.type === 'initiative') {
+            const label = document.createElement('span');
+            label.textContent = 'Status: ';
+            const value = document.createElement('strong');
+            value.textContent = task.status || 'N/A';
+            detail.appendChild(label);
+            detail.appendChild(value);
+            return detail;
+        }
+
+        if (task.type === 'workPackage') {
+            detail.textContent = `Parent Initiative ID: ${task.initiativeId}`;
+            return detail;
+        }
+
+        if (task.type === 'assignment') {
+            detail.textContent = `Team ID: ${task.teamId}`;
+            return detail;
+        }
+
+        return null;
     }
 
     _resizeForTasks(wrapper, tasks, options = {}) {
@@ -165,14 +217,10 @@ class FrappeGanttRenderer extends GanttRenderer {
         const computedHeight = headerHeight + (padding * 2) + (count * rowHeight);
 
         // Set SVG height so all tasks render, keep width fluid
-        svg.style.width = '100%';
-        svg.style.maxWidth = 'none';
-        svg.style.height = `${computedHeight}px`;
         svg.setAttribute('height', `${computedHeight}`);
-
-        wrapper.style.minHeight = `${computedHeight}px`;
-        wrapper.style.height = `${computedHeight}px`;
-        wrapper.style.overflow = 'hidden';
+        if (typeof styleVars !== 'undefined' && styleVars.set) {
+            styleVars.set(wrapper, { '--frappe-gantt-height': `${computedHeight}px` });
+        }
     }
 
     _markLockedBars(wrapper, tasks) {
@@ -196,12 +244,10 @@ class FrappeGanttRenderer extends GanttRenderer {
                 const barEl = bar.querySelector('.bar');
                 if (barEl) {
                     barEl.setAttribute('title', lockedReason);
-                    barEl.style.cursor = 'pointer';
                 }
                 const label = bar.querySelector('.bar-label');
                 if (label) {
                     label.setAttribute('title', lockedReason);
-                    label.style.cursor = 'pointer';
                 }
             }
         });
@@ -377,16 +423,6 @@ class FrappeGanttRenderer extends GanttRenderer {
             const task = taskMap.get(idNorm);
             const taskInit = this._normalizeId(task?.initiativeId);
 
-            // Get bar element for styling
-            const barEl = bar.querySelector('.bar');
-
-            // Reset focus styles
-            if (barEl) {
-                barEl.style.removeProperty('stroke');
-                barEl.style.removeProperty('stroke-width');
-                barEl.style.removeProperty('filter');
-            }
-
             if (focusInitiativeId && taskInit && taskInit === focusInitiativeId) {
                 bar.classList.add('focus-initiative');
             }
@@ -395,12 +431,6 @@ class FrappeGanttRenderer extends GanttRenderer {
             const isInitFocus = focusType === 'initiative' && focusInitiativeId && idNorm === focusInitiativeId;
             if (isExactFocus || isInitFocus) {
                 bar.classList.add('focus-row');
-                // Apply prominent inline styles for visibility
-                if (barEl) {
-                    barEl.style.setProperty('stroke', '#3b82f6', 'important');
-                    barEl.style.setProperty('stroke-width', '3px', 'important');
-                    barEl.style.setProperty('filter', 'drop-shadow(0 0 6px rgba(59, 130, 246, 0.7))', 'important');
-                }
             }
         });
     }
@@ -409,10 +439,6 @@ class FrappeGanttRenderer extends GanttRenderer {
         // Manually enforce styles on the SVG elements to bypass CSS specificity issues
         const svg = this.container.querySelector('svg');
         if (!svg) return;
-
-        // 1. Fix Container Sizing
-        svg.style.width = '100%';
-        svg.style.maxWidth = 'none';
 
         // 2. Iterate over task groups and apply styles
         // Frappe Gantt uses data-id on the bar-wrapper
@@ -423,58 +449,8 @@ class FrappeGanttRenderer extends GanttRenderer {
             if (!task) return;
 
             const bar = group.querySelector('.bar');
-            const progress = group.querySelector('.bar-progress');
             const label = group.querySelector('.bar-label');
-
-            // Define Styles
-            let color = '#a3a3a3'; // Default Grey
-            let opacity = '0.3';
-            let fontWeight = '400';
-            let fontSize = '12px';
-            let textColor = '#333';
-
-            if (task.type === 'initiative') {
-                color = '#6f42c1'; // Purple
-                opacity = '0.25';
-                fontWeight = '700';
-                fontSize = '14px';
-                textColor = '#4a2c8a'; // Darker Purple for text
-            } else if (task.type === 'workPackage') {
-                color = '#0366d6'; // Blue
-                opacity = '0.25';
-                fontWeight = '600';
-                fontSize = '13px';
-                textColor = '#003d80'; // Darker Blue
-            } else if (task.type === 'assignment') {
-                color = '#2ea44f'; // Green
-                opacity = '0.25';
-                fontWeight = '500';
-                fontSize = '12px';
-                textColor = '#1a7f37'; // Darker Green
-            }
-
-            // Status Overrides
-            if (task.status) {
-                const s = task.status.toLowerCase();
-                if (s === 'done' || s === 'complete') {
-                    color = '#a0c4ff'; // Light Blue
-                } else if (s === 'blocked' || s === 'risk') {
-                    color = '#ff6b6b'; // Red
-                }
-            }
-
-            // Apply Styles with Priority
-            if (bar) {
-                bar.style.setProperty('fill', color, 'important');
-                bar.style.setProperty('opacity', opacity, 'important');
-            }
-            if (progress) {
-                progress.style.setProperty('fill', color, 'important');
-            }
             if (label) {
-                label.style.setProperty('font-weight', fontWeight, 'important');
-                label.style.setProperty('font-size', fontSize, 'important');
-                label.style.setProperty('fill', textColor, 'important');
                 // Prefer adapter-supplied label (includes SDE/date), fall back to title.
                 const fullLabel = task.displayLabel || task.originalLabel || task.label || task.title || '';
                 if (fullLabel) {
@@ -492,7 +468,7 @@ class FrappeGanttRenderer extends GanttRenderer {
 
                 // Dynamic truncation based on available width; tolerate slight overflow (5 chars) before trimming.
                 const availablePx = bar ? Math.max(0, Number(bar.getAttribute('width')) - 12) : 0;
-                const fontPx = parseFloat(label.style.fontSize || window.getComputedStyle(label).fontSize || '12') || 12;
+                const fontPx = parseFloat(window.getComputedStyle(label).fontSize || '12') || 12;
                 const avgCharPx = fontPx * 0.6; // rough average width per character
                 const maxChars = Math.max(4, Math.floor(availablePx / avgCharPx));
                 const tolerance = 5;
@@ -545,10 +521,6 @@ class FrappeGanttRenderer extends GanttRenderer {
                 targetEl.classList.add('dep-task');
             }
 
-            // Base styling - colors come from CSS for theme compliance
-            targetEl.style.fill = 'none';
-            targetEl.style.cursor = 'help';
-
             // Seed ids/labels from record
             const fromId = rec.from_task?.id ? this._normalizeId(rec.from_task.id) : null;
             const toId = rec.to_task?.id ? this._normalizeId(rec.to_task.id) : null;
@@ -575,10 +547,6 @@ class FrappeGanttRenderer extends GanttRenderer {
         });
 
         // Style any arrow heads present (using CSS variables via class)
-        const heads = wrapper.querySelectorAll('.arrow-head');
-        heads.forEach(head => {
-            head.style.opacity = '0.65';
-        });
     }
 
     _showSoftBadge(wrapper, arrowEl, evt) {
@@ -594,8 +562,12 @@ class FrappeGanttRenderer extends GanttRenderer {
         const wrapperBox = wrapper.getBoundingClientRect();
         const top = arrowBox.top - wrapperBox.top - 8; // slightly above arrow
         const left = arrowBox.left - wrapperBox.left + (arrowBox.width / 2);
-        badge.style.top = `${top}px`;
-        badge.style.left = `${left}px`;
+        if (typeof styleVars !== 'undefined' && styleVars.set) {
+            styleVars.set(badge, {
+                '--soft-badge-top': `${top}px`,
+                '--soft-badge-left': `${left}px`
+            });
+        }
 
         // Attach and keep reference for cleanup
         wrapper.appendChild(badge);

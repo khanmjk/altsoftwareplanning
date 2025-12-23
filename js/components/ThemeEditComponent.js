@@ -16,7 +16,7 @@ class ThemeEditComponent {
             console.error(`ThemeEditComponent: Container '${this.containerId}' not found.`);
             return;
         }
-        container.innerHTML = '';
+        this._clearElement(container);
         // Reuse service-edit-list class for identical styling if available, 
         // or use management-list-container which mimics it.
         // Given the user wants "exact behavior", reusing the class structure is safest if CSS supports it.
@@ -29,7 +29,10 @@ class ThemeEditComponent {
         }
 
         if (this.systemData.definedThemes.length === 0) {
-            container.innerHTML = '<p class="theme-edit-list-empty">No themes defined yet.</p>';
+            const emptyState = document.createElement('p');
+            emptyState.className = 'theme-edit-list-empty';
+            emptyState.textContent = 'No themes defined yet.';
+            container.appendChild(emptyState);
             return;
         }
 
@@ -112,7 +115,6 @@ class ThemeEditComponent {
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'btn btn-danger';
         deleteBtn.innerText = 'Delete Theme';
-        deleteBtn.style.marginLeft = '10px'; // Inline style from ServiceEdit
         deleteBtn.onclick = () => this._deleteTheme(index);
 
         actionsDiv.appendChild(saveBtn);
@@ -163,6 +165,13 @@ class ThemeEditComponent {
         group.appendChild(label);
         group.appendChild(input);
         return group;
+    }
+
+    _clearElement(element) {
+        if (!element) return;
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
+        }
     }
 
     async _deleteTheme(index) {

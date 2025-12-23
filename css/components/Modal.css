@@ -18,6 +18,11 @@
     animation: fadeIn 0.2s ease-out;
 }
 
+.modal.is-open,
+.modal-overlay.is-open {
+    display: flex;
+}
+
 /* Modal Content Wrapper */
 .modal-content-wrapper {
     background-color: var(--theme-card-bg);

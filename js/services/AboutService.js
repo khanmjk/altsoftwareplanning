@@ -102,23 +102,14 @@ const AboutService = {
      * @private
      */
     _extractSummary(htmlContent) {
-        const temp = document.createElement('div');
-        temp.innerHTML = htmlContent;
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlContent || '', 'text/html');
 
-        // Remove script and style tags to prevent code leakage
-        const scripts = temp.getElementsByTagName('script');
-        const styles = temp.getElementsByTagName('style');
+        doc.querySelectorAll('script, style').forEach((node) => node.remove());
 
-        // Remove strictly, iterating backwards
-        for (let i = scripts.length - 1; i >= 0; i--) {
-            scripts[i].remove();
-        }
-        for (let i = styles.length - 1; i >= 0; i--) {
-            styles[i].remove();
-        }
-
-        const text = temp.textContent || temp.innerText || '';
-        return text.substring(0, 150).trim() + (text.length > 150 ? '...' : '');
+        const text = doc.body?.textContent || '';
+        const trimmed = text.trim();
+        return trimmed.substring(0, 150) + (trimmed.length > 150 ? '...' : '');
     },
 
     /**
@@ -126,9 +117,9 @@ const AboutService = {
      * @private
      */
     _decodeHtmlEntities(text) {
-        const textarea = document.createElement('textarea');
-        textarea.innerHTML = text;
-        return textarea.value;
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(text || '', 'text/html');
+        return doc.body?.textContent || '';
     }
 };
 

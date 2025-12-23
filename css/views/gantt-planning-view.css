@@ -209,6 +209,14 @@
     vertical-align: middle;
 }
 
+.gantt-table__cell--overflow-visible {
+    overflow: visible;
+}
+
+.gantt-table__select {
+    min-width: 120px;
+}
+
 /* Initiative Row Cells */
 .gantt-table__cell--initiative {
     border-bottom-color: var(--theme-border-light);

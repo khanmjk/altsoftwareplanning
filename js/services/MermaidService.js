@@ -301,7 +301,7 @@ const MermaidService = {
                 this._renderErrorToContainer(container, 'Unable to parse diagram output.');
                 return false;
             }
-            container.style.display = 'block';
+            container.classList.remove('is-hidden');
             return true;
         } catch (error) {
             console.error('MermaidService: Render error:', error);

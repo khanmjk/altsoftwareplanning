@@ -40,7 +40,7 @@ class RoadmapInitiativeModal {
 
         const closeBtn = document.createElement('button');
         closeBtn.className = 'roadmap-modal-close';
-        closeBtn.innerHTML = '&times;';
+        closeBtn.textContent = '\u00D7';
         closeBtn.dataset.action = 'close';
         header.appendChild(closeBtn);
 
@@ -111,7 +111,7 @@ class RoadmapInitiativeModal {
         const assignList = document.createElement('div');
         assignList.id = 'roadmapModalAssignmentsList';
         assignList.className = 'assignments-list';
-        assignList.innerHTML = '<em>No teams assigned yet.</em>';
+        this._renderAssignmentsEmpty(assignList);
         assignContainer.appendChild(assignList);
 
         const assignControls = document.createElement('div');
@@ -119,7 +119,7 @@ class RoadmapInitiativeModal {
 
         // Team Select Wrapper (Using ThemedSelect)
         const teamWrap = document.createElement('div');
-        teamWrap.style.flexGrow = '1';
+        teamWrap.className = 'assignment-controls__team';
 
         // We handle this one manually/separately as it's not part of the main form map necessarily, 
         // but let's use the helper and not add it to the main `this.selects` map if we want custom handling,
@@ -136,7 +136,7 @@ class RoadmapInitiativeModal {
 
         // SDE Input Wrapper
         const sdeWrap = document.createElement('div');
-        sdeWrap.style.width = '120px';
+        sdeWrap.className = 'assignment-controls__sde';
         const sdeInput = document.createElement('input');
         sdeInput.type = 'number';
         sdeInput.id = 'roadmapModalSdeYears';
@@ -354,12 +354,12 @@ class RoadmapInitiativeModal {
             this.renderAssignments();
         }
 
-        modal.style.display = 'block';
+        modal.classList.add('is-open');
     }
 
     close() {
         const modal = document.getElementById(this.modalId);
-        if (modal) modal.style.display = 'none';
+        if (modal) modal.classList.remove('is-open');
         this.currentInitiativeId = null;
     }
 
@@ -501,21 +501,50 @@ class RoadmapInitiativeModal {
 
     renderAssignments() {
         const container = document.getElementById('roadmapModalAssignmentsList');
+        if (!container) return;
+
+        this._clearElement(container);
         if (this.assignments.length === 0) {
-            container.innerHTML = '<em>No teams assigned yet.</em>';
+            this._renderAssignmentsEmpty(container);
             return;
         }
 
-        container.innerHTML = this.assignments.map((a, index) => {
-            const team = (SystemService.getCurrentSystem().teams || []).find(t => t.teamId === a.teamId);
-            const teamName = team ? (team.teamIdentity || team.teamName) : a.teamId;
-            return `
-                <div class="assignment-item">
-                    <span><strong>${teamName}</strong>: ${a.sdeYears} SDE Years</span>
-                    <button class="btn-danger btn-sm" data-action="remove-assignment" data-index="${index}">Remove</button>
-                </div>
-            `;
-        }).join('');
+        const teams = SystemService.getCurrentSystem().teams || [];
+        this.assignments.forEach((assignment, index) => {
+            const team = teams.find(t => t.teamId === assignment.teamId);
+            const teamName = team ? (team.teamIdentity || team.teamName) : assignment.teamId;
+
+            const item = document.createElement('div');
+            item.className = 'assignment-item';
+
+            const label = document.createElement('span');
+            const strong = document.createElement('strong');
+            strong.textContent = teamName;
+            label.appendChild(strong);
+            label.appendChild(document.createTextNode(`: ${assignment.sdeYears} SDE Years`));
+
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'btn-danger btn-sm';
+            removeBtn.dataset.action = 'remove-assignment';
+            removeBtn.dataset.index = String(index);
+            removeBtn.textContent = 'Remove';
+
+            item.append(label, removeBtn);
+            container.appendChild(item);
+        });
+    }
+
+    _renderAssignmentsEmpty(container) {
+        const empty = document.createElement('em');
+        empty.textContent = 'No teams assigned yet.';
+        container.appendChild(empty);
+    }
+
+    _clearElement(element) {
+        if (!element) return;
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
+        }
     }
 
     save() {

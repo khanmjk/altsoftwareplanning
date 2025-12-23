@@ -12,6 +12,7 @@ class ManagementView {
         this.themeEditComponent = null;
         this.initiativeEditComponent = null;
         this.goalEditComponent = null;
+        this.contentContainer = null;
 
         // Bind events
         this._boundContainerClick = this.handleContainerClick.bind(this);
@@ -35,15 +36,22 @@ class ManagementView {
         this.renderToolbar();
 
         // 3. Render Content Container
-        this.container.innerHTML = `
-            <div class="management-view-container">
-                <div class="management-layout">
-                    <div id="managementContent" class="management-content">
-                        ${this.renderActiveTab()}
-                    </div>
-                </div>
-            </div>
-        `;
+        this._clearElement(this.container);
+        const viewContainer = document.createElement('div');
+        viewContainer.className = 'management-view-container';
+
+        const layout = document.createElement('div');
+        layout.className = 'management-layout';
+
+        this.contentContainer = document.createElement('div');
+        this.contentContainer.id = 'managementContent';
+        this.contentContainer.className = 'management-content';
+
+        layout.appendChild(this.contentContainer);
+        viewContainer.appendChild(layout);
+        this.container.appendChild(viewContainer);
+
+        this._renderActiveTabContent();
 
         // Bind events
         this.bindEvents();
@@ -77,11 +85,8 @@ class ManagementView {
 
     switchTab(tabId) {
         this.activeTab = tabId;
-        const contentContainer = document.getElementById('managementContent');
-        if (contentContainer) {
-            contentContainer.innerHTML = this.renderActiveTab();
-            this.postRender();
-        }
+        this._renderActiveTabContent();
+        this.postRender();
     }
 
     postRender() {
@@ -137,19 +142,25 @@ class ManagementView {
 
     // --- THEMES TAB ---
     renderThemesTab() {
-        return `
-            <div class="management-section-header">
-                <h3>Themes</h3>
-            </div>
-            <div id="themesListContainer">
-                <!-- Themes will be rendered here by ThemeEditComponent -->
-            </div>
-            <div class="management-list-actions">
-                <button class="btn btn-primary" data-action="add-theme">
-                    <i class="fas fa-plus"></i> Add Theme
-                </button>
-            </div>
-        `;
+        const fragment = document.createDocumentFragment();
+
+        const header = document.createElement('div');
+        header.className = 'management-section-header';
+        const heading = document.createElement('h3');
+        heading.textContent = 'Themes';
+        header.appendChild(heading);
+        fragment.appendChild(header);
+
+        const listContainer = document.createElement('div');
+        listContainer.id = 'themesListContainer';
+        fragment.appendChild(listContainer);
+
+        const actions = document.createElement('div');
+        actions.className = 'management-list-actions';
+        actions.appendChild(this._createActionButton('add-theme', 'Add Theme', 'fas fa-plus'));
+        fragment.appendChild(actions);
+
+        return fragment;
     }
 
     renderThemesList() {
@@ -186,21 +197,25 @@ class ManagementView {
 
     // --- INITIATIVES TAB ---
     renderInitiativesTab() {
-        return `
-            <div class="management-section-header">
-                <h3>Initiatives Overview</h3>
-            </div>
-            
-            <div id="initiativesListContainer">
-                <!-- Initiatives will be rendered here by InitiativeEditComponent -->
-            </div>
+        const fragment = document.createDocumentFragment();
 
-            <div class="management-list-actions">
-                <button class="btn btn-primary" data-action="add-initiative">
-                    <i class="fas fa-plus"></i> Add Initiative
-                </button>
-            </div>
-        `;
+        const header = document.createElement('div');
+        header.className = 'management-section-header';
+        const heading = document.createElement('h3');
+        heading.textContent = 'Initiatives Overview';
+        header.appendChild(heading);
+        fragment.appendChild(header);
+
+        const listContainer = document.createElement('div');
+        listContainer.id = 'initiativesListContainer';
+        fragment.appendChild(listContainer);
+
+        const actions = document.createElement('div');
+        actions.className = 'management-list-actions';
+        actions.appendChild(this._createActionButton('add-initiative', 'Add Initiative', 'fas fa-plus'));
+        fragment.appendChild(actions);
+
+        return fragment;
     }
 
     populateInitiativesList() {
@@ -233,19 +248,25 @@ class ManagementView {
 
     // --- GOALS TAB ---
     renderGoalsTab() {
-        return `
-            <div class="management-section-header">
-                <h3>Strategic Goals</h3>
-            </div>
-            <div id="goalsListContainer">
-                <!-- Goals will be rendered here by GoalEditComponent -->
-            </div>
-            <div class="management-list-actions">
-                <button class="btn btn-primary" data-action="add-goal">
-                    <i class="fas fa-plus"></i> Add Goal
-                </button>
-            </div>
-        `;
+        const fragment = document.createDocumentFragment();
+
+        const header = document.createElement('div');
+        header.className = 'management-section-header';
+        const heading = document.createElement('h3');
+        heading.textContent = 'Strategic Goals';
+        header.appendChild(heading);
+        fragment.appendChild(header);
+
+        const listContainer = document.createElement('div');
+        listContainer.id = 'goalsListContainer';
+        fragment.appendChild(listContainer);
+
+        const actions = document.createElement('div');
+        actions.className = 'management-list-actions';
+        actions.appendChild(this._createActionButton('add-goal', 'Add Goal', 'fas fa-plus'));
+        fragment.appendChild(actions);
+
+        return fragment;
     }
 
     populateGoalsList() {
@@ -298,5 +319,39 @@ class ManagementView {
                 status: g.status
             }))
         };
+    }
+
+    _renderActiveTabContent() {
+        if (!this.contentContainer) {
+            this.contentContainer = document.getElementById('managementContent');
+        }
+        if (!this.contentContainer) return;
+        this._clearElement(this.contentContainer);
+        const content = this.renderActiveTab();
+        if (content) {
+            this.contentContainer.appendChild(content);
+        }
+    }
+
+    _createActionButton(action, label, iconClass) {
+        const button = document.createElement('button');
+        button.className = 'btn btn-primary';
+        button.dataset.action = action;
+
+        if (iconClass) {
+            const icon = document.createElement('i');
+            icon.className = iconClass;
+            button.appendChild(icon);
+            button.appendChild(document.createTextNode(' '));
+        }
+        button.appendChild(document.createTextNode(label));
+        return button;
+    }
+
+    _clearElement(element) {
+        if (!element) return;
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
+        }
     }
 }

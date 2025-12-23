@@ -42,3 +42,8 @@
 #sdmForecastingView .input-section>*:not(h3):not(.input-group):not(button) {
     padding-left: 5px;
 }
+
+.markdown-error {
+    color: var(--theme-danger);
+    font-weight: 600;
+}

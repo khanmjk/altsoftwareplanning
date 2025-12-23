@@ -168,8 +168,7 @@ class InitiativeRow {
      */
     _createDependenciesCell(init, options) {
         const cell = document.createElement('td');
-        cell.className = 'gantt-table__cell gantt-table__cell--initiative';
-        cell.style.overflow = 'visible'; // Allow dropdown to overflow
+        cell.className = 'gantt-table__cell gantt-table__cell--initiative gantt-table__cell--overflow-visible';
 
         // Context passed from controller contains allInitiatives and optionally filteredInitiatives
         // Use filteredInitiatives if available to respect active filters

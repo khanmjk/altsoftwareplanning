@@ -155,12 +155,7 @@ class MermaidGanttRenderer extends GanttRenderer {
     _applyEnhancements(tasks) {
         const svg = this.container.querySelector('svg');
         if (svg) {
-            svg.style.width = '100%';
-            svg.style.height = '100%';
-            svg.style.minWidth = '100%';
-            svg.style.minHeight = '100%';
-            svg.style.maxWidth = 'none';
-            svg.style.maxHeight = 'none';
+            svg.classList.add('mermaid-gantt-svg');
         }
         // Add tooltips
         const taskGroups = this.container.querySelectorAll('.task');

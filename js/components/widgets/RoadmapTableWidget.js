@@ -41,7 +41,7 @@ class RoadmapTableWidget {
         // Create filters container
         this.filtersContainer = document.createElement('div');
         this.filtersContainer.id = 'roadmapTableFilters' + this.idSuffix;
-        this.filtersContainer.style.marginBottom = '15px';
+        this.filtersContainer.className = 'roadmap-table-widget__filters';
         this.container.appendChild(this.filtersContainer);
 
         // Create table container
@@ -66,9 +66,7 @@ class RoadmapTableWidget {
      */
     createFilterControls() {
         const container = document.createElement('div');
-        container.style.display = 'flex';
-        container.style.gap = '15px';
-        container.style.alignItems = 'center';
+        container.className = 'roadmap-table-widget__filter-row';
 
         // Org Filter
         const orgWrap = this._createFilterWrapper('Org:');
@@ -104,15 +102,11 @@ class RoadmapTableWidget {
      */
     _createFilterWrapper(labelText) {
         const div = document.createElement('div');
-        div.className = 'filter-item';
-        div.style.display = 'flex';
-        div.style.alignItems = 'center';
-        div.style.gap = '5px';
+        div.className = 'filter-item roadmap-table-widget__filter-item';
 
         const label = document.createElement('label');
         label.textContent = labelText;
-        label.style.fontWeight = '600';
-        label.style.marginBottom = '0';
+        label.className = 'roadmap-table-widget__filter-label';
         div.appendChild(label);
 
         return div;
@@ -159,33 +153,25 @@ class RoadmapTableWidget {
     createThemeFilter() {
         const systemData = SystemService.getCurrentSystem();
         const wrapper = document.createElement('div');
-        wrapper.className = 'filter-item';
-        wrapper.style.display = 'flex';
-        wrapper.style.alignItems = 'center';
-        wrapper.style.gap = '5px';
+        wrapper.className = 'filter-item roadmap-table-widget__filter-item';
 
         const label = document.createElement('label');
         label.textContent = 'Theme:';
-        label.style.fontWeight = '600';
-        label.style.marginBottom = '0';
+        label.className = 'roadmap-table-widget__filter-label';
         wrapper.appendChild(label);
 
         const dropdownContainer = document.createElement('div');
         dropdownContainer.className = 'custom-multiselect-dropdown';
-        dropdownContainer.style.position = 'relative';
 
         const button = document.createElement('button');
         button.id = 'theme-dropdown-button' + this.idSuffix;
-        button.className = 'dropdown-button btn btn-outline-secondary btn-sm';
+        button.className = 'dropdown-button btn btn-outline-secondary btn-sm roadmap-table-widget__dropdown-button';
         button.type = 'button';
-        button.style.minWidth = '150px';
-        button.style.textAlign = 'left';
         button.textContent = 'All Themes';
 
         const panel = document.createElement('div');
         panel.id = 'theme-dropdown-panel' + this.idSuffix;
         panel.className = 'dropdown-panel';
-        panel.style.zIndex = '1000';
 
         // Select All
         const selectAllContainer = document.createElement('div');

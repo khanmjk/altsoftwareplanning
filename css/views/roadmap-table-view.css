@@ -6,6 +6,39 @@
     overflow-x: auto;
 }
 
+.roadmap-table-container {
+    height: 100%;
+    width: 100%;
+}
+
+/* Dashboard Roadmap Table Widget Filters */
+.roadmap-table-widget__filters {
+    margin-bottom: 15px;
+}
+
+.roadmap-table-widget__filter-row {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.roadmap-table-widget__filter-row .roadmap-table-widget__filter-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.roadmap-table-widget__filter-label {
+    font-weight: 600;
+    margin-bottom: 0;
+}
+
+.roadmap-table-widget__dropdown-button {
+    min-width: 150px;
+    text-align: left;
+}
+
 /* Empty State */
 .roadmap-table-view__empty {
     text-align: center;

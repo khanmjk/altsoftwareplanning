@@ -23,7 +23,7 @@ class CapacityPlanningView {
             return;
         }
         this.container = container;
-        this.container.innerHTML = '';
+        this._clearElement(this.container);
         this.container.classList.add('workspace-view');
 
         // 1. Set Metadata
@@ -86,7 +86,7 @@ class CapacityPlanningView {
         if (!this.contentContainer) return;
 
         // Clear container
-        this.contentContainer.innerHTML = '';
+        this._clearElement(this.contentContainer);
 
         // Instantiate and Render Component
         if (viewId === 'dashboard') {
@@ -124,5 +124,12 @@ class CapacityPlanningView {
             config: SystemService.getCurrentSystem()?.capacityConfiguration,
             teamCount: SystemService.getCurrentSystem()?.teams?.length || 0
         };
+    }
+
+    _clearElement(element) {
+        if (!element) return;
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
+        }
     }
 }

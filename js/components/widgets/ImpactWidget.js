@@ -28,7 +28,7 @@ class ImpactWidget {
             return null;
         }
 
-        this.container.innerHTML = '';
+        this._clearElement(this.container);
 
         // Create SVG container
         const svgContainer = document.createElement('div');
@@ -43,7 +43,7 @@ class ImpactWidget {
         // Create summary container
         const summaryContainer = document.createElement('div');
         summaryContainer.id = 'impact-summary-container';
-        summaryContainer.style.display = 'none';
+        summaryContainer.className = 'is-hidden';
         this.container.appendChild(summaryContainer);
 
         // Create and return toolbar
@@ -56,15 +56,12 @@ class ImpactWidget {
      */
     createToolbar() {
         const controlsContainer = document.createElement('div');
-        controlsContainer.style.display = 'flex';
-        controlsContainer.style.alignItems = 'center';
-        controlsContainer.style.gap = '15px';
+        controlsContainer.className = 'impact-toolbar';
 
         // Mode label
         const modeLabel = document.createElement('label');
         modeLabel.textContent = 'View By:';
-        modeLabel.style.fontWeight = '600';
-        modeLabel.style.marginBottom = '0';
+        modeLabel.className = 'impact-toolbar__label';
         controlsContainer.appendChild(modeLabel);
 
         // Mode selector with ThemedSelect
@@ -101,7 +98,7 @@ class ImpactWidget {
      */
     updateDynamicSelector() {
         const mode = this._modeSelect?.getValue() || 'initiative';
-        this.dynamicSelectContainer.innerHTML = '';
+        this._clearElement(this.dynamicSelectContainer);
 
         const systemData = SystemService.getCurrentSystem();
         let items = [];
@@ -370,9 +367,6 @@ class ImpactWidget {
         const width = this.svg.node().getBoundingClientRect().width;
         const height = this.svg.node().getBoundingClientRect().height;
 
-        // Tooltip - use D3Service tooltip controller
-        const tooltipController = D3Service.createTooltipController({ className: 'tooltip' });
-
         // Color scales - use D3Service
         const teamColors = D3Service.createColorScale(systemData.teams.map(t => t.teamId));
         const serviceImpactCount = new Map();
@@ -415,9 +409,7 @@ class ImpactWidget {
             .attr('marker-end', d => `url(#arrow-${d.type})`)
             .style('stroke-dasharray', d => d.type === 'owns' ? '3, 3' : '0')
             .on('mouseover', (event, d) => {
-                let content = `<strong>${d.type.replace('_', ' ')}</strong>`;
-                if (d.sde) content += `<br>SDE Years: ${d.sde}`;
-                D3Service.showTooltip(event, content);
+                D3Service.showTooltip(event, this._buildLinkTooltipContent(d));
             })
             .on('mouseout', () => D3Service.hideTooltip());
 
@@ -445,20 +437,7 @@ class ImpactWidget {
 
         // Node tooltips using D3Service
         nodeGroup.on('mouseover', (event, d) => {
-            let content = `<strong>${d.type}:</strong> ${d.name}`;
-            if (d.type === 'Initiative') {
-                const sdmName = d.data.owner?.name || 'N/A';
-                const teamsImpacted = (d.data.assignments || [])
-                    .map(a => systemData.teams.find(t => t.teamId === a.teamId)?.teamIdentity || a.teamId).join(' / ');
-                content += `<br>Owner: ${sdmName}<br>Due: ${d.data.targetDueDate || 'N/A'}<br>Teams: ${teamsImpacted}`;
-            } else if (d.type === 'Service') {
-                const ownerTeam = systemData.teams.find(t => t.teamId === d.data.owningTeamId);
-                content += `<br>Owner: ${ownerTeam?.teamIdentity || 'N/A'}`;
-            } else if (d.type === 'Team') {
-                const sdm = systemData.sdms.find(s => s.sdmId === d.data.sdmId);
-                content += `<br>SDM: ${sdm?.sdmName || 'N/A'}`;
-            }
-            D3Service.showTooltip(event, content);
+            D3Service.showTooltip(event, this._buildNodeTooltipContent(d, systemData));
         })
             .on('mouseout', () => D3Service.hideTooltip());
 
@@ -509,7 +488,7 @@ class ImpactWidget {
                 return `${team?.teamIdentity || a.teamId}: ${a.sdeYears} SDE-Years`;
             }).join(' • ');
 
-            summaryContainer.style.display = 'block';
+            summaryContainer.classList.remove('is-hidden');
 
             // Create summary div
             const summaryDiv = document.createElement('div');
@@ -561,7 +540,7 @@ class ImpactWidget {
 
             summaryContainer.appendChild(summaryDiv);
         } else {
-            summaryContainer.style.display = 'none';
+            summaryContainer.classList.add('is-hidden');
         }
     }
 
@@ -642,5 +621,69 @@ class ImpactWidget {
                 }
             }
         });
+    }
+
+    _buildTooltipLine(label, value, includeSeparator = false) {
+        const line = document.createElement('div');
+        const strong = document.createElement('strong');
+        strong.textContent = label;
+        line.appendChild(strong);
+        line.appendChild(document.createTextNode(` ${value}`));
+        if (includeSeparator) {
+            line.appendChild(document.createTextNode(' • '));
+        }
+        return line;
+    }
+
+    _buildLinkTooltipContent(link) {
+        const wrapper = document.createElement('div');
+        const title = document.createElement('div');
+        const strong = document.createElement('strong');
+        strong.textContent = link.type.replace('_', ' ');
+        title.appendChild(strong);
+        wrapper.appendChild(title);
+
+        if (link.sde) {
+            const line = document.createElement('div');
+            line.textContent = `SDE Years: ${link.sde}`;
+            wrapper.appendChild(line);
+        }
+
+        return wrapper;
+    }
+
+    _buildNodeTooltipContent(node, systemData) {
+        const wrapper = document.createElement('div');
+        const header = document.createElement('div');
+        const strong = document.createElement('strong');
+        strong.textContent = `${node.type}:`;
+        header.appendChild(strong);
+        header.appendChild(document.createTextNode(` ${node.name}`));
+        wrapper.appendChild(header);
+
+        if (node.type === 'Initiative') {
+            const sdmName = node.data.owner?.name || 'N/A';
+            const teamsImpacted = (node.data.assignments || [])
+                .map(a => systemData.teams.find(t => t.teamId === a.teamId)?.teamIdentity || a.teamId)
+                .join(' / ');
+            wrapper.appendChild(this._buildTooltipLine('Owner:', sdmName));
+            wrapper.appendChild(this._buildTooltipLine('Due:', node.data.targetDueDate || 'N/A'));
+            wrapper.appendChild(this._buildTooltipLine('Teams:', teamsImpacted || 'N/A'));
+        } else if (node.type === 'Service') {
+            const ownerTeam = systemData.teams.find(t => t.teamId === node.data.owningTeamId);
+            wrapper.appendChild(this._buildTooltipLine('Owner:', ownerTeam?.teamIdentity || 'N/A'));
+        } else if (node.type === 'Team') {
+            const sdm = systemData.sdms.find(s => s.sdmId === node.data.sdmId);
+            wrapper.appendChild(this._buildTooltipLine('SDM:', sdm?.sdmName || 'N/A'));
+        }
+
+        return wrapper;
+    }
+
+    _clearElement(element) {
+        if (!element) return;
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
+        }
     }
 }

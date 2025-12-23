@@ -117,6 +117,10 @@ async function loadAndDisplayDocumentation() {
         markdownText = markdownText.replace(/^\s*#\s+[^\n]+(\n|\r\n)*/, '');
 
         const htmlContent = MarkdownService.renderWithAnchors(markdownText, customSlugify);
+        if (!htmlContent) {
+            renderDocumentationError(contentDiv, 'Markdown rendering is unavailable.');
+            return;
+        }
         renderDocumentationHtml(contentDiv, htmlContent);
         console.log("LAD_SLUGIFY: Documentation rendered.");
 

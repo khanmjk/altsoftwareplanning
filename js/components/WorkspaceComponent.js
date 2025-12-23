@@ -81,6 +81,15 @@ class WorkspaceComponent {
         }
     }
 
+    _appendHtmlContent(container, htmlContent) {
+        if (!container || !htmlContent) return;
+        const parser = new DOMParser();
+        const parsed = parser.parseFromString(htmlContent, 'text/html');
+        while (parsed.body.firstChild) {
+            container.appendChild(parsed.body.firstChild);
+        }
+    }
+
     /**
      * Renders an error message using DOM APIs
      * @param {HTMLElement} container
@@ -199,13 +208,7 @@ class WorkspaceComponent {
         this._clearElement(toolbar);
 
         if (typeof content === 'string') {
-            // For string content, create a wrapper and use textContent if it's plain text
-            // or use insertAdjacentHTML for HTML strings (acceptable for toolbar content from views)
-            const wrapper = document.createElement('div');
-            wrapper.innerHTML = content; // toolbar content from views may contain HTML
-            while (wrapper.firstChild) {
-                toolbar.appendChild(wrapper.firstChild);
-            }
+            this._appendHtmlContent(toolbar, content);
         } else if (content instanceof HTMLElement) {
             toolbar.appendChild(content);
         }
@@ -383,7 +386,9 @@ class WorkspaceComponent {
             : null;
         const clampedWidth = this._clampExtensionWidth(width, activeEntry);
         this.currentExtensionWidth = clampedWidth;
-        document.documentElement.style.setProperty('--workspace-extension-width', `${clampedWidth}px`);
+        if (typeof styleVars !== 'undefined' && styleVars.set) {
+            styleVars.set(document.documentElement, { '--workspace-extension-width': `${clampedWidth}px` });
+        }
     }
 
     _clampExtensionWidth(width, entry) {

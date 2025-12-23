@@ -62,7 +62,7 @@ class EnhancedTableWidget {
      * Creates the main DOM structure for the widget (controls area, Tabulator container).
      */
     _buildWidgetShell() {
-        this.targetElement.innerHTML = ''; // Clear the target element
+        this._clearElement(this.targetElement);
 
         this.widgetContainer = document.createElement('div');
         this.widgetContainer.className = 'enhanced-table-widget'; // For overall widget styling
@@ -147,9 +147,9 @@ class EnhancedTableWidget {
         const totalRows = this.tabulatorInstance.getDataCount("active");
 
         if (totalRows <= pageSize) {
-            footer.style.display = 'none';
+            footer.classList.add('is-hidden');
         } else {
-            footer.style.display = 'block';
+            footer.classList.remove('is-hidden');
         }
     }
 
@@ -163,7 +163,7 @@ class EnhancedTableWidget {
 
         if (this.options.showColumnToggle) {
             const gearButton = document.createElement('button');
-            gearButton.innerHTML = '<i class="fas fa-cog"></i>';
+            this._appendIcon(gearButton, 'fas fa-cog');
             gearButton.title = 'Show/Hide Columns';
             gearButton.className = 'etw-control-button etw-column-toggle-button';
             gearButton.type = 'button';
@@ -176,7 +176,7 @@ class EnhancedTableWidget {
 
         if (this.options.showExportMenu) {
             const exportButton = document.createElement('button');
-            exportButton.innerHTML = '<i class="fas fa-download"></i>';
+            this._appendIcon(exportButton, 'fas fa-download');
             exportButton.title = 'Export Data';
             exportButton.className = 'etw-control-button etw-export-button';
             exportButton.type = 'button';
@@ -185,6 +185,20 @@ class EnhancedTableWidget {
                 this._toggleExportDropdown(exportButton);
             };
             this.controlsDiv.appendChild(exportButton);
+        }
+    }
+
+    _appendIcon(button, iconClass) {
+        if (!button) return;
+        const icon = document.createElement('i');
+        icon.className = iconClass;
+        button.appendChild(icon);
+    }
+
+    _clearElement(element) {
+        if (!element) return;
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
         }
     }
 
@@ -293,10 +307,13 @@ class EnhancedTableWidget {
         parentForDropdown.appendChild(dropdownElement); // Append first to calculate position correctly if needed
 
         // Basic positioning (can be enhanced with more precise calculations)
-        dropdownElement.style.position = 'absolute';
-        dropdownElement.style.top = buttonElement.offsetTop + buttonElement.offsetHeight + 'px'; // Below the button
-        dropdownElement.style.right = parentForDropdown.offsetWidth - (buttonElement.offsetLeft + buttonElement.offsetWidth) + 'px'; // Align right edge of dropdown with right edge of button
-        dropdownElement.style.display = 'block';
+        if (typeof styleVars !== 'undefined' && styleVars.set) {
+            styleVars.set(dropdownElement, {
+                '--etw-dropdown-top': `${buttonElement.offsetTop + buttonElement.offsetHeight}px`,
+                '--etw-dropdown-right': `${parentForDropdown.offsetWidth - (buttonElement.offsetLeft + buttonElement.offsetWidth)}px`
+            });
+        }
+        dropdownElement.classList.add('etw-dropdown--open');
 
         // Click outside to close
         const clickOutsideHandler = (event) => {

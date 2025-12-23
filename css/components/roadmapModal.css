@@ -13,6 +13,10 @@
     backdrop-filter: blur(2px);
 }
 
+.roadmap-modal-overlay.is-open {
+    display: block;
+}
+
 .roadmap-modal-content {
     background-color: var(--theme-card-bg);
     margin: 5% auto;
@@ -201,6 +205,14 @@
     display: flex;
     gap: 10px;
     align-items: flex-end;
+}
+
+.assignment-controls__team {
+    flex-grow: 1;
+}
+
+.assignment-controls__sde {
+    width: 120px;
 }
 
 .btn-sm {

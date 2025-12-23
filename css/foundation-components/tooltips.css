@@ -1,15 +1,26 @@
 /* Tooltip Component Styles */
 
-.tooltip {
+.tooltip,
+.d3-tooltip {
     position: absolute;
+    top: 0;
+    left: 0;
     text-align: left;
     width: auto;
     max-width: 300px;
     padding: 10px;
     font: 12px sans-serif;
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid #ccc;
+    background: var(--theme-card-bg);
+    border: 1px solid var(--theme-border-color);
     border-radius: 5px;
     pointer-events: none;
     z-index: 1000;
+    color: var(--theme-text-primary);
+    opacity: 0;
+    transform: translate(var(--tooltip-x, 0px), var(--tooltip-y, 0px));
+    transition: opacity 0.15s ease-in-out;
+}
+
+.tooltip--visible {
+    opacity: 0.95;
 }

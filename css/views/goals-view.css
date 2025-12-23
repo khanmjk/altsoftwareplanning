@@ -149,6 +149,7 @@
     height: 100%;
     background: linear-gradient(90deg, var(--theme-success, #28a745), color-mix(in srgb, var(--theme-success, #28a745), var(--theme-info, #17a2b8) 50%));
     transition: width 0.3s ease;
+    width: var(--goal-progress, 0%);
 }
 
 .progress-bar-text {

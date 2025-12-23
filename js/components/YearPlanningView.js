@@ -387,7 +387,7 @@ class YearPlanningView {
         const isExpanded = this.isSummaryExpanded;
 
         // Clear container
-        this.container.innerHTML = '';
+        this._clearElement(this.container);
 
         // === Team Load Summary Section ===
         // Styling now in year-planning-view.css
@@ -546,9 +546,9 @@ class YearPlanningView {
         }
 
         // Clear existing content
-        summaryTableHead.innerHTML = '';
-        summaryTableBody.innerHTML = '';
-        summaryTableFoot.innerHTML = '';
+        this._clearElement(summaryTableHead);
+        this._clearElement(summaryTableBody);
+        this._clearElement(summaryTableFoot);
 
         // Scenario and state configuration
         const scenarioKey = this.scenario === 'funded' ? 'FundedHC' :
@@ -764,7 +764,7 @@ class YearPlanningView {
         const tableContainer = document.getElementById('planningTableContainer');
         if (!tableContainer) { return; }
 
-        tableContainer.innerHTML = '';
+        this._clearElement(tableContainer);
 
         const tableWrapper = document.createElement('div');
         tableWrapper.id = 'planningTableWrapper';
@@ -1207,6 +1207,13 @@ class YearPlanningView {
         // Reset drag state
         this.draggedInitiativeId = null;
         this.draggedRowElement = null;
+    }
+
+    _clearElement(element) {
+        if (!element) return;
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
+        }
     }
 
     // ==================== AI Integration ====================

@@ -609,7 +609,7 @@ class GanttPlanningView {
     renderDynamicGroupFilter() {
         const wrap = document.getElementById('ganttDynamicFilter');
         if (!wrap) return;
-        wrap.innerHTML = '';
+        this._clearElement(wrap);
 
         if (this.currentGanttGroupBy === 'Team') {
             // Build team options for ThemedSelect
@@ -1098,6 +1098,13 @@ class GanttPlanningView {
         } else {
             // Show error feedback
             ToastComponent.show('Failed to save changes', 'error');
+        }
+    }
+
+    _clearElement(element) {
+        if (!element) return;
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
         }
     }
 }

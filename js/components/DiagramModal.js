@@ -35,7 +35,7 @@ class DiagramModal {
 
         const closeBtn = document.createElement('span');
         closeBtn.className = 'close-button';
-        closeBtn.innerHTML = '&times;';
+        closeBtn.textContent = '\u00D7';
         closeBtn.addEventListener('click', () => this.close());
 
         header.appendChild(title);
@@ -78,12 +78,26 @@ class DiagramModal {
         this.contentElement = content;
     }
 
+    open() {
+        this.render();
+        if (this.modalElement) {
+            this.modalElement.classList.add('is-open');
+        }
+    }
+
     close() {
         if (this.modalElement) {
-            this.modalElement.style.display = 'none';
+            this.modalElement.classList.remove('is-open');
         }
         if (this.contentElement) {
-            this.contentElement.innerHTML = '';
+            this._clearElement(this.contentElement);
+        }
+    }
+
+    _clearElement(element) {
+        if (!element) return;
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
         }
     }
 }

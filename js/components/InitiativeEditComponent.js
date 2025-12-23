@@ -45,7 +45,7 @@ class InitiativeEditComponent {
             console.error(`InitiativeEditComponent: Container '${this.containerId}' not found.`);
             return;
         }
-        container.innerHTML = '';
+        this._clearElement(container);
         container.className = 'initiative-edit-list';
 
         // Ensure we are working with fresh data if possible, but systemData is passed by ref.
@@ -59,7 +59,10 @@ class InitiativeEditComponent {
         const hasDraft = !!this.draftInitiative;
 
         if (!hasItems && !hasDraft) {
-            container.innerHTML = '<p class="initiative-edit-list-empty">No initiatives found. Click "Add Initiative" to create one.</p>';
+            const empty = document.createElement('p');
+            empty.className = 'initiative-edit-list-empty';
+            empty.textContent = 'No initiatives found. Click "Add Initiative" to create one.';
+            container.appendChild(empty);
             return;
         }
 
@@ -207,7 +210,6 @@ class InitiativeEditComponent {
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'btn btn-danger';
         deleteBtn.innerText = isDraft ? 'Cancel' : 'Delete Initiative';
-        deleteBtn.style.marginLeft = '10px';
         deleteBtn.onclick = () => this._deleteInitiative(index);
 
         actionsDiv.appendChild(saveBtn);
@@ -377,7 +379,7 @@ class InitiativeEditComponent {
         list.className = 'initiative-assignments-list';
 
         const renderList = () => {
-            list.innerHTML = '';
+            this._clearElement(list);
             (init.assignments || []).forEach((a, aIdx) => {
                 const team = (this.systemData.teams || []).find(t => t.teamId === a.teamId);
                 const teamName = team ? (team.teamIdentity || team.teamName) : a.teamId;
@@ -438,10 +440,9 @@ class InitiativeEditComponent {
 
         const sdeInput = document.createElement('input');
         sdeInput.type = 'number';
-        sdeInput.className = 'initiative-edit-input';
+        sdeInput.className = 'initiative-edit-input initiative-assignment-sde';
         sdeInput.placeholder = 'SDE Years';
         sdeInput.step = '0.1';
-        sdeInput.style.width = '100px';
 
         const addBtn = document.createElement('button');
         addBtn.className = 'btn btn-secondary';
@@ -475,6 +476,13 @@ class InitiativeEditComponent {
         container.appendChild(controls);
 
         return container;
+    }
+
+    _clearElement(element) {
+        if (!element) return;
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
+        }
     }
 
     _createROIContent(init, index) {

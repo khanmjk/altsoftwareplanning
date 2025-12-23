@@ -477,6 +477,7 @@
     width: 100%;
     flex-wrap: wrap;
     /* Allow wrapping on small screens */
+    margin-bottom: 15px;
 }
 
 .roadmap-filter-group {

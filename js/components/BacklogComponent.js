@@ -29,7 +29,13 @@ class BacklogComponent {
         const container = document.getElementById(this.containerId);
         if (!container) return;
 
-        container.innerHTML = `<div id="backlogTableContainer" class="roadmap-table-container" style="height: 100%; width: 100%;"></div>`;
+        while (container.firstChild) {
+            container.removeChild(container.firstChild);
+        }
+        const tableContainer = document.createElement('div');
+        tableContainer.id = 'backlogTableContainer';
+        tableContainer.className = 'roadmap-table-container';
+        container.appendChild(tableContainer);
         this.renderTable();
     }
 
@@ -285,10 +291,24 @@ class BacklogComponent {
                 title: 'Actions', width: 120, hozAlign: 'center', headerSort: false,
                 formatter: (cell) => {
                     const id = cell.getRow().getData().id;
-                    return `<div class="roadmap-action-buttons">
-                        <button class="btn btn-secondary btn-sm" data-action="edit" data-initiative-id="${id}">Edit</button>
-                        <button class="btn btn-danger btn-sm" data-action="delete" data-initiative-id="${id}">Del</button>
-                    </div>`;
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'roadmap-action-buttons';
+
+                    const editButton = document.createElement('button');
+                    editButton.className = 'btn btn-secondary btn-sm';
+                    editButton.dataset.action = 'edit';
+                    editButton.dataset.initiativeId = id;
+                    editButton.textContent = 'Edit';
+
+                    const deleteButton = document.createElement('button');
+                    deleteButton.className = 'btn btn-danger btn-sm';
+                    deleteButton.dataset.action = 'delete';
+                    deleteButton.dataset.initiativeId = id;
+                    deleteButton.textContent = 'Del';
+
+                    wrapper.appendChild(editButton);
+                    wrapper.appendChild(deleteButton);
+                    return wrapper;
                 }
             }
         ];

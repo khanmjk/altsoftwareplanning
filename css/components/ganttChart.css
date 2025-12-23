@@ -139,6 +139,41 @@
     min-height: 0;
 }
 
+.frappe-gantt-renderer {
+    display: block;
+    height: 100%;
+    min-height: 0;
+    overflow: auto;
+}
+
+.frappe-gantt-wrapper {
+    overflow: hidden;
+    height: var(--frappe-gantt-height, 100%);
+    min-height: var(--frappe-gantt-height, 100%);
+    width: 100%;
+    position: relative;
+}
+
+.frappe-gantt-wrapper svg {
+    width: 100%;
+    max-width: none;
+    height: var(--frappe-gantt-height, auto);
+}
+
+.gantt-empty-state {
+    padding: 20px;
+    text-align: center;
+    color: var(--theme-text-muted);
+}
+
+.gantt-error {
+    color: var(--theme-danger);
+    background-color: color-mix(in srgb, var(--theme-danger), transparent 90%);
+    padding: 10px;
+    border: 1px solid var(--theme-danger);
+    border-radius: 4px;
+}
+
 /* Ensure Frappe wrapper inside the chart fills height and scrolls */
 .gantt-chart-box>div {
     height: 100%;
@@ -247,6 +282,10 @@
     opacity: 0.45;
 }
 
+.gantt .bar-wrapper.focus-row .bar {
+    filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.7));
+}
+
 .gantt .bar-wrapper.focus-row .bar-label {
     fill: var(--theme-gantt-focus-row-text);
     font-weight: 700;
@@ -258,6 +297,7 @@
     stroke-dasharray: 5 4;
     opacity: 0.7;
     fill: none;
+    cursor: help;
 }
 
 /* Initiative dependencies: solid primary-colored lines */
@@ -267,6 +307,7 @@
     stroke-width: 2px !important;
     stroke-dasharray: none !important;
     opacity: 0.85 !important;
+    cursor: help;
 }
 
 /* Task/Assignment dependencies: dotted success-colored lines */
@@ -276,6 +317,7 @@
     stroke-width: 1.5px !important;
     stroke-dasharray: 5 4 !important;
     opacity: 0.8 !important;
+    cursor: help;
 }
 
 .gantt .arrow-head {
@@ -296,6 +338,8 @@
     white-space: nowrap;
     pointer-events: none;
     z-index: 10;
+    top: var(--soft-badge-top, 0px);
+    left: var(--soft-badge-left, 0px);
 }
 
 
@@ -373,6 +417,15 @@
 
 .mermaid .task rect {
     height: 28px;
+}
+
+.mermaid-gantt-svg {
+    width: 100%;
+    height: 100%;
+    min-width: 100%;
+    min-height: 100%;
+    max-width: none;
+    max-height: none;
 }
 
 .mermaid .task text {
@@ -522,4 +575,36 @@
     color: var(--theme-text-secondary) !important;
     font-size: 11px !important;
     margin-bottom: 4px !important;
+}
+
+.frappe-gantt-tooltip {
+    width: 240px;
+    padding: 10px;
+}
+
+.frappe-gantt-tooltip__title {
+    margin: 0 0 5px 0;
+    font-size: 14px;
+    border-bottom: 1px solid var(--theme-border-color);
+    padding-bottom: 4px;
+}
+
+.frappe-gantt-tooltip__badge {
+    font-size: 10px;
+    background: var(--theme-bg-secondary);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--theme-text-secondary);
+    display: inline-block;
+}
+
+.frappe-gantt-tooltip__line {
+    margin: 8px 0 0 0;
+    font-size: 12px;
+}
+
+.frappe-gantt-tooltip__detail {
+    margin: 5px 0 0 0;
+    font-size: 11px;
+    color: var(--theme-text-muted);
 }

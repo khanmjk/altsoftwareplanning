@@ -15,7 +15,7 @@ class TeamEditComponent {
             console.error(`TeamEditComponent: Container '${this.containerId}' not found.`);
             return;
         }
-        container.innerHTML = '';
+        this._clearElement(container);
         container.className = 'team-edit-list';
 
         if (!this.systemData.teams) {
@@ -122,7 +122,6 @@ class TeamEditComponent {
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'btn btn-danger';
         deleteBtn.innerText = 'Delete Team';
-        deleteBtn.style.marginLeft = '10px';
         deleteBtn.onclick = () => this._deleteTeam(index);
 
         actionsDiv.appendChild(saveBtn);
@@ -253,7 +252,7 @@ class TeamEditComponent {
         // Sr Mgr Container (Placeholder, populated by displaySeniorManagerAssignment)
         const srMgrContainer = document.createElement('div');
         srMgrContainer.id = `srMgrAssignmentContainer_${index}`;
-        srMgrContainer.style.marginTop = '10px';
+        srMgrContainer.className = 'team-edit-sr-manager';
         sdmSection.appendChild(srMgrContainer);
 
         return sdmSection;
@@ -482,20 +481,20 @@ class TeamEditComponent {
                 listDiv.appendChild(item);
             });
         } else {
-            listDiv.innerHTML = '<em style="color: #999; padding: 5px;">No away-team members assigned.</em>';
+            const empty = document.createElement('em');
+            empty.className = 'away-team-empty';
+            empty.textContent = 'No away-team members assigned.';
+            listDiv.appendChild(empty);
         }
         section.appendChild(listDiv);
 
         // Add New Form
         const form = document.createElement('div');
-        form.className = 'team-edit-form-group';
-        form.style.display = 'flex';
-        form.style.gap = '10px';
-        form.style.alignItems = 'flex-end';
+        form.className = 'team-edit-form-group away-team-form';
 
         // Name field
         const nameDiv = document.createElement('div');
-        nameDiv.style.flex = '2';
+        nameDiv.className = 'away-team-form__field away-team-form__field--wide';
         const nameLabel = document.createElement('label');
         nameLabel.className = 'team-edit-label';
         nameLabel.textContent = 'Name';
@@ -509,7 +508,7 @@ class TeamEditComponent {
 
         // Level field
         const levelDiv = document.createElement('div');
-        levelDiv.style.flex = '1';
+        levelDiv.className = 'away-team-form__field away-team-form__field--narrow';
         const levelLabel = document.createElement('label');
         levelLabel.className = 'team-edit-label';
         levelLabel.textContent = 'Level';
@@ -525,7 +524,7 @@ class TeamEditComponent {
 
         // Source field
         const sourceDiv = document.createElement('div');
-        sourceDiv.style.flex = '2';
+        sourceDiv.className = 'away-team-form__field away-team-form__field--wide';
         const sourceLabel = document.createElement('label');
         sourceLabel.className = 'team-edit-label';
         sourceLabel.textContent = 'Source';
@@ -642,5 +641,12 @@ class TeamEditComponent {
         CapacityEngine.recalculate(this.systemData);
 
         notificationManager.showToast('Team changes saved.', 'success');
+    }
+
+    _clearElement(element) {
+        if (!element) return;
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
+        }
     }
 }

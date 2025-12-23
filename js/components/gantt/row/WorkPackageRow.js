@@ -203,7 +203,7 @@ class WorkPackageRow {
         });
 
         const selectContainer = themedSelect.render();
-        selectContainer.style.minWidth = '120px';
+        selectContainer.classList.add('gantt-table__select');
         selectContainer.dataset.kind = 'work-package';
         selectContainer.dataset.field = 'dependencies';
         selectContainer.dataset.wpId = wp.workPackageId;

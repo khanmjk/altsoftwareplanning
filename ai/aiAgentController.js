@@ -23,6 +23,69 @@ const aiAgentController = (() => {
         return message;
     }
 
+    function buildInlineStrongMessage(prefix, strongText, suffix = '') {
+        const span = document.createElement('span');
+        if (prefix) span.appendChild(document.createTextNode(prefix));
+        const strong = document.createElement('strong');
+        strong.textContent = strongText;
+        span.appendChild(strong);
+        if (suffix) span.appendChild(document.createTextNode(suffix));
+        return span;
+    }
+
+    function buildParagraphMessage(text) {
+        const p = document.createElement('p');
+        p.textContent = text;
+        return p;
+    }
+
+    function buildDiagramImageMessage(response) {
+        const wrapper = document.createElement('div');
+        const intro = document.createElement('p');
+        intro.textContent = 'Here is the generated diagram:';
+        wrapper.appendChild(intro);
+
+        const image = document.createElement('img');
+        image.src = response.imageUrl;
+        image.alt = response.altText || 'Generated diagram';
+        image.className = 'chat-generated-image';
+        image.title = 'Right-click to copy or save this image';
+        wrapper.appendChild(image);
+        return wrapper;
+    }
+
+    function buildAgentStepMessage(stepIndex, command) {
+        return buildInlineStrongMessage(`Step ${stepIndex}: Executing `, command, '...');
+    }
+
+    function buildAgentSummaryMessage(stepSummaries) {
+        const wrapper = document.createElement('div');
+        const heading = document.createElement('p');
+        const strong = document.createElement('strong');
+        strong.textContent = 'Agent plan finished.';
+        heading.appendChild(strong);
+        heading.appendChild(document.createTextNode(' UI has been refreshed.'));
+        wrapper.appendChild(heading);
+
+        if (stepSummaries.length > 0) {
+            const label = document.createElement('p');
+            const labelStrong = document.createElement('strong');
+            labelStrong.textContent = 'Actions performed:';
+            label.appendChild(labelStrong);
+            wrapper.appendChild(label);
+
+            const list = document.createElement('ul');
+            stepSummaries.forEach((summary) => {
+                const item = document.createElement('li');
+                item.textContent = summary;
+                list.appendChild(item);
+            });
+            wrapper.appendChild(list);
+        }
+
+        return wrapper;
+    }
+
     const SUGGESTED_QUESTIONS = {
         planningView: [
             { text: "Which teams are overloaded in this plan?" },
@@ -332,13 +395,12 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
             );
 
             if (response && response.isImage && response.imageUrl) {
-                const html = `\n                <p>Here is the generated diagram:</p>\n                <img src="${response.imageUrl}"\n                     alt="${response.altText || 'Generated diagram'}"\n                     class="chat-generated-image"\n                     title="Right-click to copy or save this image" />\n            `;
                 if (view) {
-                    view.hideAgentLoadingIndicator(loadingMessageEl, html);
+                    view.hideAgentLoadingIndicator(loadingMessageEl, buildDiagramImageMessage(response));
                 }
             } else if (response && response.code) {
                 if (view) {
-                    view.hideAgentLoadingIndicator(loadingMessageEl, '<p>Diagram generated. Click "View Diagram" to open.</p>');
+                    view.hideAgentLoadingIndicator(loadingMessageEl, buildParagraphMessage('Diagram generated. Click "View Diagram" to open.'));
                 }
                 if (view) {
                     view.postDiagramWidget(response.title, response.code);
@@ -349,7 +411,11 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
         } catch (error) {
             console.error("Error during AI image submit:", error);
             if (view) {
-                view.hideAgentLoadingIndicator(loadingMessageEl, `<span style="color:red;">Error: ${error.message}</span>`);
+                view.hideAgentLoadingIndicator(
+                    loadingMessageEl,
+                    buildParagraphMessage(`Error: ${error.message}`),
+                    { isError: true }
+                );
             }
         } finally {
             isAgentThinking = false;
@@ -372,7 +438,7 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
 
 
         if (view) {
-            view.hideAgentLoadingIndicator(loadingMessageEl, '<p>Starting agent plan...</p>');
+            view.hideAgentLoadingIndicator(loadingMessageEl, buildParagraphMessage('Starting agent plan...'));
         }
 
         console.debug('[AI Agent Controller] Executing agent plan with steps:', steps);
@@ -384,11 +450,11 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
             try {
                 const resolvedPayload = _resolvePayloadPlaceholders(step.payload || {}, stepResults);
                 if (view) {
-                    view.postAgentMessageToView(`Step ${i + 1}: Executing <b>${step.command}</b>...`);
+                    view.postAgentMessageToView(buildAgentStepMessage(i + 1, step.command));
                 }
                 if (step.command === 'generateDiagram') {
                     if (view) {
-                        view.postAgentMessageToView(`Generating diagram: "${resolvedPayload.description || ''}"...`);
+                        view.postAgentMessageToView(buildParagraphMessage(`Generating diagram: "${resolvedPayload.description || ''}"...`));
                     }
                     const contextJson = scrapeCurrentViewContext();
                     console.debug("[AI-DIAGRAM] Context JSON length:", (contextJson || '').length);
@@ -441,13 +507,7 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
         navigationManager.refresh();
 
         if (view) {
-            let summaryHtml = '<b>Agent plan finished.</b> UI has been refreshed.';
-            if (stepSummaries.length > 0) {
-                summaryHtml += '<br><br><strong>Actions performed:</strong><ul>' +
-                    stepSummaries.map(text => `<li>${text}</li>`).join('') +
-                    '</ul>';
-            }
-            view.postAgentMessageToView(summaryHtml);
+            view.postAgentMessageToView(buildAgentSummaryMessage(stepSummaries));
         }
     }
 
@@ -490,34 +550,34 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
             case 'addInitiative': {
                 const title = payload?.title || result?.title || 'initiative';
                 const planningYear = payload?.attributes?.planningYear || (result?.attributes?.planningYear);
-                return `Created initiative <strong>${title}</strong>${planningYear ? ` for ${planningYear}` : ''}.`;
+                return `Created initiative "${title}"${planningYear ? ` for ${planningYear}` : ''}.`;
             }
             case 'updateInitiative': {
                 const initiativeId = payload?.initiativeId || result?.initiativeId || '(unknown)';
                 const summary = _summarizeInitiativeUpdates(payload?.updates || {}, result);
-                return `Updated initiative <code>${initiativeId}</code>${summary ? ` (${summary})` : '.'}`;
+                return `Updated initiative ${initiativeId}${summary ? ` (${summary})` : '.'}`;
             }
             case 'deleteInitiative': {
                 const initiativeId = payload?.initiativeId || result?.initiativeId || '(unknown)';
-                return `Deleted initiative <code>${initiativeId}</code>.`;
+                return `Deleted initiative ${initiativeId}.`;
             }
             case 'moveEngineerToTeam': {
                 const engineer = payload?.engineerName || result?.name || 'engineer';
                 const team = payload?.newTeamId || result?.currentTeamId || 'unassigned';
-                return `Moved ${engineer} to team <code>${team}</code>.`;
+                return `Moved ${engineer} to team ${team}.`;
             }
             case 'addEngineerToRoster': {
                 const engineerName = payload?.name || result?.name || 'engineer';
-                return `Added engineer <strong>${engineerName}</strong> to roster.`;
+                return `Added engineer ${engineerName} to roster.`;
             }
             case 'addNewTeam': {
                 const teamId = result?.teamId || '(new team)';
                 const teamName = result?.teamName || result?.teamIdentity || '';
-                return `Created team <strong>${teamName || teamId}</strong>.`;
+                return `Created team ${teamName || teamId}.`;
             }
             case 'addNewService': {
                 const serviceName = payload?.serviceData?.serviceName || result?.serviceName || 'service';
-                return `Created service <strong>${serviceName}</strong>.`;
+                return `Created service ${serviceName}.`;
             }
             case 'bulkUpdateTeamCapacity': {
                 const count = result?.updatedCount ?? 0;
@@ -543,10 +603,10 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
                 const moved = result?.movedTeamIds?.length ?? 0;
                 const source = payload?.sourceSdmId || payload?.fromSdmId;
                 const target = payload?.targetSdmId || payload?.toSdmId;
-                return `Moved ${moved} teams from <code>${source}</code> to <code>${target}</code>.`;
+                return `Moved ${moved} teams from ${source} to ${target}.`;
             }
             default:
-                return `Executed <code>${command}</code> (step ${index + 1}).`;
+                return `Executed ${command} (step ${index + 1}).`;
         }
     }
 
@@ -722,8 +782,7 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
         if (container) {
             container.replaceChildren(); // Clear existing content
             const p = document.createElement('p');
-            p.style.color = 'var(--theme-text-secondary)';
-            p.style.fontStyle = 'italic';
+            p.className = 'agent-confirmation-note';
             p.textContent = outcomeText;
             container.appendChild(p);
         }
@@ -746,6 +805,3 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
         _waitForAnalysisFunction
     };
 })();
-
-
-

@@ -81,6 +81,18 @@
     font-weight: 600;
 }
 
+.org-editable-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.org-edit-icon {
+    color: var(--theme-primary);
+    font-size: 0.8em;
+    cursor: pointer;
+}
+
 .org-details {
     font-size: 0.85em;
     color: var(--theme-text-secondary);

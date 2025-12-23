@@ -43,7 +43,6 @@ class RoadmapComponent {
         const filtersContainer = document.createElement('div');
         filtersContainer.id = 'roadmapTableFilters';
         filtersContainer.className = 'roadmap-toolbar-content';
-        filtersContainer.style.marginBottom = '15px';
         container.appendChild(filtersContainer);
 
         // Create grid container

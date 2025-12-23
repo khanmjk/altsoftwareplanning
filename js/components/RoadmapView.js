@@ -28,7 +28,11 @@ class RoadmapView {
         });
 
         // 2. Setup Container
-        container.innerHTML = `<div id="roadmapViewContainer" class="roadmap-view-container"></div>`;
+        this._clearElement(container);
+        const viewContainer = document.createElement('div');
+        viewContainer.id = 'roadmapViewContainer';
+        viewContainer.className = 'roadmap-view-container';
+        container.appendChild(viewContainer);
 
         // 3. Setup Pill Navigation and Toolbar
         this.setupToolbar();
@@ -62,13 +66,19 @@ class RoadmapView {
 
         const addBtn = document.createElement('button');
         addBtn.className = 'btn btn-secondary btn-sm';
-        addBtn.innerHTML = '<i class="fas fa-plus"></i> Add Initiative';
+        const addIcon = document.createElement('i');
+        addIcon.className = 'fas fa-plus';
+        addBtn.appendChild(addIcon);
+        addBtn.appendChild(document.createTextNode(' Add Initiative'));
         addBtn.onclick = () => this.openModalForAdd();
         actionsRow.appendChild(addBtn);
 
         const themesBtn = document.createElement('button');
         themesBtn.className = 'btn btn-secondary btn-sm';
-        themesBtn.innerHTML = '<i class="fas fa-tags"></i> Manage Themes';
+        const themesIcon = document.createElement('i');
+        themesIcon.className = 'fas fa-tags';
+        themesBtn.appendChild(themesIcon);
+        themesBtn.appendChild(document.createTextNode(' Manage Themes'));
         themesBtn.onclick = () => {
             navigationManager.navigateTo('managementView', { tab: 'themes' });
         };
@@ -93,9 +103,9 @@ class RoadmapView {
         if (!container) return;
 
         // Clear container
-        container.innerHTML = '';
+        this._clearElement(container);
         const controlsContainer = document.getElementById('roadmapViewControls');
-        if (controlsContainer) controlsContainer.innerHTML = '';
+        if (controlsContainer) this._clearElement(controlsContainer);
 
         // Instantiate and Render Component
         if (viewId === 'backlog') {
@@ -207,5 +217,12 @@ class RoadmapView {
             themeCount: themes.length,
             quarterlyRoadmap: initiatives.filter(i => i.status === 'Committed' || i.status === 'In Progress').length
         };
+    }
+
+    _clearElement(element) {
+        if (!element) return;
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
+        }
     }
 }

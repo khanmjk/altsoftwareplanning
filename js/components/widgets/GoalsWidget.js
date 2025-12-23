@@ -31,7 +31,7 @@ class GoalsWidget {
         }
 
         // Clear and create structure
-        this.container.innerHTML = '';
+        this._clearElement(this.container);
 
         this.cardsContainer = document.createElement('div');
         this.cardsContainer.id = 'goalCardsContainer';
@@ -140,7 +140,7 @@ class GoalsWidget {
         if (!this.cardsContainer) return;
 
         const goalData = this.prepareGoalData();
-        this.cardsContainer.innerHTML = '';
+        this._clearElement(this.cardsContainer);
 
         if (goalData.length === 0) {
             const emptyMsg = document.createElement('p');
@@ -281,7 +281,9 @@ class GoalsWidget {
 
         const progressFill = document.createElement('div');
         progressFill.className = 'progress-bar-fill';
-        progressFill.style.width = `${progressPct}%`;
+        if (typeof styleVars !== 'undefined' && styleVars.set) {
+            styleVars.set(progressFill, { '--goal-progress': `${progressPct}%` });
+        }
         progressContainer.appendChild(progressFill);
 
         const progressText = document.createElement('span');
@@ -455,5 +457,12 @@ class GoalsWidget {
                 }
             });
         });
+    }
+
+    _clearElement(element) {
+        if (!element) return;
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
+        }
     }
 }

@@ -38,7 +38,7 @@ class SettingsView {
         workspaceComponent.setToolbar(this.pillNav.render());
 
         // 3. Clear and create content structure using DOM
-        this.container.innerHTML = '';
+        this._clearElement(this.container);
 
         const wrapper = document.createElement('div');
         wrapper.className = 'settings-view-container workspace-view';
@@ -624,7 +624,7 @@ class SettingsView {
             }));
 
             // Clear container and rebuild ThemedSelect
-            themeContainer.innerHTML = '';
+            this._clearElement(themeContainer);
             this._themeSelect = new ThemedSelect({
                 options: themeOptions,
                 value: randomTheme.id,
@@ -654,5 +654,12 @@ class SettingsView {
             hasSystemLoaded: !!SystemService.getCurrentSystem(),
             currentTheme: ThemeService.getCurrentTheme()
         };
+    }
+
+    _clearElement(element) {
+        if (!element) return;
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
+        }
     }
 }

@@ -136,7 +136,7 @@ class ThemedSelect {
      * Render dropdown options
      */
     _renderOptions() {
-        this.dropdown.innerHTML = '';
+        this._clearElement(this.dropdown);
 
         this.options.forEach((opt, index) => {
             const option = document.createElement('div');
@@ -153,8 +153,6 @@ class ThemedSelect {
                 checkbox.className = 'themed-select__checkbox';
                 checkbox.checked = this.value.includes(opt.value);
                 checkbox.tabIndex = -1; // Prevent tab focus, let container handle it
-                checkbox.style.marginRight = '8px';
-                checkbox.style.pointerEvents = 'none'; // Click handled by option
 
                 option.appendChild(checkbox);
                 const span = document.createElement('span');
@@ -227,6 +225,13 @@ class ThemedSelect {
                 this.trigger.textContent = this.placeholder;
                 this.trigger.classList.add('themed-select__trigger--placeholder');
             }
+        }
+    }
+
+    _clearElement(element) {
+        if (!element) return;
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
         }
     }
 
@@ -712,7 +717,7 @@ class ThemedSelect {
         const themedElement = instance.render();
 
         // Hide original select (keep for form submission and event handling)
-        select.style.display = 'none';
+        select.classList.add('is-hidden');
         select.setAttribute('data-themed-select-upgraded', 'true');
         select.setAttribute('aria-hidden', 'true');
         select.tabIndex = -1;

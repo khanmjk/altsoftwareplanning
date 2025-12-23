@@ -11,7 +11,7 @@ class CapacityConfigurationView {
 
     render(container) {
         this.container = container;
-        this.container.innerHTML = '';
+        this._clearElement(this.container);
 
         const wrapper = document.createElement('div');
         wrapper.className = 'capacity-configuration-view';
@@ -212,7 +212,7 @@ class CapacityConfigurationView {
     }
 
     _renderLeaveTypesRows(tbody) {
-        tbody.innerHTML = '';
+        this._clearElement(tbody);
         const leaveTypes = SystemService.getCurrentSystem().capacityConfiguration?.leaveTypes || [];
         leaveTypes.forEach(lt => {
             const row = tbody.insertRow();
@@ -227,7 +227,7 @@ class CapacityConfigurationView {
     }
 
     _renderOrgEventsRows(tbody) {
-        tbody.innerHTML = '';
+        this._clearElement(tbody);
         const events = SystemService.getCurrentSystem().capacityConfiguration?.globalConstraints?.orgEvents || [];
         events.forEach((event, index) => {
             const row = tbody.insertRow();
@@ -458,7 +458,7 @@ class CapacityConfigurationView {
         actTable.appendChild(actTbody);
 
         const renderActs = () => {
-            actTbody.innerHTML = '';
+            this._clearElement(actTbody);
             (team.teamCapacityAdjustments.teamActivities || []).forEach((act, idx) => {
                 const r = actTbody.insertRow();
 
@@ -488,7 +488,7 @@ class CapacityConfigurationView {
 
                 const delBtn = document.createElement('button');
                 delBtn.className = 'btn btn-danger btn-sm';
-                delBtn.innerHTML = '&times;';
+                delBtn.textContent = '\u00D7';
                 delBtn.onclick = () => {
                     team.teamCapacityAdjustments.teamActivities.splice(idx, 1);
                     renderActs();
@@ -550,5 +550,12 @@ class CapacityConfigurationView {
             teamCount: teams.length,
             teamsWithAdjustments: teams.filter(t => t.teamCapacityAdjustments).length
         };
+    }
+
+    _clearElement(element) {
+        if (!element) return;
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
+        }
     }
 }

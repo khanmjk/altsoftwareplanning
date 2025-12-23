@@ -42,6 +42,17 @@
     border-left: 1px solid var(--theme-border-color);
 }
 
+.impact-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.impact-toolbar__label {
+    font-weight: 600;
+    margin-bottom: 0;
+}
+
 /* Year Selector */
 .dashboard-filter-bar {
     display: flex;

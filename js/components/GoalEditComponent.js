@@ -46,7 +46,7 @@ class GoalEditComponent {
             console.error(`GoalEditComponent: Container '${this.containerId}' not found.`);
             return;
         }
-        container.innerHTML = '';
+        this._clearElement(container);
         container.className = 'inline-edit-list';
 
         if (!this.systemData.goals) {
@@ -57,7 +57,10 @@ class GoalEditComponent {
         const hasDraft = !!this.draftGoal;
 
         if (!hasItems && !hasDraft) {
-            container.innerHTML = '<p class="inline-edit-list-empty">No strategic goals defined. Click "Add Goal" to create one.</p>';
+            const empty = document.createElement('p');
+            empty.className = 'inline-edit-list-empty';
+            empty.textContent = 'No strategic goals defined. Click "Add Goal" to create one.';
+            container.appendChild(empty);
             return;
         }
 
@@ -162,13 +165,27 @@ class GoalEditComponent {
 
         const relatedThemes = (this.systemData.definedThemes || []).filter(t => uniqueThemeIds.has(t.themeId));
 
-        const themesList = relatedThemes.length > 0
-            ? relatedThemes.map(t => `<span class="goal-theme-tag">${t.name}</span>`).join('')
-            : '<span class="text-muted">No themes linked via initiatives.</span>';
-
         const themesDiv = document.createElement('div');
         themesDiv.className = 'inline-edit-form-group';
-        themesDiv.innerHTML = `<label class="inline-edit-label">Related Themes (via Initiatives)</label><div class="inline-edit-static-value">${themesList}</div>`;
+        const themesLabel = document.createElement('label');
+        themesLabel.className = 'inline-edit-label';
+        themesLabel.textContent = 'Related Themes (via Initiatives)';
+        const themesValue = document.createElement('div');
+        themesValue.className = 'inline-edit-static-value';
+        if (relatedThemes.length > 0) {
+            relatedThemes.forEach(theme => {
+                const tag = document.createElement('span');
+                tag.className = 'goal-theme-tag';
+                tag.textContent = theme.name;
+                themesValue.appendChild(tag);
+            });
+        } else {
+            const emptyTheme = document.createElement('span');
+            emptyTheme.className = 'text-muted';
+            emptyTheme.textContent = 'No themes linked via initiatives.';
+            themesValue.appendChild(emptyTheme);
+        }
+        themesDiv.append(themesLabel, themesValue);
         contextGrid.appendChild(themesDiv);
 
         // Aggregated ROI (Read-Only)
@@ -193,7 +210,15 @@ class GoalEditComponent {
 
         const roiDiv = document.createElement('div');
         roiDiv.className = 'inline-edit-form-group';
-        roiDiv.innerHTML = `<label class="inline-edit-label">Aggregated ROI Impact</label><div class="inline-edit-static-value"><strong>${roiSummary}</strong></div>`;
+        const roiLabel = document.createElement('label');
+        roiLabel.className = 'inline-edit-label';
+        roiLabel.textContent = 'Aggregated ROI Impact';
+        const roiValue = document.createElement('div');
+        roiValue.className = 'inline-edit-static-value';
+        const roiStrong = document.createElement('strong');
+        roiStrong.textContent = roiSummary;
+        roiValue.appendChild(roiStrong);
+        roiDiv.append(roiLabel, roiValue);
         contextGrid.appendChild(roiDiv);
 
         details.appendChild(contextGrid);
@@ -219,7 +244,6 @@ class GoalEditComponent {
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'btn btn-danger';
         deleteBtn.innerText = isDraft ? 'Cancel' : 'Delete Goal';
-        deleteBtn.style.marginLeft = '10px';
         deleteBtn.onclick = () => this._deleteGoal(index);
 
         actionsDiv.appendChild(saveBtn);
@@ -230,6 +254,13 @@ class GoalEditComponent {
         itemDiv.appendChild(details);
 
         return itemDiv;
+    }
+
+    _clearElement(element) {
+        if (!element) return;
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
+        }
     }
 
     _createFormGroup(labelText, inputType, fieldName, value, index) {
@@ -328,9 +359,7 @@ class GoalEditComponent {
         });
 
         const helpText = document.createElement('small');
-        helpText.style.color = 'var(--theme-text-muted)';
-        helpText.style.display = 'block';
-        helpText.style.marginTop = '4px';
+        helpText.className = 'inline-edit-help-text';
         helpText.innerText = 'Hold Ctrl/Cmd to select multiple initiatives';
 
         select.addEventListener('change', (e) => {

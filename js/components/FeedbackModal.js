@@ -54,7 +54,7 @@ class FeedbackModal {
 
         const closeBtn = document.createElement('span');
         closeBtn.className = 'close-button';
-        closeBtn.innerHTML = '&times;';
+        closeBtn.textContent = '\u00D7';
         closeBtn.addEventListener('click', () => this.close());
 
         header.appendChild(title);
@@ -211,7 +211,7 @@ class FeedbackModal {
 
         this.render();
         this.resetForm();
-        this.modalElement.style.display = 'flex';
+        this.modalElement.classList.add('is-open');
         this.isOpen = true;
 
         // Focus description field
@@ -226,7 +226,7 @@ class FeedbackModal {
      */
     close() {
         if (this.modalElement) {
-            this.modalElement.style.display = 'none';
+            this.modalElement.classList.remove('is-open');
         }
         this.isOpen = false;
     }

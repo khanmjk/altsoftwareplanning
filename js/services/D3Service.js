@@ -21,7 +21,9 @@
  * 
  * @example
  * // Show tooltip
- * D3Service.showTooltip(event, '<strong>Node:</strong> Example');
+ * const content = document.createElement('strong');
+ * content.textContent = 'Node: Example';
+ * D3Service.showTooltip(event, content);
  */
 const D3Service = {
     _tooltip: null,
@@ -265,38 +267,34 @@ const D3Service = {
     /**
      * Show a tooltip at the event position
      * @param {Event} event - Mouse event
-     * @param {string} content - HTML content for tooltip
+     * @param {string|Node|DocumentFragment|Array<Node>} content - Content for tooltip
      * @param {Object} [options] - Tooltip options
-     * @param {string} [options.className='d3-tooltip'] - CSS class
+     * @param {string} [options.className='tooltip'] - CSS class
      * @param {number} [options.offsetX=10] - X offset from cursor
      * @param {number} [options.offsetY=10] - Y offset from cursor
      */
     showTooltip(event, content, options = {}) {
         if (!this.isAvailable()) return;
 
-        const { className = 'd3-tooltip', offsetX = 10, offsetY = 10 } = options;
+        const { className = 'tooltip', offsetX = 10, offsetY = 10 } = options;
 
         // Create or reuse tooltip
         if (!this._tooltip) {
             this._tooltip = d3.select('body')
                 .append('div')
-                .attr('class', className)
-                .style('position', 'absolute')
-                .style('pointer-events', 'none')
-                .style('background', 'rgba(0, 0, 0, 0.85)')
-                .style('color', '#fff')
-                .style('padding', '8px 12px')
-                .style('border-radius', '4px')
-                .style('font-size', '12px')
-                .style('z-index', '9999')
-                .style('opacity', 0);
+                .attr('class', className);
+        } else if (className && this._tooltip.attr('class') !== className) {
+            this._tooltip.attr('class', className);
         }
 
-        this._tooltip
-            .html(content)
-            .style('left', `${event.pageX + offsetX}px`)
-            .style('top', `${event.pageY + offsetY}px`)
-            .style('opacity', 1);
+        const tooltipNode = this._tooltip.node();
+        if (tooltipNode) {
+            this._clearElement(tooltipNode);
+            this._appendTooltipContent(tooltipNode, content);
+            this._setTooltipPosition(tooltipNode, event.pageX + offsetX, event.pageY + offsetY);
+        }
+
+        this._tooltip.classed('tooltip--visible', true);
     },
 
     /**
@@ -304,7 +302,7 @@ const D3Service = {
      */
     hideTooltip() {
         if (this._tooltip) {
-            this._tooltip.style('opacity', 0);
+            this._tooltip.classed('tooltip--visible', false);
         }
     },
 
@@ -323,6 +321,37 @@ const D3Service = {
                 service.hideTooltip();
             }
         };
+    },
+
+    _appendTooltipContent(container, content) {
+        if (!container || content === undefined || content === null) return;
+        if (Array.isArray(content)) {
+            content.forEach(item => this._appendTooltipContent(container, item));
+            return;
+        }
+        if (content && typeof content === 'object' && 'nodeType' in content) {
+            container.appendChild(content);
+            return;
+        }
+        container.textContent = String(content);
+    },
+
+    _setTooltipPosition(container, x, y) {
+        if (!container) return;
+        const styles = {
+            '--tooltip-x': `${x}px`,
+            '--tooltip-y': `${y}px`
+        };
+        if (typeof styleVars !== 'undefined' && styleVars.set) {
+            styleVars.set(container, styles);
+        }
+    },
+
+    _clearElement(element) {
+        if (!element) return;
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
+        }
     },
 
     // ==================== Legend Helpers ====================

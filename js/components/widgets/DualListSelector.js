@@ -51,23 +51,19 @@ class DualListSelector {
     render() {
         const container = document.createElement('div');
         container.className = 'dual-list-container';
-        container.style.display = 'flex';
-        container.style.alignItems = 'center';
-        container.style.marginBottom = '10px';
 
         // Left List (Current/Selected)
         const leftDiv = document.createElement('div');
-        leftDiv.style.flex = '1';
-        leftDiv.style.marginRight = '5px';
+        leftDiv.className = 'dual-list-panel';
 
         const currentLabel = document.createElement('label');
         currentLabel.textContent = this.leftLabel;
-        currentLabel.style.display = 'block';
+        currentLabel.className = 'dual-list-label';
 
         const currentSelect = document.createElement('select');
         currentSelect.multiple = this.multiSelectLeft;
         currentSelect.size = 5;
-        currentSelect.style.width = '100%';
+        currentSelect.className = 'dual-list-select';
         currentSelect.setAttribute('data-list-context-index', this.contextIndex);
         currentSelect.setAttribute('data-field', this.leftField);
 
@@ -80,20 +76,16 @@ class DualListSelector {
 
         // Buttons
         const buttonsDiv = document.createElement('div');
-        buttonsDiv.style.display = 'flex';
-        buttonsDiv.style.flexDirection = 'column';
-        buttonsDiv.style.alignItems = 'center';
-        buttonsDiv.style.margin = '0 5px';
+        buttonsDiv.className = 'dual-list-controls';
 
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
-        removeBtn.innerHTML = '&gt;';
+        removeBtn.textContent = '>';
         removeBtn.title = 'Remove selected item(s)';
-        removeBtn.style.marginBottom = '5px';
 
         const addBtn = document.createElement('button');
         addBtn.type = 'button';
-        addBtn.innerHTML = '&lt;';
+        addBtn.textContent = '<';
         addBtn.title = 'Add selected item(s)';
 
         buttonsDiv.appendChild(addBtn);
@@ -101,17 +93,16 @@ class DualListSelector {
 
         // Right List (Available)
         const rightDiv = document.createElement('div');
-        rightDiv.style.flex = '1';
-        rightDiv.style.marginLeft = '5px';
+        rightDiv.className = 'dual-list-panel';
 
         const availableLabel = document.createElement('label');
         availableLabel.textContent = this.rightLabel;
-        availableLabel.style.display = 'block';
+        availableLabel.className = 'dual-list-label';
 
         const availableSelect = document.createElement('select');
         availableSelect.multiple = true;
         availableSelect.size = 5;
-        availableSelect.style.width = '100%';
+        availableSelect.className = 'dual-list-select';
         availableSelect.setAttribute('data-list-context-index', this.contextIndex);
         availableSelect.setAttribute('data-field', this.rightField);
 
@@ -125,14 +116,12 @@ class DualListSelector {
         // Add New functionality
         if (this.allowAddNew && this.addNewCallback) {
             const addNewContainer = document.createElement('div');
-            addNewContainer.style.marginTop = '5px';
-            addNewContainer.style.display = 'flex';
+            addNewContainer.className = 'dual-list-add-new';
 
             const addNewInput = document.createElement('input');
             addNewInput.type = 'text';
             addNewInput.placeholder = this.addNewPlaceholder;
-            addNewInput.style.flexGrow = '1';
-            addNewInput.style.marginRight = '5px';
+            addNewInput.className = 'dual-list-add-new__input';
 
             const addNewBtn = document.createElement('button');
             addNewBtn.type = 'button';

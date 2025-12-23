@@ -15,7 +15,7 @@ class ServiceEditComponent {
             console.error(`ServiceEditComponent: Container '${this.containerId}' not found.`);
             return;
         }
-        container.innerHTML = '';
+        this._clearElement(container);
         container.className = 'service-edit-list';
 
         if (!this.systemData.services) {
@@ -90,7 +90,6 @@ class ServiceEditComponent {
         // Action Buttons
         const actionsDiv = document.createElement('div');
         actionsDiv.className = 'service-edit-actions';
-        actionsDiv.style.marginTop = '15px';
 
         const saveBtn = document.createElement('button');
         saveBtn.className = 'btn btn-primary';
@@ -100,7 +99,6 @@ class ServiceEditComponent {
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'btn btn-danger';
         deleteBtn.innerText = 'Delete Service';
-        deleteBtn.style.marginLeft = '10px';
         deleteBtn.onclick = () => this._deleteService(index);
 
         actionsDiv.appendChild(saveBtn);
@@ -352,9 +350,8 @@ class ServiceEditComponent {
 
         // Delete API Button
         const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'btn btn-danger';
+        deleteBtn.className = 'btn btn-danger service-edit-api-delete';
         deleteBtn.innerText = 'Delete API';
-        deleteBtn.style.marginTop = '10px';
         deleteBtn.onclick = () => this._deleteApi(serviceIndex, apiIndex);
         item.appendChild(deleteBtn);
 
@@ -398,7 +395,7 @@ class ServiceEditComponent {
         const currentPlatDepsSelect = content.querySelector('select[data-field="currentPlatformDependencies"]');
         if (otherPlatDepsSelect && currentPlatDepsSelect) {
             const currentPlatDeps = Array.from(currentPlatDepsSelect.options).map(opt => opt.value);
-            otherPlatDepsSelect.innerHTML = '';
+            this._clearElement(otherPlatDepsSelect);
             (this.systemData.platformDependencies || []).forEach(dep => {
                 if (!currentPlatDeps.includes(dep)) {
                     otherPlatDepsSelect.appendChild(new Option(dep, dep));
@@ -411,7 +408,7 @@ class ServiceEditComponent {
         const currentSvcDepsSelect = content.querySelector('select[data-field="currentServiceDependencies"]');
         if (otherSvcDepsSelect && currentSvcDepsSelect) {
             const currentSvcDeps = Array.from(currentSvcDepsSelect.options).map(opt => opt.value);
-            otherSvcDepsSelect.innerHTML = '';
+            this._clearElement(otherSvcDepsSelect);
             (this.systemData.services || []).forEach(otherSvc => {
                 if (otherSvc.serviceName !== service.serviceName && !currentSvcDeps.includes(otherSvc.serviceName)) {
                     otherSvcDepsSelect.appendChild(new Option(otherSvc.serviceName, otherSvc.serviceName));
@@ -428,7 +425,7 @@ class ServiceEditComponent {
             const currentApiDepsSelect = apiDiv.querySelector('select[data-field="currentDependentApis"]');
             if (otherApiDepsSelect && currentApiDepsSelect && currentApiName) {
                 const currentApiDeps = Array.from(currentApiDepsSelect.options).map(opt => opt.value);
-                otherApiDepsSelect.innerHTML = '';
+                this._clearElement(otherApiDepsSelect);
                 allApisList.forEach(apiName => {
                     if (apiName !== currentApiName && !currentApiDeps.includes(apiName)) {
                         otherApiDepsSelect.appendChild(new Option(apiName, apiName));
@@ -436,6 +433,13 @@ class ServiceEditComponent {
                 });
             }
         });
+    }
+
+    _clearElement(element) {
+        if (!element) return;
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
+        }
     }
 
     _addNewApi(serviceIndex) {

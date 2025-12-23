@@ -213,6 +213,17 @@
     height: var(--space-sm);
 }
 
+.service-edit-actions {
+    margin-top: var(--space-md);
+    display: flex;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+}
+
+.service-edit-api-delete {
+    margin-top: var(--space-sm);
+}
+
 
 /* Service Item Card */
 .service-edit-item {

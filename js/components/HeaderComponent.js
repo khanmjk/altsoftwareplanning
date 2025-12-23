@@ -119,7 +119,7 @@ class HeaderComponent {
 
     renderNotificationsList(items = [], listEl, badgeEl) {
         if (!listEl) return;
-        listEl.innerHTML = ''; // Clear existing content
+        this._clearElement(listEl);
 
         if (!Array.isArray(items) || items.length === 0) {
             // Create empty state using DOM
@@ -165,7 +165,7 @@ class HeaderComponent {
                 removeBtn.setAttribute('data-action', 'remove-notification');
                 removeBtn.setAttribute('data-id', item.id);
                 removeBtn.title = 'Remove notification';
-                removeBtn.innerHTML = '&times;';
+                removeBtn.textContent = '\u00D7';
 
                 itemDiv.appendChild(iconDiv);
                 itemDiv.appendChild(contentDiv);
@@ -197,24 +197,33 @@ class HeaderComponent {
             return;
         }
 
-        const homeIcon = '<span style="color: var(--theme-text-secondary);"><i class="fas fa-home"></i></span>';
-        const separator = '<span class="canvas-header__breadcrumb-item"></span>'; // Use new separator style if possible, or just text
+        this._clearElement(this.breadcrumbsContainer);
 
-        let html = `${homeIcon}`;
+        const homeItem = document.createElement('span');
+        homeItem.className = 'canvas-header__breadcrumb-item';
+        const homeIcon = document.createElement('i');
+        homeIcon.className = 'fas fa-home';
+        homeItem.appendChild(homeIcon);
+        this.breadcrumbsContainer.appendChild(homeItem);
 
         if (systemName) {
-            html += ` <span class="canvas-header__breadcrumb-item">${systemName}</span>`;
+            const systemItem = document.createElement('span');
+            systemItem.className = 'canvas-header__breadcrumb-item';
+            systemItem.textContent = systemName;
+            this.breadcrumbsContainer.appendChild(systemItem);
         }
 
         // Map viewId to Breadcrumb path
         const path = this.getViewPath(viewId);
         if (path) {
             path.forEach(step => {
-                html += ` <span class="canvas-header__breadcrumb-item ${step.isLast ? 'current-page' : ''}">${step.label}</span>`;
+                const crumb = document.createElement('span');
+                crumb.className = 'canvas-header__breadcrumb-item';
+                if (step.isLast) crumb.classList.add('current-page');
+                crumb.textContent = step.label;
+                this.breadcrumbsContainer.appendChild(crumb);
             });
         }
-
-        this.breadcrumbsContainer.innerHTML = html;
     }
 
 
@@ -238,5 +247,11 @@ class HeaderComponent {
         return paths[viewId] || [{ label: 'Home', isLast: true }];
     }
 
+    _clearElement(element) {
+        if (!element) return;
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
+        }
+    }
 
 }

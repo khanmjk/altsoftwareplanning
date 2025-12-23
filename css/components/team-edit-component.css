@@ -177,6 +177,31 @@
     border-bottom: none;
 }
 
+.away-team-empty {
+    color: var(--theme-text-muted);
+    padding: 5px;
+    font-style: italic;
+}
+
+.away-team-form {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+.away-team-form__field {
+    display: flex;
+    flex-direction: column;
+}
+
+.away-team-form__field--wide {
+    flex: 2;
+}
+
+.away-team-form__field--narrow {
+    flex: 1;
+}
+
 /* Buttons */
 .team-edit-btn {
     font-family: 'Inter', sans-serif;
@@ -223,6 +248,9 @@
 
 .team-edit-actions {
     margin-top: var(--space-md);
+    display: flex;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
 }
 
 
@@ -418,4 +446,11 @@
 
 .team-edit-actions {
     margin-top: var(--space-md);
+    display: flex;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+}
+
+.team-edit-sr-manager {
+    margin-top: var(--space-sm);
 }

@@ -177,6 +177,11 @@
     background-color: transparent;
 }
 
+.themed-select__checkbox {
+    margin-right: 8px;
+    pointer-events: none;
+}
+
 /* Option group header (for future use) */
 .themed-select__group-header {
     padding: 0.5rem 0.75rem;

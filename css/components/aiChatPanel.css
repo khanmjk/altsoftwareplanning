@@ -118,6 +118,10 @@
     padding: 6px 0;
 }
 
+#aiChatCommandPopup.is-open {
+    display: block;
+}
+
 #aiChatInput {
     width: 100%;
     min-height: 70px;
@@ -285,6 +289,15 @@
     font-weight: 600;
 }
 
+.chat-diagram-button {
+    margin-top: 8px;
+}
+
+.agent-confirmation-note {
+    color: var(--theme-text-secondary);
+    font-style: italic;
+}
+
 /* Command Popup Options */
 .ai-command-option {
     padding: 8px 12px;
@@ -312,5 +325,22 @@
 
 .ai-command-option .command-desc {
     font-size: 0.85em;
+    color: var(--theme-text-secondary);
+}
+
+.agent-confirmation-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.agent-confirmation-controls__actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.agent-confirmation-status {
+    font-size: 0.9em;
     color: var(--theme-text-secondary);
 }

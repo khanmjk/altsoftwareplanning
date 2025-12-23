@@ -33,7 +33,7 @@ class AIGenerationStatsModal {
 
         const closeBtn = document.createElement('span');
         closeBtn.className = 'close-button';
-        closeBtn.innerHTML = '&times;';
+        closeBtn.textContent = '\u00D7';
         closeBtn.addEventListener('click', () => this.close());
 
         header.appendChild(title);
@@ -81,13 +81,13 @@ class AIGenerationStatsModal {
             this.contentElement.textContent = contentText;
         }
         if (this.modalElement) {
-            this.modalElement.style.display = 'block';
+            this.modalElement.classList.add('is-open');
         }
     }
 
     close() {
         if (this.modalElement) {
-            this.modalElement.style.display = 'none';
+            this.modalElement.classList.remove('is-open');
         }
     }
 }

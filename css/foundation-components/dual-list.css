@@ -13,6 +13,36 @@
     font-size: 0.85em;
 }
 
+.dual-list-panel {
+    flex: 1;
+}
+
+.dual-list-label {
+    display: block;
+    margin-bottom: 4px;
+}
+
+.dual-list-select {
+    width: 100%;
+}
+
+.dual-list-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.dual-list-add-new {
+    margin-top: 5px;
+    display: flex;
+    gap: 5px;
+}
+
+.dual-list-add-new__input {
+    flex-grow: 1;
+}
+
 /* Available and Selected Lists */
 .available-list,
 .selected-list {

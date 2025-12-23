@@ -53,7 +53,7 @@ class OrgView {
         // 4. Set Workspace Toolbar
         workspaceComponent.setToolbar(this.pillNav.render());
 
-        this.container.innerHTML = ''; // Clear container cleanly
+        this._clearElement(this.container);
 
         if (!SystemService.getCurrentSystem()) {
             const errorMsg = document.createElement('div');
@@ -247,7 +247,7 @@ class OrgView {
     renderHtmlOrgList(container) {
         const hierarchicalData = this.buildHierarchyData();
 
-        container.innerHTML = ''; // Clear previous content
+        this._clearElement(container);
 
         if (!hierarchicalData) {
             console.error('No data for HTML org list');
@@ -357,7 +357,7 @@ class OrgView {
             console.error('D3 Org Chart container or data not found');
             // Strict DOM replacement for error
             if (container) {
-                container.innerHTML = '';
+                this._clearElement(container);
                 const p = document.createElement('p');
                 p.className = 'org-error-text';
                 p.textContent = 'Could not generate D3 organogram data.';
@@ -366,7 +366,7 @@ class OrgView {
             return;
         }
 
-        container.innerHTML = '';
+        this._clearElement(container);
 
         const renderChart = (force = false) => {
             let width = container.clientWidth;
@@ -467,21 +467,12 @@ class OrgView {
                         update(d);
                     })
                     .on("mouseover", (event, d) => {
-                        let info = '';
-                        switch (d.data.type) {
-                            case 'root': info = `<strong>System:</strong> ${d.data.name}`; break;
-                            case 'srMgr': info = `<strong>Sr. Manager:</strong> ${d.data.name}`; break;
-                            case 'sdm': info = `<strong>SDM:</strong> ${d.data.name}`; break;
-                            case 'team':
-                                info = `<strong>Team:</strong> ${d.data.name}<br><strong>Details:</strong> ${d.data.details}`;
-                                if (d.data.awayTeamCount > 0) info += `<br><span class="org-tooltip-away">Away:</span> +${d.data.awayTeamCount} (${d.data.awaySourceSummary})`;
-                                break;
-                            case 'engineer': info = `<strong>Engineer:</strong> ${d.data.name}`; break;
-                            default: info = d.data.name;
+                        const tooltipNode = tooltip.node();
+                        if (tooltipNode) {
+                            this._clearElement(tooltipNode);
+                            tooltipNode.appendChild(this._buildOrgTooltipContent(d.data));
                         }
                         tooltip.classed('d3-org-tooltip--visible', true);
-                        tooltip.html(info);
-                        const tooltipNode = tooltip.node();
                         styleVars.set(tooltipNode, {
                             '--tooltip-x': `${event.pageX + 15}px`,
                             '--tooltip-y': `${event.pageY - 28}px`
@@ -515,11 +506,11 @@ class OrgView {
 
                 div.append("xhtml:div")
                     .attr("class", "org-node-label-name")
-                    .html(d => d.data.name);
+                    .text(d => d.data.name);
 
                 div.append("xhtml:div")
                     .attr("class", "org-node-label-details")
-                    .html(d => {
+                    .text(d => {
                         if (d.data.type === 'team') return d.data.details;
                         if (d.data.type === 'engineer') return d.data.name.includes('[AI]') ? 'AI Software Engineer' : 'Software Engineer';
                         return d.data.type.replace('srMgr', 'Senior Manager');
@@ -607,7 +598,7 @@ class OrgView {
         const widgetContainer = document.getElementById('teamBreakdown');
         if (!widgetContainer) return;
 
-        widgetContainer.innerHTML = ''; // Clean slate
+        this._clearElement(widgetContainer);
 
         // ... (Rest of existing logic is fine as EnhancedTableWidget handles its DOM internally safely) ...
         // Re-injecting the original logic cleanly:
@@ -776,7 +767,7 @@ class OrgView {
             return;
         }
 
-        widgetContainer.innerHTML = ''; // Start clean
+        this._clearElement(widgetContainer);
 
         // Create narrative paragraph using DOM
         const narrativeP = document.createElement('p');
@@ -843,7 +834,7 @@ class OrgView {
         const stats = this.calculateEngineerStatistics();
 
         // Clear existing content
-        heading.innerHTML = ''; // Safe clear as we're rebuilding children
+        this._clearElement(heading);
 
         // Helper to create bold text
         const createBold = (text) => {
@@ -1055,7 +1046,7 @@ class OrgView {
         }
 
         if (columnDef.editor && value) {
-            return `${value} <span style='color:#007bff; font-size:0.8em; margin-left:5px; cursor:pointer;' title='Edit ${columnDef.title}'>✏️</span>`;
+            return this._createEditableCellContent(value, `Edit ${columnDef.title}`);
         }
         return value || '';
     }
@@ -1068,14 +1059,16 @@ class OrgView {
         const columnDef = cell.getColumn().getDefinition();
 
         if (!teamId) {
-            return columnDef.editor ? `Unallocated <span style='color:#007bff; font-size:0.8em; margin-left:5px; cursor:pointer;'>✏️</span>` : 'Unallocated';
+            return columnDef.editor
+                ? this._createEditableCellContent('Unallocated', 'Edit Team Assignment')
+                : 'Unallocated';
         }
 
         const team = (SystemService.getCurrentSystem().teams || []).find(t => t.teamId === teamId);
         const display = team ? (team.teamIdentity || team.teamName || teamId) : `Missing (${teamId.slice(-4)})`;
 
         if (columnDef.editor) {
-            return `${display} <span style='color:#007bff; font-size:0.8em; margin-left:5px; cursor:pointer;' title='Edit Team Assignment'>✏️</span>`;
+            return this._createEditableCellContent(display, 'Edit Team Assignment');
         }
         return display;
     }
@@ -1115,6 +1108,79 @@ class OrgView {
         });
 
         return { values: options, clearable: true, autocomplete: true };
+    }
+
+    _createEditableCellContent(text, title) {
+        const wrapper = document.createElement('span');
+        wrapper.className = 'org-editable-cell';
+
+        const textNode = document.createElement('span');
+        textNode.textContent = text;
+        wrapper.appendChild(textNode);
+
+        const icon = document.createElement('span');
+        icon.className = 'org-edit-icon';
+        if (title) icon.title = title;
+        icon.textContent = '\u270F\uFE0F';
+        wrapper.appendChild(icon);
+
+        return wrapper;
+    }
+
+    _buildOrgTooltipContent(nodeData) {
+        const fragment = document.createDocumentFragment();
+        const addLine = (label, value) => {
+            const line = document.createElement('div');
+            const strong = document.createElement('strong');
+            strong.textContent = label;
+            line.appendChild(strong);
+            line.appendChild(document.createTextNode(` ${value}`));
+            fragment.appendChild(line);
+        };
+
+        switch (nodeData.type) {
+            case 'root':
+                addLine('System:', nodeData.name);
+                break;
+            case 'srMgr':
+                addLine('Sr. Manager:', nodeData.name);
+                break;
+            case 'sdm':
+                addLine('SDM:', nodeData.name);
+                break;
+            case 'team':
+                addLine('Team:', nodeData.name);
+                if (nodeData.details) {
+                    addLine('Details:', nodeData.details);
+                }
+                if (nodeData.awayTeamCount > 0) {
+                    const awayLine = document.createElement('div');
+                    const awayLabel = document.createElement('span');
+                    awayLabel.className = 'org-tooltip-away';
+                    awayLabel.textContent = 'Away:';
+                    awayLine.appendChild(awayLabel);
+                    awayLine.appendChild(document.createTextNode(` +${nodeData.awayTeamCount} (${nodeData.awaySourceSummary})`));
+                    fragment.appendChild(awayLine);
+                }
+                break;
+            case 'engineer':
+                addLine('Engineer:', nodeData.name);
+                break;
+            default: {
+                const line = document.createElement('div');
+                line.textContent = nodeData.name || '';
+                fragment.appendChild(line);
+            }
+        }
+
+        return fragment;
+    }
+
+    _clearElement(element) {
+        if (!element) return;
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
+        }
     }
 
     /**

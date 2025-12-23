@@ -31,7 +31,7 @@ class AccomplishmentsWidget {
         }
 
         // Clear and create structure
-        this.container.innerHTML = '';
+        this._clearElement(this.container);
 
         this.cardsContainer = document.createElement('div');
         this.cardsContainer.id = 'accomplishmentsContainer';
@@ -79,7 +79,7 @@ class AccomplishmentsWidget {
         if (!this.cardsContainer) return;
 
         const accomplishments = this.prepareData();
-        this.cardsContainer.innerHTML = '';
+        this._clearElement(this.cardsContainer);
 
         if (accomplishments.length === 0) {
             const emptyMsg = document.createElement('p');
@@ -214,5 +214,12 @@ class AccomplishmentsWidget {
         card.appendChild(footer);
 
         return card;
+    }
+
+    _clearElement(element) {
+        if (!element) return;
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
+        }
     }
 }

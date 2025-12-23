@@ -55,7 +55,7 @@ class DashboardView {
         workspaceComponent.setToolbar(toolbar);
 
         if (!SystemService.getCurrentSystem()) {
-            this.container.innerHTML = '';
+            this._clearElement(this.container);
             const emptyState = document.createElement('div');
             emptyState.className = 'dashboard-empty-state';
             const icon = document.createElement('i');
@@ -69,7 +69,7 @@ class DashboardView {
         }
 
         // 3. Render Content Container (DOM creation for §2.6 compliance)
-        this.container.innerHTML = '';
+        this._clearElement(this.container);
         const dashboardView = document.createElement('div');
         dashboardView.className = 'dashboard-view';
         const dashboardContent = document.createElement('div');
@@ -174,37 +174,6 @@ class DashboardView {
     }
 
     /**
-     * Generate year filter options (legacy HTML format)
-     */
-    generateYearOptions() {
-        // Safety check for data
-        if (!SystemService.getCurrentSystem() || !SystemService.getCurrentSystem().yearlyInitiatives) {
-            return '<option value="all">All Years</option>';
-        }
-
-        const allYears = [...new Set(
-            (SystemService.getCurrentSystem().yearlyInitiatives || [])
-                .map(init => init.attributes?.planningYear)
-                .filter(Boolean)
-        )].sort((a, b) => a - b);
-
-        if (allYears.length === 0) {
-            allYears.push(new Date().getFullYear());
-        }
-
-        if (this.planningYear !== 'all' && !allYears.includes(parseInt(this.planningYear))) {
-            this.planningYear = 'all';
-        }
-
-        const options = [`<option value="all" ${this.planningYear === 'all' ? 'selected' : ''}>All Years</option>`];
-        options.push(...allYears.map(year =>
-            `<option value="${year}" ${year == this.planningYear ? 'selected' : ''}>${year}</option>`
-        ));
-
-        return options.join('');
-    }
-
-    /**
      * Build year options for ThemedSelect
      * @returns {Array<{value: string, text: string}>}
      */
@@ -262,7 +231,7 @@ class DashboardView {
         if (!contentContainer) return;
 
         // Clear container
-        contentContainer.innerHTML = '';
+        this._clearElement(contentContainer);
 
         // Create widget container
         const widgetEl = document.createElement('div');
@@ -282,7 +251,7 @@ class DashboardView {
         const contextToolbarContainer = document.getElementById('dashboardContextToolbar');
         console.log('[DEBUG] contextToolbarContainer found:', !!contextToolbarContainer);
         if (contextToolbarContainer) {
-            contextToolbarContainer.innerHTML = ''; // Clear previous
+            this._clearElement(contextToolbarContainer);
             if (returnedToolbar instanceof HTMLElement) {
                 console.log('[DEBUG] Attaching toolbar to contextual area');
                 contextToolbarContainer.appendChild(returnedToolbar);
@@ -341,6 +310,13 @@ class DashboardView {
             canvas.id = 'teamDemandChart';
             chartContainer.appendChild(canvas);
             widgetEl.append(filterBar, chartContainer);
+        }
+    }
+
+    _clearElement(element) {
+        if (!element) return;
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
         }
     }
 
@@ -606,7 +582,7 @@ class DashboardView {
         const container = document.getElementById('investmentTableContainer');
         if (!container) return;
 
-        container.innerHTML = ''; // Clear previous
+        this._clearElement(container);
 
         const table = document.createElement('table');
         table.className = 'investment-table';

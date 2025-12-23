@@ -28,6 +28,47 @@ function appendHtmlContent(container, htmlContent) {
     }
 }
 
+function appendContent(container, content) {
+    if (!container || content === undefined || content === null) return;
+    if (Array.isArray(content)) {
+        content.forEach(item => appendContent(container, item));
+        return;
+    }
+    if (content && typeof content === 'object' && 'nodeType' in content) {
+        container.appendChild(content);
+        return;
+    }
+    if (typeof content === 'string') {
+        appendHtmlContent(container, content);
+        return;
+    }
+    container.textContent = String(content);
+}
+
+function serializeContent(content) {
+    if (content === undefined || content === null) return '';
+    if (typeof content === 'string') return content;
+    if (Array.isArray(content)) return content.map(serializeContent).join('');
+    if (content && typeof content === 'object' && 'nodeType' in content) {
+        const serializer = new XMLSerializer();
+        if (content.nodeType === 11) {
+            return Array.from(content.childNodes)
+                .map(node => serializer.serializeToString(node))
+                .join('');
+        }
+        return serializer.serializeToString(content);
+    }
+    return String(content);
+}
+
+function serializeNodeChildren(node) {
+    if (!node) return '';
+    const serializer = new XMLSerializer();
+    return Array.from(node.childNodes)
+        .map(child => serializer.serializeToString(child))
+        .join('');
+}
+
 function setButtonIcon(button, iconClass) {
     if (!button) return;
     clearElement(button);
@@ -56,8 +97,8 @@ function monitorChatInputHeight() {
 
     const updateHeightVar = () => {
         const heightValue = aiChatInput ? (aiChatInput.offsetHeight || 0) : 0;
-        if (typeof document !== 'undefined' && document.documentElement) {
-            document.documentElement.style.setProperty('--ai-chat-input-height', `${heightValue}px`);
+        if (typeof document !== 'undefined' && document.documentElement && typeof styleVars !== 'undefined' && styleVars.set) {
+            styleVars.set(document.documentElement, { '--ai-chat-input-height': `${heightValue}px` });
         }
     };
 
@@ -132,7 +173,7 @@ function postAgentMessageToView(htmlContent, isError = false) {
     const messageDiv = addChatMessage('', 'ai');
     if (!messageDiv) return null;
     clearElement(messageDiv);
-    appendHtmlContent(messageDiv, htmlContent || '');
+    appendContent(messageDiv, htmlContent || '');
     if (isError) {
         messageDiv.classList.add('ai-chat-error');
     }
@@ -147,15 +188,23 @@ function showAgentLoadingIndicator() {
     return addChatMessage('AI is thinking...', 'ai', true);
 }
 
-function hideAgentLoadingIndicator(loadingMessageEl, htmlContent) {
+function hideAgentLoadingIndicator(loadingMessageEl, htmlContent, options = {}) {
     if (!loadingMessageEl) return;
     clearElement(loadingMessageEl);
     loadingMessageEl.classList.remove('loading');
+    if (options.isError) {
+        loadingMessageEl.classList.add('ai-chat-error');
+    } else {
+        loadingMessageEl.classList.remove('ai-chat-error');
+    }
 
     const contentDiv = document.createElement('div');
     contentDiv.className = 'chat-content-container';
-    contentDiv.dataset.rawHtml = htmlContent || '';
-    appendHtmlContent(contentDiv, htmlContent || '');
+    const serialized = serializeContent(htmlContent);
+    if (serialized) {
+        contentDiv.dataset.rawHtml = serialized;
+    }
+    appendContent(contentDiv, htmlContent);
 
     const copyButton = document.createElement('button');
     copyButton.className = 'chat-copy-button';
@@ -164,7 +213,7 @@ function hideAgentLoadingIndicator(loadingMessageEl, htmlContent) {
     copyButton.onclick = (e) => {
         e.stopPropagation();
         try {
-            const htmlToCopy = contentDiv.dataset.rawHtml || '';
+            const htmlToCopy = contentDiv.dataset.rawHtml || serializeNodeChildren(contentDiv);
             const textToCopy = contentDiv.textContent;
             const htmlBlob = new Blob([htmlToCopy], { type: 'text/html' });
             const textBlob = new Blob([textToCopy], { type: 'text/plain' });
@@ -192,11 +241,11 @@ function setSuggestionPills(suggestions = []) {
 
     if (!Array.isArray(suggestions) || suggestions.length === 0) {
         clearElement(suggestionsContainer);
-        suggestionsContainer.style.display = 'none';
+        suggestionsContainer.classList.add('is-hidden');
         return;
     }
 
-    suggestionsContainer.style.display = 'flex';
+    suggestionsContainer.classList.remove('is-hidden');
     clearElement(suggestionsContainer);
 
     suggestions.forEach((suggestion) => {
@@ -372,12 +421,12 @@ function buildCommandPopup(tools) {
         aiChatCommandPopup.appendChild(option);
         commandPopupOptions.push({ element: option, command: tool.command });
     });
-    aiChatCommandPopup.style.display = 'block';
+    aiChatCommandPopup.classList.add('is-open');
 }
 
 function hideCommandPopup() {
     if (!aiChatCommandPopup) return;
-    aiChatCommandPopup.style.display = 'none';
+    aiChatCommandPopup.classList.remove('is-open');
     clearElement(aiChatCommandPopup);
     commandPopupOptions = [];
     commandPopupIndex = -1;
@@ -385,7 +434,7 @@ function hideCommandPopup() {
 }
 
 function isCommandPopupVisible() {
-    return !!(aiChatCommandPopup && aiChatCommandPopup.style.display !== 'none' && aiChatCommandPopup.childElementCount > 0);
+    return !!(aiChatCommandPopup && aiChatCommandPopup.classList.contains('is-open') && aiChatCommandPopup.childElementCount > 0);
 }
 
 function highlightCommandOption(newIndex) {
@@ -417,7 +466,7 @@ function setCommandPopupKeyboardNav(isActive) {
 
 function openDiagramModal(code, title = 'Generated Diagram') {
     if (typeof DiagramModal !== 'undefined') {
-        DiagramModal.getInstance().render();
+        DiagramModal.getInstance().open();
     }
     const modal = document.getElementById('diagramModal');
     const titleEl = document.getElementById('diagramModalTitle');
@@ -427,7 +476,7 @@ function openDiagramModal(code, title = 'Generated Diagram') {
         return;
     }
     if (titleEl) titleEl.textContent = title || 'Generated Diagram';
-    modal.style.display = 'block';
+    modal.classList.add('is-open');
 
     const renderDiagramError = (error, source) => {
         while (contentEl.firstChild) {
@@ -568,7 +617,7 @@ function closeDiagramModal() {
     }
     const modal = document.getElementById('diagramModal');
     const contentEl = document.getElementById('diagramModalContent');
-    if (modal) modal.style.display = 'none';
+    if (modal) modal.classList.remove('is-open');
     clearElement(contentEl);
 }
 
@@ -582,8 +631,7 @@ function postDiagramWidget(title, code) {
     summary.appendChild(strong);
     summary.appendChild(document.createTextNode(` ${title || 'Untitled'}`));
     const button = document.createElement('button');
-    button.className = 'btn-primary';
-    button.style.marginTop = '8px';
+    button.className = 'btn-primary chat-diagram-button';
     button.textContent = 'View Diagram';
     button.onclick = () => openDiagramModal(code, title);
     message.appendChild(summary);

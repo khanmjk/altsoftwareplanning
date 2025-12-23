@@ -21,3 +21,9 @@
     color: var(--text-secondary);
     font-style: italic;
 }
+
+.inline-edit-help-text {
+    color: var(--theme-text-muted);
+    display: block;
+    margin-top: 4px;
+}

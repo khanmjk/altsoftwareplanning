@@ -34,7 +34,7 @@ class AboutView {
      */
     render(container) {
         this.container = container;
-        this.container.innerHTML = '';
+        this._clearElement(this.container);
 
         // Set page metadata
         workspaceComponent.setPageMetadata({
@@ -196,7 +196,7 @@ class AboutView {
      * Helper to set loading state
      */
     _setLoadingState(container, text) {
-        container.innerHTML = '';
+        this._clearElement(container);
         const wrapper = document.createElement('div');
         wrapper.className = 'about-view__loading';
 
@@ -235,7 +235,7 @@ class AboutView {
         const container = document.getElementById('about-posts-container');
         if (!container) return;
 
-        container.innerHTML = '';
+        this._clearElement(container);
 
         if (this.posts.length === 0) {
             const empty = document.createElement('p');
@@ -294,7 +294,7 @@ class AboutView {
         const container = document.getElementById('about-posts-container');
         if (!container) return;
 
-        container.innerHTML = '';
+        this._clearElement(container);
         const errorDiv = document.createElement('div');
         errorDiv.className = 'about-view__error';
 
@@ -380,7 +380,7 @@ class AboutView {
         const container = document.getElementById('about-videos-container');
         if (!container) return;
 
-        container.innerHTML = '';
+        this._clearElement(container);
 
         if (this.videos.length === 0) {
             const empty = document.createElement('p');
@@ -445,7 +445,7 @@ class AboutView {
         const container = document.getElementById('about-videos-container');
         if (!container) return;
 
-        container.innerHTML = '';
+        this._clearElement(container);
         const errorDiv = document.createElement('div');
         errorDiv.className = 'about-view__error';
 
@@ -491,5 +491,12 @@ class AboutView {
             },
             description: 'Displays author information, AI-related blog articles, and YouTube videos. Use this context to answer questions about the developer and their content.'
         };
+    }
+
+    _clearElement(element) {
+        if (!element) return;
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
+        }
     }
 }

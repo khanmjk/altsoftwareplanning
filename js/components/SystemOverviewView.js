@@ -129,7 +129,7 @@ class SystemOverviewView {
      * Creates the DOM structure for all visualization views
      */
     renderViewStructure() {
-        this.container.innerHTML = ''; // Clear previous content
+        this._clearElement(this.container);
 
         // Create wrapper for all views
         const viewsWrapper = document.createElement('div');
@@ -512,7 +512,7 @@ class SystemOverviewView {
         if (!container) return;
 
         // Clear any previous instance
-        container.innerHTML = '';
+        this._clearElement(container);
 
         // Build service options for ThemedSelect
         const serviceOptions = [{ value: 'all', text: 'All Services View' }];
@@ -563,7 +563,7 @@ class SystemOverviewView {
         if (!container) return;
 
         // Clear any previous instance
-        container.innerHTML = '';
+        this._clearElement(container);
 
         // Build service options for ThemedSelect
         const serviceOptions = [];
@@ -637,7 +637,7 @@ class SystemOverviewView {
         if (!container || !SystemService.getCurrentSystem() || !Array.isArray(SystemService.getCurrentSystem().services)) return;
 
         // Clear any previous instance
-        container.innerHTML = '';
+        this._clearElement(container);
 
         // Build service options for ThemedSelect
         const serviceOptions = [{ value: 'all', text: 'All Services' }];
@@ -785,7 +785,14 @@ class SystemOverviewView {
             this.serviceDependenciesTableWidget = null;
         }
         if (this.container) {
-            this.container.innerHTML = '';
+            this._clearElement(this.container);
+        }
+    }
+
+    _clearElement(element) {
+        if (!element) return;
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
         }
     }
 

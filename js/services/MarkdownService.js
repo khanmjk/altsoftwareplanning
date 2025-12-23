@@ -72,12 +72,12 @@ const MarkdownService = {
     /**
      * Render markdown content to HTML
      * @param {string} markdownText - The markdown content to render
-     * @returns {string} Rendered HTML string
+     * @returns {string|null} Rendered HTML string
      */
     render(markdownText) {
         const md = this._getRenderer();
         if (!md) {
-            return `<p style="color:red;">Markdown renderer not available</p>`;
+            return null;
         }
         return md.render(markdownText || '');
     },
@@ -86,7 +86,7 @@ const MarkdownService = {
      * Render markdown with anchor headers (for documentation/help views)
      * @param {string} markdownText - The markdown content to render
      * @param {Function} [slugifyFn] - Optional custom slugify function for anchors
-     * @returns {string} Rendered HTML string with header anchors
+     * @returns {string|null} Rendered HTML string with header anchors
      */
     renderWithAnchors(markdownText, slugifyFn) {
         const md = this._getRendererWithAnchors(slugifyFn);
@@ -103,7 +103,7 @@ const MarkdownService = {
      * @param {Object} [options] - Options object
      * @param {boolean} [options.withAnchors=false] - Whether to include header anchors
      * @param {Function} [options.slugifyFn] - Custom slugify function for anchors
-     * @returns {Promise<string>} Rendered HTML string
+     * @returns {Promise<string|null>} Rendered HTML string
      */
     async fetchAndRender(url, options = {}) {
         try {
@@ -119,7 +119,7 @@ const MarkdownService = {
             return this.render(markdownText);
         } catch (error) {
             console.error('MarkdownService: Failed to fetch and render:', error);
-            return `<p style="color:red;">Could not load content. Details: ${error.message}</p>`;
+            return null;
         }
     },
 
