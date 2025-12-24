@@ -314,17 +314,24 @@ class MyView {
 
 ### 5.2 Registration with NavigationManager
 
-Add view mapping in `NavigationManager.navigateTo()`:
+Add view configuration to `VIEW_REGISTRY` and ensure the class is in the `CLASS_MAP` (NavigationManager owns the instance cache):
 ```javascript
-else if (viewId === 'myView') {
-    window.workspaceComponent.render(viewId, (container) => {
-        if (!window.myViewInstance) {
-            window.myViewInstance = new MyView(container.id);
-        } else {
-            window.myViewInstance.container = container;
-        }
-        window.myViewInstance.render();
-    });
+const VIEW_REGISTRY = {
+    myView: {
+        className: 'MyView',
+        title: 'My View',
+        breadcrumbs: ['Section', 'My View'],
+        singleton: true,
+        requiresSystem: false,
+        selfManaged: false
+    }
+};
+
+function getClassMap() {
+    return {
+        // ...other views
+        MyView
+    };
 }
 ```
 
@@ -495,6 +502,9 @@ To enable future migration to modern frameworks (React, Next.js, Rails), all vie
 - Modify global state directly (return values instead)
 - Contain presentation logic (colors, labels for display)
 
+**Exception (module-level singleton state)**:
+- Module-scoped singleton state is allowed for services/managers when it is private to the module (not attached to `window`) and accessed only through the module's API.
+
 **Approved DOM access exceptions (service-level)**:
 - `ThemeService` (theme application to document root)
 - `AIService` (chat panel integration hooks)
@@ -584,17 +594,16 @@ All views are registered in `js/ai/aiViewRegistry.js`:
 ```javascript
 const AI_VIEW_REGISTRY = {
     planningView: {
-        getInstance: () => window.yearPlanningView,
         displayName: 'Year Plan',
-        fallbackGlobals: ['currentPlanningYear', 'planningCapacityScenario']
+        fallbackGlobals: []
     },
     // ... other views
 };
 ```
 
 **When creating a new view**:
-1. Add entry to `AI_VIEW_REGISTRY` 
-2. Set instance variable pattern: `window.[viewName]Instance`
+1. Add entry to `VIEW_REGISTRY` in `NavigationManager.js`
+2. Add entry to `AI_VIEW_REGISTRY`
 3. Implement `getAIContext()` method
 
 ### 11.4 How AI Scraping Works
@@ -606,14 +615,14 @@ The `aiAgentController.scrapeCurrentViewContext()` function:
 
 ```javascript
 // ai/aiAgentController.js
-if (window.getAIContextForView && currentView) {
-    const classContext = window.getAIContextForView(currentView);
+if (currentView) {
+    const classContext = getAIContextForView(currentView);
     if (classContext && classContext.source === 'class') {
         contextData.data = classContext;  // Uses class method
         return JSON.stringify(contextData);
     }
 }
-// Falls back to legacy globals...
+// Falls back to legacy globals (when configured)...
 ```
 
 ### 11.5 Compliance Checklist for AI
@@ -621,31 +630,29 @@ if (window.getAIContextForView && currentView) {
 When refactoring a view, verify:
 
 - [ ] Class implements `getAIContext()` method
-- [ ] View instance registered on `window` (e.g., `window.myViewInstance`)
-- [ ] Entry added to `AI_VIEW_REGISTRY` in `js/ai/aiViewRegistry.js`
+- [ ] Entry added to `VIEW_REGISTRY` and `AI_VIEW_REGISTRY`
 - [ ] `getAIContext()` returns `viewTitle` + relevant state data
-- [ ] Legacy global variables preserved until all dependencies migrated
+- [ ] No new `window.*` globals introduced (use NavigationManager instances)
 - [ ] Tested: Open AI Chat, ask context-dependent question, verify response
 
 ### 11.6 AI Optimizer Integration
 
 Views with AI optimization capabilities must:
 
-1. **Expose optimization trigger**: `window.runOptimizer(options)`
-2. **Accept result callback**: Update UI after optimization completes
-3. **Preserve undo capability**: Store pre-optimization state
+1. **Expose optimization trigger**: method on the view instance (no `window.*`)
+2. **Accept result callback**: update UI after optimization completes
+3. **Preserve undo capability**: store pre-optimization state on the view
 
 ```javascript
 // Example: Year Planning optimizer hook
-window.runYearPlanOptimizer = async function(options) {
-    const preState = JSON.parse(JSON.stringify(currentPlanData));
-    const result = await AIOptimizerAgent.optimize(options);
-    
-    applyOptimizationResult(result);
-    renderPlanningView();
-    
-    return { success: true, undoState: preState };
-};
+const planningView = navigationManager.getViewInstance('planningView');
+const preState = planningView.getSnapshot();
+const result = await AIOptimizerAgent.optimize(options);
+
+planningView.applyOptimizationResult(result);
+planningView.render();
+
+return { success: true, undoState: preState };
 ```
 
 

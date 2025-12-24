@@ -278,6 +278,10 @@ class YearPlanningView {
 }
 ```
 
+**Exception (module-level singleton state)**:
+- Module-scoped singleton state is allowed for services/managers when it is private to the module (not attached to `window`) and accessed only through the module's API.
+- Use this for caches or current state holders (e.g., `SystemService` internal state, `NavigationManager` class map cache).
+
 **Allowed globals** (in main.js only):
 - Singleton component instances: `workspaceComponent`, `headerComponent`, `sidebarComponent`
 - Singleton managers: `navigationManager`
@@ -293,6 +297,7 @@ Every class-based view must:
 1. Implement `getAIContext()` method
 2. Be registered in `js/ai/aiViewRegistry.js`
 3. Return meaningful context for AI analysis
+4. Rely on `NavigationManager` for instance lookup (no `window.*` view globals)
 
 ```javascript
 class MyView {
@@ -309,6 +314,13 @@ class MyView {
 
 > [!IMPORTANT]
 > Do NOT use duck-typing checks like `typeof instance.getAIContext === 'function'`. Assume all views implement the interface. If a view doesn't, that's a bug to be fixed.
+
+**Lookup pattern**:
+```javascript
+// ai/aiViewRegistry.js
+const instance = navigationManager.getViewInstance(viewId);
+return instance.getAIContext();
+```
 
 ---
 
@@ -338,7 +350,7 @@ Before submitting any code change, verify:
 - [ ] No inline HTML templates
 - [ ] No HTML template files or TemplateLoader usage
 - [ ] No cross-view updates
-- [ ] Module-level state encapsulated in class
+- [ ] Module-level state encapsulated in class (except approved module-scoped singletons)
 - [ ] CSS uses theme variables (see theming rule below)
 
 ### Theming Compliance
