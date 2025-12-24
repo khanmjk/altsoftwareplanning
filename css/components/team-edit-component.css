@@ -41,7 +41,7 @@
 }
 
 .team-edit-header:hover {
-    background-color: rgba(0, 0, 0, 0.02);
+    background-color: color-mix(in srgb, var(--theme-text-primary), transparent 98%);
     color: var(--theme-text-primary);
     padding-left: 4px;
 }
@@ -104,7 +104,7 @@
 .team-edit-select:focus {
     border-color: var(--color-primary);
     outline: 0;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 2px rgba(var(--theme-primary-rgb), 0.1);
 }
 
 .team-edit-textarea {
@@ -288,7 +288,7 @@
 }
 
 .team-edit-header:hover {
-    background-color: rgba(0, 0, 0, 0.02);
+    background-color: color-mix(in srgb, var(--theme-text-primary), transparent 98%);
     color: var(--theme-text-primary);
     padding-left: 4px;
 }
@@ -351,7 +351,7 @@
 .team-edit-select:focus {
     border-color: var(--color-primary);
     outline: 0;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 2px rgba(var(--theme-primary-rgb), 0.1);
 }
 
 .team-edit-textarea {
@@ -453,4 +453,5 @@
 
 .team-edit-sr-manager {
     margin-top: var(--space-sm);
+    padding-left: var(--space-lg);
 }

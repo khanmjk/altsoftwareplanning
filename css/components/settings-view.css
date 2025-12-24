@@ -142,7 +142,7 @@
 .settings-select:focus {
     outline: none;
     border-color: var(--theme-primary);
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 2px rgba(var(--theme-primary-rgb), 0.1);
 }
 
 .settings-input-wrapper {

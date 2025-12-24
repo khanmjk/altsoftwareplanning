@@ -14,6 +14,7 @@ class FrappeGanttRenderer extends GanttRenderer {
         if (!this.container) return;
         this.clear();
         this.tasks = tasks; // Store for view mode switching
+        this._lastRenderOptions = options;
 
         // Ensure container stretches to available height for consistent scrolling
         this.container.classList.add('frappe-gantt-renderer');
@@ -36,8 +37,10 @@ class FrappeGanttRenderer extends GanttRenderer {
         wrapper.id = wrapperId;
         wrapper.className = 'frappe-gantt-wrapper';
         this.container.appendChild(wrapper);
+        this._wrapper = wrapper;
 
         const frappeTasks = this._transformTasks(clampedTasks || []);
+        this._frappeTasks = frappeTasks;
         this._taskLabelMap = this._buildTaskLabelMap(frappeTasks);
         this._dependencyTextMap = this._buildDependencyTextMap(frappeTasks);
 
@@ -66,10 +69,6 @@ class FrappeGanttRenderer extends GanttRenderer {
                 // Limit view to 12 months
                 start: startDateObj,
                 end: endDateObj,
-                custom_popup_html: (task) => {
-                    const tooltip = this._buildTooltipNode(task);
-                    return tooltip ? tooltip.outerHTML : '';
-                },
                 on_date_change: (task, start, end) => {
                     if (options.onUpdate) {
                         // Frappe passes Date objects, convert to YYYY-MM-DD string
@@ -97,6 +96,7 @@ class FrappeGanttRenderer extends GanttRenderer {
             this._markLockedBars(wrapper, frappeTasks);
             this._applyFocusStyles(wrapper, frappeTasks, options.focus);
             this._styleDependencies(wrapper);
+            this._bindTooltip(wrapper, frappeTasks);
 
             // Attach double-click handling to support expand/collapse sync with table
             this._bindDoubleClick(wrapper, frappeTasks, options);
@@ -124,6 +124,44 @@ class FrappeGanttRenderer extends GanttRenderer {
             this.currentViewMode = mode;
             this.gantt.change_view_mode(mode);
         }
+    }
+
+    highlightTask(taskIdOrContext) {
+        if (!this.container) return;
+        const wrapper = this._wrapper || this.container.querySelector('.frappe-gantt-wrapper');
+        if (!wrapper) return;
+
+        const focus = this._resolveFocusContext(taskIdOrContext);
+        if (!focus || !focus.taskId) return;
+
+        this._applyFocusStyles(wrapper, this._frappeTasks || [], focus);
+    }
+
+    _resolveFocusContext(taskIdOrContext) {
+        if (!taskIdOrContext) return null;
+
+        if (typeof taskIdOrContext === 'object') {
+            const taskId = taskIdOrContext.taskId || null;
+            const task = this._findTaskById(taskId);
+            return {
+                taskId: taskId || task?.id || null,
+                taskType: taskIdOrContext.taskType || task?.type || null,
+                initiativeId: taskIdOrContext.initiativeId || task?.initiativeId || (task?.type === 'initiative' ? task?.id : null)
+            };
+        }
+
+        const task = this._findTaskById(taskIdOrContext);
+        return {
+            taskId: taskIdOrContext,
+            taskType: task?.type || null,
+            initiativeId: task?.initiativeId || (task?.type === 'initiative' ? task?.id : null)
+        };
+    }
+
+    _findTaskById(taskId) {
+        if (!taskId || !Array.isArray(this._frappeTasks)) return null;
+        const targetId = this._normalizeId(taskId);
+        return this._frappeTasks.find(task => this._normalizeId(task.id) === targetId) || null;
     }
 
     _buildTooltipNode(task) {
@@ -274,6 +312,54 @@ class FrappeGanttRenderer extends GanttRenderer {
 
         // Return a cleanup if ever needed; for now rely on wrapper recreation per render
         this._detachDbl = () => wrapper.removeEventListener('dblclick', handler);
+    }
+
+    _bindTooltip(wrapper, tasks) {
+        if (!wrapper || !tasks || !tasks.length) return;
+        const taskMap = new Map(tasks.map(t => [this._normalizeId(t.id), t]));
+        let activeBar = null;
+
+        const showTooltip = (event, bar) => {
+            const id = bar.getAttribute('data-id');
+            if (!id) return;
+            const task = taskMap.get(this._normalizeId(id));
+            if (!task) return;
+            const tooltip = bar._tooltipContent || this._buildTooltipNode(task);
+            bar._tooltipContent = tooltip;
+            if (tooltip) {
+                D3Service.showTooltip(event, tooltip, { className: 'gantt-tooltip' });
+                activeBar = bar;
+            }
+        };
+
+        const handleOver = (event) => {
+            const bar = event.target.closest('.bar-wrapper');
+            if (!bar || bar === activeBar) return;
+            showTooltip(event, bar);
+        };
+
+        const handleMove = (event) => {
+            if (!activeBar || !activeBar._tooltipContent) return;
+            D3Service.showTooltip(event, activeBar._tooltipContent, { className: 'gantt-tooltip' });
+        };
+
+        const handleOut = (event) => {
+            if (!activeBar) return;
+            const next = event.relatedTarget;
+            if (next && activeBar.contains(next)) return;
+            activeBar._tooltipContent = null;
+            activeBar = null;
+            D3Service.hideTooltip();
+        };
+
+        wrapper.addEventListener('mouseover', handleOver);
+        wrapper.addEventListener('mousemove', handleMove);
+        wrapper.addEventListener('mouseout', handleOut);
+        this._detachTooltip = () => {
+            wrapper.removeEventListener('mouseover', handleOver);
+            wrapper.removeEventListener('mousemove', handleMove);
+            wrapper.removeEventListener('mouseout', handleOut);
+        };
     }
 
     _clampTasksToYear(tasks, year) {

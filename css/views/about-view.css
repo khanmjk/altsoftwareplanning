@@ -89,7 +89,7 @@
 
 .about-view__link:hover {
     background: var(--theme-primary);
-    color: white;
+    color: var(--theme-text-on-accent);
 }
 
 .about-view__link i {
@@ -286,12 +286,12 @@
     transform: translate(-50%, -50%);
     width: 50px;
     height: 50px;
-    background: rgba(0, 0, 0, 0.7);
+    background: color-mix(in srgb, var(--theme-text-primary), transparent 30%);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: var(--theme-text-on-accent);
     font-size: 1.2rem;
     opacity: 0.9;
     transition: all 0.2s ease;

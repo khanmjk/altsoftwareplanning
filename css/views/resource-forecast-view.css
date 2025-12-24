@@ -4,19 +4,19 @@
     /* Inherit padding/layout from .workspace-view */
     /* Only add view-specific overrides if absolutely necessary */
     /* Left align like System Edit */
-    color: var(--text-primary);
+    color: var(--theme-text-primary);
 }
 
 /* --- Input Section --- */
 .forecast-input-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: var(--spacing-md);
-    background-color: var(--bg-secondary);
-    padding: var(--spacing-lg);
+    gap: var(--space-md);
+    background-color: var(--theme-bg-secondary);
+    padding: var(--space-lg);
     border-radius: var(--radius-md);
     /* No outer border - content flows as part of the workspace canvas */
-    margin-bottom: var(--spacing-xl);
+    margin-bottom: var(--space-xl);
     max-width: 1200px;
     /* Optional: keep grid from getting too wide on huge screens */
 }
@@ -24,22 +24,22 @@
 .forecast-input-group {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xs);
+    gap: var(--space-xs);
 }
 
 .forecast-input-group label {
     font-size: var(--font-size-sm);
     font-weight: 600;
-    color: var(--text-secondary);
+    color: var(--theme-text-secondary);
 }
 
 .forecast-input-group input {
     padding: 8px 12px;
     border: 1px solid var(--theme-border-color);
     border-radius: var(--radius-sm);
-    font-size: var(--font-size-md);
-    background-color: var(--bg-primary);
-    color: var(--text-primary);
+    font-size: var(--font-size-base);
+    background-color: var(--theme-bg-primary);
+    color: var(--theme-text-primary);
     transition: border-color 0.2s;
 }
 
@@ -49,14 +49,14 @@
 }
 
 .forecast-input-group input[readonly] {
-    background-color: var(--bg-tertiary);
-    color: var(--text-secondary);
+    background-color: var(--theme-bg-tertiary);
+    color: var(--theme-text-secondary);
     cursor: not-allowed;
 }
 
 .forecast-help-text {
     font-size: var(--font-size-xs);
-    color: var(--text-tertiary);
+    color: var(--theme-text-muted);
     line-height: 1.4;
 }
 
@@ -64,14 +64,14 @@
 .forecast-output-section {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xl);
+    gap: var(--space-xl);
     max-width: 1200px;
     /* Match input grid width */
 }
 
 .forecast-chart-container {
-    background-color: var(--bg-primary);
-    padding: var(--spacing-md);
+    background-color: var(--theme-bg-primary);
+    padding: var(--space-md);
     border-radius: var(--radius-md);
     /* No outer border - content flows as part of the workspace canvas */
     height: 450px;
@@ -79,8 +79,8 @@
 }
 
 .forecast-summary-box {
-    background-color: var(--bg-secondary);
-    padding: var(--spacing-md);
+    background-color: var(--theme-bg-secondary);
+    padding: var(--space-md);
     border-radius: var(--radius-md);
     border-left: 4px solid var(--theme-primary);
 }
@@ -131,14 +131,14 @@
 }
 
 .forecast-summary-text {
-    font-size: var(--font-size-md);
+    font-size: var(--font-size-base);
     line-height: 1.5;
 }
 
 .forecast-tables-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: var(--spacing-lg);
+    gap: var(--space-lg);
 }
 
 @media (max-width: 1024px) {
@@ -149,15 +149,15 @@
 
 /* --- Tables --- */
 .forecast-table-wrapper {
-    background-color: var(--bg-primary);
+    background-color: var(--theme-bg-primary);
     border-radius: var(--radius-md);
     border: 1px solid var(--theme-border-color);
     overflow: hidden;
 }
 
 .forecast-table-header {
-    background-color: var(--bg-secondary);
-    padding: var(--spacing-sm) var(--spacing-md);
+    background-color: var(--theme-bg-secondary);
+    padding: var(--space-sm) var(--space-md);
     font-weight: 600;
     border-bottom: 1px solid var(--theme-border-color);
 }
@@ -170,15 +170,15 @@
 
 .forecast-data-table th,
 .forecast-data-table td {
-    padding: var(--spacing-sm) var(--spacing-md);
+    padding: var(--space-sm) var(--space-md);
     text-align: left;
     border-bottom: 1px solid var(--theme-border-color);
 }
 
 .forecast-data-table th {
-    background-color: var(--bg-tertiary);
+    background-color: var(--theme-bg-tertiary);
     font-weight: 600;
-    color: var(--text-secondary);
+    color: var(--theme-text-secondary);
 }
 
 .forecast-data-table tr:last-child td {
@@ -187,17 +187,17 @@
 
 /* --- FAQ Section (System Edit Style) --- */
 .forecast-faq-section {
-    margin-top: var(--spacing-xxl);
+    margin-top: var(--space-2xl);
     border-top: 2px solid var(--theme-border-color);
     /* Thicker divider like System Edit */
-    padding-top: var(--spacing-md);
+    padding-top: var(--space-md);
     max-width: 1200px;
 }
 
 .forecast-faq-section h3 {
-    margin: 0 0 var(--spacing-md) 0;
+    margin: 0 0 var(--space-md) 0;
     font-size: 1.2rem;
-    color: var(--text-primary);
+    color: var(--theme-text-primary);
     font-weight: 600;
 }
 
@@ -218,7 +218,7 @@
     cursor: pointer;
     font-weight: 500;
     font-size: 0.9rem;
-    color: var(--text-secondary);
+    color: var(--theme-text-secondary);
     /* Gray 700 equivalent */
     list-style: none;
     display: flex;
@@ -227,8 +227,8 @@
 }
 
 .forecast-faq-item summary:hover {
-    background-color: rgba(0, 0, 0, 0.02);
-    color: var(--text-primary);
+    background-color: color-mix(in srgb, var(--theme-text-primary), transparent 98%);
+    color: var(--theme-text-primary);
     padding-left: 4px;
 }
 
@@ -236,7 +236,7 @@
 .forecast-faq-item summary::before {
     content: '+';
     margin-right: 4px;
-    color: var(--text-tertiary);
+    color: var(--theme-text-muted);
     /* Gray 400 equivalent */
     font-family: monospace;
     font-size: 1em;
@@ -256,7 +256,7 @@
 }
 
 .forecast-faq-content {
-    padding: var(--spacing-md) 0;
+    padding: var(--space-md) 0;
     background-color: transparent;
     border: none;
 }
@@ -264,14 +264,14 @@
 .forecast-faq-content p,
 .forecast-faq-content ul {
     font-size: var(--font-size-sm);
-    color: var(--text-secondary);
+    color: var(--theme-text-secondary);
     line-height: 1.6;
     margin-top: 0;
-    margin-bottom: var(--spacing-sm);
+    margin-bottom: var(--space-sm);
 }
 
 .forecast-faq-content ul {
-    padding-left: var(--spacing-lg);
+    padding-left: var(--space-lg);
 }
 
 .forecast-faq-content li {
@@ -290,7 +290,7 @@
     margin-right: 8px;
     font-size: 0.9rem;
     font-weight: 500;
-    color: var(--text-secondary);
+    color: var(--theme-text-secondary);
 }
 
 .forecast-toolbar-gap {
@@ -299,8 +299,8 @@
 
 .forecast-empty-state {
     text-align: center;
-    padding: var(--spacing-xl);
-    color: var(--text-secondary);
+    padding: var(--space-xl);
+    color: var(--theme-text-secondary);
     font-style: italic;
 }
 
@@ -322,7 +322,7 @@
     cursor: pointer;
     font-weight: 600;
     font-size: 1rem;
-    color: var(--text-primary);
+    color: var(--theme-text-primary);
     list-style: none;
     display: flex;
     align-items: center;
@@ -337,7 +337,7 @@
 #rf-faq-container summary::before {
     content: '+';
     margin-right: 8px;
-    color: var(--text-tertiary);
+    color: var(--theme-text-muted);
     font-family: monospace;
     font-size: 1.2em;
     width: 16px;
@@ -359,7 +359,7 @@
 #rf-faq-container details>*:not(summary) {
     padding-left: 24px;
     /* Indent content to align with text */
-    padding-bottom: var(--spacing-md);
+    padding-bottom: var(--space-md);
     animation: fadeIn 0.3s ease-in-out;
 }
 
@@ -375,16 +375,16 @@
 
 #rf-faq-container p {
     font-size: var(--font-size-sm);
-    color: var(--text-secondary);
+    color: var(--theme-text-secondary);
     line-height: 1.6;
-    margin-bottom: var(--spacing-md);
+    margin-bottom: var(--space-md);
     margin-top: 0;
 }
 
 #rf-faq-container ul {
     padding-left: 20px;
     /* Standard indentation */
-    margin-bottom: var(--spacing-md);
+    margin-bottom: var(--space-md);
     margin-top: 0;
     list-style-type: disc;
     /* Level 1: Filled circle */
@@ -399,7 +399,7 @@
 
 #rf-faq-container li {
     font-size: var(--font-size-sm);
-    color: var(--text-secondary);
+    color: var(--theme-text-secondary);
     line-height: 1.6;
     margin-bottom: 8px;
     /* Slightly more space between items */
@@ -412,7 +412,7 @@
 
 #rf-faq-container strong {
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--theme-text-primary);
 }
 
 #rf-faq-container em {

@@ -48,6 +48,6 @@
 }
 
 .dependency-item.selected {
-    background-color: var(--color-primary-50);
-    border-color: var(--color-primary-300);
+    background-color: color-mix(in srgb, var(--theme-primary), transparent 90%);
+    border-color: color-mix(in srgb, var(--theme-primary), var(--theme-border-color) 60%);
 }

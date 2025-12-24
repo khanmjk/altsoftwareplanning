@@ -7,18 +7,16 @@
     padding: 4px 10px;
     margin-right: 8px;
     margin-bottom: 4px;
-    background-color: #e0f2fe;
-    /* Light blue */
-    color: #0369a1;
-    /* Dark blue */
+    background-color: color-mix(in srgb, var(--theme-info), transparent 85%);
+    color: var(--theme-info);
     border-radius: 16px;
     font-size: 0.85rem;
     font-weight: 500;
-    border: 1px solid #bae6fd;
+    border: 1px solid color-mix(in srgb, var(--theme-info), transparent 70%);
 }
 
 .text-muted {
-    color: var(--text-secondary);
+    color: var(--theme-text-secondary);
     font-style: italic;
 }
 

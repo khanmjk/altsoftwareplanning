@@ -13,7 +13,7 @@
 }
 
 .initiative-card:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 8px var(--theme-card-shadow);
     border-color: var(--theme-primary);
 }
 
@@ -43,7 +43,7 @@
 }
 
 .mini-initiative-card:hover {
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 4px var(--theme-card-shadow);
     border-left-color: var(--theme-primary-hover);
 }
 

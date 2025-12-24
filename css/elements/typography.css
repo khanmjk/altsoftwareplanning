@@ -46,7 +46,7 @@ h4 {
 
 /* Links */
 a {
-    color: var(--color-primary-600);
+    color: var(--theme-primary);
     text-decoration: none;
 }
 

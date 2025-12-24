@@ -171,8 +171,7 @@ class DependencyVisualization extends BaseVisualization {
      * @param {Object} d - Node data
      */
     handleMouseOver(event, d) {
-        // Build tooltip content
-        let info = '';
+        let tooltipContent = null;
         if (d.type === 'service') {
             const service = SystemService.getCurrentSystem().services.find(s => s.serviceName === d.id);
             if (service) {
@@ -181,16 +180,22 @@ class DependencyVisualization extends BaseVisualization {
                     .filter(s => (s.serviceDependencies || []).includes(d.id))
                     .map(s => s.serviceName);
                 const platformDeps = service.platformDependencies || [];
-                info = `<strong>Service:</strong> ${d.id}<br>`;
-                info += `<strong>Upstream:</strong> ${upstreams.length > 0 ? upstreams.join(', ') : 'None'}<br>`;
-                info += `<strong>Downstream:</strong> ${downstreams.length > 0 ? downstreams.join(', ') : 'None'}<br>`;
-                info += `<strong>Platform Deps:</strong> ${platformDeps.length > 0 ? platformDeps.join(', ') : 'None'}`;
+                tooltipContent = this._buildTooltipContent([
+                    { label: 'Service', value: d.id },
+                    { label: 'Upstream', value: upstreams.length > 0 ? upstreams.join(', ') : 'None' },
+                    { label: 'Downstream', value: downstreams.length > 0 ? downstreams.join(', ') : 'None' },
+                    { label: 'Platform Deps', value: platformDeps.length > 0 ? platformDeps.join(', ') : 'None' }
+                ]);
             }
         } else if (d.type === 'platform') {
-            info = `<strong>Platform:</strong> ${d.id}`;
+            tooltipContent = this._buildTooltipContent([
+                { label: 'Platform', value: d.id }
+            ]);
         }
 
-        D3Service.showTooltip(event, info, { className: 'visualization-tooltip' });
+        if (tooltipContent) {
+            D3Service.showTooltip(event, tooltipContent, { className: 'visualization-tooltip' });
+        }
 
         // Highlight connected nodes and links
         this.highlightedNodes.clear();

@@ -20,7 +20,7 @@
 }
 
 .chat-message.user {
-    background-color: var(--color-primary-100);
+    background-color: color-mix(in srgb, var(--theme-primary), transparent 88%);
     margin-left: auto;
 }
 
@@ -47,6 +47,6 @@
 
 .chat-input:focus {
     outline: none;
-    border-color: var(--color-primary-500);
-    box-shadow: 0 0 0 2px var(--color-primary-100);
+    border-color: var(--theme-primary);
+    box-shadow: 0 0 0 2px rgba(var(--theme-primary-rgb), 0.15);
 }

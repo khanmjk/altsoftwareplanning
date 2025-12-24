@@ -55,7 +55,7 @@
     border: 1px solid var(--theme-border-color);
     border-radius: var(--radius-md);
     outline: 0;
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    box-shadow: 0 0.5rem 1rem var(--theme-card-shadow);
 }
 
 .modal-header {

@@ -41,7 +41,7 @@
 }
 
 .initiative-edit-header:hover {
-    background-color: rgba(0, 0, 0, 0.02);
+    background-color: color-mix(in srgb, var(--theme-text-primary), transparent 98%);
     color: var(--color-gray-900);
     padding-left: 4px;
 }
@@ -121,7 +121,7 @@
 .initiative-edit-select:focus {
     border-color: var(--color-primary);
     outline: 0;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 2px rgba(var(--theme-primary-rgb), 0.1);
 }
 
 .initiative-edit-textarea {
@@ -140,7 +140,7 @@
 
 .initiative-edit-section-header {
     padding: 8px 12px;
-    background-color: rgba(0, 0, 0, 0.02);
+    background-color: color-mix(in srgb, var(--theme-text-primary), transparent 98%);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -149,7 +149,7 @@
 }
 
 .initiative-edit-section-header:hover {
-    background-color: rgba(0, 0, 0, 0.04);
+    background-color: color-mix(in srgb, var(--theme-text-primary), transparent 96%);
 }
 
 .initiative-edit-section-title {

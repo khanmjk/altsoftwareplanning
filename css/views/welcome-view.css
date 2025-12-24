@@ -45,7 +45,7 @@
 
 .action-card:hover {
     transform: translateY(-5px);
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 10px 15px -3px var(--theme-card-shadow);
     border-color: var(--theme-border-color);
 }
 

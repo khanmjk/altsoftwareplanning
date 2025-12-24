@@ -183,17 +183,21 @@ class SystemVisualization extends BaseVisualization {
     /**
      * Get tooltip content for a node
      * @param {Object} d - Node data
-     * @returns {string} HTML content
+     * @returns {Node} Tooltip content
      */
     getTooltipContent(d) {
         if (d.type === 'service') {
             const service = (this.systemData.services || []).find(s => s.serviceName === d.id);
             const team = service ? (this.systemData.teams || []).find(t => t.teamId === service.owningTeamId) : null;
-            return `<strong>Service:</strong> ${d.id}<br>
-                    <strong>Team:</strong> ${team ? (team.teamName || team.teamIdentity) : 'Unassigned'}<br>
-                    <strong>Description:</strong> ${service?.serviceDescription || 'N/A'}`;
-        } else if (d.type === 'api') {
-            let api, serviceName;
+            return this._buildTooltipContent([
+                { label: 'Service', value: d.id },
+                { label: 'Team', value: team ? (team.teamName || team.teamIdentity) : 'Unassigned' },
+                { label: 'Description', value: service?.serviceDescription || 'N/A' }
+            ]);
+        }
+        if (d.type === 'api') {
+            let api;
+            let serviceName;
             (this.systemData.services || []).forEach(service => {
                 (service.apis || []).forEach(a => {
                     if (a.apiName === d.id) {
@@ -202,13 +206,18 @@ class SystemVisualization extends BaseVisualization {
                     }
                 });
             });
-            return `<strong>API:</strong> ${d.id}<br>
-                    <strong>Service:</strong> ${serviceName || 'N/A'}<br>
-                    <strong>Description:</strong> ${api?.apiDescription || 'N/A'}`;
-        } else if (d.type === 'platform') {
-            return `<strong>Platform:</strong> ${d.id}`;
+            return this._buildTooltipContent([
+                { label: 'API', value: d.id },
+                { label: 'Service', value: serviceName || 'N/A' },
+                { label: 'Description', value: api?.apiDescription || 'N/A' }
+            ]);
         }
-        return '';
+        if (d.type === 'platform') {
+            return this._buildTooltipContent([
+                { label: 'Platform', value: d.id }
+            ]);
+        }
+        return this._buildTooltipContent([{ label: 'Item', value: d.id }]);
     }
 
     /**

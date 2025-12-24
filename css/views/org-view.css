@@ -177,7 +177,7 @@
     border: 1px solid var(--theme-border-color);
     border-radius: 4px;
     pointer-events: none;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 5px var(--theme-card-shadow);
     z-index: 1000;
     opacity: 0;
     transform: translate(var(--tooltip-x, 0px), var(--tooltip-y, 0px));
@@ -227,7 +227,7 @@
 .org-node-rect:hover {
     stroke: var(--theme-primary);
     stroke-width: 2px;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+    filter: drop-shadow(0 2px 4px var(--theme-card-shadow));
 }
 
 /* Node Type Specific Colors */

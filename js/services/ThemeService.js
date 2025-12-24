@@ -291,6 +291,8 @@ const ThemeService = {
                 root.style.setProperty(`--theme-${cssVar}`, value);
             });
 
+            this._applyRgbVariables(root, theme.colors);
+
             this.currentTheme = themeId;
 
             // Re-enable transitions
@@ -482,5 +484,87 @@ const ThemeService = {
      */
     camelToKebab(str) {
         return str.replace(/([A-Z])/g, '-$1').toLowerCase();
+    },
+
+    _applyRgbVariables(root, colors) {
+        const rgbKeys = ['primary', 'warning', 'success', 'danger', 'info', 'textOnAccent'];
+        rgbKeys.forEach(key => {
+            const value = colors[key];
+            const rgb = this._colorToRgb(value);
+            if (rgb) {
+                root.style.setProperty(`--theme-${this.camelToKebab(key)}-rgb`, rgb);
+            }
+        });
+    },
+
+    _colorToRgb(color) {
+        if (!color || typeof color !== 'string') return null;
+        if (color.startsWith('#')) {
+            const hex = color.replace('#', '');
+            const normalized = hex.length === 3
+                ? hex.split('').map(ch => ch + ch).join('')
+                : hex;
+            if (normalized.length !== 6) return null;
+            const intVal = parseInt(normalized, 16);
+            const r = (intVal >> 16) & 255;
+            const g = (intVal >> 8) & 255;
+            const b = intVal & 255;
+            return `${r}, ${g}, ${b}`;
+        }
+
+        const rgbMatch = color.match(/rgba?\(([^)]+)\)/i);
+        if (rgbMatch) {
+            const parts = rgbMatch[1].split(',').map(part => part.trim());
+            if (parts.length < 3) return null;
+            return `${parseInt(parts[0], 10)}, ${parseInt(parts[1], 10)}, ${parseInt(parts[2], 10)}`;
+        }
+
+        const hslMatch = color.match(/hsla?\(([^)]+)\)/i);
+        if (hslMatch) {
+            const parts = hslMatch[1].split(',').map(part => part.trim());
+            if (parts.length < 3) return null;
+            const h = parseFloat(parts[0]);
+            const s = parseFloat(parts[1]) / 100;
+            const l = parseFloat(parts[2]) / 100;
+            const rgb = this._hslToRgb(h, s, l);
+            return rgb ? `${rgb.r}, ${rgb.g}, ${rgb.b}` : null;
+        }
+
+        return null;
+    },
+
+    _hslToRgb(h, s, l) {
+        if (Number.isNaN(h) || Number.isNaN(s) || Number.isNaN(l)) return null;
+        const c = (1 - Math.abs(2 * l - 1)) * s;
+        const hPrime = ((h % 360) + 360) % 360 / 60;
+        const x = c * (1 - Math.abs((hPrime % 2) - 1));
+        let r1 = 0;
+        let g1 = 0;
+        let b1 = 0;
+        if (hPrime >= 0 && hPrime < 1) {
+            r1 = c;
+            g1 = x;
+        } else if (hPrime >= 1 && hPrime < 2) {
+            r1 = x;
+            g1 = c;
+        } else if (hPrime >= 2 && hPrime < 3) {
+            g1 = c;
+            b1 = x;
+        } else if (hPrime >= 3 && hPrime < 4) {
+            g1 = x;
+            b1 = c;
+        } else if (hPrime >= 4 && hPrime < 5) {
+            r1 = x;
+            b1 = c;
+        } else if (hPrime >= 5 && hPrime < 6) {
+            r1 = c;
+            b1 = x;
+        }
+        const m = l - c / 2;
+        return {
+            r: Math.round((r1 + m) * 255),
+            g: Math.round((g1 + m) * 255),
+            b: Math.round((b1 + m) * 255)
+        };
     }
 };

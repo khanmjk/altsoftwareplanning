@@ -14,7 +14,7 @@
     padding: 2px 0;
     /* Minimal padding */
     margin-bottom: 3px;
-    /* border-bottom: 1px solid #efefef; /* Optional separator */
+    /* border-bottom: 1px solid var(--theme-border-color); Optional separator */
 }
 
 .etw-control-button {
@@ -52,7 +52,7 @@
     /* Align to the right of the button container */
     background-color: var(--theme-dropdown-bg);
     border: 1px solid var(--theme-border-color);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 8px var(--theme-card-shadow);
     z-index: 1060;
     /* Ensure it's above Tabulator header/content */
     padding: 8px;
@@ -167,9 +167,9 @@
 }
 
 .tabulator-row.tabulator-selected {
-    background-color: var(--theme-accent) !important;
+    background-color: var(--theme-primary) !important;
     /* Use accent color */
-    color: white !important;
+    color: var(--theme-text-on-accent) !important;
 }
 
 /* 4. Cell Styling */
@@ -202,7 +202,7 @@
 
 .tabulator .tabulator-footer .tabulator-page.active {
     background: var(--theme-primary) !important;
-    color: white !important;
+    color: var(--theme-text-on-accent) !important;
     border-color: var(--theme-primary) !important;
 }
 

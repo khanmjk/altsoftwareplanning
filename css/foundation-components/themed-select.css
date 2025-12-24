@@ -93,7 +93,7 @@
     background-color: var(--theme-dropdown-bg);
     border: 1px solid var(--theme-border-color);
     border-radius: var(--radius-sm);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px var(--theme-card-shadow);
 }
 
 .themed-select--open .themed-select__dropdown {

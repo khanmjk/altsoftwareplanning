@@ -30,14 +30,14 @@
 
 /* Collapsible Header Hover Effects */
 #documentationHeader:hover {
-    background-color: var(--color-gray-200);
-    color: var(--color-primary-600);
+    background-color: color-mix(in srgb, var(--theme-primary), transparent 92%);
+    color: var(--theme-primary);
     transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
 }
 
 #systemEditForm .service-edit>h4:hover {
-    background-color: #dce9f5;
-    color: #004a99;
+    background-color: color-mix(in srgb, var(--theme-primary), transparent 92%);
+    color: var(--theme-primary);
     transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
 }
 

@@ -103,7 +103,7 @@ class WelcomeView {
         };
     }
 
-    _createActionCard({ id, title, description, iconClass, iconModifier, onClick, isHidden = false }) {
+    _createActionCard({ id, title, description, iconClass, iconModifier, onClick = () => {}, isHidden = false }) {
         const card = document.createElement('div');
         card.className = 'action-card';
         if (id) {
@@ -112,9 +112,7 @@ class WelcomeView {
         if (isHidden) {
             card.classList.add('is-hidden');
         }
-        if (typeof onClick === 'function') {
-            card.addEventListener('click', onClick);
-        }
+        card.addEventListener('click', onClick);
 
         const iconContainer = document.createElement('div');
         iconContainer.className = `action-card__icon-container ${iconModifier}`;

@@ -311,8 +311,8 @@
     text-align: left;
     padding: 8px;
     font: 12px sans-serif;
-    background: rgba(0, 0, 0, 0.8);
-    color: var(--color-white);
+    background: var(--theme-text-primary);
+    color: var(--theme-bg-primary);
     border-radius: 4px;
     pointer-events: none;
     z-index: 1000;

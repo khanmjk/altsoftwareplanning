@@ -53,7 +53,7 @@
 
 .management-nav-item.active {
     background: var(--theme-primary);
-    color: #ffffff;
+    color: var(--theme-text-on-accent);
 }
 
 /* Content Area */

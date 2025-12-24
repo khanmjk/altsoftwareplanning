@@ -23,7 +23,7 @@
     background: var(--theme-card-bg);
     border: 1px solid var(--theme-border-color);
     color: var(--theme-text-primary);
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 10px 15px -3px var(--theme-card-shadow);
 }
 
 .notifications-dropdown__header {
@@ -73,7 +73,7 @@
     padding: 16px 20px;
     min-width: 300px;
     max-width: 450px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px var(--theme-card-shadow);
     display: flex;
     align-items: flex-start;
     gap: 12px;
@@ -207,7 +207,7 @@
     border-radius: 12px;
     width: 90%;
     max-width: 480px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 20px 25px -5px var(--theme-card-shadow), 0 10px 10px -5px var(--theme-card-shadow);
     animation: scale-in 0.2s ease-out;
     overflow: hidden;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -235,6 +235,11 @@
     line-height: 1.5;
 }
 
+.notification-modal-label {
+    display: block;
+    margin-bottom: 5px;
+}
+
 .notification-modal-input {
     width: 100%;
     padding: 10px 12px;
@@ -248,7 +253,7 @@
 .notification-modal-input:focus {
     outline: none;
     border-color: var(--theme-primary);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 3px rgba(var(--theme-primary-rgb), 0.1);
 }
 
 .notification-modal-footer {

@@ -50,7 +50,7 @@
 }
 
 #sidebar .system-switcher-btn {
-    background: rgba(255, 255, 255, 0.05);
+    background: color-mix(in srgb, var(--theme-sidebar-bg), var(--theme-text-primary) 6%);
     padding: 10px;
     border-radius: 6px;
     display: flex;
@@ -62,7 +62,7 @@
 }
 
 #sidebar .system-switcher-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: color-mix(in srgb, var(--theme-sidebar-bg), var(--theme-text-primary) 12%);
 }
 
 /* Create Button */
@@ -73,7 +73,7 @@
 #sidebar .create-btn {
     width: 100%;
     background-color: var(--theme-primary);
-    color: white;
+    color: var(--theme-text-on-accent);
     border: none;
     padding: 10px;
     border-radius: 6px;
@@ -178,7 +178,7 @@
     padding: 5px 0;
     width: 220px;
     z-index: 1100;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 6px var(--theme-card-shadow);
     display: none;
 }
 
@@ -204,5 +204,5 @@
 }
 
 .dropdown-item.danger:hover {
-    background-color: rgba(220, 53, 69, 0.1);
+    background-color: rgba(var(--theme-danger-rgb), 0.1);
 }

@@ -9,7 +9,7 @@
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: var(--theme-modal-overlay);
     backdrop-filter: blur(2px);
 }
 
@@ -25,7 +25,7 @@
     border-radius: 8px;
     width: 70%;
     max-width: 900px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 25px var(--theme-card-shadow);
     animation: modalSlideIn 0.3s ease-out;
 }
 
@@ -152,7 +152,7 @@
 .roadmap-textarea:focus {
     outline: none;
     border-color: var(--theme-primary);
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 2px rgba(var(--theme-primary-rgb), 0.1);
 }
 
 .roadmap-section-title {

@@ -174,7 +174,7 @@ class NotificationManager {
             titleEl.textContent = title;
             const closeBtn = document.createElement('button');
             closeBtn.className = 'toast-close';
-            closeBtn.innerHTML = '&times;';
+            closeBtn.textContent = '\u00d7';
             header.appendChild(titleEl);
             header.appendChild(closeBtn);
 
@@ -241,7 +241,7 @@ class NotificationManager {
             titleEl.textContent = title;
             const closeBtn = document.createElement('button');
             closeBtn.className = 'toast-close';
-            closeBtn.innerHTML = '&times;';
+            closeBtn.textContent = '\u00d7';
             header.appendChild(titleEl);
             header.appendChild(closeBtn);
 
@@ -249,8 +249,7 @@ class NotificationManager {
             const body = document.createElement('div');
             body.className = 'notification-modal-body';
             const label = document.createElement('label');
-            label.style.display = 'block';
-            label.style.marginBottom = '5px';
+            label.className = 'notification-modal-label';
             label.textContent = message;
             const input = document.createElement('input');
             input.type = 'text';

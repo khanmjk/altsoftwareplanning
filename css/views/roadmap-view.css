@@ -44,7 +44,7 @@
 
 .roadmap-filter-label {
     font-weight: 600;
-    color: var(--text-secondary);
+    color: var(--theme-text-secondary);
     font-size: 0.9rem;
 }
 
@@ -56,13 +56,13 @@
 }
 
 .roadmap-filter-checkbox {
-    accent-color: var(--primary-color);
+    accent-color: var(--theme-primary);
     cursor: pointer;
 }
 
 .roadmap-filter-checkbox-label {
     font-size: 0.9rem;
-    color: var(--text-primary);
+    color: var(--theme-text-primary);
     cursor: pointer;
     user-select: none;
 }
@@ -110,7 +110,7 @@
 
 .quarterly-roadmap-table .theme-cell {
     font-weight: 600;
-    background: var(--bg-secondary);
+    background: var(--theme-bg-secondary);
     width: 150px;
 }
 
@@ -123,9 +123,9 @@
 
 /* Initiative Card (Visual View) */
 .initiative-card {
-    background: var(--bg-primary);
-    border: 1px solid var(--border-color);
-    border-left: 4px solid var(--primary-color);
+    background: var(--theme-bg-primary);
+    border: 1px solid var(--theme-border-color);
+    border-left: 4px solid var(--theme-primary);
     border-radius: 4px;
     padding: 8px;
     font-size: 0.85rem;
@@ -135,18 +135,18 @@
 
 .initiative-card:hover {
     transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 4px 6px -1px var(--theme-card-shadow);
 }
 
 .initiative-title {
     font-weight: 600;
     margin-bottom: 4px;
-    color: var(--text-primary);
+    color: var(--theme-text-primary);
 }
 
 .initiative-sde {
     font-size: 0.75rem;
-    color: var(--text-secondary);
+    color: var(--theme-text-secondary);
 }
 
 /* Status Colors for Cards */
@@ -178,7 +178,7 @@
 .roadmap-table-view__empty {
     text-align: center;
     padding: 40px;
-    color: var(--text-secondary);
+    color: var(--theme-text-secondary);
     font-style: italic;
 }
 
@@ -197,16 +197,16 @@
     min-width: 1000px;
     height: 100%;
     /* Fill container */
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--theme-border-color);
     border-radius: 8px;
-    background: var(--bg-card);
-    box-shadow: var(--shadow-sm);
+    background: var(--theme-card-bg);
+    box-shadow: 0 1px 2px 0 var(--theme-card-shadow);
 }
 
 /* Header Row */
 .roadmap-header-row {
     display: flex;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--theme-border-color);
     position: sticky;
     top: 0;
     z-index: 10;
@@ -214,13 +214,13 @@
     font-size: 0.9rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: var(--text-secondary);
+    color: var(--theme-text-secondary);
 }
 
 .roadmap-header-cell {
     flex: 1;
     padding: 16px;
-    border-right: 1px solid var(--border-color);
+    border-right: 1px solid var(--theme-border-color);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -347,13 +347,13 @@
 }
 
 .roadmap-quarter-cell:hover {
-    background-color: rgba(0, 0, 0, 0.01);
+    background-color: color-mix(in srgb, var(--theme-text-primary), transparent 99%);
 }
 
 /* Drag & Drop States */
 .roadmap-quarter-cell.drag-over {
-    background-color: rgba(var(--primary-rgb), 0.1) !important;
-    border: 2px dashed var(--primary-color);
+    background-color: rgba(var(--theme-primary-rgb), 0.1) !important;
+    border: 2px dashed var(--theme-primary);
     border-radius: 4px;
 }
 
@@ -361,7 +361,7 @@
 .roadmap-card {
     background: var(--theme-card-bg);
     border: 1px solid var(--theme-card-border);
-    border-left: 4px solid var(--primary-color);
+    border-left: 4px solid var(--theme-primary);
     border-radius: 4px;
     padding: 12px;
     cursor: grab;
@@ -376,7 +376,7 @@
 
 .roadmap-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 16px var(--theme-card-shadow);
     z-index: 2;
 }
 
@@ -387,7 +387,7 @@
 .roadmap-card.dragging {
     opacity: 0.6;
     transform: scale(0.98);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 12px 24px var(--theme-card-shadow);
 }
 
 .card-header {
@@ -399,7 +399,7 @@
 .card-title {
     font-weight: 600;
     font-size: 0.95rem;
-    color: var(--text-primary);
+    color: var(--theme-text-primary);
     line-height: 1.4;
 }
 
@@ -493,7 +493,7 @@
     white-space: nowrap;
     font-weight: 600;
     font-size: 0.9rem;
-    color: var(--text-primary);
+    color: var(--theme-text-primary);
     line-height: 1;
     /* Ensure line-height doesn't offset alignment */
 }

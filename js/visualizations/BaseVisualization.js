@@ -221,7 +221,7 @@ class BaseVisualization {
     /**
      * Attach tooltip behavior to a selection
      * @param {d3.Selection} selection - Selection to attach tooltips to
-     * @param {Function} contentFn - Function returning tooltip HTML content
+     * @param {Function} contentFn - Function returning tooltip content (Node or string)
      */
     attachTooltips(selection, contentFn) {
         selection
@@ -233,6 +233,23 @@ class BaseVisualization {
             .on('mouseout', () => {
                 D3Service.hideTooltip();
             });
+    }
+
+    _buildTooltipContent(rows) {
+        const container = document.createElement('div');
+        rows.forEach(({ label, value }) => {
+            container.appendChild(this._createTooltipRow(label, value));
+        });
+        return container;
+    }
+
+    _createTooltipRow(label, value) {
+        const row = document.createElement('div');
+        const strong = document.createElement('strong');
+        strong.textContent = `${label}:`;
+        row.appendChild(strong);
+        row.appendChild(document.createTextNode(` ${value}`));
+        return row;
     }
 
     /**

@@ -137,7 +137,7 @@
 /* Drop zone indicator - shows where the row will be placed */
 #planningTableBody tr.drag-over {
     border-top: 3px solid var(--theme-primary);
-    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 -2px 4px var(--theme-card-shadow);
 }
 
 /* ============================================
@@ -180,7 +180,7 @@
 
 /* BTL initiatives - below the line */
 #planningTableBody tr.year-plan-row--btl {
-    background-color: rgba(var(--theme-warning-rgb, 255, 193, 7), 0.05);
+    background-color: rgba(var(--theme-warning-rgb), 0.05);
 }
 
 /* Draggable cursor */
@@ -247,15 +247,15 @@
    ============================================ */
 
 .year-plan-capacity--ok {
-    background-color: rgba(var(--theme-success-rgb, 40, 167, 69), 0.15);
+    background-color: rgba(var(--theme-success-rgb), 0.15);
 }
 
 .year-plan-capacity--warning {
-    background-color: rgba(var(--theme-warning-rgb, 255, 193, 7), 0.15);
+    background-color: rgba(var(--theme-warning-rgb), 0.15);
 }
 
 .year-plan-capacity--danger {
-    background-color: rgba(var(--theme-danger-rgb, 220, 53, 69), 0.15);
+    background-color: rgba(var(--theme-danger-rgb), 0.15);
 }
 
 /* ============================================
@@ -268,11 +268,11 @@
 }
 
 .year-plan-team-cell--ok {
-    background-color: rgba(var(--theme-success-rgb, 40, 167, 69), 0.15);
+    background-color: rgba(var(--theme-success-rgb), 0.15);
 }
 
 .year-plan-team-cell--over {
-    background-color: rgba(var(--theme-danger-rgb, 220, 53, 69), 0.15);
+    background-color: rgba(var(--theme-danger-rgb), 0.15);
 }
 
 .year-plan-estimate-input {

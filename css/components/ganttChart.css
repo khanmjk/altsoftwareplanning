@@ -283,7 +283,7 @@
 }
 
 .gantt .bar-wrapper.focus-row .bar {
-    filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.7));
+    filter: drop-shadow(0 0 6px rgba(var(--theme-primary-rgb), 0.7));
 }
 
 .gantt .bar-wrapper.focus-row .bar-label {
@@ -481,7 +481,7 @@
     background-color: var(--theme-bg-tertiary);
     font-weight: 600;
     color: var(--theme-text-primary);
-    box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+    box-shadow: inset 0 3px 5px var(--theme-card-shadow);
 }
 
 /* Frappe Gantt Custom Overrides & Hierarchy */
@@ -575,6 +575,24 @@
     color: var(--theme-text-secondary) !important;
     font-size: 11px !important;
     margin-bottom: 4px !important;
+}
+
+.frappe-gantt-renderer .popup-wrapper {
+    display: none !important;
+}
+
+.gantt-tooltip {
+    position: absolute;
+    text-align: left;
+    padding: 8px;
+    font: 12px sans-serif;
+    background: var(--theme-card-bg);
+    color: var(--theme-text-primary);
+    border-radius: 4px;
+    pointer-events: none;
+    z-index: 1000;
+    box-shadow: var(--theme-card-shadow);
+    border: 1px solid var(--theme-border-color);
 }
 
 .frappe-gantt-tooltip {

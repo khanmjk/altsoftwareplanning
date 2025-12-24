@@ -27,7 +27,7 @@
 .modal-content-wrapper {
     background-color: var(--theme-card-bg);
     border-radius: 12px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 25px 50px -12px var(--theme-card-shadow);
     width: 100%;
     max-width: 600px;
     /* Default width, can be overridden */
@@ -98,7 +98,7 @@
 
 .modal-body--diagram {
     overflow: hidden;
-    background-color: #ffffff;
+    background-color: var(--theme-bg-primary);
     display: flex;
     flex-direction: column;
     padding: 0;
@@ -154,7 +154,7 @@
 /* Buttons */
 .btn-primary {
     background-color: var(--theme-primary);
-    color: #ffffff;
+    color: var(--theme-text-on-accent);
     border: none;
     padding: 8px 16px;
     border-radius: 6px;

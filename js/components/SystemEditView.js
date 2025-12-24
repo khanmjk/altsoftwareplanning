@@ -2,12 +2,13 @@
  * SystemEditView
  * 
  * Wrapper class to conform editSystem.js to the workspace-canvas-contract.
- * Delegates rendering to the existing showSystemEditForm function.
+ * Delegates rendering to SystemEditController.
  */
 class SystemEditView {
     constructor(containerId) {
         this.containerId = containerId;
         this.container = null;
+        this.controller = null;
     }
 
     render(container, params = {}) {
@@ -22,11 +23,14 @@ class SystemEditView {
             return;
         }
 
+        if (!this.controller) {
+            this.controller = new SystemEditController();
+        }
+
         // Get current system or create new for create mode
         const system = params.createMode ? null : SystemService.getCurrentSystem();
 
-        // Delegate to existing function
-        showSystemEditForm(system, this.container);
+        this.controller.render(system, this.container);
     }
 
     /**

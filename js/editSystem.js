@@ -3,328 +3,381 @@
  * Refactored to use ServiceEditComponent and TeamEditComponent
  */
 
-// Global Instances
-let serviceEditComponent = null;
-let teamEditComponent = null;
-
-/** Show System Edit Form using WorkspaceComponent */
-function showSystemEditForm(systemData, container) {
-    console.log("Entering Edit System form (Focus Mode)...");
-
-    // Fallback if container not passed
-    if (!container) {
-        container = document.getElementById('systemEditForm');
-    }
-    if (!container) {
-        console.error("System Edit Form container not found.");
-        return;
-    }
-
-    if (!systemData) {
-        console.error("showSystemEditForm called without systemData.");
-        container.innerHTML = '<div class="alert alert-danger">Error: No system data loaded.</div>';
-        return;
+class SystemEditController {
+    constructor() {
+        this.container = null;
+        this.systemData = null;
+        this.serviceEditComponent = null;
+        this.teamEditComponent = null;
+        this.refs = {};
+        this._handlers = {
+            saveDetails: () => this.saveSystemDetails(),
+            addService: () => this.addNewService(),
+            addTeam: () => this.addNewTeam(),
+            saveAll: () => this.saveAllChanges(),
+            cancel: () => this.exitEditMode()
+        };
     }
 
-    // Inject the template
-    container.innerHTML = systemEditFormTemplate;
+    render(systemData, container) {
+        console.log('Entering Edit System form (Focus Mode)...');
 
-    // Attach event listeners (replacing inline onclick handlers per contract)
-    _attachSystemEditEventListeners();
+        this.systemData = systemData;
+        this.container = container || document.getElementById('systemEditForm');
 
-    // Populate the form
-    populateSystemEditForm(systemData);
-}
-
-/**
- * Attaches event listeners to the System Edit Form buttons.
- * This replaces the inline onclick handlers per workspace-canvas-contract.
- */
-function _attachSystemEditEventListeners() {
-    const saveDetailsBtn = document.getElementById('saveSystemDetailsBtn');
-    const addServiceBtn = document.getElementById('addNewServiceBtn');
-    const addTeamBtn = document.getElementById('addNewTeamBtn');
-    const saveAllBtn = document.getElementById('saveAllChangesBtn');
-    const cancelBtn = document.getElementById('cancelEditBtn');
-
-    if (saveDetailsBtn) saveDetailsBtn.addEventListener('click', saveSystemDetails);
-    if (addServiceBtn) addServiceBtn.addEventListener('click', addNewService);
-    if (addTeamBtn) addTeamBtn.addEventListener('click', addNewTeam);
-    if (saveAllBtn) saveAllBtn.addEventListener('click', saveAllChanges);
-    if (cancelBtn) cancelBtn.addEventListener('click', exitEditMode);
-}
-
-// Template for the System Edit Form
-const systemEditFormTemplate = `
-        <div id="systemEditFormContent" class="system-edit-container">
-            <!-- Header removed to avoid duplication -->
-            
-            <div class="system-edit-section-header">
-                <h3>System Details</h3>
-            </div>
-            
-            <form id="editSystemForm">
-                <div class="system-edit-group">
-                    <label for="systemNameInput">System Name:</label>
-                    <input type="text" id="systemNameInput" class="form-control">
-                </div>
-                <div class="system-edit-group">
-                    <label for="systemDescriptionInput">System Description:</label>
-                    <textarea id="systemDescriptionInput" class="form-control"></textarea>
-                </div>
-                <div class="system-edit-actions">
-                    <button type="button" id="saveSystemDetailsBtn" class="btn btn-primary">Save System Details</button>
-                </div>
-            </form>
-
-            <div class="system-edit-section-header">
-                <h3>Services</h3>
-            </div>
-            <div id="editServicesManagement"></div>
-            <div class="system-edit-actions">
-                <button type="button" id="addNewServiceBtn" class="btn btn-primary">Add New Service</button>
-            </div>
-
-            <div class="system-edit-section-header">
-                <h3>Teams</h3>
-            </div>
-            <div id="teamsManagement"></div>
-            <div class="system-edit-actions">
-                <button id="addNewTeamBtn" type="button" class="btn btn-primary">Add New Team</button>
-            </div>
-
-            <div class="system-edit-footer-actions">
-                <button type="button" id="saveAllChangesBtn" class="btn btn-success">Save All Changes</button>
-                <button type="button" id="cancelEditBtn" class="btn btn-danger">Cancel</button>
-            </div>
-        </div>
-    `;
-
-/**
- * Populates the System Edit Form with data.
- */
-function populateSystemEditForm(systemData) {
-    console.log("Populating System Edit Form...");
-    if (!systemData) { console.error("populateSystemEditForm called without systemData."); return; }
-
-    // --- Populate form fields ---
-    const nameInput = document.getElementById('systemNameInput');
-    const descInput = document.getElementById('systemDescriptionInput');
-    if (nameInput) nameInput.value = systemData.systemName || '';
-    if (descInput) descInput.value = systemData.systemDescription || '';
-
-    // Initialize Components
-    if (!serviceEditComponent) {
-        serviceEditComponent = new ServiceEditComponent('editServicesManagement', systemData);
-    } else {
-        serviceEditComponent.systemData = systemData; // Update data
-    }
-
-    if (!teamEditComponent) {
-        teamEditComponent = new TeamEditComponent('teamsManagement', systemData);
-    } else {
-        teamEditComponent.systemData = systemData; // Update data
-    }
-
-    // Render Components
-    try {
-        serviceEditComponent.render();
-        teamEditComponent.render();
-    } catch (error) {
-        console.error("Error rendering edit components:", error);
-    }
-}
-
-
-/** Add New Service **/
-function addNewService(overrides = {}) {
-    const newService = {
-        serviceName: 'New Service ' + ((SystemService.getCurrentSystem().services?.length || 0) + 1),
-        serviceDescription: '',
-        owningTeamId: null,
-        apis: [],
-        serviceDependencies: [],
-        platformDependencies: [],
-        ...overrides
-    };
-
-    if (!SystemService.getCurrentSystem().services) SystemService.getCurrentSystem().services = [];
-    SystemService.getCurrentSystem().services.push(newService);
-
-    // Refresh Component
-    if (serviceEditComponent) {
-        serviceEditComponent.expandedIndex = SystemService.getCurrentSystem().services.length - 1; // Expand new
-        serviceEditComponent.render();
-    }
-    return newService;
-}
-
-/** Add New Team **/
-function addNewTeam(overrides = {}) {
-    const newTeamId = 'team-' + Date.now();
-    const newTeam = {
-        teamId: newTeamId,
-        teamName: '',
-        teamIdentity: '',
-        teamDescription: '',
-        fundedHeadcount: 0,
-        buildersInSeats: 0,
-        engineers: [],
-        sdmId: null,
-        pmtId: null,
-        ...overrides
-    };
-
-    if (!SystemService.getCurrentSystem().teams) SystemService.getCurrentSystem().teams = [];
-    SystemService.getCurrentSystem().teams.push(newTeam);
-
-    // Refresh Component
-    if (teamEditComponent) {
-        teamEditComponent.expandedIndex = SystemService.getCurrentSystem().teams.length - 1; // Expand new
-        teamEditComponent.render();
-    }
-    return newTeam;
-}
-
-/** Save System Details **/
-async function saveSystemDetails() {
-    const systemNameInput = document.getElementById('systemNameInput');
-    const systemDescriptionTextarea = document.getElementById('systemDescriptionInput');
-
-    const newSystemName = systemNameInput.value.trim();
-
-    if (!newSystemName) {
-        notificationManager.showToast('System name cannot be empty.', 'warning');
-        return;
-    }
-
-    SystemService.getCurrentSystem().systemName = newSystemName;
-    SystemService.getCurrentSystem().systemDescription = systemDescriptionTextarea.value.trim();
-
-    const saved = SystemService.saveSystem(SystemService.getCurrentSystem(), newSystemName);
-    if (saved) {
-        notificationManager.showToast('System details saved.', 'success');
-    } else {
-        notificationManager.showToast('Failed to save system details.', 'error');
-    }
-
-
-}
-
-/** Save All Changes (Main Save Handler) **/
-async function saveAllChanges() {
-    console.log("saveAllChanges called.");
-
-    // 1. Get Inputs
-    const systemNameInput = document.getElementById('systemNameInput');
-    const systemDescriptionTextarea = document.getElementById('systemDescriptionInput');
-    const finalSystemName = systemNameInput ? systemNameInput.value.trim() : '';
-    const finalSystemDescription = systemDescriptionTextarea ? systemDescriptionTextarea.value.trim() : '';
-
-    // 2. Validate Inputs
-    if (!finalSystemName) {
-        notificationManager.showToast('System Name cannot be empty.', 'warning');
-        if (systemNameInput) systemNameInput.focus();
-        return;
-    }
-
-    if (!finalSystemDescription) {
-        if (!await notificationManager.confirm('System Description is empty. Save anyway?', 'Empty Description', { confirmStyle: 'warning' })) {
-            if (systemDescriptionTextarea) systemDescriptionTextarea.focus();
+        if (!this.container) {
+            console.error('System Edit Form container not found.');
             return;
+        }
+
+        this._clearContainer(this.container);
+
+        if (!this.systemData) {
+            console.error('SystemEditController called without systemData.');
+            this._renderError('Error: No system data loaded.');
+            return;
+        }
+
+        const formShell = this._buildFormShell();
+        this.container.appendChild(formShell);
+        this._attachEventListeners();
+        this._populateSystemEditForm();
+    }
+
+    _clearContainer(container) {
+        if (!container) return;
+        container.replaceChildren();
+    }
+
+    _renderError(message) {
+        const alert = document.createElement('div');
+        alert.className = 'alert alert-danger';
+        alert.textContent = message;
+        this.container.appendChild(alert);
+    }
+
+    _buildFormShell() {
+        this.refs = {};
+
+        const wrapper = document.createElement('div');
+        wrapper.id = 'systemEditFormContent';
+        wrapper.className = 'system-edit-container';
+
+        wrapper.appendChild(this._createSectionHeader('System Details'));
+
+        const form = document.createElement('form');
+        form.id = 'editSystemForm';
+
+        const nameInput = this._createInput('text', 'systemNameInput', 'form-control');
+        const nameGroup = this._createFormGroup('System Name:', nameInput);
+        form.appendChild(nameGroup);
+
+        const descInput = this._createTextarea('systemDescriptionInput', 'form-control');
+        const descGroup = this._createFormGroup('System Description:', descInput);
+        form.appendChild(descGroup);
+
+        const saveDetailsBtn = this._createButton('Save System Details', 'saveSystemDetailsBtn', 'btn btn-primary');
+        const saveActions = this._createActionGroup([saveDetailsBtn], 'system-edit-actions');
+        form.appendChild(saveActions);
+
+        wrapper.appendChild(form);
+
+        wrapper.appendChild(this._createSectionHeader('Services'));
+        const servicesContainer = document.createElement('div');
+        servicesContainer.id = 'editServicesManagement';
+        wrapper.appendChild(servicesContainer);
+
+        const addServiceBtn = this._createButton('Add New Service', 'addNewServiceBtn', 'btn btn-primary');
+        wrapper.appendChild(this._createActionGroup([addServiceBtn], 'system-edit-actions'));
+
+        wrapper.appendChild(this._createSectionHeader('Teams'));
+        const teamsContainer = document.createElement('div');
+        teamsContainer.id = 'teamsManagement';
+        wrapper.appendChild(teamsContainer);
+
+        const addTeamBtn = this._createButton('Add New Team', 'addNewTeamBtn', 'btn btn-primary');
+        wrapper.appendChild(this._createActionGroup([addTeamBtn], 'system-edit-actions'));
+
+        const saveAllBtn = this._createButton('Save All Changes', 'saveAllChangesBtn', 'btn btn-success');
+        const cancelBtn = this._createButton('Cancel', 'cancelEditBtn', 'btn btn-danger');
+        wrapper.appendChild(this._createActionGroup([saveAllBtn, cancelBtn], 'system-edit-footer-actions'));
+
+        this.refs.systemNameInput = nameInput;
+        this.refs.systemDescriptionInput = descInput;
+        this.refs.saveDetailsBtn = saveDetailsBtn;
+        this.refs.addServiceBtn = addServiceBtn;
+        this.refs.addTeamBtn = addTeamBtn;
+        this.refs.saveAllBtn = saveAllBtn;
+        this.refs.cancelBtn = cancelBtn;
+        this.refs.servicesContainer = servicesContainer;
+        this.refs.teamsContainer = teamsContainer;
+
+        return wrapper;
+    }
+
+    _createSectionHeader(title) {
+        const header = document.createElement('div');
+        header.className = 'system-edit-section-header';
+        const heading = document.createElement('h3');
+        heading.textContent = title;
+        header.appendChild(heading);
+        return header;
+    }
+
+    _createFormGroup(labelText, fieldEl) {
+        const group = document.createElement('div');
+        group.className = 'system-edit-group';
+        const label = document.createElement('label');
+        label.textContent = labelText;
+        if (fieldEl.id) {
+            label.htmlFor = fieldEl.id;
+        }
+        group.appendChild(label);
+        group.appendChild(fieldEl);
+        return group;
+    }
+
+    _createInput(type, id, className) {
+        const input = document.createElement('input');
+        input.type = type;
+        input.id = id;
+        input.className = className;
+        return input;
+    }
+
+    _createTextarea(id, className) {
+        const textarea = document.createElement('textarea');
+        textarea.id = id;
+        textarea.className = className;
+        return textarea;
+    }
+
+    _createButton(text, id, className) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.id = id;
+        button.className = className;
+        button.textContent = text;
+        return button;
+    }
+
+    _createActionGroup(buttons, className) {
+        const group = document.createElement('div');
+        group.className = className;
+        buttons.forEach(button => group.appendChild(button));
+        return group;
+    }
+
+    _attachEventListeners() {
+        const { saveDetailsBtn, addServiceBtn, addTeamBtn, saveAllBtn, cancelBtn } = this.refs;
+
+        if (saveDetailsBtn) saveDetailsBtn.addEventListener('click', this._handlers.saveDetails);
+        if (addServiceBtn) addServiceBtn.addEventListener('click', this._handlers.addService);
+        if (addTeamBtn) addTeamBtn.addEventListener('click', this._handlers.addTeam);
+        if (saveAllBtn) saveAllBtn.addEventListener('click', this._handlers.saveAll);
+        if (cancelBtn) cancelBtn.addEventListener('click', this._handlers.cancel);
+    }
+
+    _populateSystemEditForm() {
+        console.log('Populating System Edit Form...');
+        if (!this.systemData) {
+            console.error('populateSystemEditForm called without systemData.');
+            return;
+        }
+
+        const { systemNameInput, systemDescriptionInput } = this.refs;
+        if (systemNameInput) systemNameInput.value = this.systemData.systemName || '';
+        if (systemDescriptionInput) systemDescriptionInput.value = this.systemData.systemDescription || '';
+
+        if (!this.serviceEditComponent) {
+            this.serviceEditComponent = new ServiceEditComponent('editServicesManagement', this.systemData);
+        } else {
+            this.serviceEditComponent.systemData = this.systemData;
+        }
+
+        if (!this.teamEditComponent) {
+            this.teamEditComponent = new TeamEditComponent('teamsManagement', this.systemData);
+        } else {
+            this.teamEditComponent.systemData = this.systemData;
+        }
+
+        try {
+            this.serviceEditComponent.render();
+            this.teamEditComponent.render();
+        } catch (error) {
+            console.error('Error rendering edit components:', error);
         }
     }
 
-    // 3. Update Data Object (temporarily)
-    const oldSystemNameKey = SystemService.getCurrentSystem().systemName;
-    SystemService.getCurrentSystem().systemName = finalSystemName;
-    SystemService.getCurrentSystem().systemDescription = finalSystemDescription;
+    addNewService(overrides = {}) {
+        const currentSystem = SystemService.getCurrentSystem();
+        const newService = {
+            serviceName: 'New Service ' + ((currentSystem.services?.length || 0) + 1),
+            serviceDescription: '',
+            owningTeamId: null,
+            apis: [],
+            serviceDependencies: [],
+            platformDependencies: [],
+            ...overrides
+        };
 
-    // 4. Validate Engineer Assignments
-    if (!validateEngineerAssignments()) {
-        // Revert name change on validation failure to avoid state mismatch
-        SystemService.getCurrentSystem().systemName = oldSystemNameKey;
-        return;
+        if (!currentSystem.services) currentSystem.services = [];
+        currentSystem.services.push(newService);
+
+        if (this.serviceEditComponent) {
+            this.serviceEditComponent.expandedIndex = currentSystem.services.length - 1;
+            this.serviceEditComponent.render();
+        }
+        return newService;
     }
 
-    // 5. Save to Repository (with Rename/Overwrite Logic)
-    try {
-        // Check for Rename: In this app, renaming acts as "Save Copy". 
-        // We DO NOT delete the old system. This allows users to experiment by creating variations.
-        // if (oldSystemNameKey && oldSystemNameKey !== finalSystemName) { ... } // DELETED
+    addNewTeam(overrides = {}) {
+        const currentSystem = SystemService.getCurrentSystem();
+        const newTeamId = 'team-' + Date.now();
+        const newTeam = {
+            teamId: newTeamId,
+            teamName: '',
+            teamIdentity: '',
+            teamDescription: '',
+            fundedHeadcount: 0,
+            buildersInSeats: 0,
+            engineers: [],
+            sdmId: null,
+            pmtId: null,
+            ...overrides
+        };
 
-        // Check for Overwrite: If new name exists (and it's not the same as old name)
-        if (SystemService.systemExists(finalSystemName) && oldSystemNameKey !== finalSystemName) {
-            if (!await notificationManager.confirm(`A system named "${finalSystemName}" already exists. Overwrite it?`, 'Overwrite System', { confirmStyle: 'danger' })) {
-                SystemService.getCurrentSystem().systemName = oldSystemNameKey;
-                const fallbackSaved = SystemService.saveSystem(SystemService.getCurrentSystem(), oldSystemNameKey);
-                if (!fallbackSaved) {
-                    notificationManager.showToast('Failed to save system. Please try again.', 'error');
-                }
+        if (!currentSystem.teams) currentSystem.teams = [];
+        currentSystem.teams.push(newTeam);
+
+        if (this.teamEditComponent) {
+            this.teamEditComponent.expandedIndex = currentSystem.teams.length - 1;
+            this.teamEditComponent.render();
+        }
+        return newTeam;
+    }
+
+    async saveSystemDetails() {
+        const { systemNameInput, systemDescriptionInput } = this.refs;
+        const newSystemName = systemNameInput ? systemNameInput.value.trim() : '';
+
+        if (!newSystemName) {
+            notificationManager.showToast('System name cannot be empty.', 'warning');
+            return;
+        }
+
+        const currentSystem = SystemService.getCurrentSystem();
+        currentSystem.systemName = newSystemName;
+        currentSystem.systemDescription = systemDescriptionInput ? systemDescriptionInput.value.trim() : '';
+
+        const saved = SystemService.saveSystem(currentSystem, newSystemName);
+        if (saved) {
+            notificationManager.showToast('System details saved.', 'success');
+        } else {
+            notificationManager.showToast('Failed to save system details.', 'error');
+        }
+    }
+
+    async saveAllChanges() {
+        console.log('saveAllChanges called.');
+
+        const { systemNameInput, systemDescriptionInput } = this.refs;
+        const finalSystemName = systemNameInput ? systemNameInput.value.trim() : '';
+        const finalSystemDescription = systemDescriptionInput ? systemDescriptionInput.value.trim() : '';
+
+        if (!finalSystemName) {
+            notificationManager.showToast('System Name cannot be empty.', 'warning');
+            if (systemNameInput) systemNameInput.focus();
+            return;
+        }
+
+        if (!finalSystemDescription) {
+            const confirm = await notificationManager.confirm(
+                'System Description is empty. Save anyway?',
+                'Empty Description',
+                { confirmStyle: 'warning' }
+            );
+            if (!confirm) {
+                if (systemDescriptionInput) systemDescriptionInput.focus();
                 return;
             }
         }
 
-        // Perform Save
-        const saved = SystemService.saveSystem(SystemService.getCurrentSystem(), finalSystemName);
+        const currentSystem = SystemService.getCurrentSystem();
+        const oldSystemNameKey = currentSystem.systemName;
+        currentSystem.systemName = finalSystemName;
+        currentSystem.systemDescription = finalSystemDescription;
 
-        if (saved) {
-            // Recalculate capacity metrics so Year Plan picks up changes
-            CapacityEngine.recalculate(SystemService.getCurrentSystem());
-
-            notificationManager.showToast(`System "${finalSystemName}" saved successfully!`, 'success');
-
-
-        } else {
-            notificationManager.showToast('Failed to save system. Please try again.', 'error');
-            SystemService.getCurrentSystem().systemName = oldSystemNameKey; // Revert on failure
+        if (!validateEngineerAssignments()) {
+            currentSystem.systemName = oldSystemNameKey;
+            return;
         }
-    } catch (error) {
-        console.error("Error saving system:", error);
-        notificationManager.showToast('An error occurred while saving.', 'error');
-        SystemService.getCurrentSystem().systemName = oldSystemNameKey; // Revert on error
+
+        try {
+            if (SystemService.systemExists(finalSystemName) && oldSystemNameKey !== finalSystemName) {
+                const confirmOverwrite = await notificationManager.confirm(
+                    `A system named "${finalSystemName}" already exists. Overwrite it?`,
+                    'Overwrite System',
+                    { confirmStyle: 'danger' }
+                );
+                if (!confirmOverwrite) {
+                    currentSystem.systemName = oldSystemNameKey;
+                    const fallbackSaved = SystemService.saveSystem(currentSystem, oldSystemNameKey);
+                    if (!fallbackSaved) {
+                        notificationManager.showToast('Failed to save system. Please try again.', 'error');
+                    }
+                    return;
+                }
+            }
+
+            const saved = SystemService.saveSystem(currentSystem, finalSystemName);
+            if (saved) {
+                CapacityEngine.recalculate(currentSystem);
+                notificationManager.showToast(`System "${finalSystemName}" saved successfully!`, 'success');
+            } else {
+                notificationManager.showToast('Failed to save system. Please try again.', 'error');
+                currentSystem.systemName = oldSystemNameKey;
+            }
+        } catch (error) {
+            console.error('Error saving system:', error);
+            notificationManager.showToast('An error occurred while saving.', 'error');
+            currentSystem.systemName = oldSystemNameKey;
+        }
+    }
+
+    exitEditMode() {
+        console.log('Exiting edit mode...');
+        const currentSystem = SystemService.getCurrentSystem();
+        if (currentSystem && currentSystem.systemName) {
+            SystemService.loadAndActivate(currentSystem.systemName);
+        } else {
+            appState.closeCurrentSystem();
+        }
     }
 }
 
-
-/** Exit Edit Mode **/
-function exitEditMode() {
-    console.log("Exiting edit mode...");
-    // If we were creating a new system, return to home or load the new system
-    if (SystemService.getCurrentSystem() && SystemService.getCurrentSystem().systemName) {
-        SystemService.loadAndActivate(SystemService.getCurrentSystem().systemName);
-    } else {
-        appState.closeCurrentSystem();
-    }
-}
-
-
-/** 
- * Helper to display Senior Manager Assignment UI within SDM section 
+/**
+ * Helper to display Senior Manager Assignment UI within SDM section
  * Kept global as it's used by TeamEditComponent
  */
 function displaySeniorManagerAssignment(sdmSectionContainer, teamIndex, currentSdmId) {
-    // Find the specific container using teamIndex
-    let srMgrContainer = sdmSectionContainer.querySelector(`#srMgrAssignmentContainer_${teamIndex}`);
+    const srMgrContainer = sdmSectionContainer.querySelector(`#srMgrAssignmentContainer_${teamIndex}`);
     if (!srMgrContainer) {
-        // Fallback or error handling if container structure changed
-        // In the new component, we create this container, so it should be found if passed correctly
         return;
     }
-    srMgrContainer.innerHTML = '';
-    srMgrContainer.style.paddingLeft = '20px';
+    srMgrContainer.replaceChildren();
 
     const allSdms = SystemService.getCurrentSystem().sdms || [];
     const allSeniorManagers = SystemService.getCurrentSystem().seniorManagers || [];
     const currentSdm = allSdms.find(sdm => sdm && sdm.sdmId === currentSdmId);
 
     if (!currentSdm) {
-        srMgrContainer.innerText = 'Assign an SDM to manage Senior Manager assignment.';
+        srMgrContainer.textContent = 'Assign an SDM to manage Senior Manager assignment.';
         return;
     }
 
-    let title = document.createElement('h6');
-    title.innerText = `Senior Manager for SDM: ${currentSdm.sdmName}`;
+    const title = document.createElement('h6');
+    title.textContent = `Senior Manager for SDM: ${currentSdm.sdmName}`;
     srMgrContainer.appendChild(title);
 
     const currentSrMgr = allSeniorManagers.find(sr => sr && sr.seniorManagerId === currentSdm.seniorManagerId);
@@ -349,17 +402,18 @@ function displaySeniorManagerAssignment(sdmSectionContainer, teamIndex, currentS
         addNewPlaceholder: 'Enter New Sr. Manager Name',
         addNewCallback: (newSrMgrName) => {
             if (!newSrMgrName || newSrMgrName.trim() === '') return null;
-            newSrMgrName = newSrMgrName.trim();
-            let existingSrMgr = (SystemService.getCurrentSystem().seniorManagers || []).find(s => s && s.seniorManagerName.toLowerCase() === newSrMgrName.toLowerCase());
+            const normalizedName = newSrMgrName.trim();
+            const existingSrMgr = (SystemService.getCurrentSystem().seniorManagers || [])
+                .find(s => s && s.seniorManagerName.toLowerCase() === normalizedName.toLowerCase());
             if (existingSrMgr) {
-                notificationManager.showToast(`Senior Manager "${newSrMgrName}" already exists.`, 'warning');
+                notificationManager.showToast(`Senior Manager "${normalizedName}" already exists.`, 'warning');
                 return null;
             }
             const newSrMgrId = 'srMgr-' + Date.now();
-            const newSrMgr = { seniorManagerId: newSrMgrId, seniorManagerName: newSrMgrName };
+            const newSrMgr = { seniorManagerId: newSrMgrId, seniorManagerName: normalizedName };
             if (!SystemService.getCurrentSystem().seniorManagers) SystemService.getCurrentSystem().seniorManagers = [];
             SystemService.getCurrentSystem().seniorManagers.push(newSrMgr);
-            return { value: newSrMgrId, text: newSrMgrName };
+            return { value: newSrMgrId, text: normalizedName };
         }
     }).render();
     srMgrContainer.appendChild(srMgrDualList);
@@ -369,7 +423,7 @@ function displaySeniorManagerAssignment(sdmSectionContainer, teamIndex, currentS
 function validateEngineerAssignments() {
     const engineerAssignments = {};
     SystemService.getCurrentSystem().teams.forEach(team => {
-        const teamEngineers = team.engineers || []; // Now array of names
+        const teamEngineers = team.engineers || [];
         teamEngineers.forEach(engineerName => {
             if (engineerName) {
                 if (engineerAssignments[engineerName]) {
@@ -397,4 +451,3 @@ function validateEngineerAssignments() {
     }
     return true;
 }
-

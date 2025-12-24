@@ -156,20 +156,25 @@ class ServiceVisualization extends BaseVisualization {
     /**
      * Get tooltip content for a node
      * @param {Object} d - Node data
-     * @returns {string} HTML content
+     * @returns {Node} Tooltip content
      */
     getTooltipContent(d) {
         if (d.type === 'service') {
             const service = this.serviceMap[d.id];
             const systemData = SystemService.getCurrentSystem();
             const team = systemData.teams.find(t => t.teamId === service.owningTeamId);
-            return `<strong>Service Name:</strong> ${service.serviceName}<br>
-                    <strong>Description:</strong> ${service.serviceDescription}<br>
-                    <strong>Team:</strong> ${team ? `${team.teamName} (${team.teamIdentity})` : 'Unassigned'}`;
-        } else if (d.type === 'platform') {
-            return `<strong>Platform Dependency:</strong> ${d.id}`;
+            return this._buildTooltipContent([
+                { label: 'Service Name', value: service?.serviceName || d.id },
+                { label: 'Description', value: service?.serviceDescription || 'N/A' },
+                { label: 'Team', value: team ? `${team.teamName} (${team.teamIdentity})` : 'Unassigned' }
+            ]);
         }
-        return '';
+        if (d.type === 'platform') {
+            return this._buildTooltipContent([
+                { label: 'Platform Dependency', value: d.id }
+            ]);
+        }
+        return this._buildTooltipContent([{ label: 'Item', value: d.id }]);
     }
 
     /**
