@@ -132,7 +132,6 @@ class NotificationManager {
      * @returns {function} unsubscribe
      */
     addListener(cb) {
-        if (typeof cb !== 'function') return () => { };
         this.listeners.add(cb);
         // push initial state
         cb(this.getNotifications());

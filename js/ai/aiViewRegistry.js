@@ -3,8 +3,7 @@
  * Maps view IDs to their context providers for AI Chat Panel integration.
  * 
  * This registry enables the AI scraper to get structured context data from
- * class-based views via their getAIContext() method, with fallback to legacy
- * global variable scraping.
+ * class-based views via their getAIContext() method.
  */
 
 const AI_VIEW_REGISTRY = {
@@ -32,7 +31,7 @@ const AI_VIEW_REGISTRY = {
 
     visualizationCarousel: {
         displayName: 'System Overview',
-        fallbackGlobals: ['currentServiceDependenciesTableData']
+        fallbackGlobals: []
     },
 
     organogramView: {
@@ -48,7 +47,7 @@ const AI_VIEW_REGISTRY = {
     // P2 - Secondary
     dashboardView: {
         displayName: 'Dashboard',
-        fallbackGlobals: ['dashboardItems', 'currentDashboardIndex', 'dashboardPlanningYear']
+        fallbackGlobals: []
     },
 
     sdmForecastingView: {
@@ -100,7 +99,7 @@ function getViewInstance(viewId) {
 
 /**
  * Get AI context for the current view
- * Tries class instance first, falls back to legacy globals
+ * Tries class instance first
  * @param {string} viewId - The view ID to get context for
  * @returns {Object|null} Context data or null if view not found
  */
@@ -130,7 +129,7 @@ function getAIContextForView(viewId) {
         };
     }
 
-    // Signal caller to use legacy scraping
+    // Signal caller that no class context is available
     return null;
 }
 
