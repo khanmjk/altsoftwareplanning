@@ -235,6 +235,7 @@ Services must:
 - `AIService` (chat panel integration hooks)
 - `AboutService` (JSONP and HTML decoding helpers)
 - `MermaidService` (render error UI for external library)
+- `D3Service` (tooltip management and SVG helpers for visualizations)
 
 If another service needs DOM access, add it to this allowlist with a brief justification.
 

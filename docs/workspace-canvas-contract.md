@@ -495,6 +495,13 @@ To enable future migration to modern frameworks (React, Next.js, Rails), all vie
 - Modify global state directly (return values instead)
 - Contain presentation logic (colors, labels for display)
 
+**Approved DOM access exceptions (service-level)**:
+- `ThemeService` (theme application to document root)
+- `AIService` (chat panel integration hooks)
+- `AboutService` (JSONP and HTML decoding helpers)
+- `MermaidService` (render error UI for external library)
+- `D3Service` (tooltip management and SVG helpers for visualizations)
+
 ### 10.3 Example Pattern
 
 ```javascript

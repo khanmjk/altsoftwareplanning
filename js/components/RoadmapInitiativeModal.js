@@ -617,13 +617,3 @@ class RoadmapInitiativeModal {
         this.close();
     }
 }
-
-// Global singleton instance
-let roadmapInitiativeModal = null;
-
-// Initialize on load
-if (typeof window !== 'undefined') {
-    window.addEventListener('DOMContentLoaded', () => {
-        roadmapInitiativeModal = new RoadmapInitiativeModal();
-    });
-}

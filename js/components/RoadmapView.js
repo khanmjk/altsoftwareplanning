@@ -7,6 +7,7 @@ class RoadmapView {
         this.currentView = 'backlog'; // default
         this.pillNav = null;
         this.activeComponent = null;
+        this.initiativeModal = null;
 
         this.viewConfigs = [
             { id: 'backlog', label: 'Backlog List', icon: 'fas fa-list' },
@@ -40,10 +41,7 @@ class RoadmapView {
         // 4. Render Default View
         this.switchView(this.currentView);
 
-        // Initialize modal if needed
-        if (!roadmapInitiativeModal) {
-            roadmapInitiativeModal = new RoadmapInitiativeModal();
-        }
+        this._ensureInitiativeModal();
     }
 
     setupToolbar() {
@@ -126,20 +124,24 @@ class RoadmapView {
         }
     }
 
-    // --- Modal & Data Handling (Delegated to Global/Shared Logic) ---
+    // --- Modal & Data Handling (View-owned) ---
 
-    openModalForAdd() {
-        if (roadmapInitiativeModal) {
-            roadmapInitiativeModal.onSave = this.handleSave.bind(this);
-            roadmapInitiativeModal.open();
+    _ensureInitiativeModal() {
+        if (!this.initiativeModal) {
+            this.initiativeModal = new RoadmapInitiativeModal();
         }
     }
 
+    openModalForAdd() {
+        this._ensureInitiativeModal();
+        this.initiativeModal.onSave = this.handleSave.bind(this);
+        this.initiativeModal.open();
+    }
+
     openModalForEdit(initiativeId) {
-        if (roadmapInitiativeModal) {
-            roadmapInitiativeModal.onSave = this.handleSave.bind(this);
-            roadmapInitiativeModal.open(initiativeId);
-        }
+        this._ensureInitiativeModal();
+        this.initiativeModal.onSave = this.handleSave.bind(this);
+        this.initiativeModal.open(initiativeId);
     }
 
     handleSave(initiativeData, isEdit) {
