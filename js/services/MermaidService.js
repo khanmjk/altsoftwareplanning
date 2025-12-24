@@ -318,7 +318,6 @@ const MermaidService = {
      * @returns {string} Mermaid diagram syntax
      */
     generateArchitectureSyntax(systemData) {
-        const includePlatforms = (typeof showPlatformComponents === 'undefined') ? true : !!showPlatformComponents;
         const data = systemData || {};
         const lines = ['graph TD'];
 
@@ -393,22 +392,20 @@ const MermaidService = {
                 if (target) edges.push(`${source.id} --> ${target.id}`);
             });
 
-            if (includePlatforms) {
-                const platforms = Array.isArray(service.platformDependencies) ? [...service.platformDependencies].sort((a, b) => a.localeCompare(b)) : [];
-                platforms.forEach(platformName => {
-                    const normalized = this._normalizeKey(platformName);
-                    if (!normalized) return;
-                    if (!platformNodes.has(normalized)) {
-                        const platformId = this._createStableId(platformName, 'plat', idRegistry);
-                        platformNodes.set(normalized, { id: platformId, label: platformName });
-                    }
-                    const platformInfo = platformNodes.get(normalized);
-                    edges.push(`${source.id} -.-> ${platformInfo.id}`);
-                });
-            }
+            const platforms = Array.isArray(service.platformDependencies) ? [...service.platformDependencies].sort((a, b) => a.localeCompare(b)) : [];
+            platforms.forEach(platformName => {
+                const normalized = this._normalizeKey(platformName);
+                if (!normalized) return;
+                if (!platformNodes.has(normalized)) {
+                    const platformId = this._createStableId(platformName, 'plat', idRegistry);
+                    platformNodes.set(normalized, { id: platformId, label: platformName });
+                }
+                const platformInfo = platformNodes.get(normalized);
+                edges.push(`${source.id} -.-> ${platformInfo.id}`);
+            });
         });
 
-        if (includePlatforms && platformNodes.size > 0) {
+        if (platformNodes.size > 0) {
             Array.from(platformNodes.values())
                 .sort((a, b) => a.label.localeCompare(b.label))
                 .forEach(node => {
@@ -422,7 +419,7 @@ const MermaidService = {
             lines.push(`class ${Array.from(serviceNodeIds).join(',')} serviceNode;`);
         }
 
-        if (includePlatforms && platformNodes.size > 0) {
+        if (platformNodes.size > 0) {
             const platformIds = Array.from(platformNodes.values()).map(node => node.id);
             lines.push(`class ${platformIds.join(',')} platformNode;`);
         }
@@ -439,7 +436,6 @@ const MermaidService = {
      * @returns {string} Mermaid diagram syntax
      */
     generateApiSyntax(systemData, options = {}) {
-        const includePlatforms = (typeof showPlatformComponents === 'undefined') ? true : !!showPlatformComponents;
         const selectedService = options.selectedService || 'all';
         const data = systemData || {};
         const services = Array.isArray(data.services) ? [...data.services] : [];
@@ -529,7 +525,7 @@ const MermaidService = {
                     });
                 });
 
-                if (includePlatforms && (service.platformDependencies || []).length) {
+                if ((service.platformDependencies || []).length) {
                     service.platformDependencies.forEach(platformName => {
                         const normalized = this._normalizeKey(platformName);
                         if (!normalized) return;
@@ -601,7 +597,7 @@ const MermaidService = {
             lines.push('end');
         });
 
-        if (includePlatforms && platformNodes.size > 0) {
+        if (platformNodes.size > 0) {
             Array.from(platformNodes.values())
                 .sort((a, b) => a.label.localeCompare(b.label))
                 .forEach(node => {
@@ -616,7 +612,7 @@ const MermaidService = {
         if (apiNodes.length > 0) {
             lines.push(`class ${apiNodes.map(a => a.id).join(',')} apiNode;`);
         }
-        if (includePlatforms && platformNodes.size > 0) {
+        if (platformNodes.size > 0) {
             const platformIds = Array.from(platformNodes.values()).map(node => node.id);
             lines.push(`class ${platformIds.join(',')} platformNode;`);
         }
