@@ -386,9 +386,7 @@ class WorkspaceComponent {
             : null;
         const clampedWidth = this._clampExtensionWidth(width, activeEntry);
         this.currentExtensionWidth = clampedWidth;
-        if (typeof styleVars !== 'undefined' && styleVars.set) {
-            styleVars.set(document.documentElement, { '--workspace-extension-width': `${clampedWidth}px` });
-        }
+        styleVars.set(document.documentElement, { '--workspace-extension-width': `${clampedWidth}px` });
     }
 
     _clampExtensionWidth(width, entry) {

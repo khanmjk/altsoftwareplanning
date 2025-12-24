@@ -214,12 +214,6 @@ class AboutView {
      */
     async _fetchBlogPosts() {
         try {
-            if (typeof AboutService === 'undefined') {
-                console.error('AboutService not found. Make sure it is loaded in index.html');
-                this._renderPostsError();
-                return;
-            }
-
             this.posts = await AboutService.getBlogPosts(this.blogId, this.labelFilter);
             this._renderPosts();
         } catch (error) {
@@ -359,12 +353,6 @@ class AboutView {
      */
     async _fetchYouTubeVideos() {
         try {
-            if (typeof AboutService === 'undefined') {
-                console.error('AboutService not found');
-                this._renderVideosError();
-                return;
-            }
-
             this.videos = await AboutService.getYouTubeVideos(this.youtubeWorkerUrl);
             this._renderVideos();
         } catch (error) {

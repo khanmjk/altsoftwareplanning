@@ -8,6 +8,7 @@ class GanttRenderer {
             throw new Error("Abstract classes can't be instantiated.");
         }
         this.container = container;
+        this._eventTarget = new EventTarget();
     }
 
     /**
@@ -27,5 +28,17 @@ class GanttRenderer {
         while (this.container.firstChild) {
             this.container.removeChild(this.container.firstChild);
         }
+    }
+
+    addEventListener(type, listener, options) {
+        this._eventTarget.addEventListener(type, listener, options);
+    }
+
+    removeEventListener(type, listener, options) {
+        this._eventTarget.removeEventListener(type, listener, options);
+    }
+
+    _emit(type, detail) {
+        this._eventTarget.dispatchEvent(new CustomEvent(type, { detail }));
     }
 }

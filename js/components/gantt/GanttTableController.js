@@ -452,10 +452,6 @@ class GanttTableController {
     _setupFrappeSync() {
         if (!this.frappeRenderer) return;
 
-        // FrappeGanttRenderer is an external library - defensive check is appropriate here
-        // Per coding contract Rule 2.1: defensive checks allowed for external dependencies
-        if (typeof this.frappeRenderer.addEventListener !== 'function') return;
-
         this.frappeRenderer.addEventListener('task:dateChange', (e) => {
             this._handleFrappeDateChange(e.detail);
         });

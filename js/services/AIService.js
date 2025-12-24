@@ -107,11 +107,6 @@ ${systemPromptSummary}`.trim();
             return;
         }
 
-        if (typeof AIGenerationStatsModal === 'undefined') {
-            console.warn("AIService: AIGenerationStatsModal is not available.");
-            return;
-        }
-
         AIGenerationStatsModal.getInstance().open(this.formatAiStats(this.lastGenerationStats));
     },
 
@@ -119,7 +114,6 @@ ${systemPromptSummary}`.trim();
      * Hides the AI stats modal.
      */
     closeStatsModal() {
-        if (typeof AIGenerationStatsModal === 'undefined') return;
         AIGenerationStatsModal.getInstance().close();
     },
 

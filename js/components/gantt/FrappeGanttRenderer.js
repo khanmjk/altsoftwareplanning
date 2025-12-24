@@ -70,15 +70,24 @@ class FrappeGanttRenderer extends GanttRenderer {
                 start: startDateObj,
                 end: endDateObj,
                 on_date_change: (task, start, end) => {
+                    // Frappe passes Date objects, convert to YYYY-MM-DD string
+                    const formatDate = (d) => d.toISOString().split('T')[0];
+                    const payload = {
+                        taskId: task ? task.id : null,
+                        start: formatDate(start),
+                        end: formatDate(end)
+                    };
                     if (options.onUpdate) {
-                        // Frappe passes Date objects, convert to YYYY-MM-DD string
-                        const formatDate = (d) => d.toISOString().split('T')[0];
                         options.onUpdate({
                             task: task,
-                            start: formatDate(start),
-                            end: formatDate(end)
+                            start: payload.start,
+                            end: payload.end
                         });
                     }
+                    this._emit('task:dateChange', payload);
+                },
+                on_click: (task) => {
+                    this._emit('task:click', { taskId: task ? task.id : null });
                 }
             });
 
@@ -256,9 +265,7 @@ class FrappeGanttRenderer extends GanttRenderer {
 
         // Set SVG height so all tasks render, keep width fluid
         svg.setAttribute('height', `${computedHeight}`);
-        if (typeof styleVars !== 'undefined' && styleVars.set) {
-            styleVars.set(wrapper, { '--frappe-gantt-height': `${computedHeight}px` });
-        }
+        styleVars.set(wrapper, { '--frappe-gantt-height': `${computedHeight}px` });
     }
 
     _markLockedBars(wrapper, tasks) {
@@ -648,12 +655,10 @@ class FrappeGanttRenderer extends GanttRenderer {
         const wrapperBox = wrapper.getBoundingClientRect();
         const top = arrowBox.top - wrapperBox.top - 8; // slightly above arrow
         const left = arrowBox.left - wrapperBox.left + (arrowBox.width / 2);
-        if (typeof styleVars !== 'undefined' && styleVars.set) {
-            styleVars.set(badge, {
-                '--soft-badge-top': `${top}px`,
-                '--soft-badge-left': `${left}px`
-            });
-        }
+        styleVars.set(badge, {
+            '--soft-badge-top': `${top}px`,
+            '--soft-badge-left': `${left}px`
+        });
 
         // Attach and keep reference for cleanup
         wrapper.appendChild(badge);

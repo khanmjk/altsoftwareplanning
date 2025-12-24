@@ -572,7 +572,7 @@ class GanttPlanningView {
      */
     setupGanttRendererToggle() {
         const btn = document.getElementById('ganttRendererToggle');
-        if (!btn || typeof FeatureFlags === 'undefined') return;
+        if (!btn) return;
 
         const updateLabel = () => {
             btn.textContent = this.getRendererButtonLabel();

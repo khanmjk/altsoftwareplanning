@@ -342,9 +342,7 @@ const D3Service = {
             '--tooltip-x': `${x}px`,
             '--tooltip-y': `${y}px`
         };
-        if (typeof styleVars !== 'undefined' && styleVars.set) {
-            styleVars.set(container, styles);
-        }
+        styleVars.set(container, styles);
     },
 
     _clearElement(element) {

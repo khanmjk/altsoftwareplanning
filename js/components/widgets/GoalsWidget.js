@@ -281,9 +281,7 @@ class GoalsWidget {
 
         const progressFill = document.createElement('div');
         progressFill.className = 'progress-bar-fill';
-        if (typeof styleVars !== 'undefined' && styleVars.set) {
-            styleVars.set(progressFill, { '--goal-progress': `${progressPct}%` });
-        }
+        styleVars.set(progressFill, { '--goal-progress': `${progressPct}%` });
         progressContainer.appendChild(progressFill);
 
         const progressText = document.createElement('span');

@@ -307,12 +307,10 @@ class EnhancedTableWidget {
         parentForDropdown.appendChild(dropdownElement); // Append first to calculate position correctly if needed
 
         // Basic positioning (can be enhanced with more precise calculations)
-        if (typeof styleVars !== 'undefined' && styleVars.set) {
-            styleVars.set(dropdownElement, {
-                '--etw-dropdown-top': `${buttonElement.offsetTop + buttonElement.offsetHeight}px`,
-                '--etw-dropdown-right': `${parentForDropdown.offsetWidth - (buttonElement.offsetLeft + buttonElement.offsetWidth)}px`
-            });
-        }
+        styleVars.set(dropdownElement, {
+            '--etw-dropdown-top': `${buttonElement.offsetTop + buttonElement.offsetHeight}px`,
+            '--etw-dropdown-right': `${parentForDropdown.offsetWidth - (buttonElement.offsetLeft + buttonElement.offsetWidth)}px`
+        });
         dropdownElement.classList.add('etw-dropdown--open');
 
         // Click outside to close
