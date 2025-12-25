@@ -160,7 +160,7 @@ class DependencyVisualization extends BaseVisualization {
             .attr('text-anchor', 'middle')
             .text(d => d.id)
             .attr('font-size', '10px')
-            .style('pointer-events', 'none')
+            .attr('pointer-events', 'none')
             .attr('font-weight', d => d.id === this.selectedServiceName ? 'bold' : 'normal')
             .attr('font-weight', d => d.id === this.selectedServiceName ? 'bold' : 'normal');
     }
@@ -216,10 +216,10 @@ class DependencyVisualization extends BaseVisualization {
         });
 
         const colors = ThemeService.getThemeColors();
-        this.nodeSelection.style('opacity', n => this.highlightedNodes.has(n.id) ? 1 : 0.1);
-        this.labelSelection.style('opacity', n => this.highlightedNodes.has(n.id) ? 1 : 0.1);
+        this.nodeSelection.attr('opacity', n => this.highlightedNodes.has(n.id) ? 1 : 0.1);
+        this.labelSelection.attr('opacity', n => this.highlightedNodes.has(n.id) ? 1 : 0.1);
         this.linkSelection
-            .style('opacity', l => this.highlightedLinks.has(l.index) ? 0.9 : 0.1)
+            .attr('opacity', l => this.highlightedLinks.has(l.index) ? 0.9 : 0.1)
             .attr('stroke', l => this.highlightedLinks.has(l.index) ? (colors.textSecondary || '#555') : (colors.textMuted || '#999'));
     }
 
@@ -229,9 +229,9 @@ class DependencyVisualization extends BaseVisualization {
     handleMouseOut() {
         const colors = ThemeService.getThemeColors();
         D3Service.hideTooltip();
-        this.nodeSelection.style('opacity', 1);
-        this.labelSelection.style('opacity', 1);
-        this.linkSelection.style('opacity', 0.6).attr('stroke', colors.textMuted || '#999');
+        this.nodeSelection.attr('opacity', 1);
+        this.labelSelection.attr('opacity', 1);
+        this.linkSelection.attr('opacity', 0.6).attr('stroke', colors.textMuted || '#999');
         this.highlightedNodes.clear();
         this.highlightedLinks.clear();
     }

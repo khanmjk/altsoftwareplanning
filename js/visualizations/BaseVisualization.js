@@ -211,8 +211,8 @@ class BaseVisualization {
             .join('text')
             .attr('dy', dy)
             .attr('text-anchor', textAnchor)
-            .style('font-size', fontSize)
-            .style('pointer-events', 'none')
+            .attr('font-size', fontSize)
+            .attr('pointer-events', 'none')
             .text(labelFn);
 
         return labels;
@@ -304,12 +304,17 @@ class BaseVisualization {
             .enter().append('div')
             .attr('class', 'legend-item');
 
-        legend.append('div')
-            .style('width', '12px')
-            .style('height', '12px')
-            .style('background-color', d => d.color)
-            .style('border-radius', '50%')
-            .style('margin-right', '5px');
+        const swatch = legend.append('svg')
+            .attr('class', 'legend-swatch')
+            .attr('width', 12)
+            .attr('height', 12)
+            .attr('viewBox', '0 0 12 12');
+
+        swatch.append('circle')
+            .attr('cx', 6)
+            .attr('cy', 6)
+            .attr('r', 6)
+            .attr('fill', d => d.color);
 
         legend.append('span')
             .text(d => d.label);

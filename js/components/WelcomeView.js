@@ -22,6 +22,13 @@ class WelcomeView {
             return;
         }
 
+        workspaceComponent.setPageMetadata({
+            title: 'Welcome',
+            breadcrumbs: [],
+            actions: []
+        });
+        workspaceComponent.setToolbar(null);
+
         this._clearElement(this.container);
 
         const view = document.createElement('div');

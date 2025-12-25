@@ -23,6 +23,13 @@ class SystemEditView {
             return;
         }
 
+        workspaceComponent.setPageMetadata({
+            title: 'Edit System',
+            breadcrumbs: ['System', 'Edit System'],
+            actions: []
+        });
+        workspaceComponent.setToolbar(null);
+
         if (!this.controller) {
             this.controller = new SystemEditController();
         }

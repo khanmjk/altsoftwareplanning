@@ -67,7 +67,7 @@ workspaceComponent.setPageMetadata({
 });
 
 // Set toolbar content
-workspaceComponent.setToolbar(htmlStringOrElement);
+workspaceComponent.setToolbar(elementOrNull);
 
 // Render a view
 workspaceComponent.render(viewId, renderCallback);

@@ -83,6 +83,13 @@
     /* No border, no background - blend with workspace */
 }
 
+.impact-graph__label {
+    font-size: 10px;
+    pointer-events: none;
+    fill: var(--theme-text-primary);
+    text-shadow: 0 0 3px var(--theme-bg-primary);
+}
+
 .initiative-summary {
     line-height: 1.4;
     font-size: 14px;

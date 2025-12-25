@@ -81,15 +81,6 @@ class WorkspaceComponent {
         }
     }
 
-    _appendHtmlContent(container, htmlContent) {
-        if (!container || !htmlContent) return;
-        const parser = new DOMParser();
-        const parsed = parser.parseFromString(htmlContent, 'text/html');
-        while (parsed.body.firstChild) {
-            container.appendChild(parsed.body.firstChild);
-        }
-    }
-
     /**
      * Renders an error message using DOM APIs
      * @param {HTMLElement} container
@@ -199,7 +190,7 @@ class WorkspaceComponent {
 
     /**
      * Sets the content of the sticky toolbar.
-     * @param {string|HTMLElement} content - HTML string or Element to put in the toolbar.
+     * @param {HTMLElement|DocumentFragment|null} content - Element to put in the toolbar.
      */
     setToolbar(content) {
         const toolbar = document.getElementById('workspace-toolbar');
@@ -207,12 +198,12 @@ class WorkspaceComponent {
 
         this._clearElement(toolbar);
 
-        if (typeof content === 'string') {
-            this._appendHtmlContent(toolbar, content);
-        } else if (content instanceof HTMLElement) {
-            toolbar.appendChild(content);
+        if (!content) {
+            toolbar.classList.add('is-hidden');
+            return;
         }
 
+        toolbar.appendChild(content);
         toolbar.classList.remove('is-hidden');
     }
 

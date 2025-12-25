@@ -94,8 +94,7 @@ const D3Service = {
         return svg
             .attr('width', width)
             .attr('height', height)
-            .style('width', '100%')
-            .style('height', '100%');
+            .classed('d3-visualization-svg', true);
     },
 
     /**
@@ -385,7 +384,7 @@ const D3Service = {
             .attr('x', symbolSize + 8)
             .attr('y', symbolSize / 2)
             .attr('dy', '0.35em')
-            .style('font-size', '12px')
+            .attr('font-size', '12px')
             .text(d => d.label);
 
         return legend;

@@ -12,3 +12,11 @@
     margin-right: 15px;
     margin-bottom: 5px;
 }
+
+.legend-swatch {
+    display: block;
+    width: 12px;
+    height: 12px;
+    margin-right: 5px;
+    flex: 0 0 auto;
+}

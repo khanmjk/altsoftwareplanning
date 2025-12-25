@@ -20,6 +20,13 @@ class SystemsView {
             return;
         }
 
+        workspaceComponent.setPageMetadata({
+            title: 'My Systems',
+            breadcrumbs: ['My Systems'],
+            actions: []
+        });
+        workspaceComponent.setToolbar(null);
+
         try {
             this._clearElement(this.container);
             this.container.appendChild(this._buildViewShell());

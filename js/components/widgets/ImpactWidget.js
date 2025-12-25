@@ -404,10 +404,11 @@ class ImpactWidget {
 
         // Links
         const link = this.svg.append('g').selectAll('path').data(links).join('path')
-            .style('stroke', 'var(--theme-text-muted)').attr('stroke-opacity', 0.7)
+            .attr('stroke', 'var(--theme-text-muted)')
+            .attr('stroke-opacity', 0.7)
             .attr('stroke-width', d => Math.max(1, (d.sde || 0.5) * 2))
             .attr('marker-end', d => `url(#arrow-${d.type})`)
-            .style('stroke-dasharray', d => d.type === 'owns' ? '3, 3' : '0')
+            .attr('stroke-dasharray', d => d.type === 'owns' ? '3, 3' : '0')
             .on('mouseover', (event, d) => {
                 D3Service.showTooltip(event, this._buildLinkTooltipContent(d));
             })
@@ -443,12 +444,9 @@ class ImpactWidget {
 
         // Node labels
         nodeGroup.append('text')
+            .attr('class', 'impact-graph__label')
             .attr('text-anchor', 'middle')
             .attr('dy', '.35em')
-            .style('font-size', '10px')
-            .style('pointer-events', 'none')
-            .style('fill', 'var(--theme-text-primary)')
-            .style('text-shadow', '0 0 3px var(--theme-bg-primary)')
             .text(d => d.name)
             .call(this.wrapText, d => d.type === 'Team' ? 60 : 50);
 
@@ -586,15 +584,25 @@ class ImpactWidget {
 
         legendItems.filter(d => d.type === 'header')
             .append('text')
-            .attr('x', 0).attr('y', 10)
-            .style('font-weight', 'bold')
-            .style('font-size', '12px')
-            .style('fill', 'var(--theme-text-primary)')
+            .attr('x', 0)
+            .attr('y', 10)
+            .attr('font-weight', 'bold')
+            .attr('font-size', '12px')
+            .attr('fill', 'var(--theme-text-primary)')
             .text(d => d.label);
 
         const itemGroups = legendItems.filter(d => d.type === 'item');
-        itemGroups.append('circle').attr('cx', 5).attr('cy', 5).attr('r', 5).style('fill', d => d.color);
-        itemGroups.append('text').attr('x', 15).attr('y', 9).style('font-size', '11px').style('fill', 'var(--theme-text-primary)').text(d => d.label);
+        itemGroups.append('circle')
+            .attr('cx', 5)
+            .attr('cy', 5)
+            .attr('r', 5)
+            .attr('fill', d => d.color);
+        itemGroups.append('text')
+            .attr('x', 15)
+            .attr('y', 9)
+            .attr('font-size', '11px')
+            .attr('fill', 'var(--theme-text-primary)')
+            .text(d => d.label);
     }
 
     /**
