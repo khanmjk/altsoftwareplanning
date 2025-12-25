@@ -1,13 +1,24 @@
 /**
  * SystemRepository
- * Handles all data access operations for systems (CRUD operations via a storage driver)
+ * Handles app storage for systems, settings, and UI preferences via storage drivers.
  */
 class SystemRepository {
     constructor(options = {}) {
-        const DEFAULT_STORAGE_KEY = 'architectureVisualization_systems_v11';
+        const DEFAULT_SYSTEMS_KEY = 'architectureVisualization_systems_v11';
+        const DEFAULT_SETTINGS_KEY = 'architectureVisualization_appSettings_v1';
+        const DEFAULT_UI_PREFS_KEY = 'architectureVisualization_uiPrefs_v1';
+
         this.storageMode = options.storageMode || 'local';
-        this.storageKey = options.storageKey || DEFAULT_STORAGE_KEY;
+        this.storageKey = options.storageKey || DEFAULT_SYSTEMS_KEY;
         this.driver = options.driver || this._createDriver(this.storageMode, this.storageKey);
+
+        this.settingsStorageMode = options.settingsStorageMode || 'local';
+        this.settingsStorageKey = options.settingsStorageKey || DEFAULT_SETTINGS_KEY;
+        this.settingsDriver = options.settingsDriver || this._createDriver(this.settingsStorageMode, this.settingsStorageKey);
+
+        this.prefsStorageMode = options.prefsStorageMode || 'local';
+        this.prefsStorageKey = options.prefsStorageKey || DEFAULT_UI_PREFS_KEY;
+        this.prefsDriver = options.prefsDriver || this._createDriver(this.prefsStorageMode, this.prefsStorageKey);
     }
 
     /**
@@ -26,6 +37,24 @@ class SystemRepository {
         this.storageKey = nextStorageKey;
         this.storageMode = nextStorageMode;
         this.driver = nextDriver;
+
+        const nextSettingsKey = options.settingsStorageKey || this.settingsStorageKey;
+        const nextSettingsMode = options.settingsStorageMode || this.settingsStorageMode || 'local';
+        const hasSettingsKeyChange = nextSettingsKey !== this.settingsStorageKey;
+        const hasSettingsModeChange = nextSettingsMode !== this.settingsStorageMode;
+        const nextSettingsDriver = options.settingsDriver || ((hasSettingsKeyChange || hasSettingsModeChange) ? this._createDriver(nextSettingsMode, nextSettingsKey) : this.settingsDriver);
+        this.settingsStorageKey = nextSettingsKey;
+        this.settingsStorageMode = nextSettingsMode;
+        this.settingsDriver = nextSettingsDriver;
+
+        const nextPrefsKey = options.prefsStorageKey || this.prefsStorageKey;
+        const nextPrefsMode = options.prefsStorageMode || this.prefsStorageMode || 'local';
+        const hasPrefsKeyChange = nextPrefsKey !== this.prefsStorageKey;
+        const hasPrefsModeChange = nextPrefsMode !== this.prefsStorageMode;
+        const nextPrefsDriver = options.prefsDriver || ((hasPrefsKeyChange || hasPrefsModeChange) ? this._createDriver(nextPrefsMode, nextPrefsKey) : this.prefsDriver);
+        this.prefsStorageKey = nextPrefsKey;
+        this.prefsStorageMode = nextPrefsMode;
+        this.prefsDriver = nextPrefsDriver;
     }
 
     /**
@@ -129,6 +158,77 @@ class SystemRepository {
             return false;
         }
     }
+
+    /**
+     * Load app settings from storage.
+     * @returns {Object} Settings data
+     */
+    getSettings() {
+        return this.settingsDriver.loadAll();
+    }
+
+    /**
+     * Save app settings to storage.
+     * @param {Object} settings
+     */
+    saveSettings(settings) {
+        this.settingsDriver.saveAll(settings || {});
+    }
+
+    /**
+     * Clear stored app settings.
+     */
+    clearSettings() {
+        this.settingsDriver.clear();
+    }
+
+    /**
+     * Get stored UI preferences map.
+     * @returns {Object}
+     */
+    getUiPrefs() {
+        return this.prefsDriver.loadAll();
+    }
+
+    /**
+     * Save full UI preferences map.
+     * @param {Object} prefs
+     */
+    saveUiPrefs(prefs) {
+        this.prefsDriver.saveAll(prefs || {});
+    }
+
+    /**
+     * Get a single UI preference value.
+     * @param {string} key
+     * @param {*} [fallback]
+     * @returns {*}
+     */
+    getUiPref(key, fallback = null) {
+        const prefs = this.prefsDriver.loadAll();
+        if (Object.prototype.hasOwnProperty.call(prefs, key)) {
+            return prefs[key];
+        }
+        return fallback;
+    }
+
+    /**
+     * Set a single UI preference value.
+     * @param {string} key
+     * @param {*} value
+     */
+    setUiPref(key, value) {
+        const prefs = this.prefsDriver.loadAll();
+        prefs[key] = value;
+        this.prefsDriver.saveAll(prefs);
+    }
+
+    /**
+     * Clear stored UI preferences.
+     */
+    clearUiPrefs() {
+        this.prefsDriver.clear();
+    }
 }
 
 /**
@@ -140,22 +240,30 @@ class LocalStorageDriver {
     }
 
     loadAll() {
-        const systemsString = localStorage.getItem(this.storageKey);
-        if (!systemsString) return {};
+        const storedString = localStorage.getItem(this.storageKey);
+        if (!storedString) return {};
         try {
-            return JSON.parse(systemsString);
+            return JSON.parse(storedString);
         } catch (e) {
-            console.error('Error parsing systems from localStorage:', e);
+            console.error('Error parsing data from localStorage:', e);
             return {};
         }
     }
 
-    saveAll(systemsMap) {
-        localStorage.setItem(this.storageKey, JSON.stringify(systemsMap));
+    saveAll(dataMap) {
+        try {
+            localStorage.setItem(this.storageKey, JSON.stringify(dataMap));
+        } catch (e) {
+            console.error('Error saving data to localStorage:', e);
+        }
     }
 
     clear() {
-        localStorage.removeItem(this.storageKey);
+        try {
+            localStorage.removeItem(this.storageKey);
+        } catch (e) {
+            console.error('Error clearing localStorage key:', e);
+        }
     }
 }
 

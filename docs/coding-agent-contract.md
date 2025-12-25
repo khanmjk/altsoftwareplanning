@@ -223,7 +223,7 @@ container.appendChild(wrapper);
 |-------|----------|---------------|
 | View | `js/components/` | DOM creation, event binding, user interaction |
 | Service | `js/services/` | Business logic, calculations, pure functions |
-| Repository | `js/repositories/` | Data persistence, localStorage, API calls |
+| Repository | `js/repositories/` | Data persistence (localStorage/DB), storage access |
 
 Services must:
 - Export pure functions (no DOM access)

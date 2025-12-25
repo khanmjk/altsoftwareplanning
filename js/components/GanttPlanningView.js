@@ -45,8 +45,8 @@ class GanttPlanningView {
         this.GANTT_TABLE_WIDTH_KEY = 'ganttTableWidthPct';
         this.GANTT_STATUS_OPTIONS = ['Backlog', 'Defined', 'Committed', 'In Progress', 'Done', 'Blocked'];
 
-        // Load persisted table width from localStorage
-        const storedGanttWidth = parseFloat(localStorage.getItem(this.GANTT_TABLE_WIDTH_KEY));
+        // Load persisted table width from UI preferences
+        const storedGanttWidth = parseFloat(SettingsService.getUiPreference(this.GANTT_TABLE_WIDTH_KEY, null));
         if (isFinite(storedGanttWidth) && storedGanttWidth > 5 && storedGanttWidth < 95) {
             this.ganttTableWidthPct = storedGanttWidth;
         }
@@ -510,11 +510,7 @@ class GanttPlanningView {
             document.removeEventListener('mousemove', onDrag);
             document.removeEventListener('mouseup', stopDrag);
             document.removeEventListener('mouseleave', stopDrag);
-            try {
-                localStorage.setItem(this.GANTT_TABLE_WIDTH_KEY, String(this.ganttTableWidthPct));
-            } catch (err) {
-                console.warn('[GANTT] Failed to persist split width', err);
-            }
+            SettingsService.setUiPreference(this.GANTT_TABLE_WIDTH_KEY, this.ganttTableWidthPct);
         };
 
         const onDrag = (e) => {

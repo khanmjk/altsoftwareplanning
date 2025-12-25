@@ -540,7 +540,7 @@ class SettingsView {
     }
 
     /**
-     * Save AI settings to localStorage
+     * Persist AI settings via SettingsService
      */
     saveAiSettings() {
         const enabled = document.getElementById('aiModeEnabled_view').checked;

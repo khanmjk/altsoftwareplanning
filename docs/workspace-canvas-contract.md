@@ -485,7 +485,7 @@ To enable future migration to modern frameworks (React, Next.js, Rails), all vie
 │  └─ Calculations, transformations, pure functions           │
 ├─────────────────────────────────────────────────────────────┤
 │  Repository (Data Access)    js/repositories/[Entity]Repository.js │
-│  └─ LocalStorage, API calls, data persistence               │
+│  └─ LocalStorage/DB persistence                             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -543,7 +543,7 @@ class YearPlanningView {
 |-------|-----------------|---------------|
 | View | Becomes React component | Frontend-only |
 | Service | Stays as-is or becomes React hook | Moves to Rails controller/service |
-| Repository | Becomes API client | Becomes Rails model |
+| Repository | Becomes storage adapter | Becomes Rails model |
 
 ---
 

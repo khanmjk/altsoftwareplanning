@@ -7,8 +7,6 @@
  * Part of Service Layer Architecture (see docs/workspace-canvas-contract.md Section 10)
  */
 
-const APP_SETTINGS_KEY = 'architectureVisualization_appSettings_v1';
-
 const DEFAULT_SETTINGS = {
     ai: {
         isEnabled: false,
@@ -30,30 +28,24 @@ const SettingsService = {
     },
 
     /**
-     * Loads settings from localStorage and merges with defaults.
+     * Loads settings from storage and merges with defaults.
      * @returns {object} The loaded settings object.
      */
     load() {
-        const settingsString = localStorage.getItem(APP_SETTINGS_KEY);
-        if (settingsString) {
-            try {
-                const loadedSettings = JSON.parse(settingsString);
-                // Shallow merge first
-                this.state = { ...DEFAULT_SETTINGS, ...loadedSettings };
+        const loadedSettings = systemRepository.getSettings();
+        if (loadedSettings && Object.keys(loadedSettings).length > 0) {
+            // Shallow merge first
+            this.state = { ...DEFAULT_SETTINGS, ...loadedSettings };
 
-                // Deep merge for specific nested objects like 'ai'
-                if (loadedSettings.ai) {
-                    this.state.ai = { ...DEFAULT_SETTINGS.ai, ...loadedSettings.ai };
-                }
-
-                console.log("SettingsService: Loaded settings from localStorage:", {
-                    aiEnabled: this.state.ai.isEnabled,
-                    aiProvider: this.state.ai.provider
-                });
-            } catch (e) {
-                console.error("SettingsService: Error parsing settings, reverting to defaults:", e);
-                this.reset();
+            // Deep merge for specific nested objects like 'ai'
+            if (loadedSettings.ai) {
+                this.state.ai = { ...DEFAULT_SETTINGS.ai, ...loadedSettings.ai };
             }
+
+            console.log("SettingsService: Loaded settings from storage:", {
+                aiEnabled: this.state.ai.isEnabled,
+                aiProvider: this.state.ai.provider
+            });
         } else {
             console.log("SettingsService: No saved settings found, using defaults.");
             this.reset();
@@ -63,15 +55,10 @@ const SettingsService = {
     },
 
     /**
-     * Saves the current settings state to localStorage.
+     * Saves the current settings state to storage.
      */
     save() {
-        try {
-            localStorage.setItem(APP_SETTINGS_KEY, JSON.stringify(this.state));
-
-        } catch (e) {
-            console.error("SettingsService: Failed to save settings:", e);
-        }
+        systemRepository.saveSettings(this.state);
     },
 
     /**
@@ -106,5 +93,24 @@ const SettingsService = {
 
         this.state = { ...this.state, ...newSettings };
         this.save();
+    },
+
+    /**
+     * Gets a stored UI preference value.
+     * @param {string} key
+     * @param {*} [fallback]
+     * @returns {*}
+     */
+    getUiPreference(key, fallback = null) {
+        return systemRepository.getUiPref(key, fallback);
+    },
+
+    /**
+     * Persists a single UI preference value.
+     * @param {string} key
+     * @param {*} value
+     */
+    setUiPreference(key, value) {
+        systemRepository.setUiPref(key, value);
     }
 };
