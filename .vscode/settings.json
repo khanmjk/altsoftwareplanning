@@ -6,5 +6,10 @@
         "**/*.sqlite",
         "**/*.sqlite-journal",
         "Backlog.txt"
-    ]
+    ],
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "always",
+        "source.fixAll.stylelint": "always"
+    }
 }

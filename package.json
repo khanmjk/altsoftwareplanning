@@ -1,0 +1,32 @@
+{
+  "name": "altsoftwareplanning",
+  "private": true,
+  "version": "0.0.0",
+  "description": "SMT Platform tooling",
+  "scripts": {
+    "prepare": "husky install",
+    "lint": "eslint \"js/**/*.js\" \"ai/**/*.js\" \"smt-feedback-worker/**/*.js\"",
+    "lint:fix": "eslint \"js/**/*.js\" \"ai/**/*.js\" \"smt-feedback-worker/**/*.js\" --fix",
+    "format": "prettier --write \"**/*.{js,css,md,html,json}\"",
+    "format:check": "prettier --check \"**/*.{js,css,md,html,json}\"",
+    "stylelint": "stylelint \"css/**/*.css\"",
+    "stylelint:fix": "stylelint \"css/**/*.css\" --fix",
+    "contract:check": "node scripts/contract-scan.js",
+    "depcheck": "depcheck --ignores=stylelint-config-standard",
+    "verify": "npm run lint && npm run stylelint && npm run contract:check && npm run depcheck"
+  },
+  "devDependencies": {
+    "depcheck": "1.4.7",
+    "eslint": "8.57.0",
+    "husky": "9.0.11",
+    "lint-staged": "15.2.10",
+    "prettier": "3.3.3",
+    "stylelint": "16.6.1",
+    "stylelint-config-standard": "36.0.0"
+  },
+  "lint-staged": {
+    "js/**/*.js": "eslint --fix",
+    "css/**/*.css": "stylelint --fix",
+    "*.{js,css,md,html,json}": "prettier --write"
+  }
+}
