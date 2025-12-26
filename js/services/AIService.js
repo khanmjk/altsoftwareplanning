@@ -1,10 +1,10 @@
 /**
  * AIService.js
- * 
+ *
  * Domain logic for AI features and UI integration.
  * Handles AI settings validation, UI toggling, generation stats management,
  * and direct interaction with LLM providers (Gemini, etc.).
- * 
+ *
  * Part of Service Layer Architecture (see docs/workspace-canvas-contract.md Section 10)
  */
 
@@ -35,672 +35,786 @@ RULES:
 `;
 
 const AIService = {
+  lastGenerationStats: null,
 
-    lastGenerationStats: null,
+  // --- UI & Stats Management ---
 
-    // --- UI & Stats Management ---
+  /**
+   * Updates the UI based on AI feature enablement in global settings.
+   * Toggles "Create with AI" card and Chat Panel visibility.
+   * @param {object} globalSettings - The current global settings object.
+   * @param {object} options - Options options like { skipPlanningRender: boolean }
+   */
+  updateAiDependentUI(globalSettings, options = {}) {
+    const { skipPlanningRender = false } = options;
+    const aiEnabled = !!globalSettings?.ai?.isEnabled;
 
-    /**
-     * Updates the UI based on AI feature enablement in global settings.
-     * Toggles "Create with AI" card and Chat Panel visibility.
-     * @param {object} globalSettings - The current global settings object.
-     * @param {object} options - Options options like { skipPlanningRender: boolean }
-     */
-    updateAiDependentUI(globalSettings, options = {}) {
-        const { skipPlanningRender = false } = options;
-        const aiEnabled = !!(globalSettings?.ai?.isEnabled);
+    // Toggle the new "Create with AI" card in the welcome view
+    const createWithAiCard = document.getElementById('createWithAiCard');
+    if (createWithAiCard) {
+      createWithAiCard.classList.toggle('is-hidden', !aiEnabled);
+    }
 
-        // Toggle the new "Create with AI" card in the welcome view
-        const createWithAiCard = document.getElementById('createWithAiCard');
-        if (createWithAiCard) {
-            createWithAiCard.classList.toggle('is-hidden', !aiEnabled);
-        }
+    workspaceComponent.setExtensionEnabled('aiChat', aiEnabled);
 
-        workspaceComponent.setExtensionEnabled('aiChat', aiEnabled);
+    if (!skipPlanningRender && navigationManager.currentViewId === 'planningView') {
+      // Dispatch event so views can subscribe to settings changes
+      document.dispatchEvent(
+        new CustomEvent('settings:changed', { detail: { aiEnabled: aiEnabled } })
+      );
+      // Also refresh active view if it has a render method
+      const activeView = navigationManager.getViewInstance('planningView');
+      activeView.render();
+    }
+  },
 
-        if (!skipPlanningRender && navigationManager.currentViewId === 'planningView') {
-            // Dispatch event so views can subscribe to settings changes
-            document.dispatchEvent(new CustomEvent('settings:changed', { detail: { aiEnabled: aiEnabled } }));
-            // Also refresh active view if it has a render method
-            const activeView = navigationManager.getViewInstance('planningView');
-            activeView.render();
-        }
-    },
+  /**
+   * Formats AI generation stats into a readable block of text.
+   * @param {object} stats
+   * @returns {string} Formatted text
+   */
+  formatAiStats(stats) {
+    if (!stats) return 'No statistics were provided.';
+    const {
+      inputChars = 0,
+      outputChars = 0,
+      outputTokens = 0,
+      totalTokens = 0,
+      systemPromptSummary = '',
+    } = stats;
 
-    /**
-     * Formats AI generation stats into a readable block of text.
-     * @param {object} stats 
-     * @returns {string} Formatted text
-     */
-    formatAiStats(stats) {
-        if (!stats) return "No statistics were provided.";
-        const {
-            inputChars = 0,
-            outputChars = 0,
-            outputTokens = 0,
-            totalTokens = 0,
-            systemPromptSummary = ''
-        } = stats;
-
-        return `Input Characters: ${inputChars.toLocaleString()}
+    return `Input Characters: ${inputChars.toLocaleString()}
 Output Characters: ${outputChars.toLocaleString()}
 Output Tokens: ${outputTokens.toLocaleString()}
 Total Tokens (est.): ${totalTokens.toLocaleString()}
 
 System Prompt Summary:
 ${systemPromptSummary}`.trim();
-    },
+  },
 
-    /**
-     * Stores and displays the AI stats modal.
-     * @param {object} stats 
-     */
-    showStatsModal(stats) {
-        if (stats) {
-            this.lastGenerationStats = stats;
+  /**
+   * Stores and displays the AI stats modal.
+   * @param {object} stats
+   */
+  showStatsModal(stats) {
+    if (stats) {
+      this.lastGenerationStats = stats;
+    }
+
+    if (!this.lastGenerationStats) {
+      console.warn('AIService: No AI stats available to display.');
+      return;
+    }
+
+    AIGenerationStatsModal.getInstance().open(this.formatAiStats(this.lastGenerationStats));
+  },
+
+  /**
+   * Hides the AI stats modal.
+   */
+  closeStatsModal() {
+    AIGenerationStatsModal.getInstance().close();
+  },
+
+  /**
+   * Sanitizes Mermaid code to reduce common AI output errors.
+   * @param {string} rawCode
+   * @param {object} options
+   * @param {boolean} options.aggressive - Apply stricter cleanup rules.
+   * @returns {string}
+   */
+  sanitizeMermaidCode(rawCode, options = {}) {
+    const { aggressive = false } = options;
+    if (!rawCode || typeof rawCode !== 'string') return '';
+
+    const normalized = rawCode
+      .replace(/```mermaid/gi, '')
+      .replace(/```/g, '')
+      .replace(/\r\n?/g, '\n');
+
+    const headerRegex =
+      /^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|journey|gantt|mindmap|timeline|quadrantChart)\b/i;
+    let headerLine = '';
+    let headerHasDirection = false;
+    const bodyLines = [];
+    const subgraphLabelMap = new Map();
+    const usedSubgraphIds = new Set();
+    let subgraphDepth = 0;
+
+    const createSubgraphId = (label) => {
+      const base =
+        `sg_${label
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '_')
+          .replace(/^_+|_+$/g, '')}` || 'sg';
+      let id = base === 'sg_' ? 'sg' : base;
+      let index = 1;
+      while (usedSubgraphIds.has(id)) {
+        index += 1;
+        id = `${base}_${index}`;
+      }
+      usedSubgraphIds.add(id);
+      return id;
+    };
+
+    const normalizeSubgraphLine = (line) => {
+      const match = line.match(/^subgraph\s+(.+)$/i);
+      if (!match) return line;
+
+      const rest = match[1].trim();
+      if (!rest) return line;
+
+      const hasLabelWrapper = /[[(]/.test(rest);
+      if (hasLabelWrapper) {
+        return line;
+      }
+
+      const isQuoted = rest.startsWith('"') || rest.startsWith("'");
+      const labelText = isQuoted ? rest.replace(/^['"]|['"]$/g, '') : rest;
+      const hasSpaces = /\s/.test(labelText);
+      if (!isQuoted && !hasSpaces) {
+        return line;
+      }
+
+      const label = labelText.trim();
+      if (!label) return line;
+
+      const existing = subgraphLabelMap.get(label);
+      const id = existing || createSubgraphId(label);
+      subgraphLabelMap.set(label, id);
+      return `subgraph ${id}["${label}"]`;
+    };
+
+    const replaceSubgraphLabelTokens = (line) => {
+      let updated = line;
+      subgraphLabelMap.forEach((id, label) => {
+        const token = `"${label}"`;
+        let startIndex = 0;
+        let nextIndex = updated.indexOf(token, startIndex);
+        while (nextIndex !== -1) {
+          const before = updated[nextIndex - 1];
+          const after = updated[nextIndex + token.length];
+          const isWrapped = (before === '[' || before === '(') && (after === ']' || after === ')');
+          if (!isWrapped) {
+            updated = `${updated.slice(0, nextIndex)}${id}${updated.slice(nextIndex + token.length)}`;
+            startIndex = nextIndex + id.length;
+          } else {
+            startIndex = nextIndex + token.length;
+          }
+          nextIndex = updated.indexOf(token, startIndex);
         }
+      });
+      return updated;
+    };
 
-        if (!this.lastGenerationStats) {
-            console.warn("AIService: No AI stats available to display.");
+    normalized.split('\n').forEach((line) => {
+      let trimmed = line.trim();
+      if (!trimmed) return;
+
+      if (!headerLine && headerRegex.test(trimmed)) {
+        headerLine = trimmed;
+        const headerParts = trimmed.split(/\s+/);
+        if (headerParts.length >= 2) {
+          const maybeDirection = headerParts[1].toUpperCase();
+          headerHasDirection = ['TB', 'TD', 'BT', 'RL', 'LR'].includes(maybeDirection);
+        }
+        return;
+      }
+
+      trimmed = trimmed.replace(/^\d+[).]\s+/, '');
+      trimmed = trimmed.replace(/^[-*+]\s+/, '');
+      trimmed = trimmed.replace(/:/g, ' -');
+
+      if (!trimmed) return;
+
+      if (/^direction\b/i.test(trimmed)) {
+        const parts = trimmed.split(/\s+/);
+        const dir = (parts[1] || '').toUpperCase();
+        if (!['TB', 'TD', 'BT', 'RL', 'LR'].includes(dir)) {
+          return;
+        }
+        if (subgraphDepth > 0 || headerHasDirection) {
+          return;
+        }
+      }
+
+      if (aggressive) {
+        const looksLikeMermaid =
+          /(-->|---|==>|<--|<->|subgraph\b|end\b|classDef\b|class\b|style\b|linkStyle\b|click\b|direction\b|note\b|[[(])/i.test(
+            trimmed
+          );
+        if (!looksLikeMermaid) return;
+      }
+
+      const normalizedLine = normalizeSubgraphLine(trimmed);
+      bodyLines.push(normalizedLine);
+
+      if (/^subgraph\b/i.test(normalizedLine)) {
+        subgraphDepth += 1;
+      } else if (/^end\b/i.test(normalizedLine)) {
+        subgraphDepth = Math.max(0, subgraphDepth - 1);
+      }
+    });
+
+    const outputLines = [];
+    outputLines.push(headerLine || 'graph TD');
+    bodyLines.forEach((line) => {
+      outputLines.push(replaceSubgraphLabelTokens(line));
+    });
+
+    const subgraphCount = outputLines.filter((line) => /^subgraph\b/i.test(line)).length;
+    const endCount = outputLines.filter((line) => /^end\b/i.test(line)).length;
+    for (let i = endCount; i < subgraphCount; i += 1) {
+      outputLines.push('end');
+    }
+
+    return outputLines.join('\n').trim();
+  },
+
+  // --- Core AI Logic (Migrated from ai/aiService.js) ---
+
+  /**
+   * Public "Router" Function: Generates a new system from a text prompt.
+   * It selects the correct internal function based on the provider.
+   *
+   * @param {string} userPrompt The user's description (e.g., "A spreadsheet app").
+   * @param {string} apiKey The user's API key.
+   * @param {string} provider The selected provider (e.g., "google-gemini").
+   * @param {HTMLElement|null} spinnerP Optional element to update with progress status.
+   * @returns {Promise<object|null>} A promise that resolves to { data: object, stats: object } or null on failure.
+   */
+  async generateSystemFromPrompt(userPrompt, apiKey, provider, spinnerP = null) {
+    console.log(
+      `[AI-DEBUG] generateSystemFromPrompt: Routing for provider '${provider}' with prompt: "${userPrompt}"`
+    );
+
+    const systemPrompt = _getSystemGenerationPrompt();
+
+    try {
+      switch (provider) {
+        case 'google-gemini':
+          return await _generateSystemWithGemini(systemPrompt, userPrompt, apiKey, spinnerP);
+        case 'openai-gpt4o':
+          console.warn('OpenAI generation not yet implemented.');
+          notificationManager.showToast(
+            "AI provider 'OpenAI (GPT-4o)' is not yet implemented.",
+            'warning'
+          );
+          return { data: null, stats: null };
+        case 'anthropic-claude35':
+          console.warn('Anthropic generation not yet implemented.');
+          notificationManager.showToast(
+            "AI provider 'Anthropic (Claude 3.5 Sonnet)' is not yet implemented.",
+            'warning'
+          );
+          return { data: null, stats: null };
+        case 'mistral-large':
+          console.warn('Mistral generation not yet implemented.');
+          notificationManager.showToast(
+            "AI provider 'Mistral (Large 2)' is not yet implemented.",
+            'warning'
+          );
+          return { data: null, stats: null };
+        case 'cohere-command-r':
+          console.warn('Cohere generation not yet implemented.');
+          notificationManager.showToast(
+            "AI provider 'Cohere (Command R)' is not yet implemented.",
+            'warning'
+          );
+          return { data: null, stats: null };
+        default:
+          console.error(`Unknown AI provider: ${provider}`);
+          notificationManager.showToast(
+            `AI System Generation for "${provider}" is not yet supported.`,
+            'warning'
+          );
+          return { data: null, stats: null };
+      }
+    } catch (error) {
+      console.error(`Error during AI generation with ${provider}:`, error);
+      notificationManager.showToast(
+        `An error occurred while communicating with the AI. Check the console.\nError: ${error.message}`,
+        'error'
+      );
+      const stats = error && error.stats ? error.stats : null;
+      return { data: null, stats: stats };
+    }
+  },
+
+  /**
+   * Public "Router" Function: Gets analysis from a full chat history.
+   *
+   * @param {Array<object>} chatHistory The full conversation history (e.g., [{role: 'user', ...}, {role: 'model', ...}]).
+   * @param {string} apiKey The user's API key.
+   * @param {string} provider The selected provider.
+   * @returns {Promise<object>} A promise that resolves to { textResponse: string, usage: object }
+   */
+  async getAnalysisFromPrompt(chatHistory, apiKey, provider) {
+    console.log(
+      `[AI-DEBUG] getAnalysisFromPrompt: Routing for provider '${provider}'. History has ${chatHistory.length} turns.`
+    );
+
+    if (AI_ANALYSIS_MOCK_MODE) {
+      console.warn('[AI-DEBUG] MOCK MODE ENABLED. Returning fake data without API call.');
+      await new Promise((resolve) => setTimeout(resolve, 750));
+      const mockResponse = `This is a mock AI response. I received a history of ${chatHistory.length} turns.`;
+      return {
+        textResponse: mockResponse,
+        usage: { totalTokenCount: 100 },
+      };
+    }
+
+    try {
+      switch (provider) {
+        case 'google-gemini':
+          return await _getAnalysisWithGemini(chatHistory, apiKey);
+        case 'openai-gpt4o':
+          return {
+            textResponse: 'OpenAI analysis is not yet implemented.',
+            usage: { totalTokenCount: 0 },
+          };
+        case 'anthropic-claude35':
+          return {
+            textResponse: 'Anthropic analysis is not yet implemented.',
+            usage: { totalTokenCount: 0 },
+          };
+        default:
+          console.error(`Unknown AI provider: ${provider}`);
+          throw new Error(`Analysis for "${provider}" is not yet supported.`);
+      }
+    } catch (error) {
+      console.error(`Error during AI analysis with ${provider}:`, error);
+      throw new Error(`An error occurred while communicating with the AI: ${error.message}`);
+    }
+  },
+
+  /**
+   * Generates a mermaid diagram code from a prompt.
+   */
+  async generateDiagramFromPrompt(userPrompt, contextJson, apiKey, provider) {
+    console.debug('[AI-DIAGRAM] generateDiagramFromPrompt invoked', {
+      provider,
+      prompt: userPrompt,
+      contextLength: (contextJson || '').length,
+    });
+    const prompt = `${MERMAID_SYSTEM_PROMPT}\nCONTEXT:\n${contextJson}\nREQUEST:\n${userPrompt}`;
+    try {
+      const rawText = await _generateTextWithGemini(prompt, userPrompt, apiKey);
+      console.debug('[AI-DIAGRAM] Raw diagram response text:', rawText);
+      const cleaned = (rawText || '')
+        .replace(/```mermaid/gi, '')
+        .replace(/```/g, '')
+        .trim();
+      if (!cleaned) {
+        throw new Error(
+          'AI did not return any diagram content. Please try again or adjust your request.'
+        );
+      }
+      const sanitized = AIService.sanitizeMermaidCode(cleaned);
+      return { code: sanitized, title: userPrompt };
+    } catch (error) {
+      console.error('[AI-DIAGRAM] Diagram generation failed:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Generates an image from a prompt.
+   * Legacy/Mock wrapper - now primarily uses Diagram generation or Vertex AI.
+   */
+  async generateImageFromPrompt(userPrompt, contextJson, apiKey, provider) {
+    console.log(`[AI-DEBUG] generateImageFromPrompt: Routing for provider '${provider}'...`);
+
+    if (!apiKey) {
+      console.error('[AI-DEBUG] Image generation failed: API key is missing.');
+      throw new Error(
+        'AI API key is not set. Please add your Gemini API key in the AI Assistant settings.'
+      );
+    }
+
+    // Reuse Mermaid text generation for diagramming instead of mocked images
+    const diagramResult = await AIService.generateDiagramFromPrompt(
+      userPrompt,
+      contextJson,
+      apiKey,
+      provider
+    );
+    return {
+      isImage: false,
+      ...diagramResult,
+    };
+  },
+
+  // --- Validation Logic ---
+
+  /**
+   * Validates a newly generated AI system object against our core schema rules.
+   *
+   * @param {object} systemData The parsed JSON object from the AI.
+   * @returns {{isValid: boolean, errors: string[], warnings: string[]}}
+   */
+  validateGeneratedSystem(systemData) {
+    console.log('[AI-VALIDATE] Starting AI System Validation...');
+    const errors = [];
+    const warnings = [];
+
+    // --- 1. Top-Level Existence Checks ---
+    console.log('[AI-VALIDATE] Checking top-level data structure...');
+    if (!systemData || typeof systemData !== 'object' || Array.isArray(systemData)) {
+      errors.push('AI returned no data or the data was not a JSON object.');
+      console.error('[AI-VALIDATE] Basic structure validation FAILED. Data is not a valid object.');
+      return { isValid: false, errors, warnings };
+    }
+
+    const requiredString = (key) => {
+      if (
+        !systemData[key] ||
+        typeof systemData[key] !== 'string' ||
+        systemData[key].trim() === ''
+      ) {
+        errors.push(`Required top-level string "${key}" is missing or empty.`);
+      }
+    };
+
+    const requiredPopulatedArray = (key) => {
+      if (!Array.isArray(systemData[key])) {
+        errors.push(`Required field "${key}" is missing or not an array.`);
+        return false; // Cannot check contents
+      }
+      if (systemData[key].length === 0) {
+        errors.push(`Required array "${key}" must not be empty. AI must generate this data.`);
+        return false;
+      }
+      return true; // Array exists and is populated
+    };
+
+    const optionalArray = (key) => {
+      if (!Array.isArray(systemData[key])) {
+        errors.push(`Field "${key}" is missing or not an array.`);
+        return false;
+      }
+      if (systemData[key].length === 0) {
+        warnings.push(`Array "${key}" is empty. AI should ideally populate this.`);
+      }
+      return true;
+    };
+
+    requiredString('systemName');
+
+    const criticalArrays = [
+      'teams',
+      'allKnownEngineers',
+      'services',
+      'yearlyInitiatives',
+      'goals',
+      'definedThemes',
+      'sdms',
+      'pmts',
+      'projectManagers',
+    ];
+    let canProceed = true;
+    for (const key of criticalArrays) {
+      if (!requiredPopulatedArray(key)) {
+        canProceed = false;
+      }
+    }
+
+    if (!Array.isArray(systemData.workPackages)) {
+      errors.push(`Required field "workPackages" is missing or not an array.`);
+      canProceed = false;
+    } else if (systemData.workPackages.length === 0) {
+      warnings.push(
+        `Array "workPackages" is empty. Rule #10 (Generate Work Packages) was not fully followed.`
+      );
+    }
+
+    if (!systemData.capacityConfiguration || typeof systemData.capacityConfiguration !== 'object') {
+      errors.push(`Required field "capacityConfiguration" is missing or not an object.`);
+      canProceed = false;
+    }
+
+    optionalArray('seniorManagers');
+
+    if (!canProceed) {
+      console.error(
+        '[AI-VALIDATE] Basic structure validation FAILED. Critical arrays or objects are missing.'
+      );
+      return { isValid: false, errors, warnings }; // Stop if basic structure is wrong
+    }
+    console.log('[AI-VALIDATE] Basic structure OK.');
+
+    // --- 2. Build Look-up Sets & Check Uniqueness (Rule #6) ---
+    console.log('[AI-VALIDATE] Building look-up sets and checking uniqueness...');
+    const teamIds = new Set();
+    const teamNames = new Set();
+    systemData.teams.forEach((team, i) => {
+      if (!team.teamId) errors.push(`Team at index ${i} is missing "teamId".`);
+      else if (teamIds.has(team.teamId)) errors.push(`Duplicate teamId found: ${team.teamId}`);
+      else teamIds.add(team.teamId);
+
+      if (!team.teamName)
+        errors.push(`Team ${team.teamId || `at index ${i}`} is missing "teamName".`);
+      else if (teamNames.has(team.teamName.toLowerCase()))
+        warnings.push(`Duplicate teamName found: ${team.teamName}`);
+      else teamNames.add(team.teamName.toLowerCase());
+    });
+
+    const sdmIds = new Set();
+    systemData.sdms.forEach((sdm, i) => {
+      if (!sdm.sdmId) errors.push(`SDM at index ${i} is missing "sdmId".`);
+      else if (sdmIds.has(sdm.sdmId)) errors.push(`Duplicate sdmId found: ${sdm.sdmId}`);
+      else sdmIds.add(sdm.sdmId);
+    });
+
+    const pmtIds = new Set(systemData.pmts.map((p) => p.pmtId).filter(Boolean));
+    const goalIds = new Set(systemData.goals.map((g) => g.goalId).filter(Boolean));
+    const themeIds = new Set(systemData.definedThemes.map((t) => t.themeId).filter(Boolean));
+    const pmIds = new Set(systemData.projectManagers.map((p) => p.pmId).filter(Boolean));
+    const workPackageIds = new Set(
+      systemData.workPackages.map((wp) => wp.workPackageId).filter(Boolean)
+    );
+
+    const engineerNameMap = new Map();
+    const engineerNameCheck = new Set();
+    systemData.allKnownEngineers.forEach((eng, i) => {
+      if (!eng.name) errors.push(`Engineer at index ${i} is missing a "name".`);
+      else if (engineerNameCheck.has(eng.name.toLowerCase()))
+        errors.push(`Duplicate engineer name found: ${eng.name}`);
+      else {
+        engineerNameCheck.add(eng.name.toLowerCase());
+        engineerNameMap.set(eng.name, eng); // Use exact case for map key
+      }
+    });
+
+    // --- 3. Relational Integrity Checks (Rule #6, 7, 9, 10) ---
+    console.log('[AI-VALIDATE] Checking relational integrity (links between data)...');
+
+    // Check Teams
+    console.log(
+      `[AI-VALIDATE] ... checking ${systemData.teams.length} Teams (SDMs, PMTs, Engineers, Capacity)...`
+    );
+    systemData.teams.forEach((team) => {
+      if (team.sdmId && !sdmIds.has(team.sdmId)) {
+        errors.push(`Team "${team.teamName}" uses a non-existent sdmId: ${team.sdmId}`);
+      }
+      if (team.pmtId && !pmtIds.has(team.pmtId)) {
+        errors.push(`Team "${team.teamName}" uses a non-existent pmtId: ${team.pmtId}`);
+      }
+
+      for (const engName of team.engineers || []) {
+        if (!engineerNameMap.has(engName)) {
+          errors.push(
+            `Team "${team.teamName}" lists an engineer "${engName}" who is not in 'allKnownEngineers'.`
+          );
+        } else {
+          const engData = engineerNameMap.get(engName);
+          if (engData.currentTeamId !== team.teamId) {
+            errors.push(
+              `Data inconsistency: Engineer "${engName}" is in Team "${team.teamName}"'s list, but their 'currentTeamId' in 'allKnownEngineers' is "${engData.currentTeamId}".`
+            );
+          }
+        }
+      }
+
+      if (!team.teamCapacityAdjustments || typeof team.teamCapacityAdjustments !== 'object') {
+        errors.push(`Team "${team.teamName}" is missing "teamCapacityAdjustments" object.`);
+      } else {
+        if (typeof team.teamCapacityAdjustments.avgOverheadHoursPerWeekPerSDE !== 'number') {
+          warnings.push(`Team "${team.teamName}" is missing "avgOverheadHoursPerWeekPerSDE".`);
+        }
+        if (typeof team.teamCapacityAdjustments.aiProductivityGainPercent !== 'number') {
+          warnings.push(`Team "${team.teamName}" is missing "aiProductivityGainPercent".`);
+        }
+      }
+
+      // Type validation for numeric fields
+      if (team.fundedHeadcount !== undefined && typeof team.fundedHeadcount !== 'number') {
+        errors.push(
+          `Team "${team.teamName}" has invalid "fundedHeadcount" type: expected number, got ${typeof team.fundedHeadcount}. Value: "${team.fundedHeadcount}"`
+        );
+      }
+
+      if (!team.attributes || typeof team.attributes !== 'object') {
+        warnings.push(`Team "${team.teamName}" is missing "attributes" object.`);
+      }
+    });
+
+    // Check allKnownEngineers
+    console.log(
+      `[AI-VALIDATE] ... checking ${systemData.allKnownEngineers.length} Engineers (roster consistency)...`
+    );
+    engineerNameMap.forEach((eng, engName) => {
+      if (eng.currentTeamId && !teamIds.has(eng.currentTeamId)) {
+        errors.push(
+          `Engineer "${engName}" is assigned to a non-existent teamId: ${eng.currentTeamId}`
+        );
+      }
+    });
+
+    // Check Services
+    console.log(
+      `[AI-VALIDATE] ... checking ${systemData.services.length} Services (Ownership, Dependencies, Attributes)...`
+    );
+    systemData.services.forEach((service) => {
+      if (service.owningTeamId && !teamIds.has(service.owningTeamId)) {
+        errors.push(
+          `Service "${service.serviceName}" is owned by a non-existent teamId: ${service.owningTeamId}`
+        );
+      }
+
+      if (!service.serviceDependencies || service.serviceDependencies.length === 0) {
+        warnings.push(`Service "${service.serviceName}" has no "serviceDependencies".`);
+      }
+      if (!service.platformDependencies || service.platformDependencies.length === 0) {
+        warnings.push(`Service "${service.serviceName}" has no "platformDependencies".`);
+      }
+      if (!service.attributes || typeof service.attributes !== 'object') {
+        warnings.push(`Service "${service.serviceName}" is missing "attributes" object.`);
+      }
+    });
+
+    // Check Goals
+    console.log(`[AI-VALIDATE] ... checking ${systemData.goals.length} Goals...`);
+    systemData.goals.forEach((goal) => {
+      if (!goal.goalId) errors.push('A goal is missing its "goalId".');
+      if (!goal.name) errors.push(`Goal "${goal.goalId}" is missing "name".`);
+
+      if (!goal.dueDate) {
+        warnings.push(`Goal "${goal.name || goal.goalId}" is missing "dueDate".`);
+      }
+    });
+
+    // Check Initiatives
+    console.log(
+      `[AI-VALIDATE] ... checking ${systemData.yearlyInitiatives.length} Initiatives (Goals, Themes, Personnel, Work Packages)...`
+    );
+    systemData.yearlyInitiatives.forEach((init) => {
+      if (!init.initiativeId) errors.push('An initiative is missing its "initiativeId".');
+
+      if (init.primaryGoalId && !goalIds.has(init.primaryGoalId)) {
+        errors.push(
+          `Initiative "${init.title}" uses a non-existent primaryGoalId: ${init.primaryGoalId}`
+        );
+      }
+
+      for (const themeId of init.themes || []) {
+        if (!themeIds.has(themeId)) {
+          errors.push(`Initiative "${init.title}" uses a non-existent themeId: ${themeId}`);
+        }
+      }
+
+      for (const assignment of init.assignments || []) {
+        if (!assignment.teamId || !teamIds.has(assignment.teamId)) {
+          errors.push(
+            `Initiative "${init.title}" is assigned to a non-existent teamId: ${assignment.teamId || 'null'}`
+          );
+        }
+      }
+
+      const checkPersonnel = (personnel, type) => {
+        if (!personnel) {
+          warnings.push(`Initiative "${init.title}" is missing "${type}".`);
+          return;
+        }
+        if (!personnel.type || !personnel.id || !personnel.name) {
+          errors.push(`Initiative "${init.title}" has an incomplete "${type}" object.`);
+          return;
+        }
+        let idSet;
+
+        switch (personnel.type) {
+          case 'sdm':
+            idSet = sdmIds;
+            break;
+          case 'pmt':
+            idSet = pmtIds;
+            break;
+          case 'pm':
+            idSet = pmIds;
+            break;
+          case 'engineer':
+            idSet = engineerNameMap;
+            break;
+          case 'seniorManager':
+            idSet = new Set(systemData.seniorManagers.map((sm) => sm.seniorManagerId));
+            break;
+          default:
+            errors.push(
+              `Initiative "${init.title}" has unknown personnel type "${personnel.type}" for "${type}".`
+            );
             return;
         }
 
-        AIGenerationStatsModal.getInstance().open(this.formatAiStats(this.lastGenerationStats));
-    },
-
-    /**
-     * Hides the AI stats modal.
-     */
-    closeStatsModal() {
-        AIGenerationStatsModal.getInstance().close();
-    },
-
-    /**
-     * Sanitizes Mermaid code to reduce common AI output errors.
-     * @param {string} rawCode
-     * @param {object} options
-     * @param {boolean} options.aggressive - Apply stricter cleanup rules.
-     * @returns {string}
-     */
-    sanitizeMermaidCode(rawCode, options = {}) {
-        const { aggressive = false } = options;
-        if (!rawCode || typeof rawCode !== 'string') return '';
-
-        const normalized = rawCode
-            .replace(/```mermaid/gi, '')
-            .replace(/```/g, '')
-            .replace(/\r\n?/g, '\n');
-
-        const headerRegex = /^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|journey|gantt|mindmap|timeline|quadrantChart)\b/i;
-        let headerLine = '';
-        let headerHasDirection = false;
-        const bodyLines = [];
-        const subgraphLabelMap = new Map();
-        const usedSubgraphIds = new Set();
-        let subgraphDepth = 0;
-
-        const createSubgraphId = (label) => {
-            const base = `sg_${label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '')}` || 'sg';
-            let id = base === 'sg_' ? 'sg' : base;
-            let index = 1;
-            while (usedSubgraphIds.has(id)) {
-                index += 1;
-                id = `${base}_${index}`;
-            }
-            usedSubgraphIds.add(id);
-            return id;
-        };
-
-        const normalizeSubgraphLine = (line) => {
-            const match = line.match(/^subgraph\s+(.+)$/i);
-            if (!match) return line;
-
-            const rest = match[1].trim();
-            if (!rest) return line;
-
-            const hasLabelWrapper = /[\[\(]/.test(rest);
-            if (hasLabelWrapper) {
-                return line;
-            }
-
-            const isQuoted = rest.startsWith('"') || rest.startsWith("'");
-            const labelText = isQuoted ? rest.replace(/^['"]|['"]$/g, '') : rest;
-            const hasSpaces = /\s/.test(labelText);
-            if (!isQuoted && !hasSpaces) {
-                return line;
-            }
-
-            const label = labelText.trim();
-            if (!label) return line;
-
-            const existing = subgraphLabelMap.get(label);
-            const id = existing || createSubgraphId(label);
-            subgraphLabelMap.set(label, id);
-            return `subgraph ${id}["${label}"]`;
-        };
-
-        const replaceSubgraphLabelTokens = (line) => {
-            let updated = line;
-            subgraphLabelMap.forEach((id, label) => {
-                const token = `"${label}"`;
-                let startIndex = 0;
-                let nextIndex = updated.indexOf(token, startIndex);
-                while (nextIndex !== -1) {
-                    const before = updated[nextIndex - 1];
-                    const after = updated[nextIndex + token.length];
-                    const isWrapped = (before === '[' || before === '(') && (after === ']' || after === ')');
-                    if (!isWrapped) {
-                        updated = `${updated.slice(0, nextIndex)}${id}${updated.slice(nextIndex + token.length)}`;
-                        startIndex = nextIndex + id.length;
-                    } else {
-                        startIndex = nextIndex + token.length;
-                    }
-                    nextIndex = updated.indexOf(token, startIndex);
-                }
-            });
-            return updated;
-        };
-
-        normalized.split('\n').forEach((line) => {
-            let trimmed = line.trim();
-            if (!trimmed) return;
-
-            if (!headerLine && headerRegex.test(trimmed)) {
-                headerLine = trimmed;
-                const headerParts = trimmed.split(/\s+/);
-                if (headerParts.length >= 2) {
-                    const maybeDirection = headerParts[1].toUpperCase();
-                    headerHasDirection = ['TB', 'TD', 'BT', 'RL', 'LR'].includes(maybeDirection);
-                }
-                return;
-            }
-
-            trimmed = trimmed.replace(/^\d+[\).]\s+/, '');
-            trimmed = trimmed.replace(/^[-*+]\s+/, '');
-            trimmed = trimmed.replace(/:/g, ' -');
-
-            if (!trimmed) return;
-
-            if (/^direction\b/i.test(trimmed)) {
-                const parts = trimmed.split(/\s+/);
-                const dir = (parts[1] || '').toUpperCase();
-                if (!['TB', 'TD', 'BT', 'RL', 'LR'].includes(dir)) {
-                    return;
-                }
-                if (subgraphDepth > 0 || headerHasDirection) {
-                    return;
-                }
-            }
-
-            if (aggressive) {
-                const looksLikeMermaid = /(-->|---|==>|<--|<->|subgraph\b|end\b|classDef\b|class\b|style\b|linkStyle\b|click\b|direction\b|note\b|[\[\(])/i.test(trimmed);
-                if (!looksLikeMermaid) return;
-            }
-
-            const normalizedLine = normalizeSubgraphLine(trimmed);
-            bodyLines.push(normalizedLine);
-
-            if (/^subgraph\b/i.test(normalizedLine)) {
-                subgraphDepth += 1;
-            } else if (/^end\b/i.test(normalizedLine)) {
-                subgraphDepth = Math.max(0, subgraphDepth - 1);
-            }
-        });
-
-        const outputLines = [];
-        outputLines.push(headerLine || 'graph TD');
-        bodyLines.forEach((line) => {
-            outputLines.push(replaceSubgraphLabelTokens(line));
-        });
-
-        const subgraphCount = outputLines.filter(line => /^subgraph\b/i.test(line)).length;
-        const endCount = outputLines.filter(line => /^end\b/i.test(line)).length;
-        for (let i = endCount; i < subgraphCount; i += 1) {
-            outputLines.push('end');
+        const idToFind = personnel.type === 'engineer' ? personnel.name : personnel.id;
+        if (!idSet.has(idToFind)) {
+          errors.push(
+            `Initiative "${init.title}" lists a non-existent ${type}: "${personnel.name}" (ID/Name: ${idToFind}).`
+          );
         }
+      };
+      checkPersonnel(init.owner, 'owner');
+      checkPersonnel(init.projectManager, 'projectManager');
+      checkPersonnel(init.technicalPOC, 'technicalPOC');
 
-        return outputLines.join('\n').trim();
-    },
+      if (!init.impactedServiceIds || init.impactedServiceIds.length === 0) {
+        warnings.push(`Initiative "${init.title}" has no "impactedServiceIds".`);
+      }
 
-    // --- Core AI Logic (Migrated from ai/aiService.js) ---
-
-    /**
-     * Public "Router" Function: Generates a new system from a text prompt.
-     * It selects the correct internal function based on the provider.
-     *
-     * @param {string} userPrompt The user's description (e.g., "A spreadsheet app").
-     * @param {string} apiKey The user's API key.
-     * @param {string} provider The selected provider (e.g., "google-gemini").
-     * @param {HTMLElement|null} spinnerP Optional element to update with progress status.
-     * @returns {Promise<object|null>} A promise that resolves to { data: object, stats: object } or null on failure.
-     */
-    async generateSystemFromPrompt(userPrompt, apiKey, provider, spinnerP = null) {
-        console.log(`[AI-DEBUG] generateSystemFromPrompt: Routing for provider '${provider}' with prompt: "${userPrompt}"`);
-
-        const systemPrompt = _getSystemGenerationPrompt();
-
-        try {
-            switch (provider) {
-                case 'google-gemini':
-                    return await _generateSystemWithGemini(systemPrompt, userPrompt, apiKey, spinnerP);
-                case 'openai-gpt4o':
-                    console.warn("OpenAI generation not yet implemented.");
-                    notificationManager.showToast("AI provider 'OpenAI (GPT-4o)' is not yet implemented.", 'warning');
-                    return { data: null, stats: null };
-                case 'anthropic-claude35':
-                    console.warn("Anthropic generation not yet implemented.");
-                    notificationManager.showToast("AI provider 'Anthropic (Claude 3.5 Sonnet)' is not yet implemented.", 'warning');
-                    return { data: null, stats: null };
-                case 'mistral-large':
-                    console.warn("Mistral generation not yet implemented.");
-                    notificationManager.showToast("AI provider 'Mistral (Large 2)' is not yet implemented.", 'warning');
-                    return { data: null, stats: null };
-                case 'cohere-command-r':
-                    console.warn("Cohere generation not yet implemented.");
-                    notificationManager.showToast("AI provider 'Cohere (Command R)' is not yet implemented.", 'warning');
-                    return { data: null, stats: null };
-                default:
-                    console.error(`Unknown AI provider: ${provider}`);
-                    notificationManager.showToast(`AI System Generation for "${provider}" is not yet supported.`, 'warning');
-                    return { data: null, stats: null };
-            }
-        } catch (error) {
-            console.error(`Error during AI generation with ${provider}:`, error);
-            notificationManager.showToast(`An error occurred while communicating with the AI. Check the console.\nError: ${error.message}`, 'error');
-            const stats = error && error.stats ? error.stats : null;
-            return { data: null, stats: stats };
+      if (!init.workPackageIds || !Array.isArray(init.workPackageIds)) {
+        warnings.push(`Initiative "${init.title}" is missing "workPackageIds" array.`);
+      } else if (init.workPackageIds.length > 0) {
+        for (const wpId of init.workPackageIds) {
+          if (!workPackageIds.has(wpId)) {
+            warnings.push(
+              `Initiative "${init.title}" links to a non-existent workPackageId: ${wpId}`
+            );
+          }
         }
-    },
+      }
+    });
 
-    /**
-     * Public "Router" Function: Gets analysis from a full chat history.
-     *
-     * @param {Array<object>} chatHistory The full conversation history (e.g., [{role: 'user', ...}, {role: 'model', ...}]).
-     * @param {string} apiKey The user's API key.
-     * @param {string} provider The selected provider.
-     * @returns {Promise<object>} A promise that resolves to { textResponse: string, usage: object }
-     */
-    async getAnalysisFromPrompt(chatHistory, apiKey, provider) {
-        console.log(`[AI-DEBUG] getAnalysisFromPrompt: Routing for provider '${provider}'. History has ${chatHistory.length} turns.`);
+    // Check Work Packages
+    console.log(
+      `[AI-VALIDATE] ... checking ${systemData.workPackages.length} Work Packages (links back to initiatives)...`
+    );
+    systemData.workPackages.forEach((wp) => {
+      if (
+        !wp.initiativeId ||
+        !systemData.yearlyInitiatives.some((i) => i.initiativeId === wp.initiativeId)
+      ) {
+        warnings.push(
+          `WorkPackage "${wp.workPackageId}" has an invalid or missing "initiativeId": ${wp.initiativeId}`
+        );
+      }
 
-        if (AI_ANALYSIS_MOCK_MODE) {
-            console.warn("[AI-DEBUG] MOCK MODE ENABLED. Returning fake data without API call.");
-            await new Promise(resolve => setTimeout(resolve, 750));
-            const mockResponse = `This is a mock AI response. I received a history of ${chatHistory.length} turns.`;
-            return {
-                textResponse: mockResponse,
-                usage: { totalTokenCount: 100 }
-            };
-        }
+      const parentInit = systemData.yearlyInitiatives.find(
+        (i) => i.initiativeId === wp.initiativeId
+      );
+      if (
+        parentInit &&
+        (!parentInit.workPackageIds || !parentInit.workPackageIds.includes(wp.workPackageId))
+      ) {
+        warnings.push(
+          `Data inconsistency: WorkPackage "${wp.workPackageId}" links to initiative "${parentInit.title}", but the initiative does not link back to it in its "workPackageIds" array.`
+        );
+      }
+    });
 
-        try {
-            switch (provider) {
-                case 'google-gemini':
-                    return await _getAnalysisWithGemini(chatHistory, apiKey);
-                case 'openai-gpt4o':
-                    return { textResponse: "OpenAI analysis is not yet implemented.", usage: { totalTokenCount: 0 } };
-                case 'anthropic-claude35':
-                    return { textResponse: "Anthropic analysis is not yet implemented.", usage: { totalTokenCount: 0 } };
-                default:
-                    console.error(`Unknown AI provider: ${provider}`);
-                    throw new Error(`Analysis for "${provider}" is not yet supported.`);
-            }
-        } catch (error) {
-            console.error(`Error during AI analysis with ${provider}:`, error);
-            throw new Error(`An error occurred while communicating with the AI: ${error.message}`);
-        }
-    },
-
-    /**
-     * Generates a mermaid diagram code from a prompt.
-     */
-    async generateDiagramFromPrompt(userPrompt, contextJson, apiKey, provider) {
-        console.debug("[AI-DIAGRAM] generateDiagramFromPrompt invoked", {
-            provider,
-            prompt: userPrompt,
-            contextLength: (contextJson || '').length
-        });
-        const prompt = `${MERMAID_SYSTEM_PROMPT}\nCONTEXT:\n${contextJson}\nREQUEST:\n${userPrompt}`;
-        try {
-            const rawText = await _generateTextWithGemini(prompt, userPrompt, apiKey);
-            console.debug("[AI-DIAGRAM] Raw diagram response text:", rawText);
-            const cleaned = (rawText || '')
-                .replace(/```mermaid/gi, '')
-                .replace(/```/g, '')
-                .trim();
-            if (!cleaned) {
-                throw new Error("AI did not return any diagram content. Please try again or adjust your request.");
-            }
-            const sanitized = AIService.sanitizeMermaidCode(cleaned);
-            return { code: sanitized, title: userPrompt };
-        } catch (error) {
-            console.error("[AI-DIAGRAM] Diagram generation failed:", error);
-            throw error;
-        }
-    },
-
-    /**
-     * Generates an image from a prompt.
-     * Legacy/Mock wrapper - now primarily uses Diagram generation or Vertex AI.
-     */
-    async generateImageFromPrompt(userPrompt, contextJson, apiKey, provider) {
-        console.log(`[AI-DEBUG] generateImageFromPrompt: Routing for provider '${provider}'...`);
-
-        if (!apiKey) {
-            console.error("[AI-DEBUG] Image generation failed: API key is missing.");
-            throw new Error("AI API key is not set. Please add your Gemini API key in the AI Assistant settings.");
-        }
-
-        // Reuse Mermaid text generation for diagramming instead of mocked images
-        const diagramResult = await AIService.generateDiagramFromPrompt(userPrompt, contextJson, apiKey, provider);
-        return {
-            isImage: false,
-            ...diagramResult
-        };
-    },
-
-    // --- Validation Logic ---
-
-    /**
-     * Validates a newly generated AI system object against our core schema rules.
-     *
-     * @param {object} systemData The parsed JSON object from the AI.
-     * @returns {{isValid: boolean, errors: string[], warnings: string[]}}
-     */
-    validateGeneratedSystem(systemData) {
-        console.log("[AI-VALIDATE] Starting AI System Validation...");
-        const errors = [];
-        const warnings = [];
-
-        // --- 1. Top-Level Existence Checks ---
-        console.log("[AI-VALIDATE] Checking top-level data structure...");
-        if (!systemData || typeof systemData !== 'object' || Array.isArray(systemData)) {
-            errors.push("AI returned no data or the data was not a JSON object.");
-            console.error("[AI-VALIDATE] Basic structure validation FAILED. Data is not a valid object.");
-            return { isValid: false, errors, warnings };
-        }
-
-        const requiredString = (key) => {
-            if (!systemData[key] || typeof systemData[key] !== 'string' || systemData[key].trim() === '') {
-                errors.push(`Required top-level string "${key}" is missing or empty.`);
-            }
-        };
-
-        const requiredPopulatedArray = (key) => {
-            if (!Array.isArray(systemData[key])) {
-                errors.push(`Required field "${key}" is missing or not an array.`);
-                return false; // Cannot check contents
-            }
-            if (systemData[key].length === 0) {
-                errors.push(`Required array "${key}" must not be empty. AI must generate this data.`);
-                return false;
-            }
-            return true; // Array exists and is populated
-        };
-
-        const optionalArray = (key) => {
-            if (!Array.isArray(systemData[key])) {
-                errors.push(`Field "${key}" is missing or not an array.`);
-                return false;
-            }
-            if (systemData[key].length === 0) {
-                warnings.push(`Array "${key}" is empty. AI should ideally populate this.`);
-            }
-            return true;
-        };
-
-        requiredString('systemName');
-
-        const criticalArrays = [
-            'teams', 'allKnownEngineers', 'services',
-            'yearlyInitiatives', 'goals', 'definedThemes',
-            'sdms', 'pmts', 'projectManagers'
-        ];
-        let canProceed = true;
-        for (const key of criticalArrays) {
-            if (!requiredPopulatedArray(key)) {
-                canProceed = false;
-            }
-        }
-
-        if (!Array.isArray(systemData.workPackages)) {
-            errors.push(`Required field "workPackages" is missing or not an array.`);
-            canProceed = false;
-        } else if (systemData.workPackages.length === 0) {
-            warnings.push(`Array "workPackages" is empty. Rule #10 (Generate Work Packages) was not fully followed.`);
-        }
-
-        if (!systemData.capacityConfiguration || typeof systemData.capacityConfiguration !== 'object') {
-            errors.push(`Required field "capacityConfiguration" is missing or not an object.`);
-            canProceed = false;
-        }
-
-        optionalArray('seniorManagers');
-
-        if (!canProceed) {
-            console.error("[AI-VALIDATE] Basic structure validation FAILED. Critical arrays or objects are missing.");
-            return { isValid: false, errors, warnings }; // Stop if basic structure is wrong
-        }
-        console.log("[AI-VALIDATE] Basic structure OK.");
-
-
-        // --- 2. Build Look-up Sets & Check Uniqueness (Rule #6) ---
-        console.log("[AI-VALIDATE] Building look-up sets and checking uniqueness...");
-        const teamIds = new Set();
-        const teamNames = new Set();
-        systemData.teams.forEach((team, i) => {
-            if (!team.teamId) errors.push(`Team at index ${i} is missing "teamId".`);
-            else if (teamIds.has(team.teamId)) errors.push(`Duplicate teamId found: ${team.teamId}`);
-            else teamIds.add(team.teamId);
-
-            if (!team.teamName) errors.push(`Team ${team.teamId || `at index ${i}`} is missing "teamName".`);
-            else if (teamNames.has(team.teamName.toLowerCase())) warnings.push(`Duplicate teamName found: ${team.teamName}`);
-            else teamNames.add(team.teamName.toLowerCase());
-        });
-
-        const sdmIds = new Set();
-        systemData.sdms.forEach((sdm, i) => {
-            if (!sdm.sdmId) errors.push(`SDM at index ${i} is missing "sdmId".`);
-            else if (sdmIds.has(sdm.sdmId)) errors.push(`Duplicate sdmId found: ${sdm.sdmId}`);
-            else sdmIds.add(sdm.sdmId);
-        });
-
-        const pmtIds = new Set(systemData.pmts.map(p => p.pmtId).filter(Boolean));
-        const goalIds = new Set(systemData.goals.map(g => g.goalId).filter(Boolean));
-        const themeIds = new Set(systemData.definedThemes.map(t => t.themeId).filter(Boolean));
-        const pmIds = new Set(systemData.projectManagers.map(p => p.pmId).filter(Boolean));
-        const workPackageIds = new Set(systemData.workPackages.map(wp => wp.workPackageId).filter(Boolean));
-
-        const engineerNameMap = new Map();
-        const engineerNameCheck = new Set();
-        systemData.allKnownEngineers.forEach((eng, i) => {
-            if (!eng.name) errors.push(`Engineer at index ${i} is missing a "name".`);
-            else if (engineerNameCheck.has(eng.name.toLowerCase())) errors.push(`Duplicate engineer name found: ${eng.name}`);
-            else {
-                engineerNameCheck.add(eng.name.toLowerCase());
-                engineerNameMap.set(eng.name, eng); // Use exact case for map key
-            }
-        });
-
-        // --- 3. Relational Integrity Checks (Rule #6, 7, 9, 10) ---
-        console.log("[AI-VALIDATE] Checking relational integrity (links between data)...");
-
-        // Check Teams
-        console.log(`[AI-VALIDATE] ... checking ${systemData.teams.length} Teams (SDMs, PMTs, Engineers, Capacity)...`);
-        systemData.teams.forEach(team => {
-            if (team.sdmId && !sdmIds.has(team.sdmId)) {
-                errors.push(`Team "${team.teamName}" uses a non-existent sdmId: ${team.sdmId}`);
-            }
-            if (team.pmtId && !pmtIds.has(team.pmtId)) {
-                errors.push(`Team "${team.teamName}" uses a non-existent pmtId: ${team.pmtId}`);
-            }
-
-            for (const engName of (team.engineers || [])) {
-                if (!engineerNameMap.has(engName)) {
-                    errors.push(`Team "${team.teamName}" lists an engineer "${engName}" who is not in 'allKnownEngineers'.`);
-                } else {
-                    const engData = engineerNameMap.get(engName);
-                    if (engData.currentTeamId !== team.teamId) {
-                        errors.push(`Data inconsistency: Engineer "${engName}" is in Team "${team.teamName}"'s list, but their 'currentTeamId' in 'allKnownEngineers' is "${engData.currentTeamId}".`);
-                    }
-                }
-            }
-
-            if (!team.teamCapacityAdjustments || typeof team.teamCapacityAdjustments !== 'object') {
-                errors.push(`Team "${team.teamName}" is missing "teamCapacityAdjustments" object.`);
-            } else {
-                if (typeof team.teamCapacityAdjustments.avgOverheadHoursPerWeekPerSDE !== 'number') {
-                    warnings.push(`Team "${team.teamName}" is missing "avgOverheadHoursPerWeekPerSDE".`);
-                }
-                if (typeof team.teamCapacityAdjustments.aiProductivityGainPercent !== 'number') {
-                    warnings.push(`Team "${team.teamName}" is missing "aiProductivityGainPercent".`);
-                }
-            }
-
-            // Type validation for numeric fields
-            if (team.fundedHeadcount !== undefined && typeof team.fundedHeadcount !== 'number') {
-                errors.push(`Team "${team.teamName}" has invalid "fundedHeadcount" type: expected number, got ${typeof team.fundedHeadcount}. Value: "${team.fundedHeadcount}"`);
-            }
-
-            if (!team.attributes || typeof team.attributes !== 'object') {
-                warnings.push(`Team "${team.teamName}" is missing "attributes" object.`);
-            }
-        });
-
-        // Check allKnownEngineers
-        console.log(`[AI-VALIDATE] ... checking ${systemData.allKnownEngineers.length} Engineers (roster consistency)...`);
-        engineerNameMap.forEach((eng, engName) => {
-            if (eng.currentTeamId && !teamIds.has(eng.currentTeamId)) {
-                errors.push(`Engineer "${engName}" is assigned to a non-existent teamId: ${eng.currentTeamId}`);
-            }
-        });
-
-        // Check Services
-        console.log(`[AI-VALIDATE] ... checking ${systemData.services.length} Services (Ownership, Dependencies, Attributes)...`);
-        systemData.services.forEach(service => {
-            if (service.owningTeamId && !teamIds.has(service.owningTeamId)) {
-                errors.push(`Service "${service.serviceName}" is owned by a non-existent teamId: ${service.owningTeamId}`);
-            }
-
-            if (!service.serviceDependencies || service.serviceDependencies.length === 0) {
-                warnings.push(`Service "${service.serviceName}" has no "serviceDependencies".`);
-            }
-            if (!service.platformDependencies || service.platformDependencies.length === 0) {
-                warnings.push(`Service "${service.serviceName}" has no "platformDependencies".`);
-            }
-            if (!service.attributes || typeof service.attributes !== 'object') {
-                warnings.push(`Service "${service.serviceName}" is missing "attributes" object.`);
-            }
-        });
-
-        // Check Goals
-        console.log(`[AI-VALIDATE] ... checking ${systemData.goals.length} Goals...`);
-        systemData.goals.forEach(goal => {
-            if (!goal.goalId) errors.push('A goal is missing its "goalId".');
-            if (!goal.name) errors.push(`Goal "${goal.goalId}" is missing "name".`);
-
-            if (!goal.dueDate) {
-                warnings.push(`Goal "${goal.name || goal.goalId}" is missing "dueDate".`);
-            }
-        });
-
-        // Check Initiatives
-        console.log(`[AI-VALIDATE] ... checking ${systemData.yearlyInitiatives.length} Initiatives (Goals, Themes, Personnel, Work Packages)...`);
-        systemData.yearlyInitiatives.forEach(init => {
-            if (!init.initiativeId) errors.push('An initiative is missing its "initiativeId".');
-
-            if (init.primaryGoalId && !goalIds.has(init.primaryGoalId)) {
-                errors.push(`Initiative "${init.title}" uses a non-existent primaryGoalId: ${init.primaryGoalId}`);
-            }
-
-            for (const themeId of (init.themes || [])) {
-                if (!themeIds.has(themeId)) {
-                    errors.push(`Initiative "${init.title}" uses a non-existent themeId: ${themeId}`);
-                }
-            }
-
-            for (const assignment of (init.assignments || [])) {
-                if (!assignment.teamId || !teamIds.has(assignment.teamId)) {
-                    errors.push(`Initiative "${init.title}" is assigned to a non-existent teamId: ${assignment.teamId || 'null'}`);
-                }
-            }
-
-            const checkPersonnel = (personnel, type) => {
-                if (!personnel) {
-                    warnings.push(`Initiative "${init.title}" is missing "${type}".`);
-                    return;
-                }
-                if (!personnel.type || !personnel.id || !personnel.name) {
-                    errors.push(`Initiative "${init.title}" has an incomplete "${type}" object.`);
-                    return;
-                }
-                let idSet;
-
-                switch (personnel.type) {
-                    case 'sdm': idSet = sdmIds; break;
-                    case 'pmt': idSet = pmtIds; break;
-                    case 'pm': idSet = pmIds; break;
-                    case 'engineer':
-                        idSet = engineerNameMap;
-                        break;
-                    case 'seniorManager':
-                        idSet = new Set(systemData.seniorManagers.map(sm => sm.seniorManagerId));
-                        break;
-                    default:
-                        errors.push(`Initiative "${init.title}" has unknown personnel type "${personnel.type}" for "${type}".`);
-                        return;
-                }
-
-                const idToFind = (personnel.type === 'engineer') ? personnel.name : personnel.id;
-                if (!idSet.has(idToFind)) {
-                    errors.push(`Initiative "${init.title}" lists a non-existent ${type}: "${personnel.name}" (ID/Name: ${idToFind}).`);
-                }
-            };
-            checkPersonnel(init.owner, 'owner');
-            checkPersonnel(init.projectManager, 'projectManager');
-            checkPersonnel(init.technicalPOC, 'technicalPOC');
-
-            if (!init.impactedServiceIds || init.impactedServiceIds.length === 0) {
-                warnings.push(`Initiative "${init.title}" has no "impactedServiceIds".`);
-            }
-
-            if (!init.workPackageIds || !Array.isArray(init.workPackageIds)) {
-                warnings.push(`Initiative "${init.title}" is missing "workPackageIds" array.`);
-            } else if (init.workPackageIds.length > 0) {
-                for (const wpId of init.workPackageIds) {
-                    if (!workPackageIds.has(wpId)) {
-                        warnings.push(`Initiative "${init.title}" links to a non-existent workPackageId: ${wpId}`);
-                    }
-                }
-            }
-        });
-
-        // Check Work Packages
-        console.log(`[AI-VALIDATE] ... checking ${systemData.workPackages.length} Work Packages (links back to initiatives)...`);
-        systemData.workPackages.forEach(wp => {
-            if (!wp.initiativeId || !systemData.yearlyInitiatives.some(i => i.initiativeId === wp.initiativeId)) {
-                warnings.push(`WorkPackage "${wp.workPackageId}" has an invalid or missing "initiativeId": ${wp.initiativeId}`);
-            }
-
-            const parentInit = systemData.yearlyInitiatives.find(i => i.initiativeId === wp.initiativeId);
-            if (parentInit && (!parentInit.workPackageIds || !parentInit.workPackageIds.includes(wp.workPackageId))) {
-                warnings.push(`Data inconsistency: WorkPackage "${wp.workPackageId}" links to initiative "${parentInit.title}", but the initiative does not link back to it in its "workPackageIds" array.`);
-            }
-        });
-
-        // --- 4. Final Result ---
-        if (errors.length > 0) {
-            console.error(`[AI-VALIDATE] Validation FAILED. Errors: ${errors.length}, Warnings: ${warnings.length}`);
-        } else {
-            console.log(`[AI-VALIDATE] Validation PASSED. Errors: 0, Warnings: ${warnings.length}`);
-        }
-
-        return {
-            isValid: errors.length === 0,
-            errors,
-            warnings
-        };
+    // --- 4. Final Result ---
+    if (errors.length > 0) {
+      console.error(
+        `[AI-VALIDATE] Validation FAILED. Errors: ${errors.length}, Warnings: ${warnings.length}`
+      );
+    } else {
+      console.log(`[AI-VALIDATE] Validation PASSED. Errors: 0, Warnings: ${warnings.length}`);
     }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings,
+    };
+  },
 };
 
 // --- Private Helpers ---
@@ -709,230 +823,268 @@ ${systemPromptSummary}`.trim();
  * Wraps fetch calls with exponential backoff.
  */
 async function _fetchWithRetry(url, options, maxRetries = 5, initialDelay = 1000, spinnerP = null) {
-    let attempt = 0;
-    let lastDetailedError = null;
-    while (attempt < maxRetries) {
-        console.log(`[AI-DEBUG] Fetch Attempt ${attempt + 1}/${maxRetries}: POST to ${url.split('?')[0]}`);
+  let attempt = 0;
+  let lastDetailedError = null;
+  while (attempt < maxRetries) {
+    console.log(
+      `[AI-DEBUG] Fetch Attempt ${attempt + 1}/${maxRetries}: POST to ${url.split('?')[0]}`
+    );
+    try {
+      const response = await fetch(url, options);
+
+      if (response.ok) {
+        console.log(
+          `[AI-DEBUG] Fetch Attempt ${attempt + 1} Succeeded (Status: ${response.status})`
+        );
+        return response;
+      }
+
+      if (response.status >= 400 && response.status < 500) {
+        const errorBody = await response.json();
+        const errorMessage = `API Error: ${errorBody?.error?.message || response.statusText} (Status: ${response.status})`;
+        console.error(`[AI-DEBUG] Fetch Error (4xx): ${response.status}. Not retrying.`, errorBody);
+        lastDetailedError = new Error(errorMessage);
+        throw new Error(
+          `Google API request failed: ${errorBody.error?.message || response.statusText}`
+        );
+      }
+
+      if (response.status >= 500 || response.status === 429) {
+        console.warn(
+          `[AI-DEBUG] Fetch Error (5xx/429): ${response.status}. Retrying... (Attempt ${attempt + 1}/${maxRetries})`
+        );
+        let errorBody = null;
         try {
-            const response = await fetch(url, options);
+          errorBody = await response.json();
+        } catch (e) {}
+        const errorMessage = `API Error: ${errorBody?.error?.message || response.statusText} (Status: ${response.status})`;
+        lastDetailedError = new Error(errorMessage);
+        throw new Error(`Retryable error: ${response.statusText}`);
+      }
 
-            if (response.ok) {
-                console.log(`[AI-DEBUG] Fetch Attempt ${attempt + 1} Succeeded (Status: ${response.status})`);
-                return response;
-            }
+      throw new Error(`Unhandled HTTP error: ${response.status}`);
+    } catch (error) {
+      if (error.message.includes('Google API request failed')) {
+        throw error;
+      }
 
-            if (response.status >= 400 && response.status < 500) {
-                const errorBody = await response.json();
-                const errorMessage = `API Error: ${errorBody?.error?.message || response.statusText} (Status: ${response.status})`;
-                console.error(`[AI-DEBUG] Fetch Error (4xx): ${response.status}. Not retrying.`, errorBody);
-                lastDetailedError = new Error(errorMessage);
-                throw new Error(`Google API request failed: ${errorBody.error?.message || response.statusText}`);
-            }
+      console.warn(`[AI-DEBUG] Fetch attempt ${attempt + 1} failed: ${error.message}`);
+      attempt++;
 
-            if (response.status >= 500 || response.status === 429) {
-                console.warn(`[AI-DEBUG] Fetch Error (5xx/429): ${response.status}. Retrying... (Attempt ${attempt + 1}/${maxRetries})`);
-                let errorBody = null;
-                try { errorBody = await response.json(); } catch (e) { }
-                const errorMessage = `API Error: ${errorBody?.error?.message || response.statusText} (Status: ${response.status})`;
-                lastDetailedError = new Error(errorMessage);
-                throw new Error(`Retryable error: ${response.statusText}`);
-            }
+      if (attempt >= maxRetries) {
+        console.error('[AI-DEBUG] Fetch failed after all retries.', lastDetailedError || error);
+        const finalErrorMessage = lastDetailedError ? lastDetailedError.message : error.message;
+        throw new Error(
+          `API request failed after ${maxRetries} attempts. Last error: ${finalErrorMessage}`
+        );
+      }
 
-            throw new Error(`Unhandled HTTP error: ${response.status}`);
+      const jitter = Math.random() * 1000;
+      const delay = initialDelay * Math.pow(2, attempt - 1) + jitter;
 
-        } catch (error) {
-            if (error.message.includes("Google API request failed")) {
-                throw error;
-            }
+      if (spinnerP) {
+        spinnerP.textContent = `AI service is busy (Attempt ${attempt}/${maxRetries}). Retrying in ${(delay / 1000).toFixed(1)}s...`;
+      }
 
-            console.warn(`[AI-DEBUG] Fetch attempt ${attempt + 1} failed: ${error.message}`);
-            attempt++;
-
-            if (attempt >= maxRetries) {
-                console.error("[AI-DEBUG] Fetch failed after all retries.", lastDetailedError || error);
-                const finalErrorMessage = lastDetailedError ? lastDetailedError.message : error.message;
-                throw new Error(`API request failed after ${maxRetries} attempts. Last error: ${finalErrorMessage}`);
-            }
-
-            const jitter = Math.random() * 1000;
-            const delay = initialDelay * Math.pow(2, attempt - 1) + jitter;
-
-            if (spinnerP) {
-                spinnerP.textContent = `AI service is busy (Attempt ${attempt}/${maxRetries}). Retrying in ${(delay / 1000).toFixed(1)}s...`;
-            }
-
-            console.log(`[AI-DEBUG] Waiting ${delay.toFixed(0)}ms before next retry...`);
-            await new Promise(resolve => setTimeout(resolve, delay));
-        }
+      console.log(`[AI-DEBUG] Waiting ${delay.toFixed(0)}ms before next retry...`);
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
-    throw new Error("API request failed after all retries.");
+  }
+  throw new Error('API request failed after all retries.');
 }
 
 /**
  * Builds the main "system prompt".
  */
 function _getSystemGenerationPrompt() {
-    console.log("[AI-DEBUG] _getSystemGenerationPrompt: Building master system prompt...");
+  console.log('[AI-DEBUG] _getSystemGenerationPrompt: Building master system prompt...');
 
-    const minimalSchemaExample = {
-        "systemName": "Example System",
-        "systemDescription": "A brief description of the system.",
-        "seniorManagers": [
-            { "seniorManagerId": "srMgr-example", "seniorManagerName": "Example Sr. Manager", "attributes": {} }
+  const minimalSchemaExample = {
+    systemName: 'Example System',
+    systemDescription: 'A brief description of the system.',
+    seniorManagers: [
+      {
+        seniorManagerId: 'srMgr-example',
+        seniorManagerName: 'Example Sr. Manager',
+        attributes: {},
+      },
+    ],
+    sdms: [
+      {
+        sdmId: 'sdm-example',
+        sdmName: 'Example SDM',
+        seniorManagerId: 'srMgr-example',
+        attributes: {},
+      },
+    ],
+    pmts: [{ pmtId: 'pmt-example', pmtName: 'Example PMT', attributes: {} }],
+    projectManagers: [{ pmId: 'pm-example', pmName: 'Example Project Manager', attributes: {} }],
+    teams: [
+      {
+        teamId: 'team-example',
+        teamName: 'Example Team',
+        teamIdentity: 'Phoenix',
+        fundedHeadcount: 5,
+        engineers: ['Example Engineer 1 (L4)'],
+        awayTeamMembers: [
+          { name: 'Contractor 1', level: 3, sourceTeam: 'External', attributes: {} },
         ],
-        "sdms": [
-            { "sdmId": "sdm-example", "sdmName": "Example SDM", "seniorManagerId": "srMgr-example", "attributes": {} }
-        ],
-        "pmts": [
-            { "pmtId": "pmt-example", "pmtName": "Example PMT", "attributes": {} }
-        ],
-        "projectManagers": [
-            { "pmId": "pm-example", "pmName": "Example Project Manager", "attributes": {} }
-        ],
-        "teams": [
-            {
-                "teamId": "team-example",
-                "teamName": "Example Team",
-                "teamIdentity": "Phoenix",
-                "fundedHeadcount": 5,
-                "engineers": ["Example Engineer 1 (L4)"],
-                "awayTeamMembers": [
-                    { "name": "Contractor 1", "level": 3, "sourceTeam": "External", "attributes": {} }
-                ],
-                "sdmId": "sdm-example",
-                "pmtId": "pmt-example",
-                "teamCapacityAdjustments": {
-                    "leaveUptakeEstimates": [],
-                    "variableLeaveImpact": { "maternity": { "affectedSDEs": 0, "avgDaysPerAffectedSDE": 0 } },
-                    "teamActivities": [],
-                    "avgOverheadHoursPerWeekPerSDE": 6,
-                    "aiProductivityGainPercent": 10
-                },
-                "attributes": {}
-            }
-        ],
-        "allKnownEngineers": [
-            {
-                "name": "Example Engineer 1 (L4)",
-                "level": 4,
-                "currentTeamId": "team-example",
-                "attributes": {
-                    "isAISWE": false,
-                    "aiAgentType": null,
-                    "skills": ["Java", "AWS", "React"],
-                    "yearsOfExperience": 5
-                }
-            },
-            {
-                "name": "AI-Bot-01",
-                "level": 4,
-                "currentTeamId": "team-example",
-                "attributes": {
-                    "isAISWE": true,
-                    "aiAgentType": "Code Generation",
-                    "skills": ["Python", "Unit Tests"],
-                    "yearsOfExperience": null
-                }
-            }
-        ],
-        "services": [
-            {
-                "serviceName": "ExampleService",
-                "serviceDescription": "The main service.",
-                "owningTeamId": "team-example",
-                "apis": [
-                    { "apiName": "GetExampleAPI", "apiDescription": "Gets data.", "dependentApis": [], "attributes": {} }
-                ],
-                "serviceDependencies": [],
-                "platformDependencies": ["AWS S3", "PostgreSQL"],
-                "attributes": {}
-            }
-        ],
-        "capacityConfiguration": {
-            "workingDaysPerYear": 261,
-            "standardHoursPerDay": 8,
-            "globalConstraints": {
-                "publicHolidays": 10,
-                "orgEvents": [
-                    { "id": "event-1", "name": "Global All-Hands", "estimatedDaysPerSDE": 1, "attributes": {} }
-                ]
-            },
-            "leaveTypes": [
-                { "id": "annual", "name": "Annual Leave", "defaultEstimatedDays": 20, "attributes": {} }
-            ],
-            "attributes": {}
+        sdmId: 'sdm-example',
+        pmtId: 'pmt-example',
+        teamCapacityAdjustments: {
+          leaveUptakeEstimates: [],
+          variableLeaveImpact: { maternity: { affectedSDEs: 0, avgDaysPerAffectedSDE: 0 } },
+          teamActivities: [],
+          avgOverheadHoursPerWeekPerSDE: 6,
+          aiProductivityGainPercent: 10,
         },
-        "yearlyInitiatives": [
-            {
-                "initiativeId": "init-example-001",
-                "title": "Example Initiative (Year 1)",
-                "description": "An example initiative.",
-                "isProtected": true,
-                "assignments": [
-                    { "teamId": "team-example", "sdeYears": 1.5 }
-                ],
-                "impactedServiceIds": ["ExampleService"],
-                "roi": {
-                    "category": "Tech Debt",
-                    "valueType": "QualitativeScore",
-                    "estimatedValue": "Critical",
-                    "currency": null,
-                    "timeHorizonMonths": 12,
-                    "confidenceLevel": "High",
-                    "calculationMethodology": "N/A",
-                    "businessCaseLink": null,
-                    "overrideJustification": null,
-                    "attributes": {}
-                },
-                "targetDueDate": "2025-12-31",
-                "actualCompletionDate": null,
-                "status": "Committed",
-                "themes": ["theme-example"],
-                "primaryGoalId": "goal-example",
-                "projectManager": { "type": "pm", "id": "pm-example", "name": "Example Project Manager" },
-                "owner": { "type": "sdm", "id": "sdm-example", "name": "Example SDM" },
-                "technicalPOC": { "type": "engineer", "id": "eng-example", "name": "Example Engineer 1 (L4)" },
-                "workPackageIds": ["wp-example-001"],
-                "attributes": {
-                    "pmCapacityNotes": "Example note.",
-                    "planningYear": 2025
-                }
-            }
+        attributes: {},
+      },
+    ],
+    allKnownEngineers: [
+      {
+        name: 'Example Engineer 1 (L4)',
+        level: 4,
+        currentTeamId: 'team-example',
+        attributes: {
+          isAISWE: false,
+          aiAgentType: null,
+          skills: ['Java', 'AWS', 'React'],
+          yearsOfExperience: 5,
+        },
+      },
+      {
+        name: 'AI-Bot-01',
+        level: 4,
+        currentTeamId: 'team-example',
+        attributes: {
+          isAISWE: true,
+          aiAgentType: 'Code Generation',
+          skills: ['Python', 'Unit Tests'],
+          yearsOfExperience: null,
+        },
+      },
+    ],
+    services: [
+      {
+        serviceName: 'ExampleService',
+        serviceDescription: 'The main service.',
+        owningTeamId: 'team-example',
+        apis: [
+          {
+            apiName: 'GetExampleAPI',
+            apiDescription: 'Gets data.',
+            dependentApis: [],
+            attributes: {},
+          },
         ],
-        "goals": [
-            { "goalId": "goal-example", "name": "Example Goal 2025", "description": "...", "initiativeIds": ["init-example-001"], "attributes": {}, "dueDate": "2025-12-31" }
+        serviceDependencies: [],
+        platformDependencies: ['AWS S3', 'PostgreSQL'],
+        attributes: {},
+      },
+    ],
+    capacityConfiguration: {
+      workingDaysPerYear: 261,
+      standardHoursPerDay: 8,
+      globalConstraints: {
+        publicHolidays: 10,
+        orgEvents: [
+          { id: 'event-1', name: 'Global All-Hands', estimatedDaysPerSDE: 1, attributes: {} },
         ],
-        "definedThemes": [
-            { "themeId": "theme-example", "name": "Example Theme", "description": "...", "relatedGoalIds": ["goal-example"], "attributes": {} }
+      },
+      leaveTypes: [
+        { id: 'annual', name: 'Annual Leave', defaultEstimatedDays: 20, attributes: {} },
+      ],
+      attributes: {},
+    },
+    yearlyInitiatives: [
+      {
+        initiativeId: 'init-example-001',
+        title: 'Example Initiative (Year 1)',
+        description: 'An example initiative.',
+        isProtected: true,
+        assignments: [{ teamId: 'team-example', sdeYears: 1.5 }],
+        impactedServiceIds: ['ExampleService'],
+        roi: {
+          category: 'Tech Debt',
+          valueType: 'QualitativeScore',
+          estimatedValue: 'Critical',
+          currency: null,
+          timeHorizonMonths: 12,
+          confidenceLevel: 'High',
+          calculationMethodology: 'N/A',
+          businessCaseLink: null,
+          overrideJustification: null,
+          attributes: {},
+        },
+        targetDueDate: '2025-12-31',
+        actualCompletionDate: null,
+        status: 'Committed',
+        themes: ['theme-example'],
+        primaryGoalId: 'goal-example',
+        projectManager: { type: 'pm', id: 'pm-example', name: 'Example Project Manager' },
+        owner: { type: 'sdm', id: 'sdm-example', name: 'Example SDM' },
+        technicalPOC: { type: 'engineer', id: 'eng-example', name: 'Example Engineer 1 (L4)' },
+        workPackageIds: ['wp-example-001'],
+        attributes: {
+          pmCapacityNotes: 'Example note.',
+          planningYear: 2025,
+        },
+      },
+    ],
+    goals: [
+      {
+        goalId: 'goal-example',
+        name: 'Example Goal 2025',
+        description: '...',
+        initiativeIds: ['init-example-001'],
+        attributes: {},
+        dueDate: '2025-12-31',
+      },
+    ],
+    definedThemes: [
+      {
+        themeId: 'theme-example',
+        name: 'Example Theme',
+        description: '...',
+        relatedGoalIds: ['goal-example'],
+        attributes: {},
+      },
+    ],
+    archivedYearlyPlans: [],
+    workPackages: [
+      {
+        workPackageId: 'wp-example-001',
+        initiativeId: 'init-example-001',
+        name: 'Example Work Package',
+        description: 'The first phase of work for the example initiative.',
+        owner: { type: 'sdm', id: 'sdm-example', name: 'Example SDM' },
+        status: 'Defined',
+        deliveryPhases: [
+          {
+            phaseName: 'Requirements & Definition',
+            status: 'Completed',
+            startDate: '2025-01-01',
+            endDate: '2025-01-31',
+            notes: 'Initial spec complete.',
+          },
         ],
-        "archivedYearlyPlans": [],
-        "workPackages": [
-            {
-                "workPackageId": "wp-example-001",
-                "initiativeId": "init-example-001",
-                "name": "Example Work Package",
-                "description": "The first phase of work for the example initiative.",
-                "owner": { "type": "sdm", "id": "sdm-example", "name": "Example SDM" },
-                "status": "Defined",
-                "deliveryPhases": [
-                    { "phaseName": "Requirements & Definition", "status": "Completed", "startDate": "2025-01-01", "endDate": "2025-01-31", "notes": "Initial spec complete." }
-                ],
-                "plannedDeliveryDate": "2025-12-31",
-                "actualDeliveryDate": null,
-                "impactedTeamAssignments": [{ "teamId": "team-example", "sdeDaysEstimate": 100 }],
-                "totalCapacitySDEdays": 100,
-                "impactedServiceIds": ["ExampleService"],
-                "dependencies": [],
-                "attributes": {}
-            }
-        ],
-        "calculatedCapacityMetrics": null,
-        "attributes": {}
-    };
+        plannedDeliveryDate: '2025-12-31',
+        actualDeliveryDate: null,
+        impactedTeamAssignments: [{ teamId: 'team-example', sdeDaysEstimate: 100 }],
+        totalCapacitySDEdays: 100,
+        impactedServiceIds: ['ExampleService'],
+        dependencies: [],
+        attributes: {},
+      },
+    ],
+    calculatedCapacityMetrics: null,
+    attributes: {},
+  };
 
-    const schemaExample = JSON.stringify(minimalSchemaExample, null, 2);
+  const schemaExample = JSON.stringify(minimalSchemaExample, null, 2);
 
-    const promptString = `
+  const promptString = `
 You are a seasoned VP of Engineering and strategic business partner, acting as a founding technology leader. Your purpose is to help a user create a tech business and organize their software development teams. You are an expert in software team topologies and organizational structure design, taking the best from industry players like Google, Microsoft, Apple, Netflix, Amazon, etc.
 
 Your sole task is to take a user's prompt (e.g., "An excel spreadsheet company," "A video streaming app") and generate a single, complete, valid JSON object representing the entire software system, organizational structure, and three-year roadmap. This JSON will be used in an educational tool for software managers.
@@ -1012,159 +1164,168 @@ ${schemaExample}
 
 Proceed to generate the new JSON object based on the user's prompt.
 `;
-    console.log(`[AI-DEBUG] _getSystemGenerationPrompt: Master prompt length: ${promptString.length} chars.`);
-    return promptString;
+  console.log(
+    `[AI-DEBUG] _getSystemGenerationPrompt: Master prompt length: ${promptString.length} chars.`
+  );
+  return promptString;
 }
 
 /**
  * Calls the Google Gemini API to generate a system.
  */
 async function _generateSystemWithGemini(systemPrompt, userPrompt, apiKey, spinnerP = null) {
-    console.log("[AI-DEBUG] _generateSystemWithGemini: Preparing to call Gemini for system generation...");
+  console.log(
+    '[AI-DEBUG] _generateSystemWithGemini: Preparing to call Gemini for system generation...'
+  );
 
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
-    const requestBody = {
-        "contents": [
-            {
-                "parts": [
-                    { "text": systemPrompt },
-                    { "text": "USER_PROMPT: " + userPrompt }
-                ]
-            }
-        ],
-        "generationConfig": {
-            "temperature": 0.5,
-            "topK": 1,
-            "topP": 1,
-            "maxOutputTokens": 65000
-        },
-    };
+  const requestBody = {
+    contents: [
+      {
+        parts: [{ text: systemPrompt }, { text: 'USER_PROMPT: ' + userPrompt }],
+      },
+    ],
+    generationConfig: {
+      temperature: 0.5,
+      topK: 1,
+      topP: 1,
+      maxOutputTokens: 65000,
+    },
+  };
 
-    const fetchOptions = {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody)
-    };
+  const fetchOptions = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(requestBody),
+  };
 
-    console.log(`[AI-DEBUG] _generateSystemWithGemini: Calling _fetchWithRetry for ${API_URL.split('?')[0]}`);
+  console.log(
+    `[AI-DEBUG] _generateSystemWithGemini: Calling _fetchWithRetry for ${API_URL.split('?')[0]}`
+  );
 
-    const response = await _fetchWithRetry(API_URL, fetchOptions, 5, 1000, spinnerP);
+  const response = await _fetchWithRetry(API_URL, fetchOptions, 5, 1000, spinnerP);
 
-    console.log("[AI-DEBUG] _generateSystemWithGemini: Fetch successful. Parsing response data...");
+  console.log('[AI-DEBUG] _generateSystemWithGemini: Fetch successful. Parsing response data...');
 
-    const responseData = await response.json();
+  const responseData = await response.json();
 
-    const usage = responseData.usageMetadata || {};
-    const stats = {
-        inputChars: systemPrompt.length + userPrompt.length,
-        outputChars: 0,
-        outputTokens: usage.candidatesTokenCount || 'N/A',
-        totalTokens: usage.totalTokenCount || 'N/A',
-        systemPromptSummary: systemPrompt.substring(0, 200) + "..."
-    };
+  const usage = responseData.usageMetadata || {};
+  const stats = {
+    inputChars: systemPrompt.length + userPrompt.length,
+    outputChars: 0,
+    outputTokens: usage.candidatesTokenCount || 'N/A',
+    totalTokens: usage.totalTokenCount || 'N/A',
+    systemPromptSummary: systemPrompt.substring(0, 200) + '...',
+  };
 
-    const candidateText = responseData?.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!candidateText) {
-        console.error("[AI-DEBUG] Invalid response structure from Gemini:", responseData);
-        const error = new Error("Received an invalid response from the AI.");
-        error.stats = stats;
-        throw error;
-    }
+  const candidateText = responseData?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!candidateText) {
+    console.error('[AI-DEBUG] Invalid response structure from Gemini:', responseData);
+    const error = new Error('Received an invalid response from the AI.');
+    error.stats = stats;
+    throw error;
+  }
 
-    const jsonString = candidateText;
-    console.log(`[AI-DEBUG] _generateSystemWithGemini: Received raw response string (${jsonString.length} chars).`);
+  const jsonString = candidateText;
+  console.log(
+    `[AI-DEBUG] _generateSystemWithGemini: Received raw response string (${jsonString.length} chars).`
+  );
 
-    const cleanedJsonString = jsonString.replace(/^```json\n/, '').replace(/\n```$/, '');
-    stats.outputChars = cleanedJsonString.length;
+  const cleanedJsonString = jsonString.replace(/^```json\n/, '').replace(/\n```$/, '');
+  stats.outputChars = cleanedJsonString.length;
 
-    try {
-        const parsedJson = JSON.parse(cleanedJsonString);
-        console.log("[AI-DEBUG] _generateSystemWithGemini: JSON parsed successfully.");
-        console.log("[AI-DEBUG] Collected generation stats:", stats);
+  try {
+    const parsedJson = JSON.parse(cleanedJsonString);
+    console.log('[AI-DEBUG] _generateSystemWithGemini: JSON parsed successfully.');
+    console.log('[AI-DEBUG] Collected generation stats:', stats);
 
-        return { data: parsedJson, stats: stats };
-
-    } catch (e) {
-        console.error("[AI-DEBUG] _generateSystemWithGemini: FAILED to parse JSON response.", e);
-        console.error("Raw AI response:", jsonString);
-        const error = new Error("The AI returned invalid JSON. Please try again.");
-        error.stats = stats;
-        throw error;
-    }
+    return { data: parsedJson, stats: stats };
+  } catch (e) {
+    console.error('[AI-DEBUG] _generateSystemWithGemini: FAILED to parse JSON response.', e);
+    console.error('Raw AI response:', jsonString);
+    const error = new Error('The AI returned invalid JSON. Please try again.');
+    error.stats = stats;
+    throw error;
+  }
 }
 
 async function _generateTextWithGemini(systemPrompt, userPrompt, apiKey) {
-    console.log("[AI-DEBUG] _generateTextWithGemini: Preparing text generation call...");
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-    const requestBody = {
-        "contents": [
-            {
-                "parts": [
-                    { "text": systemPrompt },
-                    { "text": "USER_PROMPT: " + userPrompt }
-                ]
-            }
-        ],
-        "generationConfig": {
-            "temperature": 0.3,
-            "topK": 1,
-            "topP": 1,
-            "maxOutputTokens": 4000
-        }
-    };
-    const fetchOptions = {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody)
-    };
-    console.log("[AI-DEBUG] _generateTextWithGemini: Calling _fetchWithRetry", { url: API_URL.split('?')[0] });
-    const response = await _fetchWithRetry(API_URL, fetchOptions);
-    const responseData = await response.json();
-    const text = responseData?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    console.log("[AI-DEBUG] _generateTextWithGemini: Received text length", text.length);
-    return text;
+  console.log('[AI-DEBUG] _generateTextWithGemini: Preparing text generation call...');
+  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+  const requestBody = {
+    contents: [
+      {
+        parts: [{ text: systemPrompt }, { text: 'USER_PROMPT: ' + userPrompt }],
+      },
+    ],
+    generationConfig: {
+      temperature: 0.3,
+      topK: 1,
+      topP: 1,
+      maxOutputTokens: 4000,
+    },
+  };
+  const fetchOptions = {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(requestBody),
+  };
+  console.log('[AI-DEBUG] _generateTextWithGemini: Calling _fetchWithRetry', {
+    url: API_URL.split('?')[0],
+  });
+  const response = await _fetchWithRetry(API_URL, fetchOptions);
+  const responseData = await response.json();
+  const text = responseData?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  console.log('[AI-DEBUG] _generateTextWithGemini: Received text length', text.length);
+  return text;
 }
 
 /**
  * Check ai/aiService.js for details on legacy image generation.
  */
 async function _getAnalysisWithGemini(chatHistory, apiKey) {
-    console.log("[AI-DEBUG] _getAnalysisWithGemini: Preparing to call Gemini with full chat history.");
+  console.log(
+    '[AI-DEBUG] _getAnalysisWithGemini: Preparing to call Gemini with full chat history.'
+  );
 
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
-    const requestBody = {
-        "contents": chatHistory
-    };
+  const requestBody = {
+    contents: chatHistory,
+  };
 
-    const fetchOptions = {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody)
-    };
+  const fetchOptions = {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(requestBody),
+  };
 
-    console.log(`[AI-DEBUG] _getAnalysisWithGemini: Calling _fetchWithRetry with ${chatHistory.length} history items.`);
+  console.log(
+    `[AI-DEBUG] _getAnalysisWithGemini: Calling _fetchWithRetry with ${chatHistory.length} history items.`
+  );
 
-    const response = await _fetchWithRetry(API_URL, fetchOptions);
-    const responseData = await response.json();
+  const response = await _fetchWithRetry(API_URL, fetchOptions);
+  const responseData = await response.json();
 
-    if (!responseData.candidates || !responseData.candidates[0].content.parts[0].text) {
-        console.error("[AI-DEBUG] Invalid response structure from Gemini:", responseData);
-        throw new Error("Received an invalid response from the AI.");
-    }
+  if (!responseData.candidates || !responseData.candidates[0].content.parts[0].text) {
+    console.error('[AI-DEBUG] Invalid response structure from Gemini:', responseData);
+    throw new Error('Received an invalid response from the AI.');
+  }
 
-    const textResponse = responseData.candidates[0].content.parts[0].text;
-    const usage = responseData.usageMetadata || { totalTokenCount: 0 };
+  const textResponse = responseData.candidates[0].content.parts[0].text;
+  const usage = responseData.usageMetadata || { totalTokenCount: 0 };
 
-    console.log(`[AI-DEBUG] _getAnalysisWithGemini: Received analysis text. Tokens: ${usage.totalTokenCount}`);
+  console.log(
+    `[AI-DEBUG] _getAnalysisWithGemini: Received analysis text. Tokens: ${usage.totalTokenCount}`
+  );
 
-    return { textResponse, usage };
+  return { textResponse, usage };
 }
 
 // Export for ES modules
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = AIService;
+  module.exports = AIService;
 }

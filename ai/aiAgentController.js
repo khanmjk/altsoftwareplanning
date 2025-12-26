@@ -1,196 +1,197 @@
 const aiAgentController = (() => {
-    let chatSessionHistory = [];
-    let sessionTotalTokens = 0;
-    let currentViewId = null; // [NEW] Internal state for view context
-    const CONVERSATION_HISTORY_LENGTH = 30;
-    const USE_FULL_SYSTEM_CONTEXT_TOGGLE = true;
-    const md = window.markdownit();
+  let chatSessionHistory = [];
+  let sessionTotalTokens = 0;
+  let currentViewId = null; // [NEW] Internal state for view context
+  const CONVERSATION_HISTORY_LENGTH = 30;
+  const USE_FULL_SYSTEM_CONTEXT_TOGGLE = true;
+  const md = window.markdownit();
 
-    function buildGreetingMessage(systemName) {
-        const message = document.createElement('div');
-        message.className = 'chat-message ai-message';
-        message.append('Hello! I have loaded the full context for ');
-        const strong = document.createElement('strong');
-        strong.textContent = systemName || 'the system';
-        message.appendChild(strong);
-        message.append('. How can I help you analyze it?');
-        message.append(document.createElement('br'), document.createElement('br'));
-        message.append('You can now ask me to perform actions (including bulk actions!) using simple English OR Type ');
-        const bold = document.createElement('b');
-        bold.textContent = '/';
-        message.appendChild(bold);
-        message.append(' to see a list of available commands.');
-        return message;
+  function buildGreetingMessage(systemName) {
+    const message = document.createElement('div');
+    message.className = 'chat-message ai-message';
+    message.append('Hello! I have loaded the full context for ');
+    const strong = document.createElement('strong');
+    strong.textContent = systemName || 'the system';
+    message.appendChild(strong);
+    message.append('. How can I help you analyze it?');
+    message.append(document.createElement('br'), document.createElement('br'));
+    message.append(
+      'You can now ask me to perform actions (including bulk actions!) using simple English OR Type '
+    );
+    const bold = document.createElement('b');
+    bold.textContent = '/';
+    message.appendChild(bold);
+    message.append(' to see a list of available commands.');
+    return message;
+  }
+
+  function buildInlineStrongMessage(prefix, strongText, suffix = '') {
+    const span = document.createElement('span');
+    if (prefix) span.appendChild(document.createTextNode(prefix));
+    const strong = document.createElement('strong');
+    strong.textContent = strongText;
+    span.appendChild(strong);
+    if (suffix) span.appendChild(document.createTextNode(suffix));
+    return span;
+  }
+
+  function buildParagraphMessage(text) {
+    const p = document.createElement('p');
+    p.textContent = text;
+    return p;
+  }
+
+  function buildDiagramImageMessage(response) {
+    const wrapper = document.createElement('div');
+    const intro = document.createElement('p');
+    intro.textContent = 'Here is the generated diagram:';
+    wrapper.appendChild(intro);
+
+    const image = document.createElement('img');
+    image.src = response.imageUrl;
+    image.alt = response.altText || 'Generated diagram';
+    image.className = 'chat-generated-image';
+    image.title = 'Right-click to copy or save this image';
+    wrapper.appendChild(image);
+    return wrapper;
+  }
+
+  function buildAgentStepMessage(stepIndex, command) {
+    return buildInlineStrongMessage(`Step ${stepIndex}: Executing `, command, '...');
+  }
+
+  function buildAgentSummaryMessage(stepSummaries) {
+    const wrapper = document.createElement('div');
+    const heading = document.createElement('p');
+    const strong = document.createElement('strong');
+    strong.textContent = 'Agent plan finished.';
+    heading.appendChild(strong);
+    heading.appendChild(document.createTextNode(' UI has been refreshed.'));
+    wrapper.appendChild(heading);
+
+    if (stepSummaries.length > 0) {
+      const label = document.createElement('p');
+      const labelStrong = document.createElement('strong');
+      labelStrong.textContent = 'Actions performed:';
+      label.appendChild(labelStrong);
+      wrapper.appendChild(label);
+
+      const list = document.createElement('ul');
+      stepSummaries.forEach((summary) => {
+        const item = document.createElement('li');
+        item.textContent = summary;
+        list.appendChild(item);
+      });
+      wrapper.appendChild(list);
     }
 
-    function buildInlineStrongMessage(prefix, strongText, suffix = '') {
-        const span = document.createElement('span');
-        if (prefix) span.appendChild(document.createTextNode(prefix));
-        const strong = document.createElement('strong');
-        strong.textContent = strongText;
-        span.appendChild(strong);
-        if (suffix) span.appendChild(document.createTextNode(suffix));
-        return span;
-    }
+    return wrapper;
+  }
 
-    function buildParagraphMessage(text) {
-        const p = document.createElement('p');
-        p.textContent = text;
-        return p;
-    }
+  const SUGGESTED_QUESTIONS = {
+    planningView: [
+      { text: 'Which teams are overloaded in this plan?' },
+      { text: 'How can I optimize this plan to fit more initiatives?', isImageRequest: false },
+      { text: "Generate a flowchart for the top 'Committed' initiative.", isImageRequest: true },
+      { text: 'Suggest SDE-Year reductions for 2-3 BTL initiatives.', isImageRequest: false },
+      { text: 'Analyze the risks in this plan.' },
+    ],
+    ganttPlanningView: [
+      { text: 'Generate a Gantt chart for all the initiatives planned.', isImageRequest: true },
+      { text: 'Which work packages have missing dependencies?' },
+      { text: 'Identify critical path risks in the current schedule.' },
+    ],
+    roadmapView: [
+      { text: "Summarize all initiatives currently in 'Backlog' status." },
+      { text: "Which 'Defined' initiatives have the highest SDE-Year estimates?" },
+      { text: "Show me all initiatives related to the 'Revenue Growth' theme." },
+      { text: "Are there any 'Backlog' items with no teams assigned yet?" },
+    ],
+    organogramView: [
+      { text: 'Rate my overall team composition and find risks.' },
+      { text: 'Generate a stylized org chart of the managers.', isImageRequest: true },
+      { text: 'Who are all the AI Software Engineers?', isImageRequest: false },
+      { text: 'Find potential skill gaps in the engineer roster.' },
+      { text: 'Which teams have the highest number of junior engineers?' },
+    ],
+    visualizationCarousel: [
+      { text: 'Generate a block diagram of this architecture.', isImageRequest: true },
+      { text: 'Rate the architectural design. Are there bottlenecks?', isImageRequest: false },
+      { text: 'Show a table of all services and their owning teams.' },
+    ],
+    dashboardView: [
+      { text: "Summarize the key takeaways from the 'Strategic Goals' widget." },
+      { text: "Generate a mind map of our 'Strategic Goals'.", isImageRequest: true },
+      { text: "What risks do you see in the 'Team Demand' widget data?" },
+      { text: "Analyze the 'Investment Distribution' for this year." },
+      { text: "What's the biggest accomplishment shown?" },
+    ],
+    capacityConfigView: [
+      { text: 'Find anomalies in my capacity configuration.' },
+      { text: "Which team has the highest 'avgOverheadHoursPerWeekPerSDE'?" },
+      { text: "What is the total 'AI Productivity Gain' across the org?" },
+      { text: "Compare the 'Standard Leave' days for all teams." },
+    ],
+    systemEditForm: [
+      { text: 'How do I add a new Team?' },
+      { text: "What's the difference between 'Engineers' and 'Away-Team Members'?" },
+      { text: "Find any services that don't have an owning team." },
+      { text: 'Find any engineers in the roster who are not assigned to a team.' },
+      { text: "Explain the 'Platform Dependencies' field for a service." },
+    ],
+    sdmForecastingView: [
+      { text: "Explain the 'Effective Engineers' calculation." },
+      { text: "How does 'Annual Attrition Rate' affect this forecast?" },
+      { text: "What's the difference between 'Total Ramped Up Engineers' and 'Total Headcount'?" },
+      { text: 'Analyze the hiring rate needed to close the gap by the target week.' },
+      { text: "How do the 'Capacity Constraints' (like overhead) affect this forecast?" },
+    ],
+    welcomeView: [
+      { text: 'What can I do in this platform?' },
+      { text: 'How do I create a new system?' },
+      { text: "Explain the difference between 'System' and 'Org' views." },
+      { text: "What is the 'Create with AI' feature?" },
+    ],
+    helpView: [
+      { text: 'How do I add a new team to the organization?' },
+      { text: "Explain the 'Capacity Tuning' configuration." },
+      { text: "What are the best practices for defining 'Initiatives'?" },
+      { text: "How does the 'SDM Forecasting' model work?" },
+    ],
+    managementView: [
+      { text: 'Suggest 3 new themes based on our current initiatives.' },
+      { text: 'Analyze the distribution of initiatives across our themes.' },
+      { text: "Draft a description for the 'Operational Excellence' theme." },
+      { text: 'Which themes have no initiatives assigned?' },
+    ],
+    settingsView: [
+      { text: 'How do I change the AI provider?' },
+      { text: 'Is my API key stored securely?' },
+      { text: 'What happens if I reset to defaults?' },
+      { text: 'Explain the difference between Gemini and GPT-4o.' },
+    ],
+    aboutView: [
+      { text: 'Who developed this platform?' },
+      { text: 'What topics does the author write about?' },
+      { text: 'Summarize the latest blog post.' },
+      { text: 'Show me the most recent YouTube video.' },
+    ],
+    default: [
+      { text: 'What is this system about?' },
+      { text: 'How many teams are there?' },
+      { text: 'Summarize the main strategic goals.' },
+      { text: 'List all services in the system.' },
+    ],
+  };
 
-    function buildDiagramImageMessage(response) {
-        const wrapper = document.createElement('div');
-        const intro = document.createElement('p');
-        intro.textContent = 'Here is the generated diagram:';
-        wrapper.appendChild(intro);
+  let isAgentThinking = false;
 
-        const image = document.createElement('img');
-        image.src = response.imageUrl;
-        image.alt = response.altText || 'Generated diagram';
-        image.className = 'chat-generated-image';
-        image.title = 'Right-click to copy or save this image';
-        wrapper.appendChild(image);
-        return wrapper;
-    }
+  function _getAiPrimingPrompt() {
+    const toolsetDescription = aiAgentToolset
+      ? aiAgentToolset.getAgentToolsetDescription()
+      : 'Toolset description is unavailable. You may still answer questions but cannot execute actions.';
 
-    function buildAgentStepMessage(stepIndex, command) {
-        return buildInlineStrongMessage(`Step ${stepIndex}: Executing `, command, '...');
-    }
-
-    function buildAgentSummaryMessage(stepSummaries) {
-        const wrapper = document.createElement('div');
-        const heading = document.createElement('p');
-        const strong = document.createElement('strong');
-        strong.textContent = 'Agent plan finished.';
-        heading.appendChild(strong);
-        heading.appendChild(document.createTextNode(' UI has been refreshed.'));
-        wrapper.appendChild(heading);
-
-        if (stepSummaries.length > 0) {
-            const label = document.createElement('p');
-            const labelStrong = document.createElement('strong');
-            labelStrong.textContent = 'Actions performed:';
-            label.appendChild(labelStrong);
-            wrapper.appendChild(label);
-
-            const list = document.createElement('ul');
-            stepSummaries.forEach((summary) => {
-                const item = document.createElement('li');
-                item.textContent = summary;
-                list.appendChild(item);
-            });
-            wrapper.appendChild(list);
-        }
-
-        return wrapper;
-    }
-
-    const SUGGESTED_QUESTIONS = {
-        planningView: [
-            { text: "Which teams are overloaded in this plan?" },
-            { text: "How can I optimize this plan to fit more initiatives?", isImageRequest: false },
-            { text: "Generate a flowchart for the top 'Committed' initiative.", isImageRequest: true },
-            { text: "Suggest SDE-Year reductions for 2-3 BTL initiatives.", isImageRequest: false },
-            { text: "Analyze the risks in this plan." }
-        ],
-        ganttPlanningView: [
-            { text: "Generate a Gantt chart for all the initiatives planned.", isImageRequest: true },
-            { text: "Which work packages have missing dependencies?" },
-            { text: "Identify critical path risks in the current schedule." }
-        ],
-        roadmapView: [
-            { text: "Summarize all initiatives currently in 'Backlog' status." },
-            { text: "Which 'Defined' initiatives have the highest SDE-Year estimates?" },
-            { text: "Show me all initiatives related to the 'Revenue Growth' theme." },
-            { text: "Are there any 'Backlog' items with no teams assigned yet?" }
-        ],
-        organogramView: [
-            { text: "Rate my overall team composition and find risks." },
-            { text: "Generate a stylized org chart of the managers.", isImageRequest: true },
-            { text: "Who are all the AI Software Engineers?", isImageRequest: false },
-            { text: "Find potential skill gaps in the engineer roster." },
-            { text: "Which teams have the highest number of junior engineers?" }
-        ],
-        visualizationCarousel: [
-            { text: "Generate a block diagram of this architecture.", isImageRequest: true },
-            { text: "Rate the architectural design. Are there bottlenecks?", isImageRequest: false },
-            { text: "Show a table of all services and their owning teams." }
-        ],
-        dashboardView: [
-            { text: "Summarize the key takeaways from the 'Strategic Goals' widget." },
-            { text: "Generate a mind map of our 'Strategic Goals'.", isImageRequest: true },
-            { text: "What risks do you see in the 'Team Demand' widget data?" },
-            { text: "Analyze the 'Investment Distribution' for this year." },
-            { text: "What's the biggest accomplishment shown?" }
-        ],
-        capacityConfigView: [
-            { text: "Find anomalies in my capacity configuration." },
-            { text: "Which team has the highest 'avgOverheadHoursPerWeekPerSDE'?" },
-            { text: "What is the total 'AI Productivity Gain' across the org?" },
-            { text: "Compare the 'Standard Leave' days for all teams." }
-        ],
-        systemEditForm: [
-            { text: "How do I add a new Team?" },
-            { text: "What's the difference between 'Engineers' and 'Away-Team Members'?" },
-            { text: "Find any services that don't have an owning team." },
-            { text: "Find any engineers in the roster who are not assigned to a team." },
-            { text: "Explain the 'Platform Dependencies' field for a service." }
-        ],
-        sdmForecastingView: [
-            { text: "Explain the 'Effective Engineers' calculation." },
-            { text: "How does 'Annual Attrition Rate' affect this forecast?" },
-            { text: "What's the difference between 'Total Ramped Up Engineers' and 'Total Headcount'?" },
-            { text: "Analyze the hiring rate needed to close the gap by the target week." },
-            { text: "How do the 'Capacity Constraints' (like overhead) affect this forecast?" }
-        ],
-        welcomeView: [
-            { text: "What can I do in this platform?" },
-            { text: "How do I create a new system?" },
-            { text: "Explain the difference between 'System' and 'Org' views." },
-            { text: "What is the 'Create with AI' feature?" }
-        ],
-        helpView: [
-            { text: "How do I add a new team to the organization?" },
-            { text: "Explain the 'Capacity Tuning' configuration." },
-            { text: "What are the best practices for defining 'Initiatives'?" },
-            { text: "How does the 'SDM Forecasting' model work?" }
-        ],
-        managementView: [
-            { text: "Suggest 3 new themes based on our current initiatives." },
-            { text: "Analyze the distribution of initiatives across our themes." },
-            { text: "Draft a description for the 'Operational Excellence' theme." },
-            { text: "Which themes have no initiatives assigned?" }
-        ],
-        settingsView: [
-            { text: "How do I change the AI provider?" },
-            { text: "Is my API key stored securely?" },
-            { text: "What happens if I reset to defaults?" },
-            { text: "Explain the difference between Gemini and GPT-4o." }
-        ],
-        aboutView: [
-            { text: "Who developed this platform?" },
-            { text: "What topics does the author write about?" },
-            { text: "Summarize the latest blog post." },
-            { text: "Show me the most recent YouTube video." }
-        ],
-        default: [
-            { text: "What is this system about?" },
-            { text: "How many teams are there?" },
-            { text: "Summarize the main strategic goals." },
-            { text: "List all services in the system." }
-        ]
-    };
-
-    let isAgentThinking = false;
-    let cachedImageGenerationFn = null;
-
-    function _getAiPrimingPrompt() {
-        const toolsetDescription = (aiAgentToolset)
-            ? aiAgentToolset.getAgentToolsetDescription()
-            : 'Toolset description is unavailable. You may still answer questions but cannot execute actions.';
-
-        return `You are an expert Software Engineering Planning & Management Partner. Your goals are to:
+    return `You are an expert Software Engineering Planning & Management Partner. Your goals are to:
     1.  **Prioritize the CONTEXT DATA:** Base all your answers about the user's system (initiatives, teams, engineers, services) exclusively on the JSON data provided in the "CONTEXT DATA" section.
     2.  **Use General Knowledge as a Fallback:** If the user asks a general knowledge question (e.g., "What is AWS?", "Define 'SDE-Year'"), and the answer is *not* in the CONTEXT DATA, you may use your own knowledge to provide a brief, helpful definition.
     3.  **Be Clear:** When using your own knowledge, state it (e.g., "AWS CloudFront is a content delivery network..."). When using the context, be specific (e.g., "Based on the data, the 'Avengers' team...").
@@ -214,594 +215,641 @@ ACTION AGENT RULES:
 
 AVAILABLE COMMANDS:
 ${toolsetDescription}`;
+  }
+
+  function startSession() {
+    console.log('[AI CHAT] Starting agent session. Clearing history and UI.');
+    const chatLog = document.getElementById('aiChatLog');
+    if (chatLog) {
+      while (chatLog.firstChild) {
+        chatLog.removeChild(chatLog.firstChild);
+      }
+      const systemName = SystemService.getCurrentSystem()?.systemName || 'the system';
+      chatLog.appendChild(buildGreetingMessage(systemName));
+    }
+    aiChatAssistant.setTokenCount(0);
+    aiChatAssistant.clearChatInput();
+
+    chatSessionHistory = [];
+    sessionTotalTokens = 0;
+    isAgentThinking = false;
+
+    if (!SystemService.getCurrentSystem()) {
+      console.warn('[AI CHAT] No system data loaded. AI assistant will have no context.');
+      return;
     }
 
-    function startSession() {
-        console.log("[AI CHAT] Starting agent session. Clearing history and UI.");
-        const chatLog = document.getElementById('aiChatLog');
-        if (chatLog) {
-            while (chatLog.firstChild) {
-                chatLog.removeChild(chatLog.firstChild);
-            }
-            const systemName = SystemService.getCurrentSystem()?.systemName || 'the system';
-            chatLog.appendChild(buildGreetingMessage(systemName));
-        }
-        aiChatAssistant.setTokenCount(0);
-        aiChatAssistant.clearChatInput();
-
-        chatSessionHistory = [];
-        sessionTotalTokens = 0;
-        isAgentThinking = false;
-
-        if (!SystemService.getCurrentSystem()) {
-            console.warn("[AI CHAT] No system data loaded. AI assistant will have no context.");
-            return;
-        }
-
-        let primingPrompt = _getAiPrimingPrompt();
-        if (USE_FULL_SYSTEM_CONTEXT_TOGGLE) {
-            const fullContextJson = JSON.stringify(SystemService.getCurrentSystem(), null, 2);
-            primingPrompt += `\n\nHERE IS THE FULL SYSTEM DATA ("CONTEXT DATA"):\n${fullContextJson}\n\nConfirm you have received these instructions and the full system data, and are ready to answer questions.`;
-        } else {
-            primingPrompt += `\n\nYou will be given the CONTEXT DATA with each user question. Confirm you have received these instructions.`;
-        }
-
-        chatSessionHistory.push({ role: 'user', parts: [{ text: primingPrompt }] });
-        chatSessionHistory.push({ role: 'model', parts: [{ text: `Understood. I have loaded the context for ${SystemService.getCurrentSystem().systemName}. I am ready to analyze.` }] });
-
-        renderSuggestionsForCurrentView();
+    let primingPrompt = _getAiPrimingPrompt();
+    if (USE_FULL_SYSTEM_CONTEXT_TOGGLE) {
+      const fullContextJson = JSON.stringify(SystemService.getCurrentSystem(), null, 2);
+      primingPrompt += `\n\nHERE IS THE FULL SYSTEM DATA ("CONTEXT DATA"):\n${fullContextJson}\n\nConfirm you have received these instructions and the full system data, and are ready to answer questions.`;
+    } else {
+      primingPrompt += `\n\nYou will be given the CONTEXT DATA with each user question. Confirm you have received these instructions.`;
     }
 
-    function renderSuggestionsForCurrentView() {
-        // Use internal state (currentViewId is module-scoped)
-        const effectiveViewId = currentViewId || 'default';
+    chatSessionHistory.push({ role: 'user', parts: [{ text: primingPrompt }] });
+    chatSessionHistory.push({
+      role: 'model',
+      parts: [
+        {
+          text: `Understood. I have loaded the context for ${SystemService.getCurrentSystem().systemName}. I am ready to analyze.`,
+        },
+      ],
+    });
 
-        const suggestions = SUGGESTED_QUESTIONS[effectiveViewId] || SUGGESTED_QUESTIONS.default;
-        console.log(`[AI CHAT] sample questions for this screen:`, suggestions.map(s => s.text));
+    renderSuggestionsForCurrentView();
+  }
 
-        aiChatAssistant.setSuggestionPills(suggestions);
+  function renderSuggestionsForCurrentView() {
+    // Use internal state (currentViewId is module-scoped)
+    const effectiveViewId = currentViewId || 'default';
+
+    const suggestions = SUGGESTED_QUESTIONS[effectiveViewId] || SUGGESTED_QUESTIONS.default;
+    console.log(
+      `[AI CHAT] sample questions for this screen:`,
+      suggestions.map((s) => s.text)
+    );
+
+    aiChatAssistant.setSuggestionPills(suggestions);
+  }
+
+  async function handleUserChatSubmit() {
+    if (isAgentThinking) return;
+    const view = aiChatAssistant;
+    if (!view) return;
+
+    const userQuestion = view.getChatInputValue();
+    if (!userQuestion) return;
+    console.debug('[AI CHAT] User input:', userQuestion);
+
+    isAgentThinking = true;
+    view.toggleChatInput(true);
+    const isImageRequest = view.isImageRequestPending ? view.isImageRequestPending() : false;
+    view.postUserMessageToView(userQuestion);
+    view.clearChatInput();
+
+    if (isImageRequest) {
+      await _handleImageRequest(userQuestion);
+      return;
     }
 
-    async function handleUserChatSubmit() {
-        if (isAgentThinking) return;
-        const view = aiChatAssistant;
-        if (!view) return;
+    await _executeChatTurn(userQuestion);
+  }
 
-        const userQuestion = view.getChatInputValue();
-        if (!userQuestion) return;
-        console.debug('[AI CHAT] User input:', userQuestion);
+  function getAvailableTools() {
+    return aiAgentToolset ? aiAgentToolset.getToolsSummaryList() : [];
+  }
 
-        isAgentThinking = true;
-        view.toggleChatInput(true);
-        const isImageRequest = view.isImageRequestPending ? view.isImageRequestPending() : false;
-        view.postUserMessageToView(userQuestion);
-        view.clearChatInput();
+  async function _executeChatTurn(userQuestion) {
+    const view = aiChatAssistant;
+    const loadingMessageEl = view ? view.showAgentLoadingIndicator() : null;
 
-        if (isImageRequest) {
-            await _handleImageRequest(userQuestion);
-            return;
-        }
-
-        await _executeChatTurn(userQuestion);
-    }
-
-    function getAvailableTools() {
-        return aiAgentToolset ? aiAgentToolset.getToolsSummaryList() : [];
-    }
-
-    async function _executeChatTurn(userQuestion) {
-        const view = aiChatAssistant;
-        const loadingMessageEl = view ? view.showAgentLoadingIndicator() : null;
-
-        const contextJson = scrapeCurrentViewContext();
-        console.log(`[AI CHAT] Scraping DYNAMIC context (${contextJson.length} chars) from view: ${currentViewId}`);
-        const userTurnContent = `
+    const contextJson = scrapeCurrentViewContext();
+    console.log(
+      `[AI CHAT] Scraping DYNAMIC context (${contextJson.length} chars) from view: ${currentViewId}`
+    );
+    const userTurnContent = `
 USER QUESTION: "${userQuestion}"
 
 CONTEXT DATA (for this question only, from your current UI view): ${contextJson} `;
 
-        chatSessionHistory.push({ role: 'user', parts: [{ text: userTurnContent }] });
+    chatSessionHistory.push({ role: 'user', parts: [{ text: userTurnContent }] });
 
-        let historyToSend = [];
-        if (chatSessionHistory.length <= CONVERSATION_HISTORY_LENGTH) {
-            historyToSend = chatSessionHistory;
-        } else {
-            historyToSend = [
-                chatSessionHistory[0],
-                chatSessionHistory[1],
-                ...chatSessionHistory.slice(-CONVERSATION_HISTORY_LENGTH)
-            ];
-            console.log(`[AI CHAT] History is long (${chatSessionHistory.length} turns). Sending Pinned + Last ${CONVERSATION_HISTORY_LENGTH} turns.`);
-        }
-
-        try {
-            const analysisFn = await _waitForAnalysisFunction();
-            if (!analysisFn) throw new Error('AI analysis service is unavailable.');
-
-            const aiResponse = await analysisFn(
-                historyToSend,
-                SettingsService.get().ai.apiKey,
-                SettingsService.get().ai.provider
-            );
-
-            if (!aiResponse || typeof aiResponse.textResponse !== 'string') {
-                throw new Error('Received an invalid response from the AI.');
-            }
-
-            chatSessionHistory.push({ role: 'model', parts: [{ text: aiResponse.textResponse }] });
-
-            if (aiResponse.usage && aiResponse.usage.totalTokenCount) {
-                sessionTotalTokens += aiResponse.usage.totalTokenCount;
-                if (view) {
-                    view.setTokenCount(sessionTotalTokens);
-                }
-            }
-
-            const planMatch = aiResponse.textResponse.match(/<execute_plan>([\s\S]*?)<\/execute_plan>/i);
-            if (!planMatch) {
-                const rendered = md.render(aiResponse.textResponse);
-                if (view) {
-                    view.hideAgentLoadingIndicator(loadingMessageEl, rendered);
-                }
-                return;
-            }
-
-            let plan;
-            try {
-                plan = JSON.parse(planMatch[1]);
-            } catch (error) {
-                console.warn('[AI Agent Controller] Failed to parse agent plan; rendering as text instead.', error);
-                const rendered = md.render(aiResponse.textResponse);
-                if (view) {
-                    view.hideAgentLoadingIndicator(loadingMessageEl, rendered);
-                }
-                return;
-            }
-
-            const steps = Array.isArray(plan.steps) ? plan.steps : [];
-            console.debug('[AI Agent Controller] Parsed agent plan from chat:', steps);
-            await _executeAgentPlan(steps, loadingMessageEl);
-        } catch (error) {
-            console.error("Error during AI chat submit:", error);
-            if (loadingMessageEl && loadingMessageEl.remove) {
-                loadingMessageEl.remove();
-            }
-            if (view) {
-                view.postAgentMessageToView(`Error: ${error.message}`, true);
-            }
-        } finally {
-            isAgentThinking = false;
-            if (view) {
-                view.toggleChatInput(false);
-            }
-            renderSuggestionsForCurrentView();
-        }
+    let historyToSend = [];
+    if (chatSessionHistory.length <= CONVERSATION_HISTORY_LENGTH) {
+      historyToSend = chatSessionHistory;
+    } else {
+      historyToSend = [
+        chatSessionHistory[0],
+        chatSessionHistory[1],
+        ...chatSessionHistory.slice(-CONVERSATION_HISTORY_LENGTH),
+      ];
+      console.log(
+        `[AI CHAT] History is long (${chatSessionHistory.length} turns). Sending Pinned + Last ${CONVERSATION_HISTORY_LENGTH} turns.`
+      );
     }
 
-    async function _handleImageRequest(userQuestion) {
-        const view = aiChatAssistant;
-        const loadingMessageEl = view ? view.showAgentLoadingIndicator() : null;
-        try {
+    try {
+      const analysisFn = await _waitForAnalysisFunction();
+      if (!analysisFn) throw new Error('AI analysis service is unavailable.');
+
+      const aiResponse = await analysisFn(
+        historyToSend,
+        SettingsService.get().ai.apiKey,
+        SettingsService.get().ai.provider
+      );
+
+      if (!aiResponse || typeof aiResponse.textResponse !== 'string') {
+        throw new Error('Received an invalid response from the AI.');
+      }
+
+      chatSessionHistory.push({ role: 'model', parts: [{ text: aiResponse.textResponse }] });
+
+      if (aiResponse.usage && aiResponse.usage.totalTokenCount) {
+        sessionTotalTokens += aiResponse.usage.totalTokenCount;
+        if (view) {
+          view.setTokenCount(sessionTotalTokens);
+        }
+      }
+
+      const planMatch = aiResponse.textResponse.match(/<execute_plan>([\s\S]*?)<\/execute_plan>/i);
+      if (!planMatch) {
+        const rendered = md.render(aiResponse.textResponse);
+        if (view) {
+          view.hideAgentLoadingIndicator(loadingMessageEl, rendered);
+        }
+        return;
+      }
+
+      let plan;
+      try {
+        plan = JSON.parse(planMatch[1]);
+      } catch (error) {
+        console.warn(
+          '[AI Agent Controller] Failed to parse agent plan; rendering as text instead.',
+          error
+        );
+        const rendered = md.render(aiResponse.textResponse);
+        if (view) {
+          view.hideAgentLoadingIndicator(loadingMessageEl, rendered);
+        }
+        return;
+      }
+
+      const steps = Array.isArray(plan.steps) ? plan.steps : [];
+      console.debug('[AI Agent Controller] Parsed agent plan from chat:', steps);
+      await _executeAgentPlan(steps, loadingMessageEl);
+    } catch (error) {
+      console.error('Error during AI chat submit:', error);
+      if (loadingMessageEl && loadingMessageEl.remove) {
+        loadingMessageEl.remove();
+      }
+      if (view) {
+        view.postAgentMessageToView(`Error: ${error.message}`, true);
+      }
+    } finally {
+      isAgentThinking = false;
+      if (view) {
+        view.toggleChatInput(false);
+      }
+      renderSuggestionsForCurrentView();
+    }
+  }
+
+  async function _handleImageRequest(userQuestion) {
+    const view = aiChatAssistant;
+    const loadingMessageEl = view ? view.showAgentLoadingIndicator() : null;
+    try {
+      const contextJson = scrapeCurrentViewContext();
+      const imageFn = _resolveImageGenerationFunction();
+      if (!imageFn) {
+        throw new Error(
+          'AI image generation service is unavailable. Please ensure AI is enabled and an API key is saved.'
+        );
+      }
+      const response = await imageFn(
+        userQuestion,
+        contextJson,
+        SettingsService.get().ai.apiKey,
+        SettingsService.get().ai.provider
+      );
+
+      if (response && response.isImage && response.imageUrl) {
+        if (view) {
+          view.hideAgentLoadingIndicator(loadingMessageEl, buildDiagramImageMessage(response));
+        }
+      } else if (response && response.code) {
+        if (view) {
+          view.hideAgentLoadingIndicator(
+            loadingMessageEl,
+            buildParagraphMessage('Diagram generated. Click "View Diagram" to open.')
+          );
+        }
+        if (view) {
+          view.postDiagramWidget(response.title, response.code);
+        }
+      } else {
+        throw new Error('Diagram generation response was invalid.');
+      }
+    } catch (error) {
+      console.error('Error during AI image submit:', error);
+      if (view) {
+        view.hideAgentLoadingIndicator(
+          loadingMessageEl,
+          buildParagraphMessage(`Error: ${error.message}`),
+          { isError: true }
+        );
+      }
+    } finally {
+      isAgentThinking = false;
+      if (view) {
+        view.toggleChatInput(false);
+      }
+      renderSuggestionsForCurrentView();
+    }
+  }
+
+  async function _executeAgentPlan(steps, loadingMessageEl) {
+    const view = aiChatAssistant;
+    if (!Array.isArray(steps) || steps.length === 0) {
+      if (view) {
+        view.hideAgentLoadingIndicator(
+          loadingMessageEl,
+          md.render('No executable steps were provided.')
+        );
+      }
+      return;
+    }
+
+    if (view) {
+      view.hideAgentLoadingIndicator(
+        loadingMessageEl,
+        buildParagraphMessage('Starting agent plan...')
+      );
+    }
+
+    console.debug('[AI Agent Controller] Executing agent plan with steps:', steps);
+
+    const stepResults = [];
+    const stepSummaries = [];
+    for (let i = 0; i < steps.length; i++) {
+      const step = steps[i];
+      try {
+        const resolvedPayload = _resolvePayloadPlaceholders(step.payload || {}, stepResults);
+        if (view) {
+          view.postAgentMessageToView(buildAgentStepMessage(i + 1, step.command));
+        }
+        if (step.command === 'generateDiagram') {
+          if (view) {
+            view.postAgentMessageToView(
+              buildParagraphMessage(`Generating diagram: "${resolvedPayload.description || ''}"...`)
+            );
+          }
+          const contextJson = scrapeCurrentViewContext();
+          console.debug('[AI-DIAGRAM] Context JSON length:', (contextJson || '').length);
+          try {
+            const result = await AIService.generateDiagramFromPrompt(
+              resolvedPayload.description || '',
+              contextJson,
+              SettingsService.get().ai.apiKey,
+              SettingsService.get().ai.provider
+            );
+            console.debug('[AI-DIAGRAM] Diagram generation result:', result);
+            if (view) {
+              view.postDiagramWidget(result.title, result.code);
+            }
+            stepResults[i] = result;
+            stepSummaries.push(`Generated diagram: ${resolvedPayload.description || ''}`);
+            if (view) {
+              view.postAgentMessageToView(`Step ${i + 1} complete.`);
+            }
+          } catch (err) {
+            console.error('[AI-DIAGRAM] Error during diagram generation:', err);
+            throw err;
+          }
+          continue;
+        }
+        const result = await aiAgentToolset.executeTool(step.command, resolvedPayload);
+        stepResults[i] = result;
+        console.debug('[AI Agent Controller] Step completed:', {
+          step: step.command,
+          payload: resolvedPayload,
+          result,
+        });
+        stepSummaries.push(_describeAgentStep(step.command, resolvedPayload, result, i));
+        if (view) {
+          view.postAgentMessageToView(`Step ${i + 1} complete.`);
+        }
+      } catch (error) {
+        if (view) {
+          view.postAgentMessageToView(
+            `Error on step ${i + 1} (${step.command}): ${error.message}`,
+            true
+          );
+        }
+        break;
+      }
+    }
+
+    // Save changes via SystemService
+    try {
+      SystemService.save();
+    } catch (error) {
+      console.error('SystemService.save failed:', error);
+    }
+
+    // Fix: Refresh the UI to show changes
+    console.log('[AI Agent Controller] Refreshing UI after tool execution.');
+    navigationManager.refresh();
+
+    if (view) {
+      view.postAgentMessageToView(buildAgentSummaryMessage(stepSummaries));
+    }
+  }
+
+  function _resolvePayloadPlaceholders(payload, stepResults) {
+    if (Array.isArray(payload)) {
+      return payload.map((value) => _resolvePayloadPlaceholders(value, stepResults));
+    }
+    if (payload && typeof payload === 'object') {
+      const resolved = {};
+      Object.keys(payload).forEach((key) => {
+        resolved[key] = _resolvePayloadPlaceholders(payload[key], stepResults);
+      });
+      return resolved;
+    }
+    if (typeof payload === 'string') {
+      const exactMatch = payload.match(/^{{step_(\d+)_result(?:\.([^}]+))?}}$/);
+      if (exactMatch) {
+        return _getStepResultValue(stepResults, exactMatch[1], exactMatch[2]);
+      }
+      return payload.replace(/{{step_(\d+)_result(?:\.([^}]+))?}}/g, (match, indexStr, path) => {
+        const value = _getStepResultValue(stepResults, indexStr, path);
+        if (value === undefined || value === null) return '';
+        if (typeof value === 'object') return JSON.stringify(value);
+        return String(value);
+      });
+    }
+    return payload;
+  }
+
+  function _getStepResultValue(stepResults, indexStr, path) {
+    const index = parseInt(indexStr, 10);
+    const base = stepResults[index];
+    if (base === undefined) return undefined;
+    if (!path) return base;
+    return path
+      .split('.')
+      .reduce((acc, key) => (acc && acc[key] !== undefined ? acc[key] : undefined), base);
+  }
+
+  function _describeAgentStep(command, payload, result, index) {
+    switch (command) {
+      case 'addInitiative': {
+        const title = payload?.title || result?.title || 'initiative';
+        const planningYear = payload?.attributes?.planningYear || result?.attributes?.planningYear;
+        return `Created initiative "${title}"${planningYear ? ` for ${planningYear}` : ''}.`;
+      }
+      case 'updateInitiative': {
+        const initiativeId = payload?.initiativeId || result?.initiativeId || '(unknown)';
+        const summary = _summarizeInitiativeUpdates(payload?.updates || {}, result);
+        return `Updated initiative ${initiativeId}${summary ? ` (${summary})` : '.'}`;
+      }
+      case 'deleteInitiative': {
+        const initiativeId = payload?.initiativeId || result?.initiativeId || '(unknown)';
+        return `Deleted initiative ${initiativeId}.`;
+      }
+      case 'moveEngineerToTeam': {
+        const engineer = payload?.engineerName || result?.name || 'engineer';
+        const team = payload?.newTeamId || result?.currentTeamId || 'unassigned';
+        return `Moved ${engineer} to team ${team}.`;
+      }
+      case 'addEngineerToRoster': {
+        const engineerName = payload?.name || result?.name || 'engineer';
+        return `Added engineer ${engineerName} to roster.`;
+      }
+      case 'addNewTeam': {
+        const teamId = result?.teamId || '(new team)';
+        const teamName = result?.teamName || result?.teamIdentity || '';
+        return `Created team ${teamName || teamId}.`;
+      }
+      case 'addNewService': {
+        const serviceName = payload?.serviceData?.serviceName || result?.serviceName || 'service';
+        return `Created service ${serviceName}.`;
+      }
+      case 'bulkUpdateTeamCapacity': {
+        const count = result?.updatedCount ?? 0;
+        const scope = result?.scopeDescription || `${count} teams`;
+        const fields =
+          Array.isArray(result?.appliedFields) && result.appliedFields.length > 0
+            ? result.appliedFields.join(', ')
+            : null;
+        return `Bulk-updated capacity for ${scope}${fields ? ` (fields: ${fields})` : ''}.`;
+      }
+      case 'bulkUpdateInitiatives': {
+        const count = result?.updatedCount ?? 0;
+        const status = payload?.updates?.status;
+        const isProtected = payload?.updates?.isProtected;
+        const changes = [];
+        if (status) changes.push(`status → ${status}`);
+        if (typeof isProtected === 'boolean') changes.push(`isProtected → ${isProtected}`);
+        return `Updated ${count} initiatives${changes.length ? ` (${changes.join('; ')})` : ''}.`;
+      }
+      case 'bulkAdjustInitiativeEstimates': {
+        const factor = payload?.adjustmentFactor;
+        const count = result?.updatedCount ?? 0;
+        return `Scaled SDE estimates by ${factor} for ${count} initiatives.`;
+      }
+      case 'bulkReassignTeams': {
+        const moved = result?.movedTeamIds?.length ?? 0;
+        const source = payload?.sourceSdmId || payload?.fromSdmId;
+        const target = payload?.targetSdmId || payload?.toSdmId;
+        return `Moved ${moved} teams from ${source} to ${target}.`;
+      }
+      default:
+        return `Executed ${command} (step ${index + 1}).`;
+    }
+  }
+
+  function _summarizeInitiativeUpdates(updates, result) {
+    if (!updates || typeof updates !== 'object') return '';
+    const messages = [];
+    if (updates.status) {
+      messages.push(`status → ${updates.status}`);
+    }
+    if (updates.attributes && typeof updates.attributes === 'object') {
+      const attrKeys = Object.keys(updates.attributes);
+      if (attrKeys.length > 0) {
+        messages.push(`attributes (${attrKeys.join(', ')})`);
+      }
+    }
+    if (Array.isArray(updates.assignments)) {
+      const assignmentSummary = updates.assignments
+        .map((a) => {
+          const team = a.teamId || 'team';
+          const sde = typeof a.sdeYears === 'number' ? a.sdeYears.toFixed(2) : a.sdeYears;
+          return `${team}: ${sde}`;
+        })
+        .join(', ');
+      if (assignmentSummary) {
+        messages.push(`assignments → ${assignmentSummary}`);
+      }
+    }
+    const otherKeys = Object.keys(updates).filter(
+      (key) => !['status', 'attributes', 'assignments'].includes(key)
+    );
+    if (otherKeys.length > 0) {
+      messages.push(`fields: ${otherKeys.join(', ')}`);
+    }
+    return messages.join('; ');
+  }
+
+  /**
+   * [NEW] Main entry point for prebuilt agent buttons.
+   * This acts as a router to the correct specialist agent.
+   * @param {string} agentName - The name of the agent to run.
+   * @param {object} payload - The data from the UI (e.g., { engineerName: '...' }).
+   */
+  async function runPrebuiltAgent(agentName, payload) {
+    console.log(
+      `[AI Agent Controller] Received request to run prebuilt agent: ${agentName}`,
+      payload
+    );
+    const view = aiChatAssistant;
+    if (!view) {
+      console.error('AI Chat Assistant view is not available.');
+      return;
+    }
+
+    // 1. Open the chat panel
+    view.openAiChatPanel();
+
+    // 2. Route to the specialist
+    try {
+      switch (agentName) {
+        case 'optimizePlan':
+          if (aiPlanOptimizationAgent) {
             const contextJson = scrapeCurrentViewContext();
-            const imageFn = _resolveImageGenerationFunction();
-            if (!imageFn) {
-                throw new Error('AI image generation service is unavailable. Please ensure AI is enabled and an API key is saved.');
-            }
-            const response = await imageFn(
-                userQuestion,
+            const pinnedHistory = [];
+            if (chatSessionHistory[0]) pinnedHistory.push(chatSessionHistory[0]);
+            if (chatSessionHistory[1]) pinnedHistory.push(chatSessionHistory[1]);
+            // Pass the function to post messages
+            aiPlanOptimizationAgent.runOptimization(
+              {
+                postMessageFn: view.postAgentMessageToView,
+              },
+              {
                 contextJson,
-                SettingsService.get().ai.apiKey,
-                SettingsService.get().ai.provider
+                primingHistory: pinnedHistory,
+              }
             );
+          }
+          break;
 
-            if (response && response.isImage && response.imageUrl) {
-                if (view) {
-                    view.hideAgentLoadingIndicator(loadingMessageEl, buildDiagramImageMessage(response));
-                }
-            } else if (response && response.code) {
-                if (view) {
-                    view.hideAgentLoadingIndicator(loadingMessageEl, buildParagraphMessage('Diagram generated. Click "View Diagram" to open.'));
-                }
-                if (view) {
-                    view.postDiagramWidget(response.title, response.code);
-                }
-            } else {
-                throw new Error('Diagram generation response was invalid.');
-            }
-        } catch (error) {
-            console.error("Error during AI image submit:", error);
-            if (view) {
-                view.hideAgentLoadingIndicator(
-                    loadingMessageEl,
-                    buildParagraphMessage(`Error: ${error.message}`),
-                    { isError: true }
-                );
-            }
-        } finally {
-            isAgentThinking = false;
-            if (view) {
-                view.toggleChatInput(false);
-            }
-            renderSuggestionsForCurrentView();
+        default:
+          throw new Error(`Unknown or unavailable prebuilt agent: "${agentName}"`);
+      }
+    } catch (error) {
+      console.error(`Error running specialist agent '${agentName}':`, error);
+      view.postAgentMessageToView(`Error: ${error.message}`, true);
+    }
+  }
+
+  /**
+   * [NEW] Handles the user's "Apply" or "Discard" response
+   * from a specialist agent's proposal.
+   * @param {boolean} didConfirm - True if "Apply" was clicked, false if "Discard".
+   */
+  /**
+   * [NEW] Handles the user's "Apply" or "Discard" response
+   * from a specialist agent's proposal.
+   * @param {boolean} didConfirm - True if "Apply" was clicked, false if "Discard".
+   */
+  function confirmPrebuiltAgent(didConfirm) {
+    console.log(`[AI Agent Controller] Received agent confirmation: ${didConfirm}`);
+    const view = aiChatAssistant;
+    if (!view) return;
+
+    let actionHandled = false;
+    let outcomeText = didConfirm ? 'Changes applied.' : 'Changes discarded.';
+
+    // Check which agent has pending changes
+    if (aiPlanOptimizationAgent && aiPlanOptimizationAgent.hasPendingChanges()) {
+      if (didConfirm) {
+        const applied = aiPlanOptimizationAgent.applyPendingChanges();
+        actionHandled = applied;
+        if (!applied) {
+          outcomeText = 'Failed to apply changes.';
         }
+      } else {
+        aiPlanOptimizationAgent.discardPendingChanges();
+        actionHandled = true;
+      }
+    }
+    // Future agents can be added here
+    else {
+      console.warn('Agent confirmation received, but no agent had pending changes.');
+      // Only show error if we expected something (this might just be a UI artifact or stray click)
+      // view.postAgentMessageToView("Could not find the pending changes to apply. Please try running the agent again.", true);
+      outcomeText = 'No pending changes found.';
     }
 
-    async function _executeAgentPlan(steps, loadingMessageEl) {
-        const view = aiChatAssistant;
-        if (!Array.isArray(steps) || steps.length === 0) {
-            if (view) {
-                view.hideAgentLoadingIndicator(loadingMessageEl, md.render('No executable steps were provided.'));
-            }
-            return;
-        }
-
-
-
-        if (view) {
-            view.hideAgentLoadingIndicator(loadingMessageEl, buildParagraphMessage('Starting agent plan...'));
-        }
-
-        console.debug('[AI Agent Controller] Executing agent plan with steps:', steps);
-
-        const stepResults = [];
-        const stepSummaries = [];
-        for (let i = 0; i < steps.length; i++) {
-            const step = steps[i];
-            try {
-                const resolvedPayload = _resolvePayloadPlaceholders(step.payload || {}, stepResults);
-                if (view) {
-                    view.postAgentMessageToView(buildAgentStepMessage(i + 1, step.command));
-                }
-                if (step.command === 'generateDiagram') {
-                    if (view) {
-                        view.postAgentMessageToView(buildParagraphMessage(`Generating diagram: "${resolvedPayload.description || ''}"...`));
-                    }
-                    const contextJson = scrapeCurrentViewContext();
-                    console.debug("[AI-DIAGRAM] Context JSON length:", (contextJson || '').length);
-                    try {
-                        const result = await AIService.generateDiagramFromPrompt(
-                            resolvedPayload.description || '',
-                            contextJson,
-                            SettingsService.get().ai.apiKey,
-                            SettingsService.get().ai.provider
-                        );
-                        console.debug("[AI-DIAGRAM] Diagram generation result:", result);
-                        if (view) {
-                            view.postDiagramWidget(result.title, result.code);
-                        }
-                        stepResults[i] = result;
-                        stepSummaries.push(`Generated diagram: ${resolvedPayload.description || ''}`);
-                        if (view) {
-                            view.postAgentMessageToView(`Step ${i + 1} complete.`);
-                        }
-                    } catch (err) {
-                        console.error("[AI-DIAGRAM] Error during diagram generation:", err);
-                        throw err;
-                    }
-                    continue;
-                }
-                const result = await aiAgentToolset.executeTool(step.command, resolvedPayload);
-                stepResults[i] = result;
-                console.debug('[AI Agent Controller] Step completed:', { step: step.command, payload: resolvedPayload, result });
-                stepSummaries.push(_describeAgentStep(step.command, resolvedPayload, result, i));
-                if (view) {
-                    view.postAgentMessageToView(`Step ${i + 1} complete.`);
-                }
-            } catch (error) {
-                if (view) {
-                    view.postAgentMessageToView(`Error on step ${i + 1} (${step.command}): ${error.message}`, true);
-                }
-                break;
-            }
-        }
-
-        // Save changes via SystemService
-        try {
-            SystemService.save();
-        } catch (error) {
-            console.error('SystemService.save failed:', error);
-        }
-
-        // Fix: Refresh the UI to show changes
-        console.log('[AI Agent Controller] Refreshing UI after tool execution.');
-        navigationManager.refresh();
-
-        if (view) {
-            view.postAgentMessageToView(buildAgentSummaryMessage(stepSummaries));
-        }
+    if (actionHandled || outcomeText) {
+      _markAgentConfirmationHandled(outcomeText);
     }
+  }
 
-    function _resolvePayloadPlaceholders(payload, stepResults) {
-        if (Array.isArray(payload)) {
-            return payload.map(value => _resolvePayloadPlaceholders(value, stepResults));
-        }
-        if (payload && typeof payload === 'object') {
-            const resolved = {};
-            Object.keys(payload).forEach(key => {
-                resolved[key] = _resolvePayloadPlaceholders(payload[key], stepResults);
-            });
-            return resolved;
-        }
-        if (typeof payload === 'string') {
-            const exactMatch = payload.match(/^{{step_(\d+)_result(?:\.([^}]+))?}}$/);
-            if (exactMatch) {
-                return _getStepResultValue(stepResults, exactMatch[1], exactMatch[2]);
-            }
-            return payload.replace(/{{step_(\d+)_result(?:\.([^}]+))?}}/g, (match, indexStr, path) => {
-                const value = _getStepResultValue(stepResults, indexStr, path);
-                if (value === undefined || value === null) return '';
-                if (typeof value === 'object') return JSON.stringify(value);
-                return String(value);
-            });
-        }
-        return payload;
-    }
+  function _waitForAnalysisFunction(maxAttempts = 5, delayMs = 200) {
+    // Direct return of the service method
+    return AIService.getAnalysisFromPrompt;
+  }
 
-    function _getStepResultValue(stepResults, indexStr, path) {
-        const index = parseInt(indexStr, 10);
-        const base = stepResults[index];
-        if (base === undefined) return undefined;
-        if (!path) return base;
-        return path.split('.').reduce((acc, key) => (acc && acc[key] !== undefined ? acc[key] : undefined), base);
-    }
+  function _resolveImageGenerationFunction() {
+    return AIService.generateImageFromPrompt;
+  }
 
-    function _describeAgentStep(command, payload, result, index) {
-        switch (command) {
-            case 'addInitiative': {
-                const title = payload?.title || result?.title || 'initiative';
-                const planningYear = payload?.attributes?.planningYear || (result?.attributes?.planningYear);
-                return `Created initiative "${title}"${planningYear ? ` for ${planningYear}` : ''}.`;
-            }
-            case 'updateInitiative': {
-                const initiativeId = payload?.initiativeId || result?.initiativeId || '(unknown)';
-                const summary = _summarizeInitiativeUpdates(payload?.updates || {}, result);
-                return `Updated initiative ${initiativeId}${summary ? ` (${summary})` : '.'}`;
-            }
-            case 'deleteInitiative': {
-                const initiativeId = payload?.initiativeId || result?.initiativeId || '(unknown)';
-                return `Deleted initiative ${initiativeId}.`;
-            }
-            case 'moveEngineerToTeam': {
-                const engineer = payload?.engineerName || result?.name || 'engineer';
-                const team = payload?.newTeamId || result?.currentTeamId || 'unassigned';
-                return `Moved ${engineer} to team ${team}.`;
-            }
-            case 'addEngineerToRoster': {
-                const engineerName = payload?.name || result?.name || 'engineer';
-                return `Added engineer ${engineerName} to roster.`;
-            }
-            case 'addNewTeam': {
-                const teamId = result?.teamId || '(new team)';
-                const teamName = result?.teamName || result?.teamIdentity || '';
-                return `Created team ${teamName || teamId}.`;
-            }
-            case 'addNewService': {
-                const serviceName = payload?.serviceData?.serviceName || result?.serviceName || 'service';
-                return `Created service ${serviceName}.`;
-            }
-            case 'bulkUpdateTeamCapacity': {
-                const count = result?.updatedCount ?? 0;
-                const scope = result?.scopeDescription || `${count} teams`;
-                const fields = Array.isArray(result?.appliedFields) && result.appliedFields.length > 0 ? result.appliedFields.join(', ') : null;
-                return `Bulk-updated capacity for ${scope}${fields ? ` (fields: ${fields})` : ''}.`;
-            }
-            case 'bulkUpdateInitiatives': {
-                const count = result?.updatedCount ?? 0;
-                const status = payload?.updates?.status;
-                const isProtected = payload?.updates?.isProtected;
-                const changes = [];
-                if (status) changes.push(`status → ${status}`);
-                if (typeof isProtected === 'boolean') changes.push(`isProtected → ${isProtected}`);
-                return `Updated ${count} initiatives${changes.length ? ` (${changes.join('; ')})` : ''}.`;
-            }
-            case 'bulkAdjustInitiativeEstimates': {
-                const factor = payload?.adjustmentFactor;
-                const count = result?.updatedCount ?? 0;
-                return `Scaled SDE estimates by ${factor} for ${count} initiatives.`;
-            }
-            case 'bulkReassignTeams': {
-                const moved = result?.movedTeamIds?.length ?? 0;
-                const source = payload?.sourceSdmId || payload?.fromSdmId;
-                const target = payload?.targetSdmId || payload?.toSdmId;
-                return `Moved ${moved} teams from ${source} to ${target}.`;
-            }
-            default:
-                return `Executed ${command} (step ${index + 1}).`;
-        }
-    }
+  function scrapeCurrentViewContext() {
+    // Use internal state or ask NavigationManager for current view
+    const currentView = currentViewId || navigationManager.currentViewId;
 
-    function _summarizeInitiativeUpdates(updates, result) {
-        if (!updates || typeof updates !== 'object') return '';
-        const messages = [];
-        if (updates.status) {
-            messages.push(`status → ${updates.status}`);
-        }
-        if (updates.attributes && typeof updates.attributes === 'object') {
-            const attrKeys = Object.keys(updates.attributes);
-            if (attrKeys.length > 0) {
-                messages.push(`attributes (${attrKeys.join(', ')})`);
-            }
-        }
-        if (Array.isArray(updates.assignments)) {
-            const assignmentSummary = updates.assignments
-                .map(a => {
-                    const team = a.teamId || 'team';
-                    const sde = typeof a.sdeYears === 'number' ? a.sdeYears.toFixed(2) : a.sdeYears;
-                    return `${team}: ${sde}`;
-                })
-                .join(', ');
-            if (assignmentSummary) {
-                messages.push(`assignments → ${assignmentSummary}`);
-            }
-        }
-        const otherKeys = Object.keys(updates).filter(key => !['status', 'attributes', 'assignments'].includes(key));
-        if (otherKeys.length > 0) {
-            messages.push(`fields: ${otherKeys.join(', ')}`);
-        }
-        return messages.join('; ');
-    }
-
-    /**
-     * [NEW] Main entry point for prebuilt agent buttons.
-     * This acts as a router to the correct specialist agent.
-     * @param {string} agentName - The name of the agent to run.
-     * @param {object} payload - The data from the UI (e.g., { engineerName: '...' }).
-     */
-    async function runPrebuiltAgent(agentName, payload) {
-        console.log(`[AI Agent Controller] Received request to run prebuilt agent: ${agentName}`, payload);
-        const view = aiChatAssistant;
-        if (!view) {
-            console.error("AI Chat Assistant view is not available.");
-            return;
-        }
-
-        // 1. Open the chat panel
-        view.openAiChatPanel();
-
-        // 2. Route to the specialist
-        try {
-            switch (agentName) {
-                case 'optimizePlan':
-                    if (aiPlanOptimizationAgent) {
-                        const contextJson = scrapeCurrentViewContext();
-                        const pinnedHistory = [];
-                        if (chatSessionHistory[0]) pinnedHistory.push(chatSessionHistory[0]);
-                        if (chatSessionHistory[1]) pinnedHistory.push(chatSessionHistory[1]);
-                        // Pass the function to post messages
-                        aiPlanOptimizationAgent.runOptimization({
-                            postMessageFn: view.postAgentMessageToView
-                        }, {
-                            contextJson,
-                            primingHistory: pinnedHistory
-                        });
-                    }
-                    break;
-
-                default:
-                    throw new Error(`Unknown or unavailable prebuilt agent: "${agentName}"`);
-            }
-        } catch (error) {
-            console.error(`Error running specialist agent '${agentName}':`, error);
-            view.postAgentMessageToView(`Error: ${error.message}`, true);
-        }
-    }
-
-    /**
-     * [NEW] Handles the user's "Apply" or "Discard" response
-     * from a specialist agent's proposal.
-     * @param {boolean} didConfirm - True if "Apply" was clicked, false if "Discard".
-     */
-    /**
-     * [NEW] Handles the user's "Apply" or "Discard" response
-     * from a specialist agent's proposal.
-     * @param {boolean} didConfirm - True if "Apply" was clicked, false if "Discard".
-     */
-    function confirmPrebuiltAgent(didConfirm) {
-        console.log(`[AI Agent Controller] Received agent confirmation: ${didConfirm}`);
-        const view = aiChatAssistant;
-        if (!view) return;
-
-        let actionHandled = false;
-        let outcomeText = didConfirm ? 'Changes applied.' : 'Changes discarded.';
-
-        // Check which agent has pending changes
-        if (aiPlanOptimizationAgent && aiPlanOptimizationAgent.hasPendingChanges()) {
-            if (didConfirm) {
-                const applied = aiPlanOptimizationAgent.applyPendingChanges();
-                actionHandled = applied;
-                if (!applied) {
-                    outcomeText = 'Failed to apply changes.';
-                }
-            } else {
-                aiPlanOptimizationAgent.discardPendingChanges();
-                actionHandled = true;
-            }
-        }
-        // Future agents can be added here
-        else {
-            console.warn("Agent confirmation received, but no agent had pending changes.");
-            // Only show error if we expected something (this might just be a UI artifact or stray click)
-            // view.postAgentMessageToView("Could not find the pending changes to apply. Please try running the agent again.", true);
-            outcomeText = 'No pending changes found.';
-        }
-
-        if (actionHandled || outcomeText) {
-            _markAgentConfirmationHandled(outcomeText);
-        }
-    }
-
-    function _waitForAnalysisFunction(maxAttempts = 5, delayMs = 200) {
-        // Direct return of the service method
-        return AIService.getAnalysisFromPrompt;
-    }
-
-    function _resolveImageGenerationFunction() {
-        return AIService.generateImageFromPrompt;
-    }
-
-    function scrapeCurrentViewContext() {
-        // Use internal state or ask NavigationManager for current view
-        const currentView = currentViewId || navigationManager.currentViewId;
-
-        let contextData = {
-            view: currentView,
-            timestamp: new Date().toISOString()
-        };
-
-        console.log(`[AI CHAT] Scraping context for view: ${currentView || 'none'}`);
-
-        if (!SystemService.getCurrentSystem()) {
-            contextData.data = "No system is currently loaded.";
-            console.warn('[AI CHAT] No system data available while scraping context.');
-            return JSON.stringify(contextData);
-        }
-
-        contextData.systemName = SystemService.getCurrentSystem().systemName;
-        contextData.systemDescription = SystemService.getCurrentSystem().systemDescription;
-
-        // Use AI_VIEW_REGISTRY to get context
-        const viewContext = getAIContextForView(currentView || 'default');
-        if (viewContext) {
-            contextData.data = viewContext;
-            return JSON.stringify(contextData, null, 2);
-        }
-
-        // Fallback for unauthorized/unknown views
-        contextData.data = {
-            note: "This view has not implemented the AI context provider interface.",
-            viewId: currentView
-        };
-
-        return JSON.stringify(contextData, null, 2);
-    }
-
-
-    function _markAgentConfirmationHandled(outcomeText) {
-        if (!lastConfirmationContainerId) return;
-        const container = document.getElementById(lastConfirmationContainerId);
-        if (container) {
-            container.replaceChildren(); // Clear existing content
-            const p = document.createElement('p');
-            p.className = 'agent-confirmation-note';
-            p.textContent = outcomeText;
-            container.appendChild(p);
-        }
-    }
-
-    // Exposed API
-    return {
-        startSession,
-        handleUserChatSubmit,
-        getAvailableTools,
-        renderSuggestionsForCurrentView,
-        runPrebuiltAgent,
-        confirmPrebuiltAgent,
-        // [NEW] API for NavigationManager to update state
-        setCurrentView: (viewId) => {
-            currentViewId = viewId;
-            renderSuggestionsForCurrentView();
-        },
-        // For testing/debugging
-        _waitForAnalysisFunction
+    let contextData = {
+      view: currentView,
+      timestamp: new Date().toISOString(),
     };
+
+    console.log(`[AI CHAT] Scraping context for view: ${currentView || 'none'}`);
+
+    if (!SystemService.getCurrentSystem()) {
+      contextData.data = 'No system is currently loaded.';
+      console.warn('[AI CHAT] No system data available while scraping context.');
+      return JSON.stringify(contextData);
+    }
+
+    contextData.systemName = SystemService.getCurrentSystem().systemName;
+    contextData.systemDescription = SystemService.getCurrentSystem().systemDescription;
+
+    // Use AI_VIEW_REGISTRY to get context
+    const viewContext = getAIContextForView(currentView || 'default');
+    if (viewContext) {
+      contextData.data = viewContext;
+      return JSON.stringify(contextData, null, 2);
+    }
+
+    // Fallback for unauthorized/unknown views
+    contextData.data = {
+      note: 'This view has not implemented the AI context provider interface.',
+      viewId: currentView,
+    };
+
+    return JSON.stringify(contextData, null, 2);
+  }
+
+  function _markAgentConfirmationHandled(outcomeText) {
+    if (!lastConfirmationContainerId) return;
+    const container = document.getElementById(lastConfirmationContainerId);
+    if (container) {
+      container.replaceChildren(); // Clear existing content
+      const p = document.createElement('p');
+      p.className = 'agent-confirmation-note';
+      p.textContent = outcomeText;
+      container.appendChild(p);
+    }
+  }
+
+  // Exposed API
+  return {
+    startSession,
+    handleUserChatSubmit,
+    getAvailableTools,
+    renderSuggestionsForCurrentView,
+    runPrebuiltAgent,
+    confirmPrebuiltAgent,
+    // [NEW] API for NavigationManager to update state
+    setCurrentView: (viewId) => {
+      currentViewId = viewId;
+      renderSuggestionsForCurrentView();
+    },
+    // For testing/debugging
+    _waitForAnalysisFunction,
+  };
 })();
