@@ -11,6 +11,8 @@
     "format:check": "prettier --check \"**/*.{js,css,md,html,json}\"",
     "stylelint": "stylelint \"css/**/*.css\"",
     "stylelint:fix": "stylelint \"css/**/*.css\" --fix",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "contract:check": "node scripts/contract-scan.js",
     "depcheck": "depcheck --ignores=stylelint-config-standard",
     "verify": "npm run lint && npm run stylelint && npm run contract:check && npm run depcheck"
@@ -21,10 +23,12 @@
     "eslint": "9.39.2",
     "globals": "15.6.0",
     "husky": "9.0.11",
+    "jsdom": "24.1.0",
     "lint-staged": "15.2.10",
     "prettier": "3.3.3",
     "stylelint": "16.6.1",
-    "stylelint-config-standard": "36.0.0"
+    "stylelint-config-standard": "36.0.0",
+    "vitest": "2.1.2"
   },
   "lint-staged": {
     "js/**/*.js": "eslint --fix",

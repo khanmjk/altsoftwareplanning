@@ -38,6 +38,16 @@ export default [
     rules: baseRules
   },
   {
+    files: ['tests/**/*.js'],
+    languageOptions: {
+      sourceType: 'module',
+      globals: {
+        ...globals.node,
+        ...globals.es2021
+      }
+    }
+  },
+  {
     files: ['smt-feedback-worker/**/*.js'],
     languageOptions: {
       sourceType: 'module',

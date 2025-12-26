@@ -18,6 +18,7 @@ change runtime behavior and can be removed later without refactoring.
 - ESLint: JS linting and basic quality checks
 - Prettier: formatting consistency
 - Stylelint: CSS linting
+- Vitest: unit tests
 - Husky + lint-staged: local pre-commit checks
 - Contract scan: custom guardrails for contract violations
 - depcheck: unused dependency detection
@@ -79,6 +80,20 @@ npm run contract:check
 npm run verify
 ```
 
+## Unit Tests
+
+Run the test suite:
+
+```
+npm run test
+```
+
+Watch mode:
+
+```
+npm run test:watch
+```
+
 ## Configuration Notes
 
 - ESLint uses the flat config in `eslint.config.mjs`.
@@ -126,11 +141,16 @@ The contract scan enforces these rules:
 Quality checks run on every push and PR:
 
 - Lint + contract checks (`npm run verify`)
+- Unit tests (`npm run test`)
 - Dependency audit (`npm audit --audit-level=high`)
 
 Workflow file:
 
 - `.github/workflows/quality.yml`
+
+Dedicated test workflow:
+
+- `.github/workflows/tests.yml`
 
 ## ESLint Notes
 
