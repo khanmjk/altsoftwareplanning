@@ -79,6 +79,11 @@ npm run contract:check
 npm run verify
 ```
 
+## Configuration Notes
+
+- ESLint uses the flat config in `eslint.config.mjs`.
+- Ignore patterns live in the flat config (no `.eslintignore`).
+
 ## Where You See Issues (VSCode)
 
 Install these extensions:

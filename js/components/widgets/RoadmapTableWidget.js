@@ -1,629 +1,639 @@
 /**
  * RoadmapTableWidget Component
- * 
+ *
  * Displays Quarterly Roadmap and 3-Year Plan tables within DashboardView.
  * Refactored from roadmapTableView.js to use DOM creation pattern.
  */
 class RoadmapTableWidget {
-    constructor(containerId, type = 'quarterly') {
-        this.containerId = containerId;
-        this.type = type; // 'quarterly' or '3yp'
-        this.container = null;
-        this.filtersContainer = null;
-        this.tableContainer = null;
-        this.idSuffix = type === '3yp' ? '3YP' : '';
-        this.planningYear = 'all'; // Default, set via setPlanningYear()
+  constructor(containerId, type = 'quarterly') {
+    this.containerId = containerId;
+    this.type = type; // 'quarterly' or '3yp'
+    this.container = null;
+    this.filtersContainer = null;
+    this.tableContainer = null;
+    this.idSuffix = type === '3yp' ? '3YP' : '';
+    this.planningYear = 'all'; // Default, set via setPlanningYear()
+  }
+
+  /**
+   * Set the planning year filter
+   * @param {string|number} year - The year to filter by, or 'all'
+   */
+  setPlanningYear(year) {
+    this.planningYear = year;
+  }
+
+  /**
+   * Render the widget
+   */
+  render() {
+    this.container = document.getElementById(this.containerId);
+    if (!this.container) {
+      console.error('RoadmapTableWidget: Container not found:', this.containerId);
+      return;
     }
 
-    /**
-     * Set the planning year filter
-     * @param {string|number} year - The year to filter by, or 'all'
-     */
-    setPlanningYear(year) {
-        this.planningYear = year;
+    // Clear container using DOM methods
+    while (this.container.firstChild) {
+      this.container.removeChild(this.container.firstChild);
     }
 
-    /**
-     * Render the widget
-     */
-    render() {
-        this.container = document.getElementById(this.containerId);
-        if (!this.container) {
-            console.error('RoadmapTableWidget: Container not found:', this.containerId);
-            return;
-        }
+    // Create filters container
+    this.filtersContainer = document.createElement('div');
+    this.filtersContainer.id = 'roadmapTableFilters' + this.idSuffix;
+    this.filtersContainer.className = 'roadmap-table-widget__filters';
+    this.container.appendChild(this.filtersContainer);
 
-        // Clear container using DOM methods
-        while (this.container.firstChild) {
-            this.container.removeChild(this.container.firstChild);
-        }
+    // Create table container
+    this.tableContainer = document.createElement('div');
+    this.tableContainer.id =
+      this.type === '3yp' ? 'threeYearPlanContainer' : 'quarterlyRoadmapContainer';
+    this.tableContainer.className =
+      this.type === '3yp' ? 'three-year-plan-container' : 'quarterly-roadmap-container';
+    this.container.appendChild(this.tableContainer);
 
-        // Create filters container
-        this.filtersContainer = document.createElement('div');
-        this.filtersContainer.id = 'roadmapTableFilters' + this.idSuffix;
-        this.filtersContainer.className = 'roadmap-table-widget__filters';
-        this.container.appendChild(this.filtersContainer);
+    // Create filter controls
+    const filterControls = this.createFilterControls();
+    this.filtersContainer.appendChild(filterControls);
 
-        // Create table container
-        this.tableContainer = document.createElement('div');
-        this.tableContainer.id = this.type === '3yp' ? 'threeYearPlanContainer' : 'quarterlyRoadmapContainer';
-        this.tableContainer.className = this.type === '3yp' ? 'three-year-plan-container' : 'quarterly-roadmap-container';
-        this.container.appendChild(this.tableContainer);
+    // Update team filter options
+    this.updateTeamFilterOptions();
 
-        // Create filter controls
-        const filterControls = this.createFilterControls();
-        this.filtersContainer.appendChild(filterControls);
+    // Render table
+    this.renderTable();
+  }
 
-        // Update team filter options
+  /**
+   * Create filter control elements
+   */
+  createFilterControls() {
+    const container = document.createElement('div');
+    container.className = 'roadmap-table-widget__filter-row';
+
+    // Org Filter
+    const orgWrap = this._createFilterWrapper('Org:');
+    const orgOptions = this.getOrgOptions();
+    this._orgSelect = new ThemedSelect({
+      options: orgOptions.map((opt) => ({ value: opt.value, text: opt.label })),
+      value: 'all',
+      id: 'roadmapOrgFilter' + this.idSuffix,
+      onChange: () => {
         this.updateTeamFilterOptions();
-
-        // Render table
         this.renderTable();
+      },
+    });
+    orgWrap.appendChild(this._orgSelect.render());
+    container.appendChild(orgWrap);
+
+    // Team Filter (container for dynamic rebuilding)
+    const teamWrap = this._createFilterWrapper('Team:');
+    teamWrap.id = 'roadmapTeamFilterContainer' + this.idSuffix;
+    container.appendChild(teamWrap);
+
+    // Theme Filter (only for quarterly) - uses custom multi-select, not native
+    if (this.type === 'quarterly') {
+      const themeFilter = this.createThemeFilter();
+      container.appendChild(themeFilter);
     }
 
-    /**
-     * Create filter control elements
-     */
-    createFilterControls() {
-        const container = document.createElement('div');
-        container.className = 'roadmap-table-widget__filter-row';
+    return container;
+  }
 
-        // Org Filter
-        const orgWrap = this._createFilterWrapper('Org:');
-        const orgOptions = this.getOrgOptions();
-        this._orgSelect = new ThemedSelect({
-            options: orgOptions.map(opt => ({ value: opt.value, text: opt.label })),
-            value: 'all',
-            id: 'roadmapOrgFilter' + this.idSuffix,
-            onChange: () => {
-                this.updateTeamFilterOptions();
-                this.renderTable();
-            }
-        });
-        orgWrap.appendChild(this._orgSelect.render());
-        container.appendChild(orgWrap);
+  /**
+   * Create filter wrapper with label
+   */
+  _createFilterWrapper(labelText) {
+    const div = document.createElement('div');
+    div.className = 'filter-item roadmap-table-widget__filter-item';
 
-        // Team Filter (container for dynamic rebuilding)
-        const teamWrap = this._createFilterWrapper('Team:');
-        teamWrap.id = 'roadmapTeamFilterContainer' + this.idSuffix;
-        container.appendChild(teamWrap);
+    const label = document.createElement('label');
+    label.textContent = labelText;
+    label.className = 'roadmap-table-widget__filter-label';
+    div.appendChild(label);
 
-        // Theme Filter (only for quarterly) - uses custom multi-select, not native
-        if (this.type === 'quarterly') {
-            const themeFilter = this.createThemeFilter();
-            container.appendChild(themeFilter);
-        }
+    return div;
+  }
 
-        return container;
-    }
+  /**
+   * Create a dropdown filter (legacy - kept for compatibility)
+   */
+  createDropdownFilter(id, labelText, options) {
+    const div = this._createFilterWrapper(labelText);
 
-    /**
-     * Create filter wrapper with label
-     */
-    _createFilterWrapper(labelText) {
-        const div = document.createElement('div');
-        div.className = 'filter-item roadmap-table-widget__filter-item';
+    const select = document.createElement('select');
+    select.id = id;
+    select.className = 'form-select form-select-sm';
 
-        const label = document.createElement('label');
-        label.textContent = labelText;
-        label.className = 'roadmap-table-widget__filter-label';
-        div.appendChild(label);
+    options.forEach((opt) => {
+      const option = document.createElement('option');
+      option.value = opt.value;
+      option.textContent = opt.label;
+      select.appendChild(option);
+    });
 
-        return div;
-    }
+    div.appendChild(select);
+    return div;
+  }
 
-    /**
-     * Create a dropdown filter (legacy - kept for compatibility)
-     */
-    createDropdownFilter(id, labelText, options) {
-        const div = this._createFilterWrapper(labelText);
+  /**
+   * Get org filter options
+   */
+  getOrgOptions() {
+    const options = [{ value: 'all', label: 'All Organizations' }];
+    const systemData = SystemService.getCurrentSystem();
 
-        const select = document.createElement('select');
-        select.id = id;
-        select.className = 'form-select form-select-sm';
+    (systemData?.seniorManagers || []).forEach((sm) => {
+      options.push({ value: sm.seniorManagerId, label: sm.seniorManagerName });
+    });
 
-        options.forEach(opt => {
-            const option = document.createElement('option');
-            option.value = opt.value;
-            option.textContent = opt.label;
-            select.appendChild(option);
-        });
+    return options;
+  }
 
-        div.appendChild(select);
-        return div;
-    }
+  /**
+   * Create theme multi-select filter
+   */
+  createThemeFilter() {
+    const systemData = SystemService.getCurrentSystem();
+    const wrapper = document.createElement('div');
+    wrapper.className = 'filter-item roadmap-table-widget__filter-item';
 
-    /**
-     * Get org filter options
-     */
-    getOrgOptions() {
-        const options = [{ value: 'all', label: 'All Organizations' }];
-        const systemData = SystemService.getCurrentSystem();
+    const label = document.createElement('label');
+    label.textContent = 'Theme:';
+    label.className = 'roadmap-table-widget__filter-label';
+    wrapper.appendChild(label);
 
-        (systemData?.seniorManagers || []).forEach(sm => {
-            options.push({ value: sm.seniorManagerId, label: sm.seniorManagerName });
-        });
+    const dropdownContainer = document.createElement('div');
+    dropdownContainer.className = 'custom-multiselect-dropdown';
 
-        return options;
-    }
+    const button = document.createElement('button');
+    button.id = 'theme-dropdown-button' + this.idSuffix;
+    button.className =
+      'dropdown-button btn btn-outline-secondary btn-sm roadmap-table-widget__dropdown-button';
+    button.type = 'button';
+    button.textContent = 'All Themes';
 
-    /**
-     * Create theme multi-select filter
-     */
-    createThemeFilter() {
-        const systemData = SystemService.getCurrentSystem();
-        const wrapper = document.createElement('div');
-        wrapper.className = 'filter-item roadmap-table-widget__filter-item';
+    const panel = document.createElement('div');
+    panel.id = 'theme-dropdown-panel' + this.idSuffix;
+    panel.className = 'dropdown-panel';
 
-        const label = document.createElement('label');
-        label.textContent = 'Theme:';
-        label.className = 'roadmap-table-widget__filter-label';
-        wrapper.appendChild(label);
+    // Select All
+    const selectAllContainer = document.createElement('div');
+    selectAllContainer.className = 'select-all-container';
 
-        const dropdownContainer = document.createElement('div');
-        dropdownContainer.className = 'custom-multiselect-dropdown';
+    const selectAllCheckbox = document.createElement('input');
+    selectAllCheckbox.type = 'checkbox';
+    selectAllCheckbox.id = 'theme-select-all' + this.idSuffix;
+    selectAllCheckbox.checked = true;
 
-        const button = document.createElement('button');
-        button.id = 'theme-dropdown-button' + this.idSuffix;
-        button.className = 'dropdown-button btn btn-outline-secondary btn-sm roadmap-table-widget__dropdown-button';
-        button.type = 'button';
+    const selectAllLabel = document.createElement('label');
+    selectAllLabel.htmlFor = selectAllCheckbox.id;
+    selectAllLabel.textContent = 'Select/Clear All';
+
+    selectAllContainer.appendChild(selectAllCheckbox);
+    selectAllContainer.appendChild(selectAllLabel);
+    panel.appendChild(selectAllContainer);
+
+    // Theme items
+    const itemsContainer = document.createElement('div');
+    itemsContainer.className = 'dropdown-items-container';
+
+    (systemData?.definedThemes || []).forEach((theme) => {
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'dropdown-item';
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.id = `theme_filter_${theme.themeId}${this.idSuffix}`;
+      checkbox.value = theme.themeId;
+      checkbox.className = 'theme-checkbox-item';
+      checkbox.checked = true;
+
+      const itemLabel = document.createElement('label');
+      itemLabel.htmlFor = checkbox.id;
+      itemLabel.textContent = theme.name;
+
+      itemDiv.appendChild(checkbox);
+      itemDiv.appendChild(itemLabel);
+      itemsContainer.appendChild(itemDiv);
+    });
+
+    panel.appendChild(itemsContainer);
+    dropdownContainer.appendChild(button);
+    dropdownContainer.appendChild(panel);
+    wrapper.appendChild(dropdownContainer);
+
+    // Event handlers
+    const updateButtonText = () => {
+      const checked = panel.querySelectorAll('.theme-checkbox-item:checked');
+      const total = panel.querySelectorAll('.theme-checkbox-item').length;
+
+      if (checked.length === total || checked.length === 0) {
         button.textContent = 'All Themes';
+        selectAllCheckbox.checked = checked.length === total;
+        selectAllCheckbox.indeterminate = false;
+      } else {
+        button.textContent = `${checked.length} Theme(s) Selected`;
+        selectAllCheckbox.indeterminate = true;
+      }
+    };
 
-        const panel = document.createElement('div');
-        panel.id = 'theme-dropdown-panel' + this.idSuffix;
-        panel.className = 'dropdown-panel';
+    const allCheckboxes = itemsContainer.querySelectorAll('.theme-checkbox-item');
 
-        // Select All
-        const selectAllContainer = document.createElement('div');
-        selectAllContainer.className = 'select-all-container';
+    selectAllCheckbox.addEventListener('change', () => {
+      allCheckboxes.forEach((cb) => (cb.checked = selectAllCheckbox.checked));
+      updateButtonText();
+      this.renderTable();
+    });
 
-        const selectAllCheckbox = document.createElement('input');
-        selectAllCheckbox.type = 'checkbox';
-        selectAllCheckbox.id = 'theme-select-all' + this.idSuffix;
-        selectAllCheckbox.checked = true;
+    allCheckboxes.forEach((cb) => {
+      cb.addEventListener('change', () => {
+        updateButtonText();
+        this.renderTable();
+      });
+    });
 
-        const selectAllLabel = document.createElement('label');
-        selectAllLabel.htmlFor = selectAllCheckbox.id;
-        selectAllLabel.textContent = 'Select/Clear All';
+    button.addEventListener('click', (e) => {
+      e.stopPropagation();
+      panel.classList.toggle('show');
+    });
 
-        selectAllContainer.appendChild(selectAllCheckbox);
-        selectAllContainer.appendChild(selectAllLabel);
-        panel.appendChild(selectAllContainer);
+    document.addEventListener('click', (e) => {
+      if (!dropdownContainer.contains(e.target)) {
+        panel.classList.remove('show');
+      }
+    });
 
-        // Theme items
-        const itemsContainer = document.createElement('div');
-        itemsContainer.className = 'dropdown-items-container';
+    return wrapper;
+  }
 
-        (systemData?.definedThemes || []).forEach(theme => {
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'dropdown-item';
+  /**
+   * Update team filter options based on org selection
+   */
+  updateTeamFilterOptions() {
+    const container = document.getElementById('roadmapTeamFilterContainer' + this.idSuffix);
+    if (!container) return;
 
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.id = `theme_filter_${theme.themeId}${this.idSuffix}`;
-            checkbox.value = theme.themeId;
-            checkbox.className = 'theme-checkbox-item';
-            checkbox.checked = true;
+    // Clear previous ThemedSelect
+    const existingSelect = container.querySelector('.themed-select');
+    if (existingSelect) {
+      existingSelect.remove();
+    }
 
-            const itemLabel = document.createElement('label');
-            itemLabel.htmlFor = checkbox.id;
-            itemLabel.textContent = theme.name;
+    const orgValue = this._orgSelect?.getValue() || 'all';
+    const systemData = SystemService.getCurrentSystem();
 
-            itemDiv.appendChild(checkbox);
-            itemDiv.appendChild(itemLabel);
-            itemsContainer.appendChild(itemDiv);
-        });
-
-        panel.appendChild(itemsContainer);
-        dropdownContainer.appendChild(button);
-        dropdownContainer.appendChild(panel);
-        wrapper.appendChild(dropdownContainer);
-
-        // Event handlers
-        const updateButtonText = () => {
-            const checked = panel.querySelectorAll('.theme-checkbox-item:checked');
-            const total = panel.querySelectorAll('.theme-checkbox-item').length;
-
-            if (checked.length === total || checked.length === 0) {
-                button.textContent = 'All Themes';
-                selectAllCheckbox.checked = checked.length === total;
-                selectAllCheckbox.indeterminate = false;
-            } else {
-                button.textContent = `${checked.length} Theme(s) Selected`;
-                selectAllCheckbox.indeterminate = true;
+    // Get teams to show
+    let teamsToShow = [];
+    if (orgValue === 'all') {
+      teamsToShow = systemData?.teams || [];
+    } else {
+      const teamsInOrg = new Set();
+      (systemData?.sdms || []).forEach((sdm) => {
+        if (sdm.seniorManagerId === orgValue) {
+          (systemData?.teams || []).forEach((team) => {
+            if (team.sdmId === sdm.sdmId) {
+              teamsInOrg.add(team);
             }
-        };
-
-        const allCheckboxes = itemsContainer.querySelectorAll('.theme-checkbox-item');
-
-        selectAllCheckbox.addEventListener('change', () => {
-            allCheckboxes.forEach(cb => cb.checked = selectAllCheckbox.checked);
-            updateButtonText();
-            this.renderTable();
-        });
-
-        allCheckboxes.forEach(cb => {
-            cb.addEventListener('change', () => {
-                updateButtonText();
-                this.renderTable();
-            });
-        });
-
-        button.addEventListener('click', (e) => {
-            e.stopPropagation();
-            panel.classList.toggle('show');
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!dropdownContainer.contains(e.target)) {
-                panel.classList.remove('show');
-            }
-        });
-
-        return wrapper;
+          });
+        }
+      });
+      teamsToShow = Array.from(teamsInOrg);
     }
 
-    /**
-     * Update team filter options based on org selection
-     */
-    updateTeamFilterOptions() {
-        const container = document.getElementById('roadmapTeamFilterContainer' + this.idSuffix);
-        if (!container) return;
+    // Build team options
+    const teamOptions = [{ value: 'all', text: 'All Teams' }];
+    teamsToShow
+      .sort((a, b) => (a.teamIdentity || a.teamName).localeCompare(b.teamIdentity || b.teamName))
+      .forEach((team) => {
+        teamOptions.push({
+          value: team.teamId,
+          text: team.teamIdentity || team.teamName,
+        });
+      });
 
-        // Clear previous ThemedSelect
-        const existingSelect = container.querySelector('.themed-select');
-        if (existingSelect) {
-            existingSelect.remove();
+    // Create new ThemedSelect
+    this._teamSelect = new ThemedSelect({
+      options: teamOptions,
+      value: 'all',
+      id: 'roadmapTeamFilter' + this.idSuffix,
+      onChange: () => this.renderTable(),
+    });
+
+    container.appendChild(this._teamSelect.render());
+  }
+
+  /**
+   * Render the table based on type
+   */
+  renderTable() {
+    if (this.type === '3yp') {
+      this.render3YPTable();
+    } else {
+      this.renderQuarterlyTable();
+    }
+  }
+
+  /**
+   * Get filtered initiatives based on current filter selections
+   */
+  getFilteredInitiatives() {
+    const systemData = SystemService.getCurrentSystem();
+    const orgFilter = this._orgSelect?.getValue() || 'all';
+    const teamFilter = this._teamSelect?.getValue() || 'all';
+    const yearFilter = this.planningYear;
+
+    let initiatives = systemData?.yearlyInitiatives || [];
+
+    // Year filter (only for quarterly)
+    if (this.type === 'quarterly' && yearFilter !== 'all') {
+      initiatives = initiatives.filter((init) => init.attributes.planningYear == yearFilter);
+    }
+
+    // Org filter
+    if (orgFilter !== 'all') {
+      const teamsInOrg = new Set();
+      (systemData?.sdms || []).forEach((sdm) => {
+        if (sdm.seniorManagerId === orgFilter) {
+          (systemData?.teams || []).forEach((team) => {
+            if (team.sdmId === sdm.sdmId) teamsInOrg.add(team.teamId);
+          });
         }
+      });
+      initiatives = initiatives.filter((init) =>
+        (init.assignments || []).some((a) => teamsInOrg.has(a.teamId))
+      );
+    }
 
-        const orgValue = this._orgSelect?.getValue() || 'all';
-        const systemData = SystemService.getCurrentSystem();
+    // Team filter
+    if (teamFilter !== 'all') {
+      initiatives = initiatives.filter((init) =>
+        (init.assignments || []).some((a) => a.teamId === teamFilter)
+      );
+    }
 
-        // Get teams to show
-        let teamsToShow = [];
-        if (orgValue === 'all') {
-            teamsToShow = systemData?.teams || [];
-        } else {
-            const teamsInOrg = new Set();
-            (systemData?.sdms || []).forEach(sdm => {
-                if (sdm.seniorManagerId === orgValue) {
-                    (systemData?.teams || []).forEach(team => {
-                        if (team.sdmId === sdm.sdmId) {
-                            teamsInOrg.add(team);
-                        }
-                    });
-                }
-            });
-            teamsToShow = Array.from(teamsInOrg);
+    // Theme filter
+    const themePanel = document.getElementById('theme-dropdown-panel' + this.idSuffix);
+    if (themePanel) {
+      const selectedThemes = Array.from(
+        themePanel.querySelectorAll('.theme-checkbox-item:checked')
+      ).map((cb) => cb.value);
+
+      const allThemeIds = (systemData?.definedThemes || []).map((t) => t.themeId);
+
+      if (selectedThemes.length < allThemeIds.length) {
+        initiatives = initiatives.filter((init) => {
+          const initThemes = init.themes || [];
+          if (initThemes.length === 0) return false;
+          return initThemes.some((tid) => selectedThemes.includes(tid));
+        });
+      }
+    }
+
+    return initiatives;
+  }
+
+  /**
+   * Render quarterly roadmap table
+   */
+  renderQuarterlyTable() {
+    if (!this.tableContainer) return;
+
+    // Clear container
+    while (this.tableContainer.firstChild) {
+      this.tableContainer.removeChild(this.tableContainer.firstChild);
+    }
+
+    const systemData = SystemService.getCurrentSystem();
+    const initiatives = this.getFilteredInitiatives();
+    const themeMap = new Map((systemData?.definedThemes || []).map((t) => [t.themeId, t.name]));
+
+    // Group by theme and quarter
+    const roadmapData = {};
+    initiatives.forEach((init) => {
+      const quarter = this.getQuarterFromDate(init.targetDueDate);
+      if (!quarter) return;
+
+      const themes = init.themes?.length > 0 ? init.themes : ['uncategorized'];
+      themes.forEach((themeId) => {
+        const themeName = themeMap.get(themeId) || 'Uncategorized';
+        if (!roadmapData[themeName]) {
+          roadmapData[themeName] = { Q1: [], Q2: [], Q3: [], Q4: [] };
         }
+        roadmapData[themeName][quarter].push(init);
+      });
+    });
 
-        // Build team options
-        const teamOptions = [{ value: 'all', text: 'All Teams' }];
-        teamsToShow
-            .sort((a, b) => (a.teamIdentity || a.teamName).localeCompare(b.teamIdentity || b.teamName))
-            .forEach(team => {
-                teamOptions.push({
-                    value: team.teamId,
-                    text: team.teamIdentity || team.teamName
-                });
-            });
+    const themes = Object.keys(roadmapData).sort();
 
-        // Create new ThemedSelect
-        this._teamSelect = new ThemedSelect({
-            options: teamOptions,
-            value: 'all',
-            id: 'roadmapTeamFilter' + this.idSuffix,
-            onChange: () => this.renderTable()
+    if (themes.length === 0) {
+      const emptyMsg = document.createElement('p');
+      emptyMsg.className = 'roadmap-table-view__empty';
+      emptyMsg.textContent = 'No initiatives match the current filter criteria.';
+      this.tableContainer.appendChild(emptyMsg);
+      return;
+    }
+
+    // Build table using DOM
+    const table = this.buildTable(
+      ['Theme', 'Q1', 'Q2', 'Q3', 'Q4'],
+      themes.map((themeName) => ({
+        themeName,
+        columns: ['Q1', 'Q2', 'Q3', 'Q4'].map((q) => roadmapData[themeName][q] || []),
+      }))
+    );
+
+    this.tableContainer.appendChild(table);
+  }
+
+  /**
+   * Render 3-Year Plan table
+   */
+  render3YPTable() {
+    if (!this.tableContainer) return;
+
+    // Clear container
+    while (this.tableContainer.firstChild) {
+      this.tableContainer.removeChild(this.tableContainer.firstChild);
+    }
+
+    const systemData = SystemService.getCurrentSystem();
+    const initiatives = this.getFilteredInitiatives();
+    const themeMap = new Map((systemData?.definedThemes || []).map((t) => [t.themeId, t.name]));
+    const currentYear = new Date().getFullYear();
+
+    // Group by theme and year bucket
+    const roadmapData = {};
+    initiatives.forEach((init) => {
+      const planningYear = init.attributes?.planningYear;
+      if (!planningYear) return;
+
+      let yearBucket;
+      if (planningYear === currentYear) yearBucket = 'Current Year';
+      else if (planningYear === currentYear + 1) yearBucket = 'Next Year';
+      else if (planningYear > currentYear + 1) yearBucket = 'Future';
+      else return;
+
+      const themes = init.themes?.length > 0 ? init.themes : ['uncategorized'];
+      themes.forEach((themeId) => {
+        const themeName = themeMap.get(themeId) || 'Uncategorized';
+        if (!roadmapData[themeName]) {
+          roadmapData[themeName] = { 'Current Year': [], 'Next Year': [], Future: [] };
+        }
+        roadmapData[themeName][yearBucket].push(init);
+      });
+    });
+
+    const themes = Object.keys(roadmapData).sort();
+
+    if (themes.length === 0) {
+      const emptyMsg = document.createElement('p');
+      emptyMsg.className = 'roadmap-table-view__empty';
+      emptyMsg.textContent = 'No initiatives match the current filter criteria for the 3YP view.';
+      this.tableContainer.appendChild(emptyMsg);
+      return;
+    }
+
+    // Build table using DOM
+    const table = this.buildTable(
+      [
+        'Theme',
+        `Current Year (${currentYear})`,
+        `Next Year (${currentYear + 1})`,
+        `Future (${currentYear + 2}+)`,
+      ],
+      themes.map((themeName) => ({
+        themeName,
+        columns: ['Current Year', 'Next Year', 'Future'].map(
+          (bucket) => roadmapData[themeName][bucket] || []
+        ),
+      }))
+    );
+
+    this.tableContainer.appendChild(table);
+  }
+
+  /**
+   * Build table element with DOM creation
+   */
+  buildTable(headers, rows) {
+    const table = document.createElement('table');
+    table.className = 'quarterly-roadmap-table';
+
+    // Header
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    headers.forEach((h) => {
+      const th = document.createElement('th');
+      th.textContent = h;
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    // Body
+    const tbody = document.createElement('tbody');
+    const orgFilter = this._orgSelect?.getValue() || 'all';
+    const teamFilter = this._teamSelect?.getValue() || 'all';
+
+    rows.forEach((row) => {
+      const tr = document.createElement('tr');
+
+      // Theme cell
+      const themeCell = document.createElement('td');
+      themeCell.className = 'theme-cell';
+      themeCell.textContent = row.themeName;
+      tr.appendChild(themeCell);
+
+      // Quarter/Year cells
+      row.columns.forEach((initiatives) => {
+        const td = document.createElement('td');
+        const cellDiv = document.createElement('div');
+        cellDiv.className = 'quarter-cell';
+
+        initiatives.forEach((init) => {
+          const card = this.createInitiativeCard(init, orgFilter, teamFilter);
+          cellDiv.appendChild(card);
         });
 
-        container.appendChild(this._teamSelect.render());
+        td.appendChild(cellDiv);
+        tr.appendChild(td);
+      });
+
+      tbody.appendChild(tr);
+    });
+
+    table.appendChild(tbody);
+    return table;
+  }
+
+  /**
+   * Create initiative card element
+   */
+  createInitiativeCard(init, orgFilter, teamFilter) {
+    const systemData = SystemService.getCurrentSystem();
+    const card = document.createElement('div');
+    const statusClass = `status-${(init.status || 'backlog').toLowerCase().replace(/\s+/g, '-')}`;
+    card.className = `initiative-card ${statusClass}`;
+    card.title = init.description || init.title;
+    card.dataset.initiativeId = init.initiativeId;
+
+    // Title
+    const title = document.createElement('div');
+    title.className = 'initiative-title';
+    title.textContent = init.title;
+    card.appendChild(title);
+
+    // SDE display
+    const totalSde = (init.assignments || []).reduce((sum, a) => sum + (a.sdeYears || 0), 0);
+    const sdeDiv = document.createElement('div');
+    sdeDiv.className = 'initiative-sde';
+
+    if (teamFilter !== 'all') {
+      const team = systemData?.teams?.find((t) => t.teamId === teamFilter);
+      const teamName = team ? team.teamIdentity || team.teamName : 'Team';
+      const teamAssignment = (init.assignments || []).find((a) => a.teamId === teamFilter);
+      const teamSde = teamAssignment ? teamAssignment.sdeYears || 0 : 0;
+      sdeDiv.textContent = `${teamName}: ${teamSde.toFixed(2)} of ${totalSde.toFixed(2)} SDEs`;
+    } else if (orgFilter !== 'all') {
+      const teamsInOrg = new Set();
+      (systemData?.sdms || []).forEach((sdm) => {
+        if (sdm.seniorManagerId === orgFilter) {
+          (systemData?.teams || []).forEach((team) => {
+            if (team.sdmId === sdm.sdmId) teamsInOrg.add(team.teamId);
+          });
+        }
+      });
+      const orgAssignments = (init.assignments || []).filter((a) => teamsInOrg.has(a.teamId));
+      const orgSde = orgAssignments.reduce((sum, a) => sum + (a.sdeYears || 0), 0);
+      sdeDiv.textContent = `Org Total: ${orgSde.toFixed(2)} of ${totalSde.toFixed(2)} SDEs`;
+    } else {
+      sdeDiv.textContent = `(${totalSde.toFixed(2)} SDEs)`;
     }
 
-    /**
-     * Render the table based on type
-     */
-    renderTable() {
-        if (this.type === '3yp') {
-            this.render3YPTable();
-        } else {
-            this.renderQuarterlyTable();
-        }
+    card.appendChild(sdeDiv);
+
+    // Click handler
+    card.addEventListener('click', () => {
+      openRoadmapModalForEdit(init.initiativeId);
+    });
+
+    return card;
+  }
+
+  /**
+   * Get quarter from date string
+   */
+  getQuarterFromDate(dateString) {
+    if (!dateString) return null;
+    try {
+      const month = parseInt(dateString.substring(5, 7), 10);
+      if (month >= 1 && month <= 3) return 'Q1';
+      if (month >= 4 && month <= 6) return 'Q2';
+      if (month >= 7 && month <= 9) return 'Q3';
+      if (month >= 10 && month <= 12) return 'Q4';
+      return null;
+    } catch {
+      return null;
     }
-
-    /**
-     * Get filtered initiatives based on current filter selections
-     */
-    getFilteredInitiatives() {
-        const systemData = SystemService.getCurrentSystem();
-        const orgFilter = this._orgSelect?.getValue() || 'all';
-        const teamFilter = this._teamSelect?.getValue() || 'all';
-        const yearFilter = this.planningYear;
-
-        let initiatives = systemData?.yearlyInitiatives || [];
-
-        // Year filter (only for quarterly)
-        if (this.type === 'quarterly' && yearFilter !== 'all') {
-            initiatives = initiatives.filter(init => init.attributes.planningYear == yearFilter);
-        }
-
-        // Org filter
-        if (orgFilter !== 'all') {
-            const teamsInOrg = new Set();
-            (systemData?.sdms || []).forEach(sdm => {
-                if (sdm.seniorManagerId === orgFilter) {
-                    (systemData?.teams || []).forEach(team => {
-                        if (team.sdmId === sdm.sdmId) teamsInOrg.add(team.teamId);
-                    });
-                }
-            });
-            initiatives = initiatives.filter(init =>
-                (init.assignments || []).some(a => teamsInOrg.has(a.teamId))
-            );
-        }
-
-        // Team filter
-        if (teamFilter !== 'all') {
-            initiatives = initiatives.filter(init =>
-                (init.assignments || []).some(a => a.teamId === teamFilter)
-            );
-        }
-
-        // Theme filter
-        const themePanel = document.getElementById('theme-dropdown-panel' + this.idSuffix);
-        if (themePanel) {
-            const selectedThemes = Array.from(
-                themePanel.querySelectorAll('.theme-checkbox-item:checked')
-            ).map(cb => cb.value);
-
-            const allThemeIds = (systemData?.definedThemes || []).map(t => t.themeId);
-
-            if (selectedThemes.length < allThemeIds.length) {
-                initiatives = initiatives.filter(init => {
-                    const initThemes = init.themes || [];
-                    if (initThemes.length === 0) return false;
-                    return initThemes.some(tid => selectedThemes.includes(tid));
-                });
-            }
-        }
-
-        return initiatives;
-    }
-
-    /**
-     * Render quarterly roadmap table
-     */
-    renderQuarterlyTable() {
-        if (!this.tableContainer) return;
-
-        // Clear container
-        while (this.tableContainer.firstChild) {
-            this.tableContainer.removeChild(this.tableContainer.firstChild);
-        }
-
-        const systemData = SystemService.getCurrentSystem();
-        const initiatives = this.getFilteredInitiatives();
-        const themeMap = new Map((systemData?.definedThemes || []).map(t => [t.themeId, t.name]));
-
-        // Group by theme and quarter
-        const roadmapData = {};
-        initiatives.forEach(init => {
-            const quarter = this.getQuarterFromDate(init.targetDueDate);
-            if (!quarter) return;
-
-            const themes = init.themes?.length > 0 ? init.themes : ['uncategorized'];
-            themes.forEach(themeId => {
-                const themeName = themeMap.get(themeId) || 'Uncategorized';
-                if (!roadmapData[themeName]) {
-                    roadmapData[themeName] = { Q1: [], Q2: [], Q3: [], Q4: [] };
-                }
-                roadmapData[themeName][quarter].push(init);
-            });
-        });
-
-        const themes = Object.keys(roadmapData).sort();
-
-        if (themes.length === 0) {
-            const emptyMsg = document.createElement('p');
-            emptyMsg.className = 'roadmap-table-view__empty';
-            emptyMsg.textContent = 'No initiatives match the current filter criteria.';
-            this.tableContainer.appendChild(emptyMsg);
-            return;
-        }
-
-        // Build table using DOM
-        const table = this.buildTable(
-            ['Theme', 'Q1', 'Q2', 'Q3', 'Q4'],
-            themes.map(themeName => ({
-                themeName,
-                columns: ['Q1', 'Q2', 'Q3', 'Q4'].map(q => roadmapData[themeName][q] || [])
-            }))
-        );
-
-        this.tableContainer.appendChild(table);
-    }
-
-    /**
-     * Render 3-Year Plan table
-     */
-    render3YPTable() {
-        if (!this.tableContainer) return;
-
-        // Clear container
-        while (this.tableContainer.firstChild) {
-            this.tableContainer.removeChild(this.tableContainer.firstChild);
-        }
-
-        const systemData = SystemService.getCurrentSystem();
-        const initiatives = this.getFilteredInitiatives();
-        const themeMap = new Map((systemData?.definedThemes || []).map(t => [t.themeId, t.name]));
-        const currentYear = new Date().getFullYear();
-
-        // Group by theme and year bucket
-        const roadmapData = {};
-        initiatives.forEach(init => {
-            const planningYear = init.attributes?.planningYear;
-            if (!planningYear) return;
-
-            let yearBucket;
-            if (planningYear === currentYear) yearBucket = 'Current Year';
-            else if (planningYear === currentYear + 1) yearBucket = 'Next Year';
-            else if (planningYear > currentYear + 1) yearBucket = 'Future';
-            else return;
-
-            const themes = init.themes?.length > 0 ? init.themes : ['uncategorized'];
-            themes.forEach(themeId => {
-                const themeName = themeMap.get(themeId) || 'Uncategorized';
-                if (!roadmapData[themeName]) {
-                    roadmapData[themeName] = { 'Current Year': [], 'Next Year': [], 'Future': [] };
-                }
-                roadmapData[themeName][yearBucket].push(init);
-            });
-        });
-
-        const themes = Object.keys(roadmapData).sort();
-
-        if (themes.length === 0) {
-            const emptyMsg = document.createElement('p');
-            emptyMsg.className = 'roadmap-table-view__empty';
-            emptyMsg.textContent = 'No initiatives match the current filter criteria for the 3YP view.';
-            this.tableContainer.appendChild(emptyMsg);
-            return;
-        }
-
-        // Build table using DOM
-        const table = this.buildTable(
-            ['Theme', `Current Year (${currentYear})`, `Next Year (${currentYear + 1})`, `Future (${currentYear + 2}+)`],
-            themes.map(themeName => ({
-                themeName,
-                columns: ['Current Year', 'Next Year', 'Future'].map(bucket => roadmapData[themeName][bucket] || [])
-            }))
-        );
-
-        this.tableContainer.appendChild(table);
-    }
-
-    /**
-     * Build table element with DOM creation
-     */
-    buildTable(headers, rows) {
-        const table = document.createElement('table');
-        table.className = 'quarterly-roadmap-table';
-
-        // Header
-        const thead = document.createElement('thead');
-        const headerRow = document.createElement('tr');
-        headers.forEach(h => {
-            const th = document.createElement('th');
-            th.textContent = h;
-            headerRow.appendChild(th);
-        });
-        thead.appendChild(headerRow);
-        table.appendChild(thead);
-
-        // Body
-        const tbody = document.createElement('tbody');
-        const orgFilter = this._orgSelect?.getValue() || 'all';
-        const teamFilter = this._teamSelect?.getValue() || 'all';
-
-        rows.forEach(row => {
-            const tr = document.createElement('tr');
-
-            // Theme cell
-            const themeCell = document.createElement('td');
-            themeCell.className = 'theme-cell';
-            themeCell.textContent = row.themeName;
-            tr.appendChild(themeCell);
-
-            // Quarter/Year cells
-            row.columns.forEach(initiatives => {
-                const td = document.createElement('td');
-                const cellDiv = document.createElement('div');
-                cellDiv.className = 'quarter-cell';
-
-                initiatives.forEach(init => {
-                    const card = this.createInitiativeCard(init, orgFilter, teamFilter);
-                    cellDiv.appendChild(card);
-                });
-
-                td.appendChild(cellDiv);
-                tr.appendChild(td);
-            });
-
-            tbody.appendChild(tr);
-        });
-
-        table.appendChild(tbody);
-        return table;
-    }
-
-    /**
-     * Create initiative card element
-     */
-    createInitiativeCard(init, orgFilter, teamFilter) {
-        const systemData = SystemService.getCurrentSystem();
-        const card = document.createElement('div');
-        const statusClass = `status-${(init.status || 'backlog').toLowerCase().replace(/\s+/g, '-')}`;
-        card.className = `initiative-card ${statusClass}`;
-        card.title = init.description || init.title;
-        card.dataset.initiativeId = init.initiativeId;
-
-        // Title
-        const title = document.createElement('div');
-        title.className = 'initiative-title';
-        title.textContent = init.title;
-        card.appendChild(title);
-
-        // SDE display
-        const totalSde = (init.assignments || []).reduce((sum, a) => sum + (a.sdeYears || 0), 0);
-        const sdeDiv = document.createElement('div');
-        sdeDiv.className = 'initiative-sde';
-
-        if (teamFilter !== 'all') {
-            const team = systemData?.teams?.find(t => t.teamId === teamFilter);
-            const teamName = team ? (team.teamIdentity || team.teamName) : 'Team';
-            const teamAssignment = (init.assignments || []).find(a => a.teamId === teamFilter);
-            const teamSde = teamAssignment ? (teamAssignment.sdeYears || 0) : 0;
-            sdeDiv.textContent = `${teamName}: ${teamSde.toFixed(2)} of ${totalSde.toFixed(2)} SDEs`;
-        } else if (orgFilter !== 'all') {
-            const teamsInOrg = new Set();
-            (systemData?.sdms || []).forEach(sdm => {
-                if (sdm.seniorManagerId === orgFilter) {
-                    (systemData?.teams || []).forEach(team => {
-                        if (team.sdmId === sdm.sdmId) teamsInOrg.add(team.teamId);
-                    });
-                }
-            });
-            const orgAssignments = (init.assignments || []).filter(a => teamsInOrg.has(a.teamId));
-            const orgSde = orgAssignments.reduce((sum, a) => sum + (a.sdeYears || 0), 0);
-            sdeDiv.textContent = `Org Total: ${orgSde.toFixed(2)} of ${totalSde.toFixed(2)} SDEs`;
-        } else {
-            sdeDiv.textContent = `(${totalSde.toFixed(2)} SDEs)`;
-        }
-
-        card.appendChild(sdeDiv);
-
-        // Click handler
-        card.addEventListener('click', () => {
-            openRoadmapModalForEdit(init.initiativeId);
-        });
-
-        return card;
-    }
-
-    /**
-     * Get quarter from date string
-     */
-    getQuarterFromDate(dateString) {
-        if (!dateString) return null;
-        try {
-            const month = parseInt(dateString.substring(5, 7), 10);
-            if (month >= 1 && month <= 3) return 'Q1';
-            if (month >= 4 && month <= 6) return 'Q2';
-            if (month >= 7 && month <= 9) return 'Q3';
-            if (month >= 10 && month <= 12) return 'Q4';
-            return null;
-        } catch (e) {
-            return null;
-        }
-    }
+  }
 }

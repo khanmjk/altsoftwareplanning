@@ -142,12 +142,12 @@ ${systemPromptSummary}`.trim();
     let subgraphDepth = 0;
 
     const createSubgraphId = (label) => {
-      const base =
-        `sg_${label
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, '_')
-          .replace(/^_+|_+$/g, '')}` || 'sg';
-      let id = base === 'sg_' ? 'sg' : base;
+      const normalizedLabel = label
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '');
+      const base = normalizedLabel ? `sg_${normalizedLabel}` : 'sg';
+      let id = base;
       let index = 1;
       while (usedSubgraphIds.has(id)) {
         index += 1;
@@ -856,7 +856,7 @@ async function _fetchWithRetry(url, options, maxRetries = 5, initialDelay = 1000
         let errorBody = null;
         try {
           errorBody = await response.json();
-        } catch (e) {}
+        } catch {}
         const errorMessage = `API Error: ${errorBody?.error?.message || response.statusText} (Status: ${response.status})`;
         lastDetailedError = new Error(errorMessage);
         throw new Error(`Retryable error: ${response.statusText}`);
