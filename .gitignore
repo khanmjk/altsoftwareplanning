@@ -30,6 +30,10 @@ build/
 worktrees/
 SMT-Antigravity*
 
+# Coverage output
+coverage/
+.nyc_output/
+
 # Gemini Agent
 .gemini/
 

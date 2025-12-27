@@ -95,6 +95,22 @@ Watch mode:
 npm run test:watch
 ```
 
+Coverage report:
+
+```
+npm run test:coverage
+```
+
+Unit coverage output:
+
+- `coverage/unit/index.html`
+- `coverage/unit/lcov.info`
+- `.nyc_output/unit.json` (raw coverage data)
+
+Notes:
+
+- Unit coverage is collected by instrumenting VM-loaded scripts during tests.
+
 ## Integration Tests (Cypress)
 
 Run end-to-end tests against a local static server:
@@ -124,6 +140,19 @@ npx cypress run --spec cypress/e2e/smoke.cy.js
 ```
 
 For a deeper guide, see `docs/cypress-testing.md`.
+
+## Coverage Reports (Cypress)
+
+Run Cypress with coverage collection:
+
+```
+npm run test:e2e:coverage
+```
+
+E2E coverage output:
+
+- `coverage/e2e/index.html`
+- `coverage/e2e/lcov.info`
 
 ## Test Layout
 

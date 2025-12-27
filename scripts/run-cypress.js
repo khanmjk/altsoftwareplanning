@@ -5,9 +5,36 @@ const fs = require('fs');
 const path = require('path');
 const url = require('url');
 const { spawn } = require('child_process');
+const { createInstrumenter } = require('istanbul-lib-instrument');
 
 const rootDir = path.resolve(__dirname, '..');
 const port = Number(process.env.PORT) || 4173;
+const args = new Set(process.argv.slice(2));
+const enableCoverage = args.has('--coverage') || process.env.COVERAGE === '1';
+
+const shouldInstrument = (relativePath, ext) => {
+  if (!enableCoverage || ext !== '.js') return false;
+  if (relativePath.startsWith('js/sampleData/')) return false;
+  return relativePath.startsWith('js/') || relativePath.startsWith('ai/');
+};
+
+const instrumenter = enableCoverage
+  ? createInstrumenter({
+      coverageVariable: '__coverage__',
+      produceSourceMap: false,
+      esModules: false,
+    })
+  : null;
+
+if (enableCoverage) {
+  const nycOutputDir = path.join(rootDir, '.nyc_output');
+  const e2eCoverageDir = path.join(rootDir, 'coverage', 'e2e');
+  [nycOutputDir, e2eCoverageDir].forEach((dir) => {
+    if (fs.existsSync(dir)) {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+}
 
 const mimeTypes = {
   '.html': 'text/html',
@@ -48,20 +75,33 @@ const server = http.createServer((req, res) => {
     .replace(/^[/\\]+/, '');
   const filePath = path.join(rootDir, safePath);
 
-  fs.readFile(filePath, (err, data) => {
+  const ext = path.extname(filePath).toLowerCase();
+  const relativePath = safePath.replace(/\\/g, '/');
+  const instrument = shouldInstrument(relativePath, ext);
+  const readEncoding = instrument ? 'utf8' : null;
+
+  fs.readFile(filePath, readEncoding, (err, data) => {
     if (err) {
       serveIndex(res);
       return;
     }
 
-    const ext = path.extname(filePath).toLowerCase();
+    let body = data;
+    if (instrument) {
+      try {
+        body = instrumenter.instrumentSync(data, relativePath);
+      } catch (error) {
+        console.error(`Coverage instrumentation failed for ${relativePath}:`, error);
+        body = data;
+      }
+    }
+
     res.writeHead(200, { 'Content-Type': mimeTypes[ext] || 'application/octet-stream' });
-    res.end(data);
+    res.end(body);
   });
 });
 
 server.listen(port, () => {
-  const args = new Set(process.argv.slice(2));
   const mode = args.has('--open') ? 'open' : 'run';
   const binName = process.platform === 'win32' ? 'cypress.cmd' : 'cypress';
   const binPath = path.join(rootDir, 'node_modules', '.bin', binName);

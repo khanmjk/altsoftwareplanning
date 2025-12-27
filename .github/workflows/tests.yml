@@ -13,5 +13,11 @@ jobs:
           node-version: 20
       - name: Install dependencies
         run: npm install --no-fund --no-audit
-      - name: Run unit tests
-        run: npm run test
+      - name: Run unit tests with coverage
+        run: npm run test:coverage
+      - name: Upload unit coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-coverage
+          path: coverage/unit
+          if-no-files-found: error
