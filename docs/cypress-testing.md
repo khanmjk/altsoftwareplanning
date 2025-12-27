@@ -33,6 +33,25 @@ python3 -m http.server 4173
 npx cypress run --spec cypress/e2e/smoke.cy.js
 ```
 
+## Coverage (E2E)
+
+Collect coverage for Cypress runs:
+
+```
+npm run test:e2e:coverage
+```
+
+Outputs:
+
+- `coverage/e2e/index.html`
+- `coverage/e2e/lcov.info`
+- `.nyc_output/` (raw coverage data)
+
+Notes:
+
+- The Cypress server instruments files under `js/` and `ai/`.
+- `js/sampleData/` is excluded from instrumentation.
+
 ## Spec Map
 
 - `cypress/e2e/smoke.cy.js`: quick sanity checks for navigation and modals.

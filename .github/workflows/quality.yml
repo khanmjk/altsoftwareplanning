@@ -15,7 +15,21 @@ jobs:
         run: npm install --no-fund --no-audit
       - name: Lint and contract checks
         run: npm run verify
-      - name: Run unit tests
-        run: npm run test
+      - name: Run unit tests with coverage
+        run: npm run test:coverage
+      - name: Upload unit coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-coverage
+          path: coverage/unit
+          if-no-files-found: error
+      - name: Run Cypress E2E tests with coverage
+        run: npm run test:e2e:coverage
+      - name: Upload e2e coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-coverage
+          path: coverage/e2e
+          if-no-files-found: error
       - name: Dependency audit
         run: npm audit --audit-level=high
