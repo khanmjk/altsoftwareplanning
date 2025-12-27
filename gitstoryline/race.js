@@ -13,17 +13,20 @@ const state = {
   animationTimer: null,
   svg: null,
   xScale: null,
+  globalMaxLines: 0, // Fixed scale based on global max
   deletedFilesShown: new Set(),
+  previousFiles: new Set(), // Track files from previous frame
 };
 
 // Configuration
 const CONFIG = {
-  barHeight: 28,
-  barPadding: 4,
-  maxBars: 30,
-  transitionDuration: 600,
-  frameDuration: 1500, // ms between frames at 1x speed (slower)
-  margin: { top: 20, right: 100, bottom: 20, left: 200 },
+  barHeight: 18,
+  barPadding: 1,
+  maxBars: 48,
+  transitionDuration: 800,
+  frameDuration: 1500, // ms between frames at 1x speed
+  margin: { top: 10, right: 100, bottom: 10, left: 220 },
+  newFileGlowDuration: 1500, // How long new files glow
 };
 
 // Initialize
@@ -41,11 +44,22 @@ async function loadData() {
     const response = await fetch('race_data.json');
     state.data = await response.json();
 
+    // Calculate GLOBAL max lines across ALL frames for fixed scale
+    state.globalMaxLines = 0;
+    state.data.frames.forEach((frame) => {
+      frame.files.forEach((f) => {
+        if (f.lines > state.globalMaxLines) {
+          state.globalMaxLines = f.lines;
+        }
+      });
+    });
+    console.log('Global max lines:', state.globalMaxLines);
+
     // Setup slider
     const slider = document.getElementById('progressSlider');
     slider.max = state.data.frames.length - 1;
 
-    // Initialize SVG
+    // Initialize SVG with fixed scale
     initSVG();
 
     // Render initial frame
@@ -66,12 +80,15 @@ function initSVG() {
 
   state.svg = d3.select(container).append('svg').attr('width', width).attr('height', height);
 
-  // Create a group for bars
+  // Create groups for bars
   state.svg.append('g').attr('class', 'bars-container');
 
-  // Initialize scale
+  // Initialize FIXED scale based on global max
   const chartWidth = width - CONFIG.margin.left - CONFIG.margin.right;
-  state.xScale = d3.scaleLinear().domain([0, 1000]).range([0, chartWidth]);
+  state.xScale = d3
+    .scaleLinear()
+    .domain([0, state.globalMaxLines * 1.05]) // Fixed domain!
+    .range([0, chartWidth]);
 }
 
 function setupTheme() {
@@ -102,6 +119,7 @@ function setupControls() {
   document.getElementById('restartBtn').addEventListener('click', () => {
     state.currentFrame = 0;
     state.deletedFilesShown.clear();
+    state.previousFiles.clear();
     renderFrame(0);
     updateSlider();
     updateStats();
@@ -203,19 +221,20 @@ function renderFrame(frameIndex) {
     .sort((a, b) => b.lines - a.lines)
     .slice(0, CONFIG.maxBars);
 
+  // Detect new files (not in previous frame)
+  const currentFileSet = new Set(sortedFiles.map((f) => f.file));
+  sortedFiles.forEach((f) => {
+    f.isNew = !state.previousFiles.has(f.file);
+  });
+
   // Assign ranks
   sortedFiles.forEach((f, i) => (f.rank = i));
 
-  // Calculate max for scale
-  const maxLines = d3.max(sortedFiles, (d) => d.lines) || 1;
-
-  // Update scale
-  const container = document.getElementById('raceChart');
-  const chartWidth = container.clientWidth - CONFIG.margin.left - CONFIG.margin.right;
-  state.xScale.domain([0, maxLines * 1.1]).range([0, chartWidth]);
-
   // Render bars with transitions
   renderBars(sortedFiles);
+
+  // Update previous files for next frame
+  state.previousFiles = currentFileSet;
 }
 
 function renderBars(files) {
@@ -225,14 +244,14 @@ function renderBars(files) {
   // Data join
   const bars = container.selectAll('.bar-group').data(files, (d) => d.file);
 
-  // EXIT - remove old bars
+  // EXIT - remove old bars (files that dropped out of top N)
   bars.exit().transition(t).style('opacity', 0).remove();
 
-  // ENTER - new bars
+  // ENTER - new bars (files entering the race)
   const enter = bars
     .enter()
     .append('g')
-    .attr('class', 'bar-group')
+    .attr('class', (d) => `bar-group ${d.isNew ? 'bar-new' : ''}`)
     .attr(
       'transform',
       (d) =>
@@ -240,49 +259,51 @@ function renderBars(files) {
     )
     .style('opacity', 0);
 
-  // Category icon
+  // Category icon (far left)
   enter
     .append('text')
     .attr('class', 'bar-icon')
-    .attr('x', -185)
-    .attr('y', CONFIG.barHeight / 2 + 5)
+    .attr('x', -210)
+    .attr('y', CONFIG.barHeight / 2 + 4)
+    .style('font-size', '12px')
     .text((d) => getCategoryIcon(d.category));
 
   // Rank badge background
   enter
     .append('circle')
     .attr('class', 'rank-circle')
-    .attr('cx', -30)
+    .attr('cx', -190)
     .attr('cy', CONFIG.barHeight / 2)
-    .attr('r', 11);
+    .attr('r', 9);
 
   // Rank number
   enter
     .append('text')
     .attr('class', 'rank-text')
-    .attr('x', -30)
-    .attr('y', CONFIG.barHeight / 2 + 4)
+    .attr('x', -190)
+    .attr('y', CONFIG.barHeight / 2 + 3)
     .attr('text-anchor', 'middle')
-    .attr('font-size', '10px')
+    .attr('font-size', '8px')
     .attr('font-weight', '700')
     .attr('fill', 'white');
 
-  // File name
+  // File name (between rank and bar)
   enter
     .append('text')
     .attr('class', 'bar-label')
-    .attr('x', -45)
+    .attr('x', -10)
     .attr('y', CONFIG.barHeight / 2 + 4)
-    .attr('text-anchor', 'end');
+    .attr('text-anchor', 'end')
+    .style('font-size', '10px');
 
-  // Bar rect
+  // Bar rect - NEW FILES start at width 0
   enter
     .append('rect')
     .attr('class', 'bar')
     .attr('x', 0)
     .attr('y', 0)
     .attr('height', CONFIG.barHeight)
-    .attr('width', 0)
+    .attr('width', 0) // Start at 0!
     .attr('rx', 3);
 
   // Line count
@@ -297,7 +318,7 @@ function renderBars(files) {
   // UPDATE + ENTER - update all bars
   const allBars = enter.merge(bars);
 
-  // Transition positions
+  // Transition positions (for rank changes)
   allBars
     .transition(t)
     .attr(
@@ -307,25 +328,26 @@ function renderBars(files) {
     )
     .style('opacity', (d) => (d.status === 'deleted' ? 0.4 : 1));
 
+  // Handle new file glow effect
+  allBars.classed('bar-new', (d) => d.isNew);
+
   // Update rank badge
-  allBars
-    .select('.rank-circle')
-    .transition(t)
-    .attr('fill', (d) => getRankColor(d.rank));
+  allBars.select('.rank-circle').transition(t).attr('fill', getRankColor);
 
   allBars.select('.rank-text').text((d) => d.rank + 1);
 
   // Update file name
-  allBars.select('.bar-label').text((d) => truncateFileName(d.file, 25));
+  allBars.select('.bar-label').text((d) => truncateFileName(d.file, 22));
 
-  // Update bar width with transition
+  // Update bar - THIS IS THE KEY FIX: transition width properly
   allBars
     .select('.bar')
-    .attr('fill', (d) => d.color)
+    .attr('fill', (d) => (d.isNew ? '#22c55e' : d.color)) // Green for new files
     .transition(t)
-    .attr('width', (d) => Math.max(0, state.xScale(d.lines)));
+    .attr('fill', (d) => d.color) // Then transition to normal color
+    .attr('width', (d) => Math.max(0, state.xScale(d.lines))); // Animate to actual width
 
-  // Update line count
+  // Update line count with number animation
   allBars
     .select('.bar-value')
     .transition(t)
@@ -340,10 +362,10 @@ function renderBars(files) {
     });
 }
 
-function getRankColor(rank) {
-  if (rank === 0) return '#ffd700'; // Gold
-  if (rank === 1) return '#c0c0c0'; // Silver
-  if (rank === 2) return '#cd7f32'; // Bronze
+function getRankColor(d) {
+  if (d.rank === 0) return '#ffd700'; // Gold
+  if (d.rank === 1) return '#c0c0c0'; // Silver
+  if (d.rank === 2) return '#cd7f32'; // Bronze
   return '#64748b';
 }
 
@@ -364,9 +386,23 @@ function getCategoryIcon(category) {
 }
 
 function truncateFileName(path, maxLen) {
-  const name = path.split('/').pop();
-  if (name.length <= maxLen) return name;
-  return name.substring(0, maxLen - 3) + '...';
+  // Show /category/filename format
+  const parts = path.split('/');
+  const filename = parts.pop();
+  const category = parts.length > 0 ? parts[parts.length - 1] : '';
+
+  // Build breadcrumb: /category/filename or just /filename
+  const breadcrumb = category ? `/${category}/${filename}` : `/${filename}`;
+
+  if (breadcrumb.length <= maxLen) return breadcrumb;
+
+  // Truncate filename but keep category
+  const prefix = category ? `/${category}/` : '/';
+  const availableLen = maxLen - prefix.length - 3; // -3 for ...
+  if (availableLen > 5) {
+    return prefix + filename.substring(0, availableLen) + '...';
+  }
+  return breadcrumb.substring(0, maxLen - 3) + '...';
 }
 
 function updateSlider() {
@@ -403,7 +439,7 @@ function checkMilestone() {
 function checkDeletedFiles() {
   const frame = state.data.frames[state.currentFrame];
 
-  // Check if any file was just deleted (was in graveyard and matches this date)
+  // Check if any file was just deleted
   state.data.graveyard.forEach((file) => {
     if (file.deleted === frame.date && !state.deletedFilesShown.has(file.file)) {
       state.deletedFilesShown.add(file.file);
@@ -423,10 +459,8 @@ function showDeletedFileCallout(file) {
 
   overlay.classList.add('active');
 
-  // Auto-hide after 1.5 seconds
   setTimeout(() => {
     overlay.classList.remove('active');
-    // Reset icon
     icon.className = 'fas fa-star';
     icon.style.color = '';
   }, 1500);
@@ -443,7 +477,6 @@ function showMilestone(milestone) {
 
   overlay.classList.add('active');
 
-  // Auto-hide after 2.5 seconds
   setTimeout(() => {
     overlay.classList.remove('active');
   }, 2500);

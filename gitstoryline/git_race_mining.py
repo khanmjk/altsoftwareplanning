@@ -21,7 +21,7 @@ from pathlib import Path
 # Configuration
 REPO_PATH = Path(__file__).parent.parent.resolve()
 OUTPUT_FILE = REPO_PATH / "gitstoryline" / "race_data.json"
-TOP_N_FILES = 30  # Files to show in the race at any time
+TOP_N_FILES = 48  # Files to show in the race at any time
 
 # File categories for coloring
 FILE_CATEGORIES = {

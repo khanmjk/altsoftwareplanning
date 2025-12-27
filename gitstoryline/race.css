@@ -184,19 +184,39 @@ body {
 
 /* New file animation */
 @keyframes barEnter {
-  from {
+  0% {
     opacity: 0;
     transform: translateX(-50px);
   }
-
-  to {
+  50% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  100% {
     opacity: 1;
     transform: translateX(0);
   }
 }
 
+@keyframes newFileGlow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 8px var(--color-new));
+  }
+  50% {
+    filter: drop-shadow(0 0 20px var(--color-new));
+  }
+}
+
 .bar-new {
-  animation: barEnter 0.3s ease-out;
+  animation:
+    barEnter 0.5s ease-out,
+    newFileGlow 1s ease-in-out 2;
+}
+
+.bar-new .bar {
+  stroke: var(--color-new);
+  stroke-width: 2px;
 }
 
 /* Delete animation */
