@@ -215,6 +215,7 @@ the gitgub issues tracker to keep track of user feedback requests
 [Done] - [TECH DEBT] - cleanup index.html - move a bunch of html to a view file for main content or the workspace canvas files
 [DONE] - [TECH DEBT] - Revisit StorageService and System Service - refactor or enhance the factory pattern with introducting localStorageDriver for local storage, CloudDB (Cloudflare db) drivers for cloud DB, etc.
 [DONE] - [TECH DEBT] - Implement unit testing 
+[DONE] - [TECH DEBT] - Implement e2e testing and test coverage
 
 ------------
 IN PROGRESS
