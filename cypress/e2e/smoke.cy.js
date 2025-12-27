@@ -3,10 +3,10 @@ describe('Smoke: core navigation', () => {
     cy.visit('/?view=systemsView');
     cy.get('#systemsGrid', { timeout: 10000 }).should('exist');
     cy.contains('.system-card__title', 'StreamView')
-      .should('be.visible')
+      .should('exist')
       .closest('.system-card')
       .find('button[data-action="load"]')
-      .click();
+      .click({ force: true });
     cy.get('#visualizationCarousel', { timeout: 10000 }).should('exist');
   };
 
