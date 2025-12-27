@@ -19,6 +19,7 @@ change runtime behavior and can be removed later without refactoring.
 - Prettier: formatting consistency
 - Stylelint: CSS linting
 - Vitest: unit tests
+- Cypress: integration (end-to-end) tests
 - Husky + lint-staged: local pre-commit checks
 - Contract scan: custom guardrails for contract violations
 - depcheck: unused dependency detection
@@ -94,6 +95,42 @@ Watch mode:
 npm run test:watch
 ```
 
+## Integration Tests (Cypress)
+
+Run end-to-end tests against a local static server:
+
+```
+npm run test:e2e
+```
+
+Open the interactive runner:
+
+```
+npm run test:e2e:open
+```
+
+Notes:
+
+- Cypress specs live in `cypress/e2e/*.cy.js`.
+- `scripts/run-cypress.js` starts a static server on `http://127.0.0.1:4173` and runs Cypress.
+- To run a single spec, start a local server separately and invoke Cypress directly:
+
+```
+python3 -m http.server 4173
+```
+
+```
+npx cypress run --spec cypress/e2e/smoke.cy.js
+```
+
+For a deeper guide, see `docs/cypress-testing.md`.
+
+## Test Layout
+
+- Unit tests live under `tests/` and are executed with Vitest.
+- End-to-end tests live under `cypress/e2e/` and run against the static server.
+- Cypress configuration is in `cypress.config.cjs`.
+
 ## Configuration Notes
 
 - ESLint uses the flat config in `eslint.config.mjs`.
@@ -151,6 +188,10 @@ Workflow file:
 Dedicated test workflow:
 
 - `.github/workflows/tests.yml`
+
+Integration test workflow:
+
+- `.github/workflows/e2e.yml`
 
 ## ESLint Notes
 

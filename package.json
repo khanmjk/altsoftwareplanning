@@ -13,12 +13,15 @@
     "stylelint:fix": "stylelint \"css/**/*.css\" --fix",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "node scripts/run-cypress.js",
+    "test:e2e:open": "node scripts/run-cypress.js --open",
     "contract:check": "node scripts/contract-scan.js",
     "depcheck": "depcheck --ignores=stylelint-config-standard",
     "verify": "npm run lint && npm run stylelint && npm run contract:check && npm run depcheck"
   },
   "devDependencies": {
     "@eslint/js": "9.39.2",
+    "cypress": "15.8.1",
     "depcheck": "1.4.7",
     "eslint": "9.39.2",
     "globals": "15.6.0",
