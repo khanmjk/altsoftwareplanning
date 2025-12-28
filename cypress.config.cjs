@@ -1,4 +1,5 @@
 const { defineConfig } = require('cypress');
+const registerCoverageTasks = require('./scripts/cypress-coverage');
 
 module.exports = defineConfig({
   video: false,
@@ -9,8 +10,7 @@ module.exports = defineConfig({
     specPattern: 'cypress/e2e/**/*.cy.js',
     supportFile: 'cypress/support/e2e.js',
     setupNodeEvents(on, config) {
-      require('@cypress/code-coverage/task')(on, config);
-      return config;
+      return registerCoverageTasks(on, config);
     }
   }
 });

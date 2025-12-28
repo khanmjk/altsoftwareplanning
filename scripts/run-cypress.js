@@ -3,9 +3,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const url = require('url');
 const { spawn } = require('child_process');
-const { createInstrumenter } = require('istanbul-lib-instrument');
 
 const rootDir = path.resolve(__dirname, '..');
 const port = Number(process.env.PORT) || 4173;
@@ -19,7 +17,7 @@ const shouldInstrument = (relativePath, ext) => {
 };
 
 const instrumenter = enableCoverage
-  ? createInstrumenter({
+  ? require('istanbul-lib-instrument').createInstrumenter({
       coverageVariable: '__coverage__',
       produceSourceMap: false,
       esModules: false,
@@ -66,9 +64,15 @@ function serveIndex(res) {
 }
 
 const server = http.createServer((req, res) => {
-  const parsed = url.parse(req.url);
-  const pathname = decodeURIComponent(parsed.pathname || '/');
-  const normalizedPath = pathname === '/' ? 'index.html' : pathname;
+  let pathname = '/';
+  try {
+    const parsed = new URL(req.url ?? '/', 'http://localhost');
+    pathname = parsed.pathname;
+  } catch {
+    pathname = '/';
+  }
+  const decodedPathname = decodeURIComponent(pathname || '/');
+  const normalizedPath = decodedPathname === '/' ? 'index.html' : decodedPathname;
   const safePath = path
     .normalize(normalizedPath)
     .replace(/^(\.\.[/\\])+/, '')

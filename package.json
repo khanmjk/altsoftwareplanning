@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "description": "SMT Platform tooling",
   "scripts": {
-    "prepare": "husky install",
+    "prepare": "husky",
     "lint": "eslint \"js/**/*.js\" \"ai/**/*.js\" \"smt-feedback-worker/**/*.js\"",
     "lint:fix": "eslint \"js/**/*.js\" \"ai/**/*.js\" \"smt-feedback-worker/**/*.js\" --fix",
     "format": "prettier --write \"**/*.{js,css,md,html,json}\"",
@@ -23,7 +23,6 @@
     "verify": "npm run lint && npm run stylelint && npm run contract:check && npm run depcheck"
   },
   "devDependencies": {
-    "@cypress/code-coverage": "3.14.3",
     "@eslint/js": "9.39.2",
     "cypress": "15.8.1",
     "depcheck": "1.4.7",
