@@ -22,7 +22,13 @@ const baseRules = {
 
 export default [
   {
-    ignores: ['**/node_modules/**', '**/.git/**', '**/dist/**', '**/coverage/**']
+    ignores: [
+      '**/node_modules/**',
+      '**/.git/**',
+      '**/dist/**',
+      '**/coverage/**',
+      '**/gitstoryline/**'
+    ]
   },
   js.configs.recommended,
   {

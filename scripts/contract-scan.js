@@ -4,7 +4,14 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = process.cwd();
-const EXCLUDED_DIRS = new Set(['node_modules', '.git', 'dist', 'coverage', 'scripts']);
+const EXCLUDED_DIRS = new Set([
+  'node_modules',
+  '.git',
+  'dist',
+  'coverage',
+  'scripts',
+  'gitstoryline',
+]);
 const HTML_ALLOWLIST = new Set(['index.html']);
 const CSS_HEX_ALLOWLIST = new Set(['css/settings/variables.css']);
 
