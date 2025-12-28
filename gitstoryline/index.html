@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GitStoryline - SMT Platform Evolution</title>
+    <meta
+      name="description"
+      content="An animated visual timeline of how the SMT Platform codebase evolved over 14 months"
+    />
+
+    <!-- D3.js for visualizations -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Font Awesome for icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+
+    <link rel="stylesheet" href="timeline.css" />
+  </head>
+
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <div class="header-brand">
+        <i class="fas fa-code-branch"></i>
+        <h1>GitStoryline</h1>
+      </div>
+      <div class="header-title">
+        <span class="repo-name">SMT Platform</span>
+        <span class="repo-subtitle">A Visual Journey Through Code</span>
+      </div>
+      <div class="header-controls">
+        <button class="theme-toggle" id="themeToggle" title="Toggle dark/light mode">
+          <i class="fas fa-moon"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Summary Stats Bar -->
+    <section class="stats-bar" id="statsBar">
+      <div class="stat-item">
+        <span class="stat-value" id="statCommits">--</span>
+        <span class="stat-label">Commits</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value" id="statMonths">--</span>
+        <span class="stat-label">Months</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value" id="statLinesAdded">--</span>
+        <span class="stat-label">Lines Added</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value" id="statFiles">--</span>
+        <span class="stat-label">Files Created</span>
+      </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Left Panel: Phase Timeline -->
+      <aside class="phase-panel" id="phasePanel">
+        <h2>The Story</h2>
+        <div class="phase-timeline" id="phaseTimeline">
+          <!-- Phases will be rendered here -->
+        </div>
+      </aside>
+
+      <!-- Center: Main Visualization Area -->
+      <section class="viz-container">
+        <!-- Navigation Pills -->
+        <nav class="viz-nav">
+          <button class="viz-pill active" data-view="timeline">
+            <i class="fas fa-stream"></i> Timeline
+          </button>
+          <button class="viz-pill" data-view="tree">
+            <i class="fas fa-folder-tree"></i> File Tree
+          </button>
+          <button class="viz-pill" data-view="heatmap"><i class="fas fa-fire"></i> Activity</button>
+          <button class="viz-pill" data-view="evolution">
+            <i class="fas fa-chart-line"></i> File Evolution
+          </button>
+        </nav>
+
+        <!-- Visualization Views -->
+        <div class="viz-views">
+          <!-- Timeline View -->
+          <div class="viz-view active" id="timelineView">
+            <div class="timeline-controls">
+              <div class="animation-controls">
+                <button class="control-btn" id="playPauseBtn" title="Play/Pause animation">
+                  <i class="fas fa-play"></i>
+                </button>
+                <select class="speed-select" id="speedSelect">
+                  <option value="realtime">Real-time</option>
+                  <option value="commit" selected>Per Commit</option>
+                  <option value="milestone">Milestone Focus</option>
+                </select>
+                <input
+                  type="range"
+                  class="timeline-slider"
+                  id="timelineSlider"
+                  min="0"
+                  max="100"
+                  value="100"
+                />
+              </div>
+              <div class="commit-filter">
+                <label
+                  ><input type="checkbox" class="type-filter" value="feature" checked />
+                  Features</label
+                >
+                <label
+                  ><input type="checkbox" class="type-filter" value="fix" checked /> Fixes</label
+                >
+                <label
+                  ><input type="checkbox" class="type-filter" value="refactor" checked />
+                  Refactors</label
+                >
+                <label
+                  ><input type="checkbox" class="type-filter" value="other" checked /> Other</label
+                >
+              </div>
+            </div>
+            <div class="timeline-canvas" id="timelineCanvas"></div>
+          </div>
+
+          <!-- File Tree View -->
+          <div class="viz-view" id="treeView">
+            <div class="tree-controls">
+              <button class="control-btn" id="treePlayBtn">
+                <i class="fas fa-play"></i> Animate Growth
+              </button>
+              <select id="treeLayoutSelect" class="control-select" style="margin-left: 10px; padding: 4px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary);">
+                  <option value="tree">Classic Tree</option>
+                  <option value="galaxy">Galaxy View</option>
+              </select>
+              <span class="tree-date" id="treeCurrentDate">Current</span>
+            </div>
+            <div class="tree-canvas" id="treeCanvas"></div>
+          </div>
+
+          <!-- Heatmap View -->
+          <div class="viz-view" id="heatmapView">
+            <div class="heatmap-canvas" id="heatmapCanvas"></div>
+            <div class="heatmap-legend">
+              <span>Less</span>
+              <div class="legend-gradient"></div>
+              <span>More</span>
+            </div>
+          </div>
+
+          <!-- File Evolution View -->
+          <div class="viz-view" id="evolutionView">
+            <div class="evolution-controls">
+              <select class="file-select" id="fileSelect">
+                <option value="">Select a file to track...</option>
+              </select>
+            </div>
+            <div class="evolution-canvas" id="evolutionCanvas"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Panel: Details -->
+      <aside class="details-panel" id="detailsPanel">
+        <h2>Details</h2>
+        <div class="details-content" id="detailsContent">
+          <div class="empty-state">
+            <i class="fas fa-info-circle"></i>
+            <p>Click on a commit, file, or phase to see details</p>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Narrative Overlay (for phase stories) -->
+    <div class="narrative-overlay" id="narrativeOverlay">
+      <div class="narrative-content">
+        <button class="narrative-close" id="narrativeClose">
+          <i class="fas fa-times"></i>
+        </button>
+        <div class="narrative-phase" id="narrativePhase"></div>
+        <h2 class="narrative-title" id="narrativeTitle"></h2>
+        <p class="narrative-subtitle" id="narrativeSubtitle"></p>
+        <p class="narrative-text" id="narrativeText"></p>
+        <div class="narrative-stats" id="narrativeStats"></div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="loading-spinner">
+        <i class="fas fa-code-branch fa-spin"></i>
+        <p>Loading repository data...</p>
+      </div>
+    </div>
+
+    <script src="timeline.js"></script>
+  </body>
+</html>

@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GitStoryline - Codebase Evolution Race</title>
+    <meta
+      name="description"
+      content="Watch the SMT Platform codebase evolve through an animated bar chart race"
+    />
+
+    <!-- D3.js -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+
+    <link rel="stylesheet" href="race.css" />
+  </head>
+
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <div class="header-brand">
+        <i class="fas fa-trophy"></i>
+        <h1>GitStoryline</h1>
+      </div>
+      <div class="header-title">SMT Platform Evolution</div>
+      <button class="theme-toggle" id="themeToggle">
+        <i class="fas fa-moon"></i>
+      </button>
+    </header>
+
+    <!-- Date Counter -->
+    <div class="date-counter" id="dateCounter">
+      <span class="date-label">Date</span>
+      <span class="date-value" id="currentDate">2024-10</span>
+    </div>
+
+    <!-- Race Container -->
+    <main class="race-container">
+      <div class="race-chart" id="raceChart"></div>
+    </main>
+
+    <!-- Controls -->
+    <div class="controls">
+      <div class="control-group">
+        <button class="control-btn" id="restartBtn" title="Restart">
+          <i class="fas fa-redo"></i>
+        </button>
+        <button class="control-btn play-btn" id="playPauseBtn" title="Play/Pause">
+          <i class="fas fa-play"></i>
+        </button>
+        <button class="control-btn" id="skipBtn" title="Skip to end">
+          <i class="fas fa-forward"></i>
+        </button>
+      </div>
+
+      <div class="progress-container">
+        <input type="range" class="progress-slider" id="progressSlider" min="0" max="0" value="0" />
+      </div>
+
+      <div class="speed-group">
+        <span class="speed-label">Speed</span>
+        <button class="speed-btn" data-speed="0.5">0.5x</button>
+        <button class="speed-btn active" data-speed="1">1x</button>
+        <button class="speed-btn" data-speed="2">2x</button>
+        <button class="speed-btn" data-speed="4">4x</button>
+      </div>
+    </div>
+
+    <!-- Stats Footer -->
+    <footer class="stats-footer">
+      <div class="stat">
+        <span class="stat-value" id="totalFiles">0</span>
+        <span class="stat-label">Files</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="totalLines">0</span>
+        <span class="stat-label">Lines</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="frameCounter">0/0</span>
+        <span class="stat-label">Frame</span>
+      </div>
+    </footer>
+
+    <!-- Sidebar Info Sections -->
+    <div class="sidebar-container">
+      <div class="info-section milestone-section" id="milestoneSection">
+        <div class="milestone-content">
+            <div class="milestone-icon"><i class="fas fa-star"></i></div>
+            <h2 class="milestone-title" id="milestoneTitle"></h2>
+            <p class="milestone-desc" id="milestoneDesc"></p>
+        </div>
+      </div>
+
+      <div class="info-section graveyard-section" id="graveyardSection">
+        <div class="graveyard-header">
+            <i class="fas fa-tombstone"></i> In Memoriam
+        </div>
+        <div class="graveyard-list" id="graveyardList"></div>
+      </div>
+    </div>
+
+    <!-- Credits Overlay (End of Race) -->
+    <div class="credits-overlay" id="creditsOverlay">
+        <div class="credits-content" id="creditsContent">
+            <h1>In Memoriam</h1>
+            <p class="credits-subtitle">Files deleted during the evolution of the platform</p>
+            <div class="credits-list" id="creditsScrollList"></div>
+            
+            <div class="credits-footer">
+                <button class="credits-replay-btn" id="creditsReplayBtn">
+                    <i class="fas fa-redo"></i> Replay Evolution
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading" id="loading">
+      <i class="fas fa-spinner fa-spin"></i>
+      <span>Loading race data...</span>
+    </div>
+
+    <script src="race.js"></script>
+  </body>
+</html>

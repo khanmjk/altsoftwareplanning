@@ -1,5 +1,19 @@
 # Workspace Canvas Contract
 
+> **Version**: 2.4  
+> **Last Updated**: 2025-12-28
+
+## 0. Excluded Directories
+
+> [!IMPORTANT]
+> The following directories are **exempt** from all rules in this contract. They contain experimental or auxiliary code not part of the main application.
+
+| Directory | Reason |
+|-----------|--------|
+| `/gitstoryline/` | Experimental visualization tool for git history analysis. Not part of SMT Platform functionality. |
+
+---
+
 ## Purpose
 
 This document defines the architectural contract that all pages/views in the SMT Platform must follow to maintain a cohesive, enterprise-grade workspace experience. Following these rules ensures every page feels integrated and immersive—part of the workspace canvas, not a separate applet.
