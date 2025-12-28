@@ -129,6 +129,7 @@ Notes:
 
 - Cypress specs live in `cypress/e2e/*.cy.js`.
 - `scripts/run-cypress.js` starts a static server on `http://127.0.0.1:4173` and runs Cypress.
+- Coverage collection is wired via `scripts/cypress-coverage.js` and `cypress/support/e2e.js`.
 - To run a single spec, start a local server separately and invoke Cypress directly:
 
 ```
@@ -153,6 +154,7 @@ E2E coverage output:
 
 - `coverage/e2e/index.html`
 - `coverage/e2e/lcov.info`
+- `.nyc_output/coverage-*.json` (raw coverage data)
 
 ## Test Layout
 

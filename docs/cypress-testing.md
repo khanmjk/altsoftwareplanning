@@ -45,11 +45,13 @@ Outputs:
 
 - `coverage/e2e/index.html`
 - `coverage/e2e/lcov.info`
-- `.nyc_output/` (raw coverage data)
+- `.nyc_output/coverage-*.json` (raw coverage data)
 
 Notes:
 
-- The Cypress server instruments files under `js/` and `ai/`.
+- Coverage is collected from `window.__coverage__` in the app and only covers client-side code.
+- Coverage data is saved per spec by `scripts/cypress-coverage.js` and merged by `scripts/generate-coverage-report.js`.
+- The Cypress server instruments files under `js/` and `ai/` when `--coverage` is enabled.
 - `js/sampleData/` is excluded from instrumentation.
 
 ## Spec Map
