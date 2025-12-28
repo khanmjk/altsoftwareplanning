@@ -76,6 +76,7 @@ body {
   font-size: 1.2rem;
   font-weight: 700;
   background: linear-gradient(135deg, #8b5cf6, #ec4899);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -125,6 +126,17 @@ body {
   margin-bottom: 4px;
 }
 
+.date-metrics {
+  margin-top: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem; /* Smaller font size requested */
+  color: var(--text-muted);
+  font-weight: 400;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
 .date-value {
   font-family: 'JetBrains Mono', monospace;
   font-size: 3.5rem;
@@ -137,9 +149,11 @@ body {
 .race-container {
   flex: 1;
   padding: 20px 40px;
-  padding-right: 200px;
-  /* Space for date counter */
+  padding: 20px 40px;
+  /* Space for sidebar */
+  padding-right: 320px;
   overflow: hidden;
+  position: relative;
 }
 
 .race-chart {
@@ -321,6 +335,7 @@ body {
 .progress-slider {
   width: 100%;
   height: 8px;
+  appearance: none;
   -webkit-appearance: none;
   background: var(--bg-tertiary);
   border-radius: 4px;
@@ -328,6 +343,7 @@ body {
 }
 
 .progress-slider::-webkit-slider-thumb {
+  appearance: none;
   -webkit-appearance: none;
   width: 20px;
   height: 20px;
@@ -399,130 +415,92 @@ body {
   letter-spacing: 1px;
 }
 
-/* Milestone Overlay */
-.milestone-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-}
-
-.milestone-overlay.active {
+/* Sidebar Sections */
+.sidebar-container {
+  position: absolute;
+  top: 80px; /* Below header */
+  right: 40px;
+  width: 280px;
+  bottom: 0;
+  pointer-events: none; /* Let clicks pass through */
   display: flex;
+  flex-direction: column;
+  gap: 40px;
 }
 
-.milestone-content {
-  text-align: center;
-  animation: milestoneIn 0.5s ease-out;
+.info-section {
+  pointer-events: auto;
+  opacity: 0;
+  transform: translateX(20px);
+  transition: all 0.5s ease-out;
 }
 
-@keyframes milestoneIn {
-  from {
-    opacity: 0;
-    transform: scale(0.8);
-  }
+.info-section.active {
+  opacity: 1;
+  transform: translateX(0);
+}
 
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+/* Milestone Section */
+.milestone-section {
+  text-align: right;
+  padding: 20px;
+  background: rgba(var(--bg-secondary-rgb), 0.5); /* Semi-transparent if needed */
+  border-right: 4px solid var(--date-color);
+  border-radius: 8px 0 0 8px;
 }
 
 .milestone-icon {
-  font-size: 3rem;
+  font-size: 2rem;
   color: var(--date-color);
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
 .milestone-title {
-  font-size: 2rem;
+  font-size: 1.2rem;
   font-weight: 700;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
+  color: var(--text-primary);
 }
 
 .milestone-desc {
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   color: var(--text-secondary);
 }
 
-/* Graveyard Modal */
-.graveyard-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(8px);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 200;
+/* Graveyard Section */
+.graveyard-section {
+  max-height: 50vh;
+  overflow-y: hidden; /* Hide scrollbar for cleaner look */
+  text-align: right;
 }
 
-.graveyard-overlay.active {
-  display: flex;
-}
-
-.graveyard-content {
-  background: var(--bg-secondary);
-  border-radius: 16px;
-  padding: 32px;
-  max-width: 600px;
-  width: 90%;
-  max-height: 80vh;
-  overflow-y: auto;
-  text-align: center;
-}
-
-.graveyard-content h2 {
-  font-size: 1.5rem;
-  margin-bottom: 8px;
+.graveyard-header {
+  font-size: 1.1rem;
+  font-weight: 600;
   color: var(--color-deleted);
-}
-
-.graveyard-subtitle {
-  color: var(--text-muted);
-  margin-bottom: 24px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 8px;
 }
 
 .graveyard-list {
-  text-align: left;
-  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .graveyard-item {
   display: flex;
   justify-content: space-between;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border-color);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.85rem;
+  padding: 4px 0;
+  font-size: 0.8rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .graveyard-item-name {
-  color: var(--text-primary);
+    color: var(--text-muted);
 }
 
-.graveyard-item-dates {
-  color: var(--text-muted);
-}
-
-.graveyard-close {
-  padding: 12px 24px;
-  border-radius: 8px;
-  border: none;
-  background: var(--accent);
-  color: white;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.graveyard-close:hover {
-  transform: scale(1.02);
-}
 
 /* Loading */
 .loading {
@@ -573,4 +551,105 @@ body {
     width: 100%;
     justify-content: center;
   }
+}
+
+/* Credits Overlay */
+.credits-overlay {
+    position: fixed;
+    inset: 0;
+    background: #0f172a; /* Solid dark background */
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.credits-overlay.active {
+    display: flex;
+}
+
+.credits-content {
+    width: 600px;
+    max-width: 90%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    padding-top: 100vh; /* Start below screen */
+    animation: scrollCredits 60s linear forwards; /* Adjust duration based on list length */
+}
+
+@keyframes scrollCredits {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-300%); } /* Scroll way up */
+}
+
+.credits-content h1 {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 4px;
+}
+
+.credits-subtitle {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    margin-bottom: 40px;
+    text-align: center;
+}
+
+.credits-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+    width: 100%;
+}
+
+.credit-item {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1rem;
+    color: var(--text-primary);
+    padding: 4px 0;
+}
+
+.credit-item-date {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-left: 12px;
+}
+
+.credits-footer {
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1001; /* Above scrolling text */
+    opacity: 0;
+    animation: fadeIn 2s ease-out 5s forwards; /* Delay appearance */
+}
+
+@keyframes fadeIn {
+    to { opacity: 1; }
+}
+
+.credits-replay-btn {
+    padding: 12px 32px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 30px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+    transition: all 0.3s;
+}
+
+.credits-replay-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(139, 92, 246, 0.6);
 }

@@ -96,25 +96,37 @@
       </div>
     </footer>
 
-    <!-- Milestone Overlay -->
-    <div class="milestone-overlay" id="milestoneOverlay">
-      <div class="milestone-content">
-        <div class="milestone-icon"><i class="fas fa-star"></i></div>
-        <h2 class="milestone-title" id="milestoneTitle"></h2>
-        <p class="milestone-desc" id="milestoneDesc"></p>
+    <!-- Sidebar Info Sections -->
+    <div class="sidebar-container">
+      <div class="info-section milestone-section" id="milestoneSection">
+        <div class="milestone-content">
+            <div class="milestone-icon"><i class="fas fa-star"></i></div>
+            <h2 class="milestone-title" id="milestoneTitle"></h2>
+            <p class="milestone-desc" id="milestoneDesc"></p>
+        </div>
+      </div>
+
+      <div class="info-section graveyard-section" id="graveyardSection">
+        <div class="graveyard-header">
+            <i class="fas fa-tombstone"></i> In Memoriam
+        </div>
+        <div class="graveyard-list" id="graveyardList"></div>
       </div>
     </div>
 
-    <!-- Graveyard Modal -->
-    <div class="graveyard-overlay" id="graveyardOverlay">
-      <div class="graveyard-content">
-        <h2><i class="fas fa-tombstone"></i> In Memoriam</h2>
-        <p class="graveyard-subtitle">Files that served their purpose and were retired</p>
-        <div class="graveyard-list" id="graveyardList"></div>
-        <button class="graveyard-close" id="graveyardClose">
-          <i class="fas fa-times"></i> Close
-        </button>
-      </div>
+    <!-- Credits Overlay (End of Race) -->
+    <div class="credits-overlay" id="creditsOverlay">
+        <div class="credits-content" id="creditsContent">
+            <h1>In Memoriam</h1>
+            <p class="credits-subtitle">Files deleted during the evolution of the platform</p>
+            <div class="credits-list" id="creditsScrollList"></div>
+            
+            <div class="credits-footer">
+                <button class="credits-replay-btn" id="creditsReplayBtn">
+                    <i class="fas fa-redo"></i> Replay Evolution
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- Loading -->

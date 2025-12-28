@@ -338,6 +338,124 @@ def detect_architecture_phases():
             "title": "Modern Era",
             "subtitle": "Testing and CI/CD Maturity",
             "description": "Unit tests arrive. Linting enforced. The codebase becomes a professional-grade project.",
+            "phase": 8,
+            "title": "Modern Era",
+            "subtitle": "Testing and CI/CD Maturity",
+            "description": "Unit tests arrive. Linting enforced. The codebase becomes a professional-grade project.",
+            "startDate": parts[1] if len(parts) > 1 else None,
+            "hash": parts[0]
+        })
+
+    # NEW PHASES
+    
+    # Monolith Busting (index.html reduction)
+    cmd = 'git log --all --pretty=format:"%H|%ad|%s" --date=iso-strict -- "index.html"'
+    output = run_git_command(cmd)
+    index_history = []
+    if output:
+        for line in output.split('\n'):
+            if line.strip():
+                parts = line.split("|", 2)
+                h = parts[0]
+                lines = get_file_line_count_at_commit(h, "index.html")
+                index_history.append({'hash': h, 'date': parts[1], 'lines': lines})
+    
+    # Sort history by date to find the drop
+    index_history.sort(key=lambda x: x['date'])
+    max_lines = 0
+    for i, entry in enumerate(index_history):
+        max_lines = max(max_lines, entry['lines'])
+        if max_lines > 2000 and entry['lines'] < (max_lines - 1000):
+            # Found the bust
+            phases.append({
+                "phase": 3, # Inserted
+                "title": "Monolith Busting",
+                "subtitle": "Breaking the Big File",
+                "description": "The massive index.html is finally broken apart into separate modules, marking a major refactor point.",
+                "startDate": entry['date'],
+                "hash": entry['hash']
+            })
+            break
+
+    # Workspace Layout
+    cmd = 'git log --all --reverse --pretty=format:"%H|%ad|%s" --date=iso-strict --diff-filter=A -- "js/components/WorkspaceComponent.js" | head -1'
+    output = run_git_command(cmd)
+    if output:
+        parts = output.split("|", 2)
+        phases.append({
+            "phase": 4.5, # Intermediate
+            "title": "Workspace Layout",
+            "subtitle": "The Sidebar Era",
+            "description": "Navigation moves to a persistent sidebar. The concept of a 'Workspace' with swappable views is introduced.",
+            "startDate": parts[1] if len(parts) > 1 else None,
+            "hash": parts[0]
+        })
+
+    # Agent Contracts
+    cmd = 'git log --all --reverse --pretty=format:"%H|%ad|%s" --date=iso-strict --diff-filter=A -- "docs/*contract.md" | head -1'
+    output = run_git_command(cmd)
+    if output:
+        parts = output.split("|", 2)
+        phases.append({
+            "phase": 6.5,
+            "title": "Agent Contracts",
+            "subtitle": "Rules for Robots",
+            "description": "Formal contracts (docs/*.md) are established to guide AI agents in maintaining code quality and consistency.",
+            "startDate": parts[1] if len(parts) > 1 else None,
+            "hash": parts[0]
+        })
+
+    # UI Theme Styling
+    cmd = 'git log --all --reverse --pretty=format:"%H|%ad|%s" --date=iso-strict --diff-filter=A -- "css/settings/variables.css" | head -1'
+    output = run_git_command(cmd)
+    if output:
+        parts = output.split("|", 2)
+        phases.append({
+            "phase": 5.5,
+            "title": "UI Theme Styling",
+            "subtitle": "Dark Mode & Theming",
+            "description": "Introduction of semantic CSS variables and comprehensive dark mode support.",
+            "startDate": parts[1] if len(parts) > 1 else None,
+            "hash": parts[0]
+        })
+
+    # Tech Debt Paydown
+    # Find a month with > 5 tech debt commits
+    cmd = 'git log --all --pretty=format:"%ad" --date=format:"%Y-%m" --grep="Tech debt" --grep="compliance" -i'
+    output = run_git_command(cmd)
+    counts = defaultdict(int)
+    tech_debt_date = None
+    for line in output.split('\n'):
+        if line.strip():
+            counts[line.strip()] += 1
+            if counts[line.strip()] >= 5:
+                # Find the first commit of this month to use as start date
+                cmd_first = f'git log --all --reverse --pretty=format:"%H|%ad|%s" --date=iso-strict --before="{line.strip()}-30" --after="{line.strip()}-01" --grep="Tech debt" --grep="compliance" -i | head -1'
+                res = run_git_command(cmd_first)
+                if res:
+                   tech_debt_date = res.split("|", 2)
+                break
+    
+    if tech_debt_date:
+        phases.append({
+            "phase": 7,
+            "title": "Tech Debt Paydown",
+            "subtitle": "Focus on Compliance",
+            "description": "A dedicated phase for cleaning up technical debt, improving compliance, and standardizing patterns.",
+            "startDate": tech_debt_date[1] if len(tech_debt_date) > 1 else None,
+            "hash": tech_debt_date[0]
+        })
+
+    # Code Quality Gates
+    cmd = 'git log --all --reverse --pretty=format:"%H|%ad|%s" --date=iso-strict --diff-filter=A -- "eslint.config.mjs" "vitest.config.mjs" | head -1'
+    output = run_git_command(cmd)
+    if output:
+        parts = output.split("|", 2)
+        phases.append({
+            "phase": 9,
+            "title": "Code Quality Gates",
+            "subtitle": "Automated Standards",
+            "description": "Linting (ESLint) and Testing (Vitest) configurations are added, enforcing strict quality gates for all changes.",
             "startDate": parts[1] if len(parts) > 1 else None,
             "hash": parts[0]
         })

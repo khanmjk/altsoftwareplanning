@@ -1,20 +1,238 @@
 {
-  "generatedAt": "2025-12-27T11:10:05.851429",
+  "generatedAt": "2025-12-27T16:56:52.779472",
   "repository": {
     "name": "altsoftwareplanning",
     "description": "SMT Platform - Software Management Tool"
   },
   "summary": {
-    "totalCommits": 709,
+    "totalCommits": 714,
     "dateRange": {
       "start": "2024-10-20T13:47:04+02:00",
-      "end": "2025-12-27T10:18:08+02:00"
+      "end": "2025-12-27T16:05:27+02:00"
     },
-    "totalLinesAdded": 60779,
-    "totalLinesDeleted": 38666,
-    "totalFilesCreated": 267
+    "totalLinesAdded": 104018,
+    "totalLinesDeleted": 40648,
+    "totalFilesCreated": 283
   },
   "commits": [
+    {
+      "hash": "74a9bf0dbb9f46b8688b3d40c09a25f6cbf9cdab",
+      "date": "2025-12-27T16:05:27+02:00",
+      "author": "khanmjk",
+      "message": "introduce cypress tests for UI",
+      "type": "test",
+      "files": [
+        {
+          "file": "cypress/e2e/advanced-flows.cy.js",
+          "insertions": 415,
+          "deletions": 0
+        },
+        {
+          "file": "cypress/e2e/core-features.cy.js",
+          "insertions": 235,
+          "deletions": 0
+        },
+        {
+          "file": "package-lock.json",
+          "insertions": 11,
+          "deletions": 0
+        }
+      ],
+      "filesChanged": 3,
+      "insertions": 661,
+      "deletions": 0
+    },
+    {
+      "hash": "691e7cc884dc1c19d7146094884671b8a9a63de6",
+      "date": "2025-12-27T13:36:22+02:00",
+      "author": "khanmjk",
+      "message": "Fix Cypress smoke selectors",
+      "type": "fix",
+      "files": [
+        {
+          "file": "cypress/e2e/smoke.cy.js",
+          "insertions": 2,
+          "deletions": 2
+        }
+      ],
+      "filesChanged": 1,
+      "insertions": 2,
+      "deletions": 2
+    },
+    {
+      "hash": "7af7ae5d65fedfc69f8194a6c88ac0b728b5cf73",
+      "date": "2025-12-27T13:28:46+02:00",
+      "author": "khanmjk",
+      "message": "WIP on cypress-e2e: 494b4d3 Add Cypress E2E smoke tests",
+      "type": "test",
+      "files": [
+        {
+          "file": "scripts/run-cypress.js",
+          "insertions": 7,
+          "deletions": 1
+        }
+      ],
+      "filesChanged": 1,
+      "insertions": 7,
+      "deletions": 1
+    },
+    {
+      "hash": "98f8cc5efca5afc2056aa9fdb3b8657485a21f7b",
+      "date": "2025-12-27T13:28:46+02:00",
+      "author": "khanmjk",
+      "message": "index on cypress-e2e: 494b4d3 Add Cypress E2E smoke tests",
+      "type": "test",
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
+    },
+    {
+      "hash": "494b4d351c2e16a7a290dce5bd60305bfd32c880",
+      "date": "2025-12-27T13:21:12+02:00",
+      "author": "khanmjk",
+      "message": "Add Cypress E2E smoke tests",
+      "type": "test",
+      "files": [
+        {
+          "file": ".github/workflows/e2e.yml",
+          "insertions": 17,
+          "deletions": 0
+        },
+        {
+          "file": "cypress.config.cjs",
+          "insertions": 12,
+          "deletions": 0
+        },
+        {
+          "file": "cypress/e2e/smoke.cy.js",
+          "insertions": 29,
+          "deletions": 0
+        },
+        {
+          "file": "cypress/support/e2e.js",
+          "insertions": 1,
+          "deletions": 0
+        },
+        {
+          "file": "docs/code-quality-tooling.md",
+          "insertions": 19,
+          "deletions": 0
+        },
+        {
+          "file": "package-lock.json",
+          "insertions": 1757,
+          "deletions": 10
+        },
+        {
+          "file": "package.json",
+          "insertions": 3,
+          "deletions": 0
+        },
+        {
+          "file": "scripts/run-cypress.js",
+          "insertions": 79,
+          "deletions": 0
+        }
+      ],
+      "filesChanged": 8,
+      "insertions": 1917,
+      "deletions": 10
+    },
+    {
+      "hash": "75a682ecfa1c989ed8c9c36b28f76fed1f435e66",
+      "date": "2025-12-27T13:20:16+02:00",
+      "author": "khanmjk",
+      "message": "Update git storyline visualizer",
+      "type": "other",
+      "files": [
+        {
+          "file": "gitstoryline/git_race_mining.py",
+          "insertions": 1,
+          "deletions": 1
+        },
+        {
+          "file": "gitstoryline/race.css",
+          "insertions": 24,
+          "deletions": 4
+        },
+        {
+          "file": "gitstoryline/race.js",
+          "insertions": 88,
+          "deletions": 55
+        },
+        {
+          "file": "gitstoryline/race_data.json",
+          "insertions": 5284,
+          "deletions": 2668
+        }
+      ],
+      "filesChanged": 4,
+      "insertions": 5397,
+      "deletions": 2728
+    },
+    {
+      "hash": "01df150a78fc06b577159a800dd19bfc448e5f35",
+      "date": "2025-12-27T12:02:38+02:00",
+      "author": "khanmjk",
+      "message": "feat: Add GitStoryline - Bar Chart Race visualization of codebase evolution",
+      "type": "feature",
+      "files": [
+        {
+          "file": "gitstoryline/git_race_mining.py",
+          "insertions": 331,
+          "deletions": 0
+        },
+        {
+          "file": "gitstoryline/git_timeline_mining.py",
+          "insertions": 495,
+          "deletions": 0
+        },
+        {
+          "file": "gitstoryline/index.html",
+          "insertions": 208,
+          "deletions": 0
+        },
+        {
+          "file": "gitstoryline/race.css",
+          "insertions": 556,
+          "deletions": 0
+        },
+        {
+          "file": "gitstoryline/race.html",
+          "insertions": 128,
+          "deletions": 0
+        },
+        {
+          "file": "gitstoryline/race.js",
+          "insertions": 484,
+          "deletions": 0
+        },
+        {
+          "file": "gitstoryline/race_data.json",
+          "insertions": 19276,
+          "deletions": 0
+        },
+        {
+          "file": "gitstoryline/timeline.css",
+          "insertions": 919,
+          "deletions": 0
+        },
+        {
+          "file": "gitstoryline/timeline.js",
+          "insertions": 813,
+          "deletions": 0
+        },
+        {
+          "file": "gitstoryline/timeline_data.json",
+          "insertions": 17081,
+          "deletions": 0
+        }
+      ],
+      "filesChanged": 10,
+      "insertions": 40291,
+      "deletions": 0
+    },
     {
       "hash": "54dca40db7bb48690818601610939df2987b06ab",
       "date": "2025-12-27T10:18:08+02:00",
@@ -2434,110 +2652,6 @@
       "deletions": 1
     },
     {
-      "hash": "2350478b32233dabd5fb64d2af4bf59d88725edf",
-      "date": "2025-12-15T20:06:00+02:00",
-      "author": "khanmjk",
-      "message": "On main: REFACTOR EDIT/ADD Initiatives to common component",
-      "type": "refactor",
-      "files": [
-        {
-          "file": "css/components/initiative-edit-component.css",
-          "insertions": 5,
-          "deletions": 4
-        },
-        {
-          "file": "css/components/roadmapModal.css",
-          "insertions": 25,
-          "deletions": 119
-        },
-        {
-          "file": "index.html",
-          "insertions": 1,
-          "deletions": 0
-        },
-        {
-          "file": "js/components/InitiativeEditComponent.js",
-          "insertions": 71,
-          "deletions": 457
-        },
-        {
-          "file": "js/components/RoadmapInitiativeModal.js",
-          "insertions": 101,
-          "deletions": 545
-        },
-        {
-          "file": "js/components/RoadmapView.js",
-          "insertions": 1,
-          "deletions": 2
-        },
-        {
-          "file": "js/components/forms/InitiativeFormComponent.js",
-          "insertions": 428,
-          "deletions": 0
-        },
-        {
-          "file": "js/main.js",
-          "insertions": 1,
-          "deletions": 0
-        }
-      ],
-      "filesChanged": 8,
-      "insertions": 633,
-      "deletions": 1127
-    },
-    {
-      "hash": "4c7f53d378521d8d53f1d766feed1f390bf126b0",
-      "date": "2025-12-15T20:06:00+02:00",
-      "author": "khanmjk",
-      "message": "index on main: d0782b4 Fix ROI fields in initiatives management view and refactor according to coding contract",
-      "type": "refactor",
-      "files": [
-        {
-          "file": "css/components/initiative-edit-component.css",
-          "insertions": 5,
-          "deletions": 4
-        },
-        {
-          "file": "css/components/roadmapModal.css",
-          "insertions": 25,
-          "deletions": 119
-        },
-        {
-          "file": "index.html",
-          "insertions": 1,
-          "deletions": 0
-        },
-        {
-          "file": "js/components/InitiativeEditComponent.js",
-          "insertions": 71,
-          "deletions": 457
-        },
-        {
-          "file": "js/components/RoadmapInitiativeModal.js",
-          "insertions": 101,
-          "deletions": 545
-        },
-        {
-          "file": "js/components/RoadmapView.js",
-          "insertions": 1,
-          "deletions": 2
-        },
-        {
-          "file": "js/components/forms/InitiativeFormComponent.js",
-          "insertions": 428,
-          "deletions": 0
-        },
-        {
-          "file": "js/main.js",
-          "insertions": 1,
-          "deletions": 0
-        }
-      ],
-      "filesChanged": 8,
-      "insertions": 633,
-      "deletions": 1127
-    },
-    {
       "hash": "d0782b43d8dfc44b4669fa4d72ddb0f1dcf518bf",
       "date": "2025-12-15T19:41:26+02:00",
       "author": "khanmjk",
@@ -4808,26 +4922,10 @@
       "author": "khanmjk",
       "message": "fix settings themedselect render issues",
       "type": "fix",
-      "files": [
-        {
-          "file": "css/components/settings-view.css",
-          "insertions": 2,
-          "deletions": 2
-        },
-        {
-          "file": "js/components/SettingsView.js",
-          "insertions": 2,
-          "deletions": 2
-        },
-        {
-          "file": "js/components/widgets/ThemedSelect.js",
-          "insertions": 37,
-          "deletions": 0
-        }
-      ],
-      "filesChanged": 3,
-      "insertions": 41,
-      "deletions": 4
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "a138592a0521fe6395454d0a7a36f32ed10a0476",
@@ -4835,126 +4933,10 @@
       "author": "khanmjk",
       "message": "massive refactor to improve styling and remove native lists",
       "type": "refactor",
-      "files": [
-        {
-          "file": "css/components/enhancedTableWidget.css",
-          "insertions": 4,
-          "deletions": 4
-        },
-        {
-          "file": "css/components/shared-inline-edit.css",
-          "insertions": 20,
-          "deletions": 20
-        },
-        {
-          "file": "css/components/theme-edit-component.css",
-          "insertions": 11,
-          "deletions": 11
-        },
-        {
-          "file": "css/foundation-components/forms.css",
-          "insertions": 85,
-          "deletions": 0
-        },
-        {
-          "file": "css/foundation-components/themed-select.css",
-          "insertions": 250,
-          "deletions": 0
-        },
-        {
-          "file": "css/style.css",
-          "insertions": 1,
-          "deletions": 0
-        },
-        {
-          "file": "css/views/capacity-tuning-view.css",
-          "insertions": 11,
-          "deletions": 10
-        },
-        {
-          "file": "css/views/management-view.css",
-          "insertions": 12,
-          "deletions": 12
-        },
-        {
-          "file": "index.html",
-          "insertions": 3,
-          "deletions": 1
-        },
-        {
-          "file": "js/components/CapacityDashboardView.js",
-          "insertions": 36,
-          "deletions": 38
-        },
-        {
-          "file": "js/components/DashboardView.js",
-          "insertions": 43,
-          "deletions": 8
-        },
-        {
-          "file": "js/components/GanttPlanningView.js",
-          "insertions": 57,
-          "deletions": 36
-        },
-        {
-          "file": "js/components/ResourceForecastView.js",
-          "insertions": 13,
-          "deletions": 20
-        },
-        {
-          "file": "js/components/RoadmapComponent.js",
-          "insertions": 90,
-          "deletions": 51
-        },
-        {
-          "file": "js/components/SettingsView.js",
-          "insertions": 62,
-          "deletions": 47
-        },
-        {
-          "file": "js/components/SystemOverviewView.js",
-          "insertions": 88,
-          "deletions": 74
-        },
-        {
-          "file": "js/components/YearPlanningView.js",
-          "insertions": 15,
-          "deletions": 16
-        },
-        {
-          "file": "js/components/widgets/ImpactWidget.js",
-          "insertions": 39,
-          "deletions": 49
-        },
-        {
-          "file": "js/components/widgets/RoadmapTableWidget.js",
-          "insertions": 56,
-          "deletions": 44
-        },
-        {
-          "file": "js/components/widgets/ThemedSelect.js",
-          "insertions": 571,
-          "deletions": 0
-        },
-        {
-          "file": "js/ganttPlanning.js",
-          "insertions": 31,
-          "deletions": 15
-        },
-        {
-          "file": "js/main.js",
-          "insertions": 0,
-          "deletions": 1
-        },
-        {
-          "file": "js/managers/NavigationManager.js",
-          "insertions": 4,
-          "deletions": 0
-        }
-      ],
-      "filesChanged": 23,
-      "insertions": 1502,
-      "deletions": 457
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "f1cffad3c3acf2f6343dd1730cedc472905c48ff",
@@ -4962,31 +4944,10 @@
       "author": "khanmjk",
       "message": "more theme styling fixes",
       "type": "other",
-      "files": [
-        {
-          "file": "css/components/service-edit-component.css",
-          "insertions": 47,
-          "deletions": 47
-        },
-        {
-          "file": "css/components/team-edit-component.css",
-          "insertions": 59,
-          "deletions": 59
-        },
-        {
-          "file": "css/foundation-components/dual-list.css",
-          "insertions": 38,
-          "deletions": 7
-        },
-        {
-          "file": "css/views/system-edit-view.css",
-          "insertions": 19,
-          "deletions": 20
-        }
-      ],
-      "filesChanged": 4,
-      "insertions": 163,
-      "deletions": 133
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "6c4e0fe6e647c5de4ce33930ffb5550a63a90f60",
@@ -4994,16 +4955,10 @@
       "author": "khanmjk",
       "message": "fix styling in System View",
       "type": "fix",
-      "files": [
-        {
-          "file": "css/components/systems-view.css",
-          "insertions": 15,
-          "deletions": 15
-        }
-      ],
-      "filesChanged": 1,
-      "insertions": 15,
-      "deletions": 15
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "68b64d8981ddd9e3e0f23b6650f7071da814fed9",
@@ -5011,21 +4966,10 @@
       "author": "khanmjk",
       "message": "fix notifications styling to adhere to themes styling",
       "type": "fix",
-      "files": [
-        {
-          "file": "css/components/notifications.css",
-          "insertions": 38,
-          "deletions": 0
-        },
-        {
-          "file": "index.html",
-          "insertions": 4,
-          "deletions": 8
-        }
-      ],
-      "filesChanged": 2,
-      "insertions": 42,
-      "deletions": 8
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "4e53157e6436a87286538f274be846a54601382b",
@@ -5077,10 +5021,16 @@
       "author": "khanmjk",
       "message": "just kill the original css style file - causing noise for nothing",
       "type": "style",
-      "files": [],
-      "filesChanged": 0,
+      "files": [
+        {
+          "file": "css/style-original-backup.css",
+          "insertions": 0,
+          "deletions": 2299
+        }
+      ],
+      "filesChanged": 1,
       "insertions": 0,
-      "deletions": 0
+      "deletions": 2299
     },
     {
       "hash": "8d60d2189ae406b74eb465c916391ec90bf5e747",
@@ -5132,26 +5082,10 @@
       "author": "khanmjk",
       "message": "more cleaning up",
       "type": "other",
-      "files": [
-        {
-          "file": ".vscode/launch.json",
-          "insertions": 1,
-          "deletions": 2
-        },
-        {
-          "file": "js/components/DashboardView.js",
-          "insertions": 93,
-          "deletions": 31
-        },
-        {
-          "file": "js/components/SystemOverviewView.js",
-          "insertions": 144,
-          "deletions": 49
-        }
-      ],
-      "filesChanged": 3,
-      "insertions": 238,
-      "deletions": 82
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "54ed5782e1d508b70511b2eed146f319501d8629",
@@ -5203,10 +5137,21 @@
       "author": "khanmjk",
       "message": "more gantt refactoring",
       "type": "refactor",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "css/components/ganttChart.css",
+          "insertions": 107,
+          "deletions": 36
+        },
+        {
+          "file": "css/views/gantt-planning-view.css",
+          "insertions": 34,
+          "deletions": 8
+        }
+      ],
+      "filesChanged": 2,
+      "insertions": 141,
+      "deletions": 44
     },
     {
       "hash": "138971dd65c0d0bb05501ac0db6e0830ab9ac050",
@@ -5258,61 +5203,10 @@
       "author": "khanmjk",
       "message": "feat(themes): finalize all theming enhancements (recovered from worktree)",
       "type": "feature",
-      "files": [
-        {
-          "file": "css/components/aiChatPanel.css",
-          "insertions": 159,
-          "deletions": 191
-        },
-        {
-          "file": "css/components/enhancedTableWidget.css",
-          "insertions": 44,
-          "deletions": 35
-        },
-        {
-          "file": "css/elements/tables.css",
-          "insertions": 8,
-          "deletions": 0
-        },
-        {
-          "file": "css/foundation-components/d3-visualizations.css",
-          "insertions": 0,
-          "deletions": 27
-        },
-        {
-          "file": "css/foundation-components/forms.css",
-          "insertions": 4,
-          "deletions": 1
-        },
-        {
-          "file": "css/layout/sidebar.css",
-          "insertions": 3,
-          "deletions": 1
-        },
-        {
-          "file": "css/objects/layout.css",
-          "insertions": 1,
-          "deletions": 1
-        },
-        {
-          "file": "css/views/visualizations-view.css",
-          "insertions": 12,
-          "deletions": 7
-        },
-        {
-          "file": "js/visualizations/DependencyVisualization.js",
-          "insertions": 1,
-          "deletions": 1
-        },
-        {
-          "file": "js/visualizations/ServiceVisualization.js",
-          "insertions": 2,
-          "deletions": 2
-        }
-      ],
-      "filesChanged": 10,
-      "insertions": 234,
-      "deletions": 266
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "4f28fb49e6c79c154544fe5fd59b51f9e072ec90",
@@ -5364,9 +5258,15 @@
       "author": "khanmjk",
       "message": "docs: update workspace contract with theming integrity rules",
       "type": "docs",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
+      "files": [
+        {
+          "file": "docs/workspace-canvas-contract.md",
+          "insertions": 80,
+          "deletions": 0
+        }
+      ],
+      "filesChanged": 1,
+      "insertions": 80,
       "deletions": 0
     },
     {
@@ -5419,16 +5319,10 @@
       "author": "khanmjk",
       "message": "Fix Canvas Toolbar & Header backgrounds: Replaced hardcoded white with theme variables",
       "type": "fix",
-      "files": [
-        {
-          "file": "css/layout/workspace-shell.css",
-          "insertions": 11,
-          "deletions": 11
-        }
-      ],
-      "filesChanged": 1,
-      "insertions": 11,
-      "deletions": 11
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "df35e9085d9c5d0372f7ab9e599bb393b1323aa3",
@@ -5480,10 +5374,16 @@
       "author": "khanmjk",
       "message": "Implement live theme preview in Settings view",
       "type": "other",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "js/components/SettingsView.js",
+          "insertions": 22,
+          "deletions": 3
+        }
+      ],
+      "filesChanged": 1,
+      "insertions": 22,
+      "deletions": 3
     },
     {
       "hash": "1587bbc9ab74db9be07d09b3ac593c32e179577c",
@@ -5535,66 +5435,10 @@
       "author": "khanmjk",
       "message": "Implement full theming system: SettingsView, ThemeService, CSS refactor",
       "type": "refactor",
-      "files": [
-        {
-          "file": "css/components/header.css",
-          "insertions": 2,
-          "deletions": 1
-        },
-        {
-          "file": "css/elements/base.css",
-          "insertions": 2,
-          "deletions": 2
-        },
-        {
-          "file": "css/foundation-components/cards.css",
-          "insertions": 15,
-          "deletions": 15
-        },
-        {
-          "file": "css/foundation-components/modals.css",
-          "insertions": 6,
-          "deletions": 7
-        },
-        {
-          "file": "css/layout/sidebar.css",
-          "insertions": 22,
-          "deletions": 27
-        },
-        {
-          "file": "css/settings/variables.css",
-          "insertions": 77,
-          "deletions": 17
-        },
-        {
-          "file": "index.html",
-          "insertions": 2,
-          "deletions": 1
-        },
-        {
-          "file": "js/components/SettingsView.js",
-          "insertions": 426,
-          "deletions": 112
-        },
-        {
-          "file": "js/main.js",
-          "insertions": 3,
-          "deletions": 0
-        },
-        {
-          "file": "js/services/SettingsService.js",
-          "insertions": 2,
-          "deletions": 1
-        },
-        {
-          "file": "js/services/ThemeService.js",
-          "insertions": 435,
-          "deletions": 0
-        }
-      ],
-      "filesChanged": 11,
-      "insertions": 992,
-      "deletions": 183
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "421a688494230bd93766060636bf71c34c53a69f",
@@ -5646,10 +5490,26 @@
       "author": "khanmjk",
       "message": "fix reference to css",
       "type": "fix",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "Backlog.txt",
+          "insertions": 0,
+          "deletions": 2
+        },
+        {
+          "file": "css/style.css",
+          "insertions": 2,
+          "deletions": 2
+        },
+        {
+          "file": "index.html",
+          "insertions": 3,
+          "deletions": 3
+        }
+      ],
+      "filesChanged": 3,
+      "insertions": 5,
+      "deletions": 7
     },
     {
       "hash": "98b6164990323fada275c2c7e6d75d4a85ff01d2",
@@ -5701,36 +5561,10 @@
       "author": "khanmjk",
       "message": "Abstract mermaid library to a service",
       "type": "other",
-      "files": [
-        {
-          "file": "index.html",
-          "insertions": 1,
-          "deletions": 2
-        },
-        {
-          "file": "js/components/gantt/MermaidGanttRenderer.js",
-          "insertions": 2,
-          "deletions": 1
-        },
-        {
-          "file": "js/mermaidGenerator.js",
-          "insertions": 0,
-          "deletions": 405
-        },
-        {
-          "file": "js/services/MermaidService.js",
-          "insertions": 514,
-          "deletions": 0
-        },
-        {
-          "file": "js/visualizations.js",
-          "insertions": 10,
-          "deletions": 41
-        }
-      ],
-      "filesChanged": 5,
-      "insertions": 527,
-      "deletions": 449
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "27760652ab7f6ec107d2b67fb3d17cd85aff02a7",
@@ -5782,10 +5616,31 @@
       "author": "khanmjk",
       "message": "refactor: replace window dependency with local instance management in ResourceForecastView and RoadmapInitiativeModal",
       "type": "refactor",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "js/components/ResourceForecastView.js",
+          "insertions": 1,
+          "deletions": 1
+        },
+        {
+          "file": "js/components/RoadmapComponent.js",
+          "insertions": 0,
+          "deletions": 2
+        },
+        {
+          "file": "js/components/RoadmapInitiativeModal.js",
+          "insertions": 5,
+          "deletions": 4
+        },
+        {
+          "file": "js/services/SettingsService.js",
+          "insertions": 2,
+          "deletions": 14
+        }
+      ],
+      "filesChanged": 4,
+      "insertions": 8,
+      "deletions": 21
     },
     {
       "hash": "29f7835834c7fe54cef1a269fc096ce77a183225",
@@ -5837,31 +5692,10 @@
       "author": "khanmjk",
       "message": "refactor: remove window dependency for summary table state and manage it locally",
       "type": "refactor",
-      "files": [
-        {
-          "file": "js/components/YearPlanningView.js",
-          "insertions": 1,
-          "deletions": 2
-        },
-        {
-          "file": "js/managers/NavigationManager.js",
-          "insertions": 3,
-          "deletions": 2
-        },
-        {
-          "file": "js/visualizations.js",
-          "insertions": 0,
-          "deletions": 6
-        },
-        {
-          "file": "js/yearPlanning.js",
-          "insertions": 6,
-          "deletions": 6
-        }
-      ],
-      "filesChanged": 4,
-      "insertions": 10,
-      "deletions": 16
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "5a86ce97484fc9eaa48aebe3350bb57df0377472",
@@ -5913,10 +5747,41 @@
       "author": "khanmjk",
       "message": "refactor: replace window.updateInitiative calls with InitiativeService methods and clean up deprecated functions in utils.js",
       "type": "refactor",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "js/components/BacklogComponent.js",
+          "insertions": 6,
+          "deletions": 6
+        },
+        {
+          "file": "js/components/OrgView.js",
+          "insertions": 11,
+          "deletions": 14
+        },
+        {
+          "file": "js/components/RoadmapView.js",
+          "insertions": 1,
+          "deletions": 1
+        },
+        {
+          "file": "js/services/InitiativeService.js",
+          "insertions": 56,
+          "deletions": 1
+        },
+        {
+          "file": "js/utils.js",
+          "insertions": 2,
+          "deletions": 216
+        },
+        {
+          "file": "js/yearPlanning.js",
+          "insertions": 1,
+          "deletions": 1
+        }
+      ],
+      "filesChanged": 6,
+      "insertions": 77,
+      "deletions": 239
     },
     {
       "hash": "56d6ab78b0ee322a24f0bd94a41d8ec33fcae223",
@@ -5968,236 +5833,10 @@
       "author": "khanmjk",
       "message": "Refactor notification handling to use singleton instance",
       "type": "refactor",
-      "files": [
-        {
-          "file": "Backlog.txt",
-          "insertions": 2,
-          "deletions": 1
-        },
-        {
-          "file": "ai/aiAgentController.js",
-          "insertions": 23,
-          "deletions": 23
-        },
-        {
-          "file": "ai/aiAgentToolset.js",
-          "insertions": 0,
-          "deletions": 4
-        },
-        {
-          "file": "ai/aiChatAssistant.js",
-          "insertions": 24,
-          "deletions": 25
-        },
-        {
-          "file": "ai/aiPlanOptimizationAgent.js",
-          "insertions": 2,
-          "deletions": 9
-        },
-        {
-          "file": "ai/aiService.js",
-          "insertions": 6,
-          "deletions": 6
-        },
-        {
-          "file": "js/components/BacklogComponent.js",
-          "insertions": 3,
-          "deletions": 3
-        },
-        {
-          "file": "js/components/CapacityPlanningView.js",
-          "insertions": 1,
-          "deletions": 1
-        },
-        {
-          "file": "js/components/GoalEditComponent.js",
-          "insertions": 6,
-          "deletions": 6
-        },
-        {
-          "file": "js/components/HeaderComponent.js",
-          "insertions": 5,
-          "deletions": 5
-        },
-        {
-          "file": "js/components/InitiativeEditComponent.js",
-          "insertions": 6,
-          "deletions": 6
-        },
-        {
-          "file": "js/components/OrgView.js",
-          "insertions": 3,
-          "deletions": 3
-        },
-        {
-          "file": "js/components/ResourceForecastView.js",
-          "insertions": 3,
-          "deletions": 3
-        },
-        {
-          "file": "js/components/RoadmapComponent.js",
-          "insertions": 2,
-          "deletions": 2
-        },
-        {
-          "file": "js/components/RoadmapInitiativeModal.js",
-          "insertions": 4,
-          "deletions": 4
-        },
-        {
-          "file": "js/components/RoadmapView.js",
-          "insertions": 3,
-          "deletions": 3
-        },
-        {
-          "file": "js/components/ServiceEditComponent.js",
-          "insertions": 5,
-          "deletions": 5
-        },
-        {
-          "file": "js/components/SettingsView.js",
-          "insertions": 1,
-          "deletions": 1
-        },
-        {
-          "file": "js/components/SystemsView.js",
-          "insertions": 8,
-          "deletions": 12
-        },
-        {
-          "file": "js/components/TeamEditComponent.js",
-          "insertions": 15,
-          "deletions": 15
-        },
-        {
-          "file": "js/components/ThemeEditComponent.js",
-          "insertions": 4,
-          "deletions": 4
-        },
-        {
-          "file": "js/components/YearPlanningView.js",
-          "insertions": 6,
-          "deletions": 6
-        },
-        {
-          "file": "js/components/enhancedTableWidget.js",
-          "insertions": 2,
-          "deletions": 2
-        },
-        {
-          "file": "js/documentation.js",
-          "insertions": 1,
-          "deletions": 1
-        },
-        {
-          "file": "js/editSystem.js",
-          "insertions": 14,
-          "deletions": 16
-        },
-        {
-          "file": "js/ganttPlanning.js",
-          "insertions": 6,
-          "deletions": 6
-        },
-        {
-          "file": "js/main.js",
-          "insertions": 7,
-          "deletions": 8
-        },
-        {
-          "file": "js/managers/NavigationManager.js",
-          "insertions": 1,
-          "deletions": 1
-        },
-        {
-          "file": "js/managers/NotificationManager.js",
-          "insertions": 2,
-          "deletions": 4
-        },
-        {
-          "file": "js/repositories/SystemRepository.js",
-          "insertions": 0,
-          "deletions": 4
-        },
-        {
-          "file": "js/sdmForecasting.js",
-          "insertions": 5,
-          "deletions": 5
-        },
-        {
-          "file": "js/services/AIService.js",
-          "insertions": 3,
-          "deletions": 8
-        },
-        {
-          "file": "js/services/CapacityService.js",
-          "insertions": 0,
-          "deletions": 5
-        },
-        {
-          "file": "js/services/ForecastService.js",
-          "insertions": 0,
-          "deletions": 5
-        },
-        {
-          "file": "js/services/GanttService.js",
-          "insertions": 0,
-          "deletions": 5
-        },
-        {
-          "file": "js/services/InitiativeService.js",
-          "insertions": 0,
-          "deletions": 5
-        },
-        {
-          "file": "js/services/OrgService.js",
-          "insertions": 0,
-          "deletions": 5
-        },
-        {
-          "file": "js/services/PlanningService.js",
-          "insertions": 0,
-          "deletions": 5
-        },
-        {
-          "file": "js/services/RoadmapService.js",
-          "insertions": 0,
-          "deletions": 5
-        },
-        {
-          "file": "js/services/SettingsService.js",
-          "insertions": 0,
-          "deletions": 5
-        },
-        {
-          "file": "js/services/SystemService.js",
-          "insertions": 6,
-          "deletions": 9
-        },
-        {
-          "file": "js/services/VisualizationService.js",
-          "insertions": 0,
-          "deletions": 5
-        },
-        {
-          "file": "js/services/WorkPackageService.js",
-          "insertions": 0,
-          "deletions": 5
-        },
-        {
-          "file": "js/utils/TemplateLoader.js",
-          "insertions": 0,
-          "deletions": 3
-        },
-        {
-          "file": "js/yearPlanning.js",
-          "insertions": 7,
-          "deletions": 7
-        }
-      ],
-      "filesChanged": 45,
-      "insertions": 186,
-      "deletions": 271
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "bc4c14379295ef451e419fdf7eb5daa6e4364806",
@@ -6249,10 +5888,16 @@
       "author": "khanmjk",
       "message": "more cleaning up main",
       "type": "other",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "js/main.js",
+          "insertions": 2,
+          "deletions": 28
+        }
+      ],
+      "filesChanged": 1,
+      "insertions": 2,
+      "deletions": 28
     },
     {
       "hash": "3e47b88978f57fe6f00eab1329abaf34cf9596c2",
@@ -6304,46 +5949,10 @@
       "author": "khanmjk",
       "message": "more clean up and separating concerns",
       "type": "refactor",
-      "files": [
-        {
-          "file": "js/components/CapacityPlanningView.js",
-          "insertions": 4,
-          "deletions": 8
-        },
-        {
-          "file": "js/components/OrgView.js",
-          "insertions": 2,
-          "deletions": 2
-        },
-        {
-          "file": "js/components/ResourceForecastView.js",
-          "insertions": 2,
-          "deletions": 4
-        },
-        {
-          "file": "js/engines/CapacityEngine.js",
-          "insertions": 22,
-          "deletions": 0
-        },
-        {
-          "file": "js/main.js",
-          "insertions": 2,
-          "deletions": 42
-        },
-        {
-          "file": "js/utils.js",
-          "insertions": 2,
-          "deletions": 3
-        },
-        {
-          "file": "js/yearPlanning.js",
-          "insertions": 17,
-          "deletions": 0
-        }
-      ],
-      "filesChanged": 7,
-      "insertions": 51,
-      "deletions": 59
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "8aacbcf8df4c3888f7c90acc1a6cdac45776b540",
@@ -6395,10 +6004,16 @@
       "author": "khanmjk",
       "message": "cleanup main.js remove dead comments, to aid further cleanup",
       "type": "refactor",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "js/main.js",
+          "insertions": 1,
+          "deletions": 41
+        }
+      ],
+      "filesChanged": 1,
+      "insertions": 1,
+      "deletions": 41
     },
     {
       "hash": "bfd29333e80c09d7db274867f1fb9173c75a8b35",
@@ -6450,21 +6065,10 @@
       "author": "khanmjk",
       "message": "more cleanup of globals",
       "type": "refactor",
-      "files": [
-        {
-          "file": "js/main.js",
-          "insertions": 1,
-          "deletions": 8
-        },
-        {
-          "file": "js/yearPlanning.js",
-          "insertions": 1,
-          "deletions": 0
-        }
-      ],
-      "filesChanged": 2,
-      "insertions": 2,
-      "deletions": 8
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "2282a88627c89c792b77b6007825008952e4fc2d",
@@ -6516,10 +6120,36 @@
       "author": "khanmjk",
       "message": "[TECH DEBT] - Create a new service for SystemManager to handle all system related functions, maybe abstract to StorageService?",
       "type": "other",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "Backlog.txt",
+          "insertions": 2,
+          "deletions": 2
+        },
+        {
+          "file": "index.html",
+          "insertions": 1,
+          "deletions": 0
+        },
+        {
+          "file": "js/components/SystemsView.js",
+          "insertions": 8,
+          "deletions": 1
+        },
+        {
+          "file": "js/main.js",
+          "insertions": 50,
+          "deletions": 388
+        },
+        {
+          "file": "js/services/SystemService.js",
+          "insertions": 390,
+          "deletions": 0
+        }
+      ],
+      "filesChanged": 5,
+      "insertions": 451,
+      "deletions": 391
     },
     {
       "hash": "41b961414ac312945880b973c8cc7be3405d0003",
@@ -6571,46 +6201,10 @@
       "author": "khanmjk",
       "message": "more code refactoring - safety checkin - more cleanup todo",
       "type": "refactor",
-      "files": [
-        {
-          "file": "index.html",
-          "insertions": 3,
-          "deletions": 0
-        },
-        {
-          "file": "js/data.js",
-          "insertions": 0,
-          "deletions": 5
-        },
-        {
-          "file": "js/main.js",
-          "insertions": 21,
-          "deletions": 118
-        },
-        {
-          "file": "js/services/AIService.js",
-          "insertions": 123,
-          "deletions": 0
-        },
-        {
-          "file": "js/services/InitiativeService.js",
-          "insertions": 108,
-          "deletions": 0
-        },
-        {
-          "file": "js/services/SettingsService.js",
-          "insertions": 134,
-          "deletions": 0
-        },
-        {
-          "file": "js/utils.js",
-          "insertions": 9,
-          "deletions": 57
-        }
-      ],
-      "filesChanged": 7,
-      "insertions": 398,
-      "deletions": 180
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "dc6c060e3887ed66a358ba9d1c0c8a3d15730418",
@@ -6662,10 +6256,51 @@
       "author": "khanmjk",
       "message": "more refactoring to remove inline html",
       "type": "refactor",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "css/views/sdm-forecasting-view.css",
+          "insertions": 12,
+          "deletions": 0
+        },
+        {
+          "file": "index.html",
+          "insertions": 1,
+          "deletions": 1
+        },
+        {
+          "file": "js/components/DashboardView.js",
+          "insertions": 10,
+          "deletions": 2
+        },
+        {
+          "file": "js/components/widgets/RoadmapTableWidget.js",
+          "insertions": 629,
+          "deletions": 0
+        },
+        {
+          "file": "js/ganttPlanning.js",
+          "insertions": 115,
+          "deletions": 38
+        },
+        {
+          "file": "js/roadmapTableView.js",
+          "insertions": 0,
+          "deletions": 547
+        },
+        {
+          "file": "js/sdmForecasting.js",
+          "insertions": 27,
+          "deletions": 6
+        },
+        {
+          "file": "js/visualizations.js",
+          "insertions": 109,
+          "deletions": 30
+        }
+      ],
+      "filesChanged": 8,
+      "insertions": 903,
+      "deletions": 624
     },
     {
       "hash": "ab6c7e0741b3519f29c5aafce8701717b843dd26",
@@ -6717,20 +6352,9 @@
       "author": "khanmjk",
       "message": "more ai catching up to new refactoring",
       "type": "refactor",
-      "files": [
-        {
-          "file": "js/components/ResourceForecastView.js",
-          "insertions": 23,
-          "deletions": 0
-        },
-        {
-          "file": "js/components/SystemsView.js",
-          "insertions": 20,
-          "deletions": 0
-        }
-      ],
-      "filesChanged": 2,
-      "insertions": 43,
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
       "deletions": 0
     },
     {
@@ -6783,10 +6407,21 @@
       "author": "khanmjk",
       "message": "safery checkin - year planning refactor",
       "type": "refactor",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "js/components/YearPlanningView.js",
+          "insertions": 48,
+          "deletions": 30
+        },
+        {
+          "file": "js/yearPlanning.js",
+          "insertions": 16,
+          "deletions": 9
+        }
+      ],
+      "filesChanged": 2,
+      "insertions": 64,
+      "deletions": 39
     },
     {
       "hash": "dfc280b56d942f56d2fd349f2b90a74f5abbd943",
@@ -6838,20 +6473,9 @@
       "author": "khanmjk",
       "message": "patch orgview to update capacity data so everything is in sync",
       "type": "other",
-      "files": [
-        {
-          "file": "js/components/OrgView.js",
-          "insertions": 2,
-          "deletions": 0
-        },
-        {
-          "file": "js/utils.js",
-          "insertions": 6,
-          "deletions": 0
-        }
-      ],
-      "filesChanged": 2,
-      "insertions": 8,
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
       "deletions": 0
     },
     {
@@ -6904,10 +6528,16 @@
       "author": "khanmjk",
       "message": "safety checkin - almost done with rewrite",
       "type": "other",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "js/components/CapacityDashboardView.js",
+          "insertions": 84,
+          "deletions": 7
+        }
+      ],
+      "filesChanged": 1,
+      "insertions": 84,
+      "deletions": 7
     },
     {
       "hash": "6e988027fdee86a067c9b83b485edec693935863",
@@ -6959,21 +6589,10 @@
       "author": "khanmjk",
       "message": "safety checkin - added playground mode for sdm forecasting",
       "type": "other",
-      "files": [
-        {
-          "file": "docs/sdmResourceForecastingFAQ.md",
-          "insertions": 10,
-          "deletions": 0
-        },
-        {
-          "file": "js/components/ResourceForecastView.js",
-          "insertions": 26,
-          "deletions": 14
-        }
-      ],
-      "filesChanged": 2,
-      "insertions": 36,
-      "deletions": 14
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "1a0566697640ac79377142427e5cc747b8b3ae4d",
@@ -7025,9 +6644,15 @@
       "author": "khanmjk",
       "message": "ok more todos before i stop",
       "type": "other",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
+      "files": [
+        {
+          "file": "Backlog.txt",
+          "insertions": 3,
+          "deletions": 0
+        }
+      ],
+      "filesChanged": 1,
+      "insertions": 3,
       "deletions": 0
     },
     {
@@ -7080,36 +6705,10 @@
       "author": "khanmjk",
       "message": "safery checkin goals",
       "type": "other",
-      "files": [
-        {
-          "file": "css/components/goal-edit-component.css",
-          "insertions": 17,
-          "deletions": 136
-        },
-        {
-          "file": "css/components/shared-inline-edit.css",
-          "insertions": 196,
-          "deletions": 0
-        },
-        {
-          "file": "index.html",
-          "insertions": 1,
-          "deletions": 0
-        },
-        {
-          "file": "js/components/GoalEditComponent.js",
-          "insertions": 163,
-          "deletions": 29
-        },
-        {
-          "file": "js/components/ManagementView.js",
-          "insertions": 3,
-          "deletions": 25
-        }
-      ],
-      "filesChanged": 5,
-      "insertions": 380,
-      "deletions": 190
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "660fd1c002a02914ba6b7bb93ffd30351ed218c2",
@@ -7161,10 +6760,21 @@
       "author": "khanmjk",
       "message": "safty checkin - new interactive roadmap edit is working",
       "type": "other",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "css/views/roadmap-view.css",
+          "insertions": 17,
+          "deletions": 2
+        },
+        {
+          "file": "js/components/RoadmapComponent.js",
+          "insertions": 13,
+          "deletions": 5
+        }
+      ],
+      "filesChanged": 2,
+      "insertions": 30,
+      "deletions": 7
     },
     {
       "hash": "cd664a1c09031835dbd7846faf856acd5e26f9d2",
@@ -7216,21 +6826,10 @@
       "author": "khanmjk",
       "message": "more edit system styling",
       "type": "other",
-      "files": [
-        {
-          "file": "css/foundation-components/buttons.css",
-          "insertions": 2,
-          "deletions": 1
-        },
-        {
-          "file": "js/editSystem.js",
-          "insertions": 5,
-          "deletions": 0
-        }
-      ],
-      "filesChanged": 2,
-      "insertions": 7,
-      "deletions": 1
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "791e7fb41402696b9447b9d8a6dc6f7452248a2b",
@@ -7282,10 +6881,26 @@
       "author": "khanmjk",
       "message": "refactor ux - org views",
       "type": "refactor",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "css/views/org-view.css",
+          "insertions": 33,
+          "deletions": 37
+        },
+        {
+          "file": "index.html",
+          "insertions": 2,
+          "deletions": 2
+        },
+        {
+          "file": "js/components/OrgView.js",
+          "insertions": 29,
+          "deletions": 87
+        }
+      ],
+      "filesChanged": 3,
+      "insertions": 64,
+      "deletions": 126
     },
     {
       "hash": "fc7b4b8b17875742004c7baba8a9bf962799d4f6",
@@ -7337,21 +6952,10 @@
       "author": "khanmjk",
       "message": "safety checkin - sorted UX for impactview styling",
       "type": "other",
-      "files": [
-        {
-          "file": "css/views/visualizations-view.css",
-          "insertions": 5,
-          "deletions": 1
-        },
-        {
-          "file": "js/impactView.js",
-          "insertions": 1,
-          "deletions": 1
-        }
-      ],
-      "filesChanged": 2,
-      "insertions": 6,
-      "deletions": 2
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "306058ef554d9ff8566f00052e88a5ffffefef43",
@@ -7403,10 +7007,21 @@
       "author": "khanmjk",
       "message": "safety checkin",
       "type": "other",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "css/views/visualizations-view.css",
+          "insertions": 3,
+          "deletions": 3
+        },
+        {
+          "file": "js/components/SystemOverviewView.js",
+          "insertions": 4,
+          "deletions": 4
+        }
+      ],
+      "filesChanged": 2,
+      "insertions": 7,
+      "deletions": 7
     },
     {
       "hash": "89fca801aa8132cbdcd32641ec1ead1ab882228e",
@@ -7458,20 +7073,9 @@
       "author": "khanmjk",
       "message": "chore: add .gitignore and remove .DS_Store",
       "type": "other",
-      "files": [
-        {
-          "file": ".DS_Store",
-          "insertions": 0,
-          "deletions": 0
-        },
-        {
-          "file": ".gitignore",
-          "insertions": 29,
-          "deletions": 0
-        }
-      ],
-      "filesChanged": 2,
-      "insertions": 29,
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
       "deletions": 0
     },
     {
@@ -7524,10 +7128,31 @@
       "author": "khanmjk",
       "message": "feat: Implement notification system with dropdown and history management",
       "type": "feature",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "css/components/notifications.css",
+          "insertions": 88,
+          "deletions": 1
+        },
+        {
+          "file": "index.html",
+          "insertions": 3,
+          "deletions": 9
+        },
+        {
+          "file": "js/components/HeaderComponent.js",
+          "insertions": 68,
+          "deletions": 0
+        },
+        {
+          "file": "js/managers/NotificationManager.js",
+          "insertions": 60,
+          "deletions": 1
+        }
+      ],
+      "filesChanged": 4,
+      "insertions": 219,
+      "deletions": 11
     },
     {
       "hash": "e126d043f8544f7befba8ee94c4b9630e07493e8",
@@ -7579,41 +7204,10 @@
       "author": "khanmjk",
       "message": "feat: Refactor CSS by moving styles to dedicated view files for better organization and maintainability",
       "type": "feature",
-      "files": [
-        {
-          "file": "css/style-legacy.css",
-          "insertions": 19,
-          "deletions": 514
-        },
-        {
-          "file": "css/style.css",
-          "insertions": 3,
-          "deletions": 1
-        },
-        {
-          "file": "css/views/org-view.css",
-          "insertions": 62,
-          "deletions": 1
-        },
-        {
-          "file": "css/views/system-edit-view.css",
-          "insertions": 48,
-          "deletions": 0
-        },
-        {
-          "file": "css/views/visualizations-view.css",
-          "insertions": 87,
-          "deletions": 1
-        },
-        {
-          "file": "css/views/year-planning-view.css",
-          "insertions": 193,
-          "deletions": 0
-        }
-      ],
-      "filesChanged": 6,
-      "insertions": 412,
-      "deletions": 517
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "5fee202f91ff556660911c06a18d7900ead1832b",
@@ -7665,9 +7259,30 @@
       "author": "khanmjk",
       "message": "feat: add base styles for tables, D3 visualizations, legends, and tooltips components",
       "type": "feature",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
+      "files": [
+        {
+          "file": "css/3-elements/tables.css",
+          "insertions": 33,
+          "deletions": 0
+        },
+        {
+          "file": "css/5-components/d3-visualizations.css",
+          "insertions": 27,
+          "deletions": 0
+        },
+        {
+          "file": "css/5-components/legends.css",
+          "insertions": 14,
+          "deletions": 0
+        },
+        {
+          "file": "css/5-components/tooltips.css",
+          "insertions": 15,
+          "deletions": 0
+        }
+      ],
+      "filesChanged": 4,
+      "insertions": 89,
       "deletions": 0
     },
     {
@@ -7720,16 +7335,10 @@
       "author": "khanmjk",
       "message": "feat: Add commented-out user profile UI placeholder with implementation notes.",
       "type": "feature",
-      "files": [
-        {
-          "file": "index.html",
-          "insertions": 5,
-          "deletions": 1
-        }
-      ],
-      "filesChanged": 1,
-      "insertions": 5,
-      "deletions": 1
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "df230cca3f0e3e64ae84ca5042fe97c0fb3f2d41",
@@ -7781,10 +7390,21 @@
       "author": "khanmjk",
       "message": "refactor: Remove legacy modal form generation and update logic for roadmap initiatives.",
       "type": "refactor",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "ai/aiAgentToolset.js",
+          "insertions": 1,
+          "deletions": 3
+        },
+        {
+          "file": "js/roadmap.js",
+          "insertions": 2,
+          "deletions": 397
+        }
+      ],
+      "filesChanged": 2,
+      "insertions": 3,
+      "deletions": 400
     },
     {
       "hash": "5e99880c70c7de3c72144ec090678c37dcdc0110",
@@ -7836,16 +7456,10 @@
       "author": "khanmjk",
       "message": "refactor: Remove event listeners for main menu, AI chat, and settings modal from initialization.",
       "type": "refactor",
-      "files": [
-        {
-          "file": "js/main.js",
-          "insertions": 2,
-          "deletions": 38
-        }
-      ],
-      "filesChanged": 1,
-      "insertions": 2,
-      "deletions": 38
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "a8fac828761ea8127e2843c80554ca8cf0885c08",
@@ -7897,10 +7511,16 @@
       "author": "khanmjk",
       "message": "feat: remove themes tab rendering from settings view",
       "type": "feature",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "js/components/SettingsView.js",
+          "insertions": 1,
+          "deletions": 2
+        }
+      ],
+      "filesChanged": 1,
+      "insertions": 1,
+      "deletions": 2
     },
     {
       "hash": "ca2c3603cfc1c056597ebcbf27f297d5c990b39d",
@@ -7952,46 +7572,10 @@
       "author": "khanmjk",
       "message": "feat: Implement tabbed management view for themes, initiatives, and goals, and add a modal for creating/editing roadmap initiatives.",
       "type": "feature",
-      "files": [
-        {
-          "file": "css/components/management.css",
-          "insertions": 117,
-          "deletions": 50
-        },
-        {
-          "file": "css/components/roadmapModal.css",
-          "insertions": 188,
-          "deletions": 0
-        },
-        {
-          "file": "index.html",
-          "insertions": 3,
-          "deletions": 19
-        },
-        {
-          "file": "js/components/ManagementView.js",
-          "insertions": 215,
-          "deletions": 35
-        },
-        {
-          "file": "js/components/RoadmapInitiativeModal.js",
-          "insertions": 421,
-          "deletions": 0
-        },
-        {
-          "file": "js/managers/NavigationManager.js",
-          "insertions": 15,
-          "deletions": 7
-        },
-        {
-          "file": "js/roadmap.js",
-          "insertions": 34,
-          "deletions": 429
-        }
-      ],
-      "filesChanged": 7,
-      "insertions": 993,
-      "deletions": 540
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "846d7458dc5b71abe45abd3a3e08074c0eb9e06d",
@@ -8043,10 +7627,16 @@
       "author": "khanmjk",
       "message": "enable ai ux functionality",
       "type": "other",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "js/components/HeaderComponent.js",
+          "insertions": 20,
+          "deletions": 9
+        }
+      ],
+      "filesChanged": 1,
+      "insertions": 20,
+      "deletions": 9
     },
     {
       "hash": "c87031a6f795a5400b3c5c13ee4894c7c3fd2ce6",
@@ -8098,16 +7688,10 @@
       "author": "khanmjk",
       "message": "reorder menu structure",
       "type": "other",
-      "files": [
-        {
-          "file": "index.html",
-          "insertions": 20,
-          "deletions": 20
-        }
-      ],
-      "filesChanged": 1,
-      "insertions": 20,
-      "deletions": 20
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "24118bd95316f99f51165b2e1923b61b13e0ae3a",
@@ -8159,10 +7743,26 @@
       "author": "khanmjk",
       "message": "more ux refactor",
       "type": "refactor",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "index.html",
+          "insertions": 1,
+          "deletions": 64
+        },
+        {
+          "file": "js/managers/NavigationManager.js",
+          "insertions": 12,
+          "deletions": 0
+        },
+        {
+          "file": "js/yearPlanning.js",
+          "insertions": 126,
+          "deletions": 42
+        }
+      ],
+      "filesChanged": 3,
+      "insertions": 139,
+      "deletions": 106
     },
     {
       "hash": "ba5dbf57634bf0ab438de815522a12e5923a19d8",
@@ -8214,56 +7814,10 @@
       "author": "khanmjk",
       "message": "sanity checkin",
       "type": "other",
-      "files": [
-        {
-          "file": "css/components/header.css",
-          "insertions": 2,
-          "deletions": 0
-        },
-        {
-          "file": "css/layout/main-layout.css",
-          "insertions": 3,
-          "deletions": 1
-        },
-        {
-          "file": "css/style.css",
-          "insertions": 1301,
-          "deletions": 702
-        },
-        {
-          "file": "index.html",
-          "insertions": 22,
-          "deletions": 48
-        },
-        {
-          "file": "js/components/DocumentationComponent.js",
-          "insertions": 146,
-          "deletions": 0
-        },
-        {
-          "file": "js/components/HeaderComponent.js",
-          "insertions": 2,
-          "deletions": 25
-        },
-        {
-          "file": "js/components/SidebarComponent.js",
-          "insertions": 0,
-          "deletions": 1
-        },
-        {
-          "file": "js/main.js",
-          "insertions": 1,
-          "deletions": 36
-        },
-        {
-          "file": "js/managers/NavigationManager.js",
-          "insertions": 17,
-          "deletions": 0
-        }
-      ],
-      "filesChanged": 9,
-      "insertions": 1494,
-      "deletions": 813
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "f89e08043aba5e168f0a363bdb93cc134f8b7f5b",
@@ -8315,10 +7869,36 @@
       "author": "khanmjk",
       "message": "Merge pull request #40 from khanmjk/antigravity",
       "type": "merge",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "css/components/ganttChart.css",
+          "insertions": 70,
+          "deletions": 0
+        },
+        {
+          "file": "js/components/gantt/FrappeGanttRenderer.js",
+          "insertions": 251,
+          "deletions": 17
+        },
+        {
+          "file": "js/components/gantt/MermaidGanttRenderer.js",
+          "insertions": 5,
+          "deletions": 5
+        },
+        {
+          "file": "js/components/gantt/ganttAdapter.js",
+          "insertions": 112,
+          "deletions": 9
+        },
+        {
+          "file": "js/ganttPlanning.js",
+          "insertions": 288,
+          "deletions": 13
+        }
+      ],
+      "filesChanged": 5,
+      "insertions": 726,
+      "deletions": 44
     },
     {
       "hash": "aea67a83466cf3e1b65ae51e83799474d2234198",
@@ -8370,26 +7950,10 @@
       "author": "khanmjk",
       "message": "Adjust Gantt chart styles: update header height, padding, and bar dimensions for improved layout",
       "type": "style",
-      "files": [
-        {
-          "file": "css/components/ganttChart.css",
-          "insertions": 3,
-          "deletions": 0
-        },
-        {
-          "file": "js/components/gantt/FrappeGanttRenderer.js",
-          "insertions": 6,
-          "deletions": 5
-        },
-        {
-          "file": "js/components/gantt/MermaidGanttRenderer.js",
-          "insertions": 5,
-          "deletions": 5
-        }
-      ],
-      "filesChanged": 3,
-      "insertions": 14,
-      "deletions": 10
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "bdd828353f8fc819d99eda49fd7e6f99aef35756",
@@ -8441,10 +8005,16 @@
       "author": "khanmjk",
       "message": "textedits",
       "type": "other",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "js/components/gantt/FrappeGanttRenderer.js",
+          "insertions": 14,
+          "deletions": 2
+        }
+      ],
+      "filesChanged": 1,
+      "insertions": 14,
+      "deletions": 2
     },
     {
       "hash": "d0427637950a6842a388a5a776035966152583b4",
@@ -8496,21 +8066,10 @@
       "author": "khanmjk",
       "message": "improving ux interaction on frappe gantt, no logic rules implemented yet",
       "type": "other",
-      "files": [
-        {
-          "file": "js/components/gantt/FrappeGanttRenderer.js",
-          "insertions": 73,
-          "deletions": 5
-        },
-        {
-          "file": "js/ganttPlanning.js",
-          "insertions": 51,
-          "deletions": 4
-        }
-      ],
-      "filesChanged": 2,
-      "insertions": 124,
-      "deletions": 9
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "f8ae162edc46ffe872a7cf05b5dddb2d4aeffc88",
@@ -8562,10 +8121,21 @@
       "author": "khanmjk",
       "message": "add the split divider back in to adjust the display of gannt table to create more room for the gantt chart display",
       "type": "other",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "css/components/ganttChart.css",
+          "insertions": 5,
+          "deletions": 2
+        },
+        {
+          "file": "js/ganttPlanning.js",
+          "insertions": 11,
+          "deletions": 1
+        }
+      ],
+      "filesChanged": 2,
+      "insertions": 16,
+      "deletions": 3
     },
     {
       "hash": "0b47236ecf9c076e81a04e636783f74dfa7c3476",
@@ -8617,31 +8187,10 @@
       "author": "khanmjk",
       "message": "frappe increment - still lots to do",
       "type": "other",
-      "files": [
-        {
-          "file": "css/components/ganttChart.css",
-          "insertions": 127,
-          "deletions": 22
-        },
-        {
-          "file": "index.html",
-          "insertions": 28,
-          "deletions": 0
-        },
-        {
-          "file": "js/components/gantt/FrappeGanttRenderer.js",
-          "insertions": 63,
-          "deletions": 17
-        },
-        {
-          "file": "js/ganttPlanning.js",
-          "insertions": 17,
-          "deletions": 1
-        }
-      ],
-      "filesChanged": 4,
-      "insertions": 235,
-      "deletions": 40
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "f3805e0e1fdd3667583af6a646fc69ee13981d5f",
@@ -8693,10 +8242,21 @@
       "author": "khanmjk",
       "message": "refactor: Centralize work package date recalculation from assignments to a dedicated utility function.",
       "type": "refactor",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "js/data.js",
+          "insertions": 39,
+          "deletions": 12
+        },
+        {
+          "file": "js/ganttPlanning.js",
+          "insertions": 23,
+          "deletions": 17
+        }
+      ],
+      "filesChanged": 2,
+      "insertions": 62,
+      "deletions": 29
     },
     {
       "hash": "b288dd94f29263e88859f6ebf481879527bdb8b0",
@@ -8748,91 +8308,10 @@
       "author": "khanmjk",
       "message": "Merge pull request #37 from khanmjk/AIFeatures",
       "type": "feature",
-      "files": [
-        {
-          "file": ".gemini/settings.json",
-          "insertions": 6,
-          "deletions": 0
-        },
-        {
-          "file": "Backlog.txt",
-          "insertions": 12,
-          "deletions": 5
-        },
-        {
-          "file": "README.md",
-          "insertions": 17,
-          "deletions": 0
-        },
-        {
-          "file": "ai/aiAgentController.js",
-          "insertions": 36,
-          "deletions": 12
-        },
-        {
-          "file": "ai/aiAgentToolset.js",
-          "insertions": 2,
-          "deletions": 2
-        },
-        {
-          "file": "ai/aiChatAssistant.js",
-          "insertions": 6,
-          "deletions": 1
-        },
-        {
-          "file": "ai/aiService.js",
-          "insertions": 14,
-          "deletions": 4
-        },
-        {
-          "file": "css/components/ganttChart.css",
-          "insertions": 206,
-          "deletions": 0
-        },
-        {
-          "file": "index.html",
-          "insertions": 8,
-          "deletions": 0
-        },
-        {
-          "file": "js/components/ganttAdapter.js",
-          "insertions": 153,
-          "deletions": 0
-        },
-        {
-          "file": "js/components/ganttChart.js",
-          "insertions": 169,
-          "deletions": 0
-        },
-        {
-          "file": "js/data.js",
-          "insertions": 261,
-          "deletions": 0
-        },
-        {
-          "file": "js/ganttGenerator.js",
-          "insertions": 24,
-          "deletions": 0
-        },
-        {
-          "file": "js/ganttPlanning.js",
-          "insertions": 1037,
-          "deletions": 0
-        },
-        {
-          "file": "js/main.js",
-          "insertions": 20,
-          "deletions": 2
-        },
-        {
-          "file": "js/yearPlanning.js",
-          "insertions": 21,
-          "deletions": 0
-        }
-      ],
-      "filesChanged": 16,
-      "insertions": 1992,
-      "deletions": 26
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "5a6919919a01bd67dd4238afdc6f671a21bbb72b",
@@ -8884,10 +8363,16 @@
       "author": "khanmjk",
       "message": "some ai failsafes",
       "type": "other",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "ai/aiAgentController.js",
+          "insertions": 4,
+          "deletions": 2
+        }
+      ],
+      "filesChanged": 1,
+      "insertions": 4,
+      "deletions": 2
     },
     {
       "hash": "145afd03f4043250635ab619a7e78254e598cc5d",
@@ -8939,26 +8424,10 @@
       "author": "khanmjk",
       "message": "UX improvements",
       "type": "other",
-      "files": [
-        {
-          "file": "css/components/ganttChart.css",
-          "insertions": 7,
-          "deletions": 1
-        },
-        {
-          "file": "js/components/ganttAdapter.js",
-          "insertions": 36,
-          "deletions": 24
-        },
-        {
-          "file": "js/components/ganttChart.js",
-          "insertions": 27,
-          "deletions": 4
-        }
-      ],
-      "filesChanged": 3,
-      "insertions": 70,
-      "deletions": 29
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "078b4aef7763119e542c1ab57422bfa8168f31a6",
@@ -9010,10 +8479,21 @@
       "author": "khanmjk",
       "message": "updating data gaps to support work package planning",
       "type": "other",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "ai/aiService.js",
+          "insertions": 5,
+          "deletions": 2
+        },
+        {
+          "file": "js/data.js",
+          "insertions": 4,
+          "deletions": 1
+        }
+      ],
+      "filesChanged": 2,
+      "insertions": 9,
+      "deletions": 3
     },
     {
       "hash": "c85731f97d1327812ff6952f7a8ed89b96f4d30c",
@@ -9065,26 +8545,10 @@
       "author": "khanmjk",
       "message": "more refactoring - add WP drill down to detailed planning table",
       "type": "refactor",
-      "files": [
-        {
-          "file": "js/components/ganttAdapter.js",
-          "insertions": 61,
-          "deletions": 48
-        },
-        {
-          "file": "js/data.js",
-          "insertions": 147,
-          "deletions": 60
-        },
-        {
-          "file": "js/ganttPlanning.js",
-          "insertions": 326,
-          "deletions": 28
-        }
-      ],
-      "filesChanged": 3,
-      "insertions": 534,
-      "deletions": 136
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "31f6a8f30d6b38d1853a5b1b7d35e1f7347b41fc",
@@ -9136,10 +8600,26 @@
       "author": "khanmjk",
       "message": "more refinements to gantt chart view, still more todo",
       "type": "other",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "css/components/ganttChart.css",
+          "insertions": 69,
+          "deletions": 0
+        },
+        {
+          "file": "index.html",
+          "insertions": 1,
+          "deletions": 0
+        },
+        {
+          "file": "js/ganttPlanning.js",
+          "insertions": 0,
+          "deletions": 15
+        }
+      ],
+      "filesChanged": 3,
+      "insertions": 70,
+      "deletions": 15
     },
     {
       "hash": "98943a71f81cf67a5554b11951f2a20cc561baf5",
@@ -9191,16 +8671,10 @@
       "author": "khanmjk",
       "message": "update Backlog",
       "type": "other",
-      "files": [
-        {
-          "file": "Backlog.txt",
-          "insertions": 3,
-          "deletions": 1
-        }
-      ],
-      "filesChanged": 1,
-      "insertions": 3,
-      "deletions": 1
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "9c7f9371f42158ef8b4d781f303f1fdd530ceb3e",
@@ -9252,10 +8726,41 @@
       "author": "khanmjk",
       "message": "Add AI diagramming features",
       "type": "feature",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "Backlog.txt",
+          "insertions": 2,
+          "deletions": 1
+        },
+        {
+          "file": "ai/aiAgentController.js",
+          "insertions": 28,
+          "deletions": 0
+        },
+        {
+          "file": "ai/aiAgentToolset.js",
+          "insertions": 7,
+          "deletions": 0
+        },
+        {
+          "file": "ai/aiChatAssistant.js",
+          "insertions": 49,
+          "deletions": 1
+        },
+        {
+          "file": "ai/aiService.js",
+          "insertions": 72,
+          "deletions": 0
+        },
+        {
+          "file": "index.html",
+          "insertions": 16,
+          "deletions": 0
+        }
+      ],
+      "filesChanged": 6,
+      "insertions": 174,
+      "deletions": 2
     },
     {
       "hash": "00f8ddcede68b8f1a0161bca46492750d5b90c79",
@@ -9307,21 +8812,10 @@
       "author": "khanmjk",
       "message": "fix the caroussel display",
       "type": "fix",
-      "files": [
-        {
-          "file": "css/style.css",
-          "insertions": 14,
-          "deletions": 0
-        },
-        {
-          "file": "index.html",
-          "insertions": 1,
-          "deletions": 1
-        }
-      ],
-      "filesChanged": 2,
-      "insertions": 15,
-      "deletions": 1
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "8c6bb7d49a9062db3f1cf831c67a04b9679343a1",
@@ -9373,10 +8867,31 @@
       "author": "khanmjk",
       "message": "Implement bulk actions support",
       "type": "other",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "Backlog.txt",
+          "insertions": 1,
+          "deletions": 0
+        },
+        {
+          "file": "README.md",
+          "insertions": 30,
+          "deletions": 0
+        },
+        {
+          "file": "ai/aiAgentController.js",
+          "insertions": 28,
+          "deletions": 1
+        },
+        {
+          "file": "ai/aiAgentToolset.js",
+          "insertions": 257,
+          "deletions": 0
+        }
+      ],
+      "filesChanged": 4,
+      "insertions": 316,
+      "deletions": 1
     },
     {
       "hash": "802ae867ae79aafcee5d8f802f18e2762edd52c7",
@@ -9428,15 +8943,9 @@
       "author": "khanmjk",
       "message": "updated backlog to track future codebase refactor tasks",
       "type": "refactor",
-      "files": [
-        {
-          "file": "Backlog.txt",
-          "insertions": 37,
-          "deletions": 0
-        }
-      ],
-      "filesChanged": 1,
-      "insertions": 37,
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
       "deletions": 0
     },
     {
@@ -9489,10 +8998,41 @@
       "author": "khanmjk",
       "message": "introduce a planning optimization agent",
       "type": "other",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "Backlog.txt",
+          "insertions": 1,
+          "deletions": 3
+        },
+        {
+          "file": "ai/aiAgentController.js",
+          "insertions": 123,
+          "deletions": 1
+        },
+        {
+          "file": "ai/aiPlanOptimizationAgent.js",
+          "insertions": 394,
+          "deletions": 0
+        },
+        {
+          "file": "index.html",
+          "insertions": 1,
+          "deletions": 0
+        },
+        {
+          "file": "js/main.js",
+          "insertions": 38,
+          "deletions": 11
+        },
+        {
+          "file": "js/yearPlanning.js",
+          "insertions": 4,
+          "deletions": 3
+        }
+      ],
+      "filesChanged": 6,
+      "insertions": 561,
+      "deletions": 18
     },
     {
       "hash": "c31b6a15f99a98abefd3e9966a805280f478eeca",
@@ -9544,31 +9084,10 @@
       "author": "khanmjk",
       "message": "make the chat input area resizeable",
       "type": "other",
-      "files": [
-        {
-          "file": "css/components/aiChatPanel.css",
-          "insertions": 25,
-          "deletions": 1
-        },
-        {
-          "file": "html/components/aiChatPanel.html",
-          "insertions": 1,
-          "deletions": 1
-        },
-        {
-          "file": "js/aiChatAssistant.js",
-          "insertions": 45,
-          "deletions": 0
-        },
-        {
-          "file": "js/main.js",
-          "insertions": 3,
-          "deletions": 2
-        }
-      ],
-      "filesChanged": 4,
-      "insertions": 74,
-      "deletions": 4
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "3b933d0acc0434d9f4693f2bdee58f6b2d5c3951",
@@ -9620,10 +9139,46 @@
       "author": "khanmjk",
       "message": "Merge pull request #24 from khanmjk/AIFeatures",
       "type": "feature",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "Backlog.txt",
+          "insertions": 12,
+          "deletions": 11
+        },
+        {
+          "file": "ai/aiAgentController.js",
+          "insertions": 24,
+          "deletions": 24
+        },
+        {
+          "file": "index.html",
+          "insertions": 1,
+          "deletions": 15
+        },
+        {
+          "file": "js/editSystem.js",
+          "insertions": 3,
+          "deletions": 1
+        },
+        {
+          "file": "js/main.js",
+          "insertions": 24,
+          "deletions": 12
+        },
+        {
+          "file": "js/visualizations.js",
+          "insertions": 183,
+          "deletions": 47
+        },
+        {
+          "file": "js/yearPlanning.js",
+          "insertions": 377,
+          "deletions": 292
+        }
+      ],
+      "filesChanged": 7,
+      "insertions": 624,
+      "deletions": 402
     },
     {
       "hash": "be96b865db67d862de96625e147bfae9c17a8dd7",
@@ -9675,66 +9230,10 @@
       "author": "khanmjk",
       "message": "Merge pull request #23 from khanmjk/AIFeatures",
       "type": "feature",
-      "files": [
-        {
-          "file": "ai/aiAgentController.js",
-          "insertions": 533,
-          "deletions": 0
-        },
-        {
-          "file": "ai/aiAgentToolset.js",
-          "insertions": 179,
-          "deletions": 0
-        },
-        {
-          "file": "css/components/aiChatPanel.css",
-          "insertions": 49,
-          "deletions": 0
-        },
-        {
-          "file": "html/components/aiChatPanel.html",
-          "insertions": 2,
-          "deletions": 1
-        },
-        {
-          "file": "index.html",
-          "insertions": 2,
-          "deletions": 0
-        },
-        {
-          "file": "js/aiChatAssistant.js",
-          "insertions": 290,
-          "deletions": 627
-        },
-        {
-          "file": "js/aiService.js",
-          "insertions": 1,
-          "deletions": 1
-        },
-        {
-          "file": "js/editSystem.js",
-          "insertions": 21,
-          "deletions": 10
-        },
-        {
-          "file": "js/main.js",
-          "insertions": 32,
-          "deletions": 6
-        },
-        {
-          "file": "js/orgView.js",
-          "insertions": 22,
-          "deletions": 39
-        },
-        {
-          "file": "js/utils.js",
-          "insertions": 109,
-          "deletions": 1
-        }
-      ],
-      "filesChanged": 11,
-      "insertions": 1240,
-      "deletions": 685
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "9a517d04ef3fd52d001b795f1377bbaff13425b9",
@@ -9786,10 +9285,36 @@
       "author": "khanmjk",
       "message": "Make the chatpanel more conversational, give it history and more context",
       "type": "other",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "css/style.css",
+          "insertions": 7,
+          "deletions": 8
+        },
+        {
+          "file": "html/components/aiChatPanel.html",
+          "insertions": 3,
+          "deletions": 1
+        },
+        {
+          "file": "js/aiChatAssistant.js",
+          "insertions": 156,
+          "deletions": 105
+        },
+        {
+          "file": "js/aiService.js",
+          "insertions": 40,
+          "deletions": 83
+        },
+        {
+          "file": "js/main.js",
+          "insertions": 12,
+          "deletions": 1
+        }
+      ],
+      "filesChanged": 5,
+      "insertions": 218,
+      "deletions": 198
     },
     {
       "hash": "c767f5c0806b4fd33bbde7f58aff30612409161c",
@@ -9841,56 +9366,10 @@
       "author": "khanmjk",
       "message": "Merge pull request #19 from khanmjk/AIFeatures",
       "type": "feature",
-      "files": [
-        {
-          "file": ".vscode/launch.json",
-          "insertions": 16,
-          "deletions": 0
-        },
-        {
-          "file": "Backlog.txt",
-          "insertions": 2,
-          "deletions": 1
-        },
-        {
-          "file": "README.md",
-          "insertions": 13,
-          "deletions": 1
-        },
-        {
-          "file": "css/components/aiChatPanel.css",
-          "insertions": 45,
-          "deletions": 0
-        },
-        {
-          "file": "html/components/aiChatPanel.html",
-          "insertions": 1,
-          "deletions": 0
-        },
-        {
-          "file": "index.html",
-          "insertions": 3,
-          "deletions": 0
-        },
-        {
-          "file": "js/aiChatAssistant.js",
-          "insertions": 198,
-          "deletions": 0
-        },
-        {
-          "file": "js/aiService.js",
-          "insertions": 175,
-          "deletions": 1
-        },
-        {
-          "file": "js/main.js",
-          "insertions": 4,
-          "deletions": 0
-        }
-      ],
-      "filesChanged": 9,
-      "insertions": 457,
-      "deletions": 3
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "e6d5891a91bcef577035972eed86b222d8490724",
@@ -9942,10 +9421,26 @@
       "author": "khanmjk",
       "message": "enchancing suggested questions",
       "type": "other",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "Backlog.txt",
+          "insertions": 2,
+          "deletions": 1
+        },
+        {
+          "file": "js/aiChatAssistant.js",
+          "insertions": 1,
+          "deletions": 0
+        },
+        {
+          "file": "js/aiService.js",
+          "insertions": 45,
+          "deletions": 2
+        }
+      ],
+      "filesChanged": 3,
+      "insertions": 48,
+      "deletions": 3
     },
     {
       "hash": "5f0ff21bdb2a280c4f31d23bea4918487a137566",
@@ -9997,36 +9492,10 @@
       "author": "khanmjk",
       "message": "adding support for suggested questions and even image generation",
       "type": "other",
-      "files": [
-        {
-          "file": "css/components/aiChatPanel.css",
-          "insertions": 32,
-          "deletions": 0
-        },
-        {
-          "file": "html/components/aiChatPanel.html",
-          "insertions": 1,
-          "deletions": 0
-        },
-        {
-          "file": "js/aiChatAssistant.js",
-          "insertions": 155,
-          "deletions": 0
-        },
-        {
-          "file": "js/aiService.js",
-          "insertions": 88,
-          "deletions": 1
-        },
-        {
-          "file": "js/main.js",
-          "insertions": 4,
-          "deletions": 0
-        }
-      ],
-      "filesChanged": 5,
-      "insertions": 280,
-      "deletions": 1
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "83a12217dff301a5167726243f89cb7e98e34099",
@@ -10078,10 +9547,21 @@
       "author": "khanmjk",
       "message": "more prompt refinements",
       "type": "other",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "js/aiChatAssistant.js",
+          "insertions": 22,
+          "deletions": 2
+        },
+        {
+          "file": "js/aiService.js",
+          "insertions": 18,
+          "deletions": 7
+        }
+      ],
+      "filesChanged": 2,
+      "insertions": 40,
+      "deletions": 9
     },
     {
       "hash": "65a6b3d2683f75278217129aedbd36696d151598",
@@ -10133,15 +9613,9 @@
       "author": "khanmjk",
       "message": "Merge pull request #17 from khanmjk/AIFeatures",
       "type": "feature",
-      "files": [
-        {
-          "file": "js/main.js",
-          "insertions": 9,
-          "deletions": 0
-        }
-      ],
-      "filesChanged": 1,
-      "insertions": 9,
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
       "deletions": 0
     },
     {
@@ -10194,10 +9668,16 @@
       "author": "khanmjk",
       "message": "Patch _fetchWithRetry so the 4xx path builds a proper error object (define errorMessage or store errorBody directly).",
       "type": "other",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "js/aiService.js",
+          "insertions": 2,
+          "deletions": 1
+        }
+      ],
+      "filesChanged": 1,
+      "insertions": 2,
+      "deletions": 1
     },
     {
       "hash": "deb07b217aee19c736f7f717f03c1b045ea11fba",
@@ -10249,21 +9729,10 @@
       "author": "khanmjk",
       "message": "added feedback into errors in spinner text updates",
       "type": "other",
-      "files": [
-        {
-          "file": "js/aiService.js",
-          "insertions": 14,
-          "deletions": 9
-        },
-        {
-          "file": "js/main.js",
-          "insertions": 11,
-          "deletions": 3
-        }
-      ],
-      "filesChanged": 2,
-      "insertions": 25,
-      "deletions": 12
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "dc4aae683952fcc3e28e1b1b3fba9d4650cb5c19",
@@ -10315,10 +9784,16 @@
       "author": "khanmjk",
       "message": "updated backlog",
       "type": "other",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "Backlog.txt",
+          "insertions": 23,
+          "deletions": 27
+        }
+      ],
+      "filesChanged": 1,
+      "insertions": 23,
+      "deletions": 27
     },
     {
       "hash": "3698af0d0545dd2e170658662b0492d8b866ab27",
@@ -10370,16 +9845,10 @@
       "author": "khanmjk",
       "message": "Increased maxOutputTokens and switched to gemini flash - actually worked. Used \"Create with AI\" feature to simulate a system like Microsoft Excel!",
       "type": "feature",
-      "files": [
-        {
-          "file": "js/aiService.js",
-          "insertions": 1,
-          "deletions": 1
-        }
-      ],
-      "filesChanged": 1,
-      "insertions": 1,
-      "deletions": 1
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "0c507b8202a89dc071de18767a7b1ee2f0558704",
@@ -10431,10 +9900,21 @@
       "author": "khanmjk",
       "message": "some cosmetic changes",
       "type": "other",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "css/style.css",
+          "insertions": 31,
+          "deletions": 0
+        },
+        {
+          "file": "index.html",
+          "insertions": 3,
+          "deletions": 3
+        }
+      ],
+      "filesChanged": 2,
+      "insertions": 34,
+      "deletions": 3
     },
     {
       "hash": "ae2e5c562f9af402360a790dc792b0935d380d9f",
@@ -10486,21 +9966,10 @@
       "author": "khanmjk",
       "message": "Make use of tabulator for team breakdown view in Org Design",
       "type": "other",
-      "files": [
-        {
-          "file": "Backlog.txt",
-          "insertions": 1,
-          "deletions": 2
-        },
-        {
-          "file": "js/orgView.js",
-          "insertions": 271,
-          "deletions": 242
-        }
-      ],
-      "filesChanged": 2,
-      "insertions": 272,
-      "deletions": 244
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "cd9c56aac40ff7fa2bea51e17a891df1a4085d2f",
@@ -10552,10 +10021,36 @@
       "author": "khanmjk",
       "message": "Add a fintech platform as sample data",
       "type": "other",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "Backlog.txt",
+          "insertions": 1,
+          "deletions": 5
+        },
+        {
+          "file": "index.html",
+          "insertions": 1,
+          "deletions": 0
+        },
+        {
+          "file": "js/data.js",
+          "insertions": 1,
+          "deletions": 1
+        },
+        {
+          "file": "js/main.js",
+          "insertions": 2,
+          "deletions": 1
+        },
+        {
+          "file": "js/sampleData/sampleFinSecure.js",
+          "insertions": 436,
+          "deletions": 0
+        }
+      ],
+      "filesChanged": 5,
+      "insertions": 441,
+      "deletions": 7
     },
     {
       "hash": "3e3ca579672d18c6dbee5d32c739f520169dddea",
@@ -10607,26 +10102,10 @@
       "author": "khanmjk",
       "message": "Revert \"Now that we can add resources to the system, we need to also support removing resources (when people leave)\"",
       "type": "other",
-      "files": [
-        {
-          "file": "Backlog.txt",
-          "insertions": 3,
-          "deletions": 2
-        },
-        {
-          "file": "js/main.js",
-          "insertions": 6,
-          "deletions": 4
-        },
-        {
-          "file": "js/orgView.js",
-          "insertions": 553,
-          "deletions": 262
-        }
-      ],
-      "filesChanged": 3,
-      "insertions": 562,
-      "deletions": 268
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "2ce9446d9df6b74a3a49c1d00f2f8c284cf74a07",
@@ -10678,10 +10157,16 @@
       "author": "khanmjk",
       "message": "updated backlog",
       "type": "other",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "Backlog.txt",
+          "insertions": 15,
+          "deletions": 13
+        }
+      ],
+      "filesChanged": 1,
+      "insertions": 15,
+      "deletions": 13
     },
     {
       "hash": "22591080abafc3afac81907bed50cc3aba3473d4",
@@ -10733,16 +10218,10 @@
       "author": "khanmjk",
       "message": "updatws backlog",
       "type": "other",
-      "files": [
-        {
-          "file": "Backlog.txt",
-          "insertions": 10,
-          "deletions": 11
-        }
-      ],
-      "filesChanged": 1,
-      "insertions": 10,
-      "deletions": 11
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "6b619cb373ac141a908533658eaee06e22ec0159",
@@ -10794,10 +10273,21 @@
       "author": "khanmjk",
       "message": "spruce up the goals dashboard view",
       "type": "other",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "css/style.css",
+          "insertions": 77,
+          "deletions": 0
+        },
+        {
+          "file": "js/goalsView.js",
+          "insertions": 50,
+          "deletions": 23
+        }
+      ],
+      "filesChanged": 2,
+      "insertions": 127,
+      "deletions": 23
     },
     {
       "hash": "d0be73b2ceef38b696656cee5d94a9356b448bc5",
@@ -10849,20 +10339,9 @@
       "author": "khanmjk",
       "message": "highlight selected top level menu",
       "type": "other",
-      "files": [
-        {
-          "file": "css/style.css",
-          "insertions": 14,
-          "deletions": 0
-        },
-        {
-          "file": "js/main.js",
-          "insertions": 29,
-          "deletions": 0
-        }
-      ],
-      "filesChanged": 2,
-      "insertions": 43,
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
       "deletions": 0
     },
     {
@@ -10915,10 +10394,46 @@
       "author": "khanmjk",
       "message": "Merge pull request #12 from khanmjk/ManagementMetrics",
       "type": "merge",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "Backlog.txt",
+          "insertions": 1,
+          "deletions": 1
+        },
+        {
+          "file": "css/style.css",
+          "insertions": 105,
+          "deletions": 0
+        },
+        {
+          "file": "index.html",
+          "insertions": 11,
+          "deletions": 217
+        },
+        {
+          "file": "js/dashboard.js",
+          "insertions": 338,
+          "deletions": 0
+        },
+        {
+          "file": "js/documentation.js",
+          "insertions": 116,
+          "deletions": 0
+        },
+        {
+          "file": "js/main.js",
+          "insertions": 19,
+          "deletions": 7
+        },
+        {
+          "file": "js/roadmapTableView.js",
+          "insertions": 282,
+          "deletions": 0
+        }
+      ],
+      "filesChanged": 7,
+      "insertions": 872,
+      "deletions": 225
     },
     {
       "hash": "f0da073de36fdd73623c7dd62ad82acd5bed2e76",
@@ -10970,16 +10485,10 @@
       "author": "khanmjk",
       "message": "display org total when filtering by orgs",
       "type": "other",
-      "files": [
-        {
-          "file": "js/roadmapTableView.js",
-          "insertions": 16,
-          "deletions": 5
-        }
-      ],
-      "filesChanged": 1,
-      "insertions": 16,
-      "deletions": 5
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "d3f5acae455f3808a32b800b6dc750ae51a6b760",
@@ -11031,10 +10540,31 @@
       "author": "khanmjk",
       "message": "safety checkin - some refactoring, new files",
       "type": "refactor",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "index.html",
+          "insertions": 5,
+          "deletions": 217
+        },
+        {
+          "file": "js/dashboard.js",
+          "insertions": 11,
+          "deletions": 12
+        },
+        {
+          "file": "js/documentation.js",
+          "insertions": 116,
+          "deletions": 0
+        },
+        {
+          "file": "js/roadmapTableView.js",
+          "insertions": 204,
+          "deletions": 0
+        }
+      ],
+      "filesChanged": 4,
+      "insertions": 336,
+      "deletions": 229
     },
     {
       "hash": "86eb32a85dcef9e5e5c32ef0dafe9f03c51899eb",
@@ -11086,26 +10616,10 @@
       "author": "khanmjk",
       "message": "implement initial dashboard feature",
       "type": "feature",
-      "files": [
-        {
-          "file": "index.html",
-          "insertions": 8,
-          "deletions": 2
-        },
-        {
-          "file": "js/dashboard.js",
-          "insertions": 201,
-          "deletions": 0
-        },
-        {
-          "file": "js/main.js",
-          "insertions": 19,
-          "deletions": 7
-        }
-      ],
-      "filesChanged": 3,
-      "insertions": 228,
-      "deletions": 9
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "c2791b57be88cb41f90c027974231222244bb5d6",
@@ -11157,10 +10671,21 @@
       "author": "khanmjk",
       "message": "dynamically build the roadmap years to select from in yearly planning",
       "type": "other",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "js/utils.js",
+          "insertions": 58,
+          "deletions": 1
+        },
+        {
+          "file": "js/yearPlanning.js",
+          "insertions": 58,
+          "deletions": 17
+        }
+      ],
+      "filesChanged": 2,
+      "insertions": 116,
+      "deletions": 18
     },
     {
       "hash": "363d75b46cd229be426f9fc4703fa72040a308e5",
@@ -11212,26 +10737,10 @@
       "author": "khanmjk",
       "message": "Update Data Models:  add the new planningYear attribute to the sample initiatives in js/sampleData/sampleStreamingPlatform.js and js/sampleData/sampleContactCenterPlatform.js. I will also add it to the default initiative created in js/main.js.",
       "type": "other",
-      "files": [
-        {
-          "file": "js/main.js",
-          "insertions": 4,
-          "deletions": 1
-        },
-        {
-          "file": "js/sampleData/sampleContactCenterPlatform.js",
-          "insertions": 25,
-          "deletions": 25
-        },
-        {
-          "file": "js/sampleData/sampleStreamingPlatform.js",
-          "insertions": 25,
-          "deletions": 25
-        }
-      ],
-      "filesChanged": 3,
-      "insertions": 54,
-      "deletions": 51
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "b36641077bea74c55bc2a7fc623108107209f810",
@@ -11283,10 +10792,16 @@
       "author": "khanmjk",
       "message": "Merge pull request #9 from khanmjk/fix/editSystem-syntax-error",
       "type": "merge",
-      "files": [],
-      "filesChanged": 0,
+      "files": [
+        {
+          "file": "js/editSystem.js",
+          "insertions": 0,
+          "deletions": 6
+        }
+      ],
+      "filesChanged": 1,
       "insertions": 0,
-      "deletions": 0
+      "deletions": 6
     },
     {
       "hash": "b57b80c658a7d39ea16433e12a46cd3ef7f483bc",
@@ -11338,16 +10853,10 @@
       "author": "khanmjk",
       "message": "more tweaks to UI",
       "type": "other",
-      "files": [
-        {
-          "file": "js/yearPlanning.js",
-          "insertions": 98,
-          "deletions": 69
-        }
-      ],
-      "filesChanged": 1,
-      "insertions": 98,
-      "deletions": 69
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "ef1044ea35be50bed4301a9c8de86d57a02ae5e2",
@@ -11399,10 +10908,16 @@
       "author": "khanmjk",
       "message": "Updated backlog",
       "type": "other",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "Backlog.txt",
+          "insertions": 2,
+          "deletions": 1
+        }
+      ],
+      "filesChanged": 1,
+      "insertions": 2,
+      "deletions": 1
     },
     {
       "hash": "6bf21217ac57e4d4a279c2bcebb9df49ad7c8f85",
@@ -11454,16 +10969,10 @@
       "author": "khanmjk",
       "message": "stashing for later",
       "type": "other",
-      "files": [
-        {
-          "file": "js/editSystem.js",
-          "insertions": 0,
-          "deletions": 2
-        }
-      ],
-      "filesChanged": 1,
+      "files": [],
+      "filesChanged": 0,
       "insertions": 0,
-      "deletions": 2
+      "deletions": 0
     },
     {
       "hash": "dbc9ffc260a0430b45bcce2a7820524640d1e150",
@@ -11515,10 +11024,21 @@
       "author": "google-labs-jules[bot]",
       "message": "Fix: Add checkbox for AI engineer in Edit System page",
       "type": "fix",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "js/editSystem.js",
+          "insertions": 16,
+          "deletions": 11
+        },
+        {
+          "file": "js/utils.js",
+          "insertions": 39,
+          "deletions": 4
+        }
+      ],
+      "filesChanged": 2,
+      "insertions": 55,
+      "deletions": 15
     },
     {
       "hash": "97c609aa411ea79e93f961fa7dda823a618f0c25",
@@ -11570,15 +11090,9 @@
       "author": "google-labs-jules[bot]",
       "message": "feat: Implement resource removal functionality",
       "type": "feature",
-      "files": [
-        {
-          "file": "js/orgView.js",
-          "insertions": 447,
-          "deletions": 0
-        }
-      ],
-      "filesChanged": 1,
-      "insertions": 447,
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
       "deletions": 0
     },
     {
@@ -11631,10 +11145,26 @@
       "author": "khanmjk",
       "message": "Merge pull request #4 from khanmjk/feature/platform-toggle",
       "type": "feature",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "index.html",
+          "insertions": 6,
+          "deletions": 3
+        },
+        {
+          "file": "js/main.js",
+          "insertions": 8,
+          "deletions": 0
+        },
+        {
+          "file": "js/visualizations.js",
+          "insertions": 103,
+          "deletions": 43
+        }
+      ],
+      "filesChanged": 3,
+      "insertions": 117,
+      "deletions": 46
     },
     {
       "hash": "31a24a4adb839bbf13edab30f71495870d760e86",
@@ -11686,16 +11216,10 @@
       "author": "khanmjk",
       "message": "Merge pull request #1 from khanmjk/feat/owning-team-identity-carousel",
       "type": "merge",
-      "files": [
-        {
-          "file": "js/visualizations.js",
-          "insertions": 1,
-          "deletions": 1
-        }
-      ],
-      "filesChanged": 1,
-      "insertions": 1,
-      "deletions": 1
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "e3a9790688fd5a32b302c8933c59d2e3d7a56a87",
@@ -11747,10 +11271,21 @@
       "author": "khanmjk",
       "message": "Roadmap: Added ROI Type and used Theme name instead of theme ID",
       "type": "other",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "Backlog.txt",
+          "insertions": 1,
+          "deletions": 0
+        },
+        {
+          "file": "js/roadmap.js",
+          "insertions": 84,
+          "deletions": 59
+        }
+      ],
+      "filesChanged": 2,
+      "insertions": 85,
+      "deletions": 59
     },
     {
       "hash": "4384061be6cb1986dab08bd9654beaa30ce455f4",
@@ -11802,21 +11337,10 @@
       "author": "khanmjk",
       "message": "safety check in for initial feature for backlog and roadmap management",
       "type": "feature",
-      "files": [
-        {
-          "file": "README.md",
-          "insertions": 54,
-          "deletions": 13
-        },
-        {
-          "file": "js/roadmap.js",
-          "insertions": 79,
-          "deletions": 80
-        }
-      ],
-      "filesChanged": 2,
-      "insertions": 133,
-      "deletions": 93
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "b3b8b0a7505da30af10b5ca296f4c9fa67afa3ab",
@@ -11868,10 +11392,36 @@
       "author": "khanmjk",
       "message": "Started work on Roadmap and Backlog feature, WIP",
       "type": "feature",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "index.html",
+          "insertions": 44,
+          "deletions": 55
+        },
+        {
+          "file": "js/data.js",
+          "insertions": 161,
+          "deletions": 153
+        },
+        {
+          "file": "js/main.js",
+          "insertions": 36,
+          "deletions": 5
+        },
+        {
+          "file": "js/roadmap.js",
+          "insertions": 684,
+          "deletions": 0
+        },
+        {
+          "file": "js/utils.js",
+          "insertions": 121,
+          "deletions": 4
+        }
+      ],
+      "filesChanged": 5,
+      "insertions": 1046,
+      "deletions": 217
     },
     {
       "hash": "3ff31cae7b79c662e38140fae2e29ab8b2f86051",
@@ -11923,20 +11473,9 @@
       "author": "khanmjk",
       "message": "Play with animations for inserting entries into table",
       "type": "other",
-      "files": [
-        {
-          "file": "css/style.css",
-          "insertions": 27,
-          "deletions": 0
-        },
-        {
-          "file": "js/yearPlanning.js",
-          "insertions": 14,
-          "deletions": 0
-        }
-      ],
-      "filesChanged": 2,
-      "insertions": 41,
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
       "deletions": 0
     },
     {
@@ -11989,9 +11528,15 @@
       "author": "khanmjk",
       "message": "just dumped some AI backlog items",
       "type": "other",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
+      "files": [
+        {
+          "file": "Backlog.txt",
+          "insertions": 14,
+          "deletions": 0
+        }
+      ],
+      "filesChanged": 1,
+      "insertions": 14,
       "deletions": 0
     },
     {
@@ -12044,16 +11589,10 @@
       "author": "khanmjk",
       "message": "Fix filtering on engineer list - levels and team identity",
       "type": "fix",
-      "files": [
-        {
-          "file": "js/orgView.js",
-          "insertions": 92,
-          "deletions": 53
-        }
-      ],
-      "filesChanged": 1,
-      "insertions": 92,
-      "deletions": 53
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "586e55ee23c253d171ed823781eb2bd6b48cfdb9",
@@ -12105,10 +11644,26 @@
       "author": "khanmjk",
       "message": "Minor updates to UI, backlog updated",
       "type": "other",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "Backlog.txt",
+          "insertions": 13,
+          "deletions": 3
+        },
+        {
+          "file": "README.md",
+          "insertions": 12,
+          "deletions": 11
+        },
+        {
+          "file": "index.html",
+          "insertions": 3,
+          "deletions": 3
+        }
+      ],
+      "filesChanged": 3,
+      "insertions": 28,
+      "deletions": 17
     },
     {
       "hash": "b58d45b6231721766da874214f7716925ca1e396",
@@ -12160,36 +11715,10 @@
       "author": "khanmjk",
       "message": "UX - updated some button styles for consistency",
       "type": "style",
-      "files": [
-        {
-          "file": "css/style.css",
-          "insertions": 94,
-          "deletions": 0
-        },
-        {
-          "file": "index.html",
-          "insertions": 3,
-          "deletions": 3
-        },
-        {
-          "file": "js/capacityTuning.js",
-          "insertions": 20,
-          "deletions": 1
-        },
-        {
-          "file": "js/editSystem.js",
-          "insertions": 30,
-          "deletions": 7
-        },
-        {
-          "file": "js/sdmForecasting.js",
-          "insertions": 1,
-          "deletions": 1
-        }
-      ],
-      "filesChanged": 5,
-      "insertions": 148,
-      "deletions": 12
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "17a4b9b76de3ad2058d6695295bf8518060bee41",
@@ -12241,10 +11770,16 @@
       "author": "khanmjk",
       "message": "Make documentation window resizable by user",
       "type": "docs",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "index.html",
+          "insertions": 87,
+          "deletions": 17
+        }
+      ],
+      "filesChanged": 1,
+      "insertions": 87,
+      "deletions": 17
     },
     {
       "hash": "6d81510e02da71a5b94eed827883c14b45b1d13f",
@@ -12296,15 +11831,9 @@
       "author": "khanmjk",
       "message": "Update index.html",
       "type": "other",
-      "files": [
-        {
-          "file": "index.html",
-          "insertions": 1,
-          "deletions": 0
-        }
-      ],
-      "filesChanged": 1,
-      "insertions": 1,
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
       "deletions": 0
     },
     {
@@ -12357,10 +11886,16 @@
       "author": "khanmjk",
       "message": "lift and shift of SDM Resource forecasting modeling",
       "type": "other",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "index.html",
+          "insertions": 786,
+          "deletions": 3
+        }
+      ],
+      "filesChanged": 1,
+      "insertions": 786,
+      "deletions": 3
     },
     {
       "hash": "4bf65c71d62a98dacd396518c8f331fbe4f7dcff",
@@ -12412,16 +11947,10 @@
       "author": "khanmjk",
       "message": "added waterfall chart view to capacity tuning page",
       "type": "other",
-      "files": [
-        {
-          "file": "index.html",
-          "insertions": 304,
-          "deletions": 29
-        }
-      ],
-      "filesChanged": 1,
-      "insertions": 304,
-      "deletions": 29
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "00c5f6ad06139806c4b579e624b41cae0972e847",
@@ -12473,10 +12002,16 @@
       "author": "khanmjk",
       "message": "safety commit - there's still some bugs in calculating capacity tuning",
       "type": "fix",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "index.html",
+          "insertions": 312,
+          "deletions": 137
+        }
+      ],
+      "filesChanged": 1,
+      "insertions": 312,
+      "deletions": 137
     },
     {
       "hash": "53cb89848abc94603e689149bcc086b7f04d539a",
@@ -12528,16 +12063,10 @@
       "author": "khanmjk",
       "message": "fixed org-wide event changes updates to capacity summary table",
       "type": "fix",
-      "files": [
-        {
-          "file": "index.html",
-          "insertions": 48,
-          "deletions": 36
-        }
-      ],
-      "filesChanged": 1,
-      "insertions": 48,
-      "deletions": 36
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "1c5306365bb7e0b15fbc102dc2abacee9b75d8c1",
@@ -12589,10 +12118,16 @@
       "author": "khanmjk",
       "message": "simplified team capacity constraints UI",
       "type": "other",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "index.html",
+          "insertions": 400,
+          "deletions": 277
+        }
+      ],
+      "filesChanged": 1,
+      "insertions": 400,
+      "deletions": 277
     },
     {
       "hash": "fa7e2e813abe91846d6f85db07b2909d1289e8a1",
@@ -12644,16 +12179,10 @@
       "author": "khanmjk",
       "message": "some cosmetic changes, changed title to reflect the app better",
       "type": "other",
-      "files": [
-        {
-          "file": "index.html",
-          "insertions": 15,
-          "deletions": 11
-        }
-      ],
-      "filesChanged": 1,
-      "insertions": 15,
-      "deletions": 11
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "867aa1db88e174c44940ad663db94c8164874d15",
@@ -12705,10 +12234,16 @@
       "author": "khanmjk",
       "message": "cleaned up engineer list page",
       "type": "other",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "index.html",
+          "insertions": 47,
+          "deletions": 14
+        }
+      ],
+      "filesChanged": 1,
+      "insertions": 47,
+      "deletions": 14
     },
     {
       "hash": "b0dac39c8106873de7719b18400a147139ad17d5",
@@ -12760,16 +12295,10 @@
       "author": "khanmjk",
       "message": "added CSS to format teamloadsummary table",
       "type": "style",
-      "files": [
-        {
-          "file": "index.html",
-          "insertions": 38,
-          "deletions": 8
-        }
-      ],
-      "filesChanged": 1,
-      "insertions": 38,
-      "deletions": 8
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "91afd05b729f71f69b6db7f6c2a469fc303f5972",
@@ -12821,10 +12350,16 @@
       "author": "khanmjk",
       "message": "Enhanced planning table to show per team capacity scenario",
       "type": "other",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "index.html",
+          "insertions": 138,
+          "deletions": 56
+        }
+      ],
+      "filesChanged": 1,
+      "insertions": 138,
+      "deletions": 56
     },
     {
       "hash": "3f5b014daa600fbd094dd7a57422af06535da565",
@@ -12876,16 +12411,10 @@
       "author": "khanmjk",
       "message": "add save plan feature",
       "type": "feature",
-      "files": [
-        {
-          "file": "index.html",
-          "insertions": 51,
-          "deletions": 1
-        }
-      ],
-      "filesChanged": 1,
-      "insertions": 51,
-      "deletions": 1
+      "files": [],
+      "filesChanged": 0,
+      "insertions": 0,
+      "deletions": 0
     },
     {
       "hash": "3fcfeae457fb898eb9722000d74fa10384eeeac5",
@@ -12937,10 +12466,16 @@
       "author": "khanmjk",
       "message": "Made some changes to data model, included new concepts. TODO: Planning module",
       "type": "other",
-      "files": [],
-      "filesChanged": 0,
-      "insertions": 0,
-      "deletions": 0
+      "files": [
+        {
+          "file": "index.html",
+          "insertions": 1411,
+          "deletions": 1081
+        }
+      ],
+      "filesChanged": 1,
+      "insertions": 1411,
+      "deletions": 1081
     },
     {
       "hash": "0bf8d38e69b79c340705675c45fa0e642de17277",
@@ -13025,12 +12560,6 @@
         "date": "2025-12-16T15:14:41+02:00",
         "message": "feat: Add Provide Feedback feature with Cloudflare Worker backend",
         "lines": 454
-      },
-      {
-        "hash": "4c7f53d378521d8d53f1d766feed1f390bf126b0",
-        "date": "2025-12-15T20:06:00+02:00",
-        "message": "index on main: d0782b4 Fix ROI fields in initiatives management view and refactor according to coding contract",
-        "lines": 448
       },
       {
         "hash": "7f4b06c180da405d175b164a3e0689181a9e59ab",
@@ -14169,12 +13698,6 @@
         "lines": 170
       },
       {
-        "hash": "4c7f53d378521d8d53f1d766feed1f390bf126b0",
-        "date": "2025-12-15T20:06:00+02:00",
-        "message": "index on main: d0782b4 Fix ROI fields in initiatives management view and refactor according to coding contract",
-        "lines": 156
-      },
-      {
         "hash": "dcaba997ef3de035a1f689d216ccc02d8559ec10",
         "date": "2025-12-14T13:25:24+02:00",
         "message": "more compliance code cleanup",
@@ -14975,10 +14498,10 @@
     },
     {
       "month": "2025-12",
-      "commits": 293,
-      "insertions": 95509,
-      "deletions": 61427,
-      "filesChanged": 297
+      "commits": 298,
+      "insertions": 143144,
+      "deletions": 63040,
+      "filesChanged": 313
     }
   ],
   "architecturePhases": [
@@ -14999,6 +14522,14 @@
       "hash": "f5dac6aedb2412e350febe22352ac8729cf96ac1"
     },
     {
+      "phase": 3,
+      "title": "Monolith Busting",
+      "subtitle": "Breaking the Big File",
+      "description": "The massive index.html is finally broken apart into separate modules, marking a major refactor point.",
+      "startDate": "2025-05-10T07:50:15+02:00",
+      "hash": "c2f6a812eb3640ee37b3fa46e878c4628b1fe3b7"
+    },
+    {
       "phase": 4,
       "title": "The Component Revolution",
       "subtitle": "Modular Thinking Takes Hold",
@@ -15015,12 +14546,52 @@
       "hash": "9a517d04ef3fd52d001b795f1377bbaff13425b9"
     },
     {
+      "phase": 4.5,
+      "title": "Workspace Layout",
+      "subtitle": "The Sidebar Era",
+      "description": "Navigation moves to a persistent sidebar. The concept of a 'Workspace' with swappable views is introduced.",
+      "startDate": "2025-11-29T16:44:00+02:00",
+      "hash": "5f597b7e21cdeb13c2f2aa88b71b898e49ac3ea2"
+    },
+    {
+      "phase": 5.5,
+      "title": "UI Theme Styling",
+      "subtitle": "Dark Mode & Theming",
+      "description": "Introduction of semantic CSS variables and comprehensive dark mode support.",
+      "startDate": "2025-12-02T19:38:17+02:00",
+      "hash": "cd9b2d03aae65e482c32ce40c1cfbfc16969156e"
+    },
+    {
+      "phase": 6.5,
+      "title": "Agent Contracts",
+      "subtitle": "Rules for Robots",
+      "description": "Formal contracts (docs/*.md) are established to guide AI agents in maintaining code quality and consistency.",
+      "startDate": "2025-12-03T17:22:01+02:00",
+      "hash": "a2f53d90415cef9b6ffcef2c862c626d7d7b8af6"
+    },
+    {
       "phase": 5,
       "title": "Service Layer Architecture",
       "subtitle": "Separation of Concerns",
       "description": "The codebase had grown wild. Views were talking to each other, business logic was scattered. It was time for the Service Revolution.",
       "startDate": "2025-12-06T08:00:20+02:00",
       "hash": "c90f7ef9c1b4edcaeaf65a0259bd3550c8093531"
+    },
+    {
+      "phase": 7,
+      "title": "Tech Debt Paydown",
+      "subtitle": "Focus on Compliance",
+      "description": "A dedicated phase for cleaning up technical debt, improving compliance, and standardizing patterns.",
+      "startDate": "2025-12-07T06:07:07+02:00",
+      "hash": "233de26cb1b48bc371367b9b488aa36fa445491a"
+    },
+    {
+      "phase": 9,
+      "title": "Code Quality Gates",
+      "subtitle": "Automated Standards",
+      "description": "Linting (ESLint) and Testing (Vitest) configurations are added, enforcing strict quality gates for all changes.",
+      "startDate": "2025-12-26T07:13:41+02:00",
+      "hash": "016e5066d7381fe9062625a5f01059a2d7180fd3"
     },
     {
       "phase": 8,
@@ -15034,11 +14605,11 @@
   "topChurnFiles": [
     {
       "file": "index.html",
-      "commits": 194
+      "commits": 193
     },
     {
       "file": "js/main.js",
-      "commits": 121
+      "commits": 120
     },
     {
       "file": "Backlog.txt",
@@ -15094,7 +14665,7 @@
     },
     {
       "file": "js/components/RoadmapView.js",
-      "commits": 21
+      "commits": 20
     },
     {
       "file": "js/components/gantt/ganttAdapter.js",
@@ -15141,15 +14712,15 @@
       "commits": 15
     },
     {
-      "file": "js/components/RoadmapInitiativeModal.js",
-      "commits": 14
-    },
-    {
       "file": "ai/aiChatAssistant.js",
       "commits": 14
     },
     {
       "file": "css/components/aiChatPanel.css",
+      "commits": 14
+    },
+    {
+      "file": "js/components/SidebarComponent.js",
       "commits": 14
     }
   ],
@@ -15165,10 +14736,17 @@
     },
     ".github": {
       "ISSUE_TEMPLATE": {
-        "_files": ["bug_report.md", "feature_request.md", "general-feedback-template.md"]
+        "_files": [
+          "bug_report.md",
+          "feature_request.md",
+          "general-feedback-template.md"
+        ]
       },
       "workflows": {
-        "_files": ["quality.yml", "tests.yml"]
+        "_files": [
+          "quality.yml",
+          "tests.yml"
+        ]
       }
     },
     "_files": [
@@ -15187,10 +14765,16 @@
       "vitest.config.mjs"
     ],
     ".husky": {
-      "_files": [".gitignore", "pre-commit"]
+      "_files": [
+        ".gitignore",
+        "pre-commit"
+      ]
     },
     ".vscode": {
-      "_files": ["launch.json", "settings.json"]
+      "_files": [
+        "launch.json",
+        "settings.json"
+      ]
     },
     "ai": {
       "_files": [
@@ -15201,7 +14785,10 @@
       ]
     },
     "css": {
-      "_files": [".DS_Store", "style.css"],
+      "_files": [
+        ".DS_Store",
+        "style.css"
+      ],
       "components": {
         "_files": [
           "Modal.css",
@@ -15227,7 +14814,11 @@
         ]
       },
       "elements": {
-        "_files": ["base.css", "tables.css", "typography.css"]
+        "_files": [
+          "base.css",
+          "tables.css",
+          "typography.css"
+        ]
       },
       "foundation-components": {
         "_files": [
@@ -15248,16 +14839,26 @@
         ]
       },
       "layout": {
-        "_files": ["main-layout.css", "sidebar.css", "workspace-shell.css"]
+        "_files": [
+          "main-layout.css",
+          "sidebar.css",
+          "workspace-shell.css"
+        ]
       },
       "objects": {
-        "_files": ["layout.css"]
+        "_files": [
+          "layout.css"
+        ]
       },
       "settings": {
-        "_files": ["variables.css"]
+        "_files": [
+          "variables.css"
+        ]
       },
       "utilities": {
-        "_files": ["animations.css"]
+        "_files": [
+          "animations.css"
+        ]
       },
       "views": {
         "_files": [
@@ -15290,9 +14891,25 @@
         "workspace-canvas-contract.md"
       ]
     },
+    "gitstoryline": {
+      "_files": [
+        "git_race_mining.py",
+        "git_timeline_mining.py",
+        "index.html",
+        "race.css",
+        "race.html",
+        "race.js",
+        "race_data.json",
+        "timeline.css",
+        "timeline.js",
+        "timeline_data.json"
+      ]
+    },
     "js": {
       "ai": {
-        "_files": ["aiViewRegistry.js"]
+        "_files": [
+          "aiViewRegistry.js"
+        ]
       },
       "components": {
         "_files": [
@@ -15346,7 +14963,11 @@
             "ganttGenerator.js"
           ],
           "row": {
-            "_files": ["AssignmentRow.js", "InitiativeRow.js", "WorkPackageRow.js"]
+            "_files": [
+              "AssignmentRow.js",
+              "InitiativeRow.js",
+              "WorkPackageRow.js"
+            ]
           }
         },
         "widgets": {
@@ -15360,15 +14981,28 @@
           ]
         }
       },
-      "_files": ["documentation.js", "editSystem.js", "featureFlags.js", "main.js"],
+      "_files": [
+        "documentation.js",
+        "editSystem.js",
+        "featureFlags.js",
+        "main.js"
+      ],
       "engines": {
-        "_files": ["CapacityEngine.js", "ForecastingEngine.js"]
+        "_files": [
+          "CapacityEngine.js",
+          "ForecastingEngine.js"
+        ]
       },
       "managers": {
-        "_files": ["NavigationManager.js", "NotificationManager.js"]
+        "_files": [
+          "NavigationManager.js",
+          "NotificationManager.js"
+        ]
       },
       "repositories": {
-        "_files": ["SystemRepository.js"]
+        "_files": [
+          "SystemRepository.js"
+        ]
       },
       "sampleData": {
         "_files": [
@@ -15404,10 +15038,14 @@
         ]
       },
       "state": {
-        "_files": ["AppState.js"]
+        "_files": [
+          "AppState.js"
+        ]
       },
       "utils": {
-        "_files": ["StyleVars.js"]
+        "_files": [
+          "StyleVars.js"
+        ]
       },
       "visualizations": {
         "_files": [
@@ -15421,26 +15059,44 @@
       }
     },
     "scripts": {
-      "_files": ["contract-scan.js"]
+      "_files": [
+        "contract-scan.js"
+      ]
     },
     "smt-feedback-worker": {
-      "_files": ["README.md", "wrangler.toml"],
+      "_files": [
+        "README.md",
+        "wrangler.toml"
+      ],
       "src": {
-        "_files": ["index.js"]
+        "_files": [
+          "index.js"
+        ]
       }
     },
     "tests": {
       "engines": {
-        "_files": ["capacityEngine.test.js", "forecastingEngine.test.js"]
+        "_files": [
+          "capacityEngine.test.js",
+          "forecastingEngine.test.js"
+        ]
       },
       "helpers": {
-        "_files": ["sampleData.js", "testContext.js"]
+        "_files": [
+          "sampleData.js",
+          "testContext.js"
+        ]
       },
       "managers": {
-        "_files": ["navigationManager.test.js", "notificationManager.test.js"]
+        "_files": [
+          "navigationManager.test.js",
+          "notificationManager.test.js"
+        ]
       },
       "repositories": {
-        "_files": ["systemRepository.test.js"]
+        "_files": [
+          "systemRepository.test.js"
+        ]
       },
       "services": {
         "_files": [
@@ -15467,14 +15123,120 @@
         ]
       },
       "state": {
-        "_files": ["appState.test.js"]
+        "_files": [
+          "appState.test.js"
+        ]
       },
       "utils": {
-        "_files": ["styleVars.test.js"]
+        "_files": [
+          "styleVars.test.js"
+        ]
       }
     }
   },
   "fileCreationTimeline": [
+    {
+      "type": "file_created",
+      "file": "cypress/e2e/advanced-flows.cy.js",
+      "date": "2025-12-27T16:05:27+02:00",
+      "hash": "74a9bf0dbb9f46b8688b3d40c09a25f6cbf9cdab"
+    },
+    {
+      "type": "file_created",
+      "file": "cypress/e2e/core-features.cy.js",
+      "date": "2025-12-27T16:05:27+02:00",
+      "hash": "74a9bf0dbb9f46b8688b3d40c09a25f6cbf9cdab"
+    },
+    {
+      "type": "file_created",
+      "file": ".github/workflows/e2e.yml",
+      "date": "2025-12-27T13:21:12+02:00",
+      "hash": "494b4d351c2e16a7a290dce5bd60305bfd32c880"
+    },
+    {
+      "type": "file_created",
+      "file": "cypress.config.cjs",
+      "date": "2025-12-27T13:21:12+02:00",
+      "hash": "494b4d351c2e16a7a290dce5bd60305bfd32c880"
+    },
+    {
+      "type": "file_created",
+      "file": "cypress/e2e/smoke.cy.js",
+      "date": "2025-12-27T13:21:12+02:00",
+      "hash": "494b4d351c2e16a7a290dce5bd60305bfd32c880"
+    },
+    {
+      "type": "file_created",
+      "file": "cypress/support/e2e.js",
+      "date": "2025-12-27T13:21:12+02:00",
+      "hash": "494b4d351c2e16a7a290dce5bd60305bfd32c880"
+    },
+    {
+      "type": "file_created",
+      "file": "scripts/run-cypress.js",
+      "date": "2025-12-27T13:21:12+02:00",
+      "hash": "494b4d351c2e16a7a290dce5bd60305bfd32c880"
+    },
+    {
+      "type": "file_created",
+      "file": "gitstoryline/git_race_mining.py",
+      "date": "2025-12-27T12:02:38+02:00",
+      "hash": "01df150a78fc06b577159a800dd19bfc448e5f35"
+    },
+    {
+      "type": "file_created",
+      "file": "gitstoryline/git_timeline_mining.py",
+      "date": "2025-12-27T12:02:38+02:00",
+      "hash": "01df150a78fc06b577159a800dd19bfc448e5f35"
+    },
+    {
+      "type": "file_created",
+      "file": "gitstoryline/index.html",
+      "date": "2025-12-27T12:02:38+02:00",
+      "hash": "01df150a78fc06b577159a800dd19bfc448e5f35"
+    },
+    {
+      "type": "file_created",
+      "file": "gitstoryline/race.css",
+      "date": "2025-12-27T12:02:38+02:00",
+      "hash": "01df150a78fc06b577159a800dd19bfc448e5f35"
+    },
+    {
+      "type": "file_created",
+      "file": "gitstoryline/race.html",
+      "date": "2025-12-27T12:02:38+02:00",
+      "hash": "01df150a78fc06b577159a800dd19bfc448e5f35"
+    },
+    {
+      "type": "file_created",
+      "file": "gitstoryline/race.js",
+      "date": "2025-12-27T12:02:38+02:00",
+      "hash": "01df150a78fc06b577159a800dd19bfc448e5f35"
+    },
+    {
+      "type": "file_created",
+      "file": "gitstoryline/race_data.json",
+      "date": "2025-12-27T12:02:38+02:00",
+      "hash": "01df150a78fc06b577159a800dd19bfc448e5f35"
+    },
+    {
+      "type": "file_created",
+      "file": "gitstoryline/timeline.css",
+      "date": "2025-12-27T12:02:38+02:00",
+      "hash": "01df150a78fc06b577159a800dd19bfc448e5f35"
+    },
+    {
+      "type": "file_created",
+      "file": "gitstoryline/timeline.js",
+      "date": "2025-12-27T12:02:38+02:00",
+      "hash": "01df150a78fc06b577159a800dd19bfc448e5f35"
+    },
+    {
+      "type": "file_created",
+      "file": "gitstoryline/timeline_data.json",
+      "date": "2025-12-27T12:02:38+02:00",
+      "hash": "01df150a78fc06b577159a800dd19bfc448e5f35"
+    },
     {
       "type": "file_created",
       "file": ".github/workflows/tests.yml",
@@ -15846,12 +15608,6 @@
       "file": ".github/ISSUE_TEMPLATE/general-feedback-template.md",
       "date": "2025-12-16T14:20:36+02:00",
       "hash": "6702bcf4b121fc7cfbc0f456e419cb67751c911a"
-    },
-    {
-      "type": "file_created",
-      "file": "js/components/forms/InitiativeFormComponent.js",
-      "date": "2025-12-15T20:06:00+02:00",
-      "hash": "4c7f53d378521d8d53f1d766feed1f390bf126b0"
     },
     {
       "type": "file_created",

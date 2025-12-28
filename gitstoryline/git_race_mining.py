@@ -21,7 +21,7 @@ from pathlib import Path
 # Configuration
 REPO_PATH = Path(__file__).parent.parent.resolve()
 OUTPUT_FILE = REPO_PATH / "gitstoryline" / "race_data.json"
-TOP_N_FILES = 48  # Files to show in the race at any time
+TOP_N_FILES = 56  # Files to show in the race at any time
 
 # File categories for coloring
 FILE_CATEGORIES = {
@@ -90,7 +90,7 @@ def get_all_files_ever():
     files = set()
     for line in output.split('\n'):
         line = line.strip()
-        if line and (line.endswith('.js') or line.endswith('.css') or line.endswith('.html')):
+        if line and (line.endswith('.js') or line.endswith('.css') or line.endswith('.html') or line.endswith('.md')):
             files.add(line)
     
     return files
@@ -203,6 +203,31 @@ def generate_race_frames():
         
         # Get file sizes at this commit
         sizes = get_file_sizes_at_commit(commit, all_files)
+
+        # Get monthly commit count
+        # Calculate start and end of the month for this date
+        dt = datetime.strptime(date, '%Y-%m-%d')
+        start_of_month = dt.replace(day=1).strftime('%Y-%m-%d')
+        # Simple way to get end of month: first day of next month - 1 day, 
+        # but for simplicity let's just count commits in the last 30 days window up to this date
+        # to show "current velocity" rather than strict calendar month totals which fluctuate weirdly mid-month
+        start_window = (dt - timedelta(days=30)).strftime('%Y-%m-%d')
+        
+        cmd = f'git rev-list --count --since="{start_window}" --until="{date}" --all'
+        try:
+            monthly_commits = int(run_git_command(cmd))
+            daily_commits = round(monthly_commits / 30, 1)
+        except ValueError:
+            monthly_commits = 0
+            daily_commits = 0
+        
+        # Count Tech Debt / Compliance commits
+        cmd_tech = f'git rev-list --since="{start_window}" --until="{date}" --grep="Tech debt" --grep="compliance" --count --all -i'
+        try:
+            tech_debt_commits = int(run_git_command(cmd_tech))
+        except ValueError:
+            tech_debt_commits = 0
+            daily_commits = 0
         
         # Build frame data
         frame_files = []
@@ -245,7 +270,11 @@ def generate_race_frames():
             'date': date,
             'files': top_files,
             'totalFiles': len([f for f in frame_files if f['lines'] > 0]),
-            'totalLines': sum(f['lines'] for f in frame_files)
+            'totalFiles': len([f for f in frame_files if f['lines'] > 0]),
+            'totalLines': sum(f['lines'] for f in frame_files),
+            'monthlyCommits': monthly_commits,
+            'dailyCommits': daily_commits,
+            'techDebtCommits': tech_debt_commits
         })
         
         prev_sizes = sizes
@@ -277,6 +306,128 @@ def detect_milestones(frames, file_info):
                 'description': 'Modular views take shape with reusable components'
             })
         
+        ai_files = [f for f in frame['files'] if f['category'] == 'ai']
+        if ai_files and not any(m['type'] == 'ai' for m in milestones):
+            milestones.append({
+                'date': frame['date'],
+                'type': 'ai',
+                'title': 'AI Integration',
+                'description': 'Intelligent features enter the codebase'
+            })
+    
+    return milestones
+
+def detect_milestones(frames, file_info):
+    """Detect key milestones in the timeline."""
+    milestones = []
+    
+    # Track index.html size for monolith busting
+    initial_index_lines = 0
+    # Find max size of index.html encountered
+    max_index_lines = 0
+    
+    for frame in frames:
+        # Check for index.html size
+        index_file = next((f for f in frame['files'] if f['name'] == 'index.html'), None)
+        if index_file:
+            if max_index_lines == 0:
+                max_index_lines = index_file['lines']
+            max_index_lines = max(max_index_lines, index_file['lines'])
+        
+        # 1. Monolith Busting
+        # Trigger: index.html drops significantly (>1000 lines drop from max) AND total files increases (>5)
+        # We need a latch so we don't trigger repeatedly
+        if index_file and max_index_lines > 2000 and index_file['lines'] < (max_index_lines - 1000) and frame['totalFiles'] >= 5:
+            if not any(m['type'] == 'monolith_busting' for m in milestones):
+                milestones.append({
+                    'date': frame['date'],
+                    'type': 'monolith_busting',
+                    'title': 'Monolith Busting',
+                    'description': 'Breaking apart the monolithic index.html into separate modules'
+                })
+
+        # 2. Workspace UI
+        # Trigger: WorkspaceComponent.js or sidebar.css exists
+        has_workspace = any(f in file_info and file_info[f]['created'] and frame['date'] >= file_info[f]['created'] 
+                            for f in ['js/components/WorkspaceComponent.js', 'css/layout/sidebar.css'])
+        if has_workspace and not any(m['type'] == 'workspace_ui' for m in milestones):
+            milestones.append({
+                'date': frame['date'],
+                'type': 'workspace_ui',
+                'title': 'Workspace Layout',
+                'description': 'Navigation moves to sidebar, introducing the workspace concept'
+            })
+
+        # 3. Agent Contracts
+        # Trigger: docs/*contract.md exists
+        has_contracts = any('docs/' in f and 'contract.md' in f and file_info[f]['created'] and frame['date'] >= file_info[f]['created'] 
+                           for f in file_info.keys())
+        if has_contracts and not any(m['type'] == 'agent_contracts' for m in milestones):
+             milestones.append({
+                'date': frame['date'],
+                'type': 'agent_contracts',
+                'title': 'Agent Contracts',
+                'description': 'Standardized rules for AI agents to maintain code quality'
+            })
+            
+        # 3.5. UI Theme Styling
+        # Trigger: variables.css exists
+        has_theme = any('css/settings/variables.css' in f and file_info[f]['created'] and frame['date'] >= file_info[f]['created'] 
+                           for f in file_info.keys())
+        if has_theme and not any(m['type'] == 'ui_theme' for m in milestones):
+             milestones.append({
+                'date': frame['date'],
+                'type': 'ui_theme',
+                'title': 'UI Theme Styling',
+                'description': 'Introduction of dark mode and semantic variables'
+            })
+
+        # 4. Tech Debt Phase
+        # Trigger: > 5 tech debt commits in window
+        if frame.get('techDebtCommits', 0) > 5 and not any(m['type'] == 'tech_debt' for m in milestones):
+             milestones.append({
+                'date': frame['date'],
+                'type': 'tech_debt',
+                'title': 'Tech Debt Paydown',
+                'description': 'Team shifts focus to compliance and reducing technical debt'
+            })
+
+        # 5. Code Quality & Testing
+        # Trigger: eslint/vitest config or tests/ folder
+        has_quality = any(k in file_info and file_info[k]['created'] and frame['date'] >= file_info[k]['created']
+                         for k in ['eslint.config.mjs', 'vitest.config.mjs'])
+        has_tests = any(f.startswith('tests/') and file_info[f]['created'] and frame['date'] >= file_info[f]['created'] for f in file_info.keys())
+        
+        if (has_quality or has_tests) and not any(m['type'] == 'code_quality' for m in milestones):
+             milestones.append({
+                'date': frame['date'],
+                'type': 'code_quality',
+                'title': 'Code Quality Gates',
+                'description': 'Introduction of linting and automated test suites'
+            })
+
+        # Existing Milestones
+        # Service Layer
+        service_files = [f for f in frame['files'] if f['category'] == 'service']
+        if service_files and not any(m['type'] == 'service_layer' for m in milestones):
+            milestones.append({
+                'date': frame['date'],
+                'type': 'service_layer',
+                'title': 'Service Layer Emerges',
+                'description': 'Architecture shift: business logic moves to dedicated services'
+            })
+        
+        # Components
+        component_files = [f for f in frame['files'] if f['category'] == 'component']
+        if len(component_files) >= 5 and not any(m['type'] == 'components' for m in milestones):
+            milestones.append({
+                'date': frame['date'],
+                'type': 'components',
+                'title': 'Component Architecture',
+                'description': 'Modular views take shape with reusable components'
+            })
+        
+        # AI Integration
         ai_files = [f for f in frame['files'] if f['category'] == 'ai']
         if ai_files and not any(m['type'] == 'ai' for m in milestones):
             milestones.append({

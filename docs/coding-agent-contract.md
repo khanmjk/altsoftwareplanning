@@ -1,8 +1,19 @@
 # Coding Agent Contract for SMT Platform
 
-> **Version**: 1.2  
-> **Last Updated**: 2025-12-23  
+> **Version**: 1.3  
+> **Last Updated**: 2025-12-28  
 > **Purpose**: System instructions for AI coding agents working on this codebase
+
+---
+
+## 0. Excluded Directories
+
+> [!IMPORTANT]
+> The following directories are **exempt** from all rules in this contract. They contain experimental or auxiliary code not part of the main application.
+
+| Directory | Reason |
+|-----------|--------|
+| `/gitstoryline/` | Experimental visualization tool for git history analysis. Not part of SMT Platform functionality. |
 
 ---
 

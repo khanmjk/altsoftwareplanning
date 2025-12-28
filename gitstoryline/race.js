@@ -16,16 +16,17 @@ const state = {
   globalMaxLines: 0, // Fixed scale based on global max
   deletedFilesShown: new Set(),
   previousFiles: new Set(), // Track files from previous frame
+  layout: { iconX: -210, rankX: -190 }, // Dynamic layout properties
 };
 
 // Configuration
 const CONFIG = {
   barHeight: 18,
   barPadding: 1,
-  maxBars: 48,
+  maxBars: 56,
   transitionDuration: 800,
   frameDuration: 1500, // ms between frames at 1x speed
-  margin: { top: 10, right: 100, bottom: 10, left: 220 },
+  margin: { top: 10, right: 50, bottom: 10, left: 220 },
   newFileGlowDuration: 1500, // How long new files glow
 };
 
@@ -54,6 +55,38 @@ async function loadData() {
       });
     });
     console.log('Global max lines:', state.globalMaxLines);
+
+    // Calculate dynamic left margin based on longest filename
+    let maxLabelLength = 0;
+    state.data.frames.forEach((frame) => {
+      frame.files.forEach((f) => {
+        const name = formatFileName(f.file);
+        if (name.length > maxLabelLength) {
+          maxLabelLength = name.length;
+        }
+      });
+    });
+    
+    // Dynamic layout calculation
+    const charWidth = 7; // Average width per char
+    const maxTextWidth = maxLabelLength * charWidth;
+    
+    // Layout: [Icon] [Rank] [Text ....... ] [Bar]
+    // Text ends at -10
+    // Rank center needs to be left of text start: -10 - maxTextWidth - 20 (padding)
+    state.layout.rankX = -(maxTextWidth + 30);
+    state.layout.iconX = -(maxTextWidth + 50);
+    
+    // Margin needs to cover everything
+    // Left edge is at state.layout.iconX - 10 (icon width/2)
+    CONFIG.margin.left = Math.abs(state.layout.iconX) + 30;
+    
+    console.log('Dynamic Layout:', {
+        maxLabelLength,
+        maxTextWidth,
+        ...state.layout,
+        marginLeft: CONFIG.margin.left
+    });
 
     // Setup slider
     const slider = document.getElementById('progressSlider');
@@ -119,12 +152,14 @@ function setupControls() {
   document.getElementById('restartBtn').addEventListener('click', () => {
     state.currentFrame = 0;
     state.deletedFilesShown.clear();
+    state.deletedFilesShown.clear();
     state.previousFiles.clear();
-    renderFrame(0);
+    hideOverlays();
+    renderFrame(state.currentFrame);
     updateSlider();
     updateStats();
   });
-
+  
   // Skip to end
   document.getElementById('skipBtn').addEventListener('click', () => {
     stopAnimation();
@@ -132,7 +167,7 @@ function setupControls() {
     renderFrame(state.currentFrame);
     updateSlider();
     updateStats();
-    showGraveyard();
+    // showGraveyard(); // Don't auto-show full list at end, just let them persist
   });
 
   // Slider
@@ -152,9 +187,18 @@ function setupControls() {
     });
   });
 
-  // Graveyard close
-  document.getElementById('graveyardClose').addEventListener('click', () => {
-    document.getElementById('graveyardOverlay').classList.remove('active');
+
+
+  // Replay from credits
+  document.getElementById('creditsReplayBtn').addEventListener('click', () => {
+    document.getElementById('creditsOverlay').classList.remove('active');
+    state.currentFrame = 0;
+    state.deletedFilesShown.clear();
+    state.previousFiles.clear();
+    hideOverlays();
+    renderFrame(0);
+    updateSlider();
+    updateStats();
   });
 }
 
@@ -202,9 +246,11 @@ function animate() {
     state.animationTimer = setTimeout(animate, delay);
   } else {
     stopAnimation();
-    showGraveyard();
+    showCredits(); // Trigger credits at end
   }
 }
+
+
 
 function renderFrame(frameIndex) {
   const frame = state.data.frames[frameIndex];
@@ -213,7 +259,32 @@ function renderFrame(frameIndex) {
   // Update date
   const dateEl = document.getElementById('currentDate');
   const date = new Date(frame.date);
-  dateEl.textContent = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+  
+  // Format: Month Year + Commits
+  // We'll update the innerHTML to include the metrics
+  // Check if we need to create the structure first
+  let dateValue = dateEl.querySelector('.date-text');
+  let metricsValue = dateEl.querySelector('.date-metrics');
+  
+  if (!dateValue) {
+    // First render structure setup
+    dateEl.innerHTML = `
+      <div class="date-text"></div>
+      <div class="date-metrics"></div>
+    `;
+    dateValue = dateEl.querySelector('.date-text');
+    metricsValue = dateEl.querySelector('.date-metrics');
+  }
+  
+  dateValue.textContent = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+  
+  // Update metrics if available
+  if (frame.monthlyCommits !== undefined) {
+      const daily = frame.dailyCommits || 0;
+      metricsValue.innerHTML = `<i class="fas fa-code-commit"></i> ${frame.monthlyCommits} commits | <span>~${daily}/day</span>`;
+  } else {
+      metricsValue.innerHTML = '';
+  }
 
   // Prepare data - sort by lines and take top N
   const sortedFiles = [...frame.files]
@@ -263,7 +334,7 @@ function renderBars(files) {
   enter
     .append('text')
     .attr('class', 'bar-icon')
-    .attr('x', -210)
+    .attr('x', () => state.layout.iconX)
     .attr('y', CONFIG.barHeight / 2 + 4)
     .style('font-size', '12px')
     .text((d) => getCategoryIcon(d.category));
@@ -272,7 +343,7 @@ function renderBars(files) {
   enter
     .append('circle')
     .attr('class', 'rank-circle')
-    .attr('cx', -190)
+    .attr('cx', () => state.layout.rankX)
     .attr('cy', CONFIG.barHeight / 2)
     .attr('r', 9);
 
@@ -280,7 +351,7 @@ function renderBars(files) {
   enter
     .append('text')
     .attr('class', 'rank-text')
-    .attr('x', -190)
+    .attr('x', () => state.layout.rankX)
     .attr('y', CONFIG.barHeight / 2 + 3)
     .attr('text-anchor', 'middle')
     .attr('font-size', '8px')
@@ -337,7 +408,9 @@ function renderBars(files) {
   allBars.select('.rank-text').text((d) => d.rank + 1);
 
   // Update file name
-  allBars.select('.bar-label').text((d) => truncateFileName(d.file, 22));
+  allBars.select('.bar-label').text((d) => formatFileName(d.file));
+
+
 
   // Update bar - THIS IS THE KEY FIX: transition width properly
   allBars
@@ -385,24 +458,14 @@ function getCategoryIcon(category) {
   return icons[category] || '📁';
 }
 
-function truncateFileName(path, maxLen) {
+function formatFileName(path) {
   // Show /category/filename format
   const parts = path.split('/');
   const filename = parts.pop();
   const category = parts.length > 0 ? parts[parts.length - 1] : '';
 
   // Build breadcrumb: /category/filename or just /filename
-  const breadcrumb = category ? `/${category}/${filename}` : `/${filename}`;
-
-  if (breadcrumb.length <= maxLen) return breadcrumb;
-
-  // Truncate filename but keep category
-  const prefix = category ? `/${category}/` : '/';
-  const availableLen = maxLen - prefix.length - 3; // -3 for ...
-  if (availableLen > 5) {
-    return prefix + filename.substring(0, availableLen) + '...';
-  }
-  return breadcrumb.substring(0, maxLen - 3) + '...';
+  return category ? `/${category}/${filename}` : `/${filename}`;
 }
 
 function updateSlider() {
@@ -448,64 +511,82 @@ function checkDeletedFiles() {
   });
 }
 
+function hideOverlays() {
+    document.getElementById('milestoneSection').classList.remove('active');
+    document.getElementById('graveyardSection').classList.remove('active');
+    document.getElementById('graveyardList').innerHTML = '';
+}
+
 function showDeletedFileCallout(file) {
-  const overlay = document.getElementById('milestoneOverlay');
-  const icon = document.querySelector('.milestone-icon i');
-  icon.className = 'fas fa-skull';
-  icon.style.color = '#ef4444';
+  const section = document.getElementById('graveyardSection');
+  const list = document.getElementById('graveyardList');
+  
+  // Use a max length for the list so it doesn't grow forever
+  if (list.children.length > 5) {
+      list.removeChild(list.lastChild);
+  }
+  
+  const item = document.createElement('div');
+  item.className = 'graveyard-item';
+  // Fade in
+  item.style.animation = 'milestoneIn 0.3s ease-out';
+  item.innerHTML = `
+          <span class="graveyard-item-name">💀 ${file.file.split('/').pop()}</span>
+      `;
+  
+  // Prepend to top
+  list.insertBefore(item, list.firstChild);
 
-  document.getElementById('milestoneTitle').textContent = `💀 ${file.file.split('/').pop()}`;
-  document.getElementById('milestoneDesc').textContent = `Deprecated and removed from codebase`;
+  section.classList.add('active');
 
-  overlay.classList.add('active');
-
-  setTimeout(() => {
-    overlay.classList.remove('active');
-    icon.className = 'fas fa-star';
-    icon.style.color = '';
-  }, 1500);
+  // Auto-hide the section if it's been quiet for a while? 
+  // User asked to hide when animation ends, which implies it stays during animation
+  // Let's keep it visible as long as things are happening
 }
 
 function showMilestone(milestone) {
-  const overlay = document.getElementById('milestoneOverlay');
-  const icon = document.querySelector('.milestone-icon i');
-  icon.className = 'fas fa-star';
-  icon.style.color = '';
-
+  const section = document.getElementById('milestoneSection');
+  
   document.getElementById('milestoneTitle').textContent = milestone.title;
   document.getElementById('milestoneDesc').textContent = milestone.description;
 
-  overlay.classList.add('active');
+  section.classList.add('active');
 
   setTimeout(() => {
-    overlay.classList.remove('active');
-  }, 2500);
+    section.classList.remove('active');
+  }, 4000); // Show longer since it's side content
 }
 
-function showGraveyard() {
-  if (!state.data.graveyard || state.data.graveyard.length === 0) return;
-
-  const list = document.getElementById('graveyardList');
-  list.innerHTML = '';
-
-  state.data.graveyard.slice(0, 30).forEach((file) => {
-    const item = document.createElement('div');
-    item.className = 'graveyard-item';
-    item.innerHTML = `
-            <span class="graveyard-item-name">💀 ${file.file.split('/').pop()}</span>
-            <span class="graveyard-item-dates">${file.created || '?'} → ${file.deleted || '?'}</span>
+function showCredits() {
+    hideOverlays(); // Hide existing sidebars
+    
+    const overlay = document.getElementById('creditsOverlay');
+    const list = document.getElementById('creditsScrollList');
+    
+    list.innerHTML = '';
+    
+    // Sort graveyard by deletion date
+    const sortedGraveyard = [...state.data.graveyard].sort((a, b) => 
+        (a.deleted || '').localeCompare(b.deleted || '')
+    );
+    
+    sortedGraveyard.forEach(file => {
+        const item = document.createElement('div');
+        item.className = 'credit-item';
+        item.innerHTML = `
+            ${file.file.split('/').pop()} 
+            <span class="credit-item-date">${file.deleted || 'Unknown'}</span>
         `;
-    list.appendChild(item);
-  });
-
-  if (state.data.graveyard.length > 30) {
-    const more = document.createElement('div');
-    more.className = 'graveyard-item';
-    more.innerHTML = `<span style="color: var(--text-muted)">...and ${state.data.graveyard.length - 30} more files retired</span>`;
-    list.appendChild(more);
-  }
-
-  document.getElementById('graveyardOverlay').classList.add('active');
+        list.appendChild(item);
+    });
+    
+    overlay.classList.add('active');
+    
+    // Reset animation
+    const content = document.getElementById('creditsContent');
+    content.style.animation = 'none';
+    content.offsetHeight; /* trigger reflow */
+    content.style.animation = null; 
 }
 
 // Resize handler
