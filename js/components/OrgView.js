@@ -36,7 +36,7 @@ class OrgView {
       { id: 'd3', label: 'Block View', icon: 'fas fa-sitemap' },
       { id: 'list', label: 'List View', icon: 'fas fa-list' },
       { id: 'table', label: 'Org Table', icon: 'fas fa-table' },
-      { id: 'engineerList', label: 'Engineer List', icon: 'fas fa-users' },
+      { id: 'engineerList', label: 'Roster', icon: 'fas fa-users-cog' },
     ];
 
     // 3. Initialize Pill Navigation
@@ -171,7 +171,7 @@ class OrgView {
       }
     });
 
-    // Add teams under SDMs
+    // Add teams under SDMs OR directly under Senior Managers (flexible hierarchy)
     (SystemService.getCurrentSystem().teams || []).forEach((team) => {
       const awayTeamCount = team.awayTeamMembers?.length ?? 0;
       const sourceSummary = this.getSourceSummary(team.awayTeamMembers);
@@ -197,9 +197,21 @@ class OrgView {
         children: engineerChildren,
       };
 
+      // 1. Team reports to SDM
       if (team.sdmId && sdmMap.has(team.sdmId)) {
         sdmMap.get(team.sdmId).children.push(teamNode);
-      } else {
+      }
+      // 2. Team reports directly to Senior Manager (flexible hierarchy)
+      else if (team.seniorManagerId && srMgrMap.has(team.seniorManagerId)) {
+        // Create a pseudo-SDM node for direct reports to show proper hierarchy
+        const directReportNode = {
+          ...teamNode,
+          type: 'team-direct', // Mark as direct report to Sr Manager
+        };
+        srMgrMap.get(team.seniorManagerId).children.push(directReportNode);
+      }
+      // 3. Unassigned - no SDM or Senior Manager
+      else {
         const unassignedSdmKey = 'unassigned-sdm';
         if (!sdmMap.has(unassignedSdmKey)) {
           sdmMap.set(unassignedSdmKey, {
@@ -870,9 +882,9 @@ class OrgView {
     // Update statistics header
     this.updateEngineerTableStatistics();
 
-    // Prepare data and columns
-    const tableData = this.prepareEngineerDataForTabulator();
-    const columnDefs = this.defineEngineerTableColumns();
+    // Prepare unified roster data (all 6 role types) and columns
+    const tableData = this.prepareUnifiedRosterData();
+    const columnDefs = this.defineUnifiedRosterColumns();
 
     // Destroy previous instance
     if (this.engineerTableWidgetInstance) {
@@ -885,14 +897,17 @@ class OrgView {
       this.engineerTableWidgetInstance = new EnhancedTableWidget(tableDiv.id, {
         data: tableData,
         columns: columnDefs,
-        uniqueIdField: 'name',
+        uniqueIdField: 'uniqueId',
         paginationSize: 100,
         paginationSizeSelector: [25, 50, 100, 250, 500],
-        initialSort: [{ column: 'name', dir: 'asc' }],
-        exportCsvFileName: 'engineer_list.csv',
-        exportJsonFileName: 'engineer_list.json',
-        exportXlsxFileName: 'engineer_list.xlsx',
-        exportSheetName: 'Engineers',
+        initialSort: [
+          { column: 'roleType', dir: 'asc' },
+          { column: 'name', dir: 'asc' },
+        ],
+        exportCsvFileName: 'roster_list.csv',
+        exportJsonFileName: 'roster_list.json',
+        exportXlsxFileName: 'roster_list.xlsx',
+        exportSheetName: 'Roster',
         layout: 'fitData',
       });
 
@@ -912,14 +927,15 @@ class OrgView {
   }
 
   /**
-   * Calculate and update engineer table statistics header
-   * REFACTORED: Strict DOM creation for inner text and elements
+   * Calculate and update roster table statistics header
+   * Shows complete org summary with all role types
    */
   updateEngineerTableStatistics() {
     const heading = document.getElementById('orgEngineerTableHeading');
     if (!heading || !SystemService.getCurrentSystem()) return;
 
     const stats = this.calculateEngineerStatistics();
+    const rosterSummary = OrgService.getRosterSummary(SystemService.getCurrentSystem());
 
     // Clear existing content
     this._clearElement(heading);
@@ -931,37 +947,64 @@ class OrgView {
       return b;
     };
 
-    // Construct the sentence: "The organization is currently funded for [X] headcount."
-    heading.appendChild(document.createTextNode('The organization is currently funded for '));
+    // Roster Summary Line
+    heading.appendChild(document.createTextNode('Roster: '));
+    heading.appendChild(createBold(rosterSummary.engineers));
+    heading.appendChild(document.createTextNode(' Engineers, '));
+    heading.appendChild(createBold(rosterSummary.awayTeam));
+    heading.appendChild(document.createTextNode(' Away-Team, '));
+    heading.appendChild(createBold(rosterSummary.sdms));
+    heading.appendChild(document.createTextNode(' SDMs, '));
+    heading.appendChild(createBold(rosterSummary.seniorManagers));
+    heading.appendChild(document.createTextNode(' Sr Managers, '));
+    heading.appendChild(createBold(rosterSummary.pmts));
+    heading.appendChild(document.createTextNode(' PMTs, '));
+    heading.appendChild(createBold(rosterSummary.projectManagers));
+    heading.appendChild(document.createTextNode(' PMs'));
+
+    // Add pipe separator
+    heading.appendChild(document.createTextNode(' | '));
+
+    // Capacity Line
+    heading.appendChild(document.createTextNode('Funded: '));
     heading.appendChild(createBold(stats.funded));
-    heading.appendChild(document.createTextNode(' headcount. We have '));
-    heading.appendChild(createBold(stats.teamBIS));
-    heading.appendChild(document.createTextNode(' engineers on team, with '));
-    heading.appendChild(createBold(stats.awayBIS));
-    heading.appendChild(
-      document.createTextNode(
-        ' away-team members borrowed to help, resulting in an effective strength of '
-      )
-    );
+    heading.appendChild(document.createTextNode(', Active: '));
     heading.appendChild(createBold(stats.effectiveBIS));
-    heading.appendChild(document.createTextNode('. '));
 
     // Gap Text
     if (stats.hiringGap > 0) {
-      heading.appendChild(document.createTextNode('There is currently a hiring gap of '));
-      heading.appendChild(createBold(stats.hiringGap));
-      heading.appendChild(document.createTextNode(' engineers.'));
+      heading.appendChild(document.createTextNode(', Gap: '));
+      heading.appendChild(createBold('+' + stats.hiringGap));
     } else if (stats.hiringGap < 0) {
-      heading.appendChild(document.createTextNode('We are currently over-hired by '));
+      heading.appendChild(document.createTextNode(', Over: '));
       heading.appendChild(createBold(Math.abs(stats.hiringGap)));
-      heading.appendChild(document.createTextNode(' engineers.'));
-    } else {
-      heading.appendChild(
-        document.createTextNode('We are currently fully staffed against the funded headcount.')
-      );
     }
 
-    // Remove old tooltip title as the text is now self-explanatory
+    // Add instruction note with clickable link
+    const noteSpan = document.createElement('span');
+    noteSpan.className = 'org-roster-note';
+    noteSpan.style.display = 'block';
+    noteSpan.style.marginTop = '8px';
+    noteSpan.style.fontSize = '0.85em';
+    noteSpan.style.color = 'var(--theme-text-secondary)';
+    noteSpan.textContent =
+      'Note: You can only remove or partially edit resources here. To add new resources, visit ';
+
+    const editLink = document.createElement('a');
+    editLink.href = '#';
+    editLink.textContent = 'Edit System';
+    editLink.style.color = 'var(--theme-primary)';
+    editLink.style.textDecoration = 'underline';
+    editLink.style.cursor = 'pointer';
+    editLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      navigationManager.navigateTo('systemEditForm');
+    });
+    noteSpan.appendChild(editLink);
+    noteSpan.appendChild(document.createTextNode('.'));
+    heading.appendChild(noteSpan);
+
+    // Remove old tooltip title
     heading.removeAttribute('title');
   }
 
@@ -992,64 +1035,251 @@ class OrgView {
    * Prepare data for engineer table
    * Retrieved from legacy code and adapted
    */
-  prepareEngineerDataForTabulator() {
-    if (!SystemService.getCurrentSystem() || !SystemService.getCurrentSystem().allKnownEngineers) {
-      return [];
-    }
+  /**
+   * Prepare unified roster data for all role types
+   * Combines: Engineers, AI Engineers, Away-Team, SDMs, Sr Managers, PMTs, PMs
+   */
+  prepareUnifiedRosterData() {
+    const system = SystemService.getCurrentSystem();
+    if (!system) return [];
 
-    return SystemService.getCurrentSystem().allKnownEngineers.map((engineer) => {
-      let teamDisplayForColumn = 'Unallocated';
-      let actualTeamIdForData = engineer.currentTeamId;
-      let sdmName = 'N/A';
-      let seniorManagerName = 'N/A';
+    const rosterData = [];
 
-      if (engineer.currentTeamId) {
-        const team = (SystemService.getCurrentSystem().teams || []).find(
-          (t) => t.teamId === engineer.currentTeamId
-        );
-        if (team) {
-          teamDisplayForColumn = team.teamIdentity || team.teamName || 'Unknown Team';
-          if (team.sdmId) {
-            const sdm = (SystemService.getCurrentSystem().sdms || []).find(
-              (s) => s.sdmId === team.sdmId
-            );
-            if (sdm) {
-              sdmName = sdm.sdmName;
-              if (sdm.seniorManagerId) {
-                const srMgr = (SystemService.getCurrentSystem().seniorManagers || []).find(
-                  (sm) => sm.seniorManagerId === sdm.seniorManagerId
-                );
-                if (srMgr) {
-                  seniorManagerName = srMgr.seniorManagerName;
-                }
-              }
-            }
-          }
-        } else {
-          teamDisplayForColumn = 'Orphaned (Team Missing)';
-          actualTeamIdForData = null;
+    // 1. Engineers (including AI Engineers)
+    (system.allKnownEngineers || []).forEach((eng) => {
+      const teamInfo = this._getTeamInfoForEngineer(eng.currentTeamId);
+      rosterData.push({
+        roleType: eng.attributes?.isAISWE ? 'AI Engineer' : 'Engineer',
+        name: eng.name,
+        uniqueId: eng.engineerId || `eng_${eng.name}`,
+        level: eng.level,
+        teamId: eng.currentTeamId,
+        teamDisplay: teamInfo.teamDisplay,
+        reportsTo: teamInfo.sdmName,
+        seniorManagerName: teamInfo.seniorManagerName,
+        _roleCategory: 'engineer', // For delete handler
+      });
+    });
+
+    // 2. Away-Team Members (from all teams)
+    (system.teams || []).forEach((team) => {
+      (team.awayTeamMembers || []).forEach((member) => {
+        rosterData.push({
+          roleType: 'Away-Team',
+          name: member.name,
+          uniqueId: member.awayMemberId || `away_${member.name}`,
+          level: member.level,
+          teamId: team.teamId,
+          teamDisplay: `From: ${member.sourceTeam}`,
+          reportsTo: team.teamIdentity || team.teamName || 'Unknown Team',
+          seniorManagerName: '-',
+          _roleCategory: 'awayTeam',
+          _sourceTeamId: team.teamId,
+        });
+      });
+    });
+
+    // 3. SDMs
+    (system.sdms || []).forEach((sdm) => {
+      const srMgr = (system.seniorManagers || []).find(
+        (sm) => sm.seniorManagerId === sdm.seniorManagerId
+      );
+      const teamsManaged = (system.teams || [])
+        .filter((t) => t.sdmId === sdm.sdmId)
+        .map((t) => t.teamIdentity || t.teamName)
+        .slice(0, 3);
+      const teamSummary =
+        teamsManaged.length > 0
+          ? teamsManaged.join(', ') +
+            (teamsManaged.length < (system.teams || []).filter((t) => t.sdmId === sdm.sdmId).length
+              ? '...'
+              : '')
+          : 'No teams';
+
+      rosterData.push({
+        roleType: 'SDM',
+        name: sdm.sdmName,
+        uniqueId: sdm.sdmId,
+        level: '-',
+        teamId: null,
+        teamDisplay: teamSummary,
+        reportsTo: srMgr?.seniorManagerName || 'Unassigned',
+        seniorManagerName: '-',
+        _roleCategory: 'sdm',
+      });
+    });
+
+    // 4. Senior Managers
+    (system.seniorManagers || []).forEach((sm) => {
+      // SDMs managed by this Sr Manager
+      const sdmsManaged = (system.sdms || [])
+        .filter((s) => s.seniorManagerId === sm.seniorManagerId)
+        .map((s) => s.sdmName)
+        .slice(0, 3);
+
+      // Teams reporting directly to this Sr Manager (flexible hierarchy - no SDM)
+      const directTeams = (system.teams || [])
+        .filter((t) => t.seniorManagerId === sm.seniorManagerId && !t.sdmId)
+        .map((t) => t.teamIdentity || t.teamName);
+
+      // Build display string
+      let teamDisplay = '';
+      if (sdmsManaged.length > 0) {
+        teamDisplay = sdmsManaged.join(', ');
+        if (
+          sdmsManaged.length <
+          (system.sdms || []).filter((s) => s.seniorManagerId === sm.seniorManagerId).length
+        ) {
+          teamDisplay += '...';
         }
       }
 
-      return {
-        name: engineer.name,
-        level: engineer.level,
-        teamId: actualTeamIdForData,
-        teamDisplay: teamDisplayForColumn,
-        sdmName: sdmName,
-        seniorManagerName: seniorManagerName,
-      };
+      if (directTeams.length > 0) {
+        const directTeamNames = directTeams.slice(0, 2).join(', ');
+        const directWarning = `⚠️ Direct: ${directTeamNames}${directTeams.length > 2 ? '...' : ''} (needs SDM)`;
+        teamDisplay = teamDisplay ? `${teamDisplay} | ${directWarning}` : directWarning;
+      }
+
+      if (!teamDisplay) {
+        teamDisplay = 'No SDMs';
+      }
+
+      rosterData.push({
+        roleType: 'Sr Manager',
+        name: sm.seniorManagerName,
+        uniqueId: sm.seniorManagerId,
+        level: '-',
+        teamId: null,
+        teamDisplay: teamDisplay,
+        reportsTo: '-',
+        seniorManagerName: '-',
+        _roleCategory: 'seniorManager',
+      });
     });
+
+    // 5. PMTs
+    (system.pmts || []).forEach((pmt) => {
+      const teamsServed = (system.teams || [])
+        .filter((t) => t.pmtId === pmt.pmtId)
+        .map((t) => t.teamIdentity || t.teamName)
+        .slice(0, 3);
+      const teamSummary =
+        teamsServed.length > 0
+          ? teamsServed.join(', ') +
+            (teamsServed.length < (system.teams || []).filter((t) => t.pmtId === pmt.pmtId).length
+              ? '...'
+              : '')
+          : 'No teams';
+
+      rosterData.push({
+        roleType: 'PMT',
+        name: pmt.pmtName,
+        uniqueId: pmt.pmtId,
+        level: '-',
+        teamId: null,
+        teamDisplay: teamSummary,
+        reportsTo: '-',
+        seniorManagerName: '-',
+        _roleCategory: 'pmt',
+      });
+    });
+
+    // 6. Project Managers
+    (system.projectManagers || []).forEach((pm) => {
+      rosterData.push({
+        roleType: 'Project Manager',
+        name: pm.pmName,
+        uniqueId: pm.pmId,
+        level: '-',
+        teamId: null,
+        teamDisplay: '-',
+        reportsTo: '-',
+        seniorManagerName: '-',
+        _roleCategory: 'projectManager',
+      });
+    });
+
+    return rosterData;
   }
 
   /**
-   * Define engineer table columns with editing capabilities
-   * REFACTORED: Clean column definitions with edit formatters and handlers
+   * Helper to get team info for an engineer
    */
-  defineEngineerTableColumns() {
+  _getTeamInfoForEngineer(teamId) {
+    const system = SystemService.getCurrentSystem();
+    let teamDisplay = 'Unallocated';
+    let sdmName = 'N/A';
+    let seniorManagerName = 'N/A';
+
+    if (teamId) {
+      const team = (system.teams || []).find((t) => t.teamId === teamId);
+      if (team) {
+        teamDisplay = team.teamIdentity || team.teamName || 'Unknown Team';
+        if (team.sdmId) {
+          const sdm = (system.sdms || []).find((s) => s.sdmId === team.sdmId);
+          if (sdm) {
+            sdmName = sdm.sdmName;
+            if (sdm.seniorManagerId) {
+              const srMgr = (system.seniorManagers || []).find(
+                (sm) => sm.seniorManagerId === sdm.seniorManagerId
+              );
+              if (srMgr) {
+                seniorManagerName = srMgr.seniorManagerName;
+              }
+            }
+          }
+        }
+      } else {
+        teamDisplay = 'Orphaned (Team Missing)';
+      }
+    }
+
+    return { teamDisplay, sdmName, seniorManagerName };
+  }
+
+  /**
+   * Define unified roster table columns
+   * Includes Role Type column and adapts editing to role type
+   */
+  defineUnifiedRosterColumns() {
     return [
       {
-        title: 'Engineer Name',
+        title: 'Role Type',
+        field: 'roleType',
+        width: 120,
+        headerFilter: 'list',
+        headerFilterParams: {
+          values: [
+            { label: 'All', value: '' },
+            { label: 'Engineer', value: 'Engineer' },
+            { label: 'AI Engineer', value: 'AI Engineer' },
+            { label: 'Away-Team', value: 'Away-Team' },
+            { label: 'SDM', value: 'SDM' },
+            { label: 'Sr Manager', value: 'Sr Manager' },
+            { label: 'PMT', value: 'PMT' },
+            { label: 'Project Manager', value: 'Project Manager' },
+          ],
+        },
+        headerFilterPlaceholder: 'Filter...',
+        formatter: (cell) => {
+          const value = cell.getValue();
+          const badges = {
+            Engineer: 'badge-primary',
+            'AI Engineer': 'badge-info',
+            'Away-Team': 'badge-warning',
+            SDM: 'badge-success',
+            'Sr Manager': 'badge-danger',
+            PMT: 'badge-secondary',
+            'Project Manager': 'badge-dark',
+          };
+          const span = document.createElement('span');
+          span.className = `org-role-badge ${badges[value] || 'badge-light'}`;
+          span.textContent = value;
+          return span;
+        },
+      },
+      {
+        title: 'Name',
         field: 'name',
         sorter: 'string',
         minWidth: 180,
@@ -1060,66 +1290,79 @@ class OrgView {
       {
         title: 'Level',
         field: 'level',
-        width: 100,
+        width: 80,
         hozAlign: 'center',
         sorter: 'number',
-        editor: 'list',
-        editorParams: {
-          values: [
-            { label: 'L4 (SDE I)', value: 4 },
-            { label: 'L5 (SDE II)', value: 5 },
-            { label: 'L6 (SDE III / Sr.)', value: 6 },
-            { label: 'L7 (Principal)', value: 7 },
-          ],
+        formatter: (cell) => {
+          const value = cell.getValue();
+          const rowData = cell.getRow().getData();
+          if (value === '-' || rowData._roleCategory !== 'engineer') {
+            return value;
+          }
+          const levels = { 1: 'L1', 2: 'L2', 3: 'L3', 4: 'L4', 5: 'L5', 6: 'L6', 7: 'L7' };
+          const display = levels[value] || `L${value}`;
+          // Only show edit icon for engineers
+          if (rowData._roleCategory === 'engineer') {
+            return this._createEditableCellContent(display, 'Click to edit level');
+          }
+          return display;
         },
-        formatter: (cell) => this.formatEditableCell(cell, 'level'),
+        editor: (cell, onRendered, success, cancel, editorParams) => {
+          const rowData = cell.getRow().getData();
+          if (rowData._roleCategory !== 'engineer') {
+            cancel();
+            return;
+          }
+          // Create select for level editing
+          const select = document.createElement('select');
+          select.className = 'tabulator-inline-select';
+          [4, 5, 6, 7].forEach((lvl) => {
+            const opt = document.createElement('option');
+            opt.value = lvl;
+            opt.textContent = `L${lvl}`;
+            if (cell.getValue() === lvl) opt.selected = true;
+            select.appendChild(opt);
+          });
+          select.addEventListener('change', () => success(parseInt(select.value)));
+          select.addEventListener('blur', () => cancel());
+          onRendered(() => select.focus());
+          return select;
+        },
+        cellEdited: (cell) => this.handleLevelEdit(cell),
         headerFilter: 'list',
         headerFilterParams: {
           values: [
             { label: 'All', value: '' },
+            { label: 'L1', value: 1 },
+            { label: 'L2', value: 2 },
+            { label: 'L3', value: 3 },
             { label: 'L4', value: 4 },
             { label: 'L5', value: 5 },
             { label: 'L6', value: 6 },
             { label: 'L7', value: 7 },
+            { label: '-', value: '-' },
           ],
         },
-        headerFilterFunc: '=',
-        cellEdited: (cell) => this.handleLevelEdit(cell),
-      },
-      {
-        title: 'Team Identity',
-        field: 'teamId',
-        minWidth: 180,
-        editor: 'list',
-        editorParams: () => this.getTeamEditorParams(),
-        formatter: (cell) => this.formatTeamCell(cell),
-        headerFilter: 'list',
-        headerFilterParams: () => this.getTeamFilterParams(),
         headerFilterFunc: (headerValue, rowValue) => {
           if (headerValue === '') return true;
-          if (headerValue === '_UNALLOCATED_') return !rowValue;
-          return rowValue === headerValue;
+          return String(rowValue) === String(headerValue);
         },
-        cellEdited: (cell) => this.handleTeamEdit(cell),
       },
       {
-        title: 'SDM',
-        field: 'sdmName',
+        title: 'Team / Context',
+        field: 'teamDisplay',
         sorter: 'string',
-        minWidth: 150,
-        headerFilter: 'list',
-        headerFilterParams: () => this.getManagerFilterParams('sdms', 'sdmName'),
-        headerFilterFunc: '=',
+        minWidth: 160,
+        headerFilter: 'input',
+        headerFilterPlaceholder: 'Filter...',
       },
       {
-        title: 'Senior Manager',
-        field: 'seniorManagerName',
+        title: 'Reports To',
+        field: 'reportsTo',
         sorter: 'string',
-        minWidth: 150,
-        headerFilter: 'list',
-        headerFilterParams: () =>
-          this.getManagerFilterParams('seniorManagers', 'seniorManagerName'),
-        headerFilterFunc: '=',
+        minWidth: 140,
+        headerFilter: 'input',
+        headerFilterPlaceholder: 'Filter...',
       },
       {
         title: 'Actions',
@@ -1128,13 +1371,18 @@ class OrgView {
         hozAlign: 'center',
         headerSort: false,
         formatter: (cell) => {
+          const rowData = cell.getRow().getData();
           const btn = document.createElement('button');
-          btn.className = 'btn btn-danger btn-sm org-engineer-delete-btn';
-          btn.textContent = '🗑️';
-          btn.title = 'Delete Engineer';
+          btn.className = 'table-action-btn table-action-btn--delete';
+          btn.title = `Delete ${rowData.roleType}`;
+
+          const icon = document.createElement('i');
+          icon.className = 'fas fa-trash-alt';
+          btn.appendChild(icon);
+
           return btn;
         },
-        cellClick: (e, cell) => this.handleDeleteEngineer(cell),
+        cellClick: (e, cell) => this.handleDeleteRosterMember(cell),
       },
     ];
   }
@@ -1232,10 +1480,9 @@ class OrgView {
     textNode.textContent = text;
     wrapper.appendChild(textNode);
 
-    const icon = document.createElement('span');
-    icon.className = 'org-edit-icon';
+    const icon = document.createElement('i');
+    icon.className = 'fas fa-edit org-edit-icon';
     if (title) icon.title = title;
-    icon.textContent = '\u270F\uFE0F';
     wrapper.appendChild(icon);
 
     return wrapper;
@@ -1367,6 +1614,61 @@ class OrgView {
       `Moved ${engineerName} to ${newTeamId ? 'new team' : 'Unallocated'}`,
       'success'
     );
+  }
+
+  /**
+   * Handle deletion of any roster member (all role types)
+   * Uses appropriate OrgService method based on role category
+   */
+  async handleDeleteRosterMember(cell) {
+    const rowData = cell.getRow().getData();
+    const roleType = rowData.roleType;
+    const name = rowData.name;
+    const uniqueId = rowData.uniqueId;
+    const roleCategory = rowData._roleCategory;
+
+    const confirmed = await notificationManager?.confirm(
+      `Are you sure you want to delete "${name}" (${roleType}) from the roster? This action cannot be undone.`,
+      `Delete ${roleType}`,
+      { confirmStyle: 'danger' }
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const system = SystemService.getCurrentSystem();
+
+      switch (roleCategory) {
+        case 'engineer':
+          OrgService.deleteEngineer(system, name);
+          break;
+        case 'awayTeam':
+          OrgService.removeAwayTeamMember(system, rowData._sourceTeamId, uniqueId);
+          break;
+        case 'sdm':
+          OrgService.deleteSdm(system, uniqueId);
+          break;
+        case 'seniorManager':
+          OrgService.deleteSeniorManager(system, uniqueId);
+          break;
+        case 'pmt':
+          OrgService.deletePmt(system, uniqueId);
+          break;
+        case 'projectManager':
+          OrgService.deleteProjectManager(system, uniqueId);
+          break;
+        default:
+          throw new Error(`Unknown role category: ${roleCategory}`);
+      }
+
+      CapacityEngine.recalculate(system);
+      SystemService.save();
+      this.generateEngineerTable();
+      notificationManager?.showToast(`Deleted ${name} (${roleType}) from roster`, 'success');
+    } catch (err) {
+      console.error(`Error deleting ${roleType}:`, err);
+      notificationManager?.showToast(`Failed to delete ${roleType}: ${err.message}`, 'error');
+    }
   }
 
   /**

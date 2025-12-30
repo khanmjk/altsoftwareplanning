@@ -3,439 +3,1578 @@
 /** Sample Data for FinSecure (FinTech Platform) **/
 
 const sampleProjectManagersDataFinSecure = [
-    { pmId: 'pmFS001', pmName: 'Marcus Bolt (Core Banking)', attributes: {} },
-    { pmId: 'pmFS002', pmName: 'Julia Ch FINANCE(Risk & Compliance)', attributes: {} },
-    { pmId: 'pmFS003', pmName: 'Kenji Watanabe (Growth)', attributes: {} }
+  { pmId: 'pmFS001', pmName: 'Marcus Bolt (Core Banking)', attributes: {} },
+  { pmId: 'pmFS002', pmName: 'Julia Ch FINANCE(Risk & Compliance)', attributes: {} },
+  { pmId: 'pmFS003', pmName: 'Kenji Watanabe (Growth)', attributes: {} },
 ];
 
 const sampleSeniorManagersDataFinSecure = [
-    { seniorManagerId: 'srMgrFS1', seniorManagerName: 'Michael Chen (VP, Consumer Banking)', attributes: {} },
-    { seniorManagerId: 'srMgrFS2', seniorManagerName: 'Sarah Jenkins (VP, Platform & Core)', attributes: {} },
-    { seniorManagerId: 'srMgrFS3', seniorManagerName: 'David Lee (VP, Risk & Operations)', attributes: {} }
+  {
+    seniorManagerId: 'srMgrFS1',
+    seniorManagerName: 'Michael Chen (VP, Consumer Banking)',
+    attributes: {},
+  },
+  {
+    seniorManagerId: 'srMgrFS2',
+    seniorManagerName: 'Sarah Jenkins (VP, Platform & Core)',
+    attributes: {},
+  },
+  {
+    seniorManagerId: 'srMgrFS3',
+    seniorManagerName: 'David Lee (VP, Risk & Operations)',
+    attributes: {},
+  },
 ];
 
 const finSecureSDMsData = [
-    // Reporting to srMgrFS1 (Consumer Banking)
-    { sdmId: 'sdmFS1', sdmName: 'Elena Rodriguez (Mobile & Web)', seniorManagerId: 'srMgrFS1', attributes: {} },
-    { sdmId: 'sdmFS2', sdmName: 'Tom Wilson (New Products)', seniorManagerId: 'srMgrFS1', attributes: {} },
+  // Reporting to srMgrFS1 (Consumer Banking)
+  {
+    sdmId: 'sdmFS1',
+    sdmName: 'Elena Rodriguez (Mobile & Web)',
+    seniorManagerId: 'srMgrFS1',
+    attributes: {},
+  },
+  {
+    sdmId: 'sdmFS2',
+    sdmName: 'Tom Wilson (New Products)',
+    seniorManagerId: 'srMgrFS1',
+    attributes: {},
+  },
 
-    // Reporting to srMgrFS2 (Platform & Core)
-    { sdmId: 'sdmFS3', sdmName: 'Anil Gupta (Core Ledger)', seniorManagerId: 'srMgrFS2', attributes: {} },
-    { sdmId: 'sdmFS4', sdmName: 'Mei Lin (Payments Gateway)', seniorManagerId: 'srMgrFS2', attributes: {} },
-    { sdmId: 'sdmFS5', sdmName: 'Chris Porter (SRE & Platform)', seniorManagerId: 'srMgrFS2', attributes: {} },
+  // Reporting to srMgrFS2 (Platform & Core)
+  {
+    sdmId: 'sdmFS3',
+    sdmName: 'Anil Gupta (Core Ledger)',
+    seniorManagerId: 'srMgrFS2',
+    attributes: {},
+  },
+  {
+    sdmId: 'sdmFS4',
+    sdmName: 'Mei Lin (Payments Gateway)',
+    seniorManagerId: 'srMgrFS2',
+    attributes: {},
+  },
+  {
+    sdmId: 'sdmFS5',
+    sdmName: 'Chris Porter (SRE & Platform)',
+    seniorManagerId: 'srMgrFS2',
+    attributes: {},
+  },
 
-    // Reporting to srMgrFS3 (Risk & Operations)
-    { sdmId: 'sdmFS6', sdmName: 'Dr. Alex Yi (Fraud & Risk ML)', seniorManagerId: 'srMgrFS3', attributes: {} },
-    { sdmId: 'sdmFS7', sdmName: 'Sam O\'Connell (Compliance & Identity)', seniorManagerId: 'srMgrFS3', attributes: {} }
+  // Reporting to srMgrFS3 (Risk & Operations)
+  {
+    sdmId: 'sdmFS6',
+    sdmName: 'Dr. Alex Yi (Fraud & Risk ML)',
+    seniorManagerId: 'srMgrFS3',
+    attributes: {},
+  },
+  {
+    sdmId: 'sdmFS7',
+    sdmName: "Sam O'Connell (Compliance & Identity)",
+    seniorManagerId: 'srMgrFS3',
+    attributes: {},
+  },
 ];
 
 const finSecurePMTsData = [
-    { pmtId: 'pmtFS1', pmtName: 'Olivia Hayes (Core Banking PM)', attributes: {} },
-    { pmtId: 'pmtFS2', pmtName: 'Ben Carter (Consumer Apps PM)', attributes: {} },
-    { pmtId: 'pmtFS3', pmtName: 'Priya Singh (Payments & Risk PM)', attributes: {} },
-    { pmtId: 'pmtFS4', pmtName: 'Zoe Kim (Growth & New Products PM)', attributes: {} }
+  { pmtId: 'pmtFS1', pmtName: 'Olivia Hayes (Core Banking PM)', attributes: {} },
+  { pmtId: 'pmtFS2', pmtName: 'Ben Carter (Consumer Apps PM)', attributes: {} },
+  { pmtId: 'pmtFS3', pmtName: 'Priya Singh (Payments & Risk PM)', attributes: {} },
+  { pmtId: 'pmtFS4', pmtName: 'Zoe Kim (Growth & New Products PM)', attributes: {} },
 ];
 
-const tempFinSecureEngineers = [
-    // Team FS1: Mobile App
-    { name: 'Elena Rodriguez', level: 5, teamId: 'teamFS1', skills: ['iOS (Swift)', 'Android (Kotlin)', 'React Native', 'Team Lead'], yearsOfExperience: 9 },
-    { name: 'Adam Smith', level: 4, teamId: 'teamFS1', skills: ['Swift', 'SwiftUI', 'Mobile Security'], yearsOfExperience: 6 },
-    { name: 'Bethany Shaw', level: 4, teamId: 'teamFS1', skills: ['Android', 'Kotlin', 'Jetpack Compose'], yearsOfExperience: 5 },
-    { name: 'Carlos Diaz', level: 3, teamId: 'teamFS1', skills: ['React Native', 'TypeScript', 'App Performance'], yearsOfExperience: 4 },
-    // Team FS2: Web App
-    { name: 'Diana Wells', level: 4, teamId: 'teamFS1', skills: ['React', 'TypeScript', 'Next.js', 'Web Security'], yearsOfExperience: 6 },
-    { name: 'Evan Li', level: 3, teamId: 'teamFS1', skills: ['UI/UX Design', 'Figma', 'Accessibility (a11y)'], yearsOfExperience: 4 },
-    // Team FS3: Card Issuing & New Products
-    { name: 'Tom Wilson', level: 5, teamId: 'teamFS2', skills: ['Product Engineering', 'Go', 'System Design', 'Team Lead'], yearsOfExperience: 10 },
-    { name: 'Fiona Chen', level: 3, teamId: 'teamFS2', skills: ['Card Issuing (Marqeta)', 'FinTech APIs', 'Java'], yearsOfExperience: 4 },
-    { name: 'George Kims', level: 3, teamId: 'teamFS2', skills: ['Go', 'Microservices', 'PostgreSQL'], yearsOfExperience: 3 },
-    // Team FS4: Core Ledger
-    { name: 'Anil Gupta', level: 6, teamId: 'teamFS3', skills: ['System Architecture', 'Distributed Systems', 'Java', 'PostgreSQL', 'Team Lead'], yearsOfExperience: 12 },
-    { name: 'Hannah Davis', level: 4, teamId: 'teamFS3', skills: ['Database Internals', 'SQL Optimization', 'Go', 'High Availability'], yearsOfExperience: 7 },
-    { name: 'Ivan Petrov', level: 3, teamId: 'teamFS3', skills: ['Java', 'Spring Boot', 'JPA', 'Database Locks'], yearsOfExperience: 5 },
-    // Team FS5: Payments Gateway
-    { name: 'Mei Lin', level: 5, teamId: 'teamFS4', skills: ['Payments (Swift, FedNow)', 'Kafka', 'System Design', 'Go', 'Team Lead'], yearsOfExperience: 10 },
-    { name: 'Julia Romano', level: 4, teamId: 'teamFS4', skills: ['Payment Rails', 'Go', 'gRPC', 'High Reliability'], yearsOfExperience: 6 },
-    { name: 'Leo Martinez', level: 3, teamId: 'teamFS4', skills: ['Kafka', 'Java', 'Microservices', 'Resiliency'], yearsOfExperience: 4 },
-    // Team FS6: SRE & Platform
-    { name: 'Chris Porter', level: 5, teamId: 'teamFS5', skills: ['SRE', 'Kubernetes', 'AWS', 'Terraform', 'Observability', 'Team Lead'], yearsOfExperience: 11 },
-    { name: 'Mona Amini', level: 4, teamId: 'teamFS5', skills: ['Kubernetes', 'CI/CD (GitLab)', 'Go', 'Security'], yearsOfExperience: 6 },
-    { name: 'Nate Jacobs', level: 3, teamId: 'teamFS5', skills: ['AWS', 'Terraform', 'Python', 'Monitoring'], yearsOfExperience: 4 },
-    // Team FS7: Fraud & Risk ML
-    { name: 'Dr. Alex Yi', level: 6, teamId: 'teamFS6', skills: ['ML Research', 'Fraud Detection', 'Anomaly Detection', 'Python', 'Team Lead'], yearsOfExperience: 9 },
-    { name: 'Oscar Wilde', level: 4, teamId: 'teamFS6', skills: ['ML Engineering', 'Real-time Inference', 'Python', 'SQL'], yearsOfExperience: 6 },
-    { name: 'Patel Kumar', level: 3, teamId: 'teamFS6', skills: ['Data Science', 'Feature Engineering', 'Jupyter', 'Scikit-learn'], yearsOfExperience: 3 },
-    // Team FS8: KYC & Onboarding
-    { name: 'Sam O\'Connell', level: 5, teamId: 'teamFS7', skills: ['System Design', 'Backend (Go)', 'KYC/AML', 'Team Lead'], yearsOfExperience: 10 },
-    { name: 'Quincy Jones', level: 4, teamId: 'teamFS7', skills: ['KYC APIs (Onfido)', 'Workflow Automation', 'Go'], yearsOfExperience: 5 },
-    { name: 'Rachel Green', level: 3, teamId: 'teamFS7', skills: ['Full-stack', 'React', 'Node.js', 'Onboarding UI'], yearsOfExperience: 4 },
-    // Team FS9: Compliance Tech
-    { name: 'Steve Murphy', level: 4, teamId: 'teamFS8', skills: ['Compliance Engineering', 'Audit Logging', 'Go', 'Data Pipelines'], yearsOfExperience: 8 },
-    { name: 'Tina Fey', level: 3, teamId: 'teamFS8', skills: ['Data Reporting', 'SQL', 'Python', 'AML Rules'], yearsOfExperience: 5 }
-];
-
-const sampleAllKnownEngineersFinSecure = tempFinSecureEngineers.map(eng => ({
-    name: eng.name,
-    level: eng.level,
-    currentTeamId: eng.teamId,
+const sampleAllKnownEngineersFinSecure = [
+  // Team FS1: Mobile App
+  {
+    engineerId: 'engFS1',
+    name: 'Elena Rodriguez',
+    level: 5,
+    currentTeamId: 'teamFS1',
     attributes: {
-        isAISWE: false,
-        aiAgentType: null,
-        skills: eng.skills || [],
-        yearsOfExperience: eng.yearsOfExperience || 0
-    }
-})).concat([
-    { name: 'AI-Fraud-Modeler (FinSecure)', level: 5, currentTeamId: 'teamFS6', attributes: { isAISWE: true, aiAgentType: "Fraud Detection ML", skills: ["TensorFlow", "Graph Neural Networks", "Real-time Scoring"], yearsOfExperience: null } },
-    { name: 'AI-Compliance-Auditor (FinSecure)', level: 4, currentTeamId: 'teamFS8', attributes: { isAISWE: true, aiAgentType: "AML/KYC Automation", skills: ["NLP", "Rule Engine", "Data Classification"], yearsOfExperience: null } },
-    { name: 'AI-Ledger-Reconciler (FinSecure)', level: 4, currentTeamId: 'teamFS3', attributes: { isAISWE: true, aiAgentType: "Data Reconciliation", skills: ["Anomaly Detection", "SQL", "High-Volume Data"], yearsOfExperience: null } }
-]);
+      isAISWE: false,
+      aiAgentType: null,
+      skills: ['iOS (Swift)', 'Android (Kotlin)', 'React Native', 'Team Lead'],
+      yearsOfExperience: 9,
+    },
+  },
+  {
+    engineerId: 'engFS2',
+    name: 'Adam Smith',
+    level: 4,
+    currentTeamId: 'teamFS1',
+    attributes: {
+      isAISWE: false,
+      aiAgentType: null,
+      skills: ['Swift', 'SwiftUI', 'Mobile Security'],
+      yearsOfExperience: 6,
+    },
+  },
+  {
+    engineerId: 'engFS3',
+    name: 'Bethany Shaw',
+    level: 4,
+    currentTeamId: 'teamFS1',
+    attributes: {
+      isAISWE: false,
+      aiAgentType: null,
+      skills: ['Android', 'Kotlin', 'Jetpack Compose'],
+      yearsOfExperience: 5,
+    },
+  },
+  {
+    engineerId: 'engFS4',
+    name: 'Carlos Diaz',
+    level: 3,
+    currentTeamId: 'teamFS1',
+    attributes: {
+      isAISWE: false,
+      aiAgentType: null,
+      skills: ['React Native', 'TypeScript', 'App Performance'],
+      yearsOfExperience: 4,
+    },
+  },
+  // Team FS2: Web App
+  {
+    engineerId: 'engFS5',
+    name: 'Diana Wells',
+    level: 4,
+    currentTeamId: 'teamFS1',
+    attributes: {
+      isAISWE: false,
+      aiAgentType: null,
+      skills: ['React', 'TypeScript', 'Next.js', 'Web Security'],
+      yearsOfExperience: 6,
+    },
+  },
+  {
+    engineerId: 'engFS6',
+    name: 'Evan Li',
+    level: 3,
+    currentTeamId: 'teamFS1',
+    attributes: {
+      isAISWE: false,
+      aiAgentType: null,
+      skills: ['UI/UX Design', 'Figma', 'Accessibility (a11y)'],
+      yearsOfExperience: 4,
+    },
+  },
+  // Team FS3: Card Issuing & New Products
+  {
+    engineerId: 'engFS7',
+    name: 'Tom Wilson',
+    level: 5,
+    currentTeamId: 'teamFS2',
+    attributes: {
+      isAISWE: false,
+      aiAgentType: null,
+      skills: ['Product Engineering', 'Go', 'System Design', 'Team Lead'],
+      yearsOfExperience: 10,
+    },
+  },
+  {
+    engineerId: 'engFS8',
+    name: 'Fiona Chen',
+    level: 3,
+    currentTeamId: 'teamFS2',
+    attributes: {
+      isAISWE: false,
+      aiAgentType: null,
+      skills: ['Card Issuing (Marqeta)', 'FinTech APIs', 'Java'],
+      yearsOfExperience: 4,
+    },
+  },
+  {
+    engineerId: 'engFS9',
+    name: 'George Kims',
+    level: 3,
+    currentTeamId: 'teamFS2',
+    attributes: {
+      isAISWE: false,
+      aiAgentType: null,
+      skills: ['Go', 'Microservices', 'PostgreSQL'],
+      yearsOfExperience: 3,
+    },
+  },
+  // Team FS4: Core Ledger
+  {
+    engineerId: 'engFS10',
+    name: 'Anil Gupta',
+    level: 6,
+    currentTeamId: 'teamFS3',
+    attributes: {
+      isAISWE: false,
+      aiAgentType: null,
+      skills: ['System Architecture', 'Distributed Systems', 'Java', 'PostgreSQL', 'Team Lead'],
+      yearsOfExperience: 12,
+    },
+  },
+  {
+    engineerId: 'engFS11',
+    name: 'Hannah Davis',
+    level: 4,
+    currentTeamId: 'teamFS3',
+    attributes: {
+      isAISWE: false,
+      aiAgentType: null,
+      skills: ['Database Internals', 'SQL Optimization', 'Go', 'High Availability'],
+      yearsOfExperience: 7,
+    },
+  },
+  {
+    engineerId: 'engFS12',
+    name: 'Ivan Petrov',
+    level: 3,
+    currentTeamId: 'teamFS3',
+    attributes: {
+      isAISWE: false,
+      aiAgentType: null,
+      skills: ['Java', 'Spring Boot', 'JPA', 'Database Locks'],
+      yearsOfExperience: 5,
+    },
+  },
+  // Team FS5: Payments Gateway
+  {
+    engineerId: 'engFS13',
+    name: 'Mei Lin',
+    level: 5,
+    currentTeamId: 'teamFS4',
+    attributes: {
+      isAISWE: false,
+      aiAgentType: null,
+      skills: ['Payments (Swift, FedNow)', 'Kafka', 'System Design', 'Go', 'Team Lead'],
+      yearsOfExperience: 10,
+    },
+  },
+  {
+    engineerId: 'engFS14',
+    name: 'Julia Romano',
+    level: 4,
+    currentTeamId: 'teamFS4',
+    attributes: {
+      isAISWE: false,
+      aiAgentType: null,
+      skills: ['Payment Rails', 'Go', 'gRPC', 'High Reliability'],
+      yearsOfExperience: 6,
+    },
+  },
+  {
+    engineerId: 'engFS15',
+    name: 'Leo Martinez',
+    level: 3,
+    currentTeamId: 'teamFS4',
+    attributes: {
+      isAISWE: false,
+      aiAgentType: null,
+      skills: ['Kafka', 'Java', 'Microservices', 'Resiliency'],
+      yearsOfExperience: 4,
+    },
+  },
+  // Team FS6: SRE & Platform
+  {
+    engineerId: 'engFS16',
+    name: 'Chris Porter',
+    level: 5,
+    currentTeamId: 'teamFS5',
+    attributes: {
+      isAISWE: false,
+      aiAgentType: null,
+      skills: ['SRE', 'Kubernetes', 'AWS', 'Terraform', 'Observability', 'Team Lead'],
+      yearsOfExperience: 11,
+    },
+  },
+  {
+    engineerId: 'engFS17',
+    name: 'Mona Amini',
+    level: 4,
+    currentTeamId: 'teamFS5',
+    attributes: {
+      isAISWE: false,
+      aiAgentType: null,
+      skills: ['Kubernetes', 'CI/CD (GitLab)', 'Go', 'Security'],
+      yearsOfExperience: 6,
+    },
+  },
+  {
+    engineerId: 'engFS18',
+    name: 'Nate Jacobs',
+    level: 3,
+    currentTeamId: 'teamFS5',
+    attributes: {
+      isAISWE: false,
+      aiAgentType: null,
+      skills: ['AWS', 'Terraform', 'Python', 'Monitoring'],
+      yearsOfExperience: 4,
+    },
+  },
+  // Team FS7: Fraud & Risk ML
+  {
+    engineerId: 'engFS19',
+    name: 'Dr. Alex Yi',
+    level: 6,
+    currentTeamId: 'teamFS6',
+    attributes: {
+      isAISWE: false,
+      aiAgentType: null,
+      skills: ['ML Research', 'Fraud Detection', 'Anomaly Detection', 'Python', 'Team Lead'],
+      yearsOfExperience: 9,
+    },
+  },
+  {
+    engineerId: 'engFS20',
+    name: 'Oscar Wilde',
+    level: 4,
+    currentTeamId: 'teamFS6',
+    attributes: {
+      isAISWE: false,
+      aiAgentType: null,
+      skills: ['ML Engineering', 'Real-time Inference', 'Python', 'SQL'],
+      yearsOfExperience: 6,
+    },
+  },
+  {
+    engineerId: 'engFS21',
+    name: 'Patel Kumar',
+    level: 3,
+    currentTeamId: 'teamFS6',
+    attributes: {
+      isAISWE: false,
+      aiAgentType: null,
+      skills: ['Data Science', 'Feature Engineering', 'Jupyter', 'Scikit-learn'],
+      yearsOfExperience: 3,
+    },
+  },
+  // Team FS8: KYC & Onboarding
+  {
+    engineerId: 'engFS22',
+    name: "Sam O'Connell",
+    level: 5,
+    currentTeamId: 'teamFS7',
+    attributes: {
+      isAISWE: false,
+      aiAgentType: null,
+      skills: ['System Design', 'Backend (Go)', 'KYC/AML', 'Team Lead'],
+      yearsOfExperience: 10,
+    },
+  },
+  {
+    engineerId: 'engFS23',
+    name: 'Quincy Jones',
+    level: 4,
+    currentTeamId: 'teamFS7',
+    attributes: {
+      isAISWE: false,
+      aiAgentType: null,
+      skills: ['KYC APIs (Onfido)', 'Workflow Automation', 'Go'],
+      yearsOfExperience: 5,
+    },
+  },
+  {
+    engineerId: 'engFS24',
+    name: 'Rachel Green',
+    level: 3,
+    currentTeamId: 'teamFS7',
+    attributes: {
+      isAISWE: false,
+      aiAgentType: null,
+      skills: ['Full-stack', 'React', 'Node.js', 'Onboarding UI'],
+      yearsOfExperience: 4,
+    },
+  },
+  // Team FS9: Compliance Tech
+  {
+    engineerId: 'engFS25',
+    name: 'Steve Murphy',
+    level: 4,
+    currentTeamId: 'teamFS8',
+    attributes: {
+      isAISWE: false,
+      aiAgentType: null,
+      skills: ['Compliance Engineering', 'Audit Logging', 'Go', 'Data Pipelines'],
+      yearsOfExperience: 8,
+    },
+  },
+  {
+    engineerId: 'engFS26',
+    name: 'Tina Fey',
+    level: 3,
+    currentTeamId: 'teamFS8',
+    attributes: {
+      isAISWE: false,
+      aiAgentType: null,
+      skills: ['Data Reporting', 'SQL', 'Python', 'AML Rules'],
+      yearsOfExperience: 5,
+    },
+  },
+  // AI Engineers
+  {
+    engineerId: 'engFS-AI-1',
+    name: 'AI-Fraud-Modeler (FinSecure)',
+    level: 5,
+    currentTeamId: 'teamFS6',
+    attributes: {
+      isAISWE: true,
+      aiAgentType: 'Fraud Detection ML',
+      skills: ['TensorFlow', 'Graph Neural Networks', 'Real-time Scoring'],
+      yearsOfExperience: null,
+    },
+  },
+  {
+    engineerId: 'engFS-AI-2',
+    name: 'AI-Compliance-Auditor (FinSecure)',
+    level: 4,
+    currentTeamId: 'teamFS8',
+    attributes: {
+      isAISWE: true,
+      aiAgentType: 'AML/KYC Automation',
+      skills: ['NLP', 'Rule Engine', 'Data Classification'],
+      yearsOfExperience: null,
+    },
+  },
+  {
+    engineerId: 'engFS-AI-3',
+    name: 'AI-Ledger-Reconciler (FinSecure)',
+    level: 4,
+    currentTeamId: 'teamFS3',
+    attributes: {
+      isAISWE: true,
+      aiAgentType: 'Data Reconciliation',
+      skills: ['Anomaly Detection', 'SQL', 'High-Volume Data'],
+      yearsOfExperience: null,
+    },
+  },
+];
 
 const finSecureTeamsData = [
-    { teamId: 'teamFS1', teamName: 'Mobile & Web Applications', teamIdentity: 'Client Apps', fundedHeadcount: 7, engineers: ['Elena Rodriguez', 'Adam Smith', 'Bethany Shaw', 'Carlos Diaz', 'Diana Wells', 'Evan Li'], awayTeamMembers: [], sdmId: 'sdmFS1', pmtId: 'pmtFS2', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: {}, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 6, aiProductivityGainPercent: 20 }, attributes: {} },
-    { teamId: 'teamFS2', teamName: 'New Products (Cards & Growth)', teamIdentity: 'Growth Products', fundedHeadcount: 4, engineers: ['Tom Wilson', 'Fiona Chen', 'George Kims'], awayTeamMembers: [], sdmId: 'sdmFS2', pmtId: 'pmtFS4', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: {}, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 5, aiProductivityGainPercent: 15 }, attributes: {} },
-    { teamId: 'teamFS3', teamName: 'Core Ledger', teamIdentity: 'Core Ledger', fundedHeadcount: 4, engineers: ['Anil Gupta', 'Hannah Davis', 'Ivan Petrov', 'AI-Ledger-Reconciler (FinSecure)'], awayTeamMembers: [], sdmId: 'sdmFS3', pmtId: 'pmtFS1', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: {}, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 7, aiProductivityGainPercent: 10 }, attributes: {} },
-    { teamId: 'teamFS4', teamName: 'Payments Gateway', teamIdentity: 'Payments Gateway', fundedHeadcount: 4, engineers: ['Mei Lin', 'Julia Romano', 'Leo Martinez'], awayTeamMembers: [], sdmId: 'sdmFS4', pmtId: 'pmtFS3', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: {}, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 7, aiProductivityGainPercent: 15 }, attributes: {} },
-    { teamId: 'teamFS5', teamName: 'SRE & Platform', teamIdentity: 'SRE Platform', fundedHeadcount: 4, engineers: ['Chris Porter', 'Mona Amini', 'Nate Jacobs'], awayTeamMembers: [{ name: 'DevOps-Contractor-01', level: 3, sourceTeam: 'External Firm', attributes: {} }], sdmId: 'sdmFS5', pmtId: 'pmtFS1', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: {}, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 8, aiProductivityGainPercent: 20 }, attributes: {} },
-    { teamId: 'teamFS6', teamName: 'Fraud & Risk ML', teamIdentity: 'Fraud ML', fundedHeadcount: 4, engineers: ['Dr. Alex Yi', 'Oscar Wilde', 'Patel Kumar', 'AI-Fraud-Modeler (FinSecure)'], awayTeamMembers: [], sdmId: 'sdmFS6', pmtId: 'pmtFS3', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: {}, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 5, aiProductivityGainPercent: 25 }, attributes: {} },
-    { teamId: 'teamFS7', teamName: 'KYC & Onboarding', teamIdentity: 'KYC & Onboarding', fundedHeadcount: 4, engineers: ['Sam O\'Connell', 'Quincy Jones', 'Rachel Green'], awayTeamMembers: [], sdmId: 'sdmFS7', pmtId: 'pmtFS3', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: {}, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 6, aiProductivityGainPercent: 10 }, attributes: {} },
-    { teamId: 'teamFS8', teamName: 'Compliance Tech', teamIdentity: 'Compliance Tech', fundedHeadcount: 3, engineers: ['Steve Murphy', 'Tina Fey', 'AI-Compliance-Auditor (FinSecure)'], awayTeamMembers: [], sdmId: 'sdmFS7', pmtId: 'pmtFS3', teamCapacityAdjustments: { leaveUptakeEstimates: [], variableLeaveImpact: {}, teamActivities: [], avgOverheadHoursPerWeekPerSDE: 6, aiProductivityGainPercent: 20 }, attributes: {} }
+  {
+    teamId: 'teamFS1',
+    teamName: 'Mobile & Web Applications',
+    teamIdentity: 'Client Apps',
+    fundedHeadcount: 7,
+    engineers: [
+      'Elena Rodriguez',
+      'Adam Smith',
+      'Bethany Shaw',
+      'Carlos Diaz',
+      'Diana Wells',
+      'Evan Li',
+    ],
+    awayTeamMembers: [],
+    sdmId: 'sdmFS1',
+    pmtId: 'pmtFS2',
+    teamCapacityAdjustments: {
+      leaveUptakeEstimates: [],
+      variableLeaveImpact: {},
+      teamActivities: [],
+      avgOverheadHoursPerWeekPerSDE: 6,
+      aiProductivityGainPercent: 20,
+    },
+    attributes: {},
+  },
+  {
+    teamId: 'teamFS2',
+    teamName: 'New Products (Cards & Growth)',
+    teamIdentity: 'Growth Products',
+    fundedHeadcount: 4,
+    engineers: ['Tom Wilson', 'Fiona Chen', 'George Kims'],
+    awayTeamMembers: [],
+    sdmId: 'sdmFS2',
+    pmtId: 'pmtFS4',
+    teamCapacityAdjustments: {
+      leaveUptakeEstimates: [],
+      variableLeaveImpact: {},
+      teamActivities: [],
+      avgOverheadHoursPerWeekPerSDE: 5,
+      aiProductivityGainPercent: 15,
+    },
+    attributes: {},
+  },
+  {
+    teamId: 'teamFS3',
+    teamName: 'Core Ledger',
+    teamIdentity: 'Core Ledger',
+    fundedHeadcount: 4,
+    engineers: ['Anil Gupta', 'Hannah Davis', 'Ivan Petrov', 'AI-Ledger-Reconciler (FinSecure)'],
+    awayTeamMembers: [],
+    sdmId: 'sdmFS3',
+    pmtId: 'pmtFS1',
+    teamCapacityAdjustments: {
+      leaveUptakeEstimates: [],
+      variableLeaveImpact: {},
+      teamActivities: [],
+      avgOverheadHoursPerWeekPerSDE: 7,
+      aiProductivityGainPercent: 10,
+    },
+    attributes: {},
+  },
+  {
+    teamId: 'teamFS4',
+    teamName: 'Payments Gateway',
+    teamIdentity: 'Payments Gateway',
+    fundedHeadcount: 4,
+    engineers: ['Mei Lin', 'Julia Romano', 'Leo Martinez'],
+    awayTeamMembers: [],
+    sdmId: 'sdmFS4',
+    pmtId: 'pmtFS3',
+    teamCapacityAdjustments: {
+      leaveUptakeEstimates: [],
+      variableLeaveImpact: {},
+      teamActivities: [],
+      avgOverheadHoursPerWeekPerSDE: 7,
+      aiProductivityGainPercent: 15,
+    },
+    attributes: {},
+  },
+  {
+    teamId: 'teamFS5',
+    teamName: 'SRE & Platform',
+    teamIdentity: 'SRE Platform',
+    fundedHeadcount: 4,
+    engineers: ['Chris Porter', 'Mona Amini', 'Nate Jacobs'],
+    awayTeamMembers: [
+      {
+        awayMemberId: 'awayFS5_1',
+        name: 'DevOps-Contractor-01',
+        level: 3,
+        sourceTeam: 'External Firm',
+        attributes: {},
+      },
+    ],
+    sdmId: 'sdmFS5',
+    pmtId: 'pmtFS1',
+    teamCapacityAdjustments: {
+      leaveUptakeEstimates: [],
+      variableLeaveImpact: {},
+      teamActivities: [],
+      avgOverheadHoursPerWeekPerSDE: 8,
+      aiProductivityGainPercent: 20,
+    },
+    attributes: {},
+  },
+  {
+    teamId: 'teamFS6',
+    teamName: 'Fraud & Risk ML',
+    teamIdentity: 'Fraud ML',
+    fundedHeadcount: 4,
+    engineers: ['Dr. Alex Yi', 'Oscar Wilde', 'Patel Kumar', 'AI-Fraud-Modeler (FinSecure)'],
+    awayTeamMembers: [],
+    sdmId: 'sdmFS6',
+    pmtId: 'pmtFS3',
+    teamCapacityAdjustments: {
+      leaveUptakeEstimates: [],
+      variableLeaveImpact: {},
+      teamActivities: [],
+      avgOverheadHoursPerWeekPerSDE: 5,
+      aiProductivityGainPercent: 25,
+    },
+    attributes: {},
+  },
+  {
+    teamId: 'teamFS7',
+    teamName: 'KYC & Onboarding',
+    teamIdentity: 'KYC & Onboarding',
+    fundedHeadcount: 4,
+    engineers: ["Sam O'Connell", 'Quincy Jones', 'Rachel Green'],
+    awayTeamMembers: [],
+    sdmId: 'sdmFS7',
+    pmtId: 'pmtFS3',
+    teamCapacityAdjustments: {
+      leaveUptakeEstimates: [],
+      variableLeaveImpact: {},
+      teamActivities: [],
+      avgOverheadHoursPerWeekPerSDE: 6,
+      aiProductivityGainPercent: 10,
+    },
+    attributes: {},
+  },
+  {
+    teamId: 'teamFS8',
+    teamName: 'Compliance Tech',
+    teamIdentity: 'Compliance Tech',
+    fundedHeadcount: 3,
+    engineers: ['Steve Murphy', 'Tina Fey', 'AI-Compliance-Auditor (FinSecure)'],
+    awayTeamMembers: [],
+    sdmId: 'sdmFS7',
+    pmtId: 'pmtFS3',
+    teamCapacityAdjustments: {
+      leaveUptakeEstimates: [],
+      variableLeaveImpact: {},
+      teamActivities: [],
+      avgOverheadHoursPerWeekPerSDE: 6,
+      aiProductivityGainPercent: 20,
+    },
+    attributes: {},
+  },
 ];
 
 const sampleServicesDataFinSecure = [
-    {
-        serviceName: 'UserService',
-        serviceDescription: 'Manages user identity, authentication, profile data, and session management.',
-        owningTeamId: 'teamFS1',
-        apis: [{ apiName: 'AuthAPI', apiDescription: 'Handles user login, signup, MFA.', dependentApis: [], attributes: {} }, { apiName: 'ProfileAPI', apiDescription: 'Manages user PII and preferences.', dependentApis: ['KYCService:GetStatusAPI'], attributes: {} }],
-        serviceDependencies: ['KYCService'],
-        platformDependencies: ['Auth0', 'PostgreSQL (UserDB)'],
-        attributes: {}
-    },
-    {
-        serviceName: 'KYCService',
-        serviceDescription: 'Manages "Know Your Customer" identity verification workflows.',
-        owningTeamId: 'teamFS7',
-        apis: [{ apiName: 'SubmitKYCAPI', apiDescription: 'Receives KYC documents for verification.', dependentApis: ['DocumentProcessingService:ScanCheckAPI'], attributes: {} }, { apiName: 'GetStatusAPI', apiDescription: 'Returns the verification status of a user.', dependentApis: [], attributes: {} }],
-        serviceDependencies: ['ComplianceReportingService', 'DocumentProcessingService'],
-        platformDependencies: ['Onfido SDK', 'AWS S3 (Secure Docs)', 'Workflow Engine (Temporal)'],
-        attributes: {}
-    },
-    {
-        serviceName: 'DocumentProcessingService',
-        serviceDescription: 'Handles OCR and validation for uploaded documents (e.g., checks, ID cards).',
-        owningTeamId: 'teamFS7',
-        apis: [{ apiName: 'ScanCheckAPI', apiDescription: 'Performs OCR on a mobile check deposit image.', dependentApis: [], attributes: {} }],
-        serviceDependencies: [],
-        platformDependencies: ['AWS Textract', 'Internal ML (Validation)', 'S3'],
-        attributes: {}
-    },
-    {
-        serviceName: 'LedgerService',
-        serviceDescription: 'Core banking ledger. The immutable source of truth for all accounts and transactions.',
-        owningTeamId: 'teamFS3',
-        apis: [{ apiName: 'PostTransactionAPI', apiDescription: 'Internal API to post debits/credits. Uses two-phase commit.', dependentApis: [], attributes: {} }, { apiName: 'GetBalanceAPI', apiDescription: 'Internal API to get real-time account balance.', dependentApis: [], attributes: {} }],
-        serviceDependencies: [],
-        platformDependencies: ['PostgreSQL (LedgerDB)', 'Kafka (Transaction Events)'],
-        attributes: {}
-    },
-    {
-        serviceName: 'PaymentGatewayService',
-        serviceDescription: 'Handles all external payment rail integrations (ACH, FedNow, Swift, Visa).',
-        owningTeamId: 'teamFS4',
-        apis: [{ apiName: 'InitiatePaymentAPI', apiDescription: 'Initiates an outbound payment.', dependentApis: ['LedgerService:PostTransactionAPI', 'FraudDetectionService:AssessRiskAPI', 'ComplianceReportingService:ScreenTransactionAPI'], attributes: {} }, { apiName: 'ReceivePaymentAPI', apiDescription: 'Webhook for inbound payments.', dependentApis: ['LedgerService:PostTransactionAPI'], attributes: {} }],
-        serviceDependencies: ['LedgerService', 'FraudDetectionService', 'ComplianceReportingService'],
-        platformDependencies: ['FedNow Gateway', 'Swift Gateway', 'VisaNet Gateway', 'Kafka'],
-        attributes: {}
-    },
-    {
-        serviceName: 'CardManagementService',
-        serviceDescription: 'Manages the lifecycle of physical and virtual cards.',
-        owningTeamId: 'teamFS2',
-        apis: [{ apiName: 'IssueCardAPI', apiDescription: 'Creates a new virtual or physical card.', dependentApis: ['UserService:ProfileAPI'], attributes: {} }, { apiName: 'SetCardControlsAPI', apiDescription: 'Sets spending limits, freezes, etc.', dependentApis: [], attributes: {} }],
-        serviceDependencies: ['UserService', 'PaymentGatewayService'],
-        platformDependencies: ['Marqeta (Issuing Platform)', 'PostgreSQL'],
-        attributes: {}
-    },
-    {
-        serviceName: 'FraudDetectionService',
-        serviceDescription: 'Provides real-time risk assessment for transactions and signups.',
-        owningTeamId: 'teamFS6',
-        apis: [{ apiName: 'AssessRiskAPI', apiDescription: 'Returns a risk score for a transaction or event.', dependentApis: [], attributes: {} }],
-        serviceDependencies: ['AnalyticsPipelineService'],
-        platformDependencies: ['Internal ML Platform (TensorFlow)', 'Redis (Feature Store)'],
-        attributes: {}
-    },
-    {
-        serviceName: 'ComplianceReportingService',
-        serviceDescription: 'Handles AML screening, SAR filing, and regulatory reporting.',
-        owningTeamId: 'teamFS8',
-        apis: [{ apiName: 'ScreenTransactionAPI', apiDescription: 'Screens a transaction against sanctions lists.', dependentApis: [], attributes: {} }],
-        serviceDependencies: ['LedgerService', 'KYCService'],
-        platformDependencies: ['Chainalysis API', 'Data Warehouse (Snowflake)'],
-        attributes: {}
-    },
-    {
-        serviceName: 'MobileBFFService',
-        serviceDescription: 'Backend-for-Frontend for the native iOS and Android applications. Owned by Client Apps team.',
-        owningTeamId: 'teamFS1',
-        apis: [{ apiName: 'MobileAPI', apiDescription: 'Aggregates data for mobile clients.', dependentApis: ['UserService:ProfileAPI', 'LedgerService:GetBalanceAPI', 'CardManagementService:SetCardControlsAPI'], attributes: {} }],
-        serviceDependencies: ['UserService', 'LedgerService', 'CardManagementService'],
-        platformDependencies: ['Node.js', 'GraphQL (Apollo)', 'Kubernetes'],
-        attributes: {}
-    },
-    {
-        serviceName: 'WebBFFService',
-        serviceDescription: 'Backend-for-Frontend for the web application. Owned by Client Apps team.',
-        owningTeamId: 'teamFS1',
-        apis: [{ apiName: 'WebAPI', apiDescription: 'Aggregates data for the web client.', dependentApis: ['UserService:ProfileAPI', 'LedgerService:GetBalanceAPI', 'CardManagementService:SetCardControlsAPI'], attributes: {} }],
-        serviceDependencies: ['UserService', 'LedgerService', 'CardManagementService'],
-        platformDependencies: ['Node.js', 'GraphQL (Apollo)', 'Kubernetes'],
-        attributes: {}
-    },
-    {
-        serviceName: 'AnalyticsPipelineService',
-        serviceDescription: 'Collects and processes all system events for BI and ML.',
-        owningTeamId: 'teamFS5', // Owned by SRE/Platform as a central utility
-        apis: [{ apiName: 'EventIngestAPI', apiDescription: 'Receives tracking events from all services.', dependentApis: [], attributes: {} }],
-        serviceDependencies: [],
-        platformDependencies: ['Kafka', 'Spark', 'Snowflake'],
-        attributes: {}
-    }
+  {
+    serviceName: 'UserService',
+    serviceDescription:
+      'Manages user identity, authentication, profile data, and session management.',
+    owningTeamId: 'teamFS1',
+    apis: [
+      {
+        apiName: 'AuthAPI',
+        apiDescription: 'Handles user login, signup, MFA.',
+        dependentApis: [],
+        attributes: {},
+      },
+      {
+        apiName: 'ProfileAPI',
+        apiDescription: 'Manages user PII and preferences.',
+        dependentApis: ['KYCService:GetStatusAPI'],
+        attributes: {},
+      },
+    ],
+    serviceDependencies: ['KYCService'],
+    platformDependencies: ['Auth0', 'PostgreSQL (UserDB)'],
+    attributes: {},
+  },
+  {
+    serviceName: 'KYCService',
+    serviceDescription: 'Manages "Know Your Customer" identity verification workflows.',
+    owningTeamId: 'teamFS7',
+    apis: [
+      {
+        apiName: 'SubmitKYCAPI',
+        apiDescription: 'Receives KYC documents for verification.',
+        dependentApis: ['DocumentProcessingService:ScanCheckAPI'],
+        attributes: {},
+      },
+      {
+        apiName: 'GetStatusAPI',
+        apiDescription: 'Returns the verification status of a user.',
+        dependentApis: [],
+        attributes: {},
+      },
+    ],
+    serviceDependencies: ['ComplianceReportingService', 'DocumentProcessingService'],
+    platformDependencies: ['Onfido SDK', 'AWS S3 (Secure Docs)', 'Workflow Engine (Temporal)'],
+    attributes: {},
+  },
+  {
+    serviceName: 'DocumentProcessingService',
+    serviceDescription:
+      'Handles OCR and validation for uploaded documents (e.g., checks, ID cards).',
+    owningTeamId: 'teamFS7',
+    apis: [
+      {
+        apiName: 'ScanCheckAPI',
+        apiDescription: 'Performs OCR on a mobile check deposit image.',
+        dependentApis: [],
+        attributes: {},
+      },
+    ],
+    serviceDependencies: [],
+    platformDependencies: ['AWS Textract', 'Internal ML (Validation)', 'S3'],
+    attributes: {},
+  },
+  {
+    serviceName: 'LedgerService',
+    serviceDescription:
+      'Core banking ledger. The immutable source of truth for all accounts and transactions.',
+    owningTeamId: 'teamFS3',
+    apis: [
+      {
+        apiName: 'PostTransactionAPI',
+        apiDescription: 'Internal API to post debits/credits. Uses two-phase commit.',
+        dependentApis: [],
+        attributes: {},
+      },
+      {
+        apiName: 'GetBalanceAPI',
+        apiDescription: 'Internal API to get real-time account balance.',
+        dependentApis: [],
+        attributes: {},
+      },
+    ],
+    serviceDependencies: [],
+    platformDependencies: ['PostgreSQL (LedgerDB)', 'Kafka (Transaction Events)'],
+    attributes: {},
+  },
+  {
+    serviceName: 'PaymentGatewayService',
+    serviceDescription:
+      'Handles all external payment rail integrations (ACH, FedNow, Swift, Visa).',
+    owningTeamId: 'teamFS4',
+    apis: [
+      {
+        apiName: 'InitiatePaymentAPI',
+        apiDescription: 'Initiates an outbound payment.',
+        dependentApis: [
+          'LedgerService:PostTransactionAPI',
+          'FraudDetectionService:AssessRiskAPI',
+          'ComplianceReportingService:ScreenTransactionAPI',
+        ],
+        attributes: {},
+      },
+      {
+        apiName: 'ReceivePaymentAPI',
+        apiDescription: 'Webhook for inbound payments.',
+        dependentApis: ['LedgerService:PostTransactionAPI'],
+        attributes: {},
+      },
+    ],
+    serviceDependencies: ['LedgerService', 'FraudDetectionService', 'ComplianceReportingService'],
+    platformDependencies: ['FedNow Gateway', 'Swift Gateway', 'VisaNet Gateway', 'Kafka'],
+    attributes: {},
+  },
+  {
+    serviceName: 'CardManagementService',
+    serviceDescription: 'Manages the lifecycle of physical and virtual cards.',
+    owningTeamId: 'teamFS2',
+    apis: [
+      {
+        apiName: 'IssueCardAPI',
+        apiDescription: 'Creates a new virtual or physical card.',
+        dependentApis: ['UserService:ProfileAPI'],
+        attributes: {},
+      },
+      {
+        apiName: 'SetCardControlsAPI',
+        apiDescription: 'Sets spending limits, freezes, etc.',
+        dependentApis: [],
+        attributes: {},
+      },
+    ],
+    serviceDependencies: ['UserService', 'PaymentGatewayService'],
+    platformDependencies: ['Marqeta (Issuing Platform)', 'PostgreSQL'],
+    attributes: {},
+  },
+  {
+    serviceName: 'FraudDetectionService',
+    serviceDescription: 'Provides real-time risk assessment for transactions and signups.',
+    owningTeamId: 'teamFS6',
+    apis: [
+      {
+        apiName: 'AssessRiskAPI',
+        apiDescription: 'Returns a risk score for a transaction or event.',
+        dependentApis: [],
+        attributes: {},
+      },
+    ],
+    serviceDependencies: ['AnalyticsPipelineService'],
+    platformDependencies: ['Internal ML Platform (TensorFlow)', 'Redis (Feature Store)'],
+    attributes: {},
+  },
+  {
+    serviceName: 'ComplianceReportingService',
+    serviceDescription: 'Handles AML screening, SAR filing, and regulatory reporting.',
+    owningTeamId: 'teamFS8',
+    apis: [
+      {
+        apiName: 'ScreenTransactionAPI',
+        apiDescription: 'Screens a transaction against sanctions lists.',
+        dependentApis: [],
+        attributes: {},
+      },
+    ],
+    serviceDependencies: ['LedgerService', 'KYCService'],
+    platformDependencies: ['Chainalysis API', 'Data Warehouse (Snowflake)'],
+    attributes: {},
+  },
+  {
+    serviceName: 'MobileBFFService',
+    serviceDescription:
+      'Backend-for-Frontend for the native iOS and Android applications. Owned by Client Apps team.',
+    owningTeamId: 'teamFS1',
+    apis: [
+      {
+        apiName: 'MobileAPI',
+        apiDescription: 'Aggregates data for mobile clients.',
+        dependentApis: [
+          'UserService:ProfileAPI',
+          'LedgerService:GetBalanceAPI',
+          'CardManagementService:SetCardControlsAPI',
+        ],
+        attributes: {},
+      },
+    ],
+    serviceDependencies: ['UserService', 'LedgerService', 'CardManagementService'],
+    platformDependencies: ['Node.js', 'GraphQL (Apollo)', 'Kubernetes'],
+    attributes: {},
+  },
+  {
+    serviceName: 'WebBFFService',
+    serviceDescription: 'Backend-for-Frontend for the web application. Owned by Client Apps team.',
+    owningTeamId: 'teamFS1',
+    apis: [
+      {
+        apiName: 'WebAPI',
+        apiDescription: 'Aggregates data for the web client.',
+        dependentApis: [
+          'UserService:ProfileAPI',
+          'LedgerService:GetBalanceAPI',
+          'CardManagementService:SetCardControlsAPI',
+        ],
+        attributes: {},
+      },
+    ],
+    serviceDependencies: ['UserService', 'LedgerService', 'CardManagementService'],
+    platformDependencies: ['Node.js', 'GraphQL (Apollo)', 'Kubernetes'],
+    attributes: {},
+  },
+  {
+    serviceName: 'AnalyticsPipelineService',
+    serviceDescription: 'Collects and processes all system events for BI and ML.',
+    owningTeamId: 'teamFS5', // Owned by SRE/Platform as a central utility
+    apis: [
+      {
+        apiName: 'EventIngestAPI',
+        apiDescription: 'Receives tracking events from all services.',
+        dependentApis: [],
+        attributes: {},
+      },
+    ],
+    serviceDependencies: [],
+    platformDependencies: ['Kafka', 'Spark', 'Snowflake'],
+    attributes: {},
+  },
 ];
 
 const sampleYearlyInitiativesFinSecure = [
-    // --- 2025 (Year 1: Launch & Comply) ---
-    {
-        initiativeId: 'init-fs-ktlo', title: 'KTLO / Operational Excellence', description: 'Ongoing infra maintenance, security patching, dependency updates, and minor bug fixes.', isProtected: true,
-        assignments: [{ teamId: 'teamFS1', sdeYears: 1.0 }, { teamId: 'teamFS2', sdeYears: 0.25 }, { teamId: 'teamFS3', sdeYears: 1.0 }, { teamId: 'teamFS4', sdeYears: 1.0 }, { teamId: 'teamFS5', sdeYears: 1.5 }, { teamId: 'teamFS6', sdeYears: 0.5 }, { teamId: 'teamFS7', sdeYears: 0.5 }, { teamId: 'teamFS8', sdeYears: 0.5 }],
-        impactedServiceIds: [], roi: { category: 'Tech Debt', valueType: 'QualitativeScore', estimatedValue: 'Critical' }, targetDueDate: "2025-12-31", actualCompletionDate: null, status: 'Committed',
-        themes: ['theme-fs-platform-stability'], primaryGoalId: 'goal-fs-compliance-2025',
-        projectManager: null, owner: { type: 'seniorManager', id: 'srMgrFS2', name: 'Sarah Jenkins' }, technicalPOC: { type: 'sdm', id: 'sdmFS5', name: 'Chris Porter' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "Baseline KTLO.", planningYear: 2025 }
+  // --- 2025 (Year 1: Launch & Comply) ---
+  {
+    initiativeId: 'init-fs-ktlo',
+    title: 'KTLO / Operational Excellence',
+    description:
+      'Ongoing infra maintenance, security patching, dependency updates, and minor bug fixes.',
+    isProtected: true,
+    assignments: [
+      { teamId: 'teamFS1', sdeYears: 1.0 },
+      { teamId: 'teamFS2', sdeYears: 0.25 },
+      { teamId: 'teamFS3', sdeYears: 1.0 },
+      { teamId: 'teamFS4', sdeYears: 1.0 },
+      { teamId: 'teamFS5', sdeYears: 1.5 },
+      { teamId: 'teamFS6', sdeYears: 0.5 },
+      { teamId: 'teamFS7', sdeYears: 0.5 },
+      { teamId: 'teamFS8', sdeYears: 0.5 },
+    ],
+    impactedServiceIds: [],
+    roi: { category: 'Tech Debt', valueType: 'QualitativeScore', estimatedValue: 'Critical' },
+    targetDueDate: '2025-12-31',
+    actualCompletionDate: null,
+    status: 'Committed',
+    themes: ['theme-fs-platform-stability'],
+    primaryGoalId: 'goal-fs-compliance-2025',
+    projectManager: null,
+    owner: { type: 'seniorManager', id: 'srMgrFS2', name: 'Sarah Jenkins' },
+    technicalPOC: { type: 'sdm', id: 'sdmFS5', name: 'Chris Porter' },
+    workPackageIds: [],
+    attributes: { pmCapacityNotes: 'Baseline KTLO.', planningYear: 2025 },
+  },
+  {
+    initiativeId: 'init-fs-oncall',
+    title: 'On-Call / Production Support',
+    description:
+      'Dedicated capacity for handling all production incidents (payments, ledger, auth, etc.).',
+    isProtected: true,
+    assignments: [
+      { teamId: 'teamFS1', sdeYears: 0.5 },
+      { teamId: 'teamFS3', sdeYears: 1.0 },
+      { teamId: 'teamFS4', sdeYears: 1.0 },
+      { teamId: 'teamFS5', sdeYears: 1.0 },
+      { teamId: 'teamFS6', sdeYears: 0.5 },
+    ],
+    impactedServiceIds: ['LedgerService', 'PaymentGatewayService', 'AnalyticsPipelineService'],
+    roi: { category: 'Ops Stability', valueType: 'QualitativeScore', estimatedValue: 'Critical' },
+    targetDueDate: '2025-12-31',
+    actualCompletionDate: null,
+    status: 'Committed',
+    themes: ['theme-fs-platform-stability'],
+    primaryGoalId: 'goal-fs-compliance-2025',
+    projectManager: null,
+    owner: { type: 'seniorManager', id: 'srMgrFS2', name: 'Sarah Jenkins' },
+    technicalPOC: { type: 'sdm', id: 'sdmFS5', name: 'Chris Porter' },
+    workPackageIds: [],
+    attributes: { pmCapacityNotes: 'On-call for critical services.', planningYear: 2025 },
+  },
+  {
+    initiativeId: 'init-fs-001',
+    title: 'Achieve SOC 2 Type 2 & PCI-DSS L1 Compliance',
+    description:
+      'Mandatory audits and remediation work to achieve SOC 2 and PCI Level 1 compliance for payments.',
+    isProtected: true,
+    assignments: [
+      { teamId: 'teamFS8', sdeYears: 1.0 },
+      { teamId: 'teamFS5', sdeYears: 1.0 },
+      { teamId: 'teamFS4', sdeYears: 0.5 },
+      { teamId: 'teamFS3', sdeYears: 0.5 },
+      { teamId: 'teamFS1', sdeYears: 0.25 },
+    ],
+    impactedServiceIds: [
+      'ComplianceReportingService',
+      'AnalyticsPipelineService',
+      'PaymentGatewayService',
+      'LedgerService',
+      'UserService',
+      'WebBFFService',
+      'MobileBFFService',
+    ],
+    roi: { category: 'Compliance', valueType: 'Narrative', estimatedValue: 'License to Operate' },
+    targetDueDate: '2025-09-30',
+    actualCompletionDate: null,
+    status: 'Committed',
+    themes: ['theme-fs-compliance'],
+    primaryGoalId: 'goal-fs-compliance-2025',
+    projectManager: { type: 'projectManager', id: 'pmFS002', name: 'Julia Ch FINANCE' },
+    owner: { type: 'seniorManager', id: 'srMgrFS3', name: 'David Lee' },
+    technicalPOC: { type: 'sdm', id: 'sdmFS7', name: "Sam O'Connell" },
+    workPackageIds: [],
+    attributes: {
+      pmCapacityNotes: 'Top company priority. Non-negotiable for launch.',
+      planningYear: 2025,
     },
-    {
-        initiativeId: 'init-fs-oncall', title: 'On-Call / Production Support', description: 'Dedicated capacity for handling all production incidents (payments, ledger, auth, etc.).', isProtected: true,
-        assignments: [{ teamId: 'teamFS1', sdeYears: 0.5 }, { teamId: 'teamFS3', sdeYears: 1.0 }, { teamId: 'teamFS4', sdeYears: 1.0 }, { teamId: 'teamFS5', sdeYears: 1.0 }, { teamId: 'teamFS6', sdeYears: 0.5 }],
-        impactedServiceIds: ['LedgerService', 'PaymentGatewayService', 'AnalyticsPipelineService'], roi: { category: 'Ops Stability', valueType: 'QualitativeScore', estimatedValue: 'Critical' }, targetDueDate: "2025-12-31", actualCompletionDate: null, status: 'Committed',
-        themes: ['theme-fs-platform-stability'], primaryGoalId: 'goal-fs-compliance-2025',
-        projectManager: null, owner: { type: 'seniorManager', id: 'srMgrFS2', name: 'Sarah Jenkins' }, technicalPOC: { type: 'sdm', id: 'sdmFS5', name: 'Chris Porter' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "On-call for critical services.", planningYear: 2025 }
+  },
+  {
+    initiativeId: 'init-fs-002',
+    title: 'Launch v1 Consumer Checking Account (Web & Mobile)',
+    description:
+      'Launch the core product: a consumer checking account with debit card, viewable on both web and mobile apps.',
+    isProtected: false,
+    assignments: [
+      { teamId: 'teamFS1', sdeYears: 2.5 },
+      { teamId: 'teamFS2', sdeYears: 1.0 },
+      { teamId: 'teamFS7', sdeYears: 1.0 },
+      { teamId: 'teamFS3', sdeYears: 0.5 },
+      { teamId: 'teamFS6', sdeYears: 0.5 },
+      { teamId: 'teamFS8', sdeYears: 0.25 },
+    ],
+    impactedServiceIds: [
+      'MobileBFFService',
+      'WebBFFService',
+      'CardManagementService',
+      'KYCService',
+      'UserService',
+      'LedgerService',
+      'FraudDetectionService',
+      'ComplianceReportingService',
+    ],
+    roi: { category: 'Strategic', valueType: 'Narrative', estimatedValue: 'Core Product Launch' },
+    targetDueDate: '2025-06-30',
+    actualCompletionDate: null,
+    status: 'Committed',
+    themes: ['theme-fs-new-products', 'theme-fs-growth'],
+    primaryGoalId: 'goal-fs-launch-2025',
+    projectManager: { type: 'projectManager', id: 'pmFS001', name: 'Marcus Bolt' },
+    owner: { type: 'seniorManager', id: 'srMgrFS1', name: 'Michael Chen' },
+    technicalPOC: { type: 'sdm', id: 'sdmFS1', name: 'Elena Rodriguez' },
+    workPackageIds: [],
+    attributes: {
+      pmCapacityNotes:
+        'The main product launch for the year. Heavy lift for Client Apps (FS1) and KYC (FS7).',
+      planningYear: 2025,
     },
-    {
-        initiativeId: 'init-fs-001', title: 'Achieve SOC 2 Type 2 & PCI-DSS L1 Compliance', description: 'Mandatory audits and remediation work to achieve SOC 2 and PCI Level 1 compliance for payments.', isProtected: true,
-        assignments: [{ teamId: 'teamFS8', sdeYears: 1.0 }, { teamId: 'teamFS5', sdeYears: 1.0 }, { teamId: 'teamFS4', sdeYears: 0.5 }, { teamId: 'teamFS3', sdeYears: 0.5 }, { teamId: 'teamFS1', sdeYears: 0.25 }],
-        impactedServiceIds: ['ComplianceReportingService', 'AnalyticsPipelineService', 'PaymentGatewayService', 'LedgerService', 'UserService', 'WebBFFService', 'MobileBFFService'], roi: { category: 'Compliance', valueType: 'Narrative', estimatedValue: 'License to Operate' }, targetDueDate: "2025-09-30", actualCompletionDate: null, status: 'Committed',
-        themes: ['theme-fs-compliance'], primaryGoalId: 'goal-fs-compliance-2025',
-        projectManager: { type: 'projectManager', id: 'pmFS002', name: 'Julia Ch FINANCE' }, owner: { type: 'seniorManager', id: 'srMgrFS3', name: 'David Lee' }, technicalPOC: { type: 'sdm', id: 'sdmFS7', name: 'Sam O\'Connell' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "Top company priority. Non-negotiable for launch.", planningYear: 2025 }
+  },
+  {
+    initiativeId: 'init-fs-003',
+    title: 'Integrate US Payment Rails (ACH & FedNow)',
+    description:
+      'Build and certify integrations with ACH network and the new FedNow rail for real-time payments.',
+    isProtected: false,
+    assignments: [{ teamId: 'teamFS4', sdeYears: 1.5 }],
+    impactedServiceIds: ['PaymentGatewayService', 'LedgerService'],
+    roi: { category: 'Strategic', valueType: 'Narrative', estimatedValue: 'Enable Core Payments' },
+    targetDueDate: '2025-05-31',
+    actualCompletionDate: null,
+    status: 'Committed',
+    themes: ['theme-fs-platform-stability', 'theme-fs-new-products'],
+    primaryGoalId: 'goal-fs-launch-2025',
+    projectManager: { type: 'projectManager', id: 'pmFS001', name: 'Marcus Bolt' },
+    owner: { type: 'pmt', id: 'pmtFS3', name: 'Priya Singh' },
+    technicalPOC: { type: 'sdm', id: 'sdmFS4', name: 'Mei Lin' },
+    workPackageIds: [],
+    attributes: {
+      pmCapacityNotes: 'Required for checking account to send/receive money.',
+      planningYear: 2025,
     },
-    {
-        initiativeId: 'init-fs-002', title: 'Launch v1 Consumer Checking Account (Web & Mobile)', description: 'Launch the core product: a consumer checking account with debit card, viewable on both web and mobile apps.', isProtected: false,
-        assignments: [{ teamId: 'teamFS1', sdeYears: 2.5 }, { teamId: 'teamFS2', sdeYears: 1.0 }, { teamId: 'teamFS7', sdeYears: 1.0 }, { teamId: 'teamFS3', sdeYears: 0.5 }, { teamId: 'teamFS6', sdeYears: 0.5 }, { teamId: 'teamFS8', sdeYears: 0.25 }],
-        impactedServiceIds: ['MobileBFFService', 'WebBFFService', 'CardManagementService', 'KYCService', 'UserService', 'LedgerService', 'FraudDetectionService', 'ComplianceReportingService'], roi: { category: 'Strategic', valueType: 'Narrative', estimatedValue: 'Core Product Launch' }, targetDueDate: "2025-06-30", actualCompletionDate: null, status: 'Committed',
-        themes: ['theme-fs-new-products', 'theme-fs-growth'], primaryGoalId: 'goal-fs-launch-2025',
-        projectManager: { type: 'projectManager', id: 'pmFS001', name: 'Marcus Bolt' }, owner: { type: 'seniorManager', id: 'srMgrFS1', name: 'Michael Chen' }, technicalPOC: { type: 'sdm', id: 'sdmFS1', name: 'Elena Rodriguez' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "The main product launch for the year. Heavy lift for Client Apps (FS1) and KYC (FS7).", planningYear: 2025 }
+  },
+  {
+    initiativeId: 'init-fs-004',
+    title: 'v1 Fraud & Risk Engine (Rules + ML)',
+    description:
+      'Build the first version of the real-time fraud detection engine for transactions and signups.',
+    isProtected: false,
+    assignments: [{ teamId: 'teamFS6', sdeYears: 2.0 }],
+    impactedServiceIds: ['FraudDetectionService'],
+    roi: { category: 'Risk Mitigation', valueType: 'QualitativeScore', estimatedValue: 'High' },
+    targetDueDate: '2025-06-30',
+    actualCompletionDate: null,
+    status: 'Committed',
+    themes: ['theme-fs-compliance', 'theme-fs-ai-ml'],
+    primaryGoalId: 'goal-fs-compliance-2025',
+    projectManager: { type: 'projectManager', id: 'pmFS002', name: 'Julia Ch FINANCE' },
+    owner: { type: 'seniorManager', id: 'srMgrFS3', name: 'David Lee' },
+    technicalPOC: { type: 'sdm', id: 'sdmFS6', name: 'Dr. Alex Yi' },
+    workPackageIds: [],
+    attributes: { pmCapacityNotes: 'Required for launch to manage risk.', planningYear: 2025 },
+  },
+  {
+    initiativeId: 'init-fs-011',
+    title: 'v1 Mobile Check Deposit (POC)',
+    description: 'Launch a POC for mobile check deposit, including OCR and risk checks.',
+    isProtected: false,
+    assignments: [
+      { teamId: 'teamFS1', sdeYears: 0.75 },
+      { teamId: 'teamFS7', sdeYears: 0.5 },
+      { teamId: 'teamFS6', sdeYears: 0.25 },
+    ],
+    impactedServiceIds: [
+      'MobileBFFService',
+      'DocumentProcessingService',
+      'KYCService',
+      'FraudDetectionService',
+    ],
+    roi: {
+      category: 'Feature Enhancement',
+      valueType: 'MetricImprovement',
+      estimatedValue: 'Key App Feature',
     },
-    {
-        initiativeId: 'init-fs-003', title: 'Integrate US Payment Rails (ACH & FedNow)', description: 'Build and certify integrations with ACH network and the new FedNow rail for real-time payments.', isProtected: false,
-        assignments: [{ teamId: 'teamFS4', sdeYears: 1.5 }],
-        impactedServiceIds: ['PaymentGatewayService', 'LedgerService'], roi: { category: 'Strategic', valueType: 'Narrative', estimatedValue: 'Enable Core Payments' }, targetDueDate: "2025-05-31", actualCompletionDate: null, status: 'Committed',
-        themes: ['theme-fs-platform-stability', 'theme-fs-new-products'], primaryGoalId: 'goal-fs-launch-2025',
-        projectManager: { type: 'projectManager', id: 'pmFS001', name: 'Marcus Bolt' }, owner: { type: 'pmt', id: 'pmtFS3', name: 'Priya Singh' }, technicalPOC: { type: 'sdm', id: 'sdmFS4', name: 'Mei Lin' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "Required for checking account to send/receive money.", planningYear: 2025 }
-    },
-    {
-        initiativeId: 'init-fs-004', title: 'v1 Fraud & Risk Engine (Rules + ML)', description: 'Build the first version of the real-time fraud detection engine for transactions and signups.', isProtected: false,
-        assignments: [{ teamId: 'teamFS6', sdeYears: 2.0 }],
-        impactedServiceIds: ['FraudDetectionService'], roi: { category: 'Risk Mitigation', valueType: 'QualitativeScore', estimatedValue: 'High' }, targetDueDate: "2025-06-30", actualCompletionDate: null, status: 'Committed',
-        themes: ['theme-fs-compliance', 'theme-fs-ai-ml'], primaryGoalId: 'goal-fs-compliance-2025',
-        projectManager: { type: 'projectManager', id: 'pmFS002', name: 'Julia Ch FINANCE' }, owner: { type: 'seniorManager', id: 'srMgrFS3', name: 'David Lee' }, technicalPOC: { type: 'sdm', id: 'sdmFS6', name: 'Dr. Alex Yi' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "Required for launch to manage risk.", planningYear: 2025 }
-    },
-    {
-        initiativeId: 'init-fs-011', title: 'v1 Mobile Check Deposit (POC)', description: 'Launch a POC for mobile check deposit, including OCR and risk checks.', isProtected: false,
-        assignments: [{ teamId: 'teamFS1', sdeYears: 0.75 }, { teamId: 'teamFS7', sdeYears: 0.5 }, { teamId: 'teamFS6', sdeYears: 0.25 }],
-        impactedServiceIds: ['MobileBFFService', 'DocumentProcessingService', 'KYCService', 'FraudDetectionService'], roi: { category: 'Feature Enhancement', valueType: 'MetricImprovement', estimatedValue: 'Key App Feature' }, targetDueDate: "2025-11-30", actualCompletionDate: null, status: 'Committed',
-        themes: ['theme-fs-new-products'], primaryGoalId: 'goal-fs-launch-2025',
-        projectManager: { type: 'projectManager', id: 'pmFS003', name: 'Kenji Watanabe' }, owner: { type: 'pmt', id: 'pmtFS2', name: 'Ben Carter' }, technicalPOC: { type: 'sdm', id: 'sdmFS1', name: 'Elena Rodriguez' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "Important feature for app parity.", planningYear: 2025 }
-    },
+    targetDueDate: '2025-11-30',
+    actualCompletionDate: null,
+    status: 'Committed',
+    themes: ['theme-fs-new-products'],
+    primaryGoalId: 'goal-fs-launch-2025',
+    projectManager: { type: 'projectManager', id: 'pmFS003', name: 'Kenji Watanabe' },
+    owner: { type: 'pmt', id: 'pmtFS2', name: 'Ben Carter' },
+    technicalPOC: { type: 'sdm', id: 'sdmFS1', name: 'Elena Rodriguez' },
+    workPackageIds: [],
+    attributes: { pmCapacityNotes: 'Important feature for app parity.', planningYear: 2025 },
+  },
 
-    // --- 2026 (Year 2: Grow & Expand) ---
-    {
-        initiativeId: 'init-fs-ktlo-2026', title: 'KTLO / Ops (2026)', description: 'Ongoing support for all production systems, scaling for growth.', isProtected: true,
-        assignments: [{ teamId: 'teamFS1', sdeYears: 1.0 }, { teamId: 'teamFS2', sdeYears: 0.5 }, { teamId: 'teamFS3', sdeYears: 1.0 }, { teamId: 'teamFS4', sdeYears: 1.0 }, { teamId: 'teamFS5', sdeYears: 1.5 }, { teamId: 'teamFS6', sdeYears: 0.75 }, { teamId: 'teamFS7', sdeYears: 0.5 }, { teamId: 'teamFS8', sdeYears: 0.75 }],
-        impactedServiceIds: [], roi: { category: 'Tech Debt', valueType: 'QualitativeScore', estimatedValue: 'Critical' }, targetDueDate: "2026-12-31", actualCompletionDate: null, status: 'Backlog',
-        themes: ['theme-fs-platform-stability'], primaryGoalId: 'goal-fs-compliance-2025',
-        projectManager: null, owner: { type: 'seniorManager', id: 'srMgrFS2', name: 'Sarah Jenkins' }, technicalPOC: { type: 'sdm', id: 'sdmFS5', name: 'Chris Porter' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "Baseline KTLO.", planningYear: 2026 }
+  // --- 2026 (Year 2: Grow & Expand) ---
+  {
+    initiativeId: 'init-fs-ktlo-2026',
+    title: 'KTLO / Ops (2026)',
+    description: 'Ongoing support for all production systems, scaling for growth.',
+    isProtected: true,
+    assignments: [
+      { teamId: 'teamFS1', sdeYears: 1.0 },
+      { teamId: 'teamFS2', sdeYears: 0.5 },
+      { teamId: 'teamFS3', sdeYears: 1.0 },
+      { teamId: 'teamFS4', sdeYears: 1.0 },
+      { teamId: 'teamFS5', sdeYears: 1.5 },
+      { teamId: 'teamFS6', sdeYears: 0.75 },
+      { teamId: 'teamFS7', sdeYears: 0.5 },
+      { teamId: 'teamFS8', sdeYears: 0.75 },
+    ],
+    impactedServiceIds: [],
+    roi: { category: 'Tech Debt', valueType: 'QualitativeScore', estimatedValue: 'Critical' },
+    targetDueDate: '2026-12-31',
+    actualCompletionDate: null,
+    status: 'Backlog',
+    themes: ['theme-fs-platform-stability'],
+    primaryGoalId: 'goal-fs-compliance-2025',
+    projectManager: null,
+    owner: { type: 'seniorManager', id: 'srMgrFS2', name: 'Sarah Jenkins' },
+    technicalPOC: { type: 'sdm', id: 'sdmFS5', name: 'Chris Porter' },
+    workPackageIds: [],
+    attributes: { pmCapacityNotes: 'Baseline KTLO.', planningYear: 2026 },
+  },
+  {
+    initiativeId: 'init-fs-005',
+    title: 'Launch v1 Credit Card Product',
+    description:
+      'Launch a secured credit card product, including underwriting, card issuing, and in-app management.',
+    isProtected: false,
+    assignments: [
+      { teamId: 'teamFS2', sdeYears: 2.0 },
+      { teamId: 'teamFS6', sdeYears: 1.0 },
+      { teamId: 'teamFS1', sdeYears: 1.5 },
+    ],
+    impactedServiceIds: [
+      'CardManagementService',
+      'FraudDetectionService',
+      'MobileBFFService',
+      'WebBFFService',
+      'LedgerService',
+    ],
+    roi: { category: 'Revenue Generation', valueType: 'Monetary', estimatedValue: '10M New ARR' },
+    targetDueDate: '2026-06-30',
+    actualCompletionDate: null,
+    status: 'Backlog',
+    themes: ['theme-fs-new-products', 'theme-fs-revenue'],
+    primaryGoalId: 'goal-fs-growth-2026',
+    projectManager: { type: 'projectManager', id: 'pmFS003', name: 'Kenji Watanabe' },
+    owner: { type: 'pmt', id: 'pmtFS4', name: 'Zoe Kim' },
+    technicalPOC: { type: 'sdm', id: 'sdmFS2', name: 'Tom Wilson' },
+    workPackageIds: [],
+    attributes: {
+      pmCapacityNotes: 'Major new revenue product. Significant UI work for Client Apps.',
+      planningYear: 2026,
     },
-    {
-        initiativeId: 'init-fs-005', title: 'Launch v1 Credit Card Product', description: 'Launch a secured credit card product, including underwriting, card issuing, and in-app management.', isProtected: false,
-        assignments: [{ teamId: 'teamFS2', sdeYears: 2.0 }, { teamId: 'teamFS6', sdeYears: 1.0 }, { teamId: 'teamFS1', sdeYears: 1.5 }],
-        impactedServiceIds: ['CardManagementService', 'FraudDetectionService', 'MobileBFFService', 'WebBFFService', 'LedgerService'], roi: { category: 'Revenue Generation', valueType: 'Monetary', estimatedValue: '10M New ARR' }, targetDueDate: "2026-06-30", actualCompletionDate: null, status: 'Backlog',
-        themes: ['theme-fs-new-products', 'theme-fs-revenue'], primaryGoalId: 'goal-fs-growth-2026',
-        projectManager: { type: 'projectManager', id: 'pmFS003', name: 'Kenji Watanabe' }, owner: { type: 'pmt', id: 'pmtFS4', name: 'Zoe Kim' }, technicalPOC: { type: 'sdm', id: 'sdmFS2', name: 'Tom Wilson' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "Major new revenue product. Significant UI work for Client Apps.", planningYear: 2026 }
+  },
+  {
+    initiativeId: 'init-fs-006',
+    title: 'P2P Payments (v1)',
+    description:
+      'Allow users to send money instantly to other FinSecure users via username or phone number.',
+    isProtected: false,
+    assignments: [
+      { teamId: 'teamFS4', sdeYears: 1.0 },
+      { teamId: 'teamFS1', sdeYears: 1.0 },
+    ],
+    impactedServiceIds: [
+      'PaymentGatewayService',
+      'LedgerService',
+      'MobileBFFService',
+      'UserService',
+    ],
+    roi: {
+      category: 'Feature Enhancement',
+      valueType: 'MetricImprovement',
+      estimatedValue: 'Increase user engagement 20%',
     },
-    {
-        initiativeId: 'init-fs-006', title: 'P2P Payments (v1)', description: 'Allow users to send money instantly to other FinSecure users via username or phone number.', isProtected: false,
-        assignments: [{ teamId: 'teamFS4', sdeYears: 1.0 }, { teamId: 'teamFS1', sdeYears: 1.0 }],
-        impactedServiceIds: ['PaymentGatewayService', 'LedgerService', 'MobileBFFService', 'UserService'], roi: { category: 'Feature Enhancement', valueType: 'MetricImprovement', estimatedValue: 'Increase user engagement 20%' }, targetDueDate: "2026-09-30", actualCompletionDate: null, status: 'Backlog',
-        themes: ['theme-fs-growth', 'theme-fs-new-products'], primaryGoalId: 'goal-fs-growth-2026',
-        projectManager: { type: 'projectManager', id: 'pmFS001', name: 'Marcus Bolt' }, owner: { type: 'pmt', id: 'pmtFS2', name: 'Ben Carter' }, technicalPOC: { type: 'sdm', id: 'sdmFS4', name: 'Mei Lin' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "Key engagement feature. 50/50 split between backend and client UI.", planningYear: 2026 }
+    targetDueDate: '2026-09-30',
+    actualCompletionDate: null,
+    status: 'Backlog',
+    themes: ['theme-fs-growth', 'theme-fs-new-products'],
+    primaryGoalId: 'goal-fs-growth-2026',
+    projectManager: { type: 'projectManager', id: 'pmFS001', name: 'Marcus Bolt' },
+    owner: { type: 'pmt', id: 'pmtFS2', name: 'Ben Carter' },
+    technicalPOC: { type: 'sdm', id: 'sdmFS4', name: 'Mei Lin' },
+    workPackageIds: [],
+    attributes: {
+      pmCapacityNotes: 'Key engagement feature. 50/50 split between backend and client UI.',
+      planningYear: 2026,
     },
-    {
-        initiativeId: 'init-fs-007', title: 'EU Market Expansion (PSD2 & GDPR)', description: 'Prepare platform for EU launch, supporting PSD2/Open Banking and GDPR.', isProtected: false,
-        assignments: [{ teamId: 'teamFS8', sdeYears: 1.0 }, { teamId: 'teamFS5', sdeYears: 1.0 }, { teamId: 'teamFS7', sdeYears: 0.5 }, { teamId: 'teamFS4', sdeYears: 0.5 }],
-        impactedServiceIds: ['ComplianceReportingService', 'AnalyticsPipelineService', 'KYCService', 'UserService', 'PaymentGatewayService'], roi: { category: 'Strategic', valueType: 'MarketExpansion', estimatedValue: 'EU Market Entry' }, targetDueDate: "2026-12-31", actualCompletionDate: null, status: 'Backlog',
-        themes: ['theme-fs-growth', 'theme-fs-compliance'], primaryGoalId: 'goal-fs-growth-2026',
-        projectManager: { type: 'projectManager', id: 'pmFS002', name: 'Julia Ch FINANCE' }, owner: { type: 'seniorManager', id: 'srMgrFS3', name: 'David Lee' }, technicalPOC: { type: 'sdm', id: 'sdmFS7', name: 'Sam O\'Connell' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "Major regulatory and platform lift.", planningYear: 2026 }
+  },
+  {
+    initiativeId: 'init-fs-007',
+    title: 'EU Market Expansion (PSD2 & GDPR)',
+    description: 'Prepare platform for EU launch, supporting PSD2/Open Banking and GDPR.',
+    isProtected: false,
+    assignments: [
+      { teamId: 'teamFS8', sdeYears: 1.0 },
+      { teamId: 'teamFS5', sdeYears: 1.0 },
+      { teamId: 'teamFS7', sdeYears: 0.5 },
+      { teamId: 'teamFS4', sdeYears: 0.5 },
+    ],
+    impactedServiceIds: [
+      'ComplianceReportingService',
+      'AnalyticsPipelineService',
+      'KYCService',
+      'UserService',
+      'PaymentGatewayService',
+    ],
+    roi: { category: 'Strategic', valueType: 'MarketExpansion', estimatedValue: 'EU Market Entry' },
+    targetDueDate: '2026-12-31',
+    actualCompletionDate: null,
+    status: 'Backlog',
+    themes: ['theme-fs-growth', 'theme-fs-compliance'],
+    primaryGoalId: 'goal-fs-growth-2026',
+    projectManager: { type: 'projectManager', id: 'pmFS002', name: 'Julia Ch FINANCE' },
+    owner: { type: 'seniorManager', id: 'srMgrFS3', name: 'David Lee' },
+    technicalPOC: { type: 'sdm', id: 'sdmFS7', name: "Sam O'Connell" },
+    workPackageIds: [],
+    attributes: { pmCapacityNotes: 'Major regulatory and platform lift.', planningYear: 2026 },
+  },
+  {
+    initiativeId: 'init-fs-012',
+    title: 'Launch High-Yield Savings Account (v1)',
+    description:
+      'Offer a high-yield savings product, including transfers and interest calculation.',
+    isProtected: false,
+    assignments: [
+      { teamId: 'teamFS2', sdeYears: 1.0 },
+      { teamId: 'teamFS3', sdeYears: 0.5 },
+      { teamId: 'teamFS1', sdeYears: 1.0 },
+    ],
+    impactedServiceIds: [
+      'CardManagementService',
+      'LedgerService',
+      'MobileBFFService',
+      'WebBFFService',
+    ],
+    roi: {
+      category: 'Revenue Generation',
+      valueType: 'MetricImprovement',
+      estimatedValue: 'Increase deposits 30%',
     },
-    {
-        initiativeId: 'init-fs-012', title: 'Launch High-Yield Savings Account (v1)', description: 'Offer a high-yield savings product, including transfers and interest calculation.', isProtected: false,
-        assignments: [{ teamId: 'teamFS2', sdeYears: 1.0 }, { teamId: 'teamFS3', sdeYears: 0.5 }, { teamId: 'teamFS1', sdeYears: 1.0 }],
-        impactedServiceIds: ['CardManagementService', 'LedgerService', 'MobileBFFService', 'WebBFFService'], roi: { category: 'Revenue Generation', valueType: 'MetricImprovement', estimatedValue: 'Increase deposits 30%' }, targetDueDate: "2026-04-30", actualCompletionDate: null, status: 'Backlog',
-        themes: ['theme-fs-new-products', 'theme-fs-growth'], primaryGoalId: 'goal-fs-growth-2026',
-        projectManager: { type: 'projectManager', id: 'pmFS003', name: 'Kenji Watanabe' }, owner: { type: 'pmt', id: 'pmtFS4', name: 'Zoe Kim' }, technicalPOC: { type: 'sdm', id: 'sdmFS2', name: 'Tom Wilson' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "Key growth feature to attract deposits.", planningYear: 2026 }
+    targetDueDate: '2026-04-30',
+    actualCompletionDate: null,
+    status: 'Backlog',
+    themes: ['theme-fs-new-products', 'theme-fs-growth'],
+    primaryGoalId: 'goal-fs-growth-2026',
+    projectManager: { type: 'projectManager', id: 'pmFS003', name: 'Kenji Watanabe' },
+    owner: { type: 'pmt', id: 'pmtFS4', name: 'Zoe Kim' },
+    technicalPOC: { type: 'sdm', id: 'sdmFS2', name: 'Tom Wilson' },
+    workPackageIds: [],
+    attributes: { pmCapacityNotes: 'Key growth feature to attract deposits.', planningYear: 2026 },
+  },
+  {
+    initiativeId: 'init-fs-013',
+    title: 'User Financial Insights Dashboard (v1)',
+    description:
+      'Create a dashboard in web/mobile apps showing spending habits, categorization, and savings goals.',
+    isProtected: false,
+    assignments: [
+      { teamId: 'teamFS1', sdeYears: 1.5 },
+      { teamId: 'teamFS5', sdeYears: 0.5 },
+    ],
+    impactedServiceIds: ['MobileBFFService', 'WebBFFService', 'AnalyticsPipelineService'],
+    roi: {
+      category: 'Feature Enhancement',
+      valueType: 'MetricImprovement',
+      estimatedValue: 'Increase user engagement 15%',
     },
-    {
-        initiativeId: 'init-fs-013', title: 'User Financial Insights Dashboard (v1)', description: 'Create a dashboard in web/mobile apps showing spending habits, categorization, and savings goals.', isProtected: false,
-        assignments: [{ teamId: 'teamFS1', sdeYears: 1.5 }, { teamId: 'teamFS5', sdeYears: 0.5 }],
-        impactedServiceIds: ['MobileBFFService', 'WebBFFService', 'AnalyticsPipelineService'], roi: { category: 'Feature Enhancement', valueType: 'MetricImprovement', estimatedValue: 'Increase user engagement 15%' }, targetDueDate: "2026-11-30", actualCompletionDate: null, status: 'Backlog',
-        themes: ['theme-fs-growth'], primaryGoalId: 'goal-fs-growth-2026',
-        projectManager: { type: 'projectManager', id: 'pmFS001', name: 'Marcus Bolt' }, owner: { type: 'pmt', id: 'pmtFS2', name: 'Ben Carter' }, technicalPOC: { type: 'sdm', id: 'sdmFS1', name: 'Elena Rodriguez' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "Pure frontend and data-pipeline feature.", planningYear: 2026 }
-    },
+    targetDueDate: '2026-11-30',
+    actualCompletionDate: null,
+    status: 'Backlog',
+    themes: ['theme-fs-growth'],
+    primaryGoalId: 'goal-fs-growth-2026',
+    projectManager: { type: 'projectManager', id: 'pmFS001', name: 'Marcus Bolt' },
+    owner: { type: 'pmt', id: 'pmtFS2', name: 'Ben Carter' },
+    technicalPOC: { type: 'sdm', id: 'sdmFS1', name: 'Elena Rodriguez' },
+    workPackageIds: [],
+    attributes: { pmCapacityNotes: 'Pure frontend and data-pipeline feature.', planningYear: 2026 },
+  },
 
-    // --- 2027 (Year 3: Scale & Innovate) ---
-    {
-        initiativeId: 'init-fs-ktlo-2027', title: 'KTLO / Ops (2027)', description: 'Ongoing support for all production systems, EU expansion support.', isProtected: true,
-        assignments: [{ teamId: 'teamFS1', sdeYears: 1.0 }, { teamId: 'teamFS2', sdeYears: 0.5 }, { teamId: 'teamFS3', sdeYears: 1.0 }, { teamId: 'teamFS4', sdeYears: 1.5 }, { teamId: 'teamFS5', sdeYears: 2.0 }, { teamId: 'teamFS6', sdeYears: 1.0 }, { teamId: 'teamFS7', sdeYears: 0.75 }, { teamId: 'teamFS8', sdeYears: 1.0 }],
-        impactedServiceIds: [], roi: { category: 'Tech Debt', valueType: 'QualitativeScore', estimatedValue: 'Critical' }, targetDueDate: "2027-12-31", actualCompletionDate: null, status: 'Backlog',
-        themes: ['theme-fs-platform-stability'], primaryGoalId: 'goal-fs-compliance-2025',
-        projectManager: null, owner: { type: 'seniorManager', id: 'srMgrFS2', name: 'Sarah Jenkins' }, technicalPOC: { type: 'sdm', id: 'sdmFS5', name: 'Chris Porter' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "Baseline KTLO.", planningYear: 2027 }
+  // --- 2027 (Year 3: Scale & Innovate) ---
+  {
+    initiativeId: 'init-fs-ktlo-2027',
+    title: 'KTLO / Ops (2027)',
+    description: 'Ongoing support for all production systems, EU expansion support.',
+    isProtected: true,
+    assignments: [
+      { teamId: 'teamFS1', sdeYears: 1.0 },
+      { teamId: 'teamFS2', sdeYears: 0.5 },
+      { teamId: 'teamFS3', sdeYears: 1.0 },
+      { teamId: 'teamFS4', sdeYears: 1.5 },
+      { teamId: 'teamFS5', sdeYears: 2.0 },
+      { teamId: 'teamFS6', sdeYears: 1.0 },
+      { teamId: 'teamFS7', sdeYears: 0.75 },
+      { teamId: 'teamFS8', sdeYears: 1.0 },
+    ],
+    impactedServiceIds: [],
+    roi: { category: 'Tech Debt', valueType: 'QualitativeScore', estimatedValue: 'Critical' },
+    targetDueDate: '2027-12-31',
+    actualCompletionDate: null,
+    status: 'Backlog',
+    themes: ['theme-fs-platform-stability'],
+    primaryGoalId: 'goal-fs-compliance-2025',
+    projectManager: null,
+    owner: { type: 'seniorManager', id: 'srMgrFS2', name: 'Sarah Jenkins' },
+    technicalPOC: { type: 'sdm', id: 'sdmFS5', name: 'Chris Porter' },
+    workPackageIds: [],
+    attributes: { pmCapacityNotes: 'Baseline KTLO.', planningYear: 2027 },
+  },
+  {
+    initiativeId: 'init-fs-008',
+    title: 'Core Ledger v2 Migration (Scalability)',
+    description:
+      'Migrate the core ledger service to a sharded, multi-region database (e.g., CockroachDB/Spanner).',
+    isProtected: true,
+    assignments: [
+      { teamId: 'teamFS3', sdeYears: 3.0 },
+      { teamId: 'teamFS5', sdeYears: 1.0 },
+    ],
+    impactedServiceIds: ['LedgerService', 'AnalyticsPipelineService'],
+    roi: { category: 'Tech Debt', valueType: 'Narrative', estimatedValue: 'Enable 100x scale' },
+    targetDueDate: '2027-12-31',
+    actualCompletionDate: null,
+    status: 'Backlog',
+    themes: ['theme-fs-platform-stability'],
+    primaryGoalId: 'goal-fs-scale-2027',
+    projectManager: { type: 'projectManager', id: 'pmFS001', name: 'Marcus Bolt' },
+    owner: { type: 'seniorManager', id: 'srMgrFS2', name: 'Sarah Jenkins' },
+    technicalPOC: { type: 'sdm', id: 'sdmFS3', name: 'Anil Gupta' },
+    workPackageIds: [],
+    attributes: {
+      pmCapacityNotes: 'Massive, high-risk, mandatory platform project.',
+      planningYear: 2027,
     },
-    {
-        initiativeId: 'init-fs-008', title: 'Core Ledger v2 Migration (Scalability)', description: 'Migrate the core ledger service to a sharded, multi-region database (e.g., CockroachDB/Spanner).', isProtected: true,
-        assignments: [{ teamId: 'teamFS3', sdeYears: 3.0 }, { teamId: 'teamFS5', sdeYears: 1.0 }],
-        impactedServiceIds: ['LedgerService', 'AnalyticsPipelineService'], roi: { category: 'Tech Debt', valueType: 'Narrative', estimatedValue: 'Enable 100x scale' }, targetDueDate: "2027-12-31", actualCompletionDate: null, status: 'Backlog',
-        themes: ['theme-fs-platform-stability'], primaryGoalId: 'goal-fs-scale-2027',
-        projectManager: { type: 'projectManager', id: 'pmFS001', name: 'Marcus Bolt' }, owner: { type: 'seniorManager', id: 'srMgrFS2', name: 'Sarah Jenkins' }, technicalPOC: { type: 'sdm', id: 'sdmFS3', name: 'Anil Gupta' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "Massive, high-risk, mandatory platform project.", planningYear: 2027 }
+  },
+  {
+    initiativeId: 'init-fs-009',
+    title: 'Launch Crypto Trading (v1)',
+    description: 'Allow users to buy/sell major cryptocurrencies, with custody and compliance.',
+    isProtected: false,
+    assignments: [
+      { teamId: 'teamFS2', sdeYears: 1.5 },
+      { teamId: 'teamFS4', sdeYears: 1.0 },
+      { teamId: 'teamFS8', sdeYears: 0.5 },
+      { teamId: 'teamFS1', sdeYears: 1.0 },
+    ],
+    impactedServiceIds: [
+      'PaymentGatewayService',
+      'LedgerService',
+      'ComplianceReportingService',
+      'MobileBFFService',
+      'WebBFFService',
+    ],
+    roi: {
+      category: 'Revenue Generation',
+      valueType: 'Monetary',
+      estimatedValue: '15M New Revenue',
     },
-    {
-        initiativeId: 'init-fs-009', title: 'Launch Crypto Trading (v1)', description: 'Allow users to buy/sell major cryptocurrencies, with custody and compliance.', isProtected: false,
-        assignments: [{ teamId: 'teamFS2', sdeYears: 1.5 }, { teamId: 'teamFS4', sdeYears: 1.0 }, { teamId: 'teamFS8', sdeYears: 0.5 }, { teamId: 'teamFS1', sdeYears: 1.0 }],
-        impactedServiceIds: ['PaymentGatewayService', 'LedgerService', 'ComplianceReportingService', 'MobileBFFService', 'WebBFFService'], roi: { category: 'Revenue Generation', valueType: 'Monetary', estimatedValue: '15M New Revenue' }, targetDueDate: "2027-09-30", actualCompletionDate: null, status: 'Backlog',
-        themes: ['theme-fs-new-products', 'theme-fs-revenue'], primaryGoalId: 'goal-fs-innovation-2027',
-        projectManager: { type: 'projectManager', id: 'pmFS003', name: 'Kenji Watanabe' }, owner: { type: 'pmt', id: 'pmtFS4', name: 'Zoe Kim' }, technicalPOC: { type: 'sdm', id: 'sdmFS2', name: 'Tom Wilson' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "New product line expansion, heavy on compliance and client UI.", planningYear: 2027 }
+    targetDueDate: '2027-09-30',
+    actualCompletionDate: null,
+    status: 'Backlog',
+    themes: ['theme-fs-new-products', 'theme-fs-revenue'],
+    primaryGoalId: 'goal-fs-innovation-2027',
+    projectManager: { type: 'projectManager', id: 'pmFS003', name: 'Kenji Watanabe' },
+    owner: { type: 'pmt', id: 'pmtFS4', name: 'Zoe Kim' },
+    technicalPOC: { type: 'sdm', id: 'sdmFS2', name: 'Tom Wilson' },
+    workPackageIds: [],
+    attributes: {
+      pmCapacityNotes: 'New product line expansion, heavy on compliance and client UI.',
+      planningYear: 2027,
     },
-    {
-        initiativeId: 'init-fs-014', title: 'Launch Investment Platform (v1 Stocks/ETFs)', description: 'Allow users to buy/sell US stocks and ETFs. Requires broker-dealer integration.', isProtected: false,
-        assignments: [{ teamId: 'teamFS2', sdeYears: 2.0 }, { teamId: 'teamFS4', sdeYears: 1.0 }, { teamId: 'teamFS8', sdeYears: 1.0 }, { teamId: 'teamFS1', sdeYears: 1.5 }],
-        impactedServiceIds: ['PaymentGatewayService', 'LedgerService', 'ComplianceReportingService', 'MobileBFFService', 'WebBFFService'], roi: { category: 'Revenue Generation', valueType: 'Monetary', estimatedValue: '25M New Revenue' }, targetDueDate: "2027-12-31", actualCompletionDate: null, status: 'Backlog',
-        themes: ['theme-fs-new-products', 'theme-fs-revenue'], primaryGoalId: 'goal-fs-innovation-2027',
-        projectManager: { type: 'projectManager', id: 'pmFS003', name: 'Kenji Watanabe' }, owner: { type: 'pmt', id: 'pmtFS4', name: 'Zoe Kim' }, technicalPOC: { type: 'sdm', id: 'sdmFS2', name: 'Tom Wilson' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "Major new product line. Complex integration.", planningYear: 2027 }
+  },
+  {
+    initiativeId: 'init-fs-014',
+    title: 'Launch Investment Platform (v1 Stocks/ETFs)',
+    description: 'Allow users to buy/sell US stocks and ETFs. Requires broker-dealer integration.',
+    isProtected: false,
+    assignments: [
+      { teamId: 'teamFS2', sdeYears: 2.0 },
+      { teamId: 'teamFS4', sdeYears: 1.0 },
+      { teamId: 'teamFS8', sdeYears: 1.0 },
+      { teamId: 'teamFS1', sdeYears: 1.5 },
+    ],
+    impactedServiceIds: [
+      'PaymentGatewayService',
+      'LedgerService',
+      'ComplianceReportingService',
+      'MobileBFFService',
+      'WebBFFService',
+    ],
+    roi: {
+      category: 'Revenue Generation',
+      valueType: 'Monetary',
+      estimatedValue: '25M New Revenue',
     },
-    {
-        initiativeId: 'init-fs-010', title: 'AI-Driven Financial Advisor (POC)', description: 'POC for an AI-powered financial planning and advice tool for consumers, using transaction data.', isProtected: false,
-        assignments: [{ teamId: 'teamFS6', sdeYears: 1.0 }, { teamId: 'teamFS1', sdeYears: 0.5 }],
-        impactedServiceIds: ['FraudDetectionService', 'MobileBFFService', 'AnalyticsPipelineService'], roi: { category: 'Innovation', valueType: 'Narrative', estimatedValue: 'Explore new AI product' }, targetDueDate: "2027-06-30", actualCompletionDate: null, status: 'Backlog',
-        themes: ['theme-fs-ai-ml', 'theme-fs-new-products'], primaryGoalId: 'goal-fs-innovation-2027',
-        projectManager: null, owner: { type: 'pmt', id: 'pmtFS2', name: 'Ben Carter' }, technicalPOC: { type: 'sdm', id: 'sdmFS6', name: 'Dr. Alex Yi' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "R&D project.", planningYear: 2027 }
+    targetDueDate: '2027-12-31',
+    actualCompletionDate: null,
+    status: 'Backlog',
+    themes: ['theme-fs-new-products', 'theme-fs-revenue'],
+    primaryGoalId: 'goal-fs-innovation-2027',
+    projectManager: { type: 'projectManager', id: 'pmFS003', name: 'Kenji Watanabe' },
+    owner: { type: 'pmt', id: 'pmtFS4', name: 'Zoe Kim' },
+    technicalPOC: { type: 'sdm', id: 'sdmFS2', name: 'Tom Wilson' },
+    workPackageIds: [],
+    attributes: {
+      pmCapacityNotes: 'Major new product line. Complex integration.',
+      planningYear: 2027,
     },
-    {
-        initiativeId: 'init-fs-015', title: 'International Client Apps (i18n & EU UI)', description: 'Refactor mobile and web apps to support multi-language, multi-currency, and EU-specific UI flows.', isProtected: false,
-        assignments: [{ teamId: 'teamFS1', sdeYears: 2.0 }, { teamId: 'teamFS5', sdeYears: 0.5 }],
-        impactedServiceIds: ['MobileBFFService', 'WebBFFService', 'UserService'], roi: { category: 'Strategic', valueType: 'Narrative', estimatedValue: 'Enable EU Launch' }, targetDueDate: "2027-04-30", actualCompletionDate: null, status: 'Backlog',
-        themes: ['theme-fs-growth'], primaryGoalId: 'goal-fs-growth-2026',
-        projectManager: { type: 'projectManager', id: 'pmFS002', name: 'Julia Ch FINANCE' }, owner: { type: 'pmt', id: 'pmtFS2', name: 'Ben Carter' }, technicalPOC: { type: 'sdm', id: 'sdmFS1', name: 'Elena Rodriguez' },
-        workPackageIds: [], attributes: { pmCapacityNotes: "Critical path for EU market entry from the client side.", planningYear: 2027 }
-    }
+  },
+  {
+    initiativeId: 'init-fs-010',
+    title: 'AI-Driven Financial Advisor (POC)',
+    description:
+      'POC for an AI-powered financial planning and advice tool for consumers, using transaction data.',
+    isProtected: false,
+    assignments: [
+      { teamId: 'teamFS6', sdeYears: 1.0 },
+      { teamId: 'teamFS1', sdeYears: 0.5 },
+    ],
+    impactedServiceIds: ['FraudDetectionService', 'MobileBFFService', 'AnalyticsPipelineService'],
+    roi: {
+      category: 'Innovation',
+      valueType: 'Narrative',
+      estimatedValue: 'Explore new AI product',
+    },
+    targetDueDate: '2027-06-30',
+    actualCompletionDate: null,
+    status: 'Backlog',
+    themes: ['theme-fs-ai-ml', 'theme-fs-new-products'],
+    primaryGoalId: 'goal-fs-innovation-2027',
+    projectManager: null,
+    owner: { type: 'pmt', id: 'pmtFS2', name: 'Ben Carter' },
+    technicalPOC: { type: 'sdm', id: 'sdmFS6', name: 'Dr. Alex Yi' },
+    workPackageIds: [],
+    attributes: { pmCapacityNotes: 'R&D project.', planningYear: 2027 },
+  },
+  {
+    initiativeId: 'init-fs-015',
+    title: 'International Client Apps (i18n & EU UI)',
+    description:
+      'Refactor mobile and web apps to support multi-language, multi-currency, and EU-specific UI flows.',
+    isProtected: false,
+    assignments: [
+      { teamId: 'teamFS1', sdeYears: 2.0 },
+      { teamId: 'teamFS5', sdeYears: 0.5 },
+    ],
+    impactedServiceIds: ['MobileBFFService', 'WebBFFService', 'UserService'],
+    roi: { category: 'Strategic', valueType: 'Narrative', estimatedValue: 'Enable EU Launch' },
+    targetDueDate: '2027-04-30',
+    actualCompletionDate: null,
+    status: 'Backlog',
+    themes: ['theme-fs-growth'],
+    primaryGoalId: 'goal-fs-growth-2026',
+    projectManager: { type: 'projectManager', id: 'pmFS002', name: 'Julia Ch FINANCE' },
+    owner: { type: 'pmt', id: 'pmtFS2', name: 'Ben Carter' },
+    technicalPOC: { type: 'sdm', id: 'sdmFS1', name: 'Elena Rodriguez' },
+    workPackageIds: [],
+    attributes: {
+      pmCapacityNotes: 'Critical path for EU market entry from the client side.',
+      planningYear: 2027,
+    },
+  },
 ];
 
 // Then, the main sampleSystemDataFinSecure object
 const sampleSystemDataFinSecure = {
-    systemName: 'FinSecure',
-    systemDescription: 'FinSecure is a next-generation FinTech platform (Neobank) providing consumer banking, payments, and investment services.',
-    seniorManagers: sampleSeniorManagersDataFinSecure,
-    teams: finSecureTeamsData,
-    sdms: finSecureSDMsData,
-    pmts: finSecurePMTsData,
-    projectManagers: sampleProjectManagersDataFinSecure,
-    services: sampleServicesDataFinSecure,
-    platformDependencies: [],
-    capacityConfiguration: {
-        workingDaysPerYear: 261,
-        standardHoursPerDay: 8,
-        globalConstraints: {
-            publicHolidays: 11,
-            orgEvents: [
-                { id: 'eventFS001', name: 'Quarterly All-Hands', estimatedDaysPerSDE: 1, attributes: {} },
-                { id: 'eventFS002', name: 'Annual Compliance Training', estimatedDaysPerSDE: 1, attributes: {} }
-            ]
+  systemName: 'FinSecure',
+  systemDescription:
+    'FinSecure is a next-generation FinTech platform (Neobank) providing consumer banking, payments, and investment services.',
+  seniorManagers: sampleSeniorManagersDataFinSecure,
+  teams: finSecureTeamsData,
+  sdms: finSecureSDMsData,
+  pmts: finSecurePMTsData,
+  projectManagers: sampleProjectManagersDataFinSecure,
+  services: sampleServicesDataFinSecure,
+  platformDependencies: [],
+  capacityConfiguration: {
+    workingDaysPerYear: 261,
+    standardHoursPerDay: 8,
+    globalConstraints: {
+      publicHolidays: 11,
+      orgEvents: [
+        { id: 'eventFS001', name: 'Quarterly All-Hands', estimatedDaysPerSDE: 1, attributes: {} },
+        {
+          id: 'eventFS002',
+          name: 'Annual Compliance Training',
+          estimatedDaysPerSDE: 1,
+          attributes: {},
         },
-        leaveTypes: [
-            { id: "annual_fs", name: "Annual Leave", defaultEstimatedDays: 22, attributes: {} },
-            { id: "sick_fs", name: "Sick Leave", defaultEstimatedDays: 8, attributes: {} },
-            { id: "study_fs", name: "Study Leave", defaultEstimatedDays: 3, attributes: {} },
-            { id: "inlieu_fs", name: "Time off In-lieu Leave", defaultEstimatedDays: 3, attributes: {} }
-        ],
-        attributes: {}
+      ],
     },
-    yearlyInitiatives: sampleYearlyInitiativesFinSecure,
-    goals: [
-        {
-            goalId: 'goal-fs-compliance-2025', name: 'Achieve Full Compliance (2025)', description: 'Obtain all necessary licenses and pass SOC 2 & PCI audits to legally operate.', strategyLink: null,
-            owner: { type: 'seniorManager', id: 'srMgrFS3', name: 'David Lee' }, projectManager: { type: 'projectManager', id: 'pmFS002', name: 'Julia Ch FINANCE' }, technicalPOC: { type: 'sdm', id: 'sdmFS7', name: 'Sam O\'Connell' },
-            initiativeIds: ['init-fs-ktlo', 'init-fs-oncall', 'init-fs-001', 'init-fs-004', 'init-fs-ktlo-2026', 'init-fs-ktlo-2027'], attributes: {},
-            dueDate: '2025-12-31'
-        },
-        {
-            goalId: 'goal-fs-launch-2025', name: 'Launch v1 Product (2025)', description: 'Successfully launch the v1 Consumer Checking Account to the US market.', strategyLink: null,
-            owner: { type: 'seniorManager', id: 'srMgrFS1', name: 'Michael Chen' }, projectManager: { type: 'projectManager', id: 'pmFS001', name: 'Marcus Bolt' }, technicalPOC: { type: 'sdm', id: 'sdmFS1', name: 'Elena Rodriguez' },
-            initiativeIds: ['init-fs-002', 'init-fs-003', 'init-fs-011'], attributes: {},
-            dueDate: null
-        },
-        {
-            goalId: 'goal-fs-growth-2026', name: 'Grow User Base & Expand (2026)', description: 'Launch new growth products (Credit, P2P, Savings) and prepare for EU market entry.', strategyLink: null,
-            owner: { type: 'seniorManager', id: 'srMgrFS1', name: 'Michael Chen' }, projectManager: { type: 'projectManager', id: 'pmFS003', name: 'Kenji Watanabe' }, technicalPOC: { type: 'sdm', id: 'sdmFS2', name: 'Tom Wilson' },
-            initiativeIds: ['init-fs-005', 'init-fs-006', 'init-fs-007', 'init-fs-012', 'init-fs-013', 'init-fs-015'], attributes: {},
-            dueDate: null
-        },
-        {
-            goalId: 'goal-fs-scale-2027', name: 'Ensure Platform Scalability (2027)', description: 'Re-architect critical services to handle 100x user growth.', strategyLink: null,
-            owner: { type: 'seniorManager', id: 'srMgrFS2', name: 'Sarah Jenkins' }, projectManager: { type: 'projectManager', id: 'pmFS001', name: 'Marcus Bolt' }, technicalPOC: { type: 'sdm', id: 'sdmFS3', name: 'Anil Gupta' },
-            initiativeIds: ['init-fs-008'], attributes: {},
-            dueDate: null
-        },
-        {
-            goalId: 'goal-fs-innovation-2027', name: 'Innovate with New FinTech Products (2027)', description: 'Explore and launch new high-margin products like Crypto and AI financial advice.', strategyLink: null,
-            owner: { type: 'pmt', id: 'pmtFS4', name: 'Zoe Kim' }, projectManager: { type: 'projectManager', id: 'pmFS003', name: 'Kenji Watanabe' }, technicalPOC: { type: 'sdm', id: 'sdmFS6', name: 'Dr. Alex Yi' },
-            initiativeIds: ['init-fs-009', 'init-fs-010', 'init-fs-014'], attributes: {},
-            dueDate: null
-        }
+    leaveTypes: [
+      { id: 'annual_fs', name: 'Annual Leave', defaultEstimatedDays: 22, attributes: {} },
+      { id: 'sick_fs', name: 'Sick Leave', defaultEstimatedDays: 8, attributes: {} },
+      { id: 'study_fs', name: 'Study Leave', defaultEstimatedDays: 3, attributes: {} },
+      { id: 'inlieu_fs', name: 'Time off In-lieu Leave', defaultEstimatedDays: 3, attributes: {} },
     ],
-    definedThemes: [
-        { themeId: 'theme-fs-platform-stability', name: 'Platform Stability & Scalability', description: 'Core infrastructure, SRE, and scalability work (e.g., Ledger v2).', relatedGoalIds: ['goal-fs-compliance-2025', 'goal-fs-scale-2027'], attributes: {} },
-        { themeId: 'theme-fs-compliance', name: 'Regulatory & Compliance', description: 'Mandatory work for legal/regulatory bodies (SOC 2, PCI, AML, KYC).', relatedGoalIds: ['goal-fs-compliance-2025', 'goal-fs-growth-2026'], attributes: {} },
-        { themeId: 'theme-fs-new-products', name: 'New Product Development', description: 'Launching new, distinct product lines (Checking, Credit, Crypto).', relatedGoalIds: ['goal-fs-launch-2025', 'goal-fs-growth-2026', 'goal-fs-innovation-2027'], attributes: {} },
-        { themeId: 'theme-fs-growth', name: 'User Growth & Engagement', description: 'Features to acquire and retain users (P2P, EU Expansion).', relatedGoalIds: ['goal-fs-launch-2025', 'goal-fs-growth-2026'], attributes: {} },
-        { themeId: 'theme-fs-revenue', name: 'Revenue Generation', description: 'Initiatives directly tied to new ARR (Credit, Crypto).', relatedGoalIds: ['goal-fs-growth-2026', 'goal-fs-innovation-2027'], attributes: {} },
-        { themeId: 'theme-fs-ai-ml', name: 'AI/ML (Risk & Product)', description: 'Using AI for fraud detection or new product features.', relatedGoalIds: ['goal-fs-compliance-2025', 'goal-fs-innovation-2027'], attributes: {} }
-    ],
-    archivedYearlyPlans: [],
-    workPackages: [],
-    calculatedCapacityMetrics: null,
-    allKnownEngineers: sampleAllKnownEngineersFinSecure,
-    attributes: {}
+    attributes: {},
+  },
+  yearlyInitiatives: sampleYearlyInitiativesFinSecure,
+  goals: [
+    {
+      goalId: 'goal-fs-compliance-2025',
+      name: 'Achieve Full Compliance (2025)',
+      description: 'Obtain all necessary licenses and pass SOC 2 & PCI audits to legally operate.',
+      strategyLink: null,
+      owner: { type: 'seniorManager', id: 'srMgrFS3', name: 'David Lee' },
+      projectManager: { type: 'projectManager', id: 'pmFS002', name: 'Julia Ch FINANCE' },
+      technicalPOC: { type: 'sdm', id: 'sdmFS7', name: "Sam O'Connell" },
+      initiativeIds: [
+        'init-fs-ktlo',
+        'init-fs-oncall',
+        'init-fs-001',
+        'init-fs-004',
+        'init-fs-ktlo-2026',
+        'init-fs-ktlo-2027',
+      ],
+      attributes: {},
+      dueDate: '2025-12-31',
+    },
+    {
+      goalId: 'goal-fs-launch-2025',
+      name: 'Launch v1 Product (2025)',
+      description: 'Successfully launch the v1 Consumer Checking Account to the US market.',
+      strategyLink: null,
+      owner: { type: 'seniorManager', id: 'srMgrFS1', name: 'Michael Chen' },
+      projectManager: { type: 'projectManager', id: 'pmFS001', name: 'Marcus Bolt' },
+      technicalPOC: { type: 'sdm', id: 'sdmFS1', name: 'Elena Rodriguez' },
+      initiativeIds: ['init-fs-002', 'init-fs-003', 'init-fs-011'],
+      attributes: {},
+      dueDate: null,
+    },
+    {
+      goalId: 'goal-fs-growth-2026',
+      name: 'Grow User Base & Expand (2026)',
+      description:
+        'Launch new growth products (Credit, P2P, Savings) and prepare for EU market entry.',
+      strategyLink: null,
+      owner: { type: 'seniorManager', id: 'srMgrFS1', name: 'Michael Chen' },
+      projectManager: { type: 'projectManager', id: 'pmFS003', name: 'Kenji Watanabe' },
+      technicalPOC: { type: 'sdm', id: 'sdmFS2', name: 'Tom Wilson' },
+      initiativeIds: [
+        'init-fs-005',
+        'init-fs-006',
+        'init-fs-007',
+        'init-fs-012',
+        'init-fs-013',
+        'init-fs-015',
+      ],
+      attributes: {},
+      dueDate: null,
+    },
+    {
+      goalId: 'goal-fs-scale-2027',
+      name: 'Ensure Platform Scalability (2027)',
+      description: 'Re-architect critical services to handle 100x user growth.',
+      strategyLink: null,
+      owner: { type: 'seniorManager', id: 'srMgrFS2', name: 'Sarah Jenkins' },
+      projectManager: { type: 'projectManager', id: 'pmFS001', name: 'Marcus Bolt' },
+      technicalPOC: { type: 'sdm', id: 'sdmFS3', name: 'Anil Gupta' },
+      initiativeIds: ['init-fs-008'],
+      attributes: {},
+      dueDate: null,
+    },
+    {
+      goalId: 'goal-fs-innovation-2027',
+      name: 'Innovate with New FinTech Products (2027)',
+      description:
+        'Explore and launch new high-margin products like Crypto and AI financial advice.',
+      strategyLink: null,
+      owner: { type: 'pmt', id: 'pmtFS4', name: 'Zoe Kim' },
+      projectManager: { type: 'projectManager', id: 'pmFS003', name: 'Kenji Watanabe' },
+      technicalPOC: { type: 'sdm', id: 'sdmFS6', name: 'Dr. Alex Yi' },
+      initiativeIds: ['init-fs-009', 'init-fs-010', 'init-fs-014'],
+      attributes: {},
+      dueDate: null,
+    },
+  ],
+  definedThemes: [
+    {
+      themeId: 'theme-fs-platform-stability',
+      name: 'Platform Stability & Scalability',
+      description: 'Core infrastructure, SRE, and scalability work (e.g., Ledger v2).',
+      relatedGoalIds: ['goal-fs-compliance-2025', 'goal-fs-scale-2027'],
+      attributes: {},
+    },
+    {
+      themeId: 'theme-fs-compliance',
+      name: 'Regulatory & Compliance',
+      description: 'Mandatory work for legal/regulatory bodies (SOC 2, PCI, AML, KYC).',
+      relatedGoalIds: ['goal-fs-compliance-2025', 'goal-fs-growth-2026'],
+      attributes: {},
+    },
+    {
+      themeId: 'theme-fs-new-products',
+      name: 'New Product Development',
+      description: 'Launching new, distinct product lines (Checking, Credit, Crypto).',
+      relatedGoalIds: ['goal-fs-launch-2025', 'goal-fs-growth-2026', 'goal-fs-innovation-2027'],
+      attributes: {},
+    },
+    {
+      themeId: 'theme-fs-growth',
+      name: 'User Growth & Engagement',
+      description: 'Features to acquire and retain users (P2P, EU Expansion).',
+      relatedGoalIds: ['goal-fs-launch-2025', 'goal-fs-growth-2026'],
+      attributes: {},
+    },
+    {
+      themeId: 'theme-fs-revenue',
+      name: 'Revenue Generation',
+      description: 'Initiatives directly tied to new ARR (Credit, Crypto).',
+      relatedGoalIds: ['goal-fs-growth-2026', 'goal-fs-innovation-2027'],
+      attributes: {},
+    },
+    {
+      themeId: 'theme-fs-ai-ml',
+      name: 'AI/ML (Risk & Product)',
+      description: 'Using AI for fraud detection or new product features.',
+      relatedGoalIds: ['goal-fs-compliance-2025', 'goal-fs-innovation-2027'],
+      attributes: {},
+    },
+  ],
+  archivedYearlyPlans: [],
+  workPackages: [],
+  calculatedCapacityMetrics: null,
+  allKnownEngineers: sampleAllKnownEngineersFinSecure,
+  attributes: {},
 };

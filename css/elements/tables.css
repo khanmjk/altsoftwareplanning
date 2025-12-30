@@ -1,42 +1,96 @@
 /* Base Table Styles */
 
 table {
-    width: 100%;
-    margin-bottom: 1rem;
-    color: var(--theme-text-primary);
-    border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 1rem;
+  color: var(--theme-text-primary);
+  border-collapse: collapse;
 }
 
 th,
 td {
-    padding: 0.75rem;
-    vertical-align: top;
-    border-top: 1px solid var(--theme-border-color);
+  padding: 0.75rem;
+  vertical-align: top;
+  border-top: 1px solid var(--theme-border-color);
 }
 
 thead th {
-    vertical-align: bottom;
-    border-bottom: 2px solid var(--theme-border-color);
-    background-color: var(--theme-bg-secondary);
-    font-weight: 600;
-    text-align: left;
-    white-space: nowrap;
-    color: var(--theme-text-primary);
+  vertical-align: bottom;
+  border-bottom: 2px solid var(--theme-border-color);
+  background-color: var(--theme-bg-secondary);
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+  color: var(--theme-text-primary);
 }
 
 /* Tabulator Header Filters */
 .tabulator-header-filter input,
 .tabulator-header-filter select {
-    background-color: var(--theme-bg-primary) !important;
-    color: var(--theme-text-primary) !important;
-    border: 1px solid var(--theme-border-color) !important;
+  background-color: var(--theme-bg-primary) !important;
+  color: var(--theme-text-primary) !important;
+  border: 1px solid var(--theme-border-color) !important;
 }
 
 /* Striped rows for better readability */
 tbody tr:nth-child(even) {
-    background-color: var(--theme-bg-tertiary);
+  background-color: var(--theme-bg-tertiary);
 }
 
 tbody tr:hover {
-    background-color: var(--theme-bg-secondary);
+  background-color: var(--theme-bg-secondary);
+}
+
+/* ================================================
+   Shared Table Action Buttons - Icon Only Style
+   ================================================ */
+.table-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background-color: transparent;
+  color: var(--theme-text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.table-action-btn:hover {
+  transform: scale(1.05);
+}
+
+.table-action-btn i {
+  font-size: 0.9rem;
+}
+
+/* Edit Button - Blue on hover */
+.table-action-btn--edit:hover {
+  background-color: color-mix(in srgb, var(--theme-primary), transparent 85%);
+  color: var(--theme-primary);
+}
+
+.table-action-btn--edit:active {
+  background-color: color-mix(in srgb, var(--theme-primary), transparent 75%);
+}
+
+/* Delete Button - Red on hover */
+.table-action-btn--delete:hover {
+  background-color: color-mix(in srgb, var(--theme-danger), transparent 85%);
+  color: var(--theme-danger);
+}
+
+.table-action-btn--delete:active {
+  background-color: color-mix(in srgb, var(--theme-danger), transparent 75%);
+}
+
+/* Action button wrapper for multiple buttons */
+.table-action-buttons {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  align-items: center;
 }

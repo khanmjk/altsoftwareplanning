@@ -286,8 +286,11 @@ const SystemService = {
    * @private
    */
   _augmentSystemData(systemData) {
-    // 1. Engineers
+    // 1. Engineers (with engineerId backfill)
     this._augmentEngineers(systemData);
+
+    // 1b. Away-Team Members (with awayMemberId backfill)
+    this._augmentAwayTeamMembers(systemData);
 
     // 2. Capacity Configuration
     this._augmentCapacityConfiguration(systemData);
@@ -334,13 +337,6 @@ const SystemService = {
         if (!initiative.attributes) initiative.attributes = {};
         if (initiative.attributes.pmCapacityNotes === undefined)
           initiative.attributes.pmCapacityNotes = '';
-
-        // Direct specific migrations
-        if (Object.prototype.hasOwnProperty.call(initiative, 'relatedBusinessGoalId')) {
-          if (initiative.primaryGoalId === undefined)
-            initiative.primaryGoalId = initiative.relatedBusinessGoalId;
-          delete initiative.relatedBusinessGoalId;
-        }
 
         // Default ROI
         const defaultROI = {
@@ -421,12 +417,37 @@ const SystemService = {
   _augmentEngineers(systemData) {
     // Ensure Engineers have IDs if missing (legacy support)
     if (Array.isArray(systemData.allKnownEngineers)) {
-      systemData.allKnownEngineers.forEach((eng) => {
+      systemData.allKnownEngineers.forEach((eng, index) => {
+        // Legacy id field
         if (!eng.id && eng.name) {
           eng.id = eng.name.toLowerCase().replace(/\s+/g, '.');
         }
+        // New engineerId field (v2.0+) - use system-specific prefix
+        if (!eng.engineerId && eng.name) {
+          const systemPrefix = (systemData.systemName || 'sys').substring(0, 3).toLowerCase();
+          eng.engineerId = `eng_${systemPrefix}_${index + 1}`;
+        }
       });
     }
+  },
+
+  /**
+   * Helper to backfill awayMemberId for away-team members.
+   * @private
+   */
+  _augmentAwayTeamMembers(systemData) {
+    if (!Array.isArray(systemData.teams)) return;
+
+    systemData.teams.forEach((team) => {
+      if (!Array.isArray(team.awayTeamMembers)) return;
+
+      const teamIdSuffix = (team.teamId || 'team').replace(/^team/, '');
+      team.awayTeamMembers.forEach((member, index) => {
+        if (!member.awayMemberId) {
+          member.awayMemberId = `away${teamIdSuffix}_${index + 1}`;
+        }
+      });
+    });
   },
 
   /**

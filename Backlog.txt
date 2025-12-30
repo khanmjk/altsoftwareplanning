@@ -216,6 +216,7 @@ the gitgub issues tracker to keep track of user feedback requests
 [DONE] - [TECH DEBT] - Revisit StorageService and System Service - refactor or enhance the factory pattern with introducting localStorageDriver for local storage, CloudDB (Cloudflare db) drivers for cloud DB, etc.
 [DONE] - [TECH DEBT] - Implement unit testing 
 [DONE] - [TECH DEBT] - Implement e2e testing and test coverage
+[DONE] - [FEAT] Introduce a Roster feature instead of Engineer List
 
 ------------
 IN PROGRESS

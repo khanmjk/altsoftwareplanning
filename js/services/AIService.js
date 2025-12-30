@@ -584,6 +584,10 @@ ${systemPromptSummary}`.trim();
         engineerNameCheck.add(eng.name.toLowerCase());
         engineerNameMap.set(eng.name, eng); // Use exact case for map key
       }
+      // Check for engineerId (new requirement for roster management)
+      if (!eng.engineerId) {
+        warnings.push(`Engineer "${eng.name || `at index ${i}`}" is missing "engineerId".`);
+      }
     });
 
     // --- 3. Relational Integrity Checks (Rule #6, 7, 9, 10) ---
@@ -636,6 +640,17 @@ ${systemPromptSummary}`.trim();
 
       if (!team.attributes || typeof team.attributes !== 'object') {
         warnings.push(`Team "${team.teamName}" is missing "attributes" object.`);
+      }
+
+      // Check away-team members for awayMemberId
+      if (Array.isArray(team.awayTeamMembers)) {
+        team.awayTeamMembers.forEach((member, mi) => {
+          if (!member.awayMemberId) {
+            warnings.push(
+              `Away-team member "${member.name || `at index ${mi}`}" in team "${team.teamName}" is missing "awayMemberId".`
+            );
+          }
+        });
       }
     });
 
@@ -927,9 +942,16 @@ function _getSystemGenerationPrompt() {
         fundedHeadcount: 5,
         engineers: ['Example Engineer 1 (L4)'],
         awayTeamMembers: [
-          { name: 'Contractor 1', level: 3, sourceTeam: 'External', attributes: {} },
+          {
+            awayMemberId: 'away-example-1',
+            name: 'Contractor 1',
+            level: 3,
+            sourceTeam: 'External',
+            attributes: {},
+          },
         ],
         sdmId: 'sdm-example',
+        seniorManagerId: null,
         pmtId: 'pmt-example',
         teamCapacityAdjustments: {
           leaveUptakeEstimates: [],
@@ -943,6 +965,7 @@ function _getSystemGenerationPrompt() {
     ],
     allKnownEngineers: [
       {
+        engineerId: 'eng-1',
         name: 'Example Engineer 1 (L4)',
         level: 4,
         currentTeamId: 'team-example',
@@ -954,6 +977,7 @@ function _getSystemGenerationPrompt() {
         },
       },
       {
+        engineerId: 'eng-2',
         name: 'AI-Bot-01',
         level: 4,
         currentTeamId: 'team-example',
@@ -1123,15 +1147,25 @@ Your sole task is to take a user's prompt (e.g., "An excel spreadsheet company,"
     * Initiative \`primaryGoalId\` must use a valid \`goalId\` from the \`goals\` array.
     * **Personnel Links:** The \`owner\`, \`projectManager\`, and \`technicalPOC\` objects on initiatives and goals *must* be valid. The \`id\` must correspond to a real \`sdmId\`, \`pmtId\`, \`pmId\`, or \`seniorManagerId\`, and the \`name\` must match. For \`technicalPOC\` of type 'engineer', the \`name\` must match an engineer in \`allKnownEngineers\`.
 
-7.  **CREATE DENSE INTERCONNECTIONS:** This is vital for the tool's planning features. The generated system *must* be highly interconnected.
+7.  **UNIQUE IDENTIFIERS:** Every entity must have a unique identifier for roster management.
+    * Every engineer in \`allKnownEngineers\` MUST have a unique \`engineerId\` field (e.g., "eng-001", "eng-ai-1").
+    * Every away team member in \`team.awayTeamMembers\` MUST have a unique \`awayMemberId\` field (e.g., "away-001").
+    * These IDs are critical for update and delete operations.
+
+8.  **FLEXIBLE TEAM HIERARCHY:** Teams can report to either an SDM or directly to a Senior Manager.
+    * If a team reports to an SDM, set \`team.sdmId\` to the SDM's ID and \`team.seniorManagerId\` to \`null\`.
+    * If a team reports directly to a Senior Manager (no SDM layer), set \`team.seniorManagerId\` to the Senior Manager's ID and \`team.sdmId\` to \`null\`.
+    * This enables flexible organizational structures. Generate a mix of both patterns.
+
+9.  **CREATE DENSE INTERCONNECTIONS:** This is vital for the tool's planning features. The generated system *must* be highly interconnected.
     * **Service Dependencies:** Services *must* have plausible \`serviceDependencies\`. Do not create a system where all services are isolated.
     * **Platform Dependencies:** Services *must* list realistic \`platformDependencies\` (e.g., "AWS S3", "PostgreSQL", "Kafka", "AWS Lambda").
     * **API Dependencies:** APIs *must* call other APIs. Populate \`dependentApis\` to show how services interact at a technical level.
     * **Initiative Impact:** Initiatives *must* impact services. Populate \`impactedServiceIds\` for each initiative to show what parts of the system it touches.
 
-8.  **REALISTIC TEAM LOADING:** The \`sdeYears\` assignments in your roadmap must create realistic challenges. Some teams (especially platform or core product teams) should be heavily loaded or even overloaded in Year 1, reflecting real-world bottlenecks.
+10.  **REALISTIC TEAM LOADING:** The \`sdeYears\` assignments in your roadmap must create realistic challenges. Some teams (especially platform or core product teams) should be heavily loaded or even overloaded in Year 1, reflecting real-world bottlenecks.
 
-9.  **SIMULATE REALISTIC CAPACITY CONSTRAINTS:** This is essential for the planning tool. You *must* populate the capacity model with realistic, non-zero data.
+11.  **SIMULATE REALISTIC CAPACITY CONSTRAINTS:** This is essential for the planning tool. You *must* populate the capacity model with realistic, non-zero data.
     * Set \`capacityConfiguration.globalConstraints.publicHolidays\` to a realistic number (e.g., 8-12).
     * Add 1-2 plausible \`orgEvents\` to \`globalConstraints.orgEvents\`.
     * Set realistic \`defaultEstimatedDays\` for the defined \`leaveTypes\`.
@@ -1141,7 +1175,7 @@ Your sole task is to take a user's prompt (e.g., "An excel spreadsheet company,"
         * Add 1-2 \`teamActivities\` (like training or offsites) for *some* teams.
         * Add *some* non-zero data to \`variableLeaveImpact\` for at least a few teams (e.g., for 'maternity').
 
-10. **[NEW RULE] GENERATE WORK PACKAGES WITH DEPENDENCIES:** You *must* generate 1-3 \`workPackages\` for *at least 10-15 initiatives* (especially for Year 1).
+12. **[NEW RULE] GENERATE WORK PACKAGES WITH DEPENDENCIES:** You *must* generate 1-3 \`workPackages\` for *at least 10-15 initiatives* (especially for Year 1).
     * Each work package *must* have a valid \`initiativeId\`.
     * Each work package *must* link to the initiative by also adding its \`workPackageId\` to the \`yearlyInitiatives.workPackageIds\` array.
     * **Dependencies:** Create logical dependencies between these work packages.
@@ -1149,14 +1183,14 @@ Your sole task is to take a user's prompt (e.g., "An excel spreadsheet company,"
       * Creating these links is critical for the Gantt chart visualization.
     * Each work package *must* have realistic \`deliveryPhases\`.
  
-11. **[CRITICAL] STRICT DATA TYPES:** Numeric values MUST be JSON numbers, NOT strings. This is a hard requirement.
+13. **[CRITICAL] STRICT DATA TYPES:** Numeric values MUST be JSON numbers, NOT strings. This is a hard requirement.
     * \`fundedHeadcount\` must be a NUMBER (e.g., \`5\`), NOT a string (e.g., \`"5"\`).
     * \`sdeYears\`, \`level\`, \`avgOverheadHoursPerWeekPerSDE\`, \`aiProductivityGainPercent\`, \`estimatedDaysPerSDE\`, \`defaultEstimatedDays\`, \`publicHolidays\`, and ALL other numeric fields must be JSON numbers.
     * **WRONG:** \`"fundedHeadcount": "5"\` (string)
     * **CORRECT:** \`"fundedHeadcount": 5\` (number)
     * Failure to follow this rule will cause the application to crash.
  
-12.  **DO NOT TRUNCATE:** Your *entire* response must be a single, complete JSON object. Do not stop part-way. Ensure all brackets and braces are closed.
+14.  **DO NOT TRUNCATE:** Your *entire* response must be a single, complete JSON object. Do not stop part-way. Ensure all brackets and braces are closed.
 
 **JSON SCHEMA EXAMPLE:**
 Here is an example of the exact JSON structure you must follow.

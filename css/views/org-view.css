@@ -1,301 +1,392 @@
 /* css/views/org-view.css */
 
 .org-view {
-    width: 100%;
-    height: 100%;
-    overflow-y: auto;
-    padding: 20px;
-    background-color: transparent;
-    /* Canvas compatibility */
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  padding: 20px;
+  background-color: transparent;
+  /* Canvas compatibility */
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    sans-serif;
 }
 
 .org-content-area {
-    width: 100%;
-    height: 100%;
+  width: 100%;
+  height: 100%;
 }
 
 /*** HTML List View Styles ***/
 .org-list-node {
-    margin-bottom: 5px;
-    padding: 6px 12px;
-    border-left: 2px solid var(--theme-border-color);
-    position: relative;
-    border-radius: 4px;
-    /* Slight modernize */
-    background-color: var(--theme-card-bg);
-    /* Fallback */
-    box-shadow: var(--theme-card-shadow);
+  margin-bottom: 5px;
+  padding: 6px 12px;
+  border-left: 2px solid var(--theme-border-color);
+  position: relative;
+  border-radius: 4px;
+  /* Slight modernize */
+  background-color: var(--theme-card-bg);
+  /* Fallback */
+  box-shadow: var(--theme-card-shadow);
 }
 
 /* Indentation Levels */
 .org-level-0 {
-    margin-left: 0;
-    border-left-color: var(--theme-text-primary);
+  margin-left: 0;
+  border-left-color: var(--theme-text-primary);
 }
 
 .org-level-1 {
-    margin-left: 25px;
-    border-left-color: var(--theme-primary);
+  margin-left: 25px;
+  border-left-color: var(--theme-primary);
 }
 
 .org-level-2 {
-    margin-left: 50px;
-    border-left-color: var(--theme-info);
+  margin-left: 50px;
+  border-left-color: var(--theme-info);
 }
 
 .org-level-3 {
-    margin-left: 75px;
-    border-left-color: var(--theme-success);
+  margin-left: 75px;
+  border-left-color: var(--theme-success);
 }
 
 .org-level-4 {
-    margin-left: 100px;
+  margin-left: 100px;
 }
 
 /* Text Styles */
 .org-text-root {
-    font-size: 1.2em;
-    color: var(--theme-text-primary);
-    font-weight: 600;
+  font-size: 1.2em;
+  color: var(--theme-text-primary);
+  font-weight: 600;
 }
 
 .org-text-srmgr {
-    font-size: 1.1em;
-    color: var(--theme-primary);
-    font-weight: 600;
+  font-size: 1.1em;
+  color: var(--theme-primary);
+  font-weight: 600;
 }
 
 .org-text-sdm {
-    color: var(--theme-info);
-    font-weight: 600;
+  color: var(--theme-info);
+  font-weight: 600;
 }
 
 .org-text-team {
-    color: var(--theme-success);
-    font-weight: 500;
+  color: var(--theme-success);
+  font-weight: 500;
 }
 
 .org-text-default {
-    color: var(--theme-text-secondary);
-    font-weight: 600;
+  color: var(--theme-text-secondary);
+  font-weight: 600;
 }
 
 .org-editable-cell {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .org-edit-icon {
-    color: var(--theme-primary);
-    font-size: 0.8em;
-    cursor: pointer;
+  color: var(--theme-text-muted);
+  font-size: 0.85em;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.org-edit-icon:hover {
+  color: var(--theme-primary);
 }
 
 .org-details {
-    font-size: 0.85em;
-    color: var(--theme-text-secondary);
-    margin-left: 8px;
+  font-size: 0.85em;
+  color: var(--theme-text-secondary);
+  margin-left: 8px;
 }
 
 .org-away-tag {
-    color: var(--theme-danger);
-    font-style: italic;
-    font-size: 0.85em;
-    margin-left: 5px;
+  color: var(--theme-danger);
+  font-style: italic;
+  font-size: 0.85em;
+  margin-left: 5px;
 }
 
 .org-engineer-list {
-    list-style: none;
-    padding-left: 15px;
-    margin-top: 5px;
-    margin-bottom: 5px;
+  list-style: none;
+  padding-left: 15px;
+  margin-top: 5px;
+  margin-bottom: 5px;
 }
 
 .org-engineer-item {
-    font-size: 0.9em;
-    color: var(--theme-text-primary);
-    padding: 2px 0;
+  font-size: 0.9em;
+  color: var(--theme-text-primary);
+  padding: 2px 0;
 }
 
 /*** Engineer Table Narrative ***/
 .org-engineer-narrative {
-    margin-bottom: 15px;
-    padding: 10px 15px;
-    background-color: var(--theme-bg-secondary);
-    border-left: 4px solid var(--theme-primary);
-    border-radius: 4px;
-    font-size: 0.95em;
-    line-height: 1.5;
-    color: var(--theme-text-primary);
+  margin-bottom: 15px;
+  padding: 10px 15px;
+  background-color: var(--theme-bg-secondary);
+  border-left: 4px solid var(--theme-primary);
+  border-radius: 4px;
+  font-size: 0.95em;
+  line-height: 1.5;
+  color: var(--theme-text-primary);
 }
 
 .org-error-message {
-    color: var(--theme-danger);
-    padding: 20px;
-    background-color: color-mix(in srgb, var(--theme-danger), transparent 90%);
-    border: 1px solid var(--theme-danger);
-    border-radius: 4px;
-    margin: 20px;
+  color: var(--theme-danger);
+  padding: 20px;
+  background-color: color-mix(in srgb, var(--theme-danger), transparent 90%);
+  border: 1px solid var(--theme-danger);
+  border-radius: 4px;
+  margin: 20px;
 }
 
 .org-error-text {
-    color: var(--theme-danger);
+  color: var(--theme-danger);
 }
 
 .org-gap--needs-hiring {
-    color: var(--theme-warning);
+  color: var(--theme-warning);
 }
 
 .org-gap--overstaffed {
-    color: var(--theme-info);
+  color: var(--theme-info);
 }
 
 .org-gap--balanced {
-    color: var(--theme-success);
+  color: var(--theme-success);
 }
 
 .org-engineer-delete-btn {
-    padding: 2px 8px;
-    font-size: 0.8em;
+  padding: 2px 8px;
+  font-size: 0.8em;
+}
+
+/* Roster Delete Button - Subtle Icon Style */
+.org-roster-delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background-color: transparent;
+  color: var(--theme-text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.org-roster-delete-btn:hover {
+  background-color: color-mix(in srgb, var(--theme-danger), transparent 85%);
+  color: var(--theme-danger);
+}
+
+.org-roster-delete-btn:active {
+  background-color: color-mix(in srgb, var(--theme-danger), transparent 75%);
+}
+
+.org-roster-delete-btn i {
+  font-size: 0.9rem;
+}
+
+/* Unified Roster Role Type Badges */
+.org-role-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75em;
+  font-weight: 600;
+  text-align: center;
+  min-width: 70px;
+}
+
+.org-role-badge.badge-primary {
+  background-color: color-mix(in srgb, var(--theme-primary), transparent 85%);
+  color: var(--theme-primary);
+  border: 1px solid var(--theme-primary);
+}
+
+.org-role-badge.badge-info {
+  background-color: color-mix(in srgb, var(--theme-info), transparent 85%);
+  color: var(--theme-info);
+  border: 1px solid var(--theme-info);
+}
+
+.org-role-badge.badge-warning {
+  background-color: color-mix(in srgb, var(--theme-warning), transparent 85%);
+  color: var(--theme-warning);
+  border: 1px solid var(--theme-warning);
+}
+
+.org-role-badge.badge-success {
+  background-color: color-mix(in srgb, var(--theme-success), transparent 85%);
+  color: var(--theme-success);
+  border: 1px solid var(--theme-success);
+}
+
+.org-role-badge.badge-danger {
+  background-color: color-mix(in srgb, var(--theme-danger), transparent 85%);
+  color: var(--theme-danger);
+  border: 1px solid var(--theme-danger);
+}
+
+.org-role-badge.badge-secondary {
+  background-color: color-mix(in srgb, var(--theme-text-secondary), transparent 85%);
+  color: var(--theme-text-secondary);
+  border: 1px solid var(--theme-text-secondary);
+}
+
+.org-role-badge.badge-dark {
+  background-color: var(--theme-bg-tertiary);
+  color: var(--theme-text-primary);
+  border: 1px solid var(--theme-border-color);
 }
 
 .org-chart-svg {
-    overflow: auto;
+  overflow: auto;
 }
 
 /*** D3 Tooltip override/integration ***/
 .d3-org-tooltip {
-    position: absolute;
-    top: 0;
-    left: 0;
-    text-align: left;
-    padding: 10px;
-    font: 12px sans-serif;
-    background: var(--theme-card-bg);
-    border: 1px solid var(--theme-border-color);
-    border-radius: 4px;
-    pointer-events: none;
-    box-shadow: 0 2px 5px var(--theme-card-shadow);
-    z-index: 1000;
-    opacity: 0;
-    transform: translate(var(--tooltip-x, 0px), var(--tooltip-y, 0px));
-    transition: opacity 0.2s ease;
+  position: absolute;
+  top: 0;
+  left: 0;
+  text-align: left;
+  padding: 10px;
+  font: 12px sans-serif;
+  background: var(--theme-card-bg);
+  border: 1px solid var(--theme-border-color);
+  border-radius: 4px;
+  pointer-events: none;
+  box-shadow: 0 2px 5px var(--theme-card-shadow);
+  z-index: 1000;
+  opacity: 0;
+  transform: translate(var(--tooltip-x, 0px), var(--tooltip-y, 0px));
+  transition: opacity 0.2s ease;
 }
 
 .d3-org-tooltip--visible {
-    opacity: 0.9;
+  opacity: 0.9;
 }
 
 .org-tooltip-away {
-    color: var(--theme-danger);
-    font-weight: 600;
+  color: var(--theme-danger);
+  font-weight: 600;
 }
 
 .org-node-rect--interactive {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .org-node-rect--static {
-    cursor: default;
+  cursor: default;
 }
 
 .org-node-foreign {
-    pointer-events: none;
+  pointer-events: none;
 }
 
 /* D3 Link (connector lines) */
 .org-link {
-    fill: none;
-    stroke: var(--theme-border-color);
-    stroke-width: 1.5px;
+  fill: none;
+  stroke: var(--theme-border-color);
+  stroke-width: 1.5px;
 }
 
 /*** D3 Chart Styles - Fix for Black Box Issue ***/
 
 /* Base Node Rect Style */
 .org-node-rect {
-    fill: var(--theme-bg-primary);
-    /* Default white background */
-    stroke: var(--theme-text-muted);
-    stroke-width: 1px;
-    transition: all 0.3s ease;
+  fill: var(--theme-bg-primary);
+  /* Default white background */
+  stroke: var(--theme-text-muted);
+  stroke-width: 1px;
+  transition: all 0.3s ease;
 }
 
 /* Hover Effect */
 .org-node-rect:hover {
-    stroke: var(--theme-primary);
-    stroke-width: 2px;
-    filter: drop-shadow(0 2px 4px var(--theme-card-shadow));
+  stroke: var(--theme-primary);
+  stroke-width: 2px;
+  filter: drop-shadow(0 2px 4px var(--theme-card-shadow));
 }
 
 /* Node Type Specific Colors */
 .org-type-root .org-node-rect {
-    fill: var(--theme-bg-secondary);
-    stroke: var(--theme-text-primary);
-    stroke-width: 2px;
+  fill: var(--theme-bg-secondary);
+  stroke: var(--theme-text-primary);
+  stroke-width: 2px;
 }
 
 .org-type-srMgr .org-node-rect {
-    fill: color-mix(in srgb, var(--theme-primary), var(--theme-bg-primary) 85%);
-    stroke: var(--theme-primary);
+  fill: color-mix(in srgb, var(--theme-primary), var(--theme-bg-primary) 85%);
+  stroke: var(--theme-primary);
 }
 
 .org-type-sdm .org-node-rect {
-    fill: color-mix(in srgb, var(--theme-info), var(--theme-bg-primary) 85%);
-    stroke: var(--theme-info);
+  fill: color-mix(in srgb, var(--theme-info), var(--theme-bg-primary) 85%);
+  stroke: var(--theme-info);
 }
 
 .org-type-team .org-node-rect {
-    fill: color-mix(in srgb, var(--theme-success), var(--theme-bg-primary) 85%);
-    stroke: var(--theme-success);
+  fill: color-mix(in srgb, var(--theme-success), var(--theme-bg-primary) 85%);
+  stroke: var(--theme-success);
 }
 
 .org-type-engineer .org-node-rect {
-    fill: var(--theme-bg-primary);
-    stroke: var(--theme-border-light);
+  fill: var(--theme-bg-primary);
+  stroke: var(--theme-border-light);
 }
 
 /* Text inside SVG Nodes */
 .org-node-label-wrapper {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: 100%;
-    text-align: center;
-    pointer-events: none;
-    font-family: 'Inter', sans-serif;
-    overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  pointer-events: none;
+  font-family: 'Inter', sans-serif;
+  overflow: hidden;
 }
 
 .org-node-label-name {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--theme-text-primary);
-    margin-bottom: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 90%;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--theme-text-primary);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 90%;
 }
 
 .org-node-label-details {
-    font-size: 11px;
-    color: var(--theme-text-secondary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 90%;
+  font-size: 11px;
+  color: var(--theme-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 90%;
 }
 
 /* Toggle Arrow */
 .org-node-toggle {
-    font-size: 12px;
-    fill: var(--theme-text-secondary);
-    cursor: pointer;
-    pointer-events: none;
-    /* Let click pass through to g element */
+  font-size: 12px;
+  fill: var(--theme-text-secondary);
+  cursor: pointer;
+  pointer-events: none;
+  /* Let click pass through to g element */
 }

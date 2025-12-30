@@ -204,8 +204,9 @@ Understanding these core entities is key to using the tool effectively. Most ent
 
 - Agile software development teams responsible for building and maintaining services.
 - Attributes: `teamId` (unique), `teamName` (official name), `teamIdentity` (codename/nickname), `teamDescription`, `sdmId`, `pmtId`, `fundedHeadcount`.
+- **Flexible Hierarchy:** Teams can report to either an SDM (`sdmId`) OR directly to a Senior Manager (`seniorManagerId`). Only one should be set at a time.
 - `engineers`: An array of engineer names (strings) who are primary members of this team. These names link to entries in the global `allKnownEngineers` list.
-- `awayTeamMembers`: An array of objects, where each object represents a borrowed engineer and includes `{ name, level, sourceTeam, attributes }`.
+- `awayTeamMembers`: An array of objects, where each object represents a borrowed engineer and includes `{ awayMemberId, name, level, sourceTeam, attributes }`.
 - `teamCapacityAdjustments`: A detailed object for configuring team-specific capacity modifiers (see [Capacity Configuration](#capacity-configuration)).
 - Extensible `attributes` object.
 
@@ -213,6 +214,7 @@ Understanding these core entities is key to using the tool effectively. Most ent
 
 - The central roster of all engineers in the system is stored in `currentSystemData.allKnownEngineers`.
 - Each engineer object includes:
+  - `engineerId`: A unique identifier for the engineer (e.g., "eng-001", "eng-ai-1"). **Required for all operations.**
   - `name`: Unique name of the engineer.
   - `level`: Numerical level (e.g., 1-7).
   - `currentTeamId`: The `teamId` of the team they are currently assigned to as a primary member (null if unassigned).
@@ -225,7 +227,9 @@ Understanding these core entities is key to using the tool effectively. Most ent
 ### Away-Team Members
 
 - Engineers borrowed from other teams, business units, or organizations to supplement a team's capacity.
-- Tracked within each team's `awayTeamMembers` array. Each member has `name`, `level`, `sourceTeam`, and `attributes` (similar to `allKnownEngineers` for consistency, e.g., for AI away-members).
+- Tracked within each team's `awayTeamMembers` array. Each member has:
+  - `awayMemberId`: A unique identifier for the away-team member. **Required for all operations.**
+  - `name`, `level`, `sourceTeam`, and `attributes` (similar to `allKnownEngineers` for consistency, e.g., for AI away-members).
 - These members contribute to a team's **Effective BIS (Builders In Seats)**.
 
 ### Managers (SDMs, Senior Managers, Project Managers)
@@ -460,7 +464,13 @@ Mermaid-based diagrams are available across the app and via the AI Assistant.
 
 ### Organizational Views (System)
 
-- Click **"Org Design"** to see the org chart (Block, List, Table layouts) and manage the engineer roster.
+- Click **"Org Design"** to see the org chart (Block, List, Table layouts) and manage the unified roster.
+- **Manage Roster:** A unified view for managing all organizational roles including:
+  - **Engineers:** Add, edit, delete, or move engineers between teams.
+  - **PMTs (Product Management Team):** Add or remove PMT members.
+  - **Away-Team Members:** Add guests/contractors to specific teams.
+  - **Roster Summary:** View counts of all role types at a glance.
+  - **Flexible Hierarchy:** Teams can report to SDMs or directly to Senior Managers.
 
 ### Tuning Capacity Constraints (Planning)
 

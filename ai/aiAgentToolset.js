@@ -1,355 +1,795 @@
 const aiAgentTools = [
-    {
-        command: "addInitiative",
-        description: "Adds a new initiative to the backlog/year plan.",
-        parameters: [
-            { name: "title", type: "string", description: "Human-readable title for the initiative.", required: true },
-            { name: "description", type: "string", description: "Optional description of the initiative.", required: false },
-            { name: "status", type: "string", description: "Workflow status such as 'Backlog', 'Defined', or 'Committed'.", required: false },
-            { name: "attributes", type: "object", description: "Additional metadata such as { planningYear: YYYY }.", required: false },
-            { name: "targetDueDate", type: "string", description: "Target date in YYYY-MM-DD format.", required: false },
-            { name: "assignments", type: "array", description: "Array of { teamId: string, sdeYears: number } objects.", required: false }
-        ]
-    },
-    {
-        command: "updateInitiative",
-        description: "Updates the fields of an existing initiative.",
-        parameters: [
-            { name: "initiativeId", type: "string", description: "ID of the initiative to update.", required: true },
-            { name: "updates", type: "object", description: "Object containing the fields to update on the initiative.", required: true }
-        ]
-    },
-    {
-        command: "deleteInitiative",
-        description: "Deletes an initiative from the backlog/year plan.",
-        parameters: [
-            { name: "initiativeId", type: "string", description: "ID of the initiative to delete.", required: true }
-        ]
-    },
-    {
-        command: "addNewTeam",
-        description: "Creates a new team entry in the system.",
-        parameters: [
-            { name: "teamData", type: "object", description: "Optional overrides for the new team (teamName, teamIdentity, fundedHeadcount, etc.).", required: false }
-        ]
-    },
-    {
-        command: "deleteTeam",
-        description: "Deletes a team by ID.",
-        parameters: [
-            { name: "teamId", type: "string", description: "The unique ID of the team to delete.", required: true },
-            { name: "silent", type: "boolean", description: "If true, suppresses UI alerts.", required: false }
-        ]
-    },
-    {
-        command: "addEngineerToRoster",
-        description: "Adds a new engineer to the global roster (allKnownEngineers).",
-        parameters: [
-            { name: "name", type: "string", description: "Engineer name.", required: true },
-            { name: "level", type: "number", description: "Engineer level (1-7).", required: true },
-            { name: "attributes", type: "object", description: "Fields such as { isAISWE, aiAgentType, skills[], yearsOfExperience }.", required: false },
-            { name: "currentTeamId", type: "string", description: "Optional team ID to immediately assign the engineer to.", required: false }
-        ]
-    },
-    {
-        command: "moveEngineerToTeam",
-        description: "Moves an engineer to a different team (or unassigns them).",
-        parameters: [
-            { name: "engineerName", type: "string", description: "Name of the engineer in the roster.", required: true },
-            { name: "newTeamId", type: "string", description: "Destination team ID (null to unassign).", required: false }
-        ]
-    },
-    {
-        command: "addSeniorManager",
-        description: "Adds a new Senior Manager to the organization.",
-        parameters: [
-            { name: "name", type: "string", description: "The full name of the new Senior Manager.", required: true }
-        ]
-    },
-    {
-        command: "addSdm",
-        description: "Adds a new SDM (Software Development Manager) to the organization.",
-        parameters: [
-            { name: "name", type: "string", description: "The full name of the new SDM.", required: true },
-            { name: "seniorManagerId", type: "string", description: "Optional. The ID of the Senior Manager this SDM reports to.", required: false }
-        ]
-    },
-    {
-        command: "deleteSdm",
-        description: "Deletes an SDM and optionally reassigns their teams to another SDM.",
-        parameters: [
-            { name: "sdmId", type: "string", description: "The ID of the SDM to delete.", required: true },
-            { name: "reassignTeamsToSdmId", type: "string", description: "Optional. The ID of another SDM to reassign teams to.", required: false }
-        ]
-    },
-    {
-        command: "updateSdm",
-        description: "Updates the properties of an existing SDM. Used to change their reporting line.",
-        parameters: [
-            { name: "sdmId", type: "string", description: "The ID of the SDM to update.", required: true },
-            { name: "updates", type: "object", description: "An object of fields to update, e.g., { seniorManagerId: '...' }.", required: true }
-        ]
-    },
-    {
-        command: "reassignTeamToSdm",
-        description: "Moves an existing team to report to a different SDM.",
-        parameters: [
-            { name: "teamIdentifier", type: "string", description: "Team ID, name, or placeholder (e.g., {{teamId_RoutingRangers}}).", required: true },
-            { name: "sdmIdentifier", type: "string", description: "SDM ID, name, or placeholder (e.g., {{sdmId_PaulBright}}).", required: true }
-        ]
-    },
-    {
-        command: "reassignSdmWithTeams",
-        description: "Moves an SDM (and all of their teams) under a different SDM’s organization or a new Senior Manager.",
-        parameters: [
-            { name: "sdmIdentifier", type: "string", description: "SDM ID, name, or placeholder (e.g., {{sdmId_AlexChen}}).", required: true },
-            { name: "destinationIdentifier", type: "string", description: "Target SDM or Senior Manager identifier.", required: true },
-            { name: "destinationType", type: "string", description: "Optional. Explicitly set to 'sdm' or 'seniorManager'.", required: false }
-        ]
-    },
-    {
-        command: "deleteSeniorManager",
-        description: "Deletes a Senior Manager and optionally reassigns their SDMs to another Sr. Manager.",
-        parameters: [
-            { name: "seniorManagerId", type: "string", description: "The ID of the Senior Manager to delete.", required: true },
-            { name: "reassignToSeniorManagerId", type: "string", description: "Optional. The ID of another Senior Manager to reassign SDMs to.", required: false }
-        ]
-    },
-    {
-        command: "addNewService",
-        description: "Creates a new service entry in the system.",
-        parameters: [
-            { name: "serviceData", type: "object", description: "Optional overrides such as serviceName, owningTeamId, dependencies, etc.", required: false }
-        ]
-    },
-    {
-        command: "deleteService",
-        description: "Deletes a service by name.",
-        parameters: [
-            { name: "serviceName", type: "string", description: "Name of the service to delete.", required: true }
-        ]
-    },
-    {
-        command: "bulkUpdateTeamCapacity",
-        description: "Bulk-updates capacity settings for multiple teams (overhead, AI gain, buffers).",
-        parameters: [
-            { name: "updates", type: "object", description: "Fields to merge into teamCapacityAdjustments.", required: false },
-            { name: "capacityReductionPercent", type: "number", description: "Percent reduction converted into added overhead hours/week.", required: false },
-            { name: "aiProductivityGainPercent", type: "number", description: "Set a new AI productivity gain percent for the targeted teams.", required: false },
-            { name: "avgOverheadHoursPerWeekPerSDE", type: "number", description: "Override avgOverheadHoursPerWeekPerSDE for targeted teams.", required: false },
-            { name: "filter", type: "object", description: "Optional filter { teamIds: [], orgIdentifier: 'sdmId|seniorManagerId|All' }.", required: false }
-        ]
-    },
-    {
-        command: "bulkUpdateInitiatives",
-        description: "Bulk-updates initiative fields (e.g., status/isProtected) that match criteria.",
-        parameters: [
-            { name: "updates", type: "object", description: "Fields to apply to each matching initiative (e.g., { status: 'Backlog' }).", required: true },
-            { name: "criteria", type: "object", description: "Filter initiatives by { goalId, themeId, roiValue, confidenceLevel, status, isProtected }.", required: false }
-        ]
-    },
-    {
-        command: "bulkAdjustInitiativeEstimates",
-        description: "Scales SDE-year estimates for assignments on matching initiatives by a factor.",
-        parameters: [
-            { name: "adjustmentFactor", type: "number", description: "Multiplier (0.9 reduces scope by 10%, 1.1 adds 10%).", required: true },
-            { name: "criteria", type: "object", description: "Filter initiatives by { goalId, themeId, roiValue, confidenceLevel, status, isProtected }.", required: false }
-        ]
-    },
-    {
-        command: "bulkReassignTeams",
-        description: "Moves all teams from one SDM to another SDM.",
-        parameters: [
-            { name: "sourceSdmId", type: "string", description: "SDM currently owning the teams.", required: true },
-            { name: "targetSdmId", type: "string", description: "SDM who will receive the teams.", required: true }
-        ]
-    },
-    {
-        command: "generateDiagram",
-        description: "Generates a visual diagram (flowchart, sequence, architecture, org chart, or Gantt/Timeline) based on the system data. Use this when the user asks to 'draw', 'visualize', 'show me a diagram', or 'map out' something.",
-        parameters: [
-            { name: "description", type: "string", description: "A specific description of what to diagram (e.g., 'Sequence diagram of payment flow' or 'Gantt chart for Q1 initiatives').", required: true }
-        ]
-    }
+  {
+    command: 'addInitiative',
+    description: 'Adds a new initiative to the backlog/year plan.',
+    parameters: [
+      {
+        name: 'title',
+        type: 'string',
+        description: 'Human-readable title for the initiative.',
+        required: true,
+      },
+      {
+        name: 'description',
+        type: 'string',
+        description: 'Optional description of the initiative.',
+        required: false,
+      },
+      {
+        name: 'status',
+        type: 'string',
+        description: "Workflow status such as 'Backlog', 'Defined', or 'Committed'.",
+        required: false,
+      },
+      {
+        name: 'attributes',
+        type: 'object',
+        description: 'Additional metadata such as { planningYear: YYYY }.',
+        required: false,
+      },
+      {
+        name: 'targetDueDate',
+        type: 'string',
+        description: 'Target date in YYYY-MM-DD format.',
+        required: false,
+      },
+      {
+        name: 'assignments',
+        type: 'array',
+        description: 'Array of { teamId: string, sdeYears: number } objects.',
+        required: false,
+      },
+    ],
+  },
+  {
+    command: 'updateInitiative',
+    description: 'Updates the fields of an existing initiative.',
+    parameters: [
+      {
+        name: 'initiativeId',
+        type: 'string',
+        description: 'ID of the initiative to update.',
+        required: true,
+      },
+      {
+        name: 'updates',
+        type: 'object',
+        description: 'Object containing the fields to update on the initiative.',
+        required: true,
+      },
+    ],
+  },
+  {
+    command: 'deleteInitiative',
+    description: 'Deletes an initiative from the backlog/year plan.',
+    parameters: [
+      {
+        name: 'initiativeId',
+        type: 'string',
+        description: 'ID of the initiative to delete.',
+        required: true,
+      },
+    ],
+  },
+  {
+    command: 'addNewTeam',
+    description: 'Creates a new team entry in the system.',
+    parameters: [
+      {
+        name: 'teamData',
+        type: 'object',
+        description:
+          'Optional overrides for the new team (teamName, teamIdentity, fundedHeadcount, etc.).',
+        required: false,
+      },
+    ],
+  },
+  {
+    command: 'deleteTeam',
+    description: 'Deletes a team by ID.',
+    parameters: [
+      {
+        name: 'teamId',
+        type: 'string',
+        description: 'The unique ID of the team to delete.',
+        required: true,
+      },
+      {
+        name: 'silent',
+        type: 'boolean',
+        description: 'If true, suppresses UI alerts.',
+        required: false,
+      },
+    ],
+  },
+  {
+    command: 'addEngineerToRoster',
+    description: 'Adds a new engineer to the global roster (allKnownEngineers).',
+    parameters: [
+      { name: 'name', type: 'string', description: 'Engineer name.', required: true },
+      { name: 'level', type: 'number', description: 'Engineer level (1-7).', required: true },
+      {
+        name: 'attributes',
+        type: 'object',
+        description: 'Fields such as { isAISWE, aiAgentType, skills[], yearsOfExperience }.',
+        required: false,
+      },
+      {
+        name: 'currentTeamId',
+        type: 'string',
+        description: 'Optional team ID to immediately assign the engineer to.',
+        required: false,
+      },
+    ],
+  },
+  {
+    command: 'moveEngineerToTeam',
+    description: 'Moves an engineer to a different team (or unassigns them).',
+    parameters: [
+      {
+        name: 'engineerName',
+        type: 'string',
+        description: 'Name of the engineer in the roster.',
+        required: true,
+      },
+      {
+        name: 'newTeamId',
+        type: 'string',
+        description: 'Destination team ID (null to unassign).',
+        required: false,
+      },
+    ],
+  },
+  {
+    command: 'deleteEngineer',
+    description: 'Removes an engineer from the roster and any team assignments.',
+    parameters: [
+      {
+        name: 'engineerName',
+        type: 'string',
+        description: 'Name of the engineer to delete.',
+        required: true,
+      },
+    ],
+  },
+  {
+    command: 'updateEngineer',
+    description: "Updates an engineer's level or attributes.",
+    parameters: [
+      {
+        name: 'engineerIdentifier',
+        type: 'string',
+        description: 'Engineer name or engineerId.',
+        required: true,
+      },
+      {
+        name: 'updates',
+        type: 'object',
+        description: 'Fields to update: { level, attributes }.',
+        required: true,
+      },
+    ],
+  },
+  {
+    command: 'addPmt',
+    description: 'Adds a new PMT (Product Manager Technical) to the organization.',
+    parameters: [
+      {
+        name: 'name',
+        type: 'string',
+        description: 'The full name of the new PMT.',
+        required: true,
+      },
+    ],
+  },
+  {
+    command: 'deletePmt',
+    description: 'Deletes a PMT from the organization.',
+    parameters: [
+      {
+        name: 'pmtId',
+        type: 'string',
+        description: 'The ID of the PMT to delete.',
+        required: true,
+      },
+    ],
+  },
+  {
+    command: 'addAwayTeamMember',
+    description: 'Adds an away-team (contractor/borrowed) member to a team.',
+    parameters: [
+      {
+        name: 'teamId',
+        type: 'string',
+        description: 'The team to add the away-team member to.',
+        required: true,
+      },
+      {
+        name: 'name',
+        type: 'string',
+        description: 'Name of the away-team member.',
+        required: true,
+      },
+      { name: 'level', type: 'number', description: 'Level (1-7).', required: true },
+      {
+        name: 'sourceTeam',
+        type: 'string',
+        description: "Origin (e.g., 'Contractor', 'Partner Team').",
+        required: false,
+      },
+    ],
+  },
+  {
+    command: 'removeAwayTeamMember',
+    description: 'Removes an away-team member from a team.',
+    parameters: [
+      {
+        name: 'teamId',
+        type: 'string',
+        description: 'The team containing the away-team member.',
+        required: true,
+      },
+      {
+        name: 'awayMemberId',
+        type: 'string',
+        description: 'The awayMemberId or name of the member.',
+        required: true,
+      },
+    ],
+  },
+  {
+    command: 'getRosterSummary',
+    description: 'Returns a count summary of all roster members by role type.',
+    parameters: [],
+  },
+  {
+    command: 'addSeniorManager',
+    description: 'Adds a new Senior Manager to the organization.',
+    parameters: [
+      {
+        name: 'name',
+        type: 'string',
+        description: 'The full name of the new Senior Manager.',
+        required: true,
+      },
+    ],
+  },
+  {
+    command: 'addSdm',
+    description: 'Adds a new SDM (Software Development Manager) to the organization.',
+    parameters: [
+      {
+        name: 'name',
+        type: 'string',
+        description: 'The full name of the new SDM.',
+        required: true,
+      },
+      {
+        name: 'seniorManagerId',
+        type: 'string',
+        description: 'Optional. The ID of the Senior Manager this SDM reports to.',
+        required: false,
+      },
+    ],
+  },
+  {
+    command: 'deleteSdm',
+    description: 'Deletes an SDM and optionally reassigns their teams to another SDM.',
+    parameters: [
+      {
+        name: 'sdmId',
+        type: 'string',
+        description: 'The ID of the SDM to delete.',
+        required: true,
+      },
+      {
+        name: 'reassignTeamsToSdmId',
+        type: 'string',
+        description: 'Optional. The ID of another SDM to reassign teams to.',
+        required: false,
+      },
+    ],
+  },
+  {
+    command: 'updateSdm',
+    description: 'Updates the properties of an existing SDM. Used to change their reporting line.',
+    parameters: [
+      {
+        name: 'sdmId',
+        type: 'string',
+        description: 'The ID of the SDM to update.',
+        required: true,
+      },
+      {
+        name: 'updates',
+        type: 'object',
+        description: "An object of fields to update, e.g., { seniorManagerId: '...' }.",
+        required: true,
+      },
+    ],
+  },
+  {
+    command: 'reassignTeam',
+    description:
+      'Assigns a team to report to a different SDM OR directly to a Senior Manager. Enables flexible org hierarchy.',
+    parameters: [
+      {
+        name: 'teamIdentifier',
+        type: 'string',
+        description: 'Team ID, name, or placeholder.',
+        required: true,
+      },
+      {
+        name: 'managerIdentifier',
+        type: 'string',
+        description: 'SDM or Senior Manager ID/name.',
+        required: true,
+      },
+      {
+        name: 'managerType',
+        type: 'string',
+        description: "Optional. Explicitly set to 'sdm' or 'seniorManager'.",
+        required: false,
+      },
+    ],
+  },
+  {
+    command: 'reassignSdmWithTeams',
+    description:
+      'Moves an SDM (and all of their teams) under a different SDM’s organization or a new Senior Manager.',
+    parameters: [
+      {
+        name: 'sdmIdentifier',
+        type: 'string',
+        description: 'SDM ID, name, or placeholder (e.g., {{sdmId_AlexChen}}).',
+        required: true,
+      },
+      {
+        name: 'destinationIdentifier',
+        type: 'string',
+        description: 'Target SDM or Senior Manager identifier.',
+        required: true,
+      },
+      {
+        name: 'destinationType',
+        type: 'string',
+        description: "Optional. Explicitly set to 'sdm' or 'seniorManager'.",
+        required: false,
+      },
+    ],
+  },
+  {
+    command: 'deleteSeniorManager',
+    description:
+      'Deletes a Senior Manager and optionally reassigns their SDMs to another Sr. Manager.',
+    parameters: [
+      {
+        name: 'seniorManagerId',
+        type: 'string',
+        description: 'The ID of the Senior Manager to delete.',
+        required: true,
+      },
+      {
+        name: 'reassignToSeniorManagerId',
+        type: 'string',
+        description: 'Optional. The ID of another Senior Manager to reassign SDMs to.',
+        required: false,
+      },
+    ],
+  },
+  {
+    command: 'deleteProjectManager',
+    description: 'Deletes a Project Manager from the organization.',
+    parameters: [
+      {
+        name: 'pmId',
+        type: 'string',
+        description: 'The ID of the Project Manager to delete.',
+        required: true,
+      },
+    ],
+  },
+  {
+    command: 'addNewService',
+    description: 'Creates a new service entry in the system.',
+    parameters: [
+      {
+        name: 'serviceData',
+        type: 'object',
+        description: 'Optional overrides such as serviceName, owningTeamId, dependencies, etc.',
+        required: false,
+      },
+    ],
+  },
+  {
+    command: 'deleteService',
+    description: 'Deletes a service by name.',
+    parameters: [
+      {
+        name: 'serviceName',
+        type: 'string',
+        description: 'Name of the service to delete.',
+        required: true,
+      },
+    ],
+  },
+  {
+    command: 'bulkUpdateTeamCapacity',
+    description: 'Bulk-updates capacity settings for multiple teams (overhead, AI gain, buffers).',
+    parameters: [
+      {
+        name: 'updates',
+        type: 'object',
+        description: 'Fields to merge into teamCapacityAdjustments.',
+        required: false,
+      },
+      {
+        name: 'capacityReductionPercent',
+        type: 'number',
+        description: 'Percent reduction converted into added overhead hours/week.',
+        required: false,
+      },
+      {
+        name: 'aiProductivityGainPercent',
+        type: 'number',
+        description: 'Set a new AI productivity gain percent for the targeted teams.',
+        required: false,
+      },
+      {
+        name: 'avgOverheadHoursPerWeekPerSDE',
+        type: 'number',
+        description: 'Override avgOverheadHoursPerWeekPerSDE for targeted teams.',
+        required: false,
+      },
+      {
+        name: 'filter',
+        type: 'object',
+        description: "Optional filter { teamIds: [], orgIdentifier: 'sdmId|seniorManagerId|All' }.",
+        required: false,
+      },
+    ],
+  },
+  {
+    command: 'bulkUpdateInitiatives',
+    description: 'Bulk-updates initiative fields (e.g., status/isProtected) that match criteria.',
+    parameters: [
+      {
+        name: 'updates',
+        type: 'object',
+        description: "Fields to apply to each matching initiative (e.g., { status: 'Backlog' }).",
+        required: true,
+      },
+      {
+        name: 'criteria',
+        type: 'object',
+        description:
+          'Filter initiatives by { goalId, themeId, roiValue, confidenceLevel, status, isProtected }.',
+        required: false,
+      },
+    ],
+  },
+  {
+    command: 'bulkAdjustInitiativeEstimates',
+    description: 'Scales SDE-year estimates for assignments on matching initiatives by a factor.',
+    parameters: [
+      {
+        name: 'adjustmentFactor',
+        type: 'number',
+        description: 'Multiplier (0.9 reduces scope by 10%, 1.1 adds 10%).',
+        required: true,
+      },
+      {
+        name: 'criteria',
+        type: 'object',
+        description:
+          'Filter initiatives by { goalId, themeId, roiValue, confidenceLevel, status, isProtected }.',
+        required: false,
+      },
+    ],
+  },
+  {
+    command: 'bulkReassignTeams',
+    description: 'Moves all teams from one SDM to another SDM.',
+    parameters: [
+      {
+        name: 'sourceSdmId',
+        type: 'string',
+        description: 'SDM currently owning the teams.',
+        required: true,
+      },
+      {
+        name: 'targetSdmId',
+        type: 'string',
+        description: 'SDM who will receive the teams.',
+        required: true,
+      },
+    ],
+  },
+  {
+    command: 'generateDiagram',
+    description:
+      "Generates a visual diagram (flowchart, sequence, architecture, org chart, or Gantt/Timeline) based on the system data. Use this when the user asks to 'draw', 'visualize', 'show me a diagram', or 'map out' something.",
+    parameters: [
+      {
+        name: 'description',
+        type: 'string',
+        description:
+          "A specific description of what to diagram (e.g., 'Sequence diagram of payment flow' or 'Gantt chart for Q1 initiatives').",
+        required: true,
+      },
+    ],
+  },
 ];
 
 function getAgentToolsetDescription() {
-    return aiAgentTools.map(tool => {
-        const params = (tool.parameters || []).map(param => {
-            const requiredLabel = param.required ? "[required]" : "[optional]";
+  return aiAgentTools
+    .map((tool) => {
+      const params =
+        (tool.parameters || [])
+          .map((param) => {
+            const requiredLabel = param.required ? '[required]' : '[optional]';
             return `- ${param.name} (${param.type}) ${requiredLabel}: ${param.description}`;
-        }).join('\n') || '- None';
-        return `Command: ${tool.command}\nDescription: ${tool.description}\nParameters:\n${params}`;
-    }).join('\n\n');
+          })
+          .join('\n') || '- None';
+      return `Command: ${tool.command}\nDescription: ${tool.description}\nParameters:\n${params}`;
+    })
+    .join('\n\n');
 }
 
 function getToolsSummaryList() {
-    return aiAgentTools.map(tool => ({
-        command: tool.command,
-        description: tool.description
-    }));
+  return aiAgentTools.map((tool) => ({
+    command: tool.command,
+    description: tool.description,
+  }));
 }
 
 async function executeTool(command, payload = {}) {
-    const system = SystemService.getCurrentSystem();
-    if (!system) {
-        throw new Error('No system currently loaded.');
-    }
+  const system = SystemService.getCurrentSystem();
+  if (!system) {
+    throw new Error('No system currently loaded.');
+  }
 
-    switch (command) {
-        case 'addInitiative': {
-            const newInitiative = InitiativeService.addInitiative(system, payload);
-            if (!newInitiative) throw new Error('Failed to add initiative.');
-            SystemService.save();
-            return newInitiative;
-        }
-        case 'updateInitiative': {
-            if (!payload.initiativeId) throw new Error('updateInitiative: initiativeId is required.');
-            const updates = payload.updates || {};
-            const updated = InitiativeService.updateInitiative(system, payload.initiativeId, updates);
-            if (!updated) throw new Error('Failed to update initiative.');
-            SystemService.save();
-            return updated;
-        }
-        case 'deleteInitiative': {
-            if (!payload.initiativeId) throw new Error('deleteInitiative: initiativeId is required.');
-            const success = InitiativeService.deleteInitiative(system, payload.initiativeId);
-            if (!success) throw new Error('Failed to delete initiative.');
-            SystemService.save();
-            return { deleted: true, initiativeId: payload.initiativeId };
-        }
-        case 'addNewTeam': {
-            const overrides = payload.teamData || {};
-            const result = OrgService.addTeam(system, overrides);
-            if (!result) throw new Error('Failed to add new team.');
-            SystemService.save();
-            return result;
-        }
-        case 'deleteTeam': {
-            if (!payload.teamId) throw new Error('deleteTeam: teamId is required.');
-            const success = OrgService.deleteTeam(system, payload.teamId);
-            if (!success) throw new Error('Failed to delete team.');
-            SystemService.save();
-            return { deleted: true, teamId: payload.teamId };
-        }
-        case 'addEngineerToRoster': {
-            const engineer = OrgService.addEngineerToRoster(system, payload);
-            SystemService.save();
-            return engineer;
-        }
-        case 'moveEngineerToTeam': {
-            if (!payload.engineerName) throw new Error('moveEngineerToTeam: engineerName is required.');
-            const updatedEngineer = OrgService.moveEngineerToTeam(system, payload.engineerName, payload.newTeamId || null);
-            SystemService.save();
-            return updatedEngineer;
-        }
-        case 'addSeniorManager': {
-            if (!payload.name) throw new Error('addSeniorManager: name is required.');
-            const result = OrgService.addSeniorManager(system, payload.name);
-            SystemService.save();
-            return result;
-        }
-        case 'addSdm': {
-            if (!payload.name) throw new Error('addSdm: name is required.');
-            const result = OrgService.addSdm(system, payload.name, payload.seniorManagerId || null);
-            SystemService.save();
-            return result;
-        }
-        case 'updateSdm': {
-            if (!payload.sdmId) throw new Error('updateSdm: sdmId is required.');
-            if (!payload.updates || typeof payload.updates !== 'object') {
-                throw new Error('updateSdm: updates object is required.');
-            }
-            const result = OrgService.updateSdm(system, payload.sdmId, payload.updates);
-            SystemService.save();
-            return result;
-        }
-        case 'deleteSdm': {
-            if (!payload.sdmId) throw new Error('deleteSdm: sdmId is required.');
-            const result = OrgService.deleteSdm(system, payload.sdmId, payload.reassignTeamsToSdmId || null);
-            SystemService.save();
-            return result;
-        }
-        case 'reassignTeamToSdm': {
-            const teamIdentifier = payload.teamIdentifier || payload.teamId;
-            const sdmIdentifier = payload.sdmIdentifier || payload.newSdmId;
-            if (!teamIdentifier) throw new Error('reassignTeamToSdm: teamIdentifier is required.');
-            if (!sdmIdentifier) throw new Error('reassignTeamToSdm: sdmIdentifier is required.');
-            const result = OrgService.reassignTeamToSdm(system, teamIdentifier, sdmIdentifier);
-            SystemService.save();
-            return result;
-        }
-        case 'reassignSdmWithTeams': {
-            const sdmIdentifier = payload.sdmIdentifier || payload.sdmId;
-            const destinationIdentifier = payload.destinationIdentifier || payload.destinationId || payload.targetIdentifier;
-            const destinationType = payload.destinationType || payload.targetType || null;
-            if (!sdmIdentifier) throw new Error('reassignSdmWithTeams: sdmIdentifier is required.');
-            if (!destinationIdentifier) throw new Error('reassignSdmWithTeams: destinationIdentifier is required.');
-            const result = OrgService.reassignSdmWithTeams(system, sdmIdentifier, destinationIdentifier, { destinationType });
-            SystemService.save();
-            return result;
-        }
-        case 'deleteSeniorManager': {
-            if (!payload.seniorManagerId) throw new Error('deleteSeniorManager: seniorManagerId is required.');
-            const result = OrgService.deleteSeniorManager(system, payload.seniorManagerId, payload.reassignToSeniorManagerId || null);
-            SystemService.save();
-            return result;
-        }
-        case 'addNewService': {
-            const overrides = payload.serviceData || {};
-            const newService = OrgService.addService(system, overrides);
-            if (!newService) throw new Error('Failed to add new service.');
-            SystemService.save();
-            return newService;
-        }
-        case 'deleteService': {
-            if (!payload.serviceName) throw new Error('deleteService: serviceName is required.');
-            const deletedService = OrgService.deleteService(system, payload.serviceName);
-            if (!deletedService) throw new Error('Failed to delete service.');
-            SystemService.save();
-            return { deleted: true, serviceName: payload.serviceName, service: deletedService };
-        }
-        case 'bulkUpdateTeamCapacity': {
-            const result = CapacityService.bulkUpdateTeamCapacity(system, payload || {});
-            if (!result) throw new Error('bulkUpdateTeamCapacity: No changes were applied.');
-            SystemService.save();
-            return result;
-        }
-        case 'bulkUpdateInitiatives': {
-            if (!payload || !payload.updates) throw new Error('bulkUpdateInitiatives: updates object is required.');
-            const result = InitiativeService.bulkUpdateInitiatives(system, payload.updates, payload.criteria || {});
-            SystemService.save();
-            return result;
-        }
-        case 'bulkAdjustInitiativeEstimates': {
-            const factor = payload?.adjustmentFactor;
-            if (factor === undefined || factor === null || isNaN(factor)) {
-                throw new Error('bulkAdjustInitiativeEstimates: adjustmentFactor (number) is required.');
-            }
-            const result = InitiativeService.bulkAdjustInitiativeEstimates(system, Number(factor), payload.criteria || {});
-            SystemService.save();
-            return result;
-        }
-        case 'bulkReassignTeams': {
-            const sourceSdmId = payload?.sourceSdmId || payload?.fromSdmId;
-            const targetSdmId = payload?.targetSdmId || payload?.toSdmId;
-            if (!sourceSdmId) throw new Error('bulkReassignTeams: sourceSdmId is required.');
-            if (!targetSdmId) throw new Error('bulkReassignTeams: targetSdmId is required.');
-            const result = OrgService.bulkReassignTeams(system, sourceSdmId, targetSdmId);
-            SystemService.save();
-            return result;
-        }
-        default:
-            throw new Error(`Unknown tool command: ${command}`);
+  switch (command) {
+    case 'addInitiative': {
+      const newInitiative = InitiativeService.addInitiative(system, payload);
+      if (!newInitiative) throw new Error('Failed to add initiative.');
+      SystemService.save();
+      return newInitiative;
     }
+    case 'updateInitiative': {
+      if (!payload.initiativeId) throw new Error('updateInitiative: initiativeId is required.');
+      const updates = payload.updates || {};
+      const updated = InitiativeService.updateInitiative(system, payload.initiativeId, updates);
+      if (!updated) throw new Error('Failed to update initiative.');
+      SystemService.save();
+      return updated;
+    }
+    case 'deleteInitiative': {
+      if (!payload.initiativeId) throw new Error('deleteInitiative: initiativeId is required.');
+      const success = InitiativeService.deleteInitiative(system, payload.initiativeId);
+      if (!success) throw new Error('Failed to delete initiative.');
+      SystemService.save();
+      return { deleted: true, initiativeId: payload.initiativeId };
+    }
+    case 'addNewTeam': {
+      const overrides = payload.teamData || {};
+      const result = OrgService.addTeam(system, overrides);
+      if (!result) throw new Error('Failed to add new team.');
+      SystemService.save();
+      return result;
+    }
+    case 'deleteTeam': {
+      if (!payload.teamId) throw new Error('deleteTeam: teamId is required.');
+      const success = OrgService.deleteTeam(system, payload.teamId);
+      if (!success) throw new Error('Failed to delete team.');
+      SystemService.save();
+      return { deleted: true, teamId: payload.teamId };
+    }
+    case 'addEngineerToRoster': {
+      const engineer = OrgService.addEngineerToRoster(system, payload);
+      SystemService.save();
+      return engineer;
+    }
+    case 'moveEngineerToTeam': {
+      if (!payload.engineerName) throw new Error('moveEngineerToTeam: engineerName is required.');
+      const updatedEngineer = OrgService.moveEngineerToTeam(
+        system,
+        payload.engineerName,
+        payload.newTeamId || null
+      );
+      SystemService.save();
+      return updatedEngineer;
+    }
+    case 'deleteEngineer': {
+      if (!payload.engineerName) throw new Error('deleteEngineer: engineerName is required.');
+      const deleted = OrgService.deleteEngineer(system, payload.engineerName);
+      SystemService.save();
+      return { deleted: true, engineer: deleted };
+    }
+    case 'updateEngineer': {
+      const identifier = payload.engineerIdentifier || payload.engineerName;
+      if (!identifier) throw new Error('updateEngineer: engineerIdentifier is required.');
+      if (!payload.updates || typeof payload.updates !== 'object') {
+        throw new Error('updateEngineer: updates object is required.');
+      }
+      const updated = OrgService.updateEngineer(system, identifier, payload.updates);
+      SystemService.save();
+      return updated;
+    }
+    case 'addPmt': {
+      if (!payload.name) throw new Error('addPmt: name is required.');
+      const result = OrgService.addPmt(system, payload.name, payload.attributes || {});
+      SystemService.save();
+      return result;
+    }
+    case 'deletePmt': {
+      if (!payload.pmtId) throw new Error('deletePmt: pmtId is required.');
+      const deleted = OrgService.deletePmt(system, payload.pmtId);
+      SystemService.save();
+      return { deleted: true, pmt: deleted };
+    }
+    case 'addAwayTeamMember': {
+      if (!payload.teamId) throw new Error('addAwayTeamMember: teamId is required.');
+      if (!payload.name) throw new Error('addAwayTeamMember: name is required.');
+      const member = OrgService.addAwayTeamMember(system, payload.teamId, {
+        name: payload.name,
+        level: payload.level,
+        sourceTeam: payload.sourceTeam,
+      });
+      SystemService.save();
+      return member;
+    }
+    case 'removeAwayTeamMember': {
+      if (!payload.teamId) throw new Error('removeAwayTeamMember: teamId is required.');
+      if (!payload.awayMemberId) throw new Error('removeAwayTeamMember: awayMemberId is required.');
+      const removed = OrgService.removeAwayTeamMember(system, payload.teamId, payload.awayMemberId);
+      SystemService.save();
+      return { removed: true, member: removed };
+    }
+    case 'getRosterSummary': {
+      return OrgService.getRosterSummary(system);
+    }
+    case 'addSeniorManager': {
+      if (!payload.name) throw new Error('addSeniorManager: name is required.');
+      const result = OrgService.addSeniorManager(system, payload.name);
+      SystemService.save();
+      return result;
+    }
+    case 'addSdm': {
+      if (!payload.name) throw new Error('addSdm: name is required.');
+      const result = OrgService.addSdm(system, payload.name, payload.seniorManagerId || null);
+      SystemService.save();
+      return result;
+    }
+    case 'updateSdm': {
+      if (!payload.sdmId) throw new Error('updateSdm: sdmId is required.');
+      if (!payload.updates || typeof payload.updates !== 'object') {
+        throw new Error('updateSdm: updates object is required.');
+      }
+      const result = OrgService.updateSdm(system, payload.sdmId, payload.updates);
+      SystemService.save();
+      return result;
+    }
+    case 'deleteSdm': {
+      if (!payload.sdmId) throw new Error('deleteSdm: sdmId is required.');
+      const result = OrgService.deleteSdm(
+        system,
+        payload.sdmId,
+        payload.reassignTeamsToSdmId || null
+      );
+      SystemService.save();
+      return result;
+    }
+    case 'reassignTeam':
+    case 'reassignTeamToSdm': {
+      // Supports both old 'reassignTeamToSdm' and new 'reassignTeam' for backwards compatibility
+      const teamIdentifier = payload.teamIdentifier || payload.teamId;
+      const managerIdentifier =
+        payload.managerIdentifier || payload.sdmIdentifier || payload.newSdmId;
+      const managerType = payload.managerType || null;
+      if (!teamIdentifier) throw new Error('reassignTeam: teamIdentifier is required.');
+      if (!managerIdentifier) throw new Error('reassignTeam: managerIdentifier is required.');
+      const result = OrgService.reassignTeamToManager(
+        system,
+        teamIdentifier,
+        managerIdentifier,
+        managerType
+      );
+      SystemService.save();
+      return result;
+    }
+    case 'reassignSdmWithTeams': {
+      const sdmIdentifier = payload.sdmIdentifier || payload.sdmId;
+      const destinationIdentifier =
+        payload.destinationIdentifier || payload.destinationId || payload.targetIdentifier;
+      const destinationType = payload.destinationType || payload.targetType || null;
+      if (!sdmIdentifier) throw new Error('reassignSdmWithTeams: sdmIdentifier is required.');
+      if (!destinationIdentifier)
+        throw new Error('reassignSdmWithTeams: destinationIdentifier is required.');
+      const result = OrgService.reassignSdmWithTeams(system, sdmIdentifier, destinationIdentifier, {
+        destinationType,
+      });
+      SystemService.save();
+      return result;
+    }
+    case 'deleteSeniorManager': {
+      if (!payload.seniorManagerId)
+        throw new Error('deleteSeniorManager: seniorManagerId is required.');
+      const result = OrgService.deleteSeniorManager(
+        system,
+        payload.seniorManagerId,
+        payload.reassignToSeniorManagerId || null
+      );
+      SystemService.save();
+      return result;
+    }
+    case 'deleteProjectManager': {
+      if (!payload.pmId) throw new Error('deleteProjectManager: pmId is required.');
+      const deleted = OrgService.deleteProjectManager(system, payload.pmId);
+      SystemService.save();
+      return { success: true, deleted };
+    }
+    case 'addNewService': {
+      const overrides = payload.serviceData || {};
+      const newService = OrgService.addService(system, overrides);
+      if (!newService) throw new Error('Failed to add new service.');
+      SystemService.save();
+      return newService;
+    }
+    case 'deleteService': {
+      if (!payload.serviceName) throw new Error('deleteService: serviceName is required.');
+      const deletedService = OrgService.deleteService(system, payload.serviceName);
+      if (!deletedService) throw new Error('Failed to delete service.');
+      SystemService.save();
+      return { deleted: true, serviceName: payload.serviceName, service: deletedService };
+    }
+    case 'bulkUpdateTeamCapacity': {
+      const result = CapacityService.bulkUpdateTeamCapacity(system, payload || {});
+      if (!result) throw new Error('bulkUpdateTeamCapacity: No changes were applied.');
+      SystemService.save();
+      return result;
+    }
+    case 'bulkUpdateInitiatives': {
+      if (!payload || !payload.updates)
+        throw new Error('bulkUpdateInitiatives: updates object is required.');
+      const result = InitiativeService.bulkUpdateInitiatives(
+        system,
+        payload.updates,
+        payload.criteria || {}
+      );
+      SystemService.save();
+      return result;
+    }
+    case 'bulkAdjustInitiativeEstimates': {
+      const factor = payload?.adjustmentFactor;
+      if (factor === undefined || factor === null || isNaN(factor)) {
+        throw new Error('bulkAdjustInitiativeEstimates: adjustmentFactor (number) is required.');
+      }
+      const result = InitiativeService.bulkAdjustInitiativeEstimates(
+        system,
+        Number(factor),
+        payload.criteria || {}
+      );
+      SystemService.save();
+      return result;
+    }
+    case 'bulkReassignTeams': {
+      const sourceSdmId = payload?.sourceSdmId || payload?.fromSdmId;
+      const targetSdmId = payload?.targetSdmId || payload?.toSdmId;
+      if (!sourceSdmId) throw new Error('bulkReassignTeams: sourceSdmId is required.');
+      if (!targetSdmId) throw new Error('bulkReassignTeams: targetSdmId is required.');
+      const result = OrgService.bulkReassignTeams(system, sourceSdmId, targetSdmId);
+      SystemService.save();
+      return result;
+    }
+    default:
+      throw new Error(`Unknown tool command: ${command}`);
+  }
 }
 
-
-
-
 const aiAgentToolset = {
-    aiAgentTools,
-    getAgentToolsetDescription,
-    getToolsSummaryList,
-    executeTool
+  aiAgentTools,
+  getAgentToolsetDescription,
+  getToolsSummaryList,
+  executeTool,
 };

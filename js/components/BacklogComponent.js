@@ -3,352 +3,468 @@
  * Renders the tabular list of initiatives (Backlog view).
  */
 class BacklogComponent {
-    constructor(containerId) {
-        this.containerId = containerId;
-        this.table = null;
-        this.statusFilters = [...InitiativeService.STATUSES];
-        this.ALL_STATUSES = InitiativeService.STATUSES;
+  constructor(containerId) {
+    this.containerId = containerId;
+    this.table = null;
+    this.statusFilters = [...InitiativeService.STATUSES];
+    this.ALL_STATUSES = InitiativeService.STATUSES;
+  }
+
+  formatDateToQuarterYear(dateString) {
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString + 'T00:00:00');
+      if (isNaN(date.getTime())) return '';
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+      const quarter = Math.ceil(month / 3);
+      return `Q${quarter} ${year}`;
+    } catch (e) {
+      console.warn('Error formatting date:', dateString, e);
+      return '';
+    }
+  }
+
+  render() {
+    const container = document.getElementById(this.containerId);
+    if (!container) return;
+
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
+    const tableContainer = document.createElement('div');
+    tableContainer.id = 'backlogTableContainer';
+    tableContainer.className = 'roadmap-table-container';
+    container.appendChild(tableContainer);
+    this.renderTable();
+  }
+
+  /**
+   * Generate filter controls for the toolbar
+   */
+  generateToolbarControls() {
+    const toolbarContainer = document.createElement('div');
+    toolbarContainer.className = 'roadmap-toolbar-content';
+
+    // Filter group
+    const filterGroup = document.createElement('div');
+    filterGroup.className = 'roadmap-filter-group';
+
+    const statusLabel = document.createElement('strong');
+    statusLabel.textContent = 'Filter by Status: ';
+    statusLabel.className = 'roadmap-filter-label';
+    filterGroup.appendChild(statusLabel);
+
+    const allStatuses = ['All', ...this.ALL_STATUSES];
+
+    allStatuses.forEach((status) => {
+      const checkboxId = `backlogStatusFilter_${status.toLowerCase().replace(/\s+/g, '')}`;
+      const wrapper = document.createElement('div');
+      wrapper.className = 'roadmap-filter-checkbox-wrapper';
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.id = checkboxId;
+      checkbox.value = status;
+      checkbox.className = 'roadmap-filter-checkbox';
+      checkbox.dataset.status = status;
+
+      if (status === 'All') {
+        checkbox.checked = this.statusFilters.length === this.ALL_STATUSES.length;
+      } else {
+        checkbox.checked = this.statusFilters.includes(status);
+      }
+
+      const label = document.createElement('label');
+      label.htmlFor = checkboxId;
+      label.textContent = status;
+      label.className = 'roadmap-filter-checkbox-label';
+
+      wrapper.appendChild(checkbox);
+      wrapper.appendChild(label);
+      filterGroup.appendChild(wrapper);
+    });
+
+    toolbarContainer.appendChild(filterGroup);
+
+    // Event delegation
+    toolbarContainer.addEventListener('change', (e) => {
+      if (e.target.type === 'checkbox' && e.target.dataset.status) {
+        this.handleStatusFilterChange(e.target);
+      }
+    });
+
+    return toolbarContainer;
+  }
+
+  handleStatusFilterChange(checkbox) {
+    const status = checkbox.value;
+    const isChecked = checkbox.checked;
+
+    if (status === 'All') {
+      this.statusFilters = isChecked ? [...this.ALL_STATUSES] : [];
+      this.ALL_STATUSES.forEach((s) => {
+        const cb = document.getElementById(
+          `backlogStatusFilter_${s.toLowerCase().replace(/\s+/g, '')}`
+        );
+        if (cb) cb.checked = isChecked;
+      });
+    } else {
+      if (isChecked) {
+        if (!this.statusFilters.includes(status)) this.statusFilters.push(status);
+      } else {
+        this.statusFilters = this.statusFilters.filter((s) => s !== status);
+      }
+      const allCb = document.getElementById('backlogStatusFilter_all');
+      if (allCb) {
+        allCb.checked = this.statusFilters.length === this.ALL_STATUSES.length;
+      }
+    }
+    this.renderTable();
+  }
+
+  prepareTableData() {
+    if (!SystemService.getCurrentSystem() || !SystemService.getCurrentSystem().yearlyInitiatives) {
+      return [];
     }
 
-    formatDateToQuarterYear(dateString) {
-        if (!dateString) return "";
-        try {
-            const date = new Date(dateString + 'T00:00:00');
-            if (isNaN(date.getTime())) return "";
-            const year = date.getFullYear();
-            const month = date.getMonth() + 1;
-            const quarter = Math.ceil(month / 3);
-            return `Q${quarter} ${year}`;
-        } catch (e) {
-            console.warn("Error formatting date:", dateString, e);
-            return "";
-        }
+    let initiatives = JSON.parse(
+      JSON.stringify(SystemService.getCurrentSystem().yearlyInitiatives)
+    );
+
+    if (this.statusFilters.length > 0 && this.statusFilters.length < this.ALL_STATUSES.length) {
+      initiatives = initiatives.filter((init) => this.statusFilters.includes(init.status));
     }
 
-    render() {
-        const container = document.getElementById(this.containerId);
-        if (!container) return;
+    const themesMap = new Map(
+      (SystemService.getCurrentSystem().definedThemes || []).map((t) => [t.themeId, t.name])
+    );
+    const teamsMap = new Map(
+      (SystemService.getCurrentSystem().teams || []).map((t) => [
+        t.teamId,
+        t.teamIdentity || t.teamName,
+      ])
+    );
 
-        while (container.firstChild) {
-            container.removeChild(container.firstChild);
-        }
-        const tableContainer = document.createElement('div');
-        tableContainer.id = 'backlogTableContainer';
-        tableContainer.className = 'roadmap-table-container';
-        container.appendChild(tableContainer);
-        this.renderTable();
-    }
+    return initiatives.map((init) => {
+      const ownerName = init.owner?.name || 'N/A';
+      let roiSummary = 'N/A';
+      if (init.roi?.category && init.roi?.estimatedValue) {
+        roiSummary = `${init.roi.category}: ${init.roi.estimatedValue}`;
+        if (init.roi.valueType === 'Monetary' && init.roi.currency)
+          roiSummary += ` ${init.roi.currency}`;
+      } else if (init.roi?.category) {
+        roiSummary = init.roi.category;
+      } else if (init.roi?.estimatedValue) {
+        roiSummary = String(init.roi.estimatedValue);
+      }
 
-    /**
-     * Generate filter controls for the toolbar
-     */
-    generateToolbarControls() {
-        const toolbarContainer = document.createElement('div');
-        toolbarContainer.className = 'roadmap-toolbar-content';
+      const cleanDate =
+        init.targetDueDate && String(init.targetDueDate).trim() !== ''
+          ? String(init.targetDueDate).trim()
+          : null;
+      const themes = (init.themes || []).map((tid) => themesMap.get(tid) || tid).join(', ');
+      let assignedTeams = 'None';
+      let totalSdes = 0;
+      if (init.assignments && init.assignments.length > 0) {
+        assignedTeams = init.assignments.map((a) => teamsMap.get(a.teamId) || a.teamId).join(', ');
+        totalSdes = init.assignments.reduce((sum, a) => sum + (parseFloat(a.sdeYears) || 0), 0);
+      }
 
-        // Filter group
-        const filterGroup = document.createElement('div');
-        filterGroup.className = 'roadmap-filter-group';
+      return {
+        ...init,
+        id: init.initiativeId,
+        targetDueDate: cleanDate,
+        ownerDisplay: ownerName,
+        roiSummaryDisplay: roiSummary,
+        targetQuarterYearDisplay: this.formatDateToQuarterYear(cleanDate),
+        themeNamesDisplay: themes,
+        assignedTeamsDisplay: assignedTeams,
+        totalInitialSdesDisplay: totalSdes.toFixed(2),
+      };
+    });
+  }
 
-        const statusLabel = document.createElement('strong');
-        statusLabel.textContent = 'Filter by Status: ';
-        statusLabel.className = 'roadmap-filter-label';
-        filterGroup.appendChild(statusLabel);
+  defineColumns() {
+    const getPersonnelEditorParams = () => {
+      const options = [{ label: '- No Owner -', value: '' }];
+      (SystemService.getCurrentSystem().sdms || []).forEach((p) =>
+        options.push({ label: `${p.sdmName} (SDM)`, value: `sdm:${p.sdmId}` })
+      );
+      (SystemService.getCurrentSystem().pmts || []).forEach((p) =>
+        options.push({ label: `${p.pmtName} (PMT)`, value: `pmt:${p.pmtId}` })
+      );
+      (SystemService.getCurrentSystem().seniorManagers || []).forEach((p) =>
+        options.push({
+          label: `${p.seniorManagerName} (Sr. Mgr)`,
+          value: `seniorManager:${p.seniorManagerId}`,
+        })
+      );
+      return { values: options, autocomplete: true };
+    };
 
-        const allStatuses = ['All', ...this.ALL_STATUSES];
+    const getThemeEditorParams = () => {
+      const options = (SystemService.getCurrentSystem().definedThemes || []).map((t) => ({
+        label: t.name,
+        value: t.themeId,
+      }));
+      return { values: options, multiselect: true };
+    };
 
-        allStatuses.forEach(status => {
-            const checkboxId = `backlogStatusFilter_${status.toLowerCase().replace(/\s+/g, '')}`;
-            const wrapper = document.createElement('div');
-            wrapper.className = 'roadmap-filter-checkbox-wrapper';
-
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.id = checkboxId;
-            checkbox.value = status;
-            checkbox.className = 'roadmap-filter-checkbox';
-            checkbox.dataset.status = status;
-
-            if (status === 'All') {
-                checkbox.checked = this.statusFilters.length === this.ALL_STATUSES.length;
-            } else {
-                checkbox.checked = this.statusFilters.includes(status);
+    return [
+      {
+        title: 'Title',
+        field: 'title',
+        minWidth: 200,
+        headerFilter: 'input',
+        frozen: true,
+        tooltip: (e, cell) => cell.getValue(),
+        editor: 'input',
+        cellEdited: (cell) => {
+          InitiativeService.updateInitiative(
+            SystemService.getCurrentSystem(),
+            cell.getRow().getData().id,
+            { title: cell.getValue() }
+          );
+          SystemService.save();
+        },
+      },
+      {
+        title: 'Description',
+        field: 'description',
+        minWidth: 250,
+        formatter: 'textarea',
+        headerFilter: 'input',
+        tooltip: (e, cell) => cell.getValue(),
+        editor: 'textarea',
+        cellEdited: (cell) => {
+          InitiativeService.updateInitiative(
+            SystemService.getCurrentSystem(),
+            cell.getRow().getData().id,
+            { description: cell.getValue() }
+          );
+          SystemService.save();
+        },
+      },
+      {
+        title: 'Status',
+        field: 'status',
+        width: 120,
+        headerFilter: 'list',
+        headerFilterParams: { values: ['', ...this.ALL_STATUSES], clearable: true },
+        editor: 'list',
+        editorParams: { values: this.ALL_STATUSES },
+        cellEdited: (cell) => {
+          const init = cell.getRow().getData();
+          const newValue = cell.getValue();
+          const oldValue = cell.getOldValue();
+          if (newValue === 'Completed') {
+            const today = luxon.DateTime.now().startOf('day');
+            const dueDate = luxon.DateTime.fromISO(init.targetDueDate).startOf('day');
+            if (oldValue !== 'Committed') {
+              notificationManager.showToast(
+                "Only 'Committed' initiatives can be marked as 'Completed'",
+                'error'
+              );
+              cell.restoreOldValue();
+              return;
             }
-
-            const label = document.createElement('label');
-            label.htmlFor = checkboxId;
-            label.textContent = status;
-            label.className = 'roadmap-filter-checkbox-label';
-
-            wrapper.appendChild(checkbox);
-            wrapper.appendChild(label);
-            filterGroup.appendChild(wrapper);
-        });
-
-        toolbarContainer.appendChild(filterGroup);
-
-        // Event delegation
-        toolbarContainer.addEventListener('change', (e) => {
-            if (e.target.type === 'checkbox' && e.target.dataset.status) {
-                this.handleStatusFilterChange(e.target);
+            if (dueDate > today) {
+              notificationManager.showToast("Cannot mark as 'Completed' before due date", 'error');
+              cell.restoreOldValue();
+              return;
             }
-        });
-
-        return toolbarContainer;
-    }
-
-    handleStatusFilterChange(checkbox) {
-        const status = checkbox.value;
-        const isChecked = checkbox.checked;
-
-        if (status === 'All') {
-            this.statusFilters = isChecked ? [...this.ALL_STATUSES] : [];
-            this.ALL_STATUSES.forEach(s => {
-                const cb = document.getElementById(`backlogStatusFilter_${s.toLowerCase().replace(/\s+/g, '')}`);
-                if (cb) cb.checked = isChecked;
+            InitiativeService.updateInitiative(SystemService.getCurrentSystem(), init.id, {
+              status: newValue,
             });
-        } else {
-            if (isChecked) {
-                if (!this.statusFilters.includes(status)) this.statusFilters.push(status);
-            } else {
-                this.statusFilters = this.statusFilters.filter(s => s !== status);
+            SystemService.save();
+          } else {
+            notificationManager.showToast(
+              "Status updates (other than to 'Completed') managed by Year Plan ATL/BTL process",
+              'info'
+            );
+            cell.restoreOldValue();
+          }
+        },
+      },
+      {
+        title: 'Assigned Teams',
+        field: 'assignedTeamsDisplay',
+        minWidth: 180,
+        headerFilter: 'input',
+        formatter: 'textarea',
+      },
+      {
+        title: 'SDE/Yr Estimates',
+        field: 'totalInitialSdesDisplay',
+        width: 100,
+        hozAlign: 'center',
+        headerFilter: 'input',
+        sorter: 'number',
+      },
+      {
+        title: 'Owner',
+        field: 'owner',
+        width: 140,
+        headerFilter: 'input',
+        formatter: (cell) => cell.getValue()?.name || 'N/A',
+        editor: 'list',
+        editorParams: getPersonnelEditorParams,
+        cellEdited: (cell) => {
+          const ownerValue = cell.getValue();
+          let newOwner = null;
+          if (ownerValue) {
+            const [type, id] = ownerValue.split(':');
+            const options = getPersonnelEditorParams().values;
+            const selected = options.find((opt) => opt.value === ownerValue);
+            const name = selected ? selected.label.replace(/ \(.+\)/, '') : id;
+            newOwner = { type, id, name };
+          }
+          InitiativeService.updateInitiative(
+            SystemService.getCurrentSystem(),
+            cell.getRow().getData().id,
+            { owner: newOwner }
+          );
+          SystemService.save();
+          cell.getRow().update({ owner: newOwner });
+        },
+      },
+      { title: 'ROI Summary', field: 'roiSummaryDisplay', minWidth: 180, headerFilter: 'input' },
+      {
+        title: 'Target Quarter/Yr',
+        field: 'targetQuarterYearDisplay',
+        width: 110,
+        hozAlign: 'center',
+        headerFilter: 'input',
+        sorter: (a, b, aRow, bRow) => {
+          const dateA = aRow.getData().targetDueDate
+            ? luxon.DateTime.fromISO(aRow.getData().targetDueDate)
+            : null;
+          const dateB = bRow.getData().targetDueDate
+            ? luxon.DateTime.fromISO(bRow.getData().targetDueDate)
+            : null;
+          if (!dateA?.isValid && !dateB?.isValid) return 0;
+          if (!dateA?.isValid) return 1;
+          if (!dateB?.isValid) return -1;
+          return dateA - dateB;
+        },
+      },
+      {
+        title: 'Target Due Date',
+        field: 'targetDueDate',
+        width: 120,
+        hozAlign: 'center',
+        headerFilter: 'input',
+        editor: 'date',
+        editorParams: { format: 'yyyy-MM-dd' },
+        cellEdited: (cell) => {
+          const newDate = cell.getValue();
+          const newYear = newDate ? luxon.DateTime.fromISO(newDate).year : new Date().getFullYear();
+          InitiativeService.updateInitiative(
+            SystemService.getCurrentSystem(),
+            cell.getRow().getData().id,
+            {
+              targetDueDate: newDate,
+              attributes: { ...cell.getRow().getData().attributes, planningYear: newYear },
             }
-            const allCb = document.getElementById('backlogStatusFilter_all');
-            if (allCb) {
-                allCb.checked = this.statusFilters.length === this.ALL_STATUSES.length;
-            }
-        }
-        this.renderTable();
-    }
+          );
+          SystemService.save();
+          cell.getRow().update({ targetQuarterYearDisplay: this.formatDateToQuarterYear(newDate) });
+        },
+      },
+      {
+        title: 'Themes',
+        field: 'themes',
+        minWidth: 150,
+        headerFilter: 'input',
+        formatter: (cell) => {
+          const themeMap = new Map(
+            (SystemService.getCurrentSystem().definedThemes || []).map((t) => [t.themeId, t.name])
+          );
+          return (cell.getValue() || []).map((id) => themeMap.get(id) || id).join(', ');
+        },
+        editor: 'list',
+        editorParams: getThemeEditorParams,
+        cellEdited: (cell) => {
+          InitiativeService.updateInitiative(
+            SystemService.getCurrentSystem(),
+            cell.getRow().getData().id,
+            { themes: cell.getValue() || [] }
+          );
+          SystemService.save();
+        },
+      },
+      {
+        title: 'Actions',
+        width: 100,
+        hozAlign: 'center',
+        headerSort: false,
+        formatter: (cell) => {
+          const id = cell.getRow().getData().id;
+          const wrapper = document.createElement('div');
+          wrapper.className = 'table-action-buttons';
 
-    prepareTableData() {
-        if (!SystemService.getCurrentSystem() || !SystemService.getCurrentSystem().yearlyInitiatives) {
-            return [];
-        }
+          const editButton = document.createElement('button');
+          editButton.className = 'table-action-btn table-action-btn--edit';
+          editButton.dataset.action = 'edit';
+          editButton.dataset.initiativeId = id;
+          editButton.title = 'Edit Initiative';
+          const editIcon = document.createElement('i');
+          editIcon.className = 'fas fa-edit';
+          editButton.appendChild(editIcon);
 
-        let initiatives = JSON.parse(JSON.stringify(SystemService.getCurrentSystem().yearlyInitiatives));
+          const deleteButton = document.createElement('button');
+          deleteButton.className = 'table-action-btn table-action-btn--delete';
+          deleteButton.dataset.action = 'delete';
+          deleteButton.dataset.initiativeId = id;
+          deleteButton.title = 'Delete Initiative';
+          const delIcon = document.createElement('i');
+          delIcon.className = 'fas fa-trash-alt';
+          deleteButton.appendChild(delIcon);
 
-        if (this.statusFilters.length > 0 && this.statusFilters.length < this.ALL_STATUSES.length) {
-            initiatives = initiatives.filter(init => this.statusFilters.includes(init.status));
-        }
+          wrapper.appendChild(editButton);
+          wrapper.appendChild(deleteButton);
+          return wrapper;
+        },
+      },
+    ];
+  }
 
-        const themesMap = new Map((SystemService.getCurrentSystem().definedThemes || []).map(t => [t.themeId, t.name]));
-        const teamsMap = new Map((SystemService.getCurrentSystem().teams || []).map(t => [t.teamId, t.teamIdentity || t.teamName]));
+  renderTable() {
+    const container = document.getElementById('backlogTableContainer');
+    if (!container) return;
 
-        return initiatives.map(init => {
-            const ownerName = init.owner?.name || 'N/A';
-            let roiSummary = 'N/A';
-            if (init.roi?.category && init.roi?.estimatedValue) {
-                roiSummary = `${init.roi.category}: ${init.roi.estimatedValue}`;
-                if (init.roi.valueType === 'Monetary' && init.roi.currency) roiSummary += ` ${init.roi.currency}`;
-            } else if (init.roi?.category) {
-                roiSummary = init.roi.category;
-            } else if (init.roi?.estimatedValue) {
-                roiSummary = String(init.roi.estimatedValue);
-            }
+    const tableData = this.prepareTableData();
+    const columns = this.defineColumns();
 
-            const cleanDate = (init.targetDueDate && String(init.targetDueDate).trim() !== '') ? String(init.targetDueDate).trim() : null;
-            const themes = (init.themes || []).map(tid => themesMap.get(tid) || tid).join(', ');
-            let assignedTeams = 'None';
-            let totalSdes = 0;
-            if (init.assignments && init.assignments.length > 0) {
-                assignedTeams = init.assignments.map(a => teamsMap.get(a.teamId) || a.teamId).join(', ');
-                totalSdes = init.assignments.reduce((sum, a) => sum + (parseFloat(a.sdeYears) || 0), 0);
-            }
+    const options = {
+      data: tableData,
+      columns: columns,
+      layout: 'fitColumns',
+      responsiveLayout: 'hide',
+      pagination: 'local',
+      paginationSize: 30,
+      paginationSizeSelector: [10, 15, 25, 50, 75, 100],
+      movableColumns: true,
+      initialSort: [{ column: 'title', dir: 'asc' }],
+      placeholder: 'No initiatives match the current filters.',
+      uniqueIdField: 'id',
+    };
 
-            return {
-                ...init,
-                id: init.initiativeId,
-                targetDueDate: cleanDate,
-                ownerDisplay: ownerName,
-                roiSummaryDisplay: roiSummary,
-                targetQuarterYearDisplay: this.formatDateToQuarterYear(cleanDate),
-                themeNamesDisplay: themes,
-                assignedTeamsDisplay: assignedTeams,
-                totalInitialSdesDisplay: totalSdes.toFixed(2)
-            };
-        });
-    }
+    if (this.table) this.table.destroy();
+    this.table = new EnhancedTableWidget(container, options);
 
-    defineColumns() {
-        const getPersonnelEditorParams = () => {
-            const options = [{ label: '- No Owner -', value: '' }];
-            (SystemService.getCurrentSystem().sdms || []).forEach(p => options.push({ label: `${p.sdmName} (SDM)`, value: `sdm:${p.sdmId}` }));
-            (SystemService.getCurrentSystem().pmts || []).forEach(p => options.push({ label: `${p.pmtName} (PMT)`, value: `pmt:${p.pmtId}` }));
-            (SystemService.getCurrentSystem().seniorManagers || []).forEach(p => options.push({ label: `${p.seniorManagerName} (Sr. Mgr)`, value: `seniorManager:${p.seniorManagerId}` }));
-            return { values: options, autocomplete: true };
-        };
-
-        const getThemeEditorParams = () => {
-            const options = (SystemService.getCurrentSystem().definedThemes || []).map(t => ({ label: t.name, value: t.themeId }));
-            return { values: options, multiselect: true };
-        };
-
-        return [
-            {
-                title: 'Title', field: 'title', minWidth: 200, headerFilter: 'input', frozen: true,
-                tooltip: (e, cell) => cell.getValue(), editor: 'input',
-                cellEdited: (cell) => {
-                    InitiativeService.updateInitiative(SystemService.getCurrentSystem(), cell.getRow().getData().id, { title: cell.getValue() });
-                    SystemService.save();
-                }
-            },
-            {
-                title: 'Description', field: 'description', minWidth: 250, formatter: 'textarea', headerFilter: 'input',
-                tooltip: (e, cell) => cell.getValue(), editor: 'textarea',
-                cellEdited: (cell) => {
-                    InitiativeService.updateInitiative(SystemService.getCurrentSystem(), cell.getRow().getData().id, { description: cell.getValue() });
-                    SystemService.save();
-                }
-            },
-            {
-                title: 'Status', field: 'status', width: 120, headerFilter: 'list',
-                headerFilterParams: { values: ['', ...this.ALL_STATUSES], clearable: true },
-                editor: 'list', editorParams: { values: this.ALL_STATUSES },
-                cellEdited: (cell) => {
-                    const init = cell.getRow().getData();
-                    const newValue = cell.getValue();
-                    const oldValue = cell.getOldValue();
-                    if (newValue === 'Completed') {
-                        const today = luxon.DateTime.now().startOf('day');
-                        const dueDate = luxon.DateTime.fromISO(init.targetDueDate).startOf('day');
-                        if (oldValue !== 'Committed') {
-                            notificationManager.showToast("Only 'Committed' initiatives can be marked as 'Completed'", 'error');
-                            cell.restoreOldValue(); return;
-                        }
-                        if (dueDate > today) {
-                            notificationManager.showToast("Cannot mark as 'Completed' before due date", 'error');
-                            cell.restoreOldValue(); return;
-                        }
-                        InitiativeService.updateInitiative(SystemService.getCurrentSystem(), init.id, { status: newValue });
-                        SystemService.save();
-                    } else {
-                        notificationManager.showToast("Status updates (other than to 'Completed') managed by Year Plan ATL/BTL process", 'info');
-                        cell.restoreOldValue();
-                    }
-                }
-            },
-            { title: 'Assigned Teams', field: 'assignedTeamsDisplay', minWidth: 180, headerFilter: 'input', formatter: 'textarea' },
-            { title: 'SDE/Yr Estimates', field: 'totalInitialSdesDisplay', width: 100, hozAlign: 'center', headerFilter: 'input', sorter: 'number' },
-            {
-                title: 'Owner', field: 'owner', width: 140, headerFilter: 'input',
-                formatter: (cell) => cell.getValue()?.name || 'N/A',
-                editor: 'list', editorParams: getPersonnelEditorParams,
-                cellEdited: (cell) => {
-                    const ownerValue = cell.getValue();
-                    let newOwner = null;
-                    if (ownerValue) {
-                        const [type, id] = ownerValue.split(':');
-                        const options = getPersonnelEditorParams().values;
-                        const selected = options.find(opt => opt.value === ownerValue);
-                        const name = selected ? selected.label.replace(/ \(.+\)/, '') : id;
-                        newOwner = { type, id, name };
-                    }
-                    InitiativeService.updateInitiative(SystemService.getCurrentSystem(), cell.getRow().getData().id, { owner: newOwner });
-                    SystemService.save();
-                    cell.getRow().update({ owner: newOwner });
-                }
-            },
-            { title: 'ROI Summary', field: 'roiSummaryDisplay', minWidth: 180, headerFilter: 'input' },
-            {
-                title: 'Target Quarter/Yr', field: 'targetQuarterYearDisplay', width: 110, hozAlign: 'center', headerFilter: 'input',
-                sorter: (a, b, aRow, bRow) => {
-                    const dateA = aRow.getData().targetDueDate ? luxon.DateTime.fromISO(aRow.getData().targetDueDate) : null;
-                    const dateB = bRow.getData().targetDueDate ? luxon.DateTime.fromISO(bRow.getData().targetDueDate) : null;
-                    if (!dateA?.isValid && !dateB?.isValid) return 0;
-                    if (!dateA?.isValid) return 1;
-                    if (!dateB?.isValid) return -1;
-                    return dateA - dateB;
-                }
-            },
-            {
-                title: 'Target Due Date', field: 'targetDueDate', width: 120, hozAlign: 'center', headerFilter: 'input', editor: 'date',
-                editorParams: { format: 'yyyy-MM-dd' },
-                cellEdited: (cell) => {
-                    const newDate = cell.getValue();
-                    const newYear = newDate ? luxon.DateTime.fromISO(newDate).year : new Date().getFullYear();
-                    InitiativeService.updateInitiative(SystemService.getCurrentSystem(), cell.getRow().getData().id, {
-                        targetDueDate: newDate,
-                        attributes: { ...cell.getRow().getData().attributes, planningYear: newYear }
-                    });
-                    SystemService.save();
-                    cell.getRow().update({ targetQuarterYearDisplay: this.formatDateToQuarterYear(newDate) });
-                }
-            },
-            {
-                title: 'Themes', field: 'themes', minWidth: 150, headerFilter: 'input',
-                formatter: (cell) => {
-                    const themeMap = new Map((SystemService.getCurrentSystem().definedThemes || []).map(t => [t.themeId, t.name]));
-                    return (cell.getValue() || []).map(id => themeMap.get(id) || id).join(', ');
-                },
-                editor: 'list', editorParams: getThemeEditorParams,
-                cellEdited: (cell) => {
-                    InitiativeService.updateInitiative(SystemService.getCurrentSystem(), cell.getRow().getData().id, { themes: cell.getValue() || [] });
-                    SystemService.save();
-                }
-            },
-            {
-                title: 'Actions', width: 120, hozAlign: 'center', headerSort: false,
-                formatter: (cell) => {
-                    const id = cell.getRow().getData().id;
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'roadmap-action-buttons';
-
-                    const editButton = document.createElement('button');
-                    editButton.className = 'btn btn-secondary btn-sm';
-                    editButton.dataset.action = 'edit';
-                    editButton.dataset.initiativeId = id;
-                    editButton.textContent = 'Edit';
-
-                    const deleteButton = document.createElement('button');
-                    deleteButton.className = 'btn btn-danger btn-sm';
-                    deleteButton.dataset.action = 'delete';
-                    deleteButton.dataset.initiativeId = id;
-                    deleteButton.textContent = 'Del';
-
-                    wrapper.appendChild(editButton);
-                    wrapper.appendChild(deleteButton);
-                    return wrapper;
-                }
-            }
-        ];
-    }
-
-    renderTable() {
-        const container = document.getElementById('backlogTableContainer');
-        if (!container) return;
-
-        const tableData = this.prepareTableData();
-        const columns = this.defineColumns();
-
-        const options = {
-            data: tableData,
-            columns: columns,
-            layout: 'fitColumns',
-            responsiveLayout: 'hide',
-            pagination: 'local',
-            paginationSize: 30,
-            paginationSizeSelector: [10, 15, 25, 50, 75, 100],
-            movableColumns: true,
-            initialSort: [{ column: 'title', dir: 'asc' }],
-            placeholder: 'No initiatives match the current filters.',
-            uniqueIdField: 'id'
-        };
-
-        if (this.table) this.table.destroy();
-        this.table = new EnhancedTableWidget(container, options);
-
-        container.addEventListener('click', (e) => {
-            const btn = e.target.closest('[data-action]');
-            if (!btn) return;
-            const initiativeId = btn.dataset.initiativeId;
-            if (btn.dataset.action === 'edit') {
-                const roadmapView = navigationManager.getViewInstance('roadmapView');
-                roadmapView.openModalForEdit(initiativeId);
-            } else if (btn.dataset.action === 'delete') {
-                const roadmapView = navigationManager.getViewInstance('roadmapView');
-                roadmapView.handleDelete(initiativeId);
-            }
-        });
-    }
+    container.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      const initiativeId = btn.dataset.initiativeId;
+      if (btn.dataset.action === 'edit') {
+        const roadmapView = navigationManager.getViewInstance('roadmapView');
+        roadmapView.openModalForEdit(initiativeId);
+      } else if (btn.dataset.action === 'delete') {
+        const roadmapView = navigationManager.getViewInstance('roadmapView');
+        roadmapView.handleDelete(initiativeId);
+      }
+    });
+  }
 }
