@@ -194,11 +194,12 @@ describe('System lifecycle: create, edit, and delete', () => {
       .then(($section) => {
         ensureSectionExpanded($section, '.team-edit-section-header', '.team-edit-section-content');
         cy.wrap($section).within(() => {
+          const sdmLabel = 'Alex SDM (SDM)';
           cy.get('.dual-list-add-new__input').type('Alex SDM');
           cy.get('.dual-list-add-new button').click();
-          cy.get('select[data-field="availableSdms"]').select('Alex SDM');
+          cy.get('select[data-field="availableManagers"]').select(sdmLabel);
           cy.get('.dual-list-controls button').first().click();
-          cy.get('select[data-field="currentSdm"] option').should('contain', 'Alex SDM');
+          cy.get('select[data-field="currentManager"] option').should('contain', 'Alex SDM');
         });
       });
 

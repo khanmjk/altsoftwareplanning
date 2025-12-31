@@ -88,11 +88,12 @@ describe('System Edit and Org Design', () => {
       .contains('.team-edit-section-title', 'SDM Assignment')
       .closest('.team-edit-section')
       .within(() => {
+        const sdmLabel = `${sdmName} (SDM)`;
         cy.get('.dual-list-add-new__input').clear().type(sdmName);
         cy.get('.dual-list-add-new button').click();
-        cy.get('select[data-field="availableSdms"]').select(sdmName);
+        cy.get('select[data-field="availableManagers"]').select(sdmLabel);
         cy.contains('.dual-list-controls button', '<').click();
-        cy.get('select[data-field="currentSdm"]').should('contain', sdmName);
+        cy.get('select[data-field="currentManager"]').should('contain', sdmName);
       });
 
     // Add and assign a new PMT.

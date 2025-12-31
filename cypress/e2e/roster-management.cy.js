@@ -1,7 +1,7 @@
 /**
  * E2E Tests for Roster Management
- * Tests the unified "Manage Roster" view and related roster operations
- * covering all 6 role types: Engineers, AI Engineers, Away-Team, SDMs, Sr Managers, PMTs, PMs
+ * Tests the unified "Roster" view and related roster operations
+ * covering all 7 role types: Engineers, AI Engineers, Away-Team, SDMs, Sr Managers, PMTs, PMs
  */
 
 const openSidebarView = (viewId) => {
@@ -52,6 +52,38 @@ describe('Roster Management', () => {
       navigateToManageRoster();
     });
 
+    const getRosterTable = (win) => {
+      const view = win.navigationManager?.getViewInstance('organogramView');
+      const table = view?.engineerTableWidgetInstance?.tabulatorInstance;
+      if (!table) {
+        throw new Error('Roster table not available.');
+      }
+      return table;
+    };
+
+    const applyRoleTypeFilter = (roleLabel) => {
+      cy.window().then((win) => {
+        const table = getRosterTable(win);
+        if (typeof table.setHeaderFilterValue === 'function') {
+          table.setHeaderFilterValue('roleType', roleLabel);
+        } else {
+          table.setFilter('roleType', '=', roleLabel);
+        }
+      });
+    };
+
+    const assertRoleTypeFiltered = (roleLabel) => {
+      cy.window().should((win) => {
+        const table = getRosterTable(win);
+        const data = table.getData('active');
+        expect(data.length, 'filtered rows').to.be.greaterThan(0);
+        expect(
+          data.every((row) => row.roleType.includes(roleLabel)),
+          'role types match'
+        ).to.be.true;
+      });
+    };
+
     it('displays unified roster table with all role types', () => {
       // Table should exist with rows
       cy.get('#orgEngineerTableWidgetContainer .tabulator-row').should(
@@ -77,31 +109,31 @@ describe('Roster Management', () => {
 
     it('can filter by Engineer role type', () => {
       // Open Role Type filter dropdown
-      cy.get('.tabulator-col[tabulator-field="roleType"] .tabulator-header-filter select').select(
-        'Engineer'
-      );
+      applyRoleTypeFilter('Engineer');
 
-      // After filter, all visible rows should be Engineers
-      cy.get('#orgEngineerTableWidgetContainer .tabulator-row:visible').each(($row) => {
-        cy.wrap($row).find('.org-role-badge').should('contain', 'Engineer');
-      });
+      // After filter, all rows should be Engineers
+      assertRoleTypeFiltered('Engineer');
     });
 
     it('can filter by SDM role type', () => {
       // Open Role Type filter dropdown
-      cy.get('.tabulator-col[tabulator-field="roleType"] .tabulator-header-filter select').select(
-        'SDM'
-      );
+      applyRoleTypeFilter('SDM');
 
-      // After filter, all visible rows should be SDMs
-      cy.get('#orgEngineerTableWidgetContainer .tabulator-row:visible').each(($row) => {
-        cy.wrap($row).find('.org-role-badge').should('contain', 'SDM');
-      });
+      // After filter, all rows should be SDMs
+      assertRoleTypeFiltered('SDM');
     });
 
     it('displays all 6 role types in the table', () => {
       // Verify each role type badge is present somewhere in the table
-      const roleTypes = ['Engineer', 'Away-Team', 'SDM', 'Sr Manager', 'PMT', 'Project Manager'];
+      const roleTypes = [
+        'Engineer',
+        'AI Engineer',
+        'Away-Team',
+        'SDM',
+        'Sr Manager',
+        'PMT',
+        'Project Manager',
+      ];
 
       roleTypes.forEach((roleType) => {
         cy.get(`#orgEngineerTableWidgetContainer .org-role-badge:contains("${roleType}")`).should(
@@ -137,7 +169,7 @@ describe('Roster Management', () => {
       cy.get('#orgEngineerTableWidgetContainer .tabulator-row')
         .first()
         .within(() => {
-          cy.get('.org-engineer-delete-btn').should('exist');
+          cy.get('.table-action-btn--delete').should('exist');
         });
     });
   });
@@ -194,8 +226,15 @@ describe('Roster Management', () => {
 
           // Verify it was added
           cy.get('.away-team-item').should('contain', 'Test Contractor');
+        });
 
-          // Remove the member
+      // Re-render collapses sections; reopen and remove the member.
+      cy.get('.team-edit-item').first().as('team');
+      cy.get('@team').contains('.team-edit-section-title', 'Away-Team Members').click();
+      cy.get('@team')
+        .contains('.team-edit-section-title', 'Away-Team Members')
+        .closest('.team-edit-section')
+        .within(() => {
           cy.get('.away-team-item')
             .contains('Test Contractor')
             .closest('.away-team-item')
