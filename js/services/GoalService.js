@@ -37,6 +37,19 @@ const GoalService = {
     inProgressAtRiskDays: 21,
   },
 
+  INSPECTION_STATUS: {
+    ON_TRACK: 'on-track',
+    SLIPPING: 'slipping',
+    AT_RISK: 'at-risk',
+    LATE: 'late',
+    ACHIEVED: 'achieved',
+    BLOCKED: 'blocked',
+  },
+
+  DEFAULT_INSPECTION_RULES: {
+    cadenceDays: 7,
+  },
+
   // =========================================================================
   // CRUD OPERATIONS
   // =========================================================================
@@ -74,6 +87,7 @@ const GoalService = {
       ...goalData,
     };
 
+    this._ensureGoalInspectionContainer(newGoal);
     systemData.goals.push(newGoal);
     return newGoal;
   },
@@ -98,6 +112,8 @@ const GoalService = {
     }
 
     Object.assign(goal, updates);
+    this._ensureGoalInspectionContainer(goal);
+    this._syncGoalInspectionOwner(goal, updates);
 
     // Recalculate status if dates changed
     if (updates.targetEndDate || updates.plannedEndDate || updates.dueDate) {
@@ -154,6 +170,7 @@ const GoalService = {
     const goal = this.getGoal(systemData, goalId);
     if (!goal) return null;
 
+    this._ensureGoalInspectionContainer(goal);
     const initiatives = this.getInitiativesForGoal(systemData, goalId);
     goal.plannedEndDate = this.computeGoalPlannedEndDate(goal, initiatives);
     this.refreshGoalStatus(goal, initiatives, {
@@ -393,6 +410,283 @@ const GoalService = {
   },
 
   // =========================================================================
+  // GOAL INSPECTIONS (OWNER WEEKLY CHECK-INS)
+  // =========================================================================
+
+  /**
+   * Adds a weekly owner check-in for a goal.
+   *
+   * @param {object} systemData - The global system data object.
+   * @param {string} goalId - Goal identifier.
+   * @param {object} checkInData - Owner inspection payload.
+   * @param {object} [options] - Optional overrides.
+   * @returns {{success: boolean, checkIn?: object, error?: string}}
+   */
+  addGoalCheckIn(systemData, goalId, checkInData = {}, options = {}) {
+    const goal = this.getGoal(systemData, goalId);
+    if (!goal) {
+      return { success: false, error: `Goal "${goalId}" was not found.` };
+    }
+
+    const inspection = this._ensureGoalInspectionContainer(goal);
+    const ownerStatus = this._normalizeInspectionStatus(checkInData.ownerStatus);
+    if (!ownerStatus) {
+      return { success: false, error: 'Owner status is required for a weekly check-in.' };
+    }
+
+    const needsPtg =
+      ownerStatus === this.INSPECTION_STATUS.SLIPPING ||
+      ownerStatus === this.INSPECTION_STATUS.AT_RISK ||
+      ownerStatus === this.INSPECTION_STATUS.LATE ||
+      ownerStatus === this.INSPECTION_STATUS.BLOCKED;
+    const ptg = String(checkInData.ptg || '').trim();
+    if (needsPtg && !ptg) {
+      return {
+        success: false,
+        error:
+          'Path to Green (PTG) is required when status is Slipping, At Risk, Late, or Blocked.',
+      };
+    }
+
+    const now = this._toDate(options.now || new Date()) || new Date();
+    const cadenceDays = this._normalizeCadenceDays(inspection.cadenceDays);
+    const updatedAt = now.toISOString();
+    const weekEnding = checkInData.weekEnding || this._formatDate(now);
+    const confidence = this._normalizeConfidence(checkInData.confidence);
+    const updatedBy = String(
+      checkInData.updatedBy || goal?.owner?.name || options.updatedBy || 'Goal Owner'
+    ).trim();
+
+    const checkIn = {
+      checkInId: checkInData.checkInId || this._generateId('checkin'),
+      weekEnding,
+      ownerStatus,
+      confidence,
+      comment: String(checkInData.comment || '').trim(),
+      ptg,
+      ptgTargetDate: checkInData.ptgTargetDate || null,
+      blockers: String(checkInData.blockers || '').trim(),
+      asks: String(checkInData.asks || '').trim(),
+      updatedBy,
+      updatedAt,
+    };
+
+    if (!Array.isArray(inspection.history)) {
+      inspection.history = [];
+    }
+    inspection.history.push(checkIn);
+    inspection.latestCheckIn = checkIn;
+    inspection.lastCheckInAt = updatedAt;
+    inspection.nextCheckInDueAt = this._formatDate(this._addDays(now, cadenceDays));
+    inspection.ownerId = goal?.owner?.id || inspection.ownerId || null;
+
+    return { success: true, checkIn };
+  },
+
+  /**
+   * Gets the latest owner check-in for a goal.
+   *
+   * @param {object} goal - Goal object.
+   * @returns {object|null}
+   */
+  getLatestGoalCheckIn(goal) {
+    const inspection = this._ensureGoalInspectionContainer(goal);
+    if (inspection.latestCheckIn) return inspection.latestCheckIn;
+    if (!Array.isArray(inspection.history) || inspection.history.length === 0) return null;
+    return inspection.history[inspection.history.length - 1] || null;
+  },
+
+  /**
+   * Computes owner inspection state (staleness, mismatch, and labels) for a goal.
+   *
+   * @param {object} goal - Goal object.
+   * @param {object} [options] - Optional overrides.
+   * @returns {object}
+   */
+  getGoalInspectionStatus(goal, options = {}) {
+    const inspection = this._ensureGoalInspectionContainer(goal);
+    const latestCheckIn = this.getLatestGoalCheckIn(goal);
+    const now = this._toDate(options.now || new Date()) || new Date();
+    const cadenceDays = this._normalizeCadenceDays(options.cadenceDays || inspection.cadenceDays);
+    const lastCheckInAt = latestCheckIn?.updatedAt || inspection.lastCheckInAt || null;
+    const lastCheckInDate = this._toDate(lastCheckInAt);
+    const daysSinceCheckIn = lastCheckInDate ? this._diffDays(lastCheckInDate, now) : null;
+    const isStale = daysSinceCheckIn === null ? true : daysSinceCheckIn > cadenceDays;
+    const computedStatus = String(
+      options.computedStatus || goal?.statusVisual || goal?.status || this.STATUS.NOT_STARTED
+    ).toLowerCase();
+    const computedBand = this._inspectionBandForComputedStatus(computedStatus);
+    const ownerBand = this._inspectionBandForOwnerStatus(latestCheckIn?.ownerStatus);
+    const hasMismatch =
+      !!latestCheckIn && !!ownerBand && !!computedBand && ownerBand !== computedBand;
+
+    return {
+      ownerId: inspection.ownerId || goal?.owner?.id || null,
+      cadenceDays,
+      ownerStatus: latestCheckIn?.ownerStatus || null,
+      ownerStatusLabel: this._toInspectionStatusLabel(latestCheckIn?.ownerStatus),
+      comment: latestCheckIn?.comment || '',
+      ptg: latestCheckIn?.ptg || '',
+      ptgTargetDate: latestCheckIn?.ptgTargetDate || null,
+      blockers: latestCheckIn?.blockers || '',
+      asks: latestCheckIn?.asks || '',
+      confidence: typeof latestCheckIn?.confidence === 'number' ? latestCheckIn.confidence : null,
+      weekEnding: latestCheckIn?.weekEnding || null,
+      updatedBy: latestCheckIn?.updatedBy || '',
+      lastCheckInAt: lastCheckInAt || null,
+      nextCheckInDueAt:
+        inspection.nextCheckInDueAt ||
+        (lastCheckInDate ? this._formatDate(this._addDays(lastCheckInDate, cadenceDays)) : null),
+      daysSinceCheckIn,
+      isStale,
+      hasMismatch,
+      computedStatus,
+      computedStatusBand: computedBand,
+      ownerStatusBand: ownerBand,
+    };
+  },
+
+  /**
+   * Builds reporting rows for goal inspections with optional filtering.
+   *
+   * @param {object} systemData - The global system data object.
+   * @param {object} [filters] - Report filters.
+   * @returns {Array<object>}
+   */
+  getGoalInspectionReportRows(systemData, filters = {}) {
+    if (!systemData || !Array.isArray(systemData.goals)) return [];
+
+    const now = this._toDate(filters.now || new Date()) || new Date();
+    const goalStatusRules = systemData?.attributes?.goalStatusRules || {};
+    const ownerIdFilter = filters.ownerId || 'all';
+    const ownerStatusFilter = this._normalizeInspectionStatus(filters.ownerStatus || 'all');
+    const staleOnly = !!filters.staleOnly;
+    const mismatchOnly = !!filters.mismatchOnly;
+    const planningYear = filters.planningYear || 'all';
+
+    const rows = systemData.goals
+      .map((goal) => {
+        const initiatives = this.getInitiativesForGoal(systemData, goal.goalId);
+        const initiativesForYear =
+          planningYear === 'all'
+            ? initiatives
+            : initiatives.filter((init) => init?.attributes?.planningYear == planningYear);
+        if (planningYear !== 'all' && initiativesForYear.length === 0) return null;
+
+        const computed = this.getGoalStatus(goal, initiativesForYear, {
+          now,
+          rules: goalStatusRules,
+        });
+        const inspection = this.getGoalInspectionStatus(goal, {
+          now,
+          computedStatus: computed.visualStatus || computed.status,
+        });
+
+        const ownerName = goal?.owner?.name || 'Unassigned';
+        const row = {
+          goalId: goal.goalId || '',
+          goalName: goal.name || goal.title || goal.goalId || 'Untitled Goal',
+          ownerId: inspection.ownerId || '',
+          ownerName,
+          ownerStatus: inspection.ownerStatus || '',
+          ownerStatusLabel: inspection.ownerStatusLabel,
+          computedStatus: inspection.computedStatus || '',
+          computedStatusLabel: computed.label || this._toStatusLabel(computed.status),
+          mismatch: inspection.hasMismatch ? 'Yes' : 'No',
+          stale: inspection.isStale ? 'Yes' : 'No',
+          daysSinceCheckIn: inspection.daysSinceCheckIn ?? '',
+          lastCheckInAt: inspection.lastCheckInAt ? inspection.lastCheckInAt.slice(0, 10) : '',
+          nextCheckInDueAt: inspection.nextCheckInDueAt || '',
+          weekEnding: inspection.weekEnding || '',
+          confidence:
+            typeof inspection.confidence === 'number' ? inspection.confidence.toFixed(0) : '',
+          comment: inspection.comment || '',
+          ptg: inspection.ptg || '',
+          ptgTargetDate: inspection.ptgTargetDate || '',
+          blockers: inspection.blockers || '',
+          asks: inspection.asks || '',
+          goalDueDate: goal?.targetEndDate || goal?.dueDate || '',
+          plannedEndDate: goal?.plannedEndDate || '',
+          linkedInitiatives: initiativesForYear.length,
+        };
+
+        return row;
+      })
+      .filter(Boolean);
+
+    return rows
+      .filter((row) => {
+        if (ownerIdFilter !== 'all' && row.ownerId !== ownerIdFilter) return false;
+        if (
+          ownerStatusFilter &&
+          ownerStatusFilter !== 'all' &&
+          row.ownerStatus !== ownerStatusFilter
+        )
+          return false;
+        if (staleOnly && row.stale !== 'Yes') return false;
+        if (mismatchOnly && row.mismatch !== 'Yes') return false;
+        return true;
+      })
+      .sort((a, b) => {
+        if (a.stale !== b.stale) return a.stale === 'Yes' ? -1 : 1;
+        if (a.mismatch !== b.mismatch) return a.mismatch === 'Yes' ? -1 : 1;
+        return String(a.goalName).localeCompare(String(b.goalName));
+      });
+  },
+
+  /**
+   * Computes leadership summary metrics for goal inspections.
+   *
+   * @param {object} systemData - The global system data object.
+   * @param {object} [filters] - Optional filters.
+   * @returns {object}
+   */
+  getGoalInspectionSummary(systemData, filters = {}) {
+    const rows = this.getGoalInspectionReportRows(systemData, filters);
+    const totalGoals = rows.length;
+    const updatedThisWeek = rows.filter(
+      (row) => typeof row.daysSinceCheckIn === 'number' && row.daysSinceCheckIn <= 7
+    ).length;
+    const staleCount = rows.filter((row) => row.stale === 'Yes').length;
+    const mismatchCount = rows.filter((row) => row.mismatch === 'Yes').length;
+    const atRiskOrLateCount = rows.filter((row) =>
+      [
+        this.INSPECTION_STATUS.SLIPPING,
+        this.INSPECTION_STATUS.AT_RISK,
+        this.INSPECTION_STATUS.LATE,
+        this.INSPECTION_STATUS.BLOCKED,
+      ].includes(row.ownerStatus)
+    ).length;
+    const updateCoveragePct = totalGoals === 0 ? 0 : (updatedThisWeek / totalGoals) * 100;
+
+    const blockerCounts = new Map();
+    rows.forEach((row) => {
+      String(row.blockers || '')
+        .split(/[\n;,]+/)
+        .map((token) => token.trim())
+        .filter(Boolean)
+        .forEach((token) => {
+          blockerCounts.set(token, (blockerCounts.get(token) || 0) + 1);
+        });
+    });
+
+    const topBlockers = Array.from(blockerCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([text, count]) => ({ text, count }));
+
+    return {
+      totalGoals,
+      updatedThisWeek,
+      staleCount,
+      mismatchCount,
+      atRiskOrLateCount,
+      updateCoveragePct,
+      topBlockers,
+    };
+  },
+
+  // =========================================================================
   // INITIATIVE LINKS
   // =========================================================================
 
@@ -557,6 +851,118 @@ const GoalService = {
     return String(value || '')
       .trim()
       .toLowerCase();
+  },
+
+  _normalizeInspectionStatus(value) {
+    const normalized = String(value || '')
+      .trim()
+      .toLowerCase();
+    if (!normalized || normalized === 'all') return normalized;
+    const allowed = Object.values(this.INSPECTION_STATUS);
+    return allowed.includes(normalized) ? normalized : '';
+  },
+
+  _normalizeCadenceDays(value) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed) || parsed <= 0) return this.DEFAULT_INSPECTION_RULES.cadenceDays;
+    return Math.round(parsed);
+  },
+
+  _normalizeConfidence(value) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return null;
+    if (parsed < 0) return 0;
+    if (parsed > 100) return 100;
+    return Math.round(parsed);
+  },
+
+  _toInspectionStatusLabel(status) {
+    const normalized = this._normalizeInspectionStatus(status);
+    if (!normalized) return 'No Update';
+    return normalized
+      .split('-')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
+  },
+
+  _toStatusLabel(status) {
+    const normalized = String(status || '')
+      .trim()
+      .toLowerCase();
+    if (!normalized) return 'Unknown';
+    return normalized
+      .split('-')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
+  },
+
+  _inspectionBandForOwnerStatus(status) {
+    const normalized = this._normalizeInspectionStatus(status);
+    if (!normalized) return '';
+    if (
+      normalized === this.INSPECTION_STATUS.AT_RISK ||
+      normalized === this.INSPECTION_STATUS.LATE ||
+      normalized === this.INSPECTION_STATUS.BLOCKED
+    ) {
+      return 'red';
+    }
+    if (normalized === this.INSPECTION_STATUS.SLIPPING) return 'amber';
+    return 'green';
+  },
+
+  _inspectionBandForComputedStatus(status) {
+    const normalized = String(status || '')
+      .trim()
+      .toLowerCase();
+    if (!normalized) return '';
+    if (normalized === this.STATUS.AT_RISK) return 'red';
+    if (normalized === this.STATUS.NOT_STARTED) return 'amber';
+    return 'green';
+  },
+
+  _syncGoalInspectionOwner(goal, updates = {}) {
+    const inspection = this._ensureGoalInspectionContainer(goal);
+    if (updates.owner && updates.owner.id) {
+      inspection.ownerId = updates.owner.id;
+      return;
+    }
+    if (!inspection.ownerId && goal?.owner?.id) {
+      inspection.ownerId = goal.owner.id;
+    }
+  },
+
+  _ensureGoalInspectionContainer(goal) {
+    if (!goal.attributes) goal.attributes = {};
+    if (!goal.attributes.goalInspection) {
+      goal.attributes.goalInspection = {};
+    }
+
+    const inspection = goal.attributes.goalInspection;
+    inspection.ownerId = inspection.ownerId || goal?.owner?.id || null;
+    inspection.cadenceDays = this._normalizeCadenceDays(inspection.cadenceDays);
+    if (!Array.isArray(inspection.history)) {
+      inspection.history = [];
+    }
+    if (!inspection.latestCheckIn && inspection.history.length > 0) {
+      inspection.latestCheckIn = inspection.history[inspection.history.length - 1];
+    }
+    if (!inspection.lastCheckInAt && inspection.latestCheckIn?.updatedAt) {
+      inspection.lastCheckInAt = inspection.latestCheckIn.updatedAt;
+    }
+    if (!inspection.nextCheckInDueAt && inspection.lastCheckInAt) {
+      const due = this._addDays(inspection.lastCheckInAt, inspection.cadenceDays);
+      inspection.nextCheckInDueAt = this._formatDate(due);
+    }
+
+    return inspection;
+  },
+
+  _addDays(value, days) {
+    const base = this._toDate(value);
+    if (!base) return null;
+    const result = new Date(base.getTime());
+    result.setDate(result.getDate() + days);
+    return result;
   },
 
   _isInitiativeCompleted(initiative) {

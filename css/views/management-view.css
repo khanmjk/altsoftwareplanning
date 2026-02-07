@@ -186,3 +186,69 @@
   font-weight: 600;
   text-transform: uppercase;
 }
+
+.goal-inspection-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.goal-inspection-summary-card {
+  border: 1px solid var(--theme-border-color);
+  background: var(--theme-card-bg);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm);
+}
+
+.goal-inspection-summary-card--wide {
+  grid-column: 1 / -1;
+}
+
+.goal-inspection-summary-card__value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--theme-text-primary);
+}
+
+.goal-inspection-summary-card__label {
+  margin-top: 4px;
+  font-size: 0.8rem;
+  color: var(--theme-text-secondary);
+}
+
+.goal-inspection-filters {
+  display: grid;
+  grid-template-columns: minmax(170px, 220px) minmax(170px, 220px) auto auto;
+  gap: var(--space-sm);
+  align-items: end;
+  margin-bottom: var(--space-md);
+}
+
+.goal-inspection-filters__item {
+  min-width: 0;
+}
+
+.goal-inspection-filters__toggle {
+  color: var(--theme-text-secondary);
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.goal-inspection-table {
+  margin-top: var(--space-sm);
+}
+
+@media (max-width: 920px) {
+  .goal-inspection-filters {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .goal-inspection-filters__toggle {
+    margin-bottom: 0;
+  }
+}

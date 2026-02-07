@@ -22,10 +22,11 @@ npm run test:e2e:open
 
 ## Current Baseline (February 7, 2026)
 
-- Full suite result: **8 specs / 52 tests passing**.
+- Full suite result: **8 specs / 53 tests passing**.
 - Includes explicit regression coverage for:
   - Roadmap -> `Manage Goals` navigation
   - Goal CRUD in Product Management goals workflow
+  - Goal owner inspection capture + reporting flow in Product Management
   - Roadmap, planning, roster, AI settings, feedback, and system edit end-to-end flows
 
 ## Run a Single Spec
@@ -65,10 +66,10 @@ Notes:
 ## Spec Map
 
 - `cypress/e2e/smoke.cy.js`: quick sanity checks for navigation and modals.
-- `cypress/e2e/core-features.cy.js`: primary views, navigation, and core UI.
+- `cypress/e2e/core-features.cy.js`: primary views, navigation, and core UI (including Management inspections tab).
 - `cypress/e2e/advanced-flows.cy.js`: full system creation, drag and drop, and forecasting.
 - `cypress/e2e/system-edit-org.cy.js`: system edit and org design workflows.
-- `cypress/e2e/product-management.cy.js`: themes, initiatives, goals, backlog CRUD, and roadmap-to-goals navigation.
+- `cypress/e2e/product-management.cy.js`: themes, initiatives, goals, goal inspections/reporting, backlog CRUD, and roadmap-to-goals navigation.
 - `cypress/e2e/planning-detailed.cy.js`: year plan, detailed planning, capacity, and forecast.
 - `cypress/e2e/settings-ai-feedback.cy.js`: AI settings, feedback, and reset flows.
 

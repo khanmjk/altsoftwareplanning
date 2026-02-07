@@ -39,6 +39,7 @@ All three analyses agree the architecture is stable enough to ship significant b
 9. Capacity intelligence: Hiring Gap KPI and corrected sink assumptions for open positions.
 10. AI planning copilots: goal alignment and goal risk analysis tools.
 11. Year Plan export actions: CSV and XLSX export from the Year Plan toolbar (metadata, team summary, initiatives).
+12. Goal inspection operations: weekly owner status/PTG check-ins plus leadership-ready inspection reporting (filters, stale/mismatch signals, CSV/XLSX export).
 
 ### Partially delivered / still open
 

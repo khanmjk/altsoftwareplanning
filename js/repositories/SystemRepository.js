@@ -2,13 +2,23 @@
  * SystemRepository
  * Handles app storage for systems, settings, and UI preferences via storage drivers.
  */
+const SYSTEM_DATA_MODEL_VERSION = 13;
+const DEFAULT_SYSTEMS_KEY = `architectureVisualization_systems_v${SYSTEM_DATA_MODEL_VERSION}`;
+const PREVIOUS_SYSTEMS_KEY = `architectureVisualization_systems_v${SYSTEM_DATA_MODEL_VERSION - 1}`;
+const DEFAULT_SETTINGS_KEY = 'architectureVisualization_appSettings_v1';
+const DEFAULT_UI_PREFS_KEY = 'architectureVisualization_uiPrefs_v1';
+const SAMPLE_SYSTEM_IDS = new Set([
+  'StreamView',
+  'ConnectPro',
+  'ShopSphere',
+  'InsightAI',
+  'FinSecure',
+]);
+
 class SystemRepository {
   constructor(options = {}) {
-    // Data Model Version v12: Added engineerId, awayMemberId, team.seniorManagerId (flexible hierarchy)
-    const DEFAULT_SYSTEMS_KEY = 'architectureVisualization_systems_v12';
-    const PREVIOUS_SYSTEMS_KEY = 'architectureVisualization_systems_v11';
-    const DEFAULT_SETTINGS_KEY = 'architectureVisualization_appSettings_v1';
-    const DEFAULT_UI_PREFS_KEY = 'architectureVisualization_uiPrefs_v1';
+    // Data Model Version v13: refreshed bundled sample-data timelines require cache invalidation.
+    // We selectively migrate user-created systems from the previous key while refreshing sample systems.
 
     this.storageMode = options.storageMode || 'local';
     this.storageKey = options.storageKey || DEFAULT_SYSTEMS_KEY;
@@ -31,39 +41,56 @@ class SystemRepository {
   }
 
   /**
-   * Migrates data from v11 storage key to v12 if v12 is empty and v11 has data.
+   * Migrates user systems from the previous storage key when the current key is empty.
+   * Bundled sample systems are intentionally not migrated so refreshed sample data is loaded.
    * @private
    */
   _migrateFromPreviousVersion() {
     try {
-      // Check if v12 already has data
+      // Current key already has data, no migration needed.
       const currentData = this.driver.loadAll();
       if (Object.keys(currentData).length > 0) {
-        // v12 already has data, no migration needed
         return;
       }
 
-      // Check if v11 has data to migrate
+      // Load previous version data.
       const previousDriver = this._createDriver(this.storageMode, this.previousStorageKey);
       const previousData = previousDriver.loadAll();
-
       if (Object.keys(previousData).length === 0) {
-        // No v11 data to migrate
         return;
+      }
+
+      const migratedUserSystems = {};
+      let skippedSampleCount = 0;
+      Object.entries(previousData).forEach(([systemId, systemData]) => {
+        const resolvedSystemId = systemData?.systemName || systemId;
+        if (SAMPLE_SYSTEM_IDS.has(systemId) || SAMPLE_SYSTEM_IDS.has(resolvedSystemId)) {
+          skippedSampleCount += 1;
+          return;
+        }
+        migratedUserSystems[systemId] = systemData;
+      });
+
+      const userSystemCount = Object.keys(migratedUserSystems).length;
+      console.log(
+        `[SystemRepository] Migrating ${userSystemCount} user systems from ${this.previousStorageKey} to ${this.storageKey}; skipped ${skippedSampleCount} sample systems.`
+      );
+
+      if (userSystemCount > 0) {
+        this.driver.saveAll(migratedUserSystems);
       }
 
       console.log(
-        `[SystemRepository] Migrating ${Object.keys(previousData).length} systems from v11 to v12...`
+        '[SystemRepository] Migration complete. Previous key data preserved (not deleted).'
       );
 
-      // Save all v11 data to v12 (augmentation will happen when loaded via SystemService)
-      this.driver.saveAll(previousData);
-
-      console.log('[SystemRepository] Migration complete. v11 data preserved (not deleted).');
-
-      // Note: We intentionally do NOT delete v11 data as a safety measure.
+      // Note: We intentionally do NOT delete old-key data as a safety measure.
       // Users can clear it manually if desired.
     } catch (error) {
+      // Non-browser test environments may not provide localStorage. Skip migration silently there.
+      if (error?.name === 'ReferenceError' && String(error.message).includes('localStorage')) {
+        return;
+      }
       console.error('[SystemRepository] Migration failed:', error);
       // Don't block app startup on migration failure
     }

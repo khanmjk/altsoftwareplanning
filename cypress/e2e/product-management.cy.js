@@ -146,6 +146,62 @@ describe('Product management workflows', () => {
     cy.contains('.inline-edit-title', goalName).should('not.exist');
   });
 
+  it('captures weekly goal inspections and reports them in management inspections', () => {
+    const goalName = 'Goal Inspection E2E';
+    const ownerComment = 'Migration dependency remains volatile.';
+    const editedOwnerComment = 'Updated owner check-in after mitigation actions.';
+    const ptgText = 'Reduce scope by one epic and add focused tiger team.';
+
+    openSidebarView('managementView');
+    cy.get('[data-pill-id="goals"]').click();
+    cy.get('#goalsListContainer', { timeout: 10000 }).should('exist');
+    cy.contains('button[data-action="add-goal"]', 'Add Goal').click();
+
+    cy.get('.inline-edit-item').last().as('draftGoal');
+    ensureExpanded('@draftGoal', '.inline-edit-details', '.inline-edit-header');
+    cy.get('@draftGoal').find('input[data-field="name"]').clear().type(goalName);
+    cy.get('@draftGoal').find('input[data-field="dueDate"]').clear().type('2026-12-31');
+    cy.get('@draftGoal').contains('button', 'Create Goal').click();
+    cy.contains('.toast-message', 'Goal created successfully.').should('exist');
+
+    cy.contains('.inline-edit-title', goalName).closest('.inline-edit-item').as('savedGoal');
+    ensureExpanded('@savedGoal', '.inline-edit-details', '.inline-edit-header');
+    selectThemedOptionByLabel('@savedGoal', 'Owner Status', 'At Risk');
+    cy.get('@savedGoal')
+      .contains('label', 'Owner Comment')
+      .parent()
+      .find('textarea')
+      .clear()
+      .type(ownerComment);
+    cy.get('@savedGoal')
+      .contains('label', 'Path to Green (PTG)')
+      .parent()
+      .find('textarea')
+      .clear()
+      .type(ptgText);
+    cy.get('@savedGoal').contains('button', 'Log Weekly Check-In').click();
+    cy.contains('.toast-message', 'Goal inspection saved.').should('exist');
+
+    // Edit the owner update and save from goal context (without using explicit check-in button).
+    cy.contains('.inline-edit-title', goalName).closest('.inline-edit-item').as('savedGoal');
+    ensureExpanded('@savedGoal', '.inline-edit-details', '.inline-edit-header');
+    cy.get('@savedGoal')
+      .contains('label', 'Owner Comment')
+      .parent()
+      .find('textarea')
+      .clear()
+      .type(editedOwnerComment);
+    cy.get('@savedGoal').contains('button', 'Save Changes').click();
+    cy.contains('.toast-message', 'Goal saved successfully.').should('exist');
+
+    cy.get('[data-pill-id="inspections"]').click();
+    cy.get('#goalInspectionSummary', { timeout: 10000 }).should('exist');
+    cy.contains('#goalInspectionTableContainer .tabulator-row', goalName).should('exist');
+    cy.contains('#goalInspectionTableContainer .tabulator-row', 'At Risk').should('exist');
+    cy.contains('#goalInspectionTableContainer .tabulator-row', editedOwnerComment).should('exist');
+    cy.contains('#goalInspectionTableContainer .tabulator-row', ownerComment).should('not.exist');
+  });
+
   it('creates an initiative with ROI and links it to a goal', () => {
     const themeName = 'Reliability';
     const goalName = 'Reduce Incidents';

@@ -93,6 +93,7 @@ class GoalsWidget {
           initiativesForYear,
           goalStatusRules
         );
+        const inspectionInfo = this._getGoalInspectionStatus(goal, statusInfo);
 
         // Contributing themes
         const contributingThemes = new Set();
@@ -118,6 +119,9 @@ class GoalsWidget {
           displayStatus: statusInfo.label || this._toStatusLabel(statusInfo.status),
           displayStatusVisual: statusInfo.visualStatus || statusInfo.status || 'on-track',
           displayStatusReason: statusInfo.message || '',
+          displayOwnerStatusLabel: inspectionInfo.label,
+          displayOwnerStatusClass: inspectionInfo.className,
+          displayOwnerStatusReason: inspectionInfo.message,
           displayContributingTeams: Array.from(contributingTeams),
           displaySdeBreakdown: sdeBreakdownByTeam,
           displayThemes: Array.from(contributingThemes),
@@ -227,6 +231,12 @@ class GoalsWidget {
     status.title = goal.displayStatusReason;
     status.textContent = goal.displayStatus;
     header.appendChild(status);
+
+    const ownerStatus = document.createElement('span');
+    ownerStatus.className = `goal-owner-status ${goal.displayOwnerStatusClass}`.trim();
+    ownerStatus.title = goal.displayOwnerStatusReason;
+    ownerStatus.textContent = goal.displayOwnerStatusLabel;
+    header.appendChild(ownerStatus);
 
     return header;
   }
@@ -503,6 +513,47 @@ class GoalsWidget {
       rules: goalStatusRules,
       now: new Date(),
     });
+  }
+
+  _getGoalInspectionStatus(goal, statusInfo) {
+    if (typeof GoalService === 'undefined' || !GoalService.getGoalInspectionStatus) {
+      return {
+        label: 'Owner: No Update',
+        className: 'goal-owner-status--none',
+        message: 'No owner update available.',
+      };
+    }
+
+    const inspection = GoalService.getGoalInspectionStatus(goal, {
+      now: new Date(),
+      computedStatus: statusInfo?.visualStatus || statusInfo?.status,
+    });
+
+    let className = 'goal-owner-status--none';
+    if (inspection.ownerStatus === GoalService.INSPECTION_STATUS.ON_TRACK) {
+      className = 'goal-owner-status--on-track';
+    } else if (inspection.ownerStatus === GoalService.INSPECTION_STATUS.ACHIEVED) {
+      className = 'goal-owner-status--on-track';
+    } else if (inspection.ownerStatus === GoalService.INSPECTION_STATUS.SLIPPING) {
+      className = 'goal-owner-status--slipping';
+    } else if (
+      inspection.ownerStatus === GoalService.INSPECTION_STATUS.AT_RISK ||
+      inspection.ownerStatus === GoalService.INSPECTION_STATUS.LATE ||
+      inspection.ownerStatus === GoalService.INSPECTION_STATUS.BLOCKED
+    ) {
+      className = 'goal-owner-status--at-risk';
+    }
+
+    const staleSuffix = inspection.isStale ? ' (Stale)' : '';
+    const mismatchSuffix = inspection.hasMismatch ? ' (Mismatch)' : '';
+
+    return {
+      label: `Owner: ${inspection.ownerStatusLabel}${staleSuffix}${mismatchSuffix}`,
+      className,
+      message: inspection.lastCheckInAt
+        ? `Latest weekly update: ${inspection.lastCheckInAt.slice(0, 10)}`
+        : 'Owner has not submitted a weekly goal update.',
+    };
   }
 
   _toStatusLabel(status) {

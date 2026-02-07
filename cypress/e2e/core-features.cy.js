@@ -177,7 +177,7 @@ describe('Core flows with a loaded sample system', () => {
     cy.get('#roadmapTableFilters').should('exist');
   });
 
-  it('switches Management tabs across themes, initiatives, and goals', () => {
+  it('switches Management tabs across themes, initiatives, goals, and inspections', () => {
     // Validate product management tabs render their respective lists.
     openSidebarView('managementView');
     cy.get('#themesListContainer', { timeout: 10000 }).should('exist');
@@ -188,6 +188,9 @@ describe('Core flows with a loaded sample system', () => {
 
     cy.get('[data-pill-id="goals"]').click();
     cy.get('#goalsListContainer').should('exist');
+
+    cy.get('[data-pill-id="inspections"]').click();
+    cy.get('#goalInspectionTableContainer').should('exist');
   });
 
   it('renders the Year Plan summary and planning table', () => {

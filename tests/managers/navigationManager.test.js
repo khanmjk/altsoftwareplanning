@@ -98,4 +98,16 @@ describe('NavigationManager', () => {
     expect(managementView.render).toHaveBeenCalledWith(expect.any(HTMLElement), { tab: 'goals' });
     expect(managementView.switchTab).not.toHaveBeenCalled();
   });
+
+  it('supports navigating directly to management inspections tab', () => {
+    navigationManager.navigateTo('managementView', { tab: 'inspections' });
+
+    const managementView = navigationManager.getViewInstance('managementView');
+    expect(managementView).toBeTruthy();
+    expect(managementView.render).toHaveBeenCalledTimes(1);
+    expect(managementView.render).toHaveBeenCalledWith(expect.any(HTMLElement), {
+      tab: 'inspections',
+    });
+    expect(managementView.switchTab).not.toHaveBeenCalled();
+  });
 });

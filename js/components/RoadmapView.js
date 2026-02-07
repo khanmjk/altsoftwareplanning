@@ -107,6 +107,17 @@ class RoadmapView {
     };
     actionsRow.appendChild(goalsBtn);
 
+    const inspectionsBtn = document.createElement('button');
+    inspectionsBtn.className = 'btn btn-secondary btn-sm';
+    const inspectionsIcon = document.createElement('i');
+    inspectionsIcon.className = 'fas fa-clipboard-check';
+    inspectionsBtn.appendChild(inspectionsIcon);
+    inspectionsBtn.appendChild(document.createTextNode(' Goal Inspections'));
+    inspectionsBtn.onclick = () => {
+      navigationManager.navigateTo('managementView', { tab: 'inspections' });
+    };
+    actionsRow.appendChild(inspectionsBtn);
+
     toolbarContainer.appendChild(actionsRow);
 
     // Row 3: View-Specific Filters

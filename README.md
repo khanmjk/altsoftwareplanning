@@ -513,8 +513,24 @@ Mermaid-based diagrams are available across the app and via the AI Assistant.
 
 - Click **"Roadmap & Backlog"**.
 - Manage the pipeline of initiatives. This is the staging area for work before it enters the Year Plan.
-- Use quick actions to jump directly to **Manage Themes**, **Manage Initiatives**, or **Manage Goals**.
+- Use quick actions to jump directly to **Manage Themes**, **Manage Initiatives**, **Manage Goals**, or **Goal Inspections**.
 - Quarterly and 3YP roadmap views support **Goal** and **Status** filtering.
+
+### Goal Inspections & Reporting (Product)
+
+- Go to **Management -> Inspections** (or use Roadmap/Dashboard quick actions).
+- Goal owners can submit weekly check-ins with:
+  - manual owner status (**On Track**, **Slipping**, **At Risk**, **Late**, **Blocked**, **Achieved**)
+  - weekly comment
+  - **Path to Green (PTG)** and PTG target date
+  - blockers and leadership asks
+- Leadership reporting includes:
+  - update coverage this week
+  - stale goals
+  - at-risk/late goals
+  - owner-vs-computed status mismatches
+  - top blockers rollup
+- Inspection report table supports filtering and **CSV/XLSX export**.
 
 ### Yearly Planning (Planning)
 
@@ -582,6 +598,7 @@ Mermaid-based diagrams are available across the app and via the AI Assistant.
 - [x] **Year Plan Snapshots**: Save/load snapshots with automatic retention (latest 5 per planning year).
 - [x] **Year Plan CSV/XLSX Export**: Export current year-plan view (metadata, team summary, initiatives) to spreadsheet formats.
 - [x] **Goal Lifecycle Management**: Goal status matrix + lifecycle CRUD in Product Management.
+- [x] **Goal Owner Inspections & Reporting**: Weekly owner status/PTG check-ins, stale+mismatch detection, and exportable leadership reporting.
 - [ ] **Cross-View CSV/XLSX Export Utility**: Standardize reusable export generation across additional planning/system views.
 - [ ] **Visual Editors**: Enhanced drag-and-drop for Org Charts.
 - [ ] **Architecture Diagrams**: Expanded auto-generation of system maps.

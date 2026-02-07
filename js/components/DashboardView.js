@@ -828,6 +828,17 @@ class DashboardView {
     manageBtn.onclick = () => navigationManager.navigateTo('managementView', { tab: 'goals' });
     toolbar.appendChild(manageBtn);
 
+    const inspectionsBtn = document.createElement('button');
+    inspectionsBtn.type = 'button';
+    inspectionsBtn.className = 'btn btn-secondary btn-sm';
+    const inspectionsIcon = document.createElement('i');
+    inspectionsIcon.className = 'fas fa-clipboard-check';
+    inspectionsBtn.appendChild(inspectionsIcon);
+    inspectionsBtn.appendChild(document.createTextNode(' Goal Inspections'));
+    inspectionsBtn.onclick = () =>
+      navigationManager.navigateTo('managementView', { tab: 'inspections' });
+    toolbar.appendChild(inspectionsBtn);
+
     return toolbar;
   }
 

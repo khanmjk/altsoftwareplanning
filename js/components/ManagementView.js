@@ -12,8 +12,16 @@ class ManagementView {
     this.themeEditComponent = null;
     this.initiativeEditComponent = null;
     this.goalEditComponent = null;
+    this.goalInspectionTableWidget = null;
     this.contentContainer = null;
     this.initiativeSearchQuery = '';
+    this.goalInspectionFilters = {
+      ownerId: 'all',
+      ownerStatus: 'all',
+      staleOnly: false,
+      mismatchOnly: false,
+      planningYear: 'all',
+    };
 
     // Bind events
     this._boundContainerClick = this.handleContainerClick.bind(this);
@@ -26,11 +34,15 @@ class ManagementView {
     }
 
     const requestedTab = params?.tab;
-    if (requestedTab && ['themes', 'initiatives', 'goals'].includes(requestedTab)) {
+    if (requestedTab && ['themes', 'initiatives', 'goals', 'inspections'].includes(requestedTab)) {
       this.activeTab = requestedTab;
     }
 
     if (!this.container) return;
+    if (this.goalInspectionTableWidget) {
+      this.goalInspectionTableWidget.destroy();
+      this.goalInspectionTableWidget = null;
+    }
 
     // 1. Set Workspace Metadata
     if (workspaceComponent) {
@@ -77,6 +89,7 @@ class ManagementView {
       { id: 'themes', label: 'Themes', icon: 'fas fa-swatchbook' },
       { id: 'initiatives', label: 'Initiatives', icon: 'fas fa-list-ul' },
       { id: 'goals', label: 'Goals', icon: 'fas fa-bullseye' },
+      { id: 'inspections', label: 'Inspections', icon: 'fas fa-clipboard-check' },
     ];
 
     // Create or update PillNavigation
@@ -94,7 +107,16 @@ class ManagementView {
   }
 
   switchTab(tabId) {
+    const previousTab = this.activeTab;
     this.activeTab = tabId;
+    if (
+      previousTab === 'inspections' &&
+      tabId !== 'inspections' &&
+      this.goalInspectionTableWidget
+    ) {
+      this.goalInspectionTableWidget.destroy();
+      this.goalInspectionTableWidget = null;
+    }
     this._renderActiveTabContent();
     this.postRender();
   }
@@ -106,6 +128,8 @@ class ManagementView {
       this.populateInitiativesList();
     } else if (this.activeTab === 'goals') {
       this.populateGoalsList();
+    } else if (this.activeTab === 'inspections') {
+      this.populateGoalInspections();
     }
   }
 
@@ -149,6 +173,8 @@ class ManagementView {
         return this.renderInitiativesTab();
       case 'goals':
         return this.renderGoalsTab();
+      case 'inspections':
+        return this.renderInspectionsTab();
       default:
         return this.renderThemesTab();
     }
@@ -350,6 +376,237 @@ class ManagementView {
     }
   }
 
+  // --- INSPECTIONS TAB ---
+  renderInspectionsTab() {
+    const fragment = document.createDocumentFragment();
+
+    const header = document.createElement('div');
+    header.className = 'management-section-header';
+    const heading = document.createElement('h3');
+    heading.textContent = 'Goal Inspections & Reporting';
+    header.appendChild(heading);
+    fragment.appendChild(header);
+
+    const summaryContainer = document.createElement('div');
+    summaryContainer.id = 'goalInspectionSummary';
+    summaryContainer.className = 'goal-inspection-summary-grid';
+    fragment.appendChild(summaryContainer);
+
+    const filtersRow = document.createElement('div');
+    filtersRow.className = 'goal-inspection-filters';
+
+    const ownerWrap = document.createElement('div');
+    ownerWrap.className = 'goal-inspection-filters__item';
+    const ownerLabel = document.createElement('label');
+    ownerLabel.className = 'inline-edit-label';
+    ownerLabel.textContent = 'Owner';
+    ownerWrap.appendChild(ownerLabel);
+    const ownerSelectHost = document.createElement('div');
+    ownerSelectHost.id = 'goalInspectionOwnerFilter';
+    ownerWrap.appendChild(ownerSelectHost);
+    filtersRow.appendChild(ownerWrap);
+
+    const statusWrap = document.createElement('div');
+    statusWrap.className = 'goal-inspection-filters__item';
+    const statusLabel = document.createElement('label');
+    statusLabel.className = 'inline-edit-label';
+    statusLabel.textContent = 'Owner Status';
+    statusWrap.appendChild(statusLabel);
+    const statusSelectHost = document.createElement('div');
+    statusSelectHost.id = 'goalInspectionStatusFilter';
+    statusWrap.appendChild(statusSelectHost);
+    filtersRow.appendChild(statusWrap);
+
+    const staleWrap = document.createElement('label');
+    staleWrap.className = 'goal-inspection-filters__toggle';
+    const staleCheckbox = document.createElement('input');
+    staleCheckbox.type = 'checkbox';
+    staleCheckbox.checked = !!this.goalInspectionFilters.staleOnly;
+    staleCheckbox.addEventListener('change', (event) => {
+      this.goalInspectionFilters.staleOnly = event.target.checked;
+      this.populateGoalInspections();
+    });
+    staleWrap.appendChild(staleCheckbox);
+    staleWrap.appendChild(document.createTextNode(' Stale only'));
+    filtersRow.appendChild(staleWrap);
+
+    const mismatchWrap = document.createElement('label');
+    mismatchWrap.className = 'goal-inspection-filters__toggle';
+    const mismatchCheckbox = document.createElement('input');
+    mismatchCheckbox.type = 'checkbox';
+    mismatchCheckbox.checked = !!this.goalInspectionFilters.mismatchOnly;
+    mismatchCheckbox.addEventListener('change', (event) => {
+      this.goalInspectionFilters.mismatchOnly = event.target.checked;
+      this.populateGoalInspections();
+    });
+    mismatchWrap.appendChild(mismatchCheckbox);
+    mismatchWrap.appendChild(document.createTextNode(' Mismatch only'));
+    filtersRow.appendChild(mismatchWrap);
+
+    fragment.appendChild(filtersRow);
+
+    const tableContainer = document.createElement('div');
+    tableContainer.id = 'goalInspectionTableContainer';
+    tableContainer.className = 'goal-inspection-table';
+    fragment.appendChild(tableContainer);
+
+    return fragment;
+  }
+
+  populateGoalInspections() {
+    const systemData = SystemService.getCurrentSystem();
+    if (!systemData) return;
+
+    const ownerMap = new Map();
+    (systemData.goals || []).forEach((goal) => {
+      if (goal?.owner?.id) {
+        ownerMap.set(goal.owner.id, goal.owner.name || goal.owner.id);
+      }
+      const inspectionOwnerId = goal?.attributes?.goalInspection?.ownerId;
+      if (inspectionOwnerId && !ownerMap.has(inspectionOwnerId)) {
+        ownerMap.set(inspectionOwnerId, inspectionOwnerId);
+      }
+    });
+
+    const ownerOptions = [{ value: 'all', text: 'All Owners' }];
+    ownerMap.forEach((name, id) => {
+      ownerOptions.push({ value: id, text: name });
+    });
+
+    const inspectionStatusOptions = [
+      { value: 'all', text: 'All Statuses' },
+      { value: GoalService.INSPECTION_STATUS.ON_TRACK, text: 'On Track' },
+      { value: GoalService.INSPECTION_STATUS.SLIPPING, text: 'Slipping' },
+      { value: GoalService.INSPECTION_STATUS.AT_RISK, text: 'At Risk' },
+      { value: GoalService.INSPECTION_STATUS.LATE, text: 'Late' },
+      { value: GoalService.INSPECTION_STATUS.BLOCKED, text: 'Blocked' },
+      { value: GoalService.INSPECTION_STATUS.ACHIEVED, text: 'Achieved' },
+    ];
+
+    const ownerSelectHost = document.getElementById('goalInspectionOwnerFilter');
+    if (ownerSelectHost) {
+      while (ownerSelectHost.firstChild) ownerSelectHost.removeChild(ownerSelectHost.firstChild);
+      const ownerSelect = new ThemedSelect({
+        options: ownerOptions,
+        value: this.goalInspectionFilters.ownerId || 'all',
+        id: 'goal-inspection-owner-select',
+        onChange: (value) => {
+          this.goalInspectionFilters.ownerId = value || 'all';
+          this.populateGoalInspections();
+        },
+      });
+      ownerSelectHost.appendChild(ownerSelect.render());
+    }
+
+    const statusSelectHost = document.getElementById('goalInspectionStatusFilter');
+    if (statusSelectHost) {
+      while (statusSelectHost.firstChild) statusSelectHost.removeChild(statusSelectHost.firstChild);
+      const statusSelect = new ThemedSelect({
+        options: inspectionStatusOptions,
+        value: this.goalInspectionFilters.ownerStatus || 'all',
+        id: 'goal-inspection-status-select',
+        onChange: (value) => {
+          this.goalInspectionFilters.ownerStatus = value || 'all';
+          this.populateGoalInspections();
+        },
+      });
+      statusSelectHost.appendChild(statusSelect.render());
+    }
+
+    const rows = GoalService.getGoalInspectionReportRows(systemData, this.goalInspectionFilters);
+    const summary = GoalService.getGoalInspectionSummary(systemData, this.goalInspectionFilters);
+    this.renderGoalInspectionSummary(summary);
+
+    const fileDate = new Date().toISOString().slice(0, 10);
+    const tableOptions = {
+      data: rows,
+      layout: 'fitDataStretch',
+      pagination: 'local',
+      paginationSize: 15,
+      uniqueIdField: 'goalId',
+      showColumnToggle: true,
+      showExportMenu: true,
+      exportCsvFileName: `goal-inspections-${fileDate}.csv`,
+      exportJsonFileName: `goal-inspections-${fileDate}.json`,
+      exportXlsxFileName: `goal-inspections-${fileDate}.xlsx`,
+      exportSheetName: 'Goal Inspections',
+      columns: [
+        { title: 'Goal', field: 'goalName', minWidth: 180 },
+        { title: 'Owner', field: 'ownerName', minWidth: 130 },
+        { title: 'Owner Status', field: 'ownerStatusLabel', minWidth: 120 },
+        { title: 'Computed', field: 'computedStatusLabel', minWidth: 160 },
+        { title: 'Mismatch', field: 'mismatch', hozAlign: 'center', width: 95 },
+        { title: 'Stale', field: 'stale', hozAlign: 'center', width: 85 },
+        { title: 'Days Since', field: 'daysSinceCheckIn', hozAlign: 'right', width: 105 },
+        { title: 'Week Ending', field: 'weekEnding', minWidth: 115 },
+        { title: 'Last Update', field: 'lastCheckInAt', minWidth: 115 },
+        { title: 'Next Due', field: 'nextCheckInDueAt', minWidth: 110 },
+        { title: 'Confidence', field: 'confidence', hozAlign: 'right', width: 100 },
+        { title: 'PTG Date', field: 'ptgTargetDate', minWidth: 100 },
+        { title: 'Comment', field: 'comment', minWidth: 220 },
+        { title: 'Path to Green', field: 'ptg', minWidth: 220 },
+        { title: 'Blockers', field: 'blockers', minWidth: 220 },
+        { title: 'Asks', field: 'asks', minWidth: 180 },
+      ],
+    };
+
+    if (!this.goalInspectionTableWidget) {
+      this.goalInspectionTableWidget = new EnhancedTableWidget(
+        'goalInspectionTableContainer',
+        tableOptions
+      );
+    } else {
+      this.goalInspectionTableWidget.setData(rows);
+    }
+  }
+
+  renderGoalInspectionSummary(summary) {
+    const container = document.getElementById('goalInspectionSummary');
+    if (!container) return;
+
+    this._clearElement(container);
+
+    const metrics = [
+      { label: 'Goals In Scope', value: summary.totalGoals },
+      { label: 'Updated This Week', value: summary.updatedThisWeek },
+      { label: 'Stale Goals', value: summary.staleCount },
+      { label: 'At Risk / Late', value: summary.atRiskOrLateCount },
+      { label: 'Health Mismatches', value: summary.mismatchCount },
+      {
+        label: 'Weekly Coverage',
+        value: `${summary.updateCoveragePct.toFixed(0)}%`,
+      },
+    ];
+
+    metrics.forEach((metric) => {
+      const card = document.createElement('div');
+      card.className = 'goal-inspection-summary-card';
+
+      const value = document.createElement('div');
+      value.className = 'goal-inspection-summary-card__value';
+      value.textContent = String(metric.value);
+      card.appendChild(value);
+
+      const label = document.createElement('div');
+      label.className = 'goal-inspection-summary-card__label';
+      label.textContent = metric.label;
+      card.appendChild(label);
+
+      container.appendChild(card);
+    });
+
+    const blockersCard = document.createElement('div');
+    blockersCard.className = 'goal-inspection-summary-card goal-inspection-summary-card--wide';
+    const blockersValue = document.createElement('div');
+    blockersValue.className = 'goal-inspection-summary-card__label';
+    blockersValue.textContent =
+      summary.topBlockers.length > 0
+        ? summary.topBlockers.map((entry) => `${entry.text} (${entry.count})`).join(' | ')
+        : 'No blockers captured.';
+    blockersCard.appendChild(blockersValue);
+    container.appendChild(blockersCard);
+  }
+
   /**
    * Returns structured context data for AI Chat Panel integration
    * Implements the AI_VIEW_REGISTRY contract
@@ -367,6 +624,13 @@ class ManagementView {
       themeCount: themes.length,
       initiativeCount: initiatives.length,
       goalCount: goals.length,
+      inspectionSummary:
+        this.activeTab === 'inspections'
+          ? GoalService.getGoalInspectionSummary(
+              SystemService.getCurrentSystem(),
+              this.goalInspectionFilters
+            )
+          : null,
       initiatives: initiatives.map((i) => ({
         id: i.initiativeId,
         title: i.title,

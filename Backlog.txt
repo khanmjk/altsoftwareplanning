@@ -247,6 +247,8 @@ the gitgub issues tracker to keep track of user feedback requests
   [Done] [Goals Management] Show pills on goals list just like initiative lists show initiative status
   [Done] Add goals drop down filter to quarterly roadmap and 3YP
   [Done] Introduce a goals lifecycle management interface (create/update/delete) in Product Management -> Goals
+  [Done] Add weekly goal owner inspections (manual owner status + comments + PTG metadata).
+  [Done] Add a goal inspections reporting view with stale/mismatch leadership metrics and CSV/XLSX export.
 
 
 ------------

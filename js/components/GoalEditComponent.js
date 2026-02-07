@@ -9,6 +9,7 @@ class GoalEditComponent {
     this.systemData = systemData;
     this.expandedIndex = -1;
     this.draftGoal = null; // New property for draft mode
+    this.goalInspectionDrafts = new Map();
   }
 
   startNewGoal() {
@@ -104,9 +105,16 @@ class GoalEditComponent {
     statusPill.innerText = statusMeta.label;
     statusPill.title = statusMeta.message;
 
+    const ownerInspectionMeta = this._resolveOwnerInspectionMeta(goal, isDraft);
+    const ownerInspectionPill = document.createElement('span');
+    ownerInspectionPill.className = `goal-status-pill ${ownerInspectionMeta.className}`;
+    ownerInspectionPill.innerText = ownerInspectionMeta.label;
+    ownerInspectionPill.title = ownerInspectionMeta.message;
+
     header.appendChild(indicator);
     header.appendChild(titleText);
     header.appendChild(statusPill);
+    header.appendChild(ownerInspectionPill);
 
     // Details Container
     const details = document.createElement('div');
@@ -140,6 +148,7 @@ class GoalEditComponent {
       this._createFormGroup('Strategy Link (URL)', 'url', 'strategyLink', goal.strategyLink, index)
     );
     details.appendChild(this._createFormGroup('Due Date', 'date', 'dueDate', goal.dueDate, index));
+    details.appendChild(this._createInspectionSection(goal, index, isDraft));
 
     // 2. People
     const grid = document.createElement('div');
@@ -519,6 +528,9 @@ class GoalEditComponent {
       )
     ) {
       const goal = this.systemData.goals[index];
+      if (goal?.goalId) {
+        this.goalInspectionDrafts.delete(goal.goalId);
+      }
 
       // Unlink initiatives
       if (goal && goal.initiativeIds) {
@@ -571,6 +583,17 @@ class GoalEditComponent {
       notificationManager.showToast('Goal created successfully.', 'success');
       this.render();
     } else {
+      const inspectionResult = this._persistGoalInspectionDraft(goal, {
+        notifyOnSuccess: false,
+      });
+      if (!inspectionResult.success) {
+        notificationManager.showToast(
+          inspectionResult.error || 'Could not save goal inspection update.',
+          'warning'
+        );
+        return;
+      }
+
       if (typeof GoalService !== 'undefined' && goal.goalId) {
         GoalService.updateGoal(this.systemData, goal.goalId, goal);
       }
@@ -581,6 +604,268 @@ class GoalEditComponent {
       GoalService.refreshAllGoalDates(this.systemData);
     }
     SystemService.save();
+  }
+
+  _createInspectionSection(goal, index, isDraft) {
+    const section = document.createElement('div');
+    section.className = 'goal-inspection-section';
+
+    const title = document.createElement('h4');
+    title.className = 'goal-inspection-section__title';
+    title.textContent = 'Weekly Goal Inspection';
+    section.appendChild(title);
+
+    if (isDraft) {
+      const draftInfo = document.createElement('p');
+      draftInfo.className = 'goal-inspection-section__meta';
+      draftInfo.textContent = 'Save this goal first, then add weekly owner check-ins.';
+      section.appendChild(draftInfo);
+      return section;
+    }
+
+    const inspectionStatus = GoalService.getGoalInspectionStatus(goal, { now: new Date() });
+    const latestCheckIn = GoalService.getLatestGoalCheckIn(goal);
+    const draftState = this.goalInspectionDrafts.get(goal.goalId) || {};
+
+    const meta = document.createElement('p');
+    meta.className = 'goal-inspection-section__meta';
+    const lastUpdatedText = inspectionStatus.lastCheckInAt
+      ? inspectionStatus.lastCheckInAt.slice(0, 10)
+      : 'never';
+    const staleText = inspectionStatus.isStale ? 'Stale' : 'Fresh';
+    const mismatchText = inspectionStatus.hasMismatch ? 'Mismatch with computed status' : 'Aligned';
+    meta.textContent = `Last update: ${lastUpdatedText} | ${staleText} | ${mismatchText}`;
+    section.appendChild(meta);
+
+    const formGrid = document.createElement('div');
+    formGrid.className = 'inline-edit-grid';
+    section.appendChild(formGrid);
+
+    const statusOptions = [
+      { value: GoalService.INSPECTION_STATUS.ON_TRACK, text: 'On Track' },
+      { value: GoalService.INSPECTION_STATUS.SLIPPING, text: 'Slipping' },
+      { value: GoalService.INSPECTION_STATUS.AT_RISK, text: 'At Risk' },
+      { value: GoalService.INSPECTION_STATUS.LATE, text: 'Late' },
+      { value: GoalService.INSPECTION_STATUS.BLOCKED, text: 'Blocked' },
+      { value: GoalService.INSPECTION_STATUS.ACHIEVED, text: 'Achieved' },
+    ];
+
+    const state = {
+      ownerStatus: latestCheckIn?.ownerStatus || GoalService.INSPECTION_STATUS.ON_TRACK,
+      weekEnding: latestCheckIn?.weekEnding || this._todayIsoDate(),
+      confidence:
+        typeof latestCheckIn?.confidence === 'number' ? String(latestCheckIn.confidence) : '',
+      comment: latestCheckIn?.comment || '',
+      ptg: latestCheckIn?.ptg || '',
+      ptgTargetDate: latestCheckIn?.ptgTargetDate || '',
+      blockers: latestCheckIn?.blockers || '',
+      asks: latestCheckIn?.asks || '',
+      dirty: false,
+      ...draftState,
+    };
+
+    const persistDraft = () => {
+      this.goalInspectionDrafts.set(goal.goalId, { ...state, dirty: true });
+    };
+
+    const statusGroup = document.createElement('div');
+    statusGroup.className = 'inline-edit-form-group';
+    const statusLabel = document.createElement('label');
+    statusLabel.className = 'inline-edit-label';
+    statusLabel.textContent = 'Owner Status';
+    const statusSelectContainer = document.createElement('div');
+    statusSelectContainer.className = 'inline-edit-select-container';
+    const ownerStatusSelect = new ThemedSelect({
+      options: statusOptions,
+      value: state.ownerStatus,
+      id: `goal-inspection-status-${index}`,
+      onChange: (value) => {
+        state.ownerStatus = value || GoalService.INSPECTION_STATUS.ON_TRACK;
+        persistDraft();
+      },
+    });
+    statusSelectContainer.appendChild(ownerStatusSelect.render());
+    statusGroup.appendChild(statusLabel);
+    statusGroup.appendChild(statusSelectContainer);
+    formGrid.appendChild(statusGroup);
+
+    formGrid.appendChild(
+      this._createInspectionInputGroup({
+        label: 'Week Ending',
+        type: 'date',
+        value: state.weekEnding,
+        onChange: (value) => {
+          state.weekEnding = value;
+          persistDraft();
+        },
+      })
+    );
+
+    formGrid.appendChild(
+      this._createInspectionInputGroup({
+        label: 'Confidence (%)',
+        type: 'number',
+        min: '0',
+        max: '100',
+        step: '1',
+        value: state.confidence,
+        onChange: (value) => {
+          state.confidence = value;
+          persistDraft();
+        },
+      })
+    );
+
+    formGrid.appendChild(
+      this._createInspectionInputGroup({
+        label: 'PTG Target Date',
+        type: 'date',
+        value: state.ptgTargetDate,
+        onChange: (value) => {
+          state.ptgTargetDate = value;
+          persistDraft();
+        },
+      })
+    );
+
+    section.appendChild(
+      this._createInspectionTextareaGroup('Owner Comment', state.comment, (value) => {
+        state.comment = value;
+        persistDraft();
+      })
+    );
+    section.appendChild(
+      this._createInspectionTextareaGroup('Path to Green (PTG)', state.ptg, (value) => {
+        state.ptg = value;
+        persistDraft();
+      })
+    );
+    section.appendChild(
+      this._createInspectionTextareaGroup('Blockers', state.blockers, (value) => {
+        state.blockers = value;
+        persistDraft();
+      })
+    );
+    section.appendChild(
+      this._createInspectionTextareaGroup('Leadership Asks', state.asks, (value) => {
+        state.asks = value;
+        persistDraft();
+      })
+    );
+
+    const actionBar = document.createElement('div');
+    actionBar.className = 'goal-inspection-section__actions';
+
+    const saveInspectionBtn = document.createElement('button');
+    saveInspectionBtn.type = 'button';
+    saveInspectionBtn.className = 'btn btn-secondary btn-sm';
+    saveInspectionBtn.textContent = 'Log Weekly Check-In';
+    saveInspectionBtn.addEventListener('click', () =>
+      this._saveGoalInspection(index, {
+        ownerStatus: state.ownerStatus,
+        weekEnding: state.weekEnding,
+        confidence: state.confidence === '' ? null : Number(state.confidence),
+        comment: state.comment,
+        ptg: state.ptg,
+        ptgTargetDate: state.ptgTargetDate || null,
+        blockers: state.blockers,
+        asks: state.asks,
+      })
+    );
+    actionBar.appendChild(saveInspectionBtn);
+
+    section.appendChild(actionBar);
+
+    return section;
+  }
+
+  _createInspectionInputGroup({ label, type = 'text', value = '', min, max, step, onChange }) {
+    const group = document.createElement('div');
+    group.className = 'inline-edit-form-group';
+    const labelEl = document.createElement('label');
+    labelEl.className = 'inline-edit-label';
+    labelEl.textContent = label;
+    const input = document.createElement('input');
+    input.className = 'inline-edit-input';
+    input.type = type;
+    input.value = value || '';
+    if (min !== undefined) input.min = String(min);
+    if (max !== undefined) input.max = String(max);
+    if (step !== undefined) input.step = String(step);
+    const syncValue = (event) => onChange(event.target.value);
+    input.addEventListener('input', syncValue);
+    input.addEventListener('change', syncValue);
+    group.appendChild(labelEl);
+    group.appendChild(input);
+    return group;
+  }
+
+  _createInspectionTextareaGroup(label, value, onChange) {
+    const group = document.createElement('div');
+    group.className = 'inline-edit-form-group';
+    const labelEl = document.createElement('label');
+    labelEl.className = 'inline-edit-label';
+    labelEl.textContent = label;
+    const textarea = document.createElement('textarea');
+    textarea.className = 'inline-edit-textarea';
+    textarea.rows = 3;
+    textarea.value = value || '';
+    const syncValue = (event) => onChange(event.target.value);
+    textarea.addEventListener('input', syncValue);
+    textarea.addEventListener('change', syncValue);
+    group.appendChild(labelEl);
+    group.appendChild(textarea);
+    return group;
+  }
+
+  _saveGoalInspection(index, payload) {
+    const goal = this.systemData.goals[index];
+    if (!goal?.goalId) return;
+
+    const result = GoalService.addGoalCheckIn(this.systemData, goal.goalId, payload, {
+      updatedBy: goal?.owner?.name || 'Goal Owner',
+    });
+    if (!result.success) {
+      notificationManager.showToast(result.error || 'Could not save goal inspection.', 'warning');
+      return;
+    }
+
+    this.goalInspectionDrafts.delete(goal.goalId);
+    GoalService.refreshGoalDates(this.systemData, goal.goalId);
+    SystemService.save();
+    notificationManager.showToast('Goal inspection saved.', 'success');
+    this.expandedIndex = index;
+    this.render();
+  }
+
+  _persistGoalInspectionDraft(goal, options = {}) {
+    if (!goal?.goalId) return { success: true };
+    const draft = this.goalInspectionDrafts.get(goal.goalId);
+    if (!draft || !draft.dirty) return { success: true };
+
+    const result = GoalService.addGoalCheckIn(
+      this.systemData,
+      goal.goalId,
+      {
+        ownerStatus: draft.ownerStatus,
+        weekEnding: draft.weekEnding,
+        confidence: draft.confidence === '' ? null : Number(draft.confidence),
+        comment: draft.comment,
+        ptg: draft.ptg,
+        ptgTargetDate: draft.ptgTargetDate || null,
+        blockers: draft.blockers,
+        asks: draft.asks,
+      },
+      { updatedBy: goal?.owner?.name || 'Goal Owner' }
+    );
+
+    if (!result.success) return result;
+
+    this.goalInspectionDrafts.delete(goal.goalId);
+    if (options.notifyOnSuccess) {
+      notificationManager.showToast('Goal inspection saved.', 'success');
+    }
+    return { success: true };
   }
 
   _syncInitiativeLinks(goal) {
@@ -625,5 +910,49 @@ class GoalEditComponent {
       className: `goal-status-pill--${suffix}`,
       message,
     };
+  }
+
+  _resolveOwnerInspectionMeta(goal, isDraft) {
+    if (isDraft) {
+      return {
+        label: 'Owner: N/A',
+        className: 'goal-status-pill--draft',
+        message: 'Owner check-ins are available after goal creation.',
+      };
+    }
+
+    const inspection = GoalService.getGoalInspectionStatus(goal, { now: new Date() });
+    const status = inspection.ownerStatus;
+    const label = status ? `Owner: ${inspection.ownerStatusLabel}` : 'Owner: No Update';
+    const staleSuffix = inspection.isStale ? ' (Stale)' : '';
+    const mismatchSuffix = inspection.hasMismatch ? ' (Mismatch)' : '';
+
+    let statusClass = 'goal-status-pill--draft';
+    if (
+      status === GoalService.INSPECTION_STATUS.ON_TRACK ||
+      status === GoalService.INSPECTION_STATUS.ACHIEVED
+    ) {
+      statusClass = 'goal-status-pill--on-track';
+    } else if (status === GoalService.INSPECTION_STATUS.SLIPPING) {
+      statusClass = 'goal-status-pill--not-started';
+    } else if (
+      status === GoalService.INSPECTION_STATUS.AT_RISK ||
+      status === GoalService.INSPECTION_STATUS.LATE ||
+      status === GoalService.INSPECTION_STATUS.BLOCKED
+    ) {
+      statusClass = 'goal-status-pill--at-risk';
+    }
+
+    return {
+      label: `${label}${staleSuffix}${mismatchSuffix}`,
+      className: statusClass,
+      message: inspection.lastCheckInAt
+        ? `Last owner update: ${inspection.lastCheckInAt.slice(0, 10)}`
+        : 'No owner weekly check-ins logged yet.',
+    };
+  }
+
+  _todayIsoDate() {
+    return new Date().toISOString().slice(0, 10);
   }
 }

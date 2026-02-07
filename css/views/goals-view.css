@@ -2,296 +2,332 @@
 
 /* Container - Using column layout (masonry style) like original */
 .goal-cards-container {
-    column-count: 3;
-    column-gap: 20px;
-    padding: 20px;
+  column-count: 3;
+  column-gap: 20px;
+  padding: 20px;
 }
 
 /* Add media queries to make the column count responsive */
 @media (max-width: 1200px) {
-    .goal-cards-container {
-        column-count: 2;
-    }
+  .goal-cards-container {
+    column-count: 2;
+  }
 }
 
 @media (max-width: 768px) {
-    .goal-cards-container {
-        column-count: 1;
-    }
+  .goal-cards-container {
+    column-count: 1;
+  }
 }
 
 /* Empty State */
 .goal-cards-container__empty {
-    text-align: center;
-    color: var(--theme-text-muted);
-    margin-top: 20px;
-    column-span: all;
+  text-align: center;
+  color: var(--theme-text-muted);
+  margin-top: 20px;
+  column-span: all;
 }
 
 /* Goal Card - Original Design */
 .goal-card {
-    /* Prevents card from breaking across columns */
-    break-inside: avoid;
-    margin-bottom: 20px;
+  /* Prevents card from breaking across columns */
+  break-inside: avoid;
+  margin-bottom: 20px;
 
-    /* Card styling */
-    border: 1px solid var(--theme-border-color);
-    border-left-width: 5px;
-    border-radius: 5px;
-    padding: 15px;
-    background-color: var(--theme-card-bg);
-    box-shadow: var(--theme-card-shadow);
-    display: flex;
-    flex-direction: column;
+  /* Card styling */
+  border: 1px solid var(--theme-border-color);
+  border-left-width: 5px;
+  border-radius: 5px;
+  padding: 15px;
+  background-color: var(--theme-card-bg);
+  box-shadow: var(--theme-card-shadow);
+  display: flex;
+  flex-direction: column;
 }
 
 /* Status border colors */
 .goal-card.status-on-track {
-    border-left-color: var(--theme-primary);
+  border-left-color: var(--theme-primary);
 }
 
 .goal-card.status-at-risk {
-    border-left-color: var(--theme-warning);
+  border-left-color: var(--theme-warning);
 }
 
 .goal-card.status-completed {
-    border-left-color: var(--theme-success);
+  border-left-color: var(--theme-success);
 }
 
 /* Card Header */
 .goal-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
 }
 
 .goal-card-header h3 {
-    margin: 0;
-    font-size: 1.25em;
-    color: var(--theme-text-primary);
+  margin: 0;
+  font-size: 1.25em;
+  color: var(--theme-text-primary);
 }
 
 /* Status Badge - Original Design */
 .goal-status {
-    font-weight: bold;
-    padding: 3px 8px;
-    border-radius: 12px;
-    font-size: 0.8em;
-    color: var(--color-white);
+  font-weight: bold;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.8em;
+  color: var(--color-white);
+}
+
+.goal-owner-status {
+  margin-left: 6px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.75em;
+  border: 1px solid transparent;
+}
+
+.goal-owner-status--none {
+  background: color-mix(in srgb, var(--theme-text-muted), transparent 82%);
+  color: var(--theme-text-secondary);
+  border-color: color-mix(in srgb, var(--theme-text-muted), transparent 65%);
+}
+
+.goal-owner-status--on-track {
+  background: color-mix(in srgb, var(--theme-success), transparent 86%);
+  color: var(--theme-success);
+  border-color: color-mix(in srgb, var(--theme-success), transparent 70%);
+}
+
+.goal-owner-status--slipping {
+  background: color-mix(in srgb, var(--theme-warning), transparent 84%);
+  color: color-mix(in srgb, var(--theme-warning), #000 28%);
+  border-color: color-mix(in srgb, var(--theme-warning), transparent 66%);
+}
+
+.goal-owner-status--at-risk {
+  background: color-mix(in srgb, var(--theme-danger), transparent 86%);
+  color: var(--theme-danger);
+  border-color: color-mix(in srgb, var(--theme-danger), transparent 70%);
 }
 
 .status-on-track .goal-status {
-    background-color: var(--theme-primary);
+  background-color: var(--theme-primary);
 }
 
 .status-at-risk .goal-status {
-    background-color: var(--theme-warning);
-    color: var(--theme-text-primary);
+  background-color: var(--theme-warning);
+  color: var(--theme-text-primary);
 }
 
 .status-completed .goal-status {
-    background-color: var(--theme-success);
+  background-color: var(--theme-success);
 }
-
 
 /* Description */
 .goal-description {
-    font-size: 0.9em;
-    color: var(--theme-text-secondary);
-    margin-bottom: 15px;
-    flex-grow: 1;
+  font-size: 0.9em;
+  color: var(--theme-text-secondary);
+  margin-bottom: 15px;
+  flex-grow: 1;
 }
 
 /* Metrics - Original simpler design */
 .goal-metrics {
-    display: flex;
-    justify-content: space-around;
-    text-align: center;
-    padding: 10px 0;
-    border-top: 1px solid var(--theme-border-color);
-    border-bottom: 1px solid var(--theme-border-color);
-    margin-bottom: 15px;
+  display: flex;
+  justify-content: space-around;
+  text-align: center;
+  padding: 10px 0;
+  border-top: 1px solid var(--theme-border-color);
+  border-bottom: 1px solid var(--theme-border-color);
+  margin-bottom: 15px;
 }
 
-.goal-metrics>div {
-    flex: 1;
+.goal-metrics > div {
+  flex: 1;
 }
 
 .metric-value {
-    display: block;
-    font-size: 1.5em;
-    font-weight: 600;
-    color: var(--theme-primary);
+  display: block;
+  font-size: 1.5em;
+  font-weight: 600;
+  color: var(--theme-primary);
 }
 
 .metric-label {
-    font-size: 0.8em;
-    color: var(--theme-text-muted);
+  font-size: 0.8em;
+  color: var(--theme-text-muted);
 }
 
 /* Progress Bar (kept for compatibility) */
 .metric-progress {
-    flex: 1;
+  flex: 1;
 }
 
 .progress-bar-container {
-    position: relative;
-    height: 24px;
-    background: var(--theme-bg-tertiary);
-    border-radius: 4px;
-    overflow: hidden;
-    cursor: help;
-    margin-bottom: 5px;
+  position: relative;
+  height: 24px;
+  background: var(--theme-bg-tertiary);
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: help;
+  margin-bottom: 5px;
 }
 
 .progress-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--theme-success, #28a745), color-mix(in srgb, var(--theme-success, #28a745), var(--theme-info, #17a2b8) 50%));
-    transition: width 0.3s ease;
-    width: var(--goal-progress, 0%);
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--theme-success, #28a745),
+    color-mix(in srgb, var(--theme-success, #28a745), var(--theme-info, #17a2b8) 50%)
+  );
+  transition: width 0.3s ease;
+  width: var(--goal-progress, 0%);
 }
 
 .progress-bar-text {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--theme-text-primary);
-    z-index: 1;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--theme-text-primary);
+  z-index: 1;
 }
 
 /*  Details Sections - Original simpler style */
 .goal-ownership,
 .goal-teams,
 .goal-themes {
-    font-size: 0.9em;
-    line-height: 1.5;
-    margin-bottom: 15px;
-    color: var(--theme-text-secondary);
+  font-size: 0.9em;
+  line-height: 1.5;
+  margin-bottom: 15px;
+  color: var(--theme-text-secondary);
 }
 
 .goal-ownership strong,
 .goal-teams strong,
 .goal-themes strong {
-    color: var(--theme-text-primary);
+  color: var(--theme-text-primary);
 }
 
 /* Theme Pills/Badges */
 .goal-themes-pills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
 }
 
 .theme-pill {
-    display: inline-block;
-    padding: 4px 12px;
-    background: var(--theme-warning, #fbbf24);
-    color: var(--theme-text-primary, #78350f);
-    font-size: 0.75rem;
-    font-weight: 600;
-    border-radius: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+  display: inline-block;
+  padding: 4px 12px;
+  background: var(--theme-warning, #fbbf24);
+  color: var(--theme-text-primary, #78350f);
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 /* Initiatives Toggle - Original style */
 .goal-initiatives-toggle {
-    border-top: 1px dashed var(--theme-border-color);
-    padding-top: 10px;
-    margin-top: 10px;
+  border-top: 1px dashed var(--theme-border-color);
+  padding-top: 10px;
+  margin-top: 10px;
 }
 
 .toggle-summary {
-    cursor: pointer;
-    font-weight: bold;
-    color: var(--theme-primary);
-    display: inline-block;
-    user-select: none;
+  cursor: pointer;
+  font-weight: bold;
+  color: var(--theme-primary);
+  display: inline-block;
+  user-select: none;
 }
 
 .toggle-summary:hover {
-    text-decoration: underline;
+  text-decoration: underline;
 }
 
 .toggle-arrow {
-    transition: transform 0.2s ease-in-out;
-    float: right;
+  transition: transform 0.2s ease-in-out;
+  float: right;
 }
 
 .initiatives-list {
-    margin-top: var(--space-sm);
-    padding: var(--space-sm);
-    background: var(--theme-bg-secondary);
-    border-radius: var(--radius-sm);
+  margin-top: var(--space-sm);
+  padding: var(--space-sm);
+  background: var(--theme-bg-secondary);
+  border-radius: var(--radius-sm);
 }
 
 .initiatives-list--hidden {
-    display: none;
+  display: none;
 }
 
 /* Mini Initiative Cards */
 .mini-initiative-card {
-    background: var(--theme-card-bg);
-    border-left: 3px solid var(--theme-text-muted);
-    padding: var(--space-sm);
-    margin-bottom: var(--space-sm);
-    border-radius: var(--radius-sm);
-    font-size: 0.85rem;
+  background: var(--theme-card-bg);
+  border-left: 3px solid var(--theme-text-muted);
+  padding: var(--space-sm);
+  margin-bottom: var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
 }
 
 .mini-initiative-card:last-child {
-    margin-bottom: 0;
+  margin-bottom: 0;
 }
 
 .mini-initiative-card.status-completed {
-    border-left-color: var(--theme-success);
+  border-left-color: var(--theme-success);
 }
 
 .mini-initiative-card.status-in-progress {
-    border-left-color: var(--theme-primary);
+  border-left-color: var(--theme-primary);
 }
 
 .mini-initiative-card.status-blocked {
-    border-left-color: var(--theme-danger);
+  border-left-color: var(--theme-danger);
 }
 
 .mini-initiative-card.btl {
-    background: color-mix(in srgb, var(--theme-warning, #fbbf24), transparent 85%);
+  background: color-mix(in srgb, var(--theme-warning, #fbbf24), transparent 85%);
 }
 
 .mini-card-main-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
 }
 
 .mini-card-title {
-    font-weight: 600;
-    color: var(--theme-text-primary);
-    flex: 1;
+  font-weight: 600;
+  color: var(--theme-text-primary);
+  flex: 1;
 }
 
 .mini-card-sde {
-    font-size: 0.8rem;
-    color: var(--theme-text-secondary);
-    white-space: nowrap;
-    margin-left: var(--space-sm);
+  font-size: 0.8rem;
+  color: var(--theme-text-secondary);
+  white-space: nowrap;
+  margin-left: var(--space-sm);
 }
 
 .mini-card-breakdown {
-    font-size: 0.75rem;
-    color: var(--theme-text-muted);
+  font-size: 0.75rem;
+  color: var(--theme-text-muted);
 }
 
 .no-initiatives-text {
-    text-align: center;
-    color: var(--color-gray-500);
-    padding: var(--space-md);
-    font-style: italic;
+  text-align: center;
+  color: var(--color-gray-500);
+  padding: var(--space-md);
+  font-style: italic;
 }

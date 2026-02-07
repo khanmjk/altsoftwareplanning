@@ -43,3 +43,18 @@
 - 12:31:12 SAST - Regression verification complete: `npm run test:e2e` passed (8 specs, 52 tests, 0 failures) after Year Plan export changes.
 - 12:31:26 SAST - Additional quality gates passed: `npm run stylelint` and `npm run contract:check`.
 - 12:32:23 SAST - Documentation/backlog reconciliation for export pass: updated `Backlog.txt`, `README.md`, and `docs/Codex5.3Recommendation07Feb26.md` to mark Year Plan CSV/XLSX export as delivered and clarify remaining export utility gaps.
+- 13:02:35 SAST - Started Goal Inspection feature delivery: goal-owner weekly check-ins, PTG metadata capture, stale/mismatch detection, and leadership reporting.
+- 13:02:35 SAST - Extended `GoalService` with owner inspection APIs (`addGoalCheckIn`, `getGoalInspectionStatus`, report rows, summary metrics) and goal metadata initialization under `goal.attributes.goalInspection`.
+- 13:02:35 SAST - Enhanced `GoalEditComponent` with weekly inspection capture UX (owner status, confidence, week ending, comments, PTG, blockers, asks) and persisted check-in action.
+- 13:02:35 SAST - Added Product Management `Inspections` tab in `ManagementView` with owner/status/stale/mismatch filters, leadership summary cards, and exportable tabular report via `EnhancedTableWidget` (CSV/XLSX/JSON).
+- 13:02:35 SAST - Added discoverability affordances: Roadmap and Dashboard now include direct navigation to Goal Inspections.
+- 13:02:35 SAST - Updated goal dashboard cards to show owner inspection state (including stale/mismatch cues) alongside computed lifecycle status.
+- 13:02:35 SAST - Added automated coverage: unit tests in `tests/services/goalService.test.js`, navigation test for inspections tab routing, and Cypress flows in `cypress/e2e/product-management.cy.js` + `cypress/e2e/core-features.cy.js`.
+- 13:02:35 SAST - Verification sequence: `npm run lint` passed, `npm test` passed (27 files, 98 tests); first e2e run surfaced a detached-element issue in a new selector assertion, test was stabilized, and rerun `npm run test:e2e` passed (8 specs, 53 tests); `npm run stylelint` and `npm run contract:check` passed.
+- 13:03:15 SAST - Updated `docs/cypress-testing.md` baseline and spec-map notes to reflect the new goal inspection coverage and 53-test suite baseline.
+- 13:35:12 SAST - Follow-up reliability fix for goal updates: `GoalEditComponent` now tracks inspection field edits with live draft state (`input` + `change` sync), persists pending owner-update edits on `Save Changes`, and clears saved drafts on successful check-in/deletion.
+- 13:35:12 SAST - Added regression assertions for edited owner updates retrieval in `tests/services/goalService.test.js` and extended `cypress/e2e/product-management.cy.js` to verify edited owner comments appear in Management -> Inspections report rows.
+- 13:35:12 SAST - Verification rerun after follow-up fix: `npm run lint` passed, `npm test` passed (27 files, 99 tests), `npm run test:e2e` passed (8 specs, 53 tests).
+- 13:42:09 SAST - Up-versioned system data model cache key from v12 to v13 in `SystemRepository` to refresh bundled sample-system data from local cache.
+- 13:42:09 SAST - Implemented selective migration policy: migrate only non-sample user systems from the previous storage key while intentionally dropping cached sample-system entries so fresh defaults reload.
+- 13:42:09 SAST - Added migration regression tests in `tests/repositories/systemRepository.test.js` (user-only migration + no-migration when current key already populated) and verified with `npm run lint` and `npm test` (27 files, 101 tests).

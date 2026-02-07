@@ -36,6 +36,32 @@
   text-transform: uppercase;
 }
 
+.goal-inspection-section {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--theme-border-color);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--theme-bg-secondary), transparent 20%);
+}
+
+.goal-inspection-section__title {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+  color: var(--theme-text-primary);
+}
+
+.goal-inspection-section__meta {
+  margin: 0 0 10px;
+  font-size: 0.8rem;
+  color: var(--theme-text-secondary);
+}
+
+.goal-inspection-section__actions {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+}
+
 .goal-status-pill--on-track {
   background-color: color-mix(in srgb, var(--theme-success), transparent 88%);
   color: var(--theme-success);
