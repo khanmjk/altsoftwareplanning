@@ -34,8 +34,7 @@ const selectThemedMultiOptionsById = (selectId, optionTexts) => {
   optionTexts.forEach((text) => {
     cy.get('@themedSelect').contains('.themed-select__option', text).click();
   });
-  cy.get('@themedSelect').find('.themed-select__trigger').click({ force: true });
-  cy.get('@themedSelect').should('not.have.class', 'themed-select--open');
+  cy.get('body').click(0, 0, { force: true });
 };
 
 const selectThemedOptionByLabel = (scopeSelector, labelText, optionText) => {
@@ -59,8 +58,7 @@ const selectThemedMultiOptionsByLabel = (scopeSelector, labelText, optionTexts) 
   optionTexts.forEach((text) => {
     cy.get('@themedSelect').contains('.themed-select__option', text).click();
   });
-  cy.get('@themedSelect').find('.themed-select__trigger').click();
-  cy.get('@themedSelect').should('not.have.class', 'themed-select--open');
+  cy.get('body').click(0, 0, { force: true });
 };
 
 const ensureExpanded = (itemSelector, detailsSelector, headerSelector) => {
@@ -282,11 +280,7 @@ describe('Product management workflows', () => {
     cy.get('[data-pill-id="goals"]').click();
     cy.contains('.inline-edit-title', goalName).closest('.inline-edit-item').as('goalCard');
     ensureExpanded('@goalCard', '.inline-edit-details', '.inline-edit-header');
-    cy.get('@goalCard')
-      .contains('label', 'Linked Initiatives')
-      .parent()
-      .find('select')
-      .select(initiativeTitle, { force: true });
+    selectThemedMultiOptionsByLabel('@goalCard', 'Linked Initiatives', [initiativeTitle]);
 
     // Linking initiatives re-renders the list, so re-open the goal before saving.
     cy.contains('.inline-edit-title', goalName).closest('.inline-edit-item').as('goalCard');

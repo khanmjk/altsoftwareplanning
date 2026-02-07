@@ -1,90 +1,95 @@
 /**
  * AI View Registry
  * Maps view IDs to their context providers for AI Chat Panel integration.
- * 
+ *
  * This registry enables the AI scraper to get structured context data from
  * class-based views via their getAIContext() method.
  */
 
 const AI_VIEW_REGISTRY = {
-    // P0 - Critical
-    planningView: {
-        displayName: 'Year Plan',
-        fallbackGlobals: []  // No module-level globals - all state in viewInstance via getContext()
-    },
+  // P0 - Critical
+  planningView: {
+    displayName: 'Year Plan',
+    fallbackGlobals: [], // No module-level globals - all state in viewInstance via getContext()
+  },
 
-    // P1 - High Priority
-    ganttPlanningView: {
-        displayName: 'Detailed Planning (Gantt)',
-        fallbackGlobals: []  // No module-level globals - all state in viewInstance
-    },
+  // P1 - High Priority
+  ganttPlanningView: {
+    displayName: 'Detailed Planning (Gantt)',
+    fallbackGlobals: [], // No module-level globals - all state in viewInstance
+  },
 
-    capacityConfigView: {
-        displayName: 'Capacity Tuning',
-        fallbackGlobals: []
-    },
+  capacityConfigView: {
+    displayName: 'Capacity Tuning',
+    fallbackGlobals: [],
+  },
 
-    managementView: {
-        displayName: 'Product Management',
-        fallbackGlobals: []
-    },
+  managementView: {
+    displayName: 'Product Management',
+    fallbackGlobals: [],
+  },
 
-    visualizationCarousel: {
-        displayName: 'System Overview',
-        fallbackGlobals: []
-    },
+  visualizationCarousel: {
+    displayName: 'System Overview',
+    fallbackGlobals: [],
+  },
 
-    organogramView: {
-        displayName: 'Org Design',
-        fallbackGlobals: []
-    },
+  organogramView: {
+    displayName: 'Org Design',
+    fallbackGlobals: [],
+  },
 
-    roadmapView: {
-        displayName: 'Roadmap',
-        fallbackGlobals: []
-    },
+  roadmapView: {
+    displayName: 'Roadmap',
+    fallbackGlobals: [],
+  },
 
-    // P2 - Secondary
-    dashboardView: {
-        displayName: 'Dashboard',
-        fallbackGlobals: []
-    },
+  // P2 - Secondary
+  dashboardView: {
+    displayName: 'Dashboard',
+    fallbackGlobals: [],
+  },
 
-    sdmForecastingView: {
-        displayName: 'Resource Forecasting',
-        fallbackGlobals: []
-    },
+  sdmForecastingView: {
+    displayName: 'Resource Forecasting',
+    fallbackGlobals: [],
+  },
 
-    settingsView: {
-        displayName: 'Settings',
-        fallbackGlobals: []
-    },
+  settingsView: {
+    displayName: 'Settings',
+    fallbackGlobals: [],
+  },
 
-    systemsView: {
-        displayName: 'Systems',
-        fallbackGlobals: []
-    },
+  systemsView: {
+    displayName: 'Systems',
+    fallbackGlobals: [],
+  },
 
-    // P3 - Low Priority / Static
-    welcomeView: {
-        displayName: 'Welcome',
-        isStatic: true
-    },
+  communityBlueprintsView: {
+    displayName: 'Community Blueprints',
+    fallbackGlobals: [],
+  },
 
-    helpView: {
-        displayName: 'Help & Documentation',
-        isStatic: true
-    },
+  // P3 - Low Priority / Static
+  welcomeView: {
+    displayName: 'Welcome',
+    isStatic: true,
+  },
 
-    systemEditForm: {
-        displayName: 'Edit System',
-        fallbackGlobals: []
-    },
+  helpView: {
+    displayName: 'Help & Documentation',
+    isStatic: true,
+  },
 
-    aboutView: {
-        displayName: 'About',
-        fallbackGlobals: []
-    }
+  systemEditForm: {
+    displayName: 'Edit System',
+    fallbackGlobals: [],
+  },
+
+  aboutView: {
+    displayName: 'About',
+    fallbackGlobals: [],
+  },
 };
 
 /**
@@ -93,8 +98,8 @@ const AI_VIEW_REGISTRY = {
  * @returns {Object|null} View instance or null
  */
 function getViewInstance(viewId) {
-    // Per coding contract: assume navigationManager exists (initialized in main.js)
-    return navigationManager.getViewInstance(viewId);
+  // Per coding contract: assume navigationManager exists (initialized in main.js)
+  return navigationManager.getViewInstance(viewId);
 }
 
 /**
@@ -104,33 +109,33 @@ function getViewInstance(viewId) {
  * @returns {Object|null} Context data or null if view not found
  */
 function getAIContextForView(viewId) {
-    const config = AI_VIEW_REGISTRY[viewId];
-    if (!config) return null;
+  const config = AI_VIEW_REGISTRY[viewId];
+  if (!config) return null;
 
-    // Try class instance from NavigationManager
-    // Per coding contract Rule 2.9: Assume all views implement getAIContext()
-    // If a view doesn't, that's a bug to be fixed, not defended against
-    const instance = getViewInstance(viewId);
-    if (instance) {
-        return {
-            source: 'class',
-            viewId: viewId,
-            displayName: config.displayName,
-            ...instance.getAIContext()
-        };
-    }
+  // Try class instance from NavigationManager
+  // Per coding contract Rule 2.9: Assume all views implement getAIContext()
+  // If a view doesn't, that's a bug to be fixed, not defended against
+  const instance = getViewInstance(viewId);
+  if (instance) {
+    return {
+      source: 'class',
+      viewId: viewId,
+      displayName: config.displayName,
+      ...instance.getAIContext(),
+    };
+  }
 
-    // For static views, return minimal context
-    if (config.isStatic) {
-        return {
-            source: 'static',
-            viewId: viewId,
-            displayName: config.displayName
-        };
-    }
+  // For static views, return minimal context
+  if (config.isStatic) {
+    return {
+      source: 'static',
+      viewId: viewId,
+      displayName: config.displayName,
+    };
+  }
 
-    // Signal caller that no class context is available
-    return null;
+  // Signal caller that no class context is available
+  return null;
 }
 
 /**
@@ -139,10 +144,10 @@ function getAIContextForView(viewId) {
  * @returns {boolean}
  */
 function hasClassContextProvider(viewId) {
-    const config = AI_VIEW_REGISTRY[viewId];
-    if (!config) return false;
+  const config = AI_VIEW_REGISTRY[viewId];
+  if (!config) return false;
 
-    // Per coding contract Rule 2.9: All registered views implement getAIContext()
-    const instance = getViewInstance(viewId);
-    return !!instance;
+  // Per coding contract Rule 2.9: All registered views implement getAIContext()
+  const instance = getViewInstance(viewId);
+  return !!instance;
 }

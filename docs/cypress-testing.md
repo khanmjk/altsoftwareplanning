@@ -22,11 +22,12 @@ npm run test:e2e:open
 
 ## Current Baseline (February 7, 2026)
 
-- Full suite result: **8 specs / 53 tests passing**.
+- Full suite result: **9 specs / 56 tests passing**.
 - Includes explicit regression coverage for:
   - Roadmap -> `Manage Goals` navigation
   - Goal CRUD in Product Management goals workflow
   - Goal owner inspection capture + reporting flow in Product Management
+  - Community Blueprints browse/preview/install and local publish workflow
   - Roadmap, planning, roster, AI settings, feedback, and system edit end-to-end flows
 
 ## Run a Single Spec
@@ -66,6 +67,7 @@ Notes:
 ## Spec Map
 
 - `cypress/e2e/smoke.cy.js`: quick sanity checks for navigation and modals.
+- `cypress/e2e/community-blueprints.cy.js`: AppStore-lite browse, preview, install, and publish-local flows.
 - `cypress/e2e/core-features.cy.js`: primary views, navigation, and core UI (including Management inspections tab).
 - `cypress/e2e/advanced-flows.cy.js`: full system creation, drag and drop, and forecasting.
 - `cypress/e2e/system-edit-org.cy.js`: system edit and org design workflows.

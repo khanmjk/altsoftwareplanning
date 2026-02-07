@@ -247,8 +247,9 @@ the gitgub issues tracker to keep track of user feedback requests
   [Done] [Goals Management] Show pills on goals list just like initiative lists show initiative status
   [Done] Add goals drop down filter to quarterly roadmap and 3YP
   [Done] Introduce a goals lifecycle management interface (create/update/delete) in Product Management -> Goals
-  [Done] Add weekly goal owner inspections (manual owner status + comments + PTG metadata).
-  [Done] Add a goal inspections reporting view with stale/mismatch leadership metrics and CSV/XLSX export.
+[Done] Add weekly goal owner inspections (manual owner status + comments + PTG metadata).
+[Done] Add a goal inspections reporting view with stale/mismatch leadership metrics and CSV/XLSX export.
+[Done] [Feature] AppStore-lite Community Blueprints Exchange (Top-100 curated catalog with availability states, launch-wave 25 prebuilt install packages, contribution-to-unlock flow for remaining curated entries, local publish flow, and package export).
 
 
 ------------
@@ -275,6 +276,7 @@ TO DO
 [Partial] [Feature] More intelligent scheduling in gantt table planning, assign resources and calculate end dates automatically.
 [Partial] [AI] Tune the system prompt so AI-created systems include rich planning metadata for goals, initiatives, work packages, tasks, start date, end date, etc.
 [Partial] [AI] Ability to export the year plan (ATL/BTL logic) to Excel using LLM-generated formulas (base CSV/XLSX export shipped; LLM formula generation pending).
+[Partial] [Feature] AppStore-lite hardening: remote moderation/submission workflow, per-blueprint CI smoke-import checks, and stricter quality scoring for `Verified` entries.
 
 Utilities
 [Partial] Now that we've got export to excel, csv and json working, we need a utility to generate these files from other places: planning table, overall system data dump, etc.
@@ -302,7 +304,7 @@ AI enhancements
 -- Export the plan to Excel or Project
 -- Create a detailed quarterly release plan for team XYZ
 -- Merge these two teams into one team, reporting to a new SDM, move these services to the new team, keep remaining services in unallocated team, etc.
--- Build an appstore feature for users to share and publish their generated systems
+[Done] -- Build an appstore feature for users to share and publish their generated systems
 -- Build an internal app API for the app to make agent creation more accessible
 -- Refactor the codebase to cleanly separate out concerns - and make future porting easier
 -- Explore a backend-as-a-service to make simpler API key integrations possible for folks who are not software engineers

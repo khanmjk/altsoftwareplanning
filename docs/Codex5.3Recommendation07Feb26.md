@@ -40,6 +40,7 @@ All three analyses agree the architecture is stable enough to ship significant b
 10. AI planning copilots: goal alignment and goal risk analysis tools.
 11. Year Plan export actions: CSV and XLSX export from the Year Plan toolbar (metadata, team summary, initiatives).
 12. Goal inspection operations: weekly owner status/PTG check-ins plus leadership-ready inspection reporting (filters, stale/mismatch signals, CSV/XLSX export).
+13. AppStore-lite baseline delivered: Community Blueprints view, curated Top-100 catalog, prompt-pack preview, blueprint install path, and local publish/export workflow.
 
 ### Partially delivered / still open
 

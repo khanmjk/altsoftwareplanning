@@ -14,6 +14,7 @@
 4.  [Getting Started](#getting-started)
 5.  [Core Concepts & Data Model](#core-concepts--data-model)
 6.  [Key Features](#key-features)
+    - [Community Blueprints Exchange](#community-blueprints-exchange)
     - [Detailed Planning & Gantt](#detailed-planning--gantt)
     - [AI Assistant](#ai-assistant-1)
     - [Strategic Dashboard](#strategic-dashboard)
@@ -119,6 +120,7 @@ This tool provides a unified platform to:
 - **Year Plan resilience improved**: users can save/load plan snapshots (latest 5 per planning year retained) and filter planning by **Team Focus**.
 - **Detailed Planning improved**: dependency conflict detection is surfaced in UI and auto-scheduling can shift work packages to resolve predecessor violations.
 - **AI planning copilots expanded**: alignment/risk analysis commands now include goal-initiative alignment and goal risk assessment.
+- **Community Blueprints Exchange delivered**: browse a curated Top-100 catalog with explicit availability states, install prebuilt launch packages without API key setup, and contribute local systems to unlock additional curated blueprints.
 
 ---
 
@@ -204,6 +206,28 @@ For a full list of AI features, see **Section 4: Key Features**.
   - unsupported or newer schema versions are rejected with clear errors
   - legacy payloads are accepted through compatibility normalization where possible
   - imported systems can be activated immediately after import
+
+### Community Blueprints (AppStore-lite)
+
+- Open **Community Blueprints** from the sidebar to browse a curated Top-100 catalog.
+- Launch wave includes **25 prebuilt, installable curated packages**; remaining entries are intentionally marked **Needs Contribution**.
+- Search and filter support title, tags, category, trust label, availability, complexity, stage, and source.
+- Open **Preview** to inspect:
+  - system composition baseline (services, teams, goals, initiatives)
+  - prompt pack (seed + MVP/Scale/Enterprise variants)
+  - trust + availability labels (`Verified`, `Community`, `Experimental`; `Available`, `Needs Contribution`)
+- Install lifecycle actions are explicit and state-aware:
+  - **Install Blueprint** for first install
+  - **Open Installed** when already installed
+  - **Install Another Copy** for parallel variants
+  - **Update to Latest** when catalog package is newer than local installed copy
+- Non-available curated entries enforce contribution flow:
+  - **Install Locked** is disabled
+  - **Contribute with AI** triggers the existing **Create with AI** generation path (BYOK token usage), then validates and publishes locally
+- Publish local systems with **Publish Local System**:
+  - validate package shape and required metadata
+  - download portable package JSON
+  - publish into local community catalog storage for discoverability
 
 ---
 
@@ -331,6 +355,16 @@ Understanding these core entities is key to using the tool effectively. Most ent
 
 ## 4. Key Features
 
+### Community Blueprints Exchange
+
+- **Curated Top-100 catalog** of inspired-by software product blueprints.
+- **Launch 25 available now** with install-ready packages; remaining curated entries are contribution-gated.
+- **Prompt-first previews** expose concise seed prompts and reusable variants for educational remixing.
+- **Install lifecycle UX** supports first install, open installed, install another copy, and update-to-latest.
+- **Contribution workflow** uses existing AI generation path to unlock curated entries locally.
+- **Local publish flow** lets users validate, export, and publish their own blueprint packages.
+- **Trust + availability labeling** distinguishes source credibility and install readiness at a glance.
+
 ### Detailed Planning & Gantt
 
 We’ve introduced a new “Detailed Planning” page with a hierarchical table and Gantt chart for initiatives and work packages.
@@ -429,6 +463,7 @@ Once a system is loaded, a **Sidebar** appears on the left, organizing all major
 
 #### **Configuration**
 
+- **Community Blueprints:** Browse/install curated blueprint packages and publish local blueprint packages.
 - **Settings:** Manage application settings (e.g., AI configuration).
 
 #### **Help**

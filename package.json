@@ -20,6 +20,11 @@
     "coverage:e2e:report": "node scripts/generate-coverage-report.js --temp-dir .nyc_output --report-dir coverage/e2e --reporter lcov --reporter text-summary --reporter html",
     "contract:check": "node scripts/contract-scan.js",
     "depcheck": "depcheck --ignores=stylelint-config-standard",
+    "blueprints:catalog": "node scripts/blueprints/build-catalog-index.js",
+    "blueprints:generate": "node scripts/blueprints/generate-seed.js",
+    "blueprints:validate": "node scripts/blueprints/validate-seed.js",
+    "blueprints:normalize-years": "node scripts/blueprints/normalize-seed-years.js",
+    "blueprints:smoke-import": "node scripts/blueprints/smoke-import-seed.js",
     "verify": "npm run lint && npm run stylelint && npm run contract:check && npm run depcheck"
   },
   "devDependencies": {

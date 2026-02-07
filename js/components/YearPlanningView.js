@@ -1342,7 +1342,7 @@ class YearPlanningView {
     const url = URL.createObjectURL(blob);
     link.href = url;
     link.download = fileName;
-    link.style.display = 'none';
+    link.hidden = true;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

@@ -173,7 +173,10 @@ class SidebarComponent {
       },
       {
         title: 'Configuration',
-        items: [{ view: 'settingsView', icon: 'fas fa-cog', text: 'Settings' }],
+        items: [
+          { view: 'communityBlueprintsView', icon: 'fas fa-store', text: 'Community Blueprints' },
+          { view: 'settingsView', icon: 'fas fa-cog', text: 'Settings' },
+        ],
       },
       {
         title: 'Help',
@@ -235,7 +238,13 @@ class SidebarComponent {
       // Exempt Help, Settings, Systems, and About views from disabling
       if (
         !hasSystem &&
-        !['helpView', 'settingsView', 'systemsView', 'aboutView'].includes(viewId)
+        ![
+          'helpView',
+          'settingsView',
+          'systemsView',
+          'aboutView',
+          'communityBlueprintsView',
+        ].includes(viewId)
       ) {
         link.classList.add('disabled');
       } else {
@@ -384,7 +393,7 @@ class SidebarComponent {
       const anchor = document.createElement('a');
       anchor.href = url;
       anchor.download = fileName;
-      anchor.style.display = 'none';
+      anchor.hidden = true;
       document.body.appendChild(anchor);
       anchor.click();
       document.body.removeChild(anchor);

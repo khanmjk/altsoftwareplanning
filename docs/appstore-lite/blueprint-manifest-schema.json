@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://altsoftwareplanning.local/schemas/blueprint-manifest.schema.json",
+  "title": "SMT Blueprint Manifest",
+  "type": "object",
+  "required": [
+    "blueprintId",
+    "title",
+    "summary",
+    "category",
+    "trustLabel",
+    "schemaVersion",
+    "appCompatibility",
+    "promptPack"
+  ],
+  "properties": {
+    "blueprintId": {
+      "type": "string",
+      "minLength": 3
+    },
+    "title": {
+      "type": "string",
+      "minLength": 3
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 5
+    },
+    "category": {
+      "type": "string",
+      "minLength": 2
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "trustLabel": {
+      "type": "string",
+      "enum": ["Verified", "Community", "Experimental"]
+    },
+    "complexity": {
+      "type": "string"
+    },
+    "companyStage": {
+      "type": "string"
+    },
+    "targetTeamSize": {
+      "type": "string"
+    },
+    "roadmapHorizonYears": {
+      "type": "number",
+      "minimum": 1
+    },
+    "schemaVersion": {
+      "type": "number",
+      "minimum": 1
+    },
+    "appCompatibility": {
+      "type": "object",
+      "required": ["minSystemSchemaVersion", "maxSystemSchemaVersion"],
+      "properties": {
+        "minSystemSchemaVersion": {
+          "type": "number"
+        },
+        "maxSystemSchemaVersion": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "promptPack": {
+      "type": "object",
+      "required": ["seedPrompt"],
+      "properties": {
+        "seedPrompt": {
+          "type": "string",
+          "minLength": 10
+        },
+        "variants": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["variantId", "name", "prompt"],
+            "properties": {
+              "variantId": { "type": "string" },
+              "name": { "type": "string" },
+              "prompt": { "type": "string" }
+            },
+            "additionalProperties": true
+          }
+        },
+        "authorNotes": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "learningOutcomes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "author": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "contact": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "license": {
+      "type": "string"
+    },
+    "sourceType": {
+      "type": "string"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": true
+}

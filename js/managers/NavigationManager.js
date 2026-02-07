@@ -124,6 +124,14 @@ const VIEW_REGISTRY = {
     requiresSystem: false,
     selfManaged: false,
   },
+  communityBlueprintsView: {
+    className: 'CommunityBlueprintsView',
+    title: 'Community Blueprints',
+    breadcrumbs: ['Community', 'Blueprints'],
+    singleton: true,
+    requiresSystem: false,
+    selfManaged: false,
+  },
   aboutView: {
     className: 'AboutView',
     title: 'About',
@@ -158,6 +166,7 @@ function getClassMap() {
     HelpView,
     SettingsView,
     SystemsView,
+    CommunityBlueprintsView,
     AboutView,
   };
   return CLASS_MAP;
@@ -347,6 +356,7 @@ class NavigationManager {
       helpView: 'How to Guide',
       settingsView: 'Settings',
       systemsView: 'My Systems',
+      communityBlueprintsView: 'Community Blueprints',
       welcomeView: 'Welcome',
       aboutView: 'About',
     };

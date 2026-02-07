@@ -1,56 +1,72 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://unpkg.com/tabulator-tables@5.5.2/dist/css/tabulator.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link href="https://unpkg.com/tabulator-tables@5.5.2/dist/css/tabulator_simple.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/settings/variables.css">
-    <link rel="stylesheet" href="css/style.css?v=99">
-    <link rel="stylesheet" href="css/layout/main-layout.css?v=99">
-    <link rel="stylesheet" href="css/layout/workspace-shell.css?v=99">
-    <link rel="stylesheet" href="css/layout/sidebar.css?v=99">
-    <link rel="stylesheet" href="css/components/sidebar-enhanced.css?v=99">
-    <link rel="stylesheet" href="css/components/header.css?v=99">
-    <link rel="stylesheet" href="css/components/pill-navigation.css?v=99">
-    <link rel="stylesheet" href="css/components/enhancedTableWidget.css?v=99">
-    <link rel="stylesheet" href="css/components/aiChatPanel.css?v=99">
-    <link rel="stylesheet" href="css/components/ganttChart.css">
-    <link rel="stylesheet" href="css/components/roadmapModal.css">
-    <link rel="stylesheet" href="css/views/welcome-view.css">
-    <link rel="stylesheet" href="css/views/visualizations-view.css?v=99">
-    <link rel="stylesheet" href="css/views/dashboard-view.css">
-    <link rel="stylesheet" href="css/views/system-edit-view.css">
-    <link rel="stylesheet" href="css/views/roadmap-view.css">
-    <link rel="stylesheet" href="css/components/service-edit-component.css">
-    <link rel="stylesheet" href="css/components/team-edit-component.css?v=1">
-    <link rel="stylesheet" href="css/components/theme-edit-component.css?v=1">
-    <link rel="stylesheet" href="css/components/initiative-edit-component.css?v=1">
-    <link rel="stylesheet" href="css/components/goal-edit-component.css?v=1">
-    <link rel="stylesheet" href="css/components/shared-inline-edit.css?v=1">
-    <link rel="stylesheet" href="css/views/gantt-planning-view.css">
-    <link rel="stylesheet" href="css/views/accomplishments-view.css">
-    <link rel="stylesheet" href="css/views/goals-view.css">
-    <link rel="stylesheet" href="css/views/roadmap-table-view.css">
-    <link rel="stylesheet" href="css/views/capacity-tuning-view.css">
-    <link rel="stylesheet" href="css/views/capacity-planning-view.css">
-    <link rel="stylesheet" href="css/views/year-planning-view.css">
-    <link rel="stylesheet" href="css/views/resource-forecast-view.css">
-    <link rel="stylesheet" href="css/components/systems-view.css">
-    <link rel="stylesheet" href="css/components/settings-view.css?v=2">
-    <link rel="stylesheet" href="css/views/management-view.css?v=2">
-    <link rel="stylesheet" href="css/views/documentation-view.css">
-    <link rel="stylesheet" href="css/components/Modal.css">
-    <link rel="stylesheet" href="css/components/feedback-modal.css">
-    <link rel="stylesheet" href="css/views/about-view.css">
-    <link rel="stylesheet" href="css/components/management.css">
-    <link rel="stylesheet" href="css/components/notifications.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css">
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://unpkg.com/tabulator-tables@5.5.2/dist/css/tabulator.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+    />
+    <link
+      href="https://unpkg.com/tabulator-tables@5.5.2/dist/css/tabulator_simple.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/settings/variables.css" />
+    <link rel="stylesheet" href="css/style.css?v=99" />
+    <link rel="stylesheet" href="css/layout/main-layout.css?v=99" />
+    <link rel="stylesheet" href="css/layout/workspace-shell.css?v=99" />
+    <link rel="stylesheet" href="css/layout/sidebar.css?v=99" />
+    <link rel="stylesheet" href="css/components/sidebar-enhanced.css?v=99" />
+    <link rel="stylesheet" href="css/components/header.css?v=99" />
+    <link rel="stylesheet" href="css/components/pill-navigation.css?v=99" />
+    <link rel="stylesheet" href="css/components/enhancedTableWidget.css?v=99" />
+    <link rel="stylesheet" href="css/components/aiChatPanel.css?v=99" />
+    <link rel="stylesheet" href="css/components/ganttChart.css" />
+    <link rel="stylesheet" href="css/components/roadmapModal.css" />
+    <link rel="stylesheet" href="css/views/welcome-view.css" />
+    <link rel="stylesheet" href="css/views/visualizations-view.css?v=99" />
+    <link rel="stylesheet" href="css/views/dashboard-view.css" />
+    <link rel="stylesheet" href="css/views/system-edit-view.css" />
+    <link rel="stylesheet" href="css/views/roadmap-view.css" />
+    <link rel="stylesheet" href="css/components/service-edit-component.css" />
+    <link rel="stylesheet" href="css/components/team-edit-component.css?v=1" />
+    <link rel="stylesheet" href="css/components/theme-edit-component.css?v=1" />
+    <link rel="stylesheet" href="css/components/initiative-edit-component.css?v=1" />
+    <link rel="stylesheet" href="css/components/goal-edit-component.css?v=1" />
+    <link rel="stylesheet" href="css/components/shared-inline-edit.css?v=1" />
+    <link rel="stylesheet" href="css/views/gantt-planning-view.css" />
+    <link rel="stylesheet" href="css/views/accomplishments-view.css" />
+    <link rel="stylesheet" href="css/views/goals-view.css" />
+    <link rel="stylesheet" href="css/views/roadmap-table-view.css" />
+    <link rel="stylesheet" href="css/views/capacity-tuning-view.css" />
+    <link rel="stylesheet" href="css/views/capacity-planning-view.css" />
+    <link rel="stylesheet" href="css/views/year-planning-view.css" />
+    <link rel="stylesheet" href="css/views/resource-forecast-view.css" />
+    <link rel="stylesheet" href="css/components/systems-view.css" />
+    <link rel="stylesheet" href="css/components/settings-view.css?v=2" />
+    <link rel="stylesheet" href="css/views/management-view.css?v=2" />
+    <link rel="stylesheet" href="css/views/documentation-view.css" />
+    <link rel="stylesheet" href="css/views/community-blueprints-view.css" />
+    <link rel="stylesheet" href="css/components/Modal.css" />
+    <link rel="stylesheet" href="css/components/feedback-modal.css" />
+    <link rel="stylesheet" href="css/views/about-view.css" />
+    <link rel="stylesheet" href="css/components/management.css" />
+    <link rel="stylesheet" href="css/components/notifications.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css"
+    />
+  </head>
+  <body>
     <div id="app-root"></div>
 
     <!-- Scripts -->
@@ -62,7 +78,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/12.3.2/markdown-it.min.js"></script>
     <script src="https://unpkg.com/markdown-it-anchor@8.6.7/dist/markdownItAnchor.umd.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/3.4.4/luxon.min.js"></script>
-    <script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.5.2/dist/js/tabulator.min.js"></script>
+    <script
+      type="text/javascript"
+      src="https://unpkg.com/tabulator-tables@5.5.2/dist/js/tabulator.min.js"
+    ></script>
     <script type="text/javascript" src="https://oss.sheetjs.com/sheetjs/xlsx.full.min.js"></script>
 
     <!-- Application Scripts -->
@@ -90,6 +109,9 @@
     <script src="js/services/FrappeGanttService.js"></script>
     <script src="js/services/D3Service.js"></script>
     <script src="js/services/FeedbackService.js"></script>
+    <script src="js/services/BlueprintCatalogService.js"></script>
+    <script src="js/services/BlueprintPackageService.js"></script>
+    <script src="js/services/BlueprintPublishService.js"></script>
 
     <!-- Wrapper View Classes (must load before NavigationManager for VIEW_REGISTRY) -->
     <script src="js/components/WelcomeView.js"></script>
@@ -177,11 +199,12 @@
 
     <script src="js/components/ManagementView.js"></script>
     <script src="js/components/SystemsView.js"></script>
+    <script src="js/components/CommunityBlueprintsView.js"></script>
     <script src="js/components/AIGenProgressOverlayView.js"></script>
     <script src="js/components/RoadmapInitiativeModal.js"></script>
     <script src="js/components/FeedbackModal.js"></script>
     <script src="js/components/AIChatPanelExtension.js"></script>
     <script src="js/components/WorkspaceComponent.js"></script>
     <script src="js/main.js?v=2"></script>
-</body>
+  </body>
 </html>

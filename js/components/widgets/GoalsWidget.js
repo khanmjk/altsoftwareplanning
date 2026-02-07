@@ -486,10 +486,7 @@ class GoalsWidget {
     const explicitIds = new Set(goal?.initiativeIds || []);
     const initiatives = systemData?.yearlyInitiatives || [];
 
-    const linkedByGoalService =
-      typeof GoalService !== 'undefined' && GoalService.getInitiativesForGoal
-        ? GoalService.getInitiativesForGoal(systemData, goal.goalId)
-        : [];
+    const linkedByGoalService = GoalService.getInitiativesForGoal(systemData, goal.goalId);
 
     const linkedByExplicitIds = initiatives.filter((init) => explicitIds.has(init.initiativeId));
 
@@ -501,14 +498,6 @@ class GoalsWidget {
   }
 
   _getGoalStatus(systemData, goal, initiatives, goalStatusRules) {
-    if (typeof GoalService === 'undefined' || !GoalService.getGoalStatus) {
-      return {
-        status: 'on-track',
-        visualStatus: 'on-track',
-        label: 'On Track',
-        message: '',
-      };
-    }
     return GoalService.getGoalStatus(goal, initiatives, {
       rules: goalStatusRules,
       now: new Date(),
@@ -516,14 +505,6 @@ class GoalsWidget {
   }
 
   _getGoalInspectionStatus(goal, statusInfo) {
-    if (typeof GoalService === 'undefined' || !GoalService.getGoalInspectionStatus) {
-      return {
-        label: 'Owner: No Update',
-        className: 'goal-owner-status--none',
-        message: 'No owner update available.',
-      };
-    }
-
     const inspection = GoalService.getGoalInspectionStatus(goal, {
       now: new Date(),
       computedStatus: statusInfo?.visualStatus || statusInfo?.status,

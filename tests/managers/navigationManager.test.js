@@ -66,6 +66,7 @@ describe('NavigationManager', () => {
       HelpView: StubView,
       SettingsView: StubView,
       SystemsView: StubView,
+      CommunityBlueprintsView: StubView,
       AboutView: StubView,
       window,
       document,

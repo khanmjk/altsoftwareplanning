@@ -823,10 +823,7 @@ function getGoalAlignmentAnalysis(system) {
 
   const goalsWithoutInitiatives = goals
     .filter((goal) => {
-      const linked =
-        typeof GoalService !== 'undefined' && GoalService.getInitiativesForGoal
-          ? GoalService.getInitiativesForGoal(system, goal.goalId)
-          : [];
+      const linked = GoalService.getInitiativesForGoal(system, goal.goalId);
       const explicit = new Set(goal?.initiativeIds || []);
       const explicitLinked = initiatives.filter((initiative) =>
         explicit.has(initiative.initiativeId)
@@ -854,17 +851,11 @@ function getGoalRiskAnalysis(system) {
   const atRiskGoals = [];
 
   goals.forEach((goal) => {
-    const initiatives =
-      typeof GoalService !== 'undefined' && GoalService.getInitiativesForGoal
-        ? GoalService.getInitiativesForGoal(system, goal.goalId)
-        : [];
-    const status =
-      typeof GoalService !== 'undefined' && GoalService.getGoalStatus
-        ? GoalService.getGoalStatus(goal, initiatives, {
-            rules: system?.attributes?.goalStatusRules || {},
-            now: new Date(),
-          })
-        : { visualStatus: 'on-track', label: 'On Track', message: '' };
+    const initiatives = GoalService.getInitiativesForGoal(system, goal.goalId);
+    const status = GoalService.getGoalStatus(goal, initiatives, {
+      rules: system?.attributes?.goalStatusRules || {},
+      now: new Date(),
+    });
 
     if (status.visualStatus === 'at-risk') {
       atRiskGoals.push({

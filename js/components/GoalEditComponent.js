@@ -54,9 +54,7 @@ class GoalEditComponent {
       this.systemData.goals = [];
     }
 
-    if (typeof GoalService !== 'undefined') {
-      GoalService.refreshAllGoalDates(this.systemData);
-    }
+    GoalService.refreshAllGoalDates(this.systemData);
 
     const hasItems = this.systemData.goals.length > 0;
     const hasDraft = !!this.draftGoal;
@@ -417,28 +415,27 @@ class GoalEditComponent {
     label.className = 'inline-edit-label';
     label.innerText = labelText;
 
-    const select = document.createElement('select');
-    select.className = 'inline-edit-select';
-    select.multiple = true;
-    select.size = 6; // Slightly larger for better visibility
+    const selectContainer = document.createElement('div');
+    selectContainer.className = 'inline-edit-select-container';
 
-    options.forEach((opt) => {
-      const option = new Option(opt.text, opt.value);
-      if (selectedValues.includes(opt.value)) option.selected = true;
-      select.appendChild(option);
+    const themedSelect = new ThemedSelect({
+      options,
+      value: Array.isArray(selectedValues) ? selectedValues : [],
+      id: `goal-${index}-${fieldName}`,
+      multiple: true,
+      placeholder: 'Select initiatives...',
+      onChange: (values) => {
+        this._updateField(index, fieldName, Array.isArray(values) ? values : []);
+      },
     });
 
     const helpText = document.createElement('small');
     helpText.className = 'inline-edit-help-text';
-    helpText.innerText = 'Hold Ctrl/Cmd to select multiple initiatives';
-
-    select.addEventListener('change', (e) => {
-      const values = Array.from(e.target.selectedOptions).map((o) => o.value);
-      this._updateField(index, fieldName, values);
-    });
+    helpText.innerText = 'Select one or more initiatives.';
 
     group.appendChild(label);
-    group.appendChild(select);
+    selectContainer.appendChild(themedSelect.render());
+    group.appendChild(selectContainer);
     group.appendChild(helpText);
     return group;
   }
@@ -482,19 +479,14 @@ class GoalEditComponent {
 
       goal.initiativeIds = newIds;
 
-      if (index !== 'draft' && goal.goalId && typeof GoalService !== 'undefined') {
+      if (index !== 'draft' && goal.goalId) {
         GoalService.refreshGoalDates(this.systemData, goal.goalId);
       }
 
       this.render();
     } else {
       goal[fieldName] = value;
-      if (
-        index !== 'draft' &&
-        goal.goalId &&
-        typeof GoalService !== 'undefined' &&
-        fieldName === 'dueDate'
-      ) {
+      if (index !== 'draft' && goal.goalId && fieldName === 'dueDate') {
         GoalService.refreshGoalDates(this.systemData, goal.goalId);
         this.render();
         return;
@@ -544,7 +536,7 @@ class GoalEditComponent {
         });
       }
 
-      if (typeof GoalService !== 'undefined' && goal?.goalId) {
+      if (goal?.goalId) {
         GoalService.deleteGoal(this.systemData, goal.goalId);
       } else {
         this.systemData.goals.splice(index, 1);
@@ -569,13 +561,7 @@ class GoalEditComponent {
     }
 
     if (index === 'draft') {
-      let createdGoal = goal;
-      // Commit draft through service to enforce defaults
-      if (typeof GoalService !== 'undefined') {
-        createdGoal = GoalService.addGoal(this.systemData, goal) || goal;
-      } else {
-        this.systemData.goals.push(goal);
-      }
+      const createdGoal = GoalService.addGoal(this.systemData, goal) || goal;
 
       this._syncInitiativeLinks(createdGoal);
       this.draftGoal = null;
@@ -594,15 +580,13 @@ class GoalEditComponent {
         return;
       }
 
-      if (typeof GoalService !== 'undefined' && goal.goalId) {
+      if (goal.goalId) {
         GoalService.updateGoal(this.systemData, goal.goalId, goal);
       }
       notificationManager.showToast('Goal saved successfully.', 'success');
     }
 
-    if (typeof GoalService !== 'undefined') {
-      GoalService.refreshAllGoalDates(this.systemData);
-    }
+    GoalService.refreshAllGoalDates(this.systemData);
     SystemService.save();
   }
 
@@ -896,8 +880,7 @@ class GoalEditComponent {
     const label = goal?.statusLabel || goal?.status || 'Not Started';
     const message =
       goal?.statusMessage || 'Goal health will update when linked initiatives change.';
-    const fallbackStatus =
-      typeof GoalService !== 'undefined' ? GoalService.STATUS.NOT_STARTED : 'not-started';
+    const fallbackStatus = GoalService.STATUS.NOT_STARTED;
     const visualStatus = goal?.statusVisual || goal?.status || fallbackStatus;
     const normalized = String(visualStatus).toLowerCase();
     let suffix = 'at-risk';
