@@ -91,4 +91,51 @@ describe('SystemService', () => {
     expect(aiAgentController.startSession).toHaveBeenCalled();
     expect(navigationManager.navigateTo).toHaveBeenCalledWith('visualizationCarousel');
   });
+
+  it('exports current system with schema metadata', () => {
+    const system = getSampleSystem('StreamView');
+    SystemService.setCurrentSystem(system);
+
+    const exported = SystemService.exportSystemsAsJson();
+    expect(exported.payload.format).toBe('smt-system-export');
+    expect(exported.payload.schemaVersion).toBe(SystemService.getExportSchemaVersion());
+    expect(exported.payload.systems[0].id).toBe('StreamView');
+  });
+
+  it('imports a legacy single-system payload using compatibility mode', () => {
+    const legacyPayload = {
+      systemName: 'Imported Legacy',
+      teams: [],
+      allKnownEngineers: [],
+      services: [],
+      yearlyInitiatives: [],
+      goals: [],
+      definedThemes: [],
+      sdms: [],
+      pmts: [],
+      seniorManagers: [],
+      projectManagers: [],
+      workPackages: [],
+    };
+
+    const result = SystemService.importFromJson(JSON.stringify(legacyPayload), {
+      activateFirst: false,
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.importedSystemIds).toContain('Imported Legacy');
+    expect(systemRepository.getSystemData('Imported Legacy')).toBeTruthy();
+  });
+
+  it('rejects imports from unsupported newer schema versions', () => {
+    const payload = {
+      format: 'smt-system-export',
+      schemaVersion: 999,
+      systems: [{ id: 'Any', data: { systemName: 'Any' } }],
+    };
+
+    const result = SystemService.importFromJson(payload);
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('newer than supported');
+  });
 });

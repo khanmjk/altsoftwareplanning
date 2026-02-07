@@ -3,25 +3,65 @@
 
 /* Theme Tags */
 .goal-theme-tag {
-    display: inline-block;
-    padding: 4px 10px;
-    margin-right: 8px;
-    margin-bottom: 4px;
-    background-color: color-mix(in srgb, var(--theme-info), transparent 85%);
-    color: var(--theme-info);
-    border-radius: 16px;
-    font-size: 0.85rem;
-    font-weight: 500;
-    border: 1px solid color-mix(in srgb, var(--theme-info), transparent 70%);
+  display: inline-block;
+  padding: 4px 10px;
+  margin-right: 8px;
+  margin-bottom: 4px;
+  background-color: color-mix(in srgb, var(--theme-info), transparent 85%);
+  color: var(--theme-info);
+  border-radius: 16px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border: 1px solid color-mix(in srgb, var(--theme-info), transparent 70%);
 }
 
 .text-muted {
-    color: var(--theme-text-secondary);
-    font-style: italic;
+  color: var(--theme-text-secondary);
+  font-style: italic;
 }
 
 .inline-edit-help-text {
-    color: var(--theme-text-muted);
-    display: block;
-    margin-top: 4px;
+  color: var(--theme-text-muted);
+  display: block;
+  margin-top: 4px;
+}
+
+.goal-status-pill {
+  margin-left: 12px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.goal-status-pill--on-track {
+  background-color: color-mix(in srgb, var(--theme-success), transparent 88%);
+  color: var(--theme-success);
+  border-color: color-mix(in srgb, var(--theme-success), transparent 75%);
+}
+
+.goal-status-pill--completed {
+  background-color: color-mix(in srgb, var(--theme-status-completed-bg), transparent 12%);
+  color: var(--theme-status-completed-text);
+  border-color: var(--theme-status-completed-border);
+}
+
+.goal-status-pill--at-risk {
+  background-color: color-mix(in srgb, var(--theme-warning), transparent 84%);
+  color: color-mix(in srgb, var(--theme-warning), #000 25%);
+  border-color: color-mix(in srgb, var(--theme-warning), transparent 65%);
+}
+
+.goal-status-pill--not-started {
+  background-color: color-mix(in srgb, var(--theme-info), transparent 86%);
+  color: var(--theme-info);
+  border-color: color-mix(in srgb, var(--theme-info), transparent 70%);
+}
+
+.goal-status-pill--draft {
+  background-color: color-mix(in srgb, var(--theme-text-muted), transparent 82%);
+  color: var(--theme-text-secondary);
+  border-color: color-mix(in srgb, var(--theme-text-muted), transparent 66%);
 }

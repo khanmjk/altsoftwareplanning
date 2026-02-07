@@ -44,4 +44,46 @@ describe('PlanningService', () => {
     expect(table[0]).toHaveProperty('isBTL');
     expect(table[0]).toHaveProperty('calculatedAtlBtlStatus');
   });
+
+  it('stores at most five snapshots per planning year', () => {
+    const system = getSampleSystem('StreamView');
+    const planningYear = system.yearlyInitiatives[0].attributes?.planningYear;
+
+    for (let i = 0; i < 6; i += 1) {
+      PlanningService.createPlanSnapshot(system, {
+        planningYear,
+        scenario: 'funded',
+        applyConstraints: true,
+        label: `Snapshot ${i + 1}`,
+      });
+    }
+
+    const snapshots = PlanningService.getPlanSnapshots(system, planningYear);
+    expect(snapshots.length).toBe(5);
+  });
+
+  it('restores yearly initiatives from a saved snapshot', () => {
+    const system = getSampleSystem('StreamView');
+    const planningYear = system.yearlyInitiatives[0].attributes?.planningYear;
+    const targetInitiative = system.yearlyInitiatives.find(
+      (init) => init.attributes?.planningYear == planningYear
+    );
+
+    const snapshot = PlanningService.createPlanSnapshot(system, {
+      planningYear,
+      scenario: 'effective',
+      applyConstraints: false,
+      label: 'Before mutation',
+    });
+
+    targetInitiative.title = 'Mutated Initiative Title';
+
+    const restored = PlanningService.restorePlanSnapshotInPlace(system, snapshot.snapshotId);
+    const restoredInitiative = system.yearlyInitiatives.find(
+      (init) => init.initiativeId === targetInitiative.initiativeId
+    );
+
+    expect(restored.success).toBe(true);
+    expect(restoredInitiative.title).not.toBe('Mutated Initiative Title');
+  });
 });

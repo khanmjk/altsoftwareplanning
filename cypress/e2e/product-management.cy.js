@@ -105,6 +105,47 @@ describe('Product management workflows', () => {
     cy.contains('.theme-edit-title', themeName).should('not.exist');
   });
 
+  it('opens Goals management from roadmap and performs goal CRUD', () => {
+    const goalName = 'E2E Goal CRUD';
+    const updatedDescription = 'Updated goal description from management view.';
+
+    openSidebarView('roadmapView');
+    cy.get('.roadmap-actions-row', { timeout: 10000 }).should('exist');
+    cy.contains('.roadmap-actions-row button', 'Manage Goals').click();
+
+    cy.get('#goalsListContainer', { timeout: 10000 }).should('exist');
+    cy.contains('button[data-action="add-goal"]', 'Add Goal').click();
+
+    cy.get('.inline-edit-item').last().as('draftGoal');
+    ensureExpanded('@draftGoal', '.inline-edit-details', '.inline-edit-header');
+    cy.get('@draftGoal').find('input[data-field="name"]').clear().type(goalName);
+    cy.get('@draftGoal')
+      .find('textarea[data-field="description"]')
+      .clear()
+      .type('Initial goal description');
+    cy.get('@draftGoal').find('input[data-field="dueDate"]').clear().type('2026-12-31');
+    cy.get('@draftGoal').contains('button', 'Create Goal').click();
+    cy.contains('.toast-message', 'Goal created successfully.').should('exist');
+
+    cy.contains('.inline-edit-title', goalName).closest('.inline-edit-item').as('savedGoal');
+    ensureExpanded('@savedGoal', '.inline-edit-details', '.inline-edit-header');
+    cy.get('@savedGoal')
+      .find('textarea[data-field="description"]')
+      .clear()
+      .type(updatedDescription);
+    cy.get('@savedGoal').contains('button', 'Save Changes').click();
+    cy.contains('.toast-message', 'Goal saved successfully.').should('exist');
+
+    cy.contains('.inline-edit-title', goalName).closest('.inline-edit-item').as('savedGoal');
+    ensureExpanded('@savedGoal', '.inline-edit-details', '.inline-edit-header');
+    cy.get('@savedGoal')
+      .find('textarea[data-field="description"]')
+      .should('have.value', updatedDescription);
+    cy.get('@savedGoal').contains('button', 'Delete Goal').click();
+    confirmNotificationModal('Delete Goal');
+    cy.contains('.inline-edit-title', goalName).should('not.exist');
+  });
+
   it('creates an initiative with ROI and links it to a goal', () => {
     const themeName = 'Reliability';
     const goalName = 'Reduce Incidents';

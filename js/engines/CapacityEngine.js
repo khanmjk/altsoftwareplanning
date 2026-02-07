@@ -26,6 +26,8 @@ class CapacityEngine {
       const zeroMetric = {
         totalHeadcount: 0,
         humanHeadcount: 0,
+        sinkBaseHumanHeadcount: 0,
+        hiringGap: 0,
         grossYrs: 0,
         deductYrs: 0,
         netYrs: 0,
@@ -65,6 +67,8 @@ class CapacityEngine {
       TeamBIS: {
         totalHeadcount: 0,
         humanHeadcount: 0,
+        sinkBaseHumanHeadcount: 0,
+        hiringGap: 0,
         grossYrs: 0,
         deductYrs: 0,
         netYrs: 0,
@@ -73,6 +77,8 @@ class CapacityEngine {
       EffectiveBIS: {
         totalHeadcount: 0,
         humanHeadcount: 0,
+        sinkBaseHumanHeadcount: 0,
+        hiringGap: 0,
         grossYrs: 0,
         deductYrs: 0,
         netYrs: 0,
@@ -81,6 +87,8 @@ class CapacityEngine {
       FundedHC: {
         totalHeadcount: 0,
         humanHeadcount: 0,
+        sinkBaseHumanHeadcount: 0,
+        hiringGap: 0,
         grossYrs: 0,
         deductYrs: 0,
         netYrs: 0,
@@ -145,6 +153,8 @@ class CapacityEngine {
       ['TeamBIS', 'EffectiveBIS', 'FundedHC'].forEach((scenario) => {
         let totalHeadcount = 0;
         let humanHeadcount = 0;
+        let sinkBaseHumanHeadcount = 0;
+        let hiringGap = 0;
         let newHireGainYrs = 0;
         let newHireRampUpSinkYrs = 0;
 
@@ -152,39 +162,52 @@ class CapacityEngine {
           case 'TeamBIS':
             totalHeadcount = teamTotalBIS;
             humanHeadcount = teamHumanBIS;
+            sinkBaseHumanHeadcount = humanHeadcount;
             // Apply new hire gain for TeamBIS - models hiring ramp-up from current to funded
             newHireGainYrs = Number(team.attributes?.newHireProductiveCapacityGain) || 0;
             break;
           case 'EffectiveBIS':
             totalHeadcount = teamTotalBIS + awayTotalMembers;
             humanHeadcount = teamHumanBIS + awayHumanMembers;
+            sinkBaseHumanHeadcount = humanHeadcount;
             break;
-          case 'FundedHC':
+          case 'FundedHC': {
             // FundedHC represents idealized full staffing
             // With constraints enabled, apply ramp-up sink and gain from forecasting
             humanHeadcount = Number(team.fundedHeadcount) || 0;
+            // Do not calculate sinks against hypothetical open roles.
+            const staffedHumans = teamHumanBIS + awayHumanMembers;
+            hiringGap = Math.max(0, humanHeadcount - staffedHumans);
+            sinkBaseHumanHeadcount = hiringGap > 0 ? staffedHumans : humanHeadcount;
             totalHeadcount = humanHeadcount + teamAIBIS + awayAIMembers;
             // Read from forecasting module (if simulation run, else 0)
             newHireGainYrs = Number(team.attributes?.newHireProductiveCapacityGain) || 0;
             newHireRampUpSinkYrs = Number(team.attributes?.newHireRampUpSink) || 0;
             break;
+          }
+        }
+
+        if (!sinkBaseHumanHeadcount && sinkBaseHumanHeadcount !== 0) {
+          sinkBaseHumanHeadcount = humanHeadcount;
         }
 
         const grossYrs = totalHeadcount * sdesPerSdeYear;
 
         const deductionsBreakdown = {
-          stdLeaveYrs: (stdLeave_days_per_sde / workingDays) * humanHeadcount,
+          stdLeaveYrs: (stdLeave_days_per_sde / workingDays) * sinkBaseHumanHeadcount,
           varLeaveYrs: variable_leave_total_team_days / workingDays,
-          holidayYrs: (holidays_days_per_sde / workingDays) * humanHeadcount,
-          orgEventYrs: (orgEvents_days_per_sde / workingDays) * humanHeadcount,
+          holidayYrs: (holidays_days_per_sde / workingDays) * sinkBaseHumanHeadcount,
+          orgEventYrs: (orgEvents_days_per_sde / workingDays) * sinkBaseHumanHeadcount,
           teamActivityYrs:
-            (teamActivityImpacts.daysPerSDE / workingDays) * humanHeadcount +
+            (teamActivityImpacts.daysPerSDE / workingDays) * sinkBaseHumanHeadcount +
             teamActivityImpacts.totalTeamDaysDuration / workingDays,
-          overheadYrs: (overhead_days_per_sde / workingDays) * humanHeadcount,
+          overheadYrs: (overhead_days_per_sde / workingDays) * sinkBaseHumanHeadcount,
           aiProductivityGainYrs: 0, // Initialize gain
           newHireGainYrs: newHireGainYrs, // Gain from new hires after ramp-up
           newHireRampUpSinkYrs: newHireRampUpSinkYrs, // Sink from new hires during ramp-up
           specificLeaveYrs: 0, // Specific Engineer Leave
+          sinkBaseHumanHeadcount: sinkBaseHumanHeadcount,
+          hiringGap: hiringGap,
         };
 
         // --- Calculate Specific Engineer Leave ---
@@ -217,7 +240,7 @@ class CapacityEngine {
         // --- Calculate and apply AI Productivity Gain ---
         const aiProductivityGainPercent =
           team.teamCapacityAdjustments?.aiProductivityGainPercent || 0;
-        const humanGrossYrs = humanHeadcount * sdesPerSdeYear;
+        const humanGrossYrs = sinkBaseHumanHeadcount * sdesPerSdeYear;
 
         // Base for AI Gain: (Human Gross - Deductions) + New Hire Capacity
         // We assume New Hires also get the AI boost.
@@ -234,6 +257,8 @@ class CapacityEngine {
         teamMetrics[team.teamId][scenario] = {
           totalHeadcount: totalHeadcount,
           humanHeadcount: humanHeadcount,
+          sinkBaseHumanHeadcount: sinkBaseHumanHeadcount,
+          hiringGap: hiringGap,
           grossYrs: grossYrs,
           deductYrs: actualDeductions, // Store actual deductions
           netYrs: netYrs,
@@ -242,6 +267,8 @@ class CapacityEngine {
 
         totals[scenario].totalHeadcount += totalHeadcount;
         totals[scenario].humanHeadcount += humanHeadcount;
+        totals[scenario].sinkBaseHumanHeadcount += sinkBaseHumanHeadcount;
+        totals[scenario].hiringGap += hiringGap;
         totals[scenario].grossYrs += grossYrs;
         totals[scenario].deductYrs += actualDeductions;
         totals[scenario].netYrs += netYrs;

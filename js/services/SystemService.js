@@ -21,6 +21,8 @@ const DEFAULT_SAMPLE_SYSTEM_KEYS = [
   'InsightAI',
   'FinSecure',
 ];
+const SYSTEM_EXPORT_FORMAT = 'smt-system-export';
+const SYSTEM_EXPORT_SCHEMA_VERSION = 12;
 
 const SystemService = {
   /**
@@ -448,6 +450,212 @@ const SystemService = {
         }
       });
     });
+  },
+
+  /**
+   * Returns the current export schema version.
+   * @returns {number}
+   */
+  getExportSchemaVersion() {
+    return SYSTEM_EXPORT_SCHEMA_VERSION;
+  },
+
+  /**
+   * Builds a portable export payload for one or more systems.
+   * @param {object} options
+   * @param {'current'|'all'} [options.scope='current'] - Export current system or all systems.
+   * @returns {object}
+   */
+  buildExportPayload(options = {}) {
+    const scope = options.scope === 'all' ? 'all' : 'current';
+    const systems = [];
+
+    if (scope === 'all') {
+      const map = systemRepository.getAllSystemsMap();
+      Object.entries(map).forEach(([id, data]) => {
+        systems.push({ id, data: this._deepClone(data) });
+      });
+    } else {
+      const current = this.getCurrentSystem();
+      if (!current?.systemName) {
+        throw new Error('No current system loaded to export.');
+      }
+      systems.push({
+        id: current.systemName,
+        data: this._deepClone(current),
+      });
+    }
+
+    return {
+      format: SYSTEM_EXPORT_FORMAT,
+      schemaVersion: SYSTEM_EXPORT_SCHEMA_VERSION,
+      exportedAt: new Date().toISOString(),
+      scope,
+      systems,
+    };
+  },
+
+  /**
+   * Serializes export payload to JSON text.
+   * @param {object} options
+   * @returns {{ fileName: string, json: string, payload: object }}
+   */
+  exportSystemsAsJson(options = {}) {
+    const payload = this.buildExportPayload(options);
+    const firstSystemId = payload.systems[0]?.id || 'systems';
+    const suffix = payload.scope === 'all' ? 'all-systems' : firstSystemId;
+    const safeSuffix = String(suffix)
+      .replace(/[^a-z0-9_-]+/gi, '-')
+      .replace(/^-+|-+$/g, '')
+      .toLowerCase();
+    const fileName = `smt-export-${safeSuffix || 'system'}-${new Date().toISOString().slice(0, 10)}.json`;
+
+    return {
+      fileName,
+      json: JSON.stringify(payload, null, 2),
+      payload,
+    };
+  },
+
+  /**
+   * Imports systems from JSON payload text/object with compatibility checks.
+   * @param {string|object} input
+   * @param {object} options
+   * @param {boolean} [options.activateFirst=true] - Activate first imported system.
+   * @returns {{success: boolean, importedSystemIds?: string[], importedCount?: number, warnings?: string[], error?: string}}
+   */
+  importFromJson(input, options = {}) {
+    const { activateFirst = true } = options;
+    let parsed = input;
+
+    if (typeof input === 'string') {
+      try {
+        parsed = JSON.parse(input);
+      } catch (error) {
+        return { success: false, error: `Invalid JSON: ${error.message}` };
+      }
+    }
+
+    const normalized = this._normalizeImportPayload(parsed);
+    if (!normalized.success) {
+      return normalized;
+    }
+
+    const { schemaVersion, systems, warnings } = normalized;
+    const importedSystemIds = [];
+
+    systems.forEach(({ id, data }) => {
+      const systemId = id || data?.systemName;
+      if (!systemId || !data) return;
+      const cloned = this._deepClone(data);
+      this._augmentSystemData(cloned);
+      this.saveSystem(cloned, systemId);
+      importedSystemIds.push(systemId);
+    });
+
+    if (importedSystemIds.length === 0) {
+      return { success: false, error: 'No valid systems found in import payload.' };
+    }
+
+    if (activateFirst) {
+      const loaded = this.loadSystem(importedSystemIds[0]);
+      if (loaded) {
+        this.setCurrentSystem(loaded);
+      }
+    }
+
+    sidebarComponent?.updateState?.();
+
+    return {
+      success: true,
+      schemaVersion,
+      importedCount: importedSystemIds.length,
+      importedSystemIds,
+      warnings,
+    };
+  },
+
+  /**
+   * Converts supported import shapes into a canonical systems array.
+   * Supported formats:
+   * 1) New payload: { format, schemaVersion, systems: [{id, data}] }
+   * 2) Legacy single-system object: { systemName, ... }
+   * 3) Legacy systems map: { SystemA: {...}, SystemB: {...} }
+   * @private
+   */
+  _normalizeImportPayload(payload) {
+    if (!payload || typeof payload !== 'object') {
+      return { success: false, error: 'Import payload must be a JSON object.' };
+    }
+
+    const warnings = [];
+
+    // New canonical format
+    if (Array.isArray(payload.systems)) {
+      if (payload.format && payload.format !== SYSTEM_EXPORT_FORMAT) {
+        return {
+          success: false,
+          error: `Unsupported export format "${payload.format}".`,
+        };
+      }
+
+      const schemaVersion = Number(payload.schemaVersion || 0);
+      if (schemaVersion > SYSTEM_EXPORT_SCHEMA_VERSION) {
+        return {
+          success: false,
+          error: `Import schema version ${schemaVersion} is newer than supported version ${SYSTEM_EXPORT_SCHEMA_VERSION}.`,
+        };
+      }
+
+      if (!schemaVersion) {
+        warnings.push('Import payload has no schema version; compatibility fallback applied.');
+      }
+
+      const systems = payload.systems
+        .map((entry) => ({
+          id: entry?.id || entry?.data?.systemName,
+          data: entry?.data || null,
+        }))
+        .filter((entry) => entry.id && entry.data);
+
+      return {
+        success: true,
+        schemaVersion: schemaVersion || null,
+        systems,
+        warnings,
+      };
+    }
+
+    // Legacy single-system export
+    if (payload.systemName) {
+      warnings.push('Legacy single-system payload detected. Imported using compatibility mode.');
+      return {
+        success: true,
+        schemaVersion: null,
+        systems: [{ id: payload.systemName, data: payload }],
+        warnings,
+      };
+    }
+
+    // Legacy systems map export
+    const mapEntries = Object.entries(payload).filter(
+      ([, value]) => value && typeof value === 'object' && value.systemName
+    );
+    if (mapEntries.length > 0) {
+      warnings.push('Legacy systems map detected. Imported using compatibility mode.');
+      return {
+        success: true,
+        schemaVersion: null,
+        systems: mapEntries.map(([id, data]) => ({ id, data })),
+        warnings,
+      };
+    }
+
+    return { success: false, error: 'Unsupported import payload structure.' };
+  },
+
+  _deepClone(value) {
+    return JSON.parse(JSON.stringify(value));
   },
 
   /**

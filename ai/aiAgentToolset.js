@@ -506,6 +506,17 @@ const aiAgentTools = [
     ],
   },
   {
+    command: 'analyzeGoalAlignment',
+    description:
+      'Analyzes alignment between goals and initiatives. Returns initiatives not linked to goals and goals without linked initiatives.',
+    parameters: [],
+  },
+  {
+    command: 'analyzeGoalRisk',
+    description: 'Analyzes goal delivery risk based on initiative slippage and goal health status.',
+    parameters: [],
+  },
+  {
     command: 'generateDiagram',
     description:
       "Generates a visual diagram (flowchart, sequence, architecture, org chart, or Gantt/Timeline) based on the system data. Use this when the user asks to 'draw', 'visualize', 'show me a diagram', or 'map out' something.",
@@ -782,9 +793,105 @@ async function executeTool(command, payload = {}) {
       SystemService.save();
       return result;
     }
+    case 'analyzeGoalAlignment': {
+      return getGoalAlignmentAnalysis(system);
+    }
+    case 'analyzeGoalRisk': {
+      return getGoalRiskAnalysis(system);
+    }
     default:
       throw new Error(`Unknown tool command: ${command}`);
   }
+}
+
+function getGoalAlignmentAnalysis(system) {
+  const initiatives = system?.yearlyInitiatives || [];
+  const goals = system?.goals || [];
+
+  const initiativesWithoutGoal = initiatives
+    .filter((initiative) => {
+      if (initiative.primaryGoalId || initiative.goalId) return false;
+      if (Array.isArray(initiative.goalIds) && initiative.goalIds.length > 0) return false;
+      return true;
+    })
+    .map((initiative) => ({
+      initiativeId: initiative.initiativeId,
+      title: initiative.title,
+      status: initiative.status,
+      planningYear: initiative.attributes?.planningYear,
+    }));
+
+  const goalsWithoutInitiatives = goals
+    .filter((goal) => {
+      const linked =
+        typeof GoalService !== 'undefined' && GoalService.getInitiativesForGoal
+          ? GoalService.getInitiativesForGoal(system, goal.goalId)
+          : [];
+      const explicit = new Set(goal?.initiativeIds || []);
+      const explicitLinked = initiatives.filter((initiative) =>
+        explicit.has(initiative.initiativeId)
+      );
+      return linked.length + explicitLinked.length === 0;
+    })
+    .map((goal) => ({
+      goalId: goal.goalId,
+      name: goal.name || goal.title || goal.goalId,
+    }));
+
+  return {
+    generatedAt: new Date().toISOString(),
+    initiativesWithoutGoal,
+    goalsWithoutInitiatives,
+    summary: {
+      initiativesWithoutGoalCount: initiativesWithoutGoal.length,
+      goalsWithoutInitiativesCount: goalsWithoutInitiatives.length,
+    },
+  };
+}
+
+function getGoalRiskAnalysis(system) {
+  const goals = system?.goals || [];
+  const atRiskGoals = [];
+
+  goals.forEach((goal) => {
+    const initiatives =
+      typeof GoalService !== 'undefined' && GoalService.getInitiativesForGoal
+        ? GoalService.getInitiativesForGoal(system, goal.goalId)
+        : [];
+    const status =
+      typeof GoalService !== 'undefined' && GoalService.getGoalStatus
+        ? GoalService.getGoalStatus(goal, initiatives, {
+            rules: system?.attributes?.goalStatusRules || {},
+            now: new Date(),
+          })
+        : { visualStatus: 'on-track', label: 'On Track', message: '' };
+
+    if (status.visualStatus === 'at-risk') {
+      atRiskGoals.push({
+        goalId: goal.goalId,
+        name: goal.name || goal.title || goal.goalId,
+        healthCode: status.healthCode,
+        label: status.label,
+        reason: status.message,
+        plannedEndDate: goal.plannedEndDate || null,
+        dueDate: goal.targetEndDate || goal.dueDate || null,
+        linkedInitiatives: initiatives.map((initiative) => ({
+          initiativeId: initiative.initiativeId,
+          title: initiative.title,
+          status: initiative.status,
+          targetDueDate: initiative.targetDueDate,
+        })),
+      });
+    }
+  });
+
+  return {
+    generatedAt: new Date().toISOString(),
+    atRiskGoals,
+    summary: {
+      atRiskGoalCount: atRiskGoals.length,
+    },
+  };
 }
 
 const aiAgentToolset = {

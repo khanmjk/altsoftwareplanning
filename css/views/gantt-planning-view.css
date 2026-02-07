@@ -2,454 +2,474 @@
 
 /* Container */
 .gantt-planning-view {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 /* Filter Bar */
 .gantt-filter-bar {
-    padding: var(--space-md);
-    background: var(--theme-bg-secondary);
-    border-bottom: 1px solid var(--theme-border-color);
+  padding: var(--space-md);
+  background: var(--theme-bg-secondary);
+  border-bottom: 1px solid var(--theme-border-color);
 }
 
 .gantt-filter-row {
-    display: flex;
-    justify-content: space-between;
-    gap: var(--space-md);
-    align-items: center;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-md);
+  align-items: center;
 }
 
 /* Toolbar */
 .gantt-toolbar {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    width: 100%;
-    flex-wrap: wrap;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  flex-wrap: wrap;
 }
 
 .gantt-toolbar .filter-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .gantt-toolbar__status {
-    min-width: 200px;
+  min-width: 200px;
 }
 
 .gantt-toolbar__label {
-    font-weight: 600;
+  font-weight: 600;
 }
 
 .gantt-toolbar__renderer {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
+}
+
+.gantt-conflict-badge {
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+
+.gantt-conflict-badge--ok {
+  color: var(--theme-success);
+  background-color: color-mix(in srgb, var(--theme-success), transparent 88%);
+  border-color: color-mix(in srgb, var(--theme-success), transparent 70%);
+}
+
+.gantt-conflict-badge--warning {
+  color: var(--theme-danger);
+  background-color: color-mix(in srgb, var(--theme-danger), transparent 88%);
+  border-color: color-mix(in srgb, var(--theme-danger), transparent 70%);
 }
 
 .gantt-save-btn {
-    opacity: 0.5;
-    cursor: default;
+  opacity: 0.5;
+  cursor: default;
 }
 
 .gantt-save-btn--active {
-    opacity: 1;
-    cursor: pointer;
+  opacity: 1;
+  cursor: pointer;
 }
 
 .gantt-legend--toolbar {
-    margin-left: auto;
+  margin-left: auto;
 }
 
 .gantt-legend.gantt-legend--hidden {
-    display: none;
+  display: none;
 }
 
 /* Legend */
 .gantt-legend {
-    display: flex;
-    gap: 15px;
-    font-size: 12px;
-    align-items: center;
-    margin-top: var(--space-md);
+  display: flex;
+  gap: 15px;
+  font-size: 12px;
+  align-items: center;
+  margin-top: var(--space-md);
 }
 
 .gantt-legend__item {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 .gantt-legend__color-box {
-    width: 12px;
-    height: 12px;
-    display: inline-block;
-    margin-right: 5px;
-    border-radius: 2px;
+  width: 12px;
+  height: 12px;
+  display: inline-block;
+  margin-right: 5px;
+  border-radius: 2px;
 }
 
 .gantt-legend__color-box--initiative {
-    background-color: var(--theme-gantt-initiative, #6f42c1);
+  background-color: var(--theme-gantt-initiative, #6f42c1);
 }
 
 .gantt-legend__color-box--work-package {
-    background-color: var(--theme-gantt-workpackage, #0366d6);
+  background-color: var(--theme-gantt-workpackage, #0366d6);
 }
 
 .gantt-legend__color-box--assignment {
-    background-color: var(--theme-gantt-assignment, #2ea44f);
+  background-color: var(--theme-gantt-assignment, #2ea44f);
 }
 
 /* Split Pane Layout */
 .gantt-split {
-    display: grid;
-    --gantt-table-pct: 36%;
-    --gantt-chart-pct: 64%;
-    grid-template-columns: var(--gantt-table-pct) 8px var(--gantt-chart-pct);
-    grid-template-rows: 1fr;
-    flex: 1;
-    overflow: hidden;
-    position: relative;
-    min-height: 0;
+  display: grid;
+  --gantt-table-pct: 36%;
+  --gantt-chart-pct: 64%;
+  grid-template-columns: var(--gantt-table-pct) 8px var(--gantt-chart-pct);
+  grid-template-rows: 1fr;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  min-height: 0;
 }
 
 .gantt-panel {
-    overflow: auto;
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    min-height: 0;
+  overflow: auto;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
 }
 
 #ganttPlanningTableContainer {
-    flex-basis: var(--gantt-table-pct);
+  flex-basis: var(--gantt-table-pct);
 }
 
 #ganttChartWrapper {
-    flex-basis: var(--gantt-chart-pct);
+  flex-basis: var(--gantt-chart-pct);
 }
 
 .gantt-resizer {
-    width: 8px;
-    background: var(--theme-border-color);
-    cursor: col-resize;
-    flex-shrink: 0;
-    position: relative;
-    user-select: none;
+  width: 8px;
+  background: var(--theme-border-color);
+  cursor: col-resize;
+  flex-shrink: 0;
+  position: relative;
+  user-select: none;
 }
 
 .gantt-resizer:hover {
-    background: var(--theme-primary-hover);
+  background: var(--theme-primary-hover);
 }
 
 /* Table Wrapper */
 .gantt-table-wrapper {
-    overflow: auto;
-    height: 100%;
-    flex: 1;
-    min-height: 0;
+  overflow: auto;
+  height: 100%;
+  flex: 1;
+  min-height: 0;
 }
 
 /* Theme-aware scrollbar */
 .gantt-table-wrapper::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+  width: 10px;
+  height: 10px;
 }
 
 .gantt-table-wrapper::-webkit-scrollbar-track {
-    background: var(--theme-bg-secondary);
-    border-radius: 5px;
+  background: var(--theme-bg-secondary);
+  border-radius: 5px;
 }
 
 .gantt-table-wrapper::-webkit-scrollbar-thumb {
-    background: var(--theme-border-color);
-    border-radius: 5px;
+  background: var(--theme-border-color);
+  border-radius: 5px;
 }
 
 .gantt-table-wrapper::-webkit-scrollbar-thumb:hover {
-    background: var(--theme-text-muted);
+  background: var(--theme-text-muted);
 }
 
 /* Firefox scrollbar */
 .gantt-table-wrapper {
-    scrollbar-width: thin;
-    scrollbar-color: var(--theme-border-color) var(--theme-bg-secondary);
+  scrollbar-width: thin;
+  scrollbar-color: var(--theme-border-color) var(--theme-bg-secondary);
 }
 
 /* Table */
 .gantt-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
 }
 
 .gantt-hierarchy {
-    table-layout: auto;
+  table-layout: auto;
 }
 
 /* Table Headers */
 .gantt-table__header-cell {
-    text-align: left;
-    padding: 6px;
-    border-bottom: 1px solid var(--theme-border-light);
-    background: var(--theme-bg-secondary);
-    font-weight: 600;
-    position: sticky;
-    top: 0;
-    z-index: 1;
+  text-align: left;
+  padding: 6px;
+  border-bottom: 1px solid var(--theme-border-light);
+  background: var(--theme-bg-secondary);
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 /* Base Cell Styles */
 .gantt-table__cell {
-    padding: 6px;
-    border-bottom: 1px solid var(--theme-border-light);
-    vertical-align: middle;
+  padding: 6px;
+  border-bottom: 1px solid var(--theme-border-light);
+  vertical-align: middle;
 }
 
 .gantt-table__cell--overflow-visible {
-    overflow: visible;
+  overflow: visible;
 }
 
 .gantt-table__select {
-    min-width: 120px;
+  min-width: 120px;
 }
 
 /* Initiative Row Cells */
 .gantt-table__cell--initiative {
-    border-bottom-color: var(--theme-border-light);
+  border-bottom-color: var(--theme-border-light);
 }
 
 .gantt-table__cell--initiative-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.gantt-table__title-container>div:first-child {
-    font-weight: 600;
+.gantt-table__title-container > div:first-child {
+  font-weight: 600;
 }
 
 .gantt-table__id-badge {
-    font-family: monospace;
-    color: var(--theme-text-secondary);
-    font-size: 12px;
+  font-family: monospace;
+  color: var(--theme-text-secondary);
+  font-size: 12px;
 }
 
 /* Work Package Row Cells */
 .gantt-table__cell--wp {
-    padding: 6px 6px 6px 32px;
-    border-bottom: 1px solid var(--theme-border-light);
+  padding: 6px 6px 6px 32px;
+  border-bottom: 1px solid var(--theme-border-light);
 }
 
 .gantt-table__cell--wp-title {
-    padding: 6px 6px 6px 32px;
+  padding: 6px 6px 6px 32px;
 }
 
-.gantt-table__cell--wp-title>div {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    vertical-align: middle;
+.gantt-table__cell--wp-title > div {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  vertical-align: middle;
 }
 
 .gantt-table__cell--wp-title .gantt-expander {
-    flex-shrink: 0;
-    margin: 0;
+  flex-shrink: 0;
+  margin: 0;
 }
 
 .gantt-table__cell--wp-teams {
-    color: var(--theme-text-secondary);
+  color: var(--theme-text-secondary);
 }
 
 .gantt-table__cell--wp-sde {
-    color: var(--theme-text-primary);
+  color: var(--theme-text-primary);
 }
 
 /* Assignment Row Cells */
 .gantt-table__cell--assignment {
-    padding: 4px 6px 4px 48px;
-    border-bottom: 1px solid var(--theme-border-light);
-    color: var(--theme-text-secondary);
-    font-size: 13px;
+  padding: 4px 6px 4px 48px;
+  border-bottom: 1px solid var(--theme-border-light);
+  color: var(--theme-text-secondary);
+  font-size: 13px;
 }
 
 .gantt-table__cell--assignment-empty {
-    padding: 4px;
-    border-bottom: 1px solid var(--theme-border-light);
+  padding: 4px;
+  border-bottom: 1px solid var(--theme-border-light);
 }
 
 /* Other Teams Toggle Row */
 .gantt-table__cell--other-teams {
-    padding: 4px 6px 4px 48px;
-    border-bottom: 1px solid var(--theme-border-light);
-    color: var(--theme-text-secondary);
-    font-size: 12px;
+  padding: 4px 6px 4px 48px;
+  border-bottom: 1px solid var(--theme-border-light);
+  color: var(--theme-text-secondary);
+  font-size: 12px;
 }
 
 .gantt-table__cell--other-teams-action {
-    padding: 4px;
-    border-bottom: 1px solid var(--theme-border-light);
+  padding: 4px;
+  border-bottom: 1px solid var(--theme-border-light);
 }
 
 /* Empty State */
 .gantt-table__empty {
-    padding: 10px;
-    text-align: center;
-    color: var(--theme-text-muted);
+  padding: 10px;
+  text-align: center;
+  color: var(--theme-text-muted);
 }
 
 .gantt-table__empty-wp {
-    padding: 6px 12px;
-    color: var(--theme-text-muted);
+  padding: 6px 12px;
+  color: var(--theme-text-muted);
 }
 
 /* Expander Button */
 .gantt-expander {
-    width: 24px;
-    height: 24px;
-    border: 1px solid var(--theme-border-color);
-    background: var(--theme-bg-primary);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    font-weight: bold;
-    flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--theme-border-color);
+  background: var(--theme-bg-primary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-weight: bold;
+  flex-shrink: 0;
 }
 
 .gantt-expander:hover {
-    background: var(--theme-bg-secondary);
-    border-color: var(--theme-primary);
+  background: var(--theme-bg-secondary);
+  border-color: var(--theme-primary);
 }
 
 /* Action Buttons */
 .gantt-add-wp {
-    padding: 4px 8px;
-    font-size: 12px;
+  padding: 4px 8px;
+  font-size: 12px;
 }
 
 /* WP Actions Column - buttons inline */
 .gantt-table__cell--wp-actions {
-    white-space: nowrap;
+  white-space: nowrap;
 }
 
 .gantt-table__cell--wp-actions button {
-    display: inline-block;
-    margin-right: 4px;
-    vertical-align: middle;
+  display: inline-block;
+  margin-right: 4px;
+  vertical-align: middle;
 }
 
 /* Row States */
 .gantt-init-row {
-    background: var(--theme-bg-primary);
-    position: relative;
-    /* Required for focus arrow indicator */
+  background: var(--theme-bg-primary);
+  position: relative;
+  /* Required for focus arrow indicator */
 }
 
 .gantt-init-row:hover {
-    background: var(--theme-bg-secondary);
+  background: var(--theme-bg-secondary);
 }
 
 .gantt-wp-row {
-    background: var(--theme-bg-tertiary);
-    position: relative;
-    /* Required for focus arrow indicator */
+  background: var(--theme-bg-tertiary);
+  position: relative;
+  /* Required for focus arrow indicator */
 }
 
 .gantt-wp-row:hover {
-    background: var(--theme-bg-tertiary);
+  background: var(--theme-bg-tertiary);
 }
 
 .gantt-wp-assign-row {
-    background: var(--theme-bg-secondary);
-    position: relative;
-    /* Required for focus arrow indicator */
+  background: var(--theme-bg-secondary);
+  position: relative;
+  /* Required for focus arrow indicator */
 }
 
 .gantt-wp-assign-row:hover {
-    background: var(--theme-bg-tertiary);
+  background: var(--theme-bg-tertiary);
 }
 
 /* Focus States - Visible border styling */
 .gantt-focus-row {
-    background: rgba(var(--theme-primary-rgb), 0.12) !important;
-    outline: 3px solid var(--theme-primary) !important;
-    outline-offset: -3px;
-    scroll-margin-top: 60px;
-    position: relative;
+  background: rgba(var(--theme-primary-rgb), 0.12) !important;
+  outline: 3px solid var(--theme-primary) !important;
+  outline-offset: -3px;
+  scroll-margin-top: 60px;
+  position: relative;
 }
 
 .gantt-focus-row td:first-child {
-    border-left: 5px solid var(--theme-primary) !important;
+  border-left: 5px solid var(--theme-primary) !important;
 }
 
 .gantt-focus-initiative {
-    background: color-mix(in srgb, var(--theme-gantt-initiative), transparent 88%) !important;
-    outline: 3px solid var(--theme-gantt-initiative) !important;
-    outline-offset: -3px;
+  background: color-mix(in srgb, var(--theme-gantt-initiative), transparent 88%) !important;
+  outline: 3px solid var(--theme-gantt-initiative) !important;
+  outline-offset: -3px;
 }
 
 .gantt-focus-initiative td:first-child {
-    border-left: 5px solid var(--theme-gantt-initiative) !important;
+  border-left: 5px solid var(--theme-gantt-initiative) !important;
 }
 
 /* Chart Container */
 .gantt-chart-box {
-    padding: var(--space-md);
-    background: var(--theme-card-bg);
-    min-height: 400px;
-    height: 100%;
-    width: 100%;
-    box-sizing: border-box;
-    flex: 1;
+  padding: var(--space-md);
+  background: var(--theme-card-bg);
+  min-height: 400px;
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  flex: 1;
 }
 
 #ganttChartContainer {
-    min-height: 600px;
+  min-height: 600px;
 }
 
 /* Input Fields in Table */
-.gantt-table input[type="text"],
-.gantt-table input[type="date"],
-.gantt-table input[type="number"] {
-    padding: 4px 6px;
-    border: 1px solid var(--color-gray-300);
-    border-radius: var(--radius-sm);
-    font-size: 13px;
+.gantt-table input[type='text'],
+.gantt-table input[type='date'],
+.gantt-table input[type='number'] {
+  padding: 4px 6px;
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
 }
 
 .gantt-table input[disabled] {
-    background: var(--theme-bg-tertiary);
-    cursor: not-allowed;
-    opacity: 0.6;
+  background: var(--theme-bg-tertiary);
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
-.gantt-table input[type="text"] {
-    width: 70%;
+.gantt-table input[type='text'] {
+  width: 70%;
 }
 
-.gantt-table input[type="number"] {
-    width: 80px;
+.gantt-table input[type='number'] {
+  width: 80px;
 }
 
 /* Select Dropdowns */
 .gantt-table select {
-    padding: 4px 6px;
-    border: 1px solid var(--theme-border-color);
-    border-radius: var(--radius-sm);
-    font-size: 13px;
-    max-width: 200px;
-    background: var(--theme-bg-primary);
-    color: var(--theme-text-primary);
+  padding: 4px 6px;
+  border: 1px solid var(--theme-border-color);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  max-width: 200px;
+  background: var(--theme-bg-primary);
+  color: var(--theme-text-primary);
 }
 
 /* Buttons in Table */
 .gantt-table button {
-    padding: 4px 8px;
-    font-size: 12px;
+  padding: 4px 8px;
+  font-size: 12px;
 }
 
-.gantt-table button[data-action="toggle-other-teams"] {
-    padding: 2px 6px;
+.gantt-table button[data-action='toggle-other-teams'] {
+  padding: 2px 6px;
 }

@@ -6,6 +6,7 @@ import { createTestContext } from '../helpers/testContext.js';
 describe('NavigationManager', () => {
   let NavigationManager;
   let navigationManager;
+  let managementViewClass;
   let workspaceComponent;
   let aiAgentController;
   let AIService;
@@ -23,6 +24,13 @@ describe('NavigationManager', () => {
     class StubView {
       render() {}
     }
+
+    managementViewClass = class {
+      constructor() {
+        this.render = vi.fn();
+        this.switchTab = vi.fn();
+      }
+    };
 
     workspaceComponent = {
       render: vi.fn((viewId, cb) => {
@@ -50,7 +58,7 @@ describe('NavigationManager', () => {
       CapacityPlanningView: StubView,
       ResourceForecastView: StubView,
       RoadmapView: StubView,
-      ManagementView: StubView,
+      ManagementView: managementViewClass,
       SystemOverviewView: StubView,
       OrgView: StubView,
       SystemEditView: StubView,
@@ -79,5 +87,15 @@ describe('NavigationManager', () => {
     expect(sidebar.setActive).toHaveBeenCalledWith('welcomeView');
     expect(workspaceComponent.render).toHaveBeenCalled();
     expect(header.update).toHaveBeenCalledWith('welcomeView', 'Test System');
+  });
+
+  it('passes management tab params through render and does not skip rendering', () => {
+    navigationManager.navigateTo('managementView', { tab: 'goals' });
+
+    const managementView = navigationManager.getViewInstance('managementView');
+    expect(managementView).toBeTruthy();
+    expect(managementView.render).toHaveBeenCalledTimes(1);
+    expect(managementView.render).toHaveBeenCalledWith(expect.any(HTMLElement), { tab: 'goals' });
+    expect(managementView.switchTab).not.toHaveBeenCalled();
   });
 });

@@ -2,157 +2,170 @@
 
 /* 1. Container & Layout */
 .management-view-container {
-    width: 100%;
-    height: 100%;
-    padding: var(--space-lg);
-    /* Match System Edit padding */
-    box-sizing: border-box;
-    overflow-y: auto;
-    background-color: transparent;
-    font-family: var(--font-family-base);
-    color: var(--theme-text-primary);
-    margin: 0 !important;
-    /* Force left align */
-    max-width: none !important;
-    /* Override any legacy max-width */
+  width: 100%;
+  height: 100%;
+  padding: var(--space-lg);
+  /* Match System Edit padding */
+  box-sizing: border-box;
+  overflow-y: auto;
+  background-color: transparent;
+  font-family: var(--font-family-base);
+  color: var(--theme-text-primary);
+  margin: 0 !important;
+  /* Force left align */
+  max-width: none !important;
+  /* Override any legacy max-width */
 }
 
 .management-layout {
-    max-width: 800px;
-    /* Match System Edit width */
-    margin: 0;
-    /* Left align */
+  max-width: 800px;
+  /* Match System Edit width */
+  margin: 0;
+  /* Left align */
 }
 
 /* 2. Section Headers */
 .management-section-header {
-    margin-top: var(--space-xl);
-    margin-bottom: var(--space-md);
-    border-bottom: 2px solid var(--theme-border-color);
-    padding-bottom: var(--space-sm);
+  margin-top: var(--space-xl);
+  margin-bottom: var(--space-md);
+  border-bottom: 2px solid var(--theme-border-color);
+  padding-bottom: var(--space-sm);
 }
 
 .management-section-header h3 {
-    margin: 0;
-    font-size: 1.2rem;
-    /* Match System Edit */
-    font-weight: 600;
-    color: var(--theme-text-primary);
+  margin: 0;
+  font-size: 1.2rem;
+  /* Match System Edit */
+  font-weight: 600;
+  color: var(--theme-text-primary);
 }
 
 /* 3. List Container */
 .management-list-container {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 }
 
 /* 4. List Item (Expandable) - Matches .service-edit */
 .management-item {
-    background: transparent;
-    border-bottom: 1px solid var(--theme-border-light);
-    margin-bottom: 0;
-    transition: background-color 0.2s ease;
+  background: transparent;
+  border-bottom: 1px solid var(--theme-border-light);
+  margin-bottom: 0;
+  transition: background-color 0.2s ease;
 }
 
 .management-item:last-child {
-    border-bottom: none;
+  border-bottom: none;
 }
 
 /* Item Header - Matches .service-edit h4 */
 .management-item-header {
-    padding: 4px 0;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    user-select: none;
-    border-radius: var(--radius-sm);
-    transition: background-color 0.1s ease;
+  padding: 4px 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  user-select: none;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.1s ease;
 }
 
 .management-item-header:hover {
-    background-color: color-mix(in srgb, var(--theme-text-primary), transparent 98%);
-    padding-left: 4px;
-    /* Visual feedback */
+  background-color: color-mix(in srgb, var(--theme-text-primary), transparent 98%);
+  padding-left: 4px;
+  /* Visual feedback */
 }
 
 .management-item-indicator {
-    margin-right: 4px;
-    color: var(--theme-text-muted);
-    font-family: monospace;
-    font-weight: normal;
-    width: 12px;
-    text-align: center;
-    display: inline-block;
+  margin-right: 4px;
+  color: var(--theme-text-muted);
+  font-family: monospace;
+  font-weight: normal;
+  width: 12px;
+  text-align: center;
+  display: inline-block;
 }
 
 .management-item-title {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: var(--theme-text-secondary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--theme-text-secondary);
 }
 
 .management-item-header:hover .management-item-title {
-    color: var(--theme-text-primary);
+  color: var(--theme-text-primary);
 }
 
 /* Item Details (Collapsible) - Matches .service-details */
 .management-item-details {
-    display: none;
-    padding: var(--space-md) 0;
-    margin-top: 4px;
-    margin-bottom: var(--space-md);
-    /* No border-left or indent to match System Edit "flat" look */
+  display: none;
+  padding: var(--space-md) 0;
+  margin-top: 4px;
+  margin-bottom: var(--space-md);
+  /* No border-left or indent to match System Edit "flat" look */
 }
 
 .management-item-details.expanded {
-    display: block;
+  display: block;
 }
 
 /* 5. Form Elements - Matches System Edit */
 .management-form-group {
-    margin-bottom: var(--space-md);
+  margin-bottom: var(--space-md);
 }
 
 .management-label {
-    display: block;
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: var(--theme-text-secondary);
-    margin-bottom: 4px;
-    margin-top: var(--space-sm);
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--theme-text-secondary);
+  margin-bottom: 4px;
+  margin-top: var(--space-sm);
 }
 
 .management-input,
 .management-textarea {
-    width: 100%;
-    padding: 6px 10px;
-    border: 1px solid var(--theme-border-color);
-    border-radius: var(--radius-sm);
-    font-size: 0.9rem;
-    line-height: 1.4;
-    color: var(--theme-text-primary);
-    background-color: var(--theme-bg-primary);
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--theme-border-color);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: var(--theme-text-primary);
+  background-color: var(--theme-bg-primary);
+  transition:
+    border-color 0.15s ease-in-out,
+    box-shadow 0.15s ease-in-out;
 }
 
 .management-input:focus,
 .management-textarea:focus {
-    border-color: var(--color-primary);
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(var(--theme-primary-rgb), 0.1);
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(var(--theme-primary-rgb), 0.1);
 }
 
 /* 6. Actions */
 .management-actions {
-    margin-top: var(--space-md);
-    display: flex;
-    gap: var(--space-md);
+  margin-top: var(--space-md);
+  display: flex;
+  gap: var(--space-md);
 }
 
 .management-list-actions {
-    margin-top: var(--space-md);
-    margin-bottom: var(--space-lg);
+  margin-top: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.management-initiatives-search {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+  margin-bottom: var(--space-md);
+}
+
+.management-initiatives-search__input {
+  flex: 1;
 }
 
 /* Buttons - Inherit global styles, but ensure specific overrides if needed */
@@ -160,16 +173,16 @@
 
 /* Empty State */
 .management-list-empty {
-    color: var(--theme-text-muted);
-    font-style: italic;
-    padding: var(--space-md) 0;
+  color: var(--theme-text-muted);
+  font-style: italic;
+  padding: var(--space-md) 0;
 }
 
 /* Status Pills (for Initiatives) */
 .pill-status {
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
 }

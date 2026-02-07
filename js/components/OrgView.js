@@ -494,7 +494,10 @@ class OrgView {
         const nodeEnter = node
           .enter()
           .append('g')
-          .attr('class', (d) => `org-node org-type-${d.data.type}`)
+          .attr('class', (d) => {
+            const depthClass = `org-depth-${Math.min(d.depth || 0, 6)}`;
+            return `org-node org-type-${d.data.type} ${depthClass}`;
+          })
           .attr('transform', (d) => `translate(${source.x0 || source.x},${source.y0 || source.y})`)
           .attr('opacity', 0)
           .on('click', (event, d) => {
@@ -576,6 +579,10 @@ class OrgView {
 
         node
           .merge(nodeEnter)
+          .attr('class', (d) => {
+            const depthClass = `org-depth-${Math.min(d.depth || 0, 6)}`;
+            return `org-node org-type-${d.data.type} ${depthClass}`;
+          })
           .transition()
           .duration(duration)
           .attr('transform', (d) => `translate(${d.x},${d.y})`)

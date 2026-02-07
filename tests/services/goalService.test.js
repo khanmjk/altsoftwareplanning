@@ -46,4 +46,56 @@ describe('GoalService', () => {
     const refreshed = GoalService.refreshGoalDates(system, 'goal-1');
     expect(refreshed.plannedEndDate).toBe('2025-11-30');
   });
+
+  it('flags goals with no linked initiatives as red health', () => {
+    const status = GoalService.getGoalStatus({ goalId: 'goal-1', dueDate: '2026-12-31' }, [], {
+      now: '2026-01-01',
+    });
+
+    expect(status.healthCode).toBe(GoalService.HEALTH.NO_INITIATIVES);
+    expect(status.visualStatus).toBe(GoalService.STATUS.AT_RISK);
+    expect(status.status).toBe(GoalService.STATUS.NOT_STARTED);
+  });
+
+  it('marks not-started goals near due date as at risk', () => {
+    const goal = { goalId: 'goal-1', dueDate: '2026-02-01' };
+    const initiatives = [
+      { initiativeId: 'init-1', status: 'Backlog', targetDueDate: '2026-02-01' },
+    ];
+
+    const status = GoalService.getGoalStatus(goal, initiatives, { now: '2026-01-20' });
+    expect(status.healthCode).toBe(GoalService.HEALTH.NOT_STARTED_AT_RISK);
+    expect(status.visualStatus).toBe(GoalService.STATUS.AT_RISK);
+  });
+
+  it('marks completed goals as late when completion exceeds due date', () => {
+    const goal = { goalId: 'goal-1', dueDate: '2026-02-01' };
+    const initiatives = [
+      {
+        initiativeId: 'init-1',
+        status: 'Completed',
+        targetDueDate: '2026-01-30',
+        actualCompletionDate: '2026-02-05',
+      },
+    ];
+
+    const status = GoalService.getGoalStatus(goal, initiatives, { now: '2026-02-06' });
+    expect(status.healthCode).toBe(GoalService.HEALTH.COMPLETED_LATE);
+    expect(status.status).toBe(GoalService.STATUS.COMPLETED);
+  });
+
+  it('detects in-progress slipping goals when planned end exceeds due date', () => {
+    const goal = { goalId: 'goal-1', dueDate: '2026-06-30' };
+    const initiatives = [
+      {
+        initiativeId: 'init-1',
+        status: 'In Progress',
+        targetDueDate: '2026-07-15',
+      },
+    ];
+
+    const status = GoalService.getGoalStatus(goal, initiatives, { now: '2026-05-01' });
+    expect(status.healthCode).toBe(GoalService.HEALTH.IN_PROGRESS_SLIPPING);
+    expect(status.visualStatus).toBe(GoalService.STATUS.AT_RISK);
+  });
 });

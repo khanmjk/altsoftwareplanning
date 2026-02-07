@@ -20,6 +20,14 @@ Interactive runner:
 npm run test:e2e:open
 ```
 
+## Current Baseline (February 7, 2026)
+
+- Full suite result: **8 specs / 52 tests passing**.
+- Includes explicit regression coverage for:
+  - Roadmap -> `Manage Goals` navigation
+  - Goal CRUD in Product Management goals workflow
+  - Roadmap, planning, roster, AI settings, feedback, and system edit end-to-end flows
+
 ## Run a Single Spec
 
 The built-in script does not pass through extra Cypress CLI flags. If you want
@@ -60,7 +68,7 @@ Notes:
 - `cypress/e2e/core-features.cy.js`: primary views, navigation, and core UI.
 - `cypress/e2e/advanced-flows.cy.js`: full system creation, drag and drop, and forecasting.
 - `cypress/e2e/system-edit-org.cy.js`: system edit and org design workflows.
-- `cypress/e2e/product-management.cy.js`: themes, initiatives, goals, and backlog CRUD.
+- `cypress/e2e/product-management.cy.js`: themes, initiatives, goals, backlog CRUD, and roadmap-to-goals navigation.
 - `cypress/e2e/planning-detailed.cy.js`: year plan, detailed planning, capacity, and forecast.
 - `cypress/e2e/settings-ai-feedback.cy.js`: AI settings, feedback, and reset flows.
 

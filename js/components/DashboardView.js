@@ -814,6 +814,21 @@ class DashboardView {
     }
     this.goalsWidget.setPlanningYear(this.planningYear);
     this.goalsWidget.render();
+
+    const toolbar = document.createElement('div');
+    toolbar.className = 'dashboard-context-actions';
+
+    const manageBtn = document.createElement('button');
+    manageBtn.type = 'button';
+    manageBtn.className = 'btn btn-secondary btn-sm';
+    const icon = document.createElement('i');
+    icon.className = 'fas fa-bullseye';
+    manageBtn.appendChild(icon);
+    manageBtn.appendChild(document.createTextNode(' Manage Goals'));
+    manageBtn.onclick = () => navigationManager.navigateTo('managementView', { tab: 'goals' });
+    toolbar.appendChild(manageBtn);
+
+    return toolbar;
   }
 
   initializeAccomplishmentsWidget() {

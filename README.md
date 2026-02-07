@@ -107,6 +107,19 @@ This tool provides a unified platform to:
 - **Forecast Team Growth:** Model SDE hiring, ramp-up, and attrition, factoring in detailed capacity constraints to predict resource availability.
 - **Accelerate Modeling with AI:** Use a powerful AI Assistant to generate entire, realistic sample systems and roadmaps from a single text prompt.
 
+### Latest Release Highlights (February 7, 2026)
+
+- **Goal lifecycle engine is now operational**: goals compute health/status from linked initiatives (including due-date inheritance, slippage detection, and completion behavior) and stay synchronized across Dashboard and Management views.
+- **Goal lifecycle UI is now fully manageable**: create/update/delete goals in **Product -> Management -> Goals**, with goal status pills and linked-initiative controls.
+- **Roadmap discoverability improved**: quarterly and 3YP now support **Goal** and **Status** filters; Roadmap toolbar includes direct shortcuts to **Manage Themes**, **Manage Initiatives**, and **Manage Goals**.
+- **Management productivity improved**: initiatives now support inline search/reset filtering in Product Management.
+- **Capacity insights improved**: Capacity dashboard includes a **Hiring Gap** KPI, and sink calculations now avoid counting unfilled roles as staffed capacity.
+- **Org chart readability improved**: org chart rendering now emphasizes depth levels visually.
+- **Data portability improved**: sidebar now supports system **Export**/**Import** (JSON) with schema-versioned payloads and compatibility checks.
+- **Year Plan resilience improved**: users can save/load plan snapshots (latest 5 per planning year retained) and filter planning by **Team Focus**.
+- **Detailed Planning improved**: dependency conflict detection is surfaced in UI and auto-scheduling can shift work packages to resolve predecessor violations.
+- **AI planning copilots expanded**: alignment/risk analysis commands now include goal-initiative alignment and goal risk assessment.
+
 ---
 
 ## 2. Getting Started
@@ -181,6 +194,16 @@ For a full list of AI features, see **Section 4: Key Features**.
 - Click **"Reset Defaults"**.
 - **Caution:** This action will erase ALL currently saved systems and restore the initial sample systems. This cannot be undone.
 - A confirmation prompt will appear before deletion.
+
+### Exporting and Importing System Data (JSON)
+
+- Open the system switcher in the sidebar (top-left system dropdown).
+- Click **"Export System"** to download a schema-versioned JSON export of the active system.
+- Click **"Import System"** to load a previously exported file.
+- Import behavior includes compatibility checks:
+  - unsupported or newer schema versions are rejected with clear errors
+  - legacy payloads are accepted through compatibility normalization where possible
+  - imported systems can be activated immediately after import
 
 ---
 
@@ -284,7 +307,9 @@ Understanding these core entities is key to using the tool effectively. Most ent
 ### Goals
 
 - Strategic objectives that initiatives align with, stored in `currentSystemData.goals`.
-- Attributes: `goalId`, `name`, `description`, `strategyLink`, `owner`, `projectManager`, `technicalPOC` (personnel objects), `initiativeIds` (array of linked initiative IDs), and an extensible `attributes` object.
+- Core attributes: `goalId`, `name`, `description`, `strategyLink`, `owner`, `projectManager`, `technicalPOC`, `initiativeIds`, and extensible `attributes`.
+- Lifecycle/status attributes (computed and persisted): `targetEndDate`/`dueDate`, `plannedEndDate`, `status`, `statusVisual`, `statusLabel`, `statusSeverity`, `healthCode`, `statusMessage`, and `inheritedDueDate`.
+- Goal status logic is centralized in `GoalService` and reused by both the Goals dashboard widget and Product Management goals list.
 
 ### Defined Themes
 
@@ -299,7 +324,8 @@ Understanding these core entities is key to using the tool effectively. Most ent
 ### Archived Yearly Plans
 
 - Snapshots of past yearly plans, stored in `currentSystemData.archivedYearlyPlans`.
-- Attributes: `versionId`, `versionName`, `archivedDate`, a deep copy of `initiatives` at that time, `notes`, and an extensible `attributes` object.
+- Snapshot attributes: `snapshotId`, `planningYear`, `createdAt`, `label`, `scenario`, `applyConstraints`, `initiatives`, and `workPackages`.
+- Retention policy: latest **5 snapshots per planning year** are kept automatically.
 
 ---
 
@@ -314,6 +340,8 @@ What’s included:
 - **Hierarchical Table**: (Initiative → Work Package → Team assignments) with inline editing of dates, estimates, and predecessor links.
 - **Gantt Chart**: A visual timeline using Mermaid/Frappe (configurable) to show work duration and dependencies.
 - **Dependency Management**: Work package dependencies and cross-initiative predecessor selection.
+- **Conflict Visibility**: dependency conflict badge shows current scheduling conflicts.
+- **Auto-Schedule Baseline**: shifts work packages when predecessors end later than scheduled starts.
 - **Filtering**: View data by Year, Team, or Goal.
 - **Drill-Down**: Double-click initiatives to reveal Work Packages, and Work Packages to reveal underlying tasks.
 
@@ -329,6 +357,7 @@ The AI Assistant has been refactored into a powerful, stateful **Action Agent** 
 - **True Context-Awareness:** The AI's context is now synchronized with _exactly_ what you see on the UI. When you ask a question, the agent scrapes the _calculated data_ from your current view (e.g., the `teamLoadSummary` and `planningTable` data from the "Year Plan" view, or the filtered data from the "Dashboard" view) and sends it with your question. This ensures its analysis is always based on the toggles and filters you have selected.
 - **Plan Optimization Agent:** Launchable from the Year Plan view, this specialist runs an Analyze → Propose → Confirm workflow. It streams progress updates into the chat, posts a before/after capacity narrative, and waits for you to Apply or Discard the suggested changes.
 - **Action Summaries:** Every autonomous agent plan now closes with a concise list of the changes it made (e.g., which initiatives were updated and how), making it easy to audit the run without digging through logs.
+- **Goal Planning Analysis Commands:** Includes alignment and risk-focused tools such as `analyzeGoalAlignment` and `analyzeGoalRisk`.
 - **Expert Analysis:** The AI is prompted to be an expert engineering partner. You can ask it to:
   - **Analyze Team Composition:** "Find hiring risks" or "Analyze the ratio of junior to senior engineers."
   - **Optimize Plans:** "Suggest SDE-Year reductions for 2-3 BTL initiatives" or "How can I optimize this plan to fit more work?"
@@ -385,6 +414,7 @@ Once a system is loaded, a **Sidebar** appears on the left, organizing all major
 #### **Product**
 
 - **Roadmap & Backlog:** The source of truth for all initiatives. Define, prioritize, and manage work before committing it to a yearly plan.
+- **Management:** Dedicated product administration for Themes, Initiatives, and Goals (including lifecycle management).
 
 #### **Planning**
 
@@ -420,7 +450,8 @@ Click **"Dashboard"** from the sidebar to access high-level widgets for strategi
 #### Strategic Goals Dashboard
 
 - **Purpose:** Track progress against high-level business objectives.
-- **Features:** Goal Cards showing SDE investment, linked initiatives, and status (On Track, At Risk). Drill down to see contributing teams.
+- **Features:** Goal cards show SDE investment, linked initiatives, status/health rationale, and contributing teams.
+- **Operational Shortcut:** Includes direct navigation to **Manage Goals**.
 
 #### Accomplishments View
 
@@ -476,16 +507,21 @@ Mermaid-based diagrams are available across the app and via the AI Assistant.
 
 - Click **"Capacity Tuning"**.
 - Define global and team-specific constraints (holidays, leave, overhead) to calculate **Net Project SDE Years**.
+- The Capacity dashboard now also reports **Hiring Gap** and uses staffed capacity assumptions when unfilled headcount exists.
 
 ### Roadmap & Backlog Management (Product)
 
 - Click **"Roadmap & Backlog"**.
 - Manage the pipeline of initiatives. This is the staging area for work before it enters the Year Plan.
+- Use quick actions to jump directly to **Manage Themes**, **Manage Initiatives**, or **Manage Goals**.
+- Quarterly and 3YP roadmap views support **Goal** and **Status** filtering.
 
 ### Yearly Planning (Planning)
 
 - Click **"Year Plan"**.
 - **Plan & Track:** Assign estimates and monitor capacity (ATL/BTL).
+- **Team Focus:** Filter planning views to a selected team while preserving totals.
+- **Snapshots:** Save and restore plan snapshots for the current planning year (latest 5 retained).
 - **AI Optimization:** Use the **🤖 Optimize This Plan** button to have the AI analyze and propose scope adjustments.
 
 ### Dynamic Theming (UX)
@@ -541,7 +577,10 @@ Mermaid-based diagrams are available across the app and via the AI Assistant.
 ## 8. Future Roadmap
 
 - [x] **Unit Testing Suite**: Implemented a TDD framework for Services.
-- [ ] **Export/Import**: Full JSON/CSV export for all data models.
+- [x] **System Export/Import (JSON)**: Schema-versioned JSON export and compatibility-checked import.
+- [x] **Year Plan Snapshots**: Save/load snapshots with automatic retention (latest 5 per planning year).
+- [x] **Goal Lifecycle Management**: Goal status matrix + lifecycle CRUD in Product Management.
+- [ ] **System/Plan CSV + XLSX Interop**: Expand export beyond JSON for all key planning views.
 - [ ] **Visual Editors**: Enhanced drag-and-drop for Org Charts.
 - [ ] **Architecture Diagrams**: Expanded auto-generation of system maps.
 

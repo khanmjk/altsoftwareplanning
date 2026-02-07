@@ -2,70 +2,70 @@
 
 /* Planning Table Headers */
 #planningTable thead th {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    background-color: var(--theme-bg-tertiary);
-    border: 1px solid var(--theme-border-color);
-    color: var(--theme-text-primary);
-    text-align: left;
-    white-space: nowrap;
-    padding: 3px 5px;
-    font-size: 0.85em;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background-color: var(--theme-bg-tertiary);
+  border: 1px solid var(--theme-border-color);
+  color: var(--theme-text-primary);
+  text-align: left;
+  white-space: nowrap;
+  padding: 3px 5px;
+  font-size: 0.85em;
 }
 
 #planningTable th[data-team-id] {
-    background-color: var(--theme-bg-tertiary);
-    /* Was legacy light blue #ddeeff */
-    color: var(--theme-text-primary);
-    padding: 5px 2px;
-    font-size: 0.8em;
-    min-width: 25px;
-    max-width: 25px;
+  background-color: var(--theme-bg-tertiary);
+  /* Was legacy light blue #ddeeff */
+  color: var(--theme-text-primary);
+  padding: 5px 2px;
+  font-size: 0.8em;
+  min-width: 25px;
+  max-width: 25px;
 }
 
 /* Planning Table Body Cells - EXACT ORIGINAL */
 #planningTable tbody td,
 #teamLoadSummaryTable tbody td {
-    padding: 2px 4px;
-    font-size: 0.82em;
-    border: 1px solid var(--theme-border-color);
-    vertical-align: middle;
-    color: var(--theme-text-primary);
+  padding: 2px 4px;
+  font-size: 0.82em;
+  border: 1px solid var(--theme-border-color);
+  vertical-align: middle;
+  color: var(--theme-text-primary);
 }
 
-#planningTable tbody td input[type="number"] {
-    font-size: 0.9em;
-    padding: 2px;
-    background-color: var(--theme-bg-primary);
-    color: var(--theme-text-primary);
-    border: 1px solid var(--theme-border-color);
+#planningTable tbody td input[type='number'] {
+  font-size: 0.9em;
+  padding: 2px;
+  background-color: var(--theme-bg-primary);
+  color: var(--theme-text-primary);
+  border: 1px solid var(--theme-border-color);
 }
 
 /* Team Load Summary Table */
 #teamLoadSummaryTable {
-    font-size: 0.85em;
-    color: var(--theme-text-primary);
+  font-size: 0.85em;
+  color: var(--theme-text-primary);
 }
 
 #teamLoadSummaryTable thead th {
-    padding: 5px 8px;
-    background-color: var(--theme-bg-tertiary);
-    color: var(--theme-text-primary);
-    border: 1px solid var(--theme-border-color);
+  padding: 5px 8px;
+  background-color: var(--theme-bg-tertiary);
+  color: var(--theme-text-primary);
+  border: 1px solid var(--theme-border-color);
 }
 
 #teamLoadSummaryTable tbody td,
 #teamLoadSummaryTable tfoot td {
-    padding: 4px 6px;
-    font-size: 0.85em;
+  padding: 4px 6px;
+  font-size: 0.85em;
 }
 
 #teamLoadSummaryTable tfoot td {
-    background-color: var(--theme-bg-secondary);
-    color: var(--theme-text-primary);
-    font-weight: 600;
-    border: 1px solid var(--theme-border-color);
+  background-color: var(--theme-bg-secondary);
+  color: var(--theme-text-primary);
+  font-weight: 600;
+  border: 1px solid var(--theme-border-color);
 }
 
 /* ============================================
@@ -75,52 +75,52 @@
 
 /* Planning Toolbar (extracted from inline) */
 .planning-toolbar {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
 }
 
 /* Team Load Summary Section (collapsible) */
 #teamLoadSummarySection {
-    margin-bottom: 20px;
-    border: 1px solid var(--theme-border-color);
-    border-radius: 4px;
-    background-color: var(--theme-bg-primary);
+  margin-bottom: 20px;
+  border: 1px solid var(--theme-border-color);
+  border-radius: 4px;
+  background-color: var(--theme-bg-primary);
 }
 
 #teamLoadSummarySection h4 {
-    cursor: pointer;
-    margin: 0;
-    padding: 10px;
-    background-color: var(--theme-bg-secondary);
-    border-bottom: 1px solid var(--theme-border-color);
-    color: var(--theme-text-primary);
+  cursor: pointer;
+  margin: 0;
+  padding: 10px;
+  background-color: var(--theme-bg-secondary);
+  border-bottom: 1px solid var(--theme-border-color);
+  color: var(--theme-text-primary);
 }
 
 #teamLoadSummaryContent {
-    padding: 10px;
+  padding: 10px;
 }
 
 #teamLoadSummaryContent.is-hidden {
-    display: none;
+  display: none;
 }
 
-#teamLoadSummaryContent>p {
-    font-size: 0.9em;
-    color: var(--theme-text-muted);
-    margin-top: 0;
+#teamLoadSummaryContent > p {
+  font-size: 0.9em;
+  color: var(--theme-text-muted);
+  margin-top: 0;
 }
 
 /* Summary Table Layout (NOT styling - that's in the table rules above) */
 #teamLoadSummaryTable {
-    margin: 0 auto;
-    border-collapse: collapse;
+  margin: 0 auto;
+  border-collapse: collapse;
 }
 
 #planningTableWrapper {
-    max-height: var(--planning-table-max-height, 600px);
-    overflow-y: auto;
+  max-height: var(--planning-table-max-height, 600px);
+  overflow-y: auto;
 }
 
 /* ============================================
@@ -129,15 +129,15 @@
 
 /* Row being dragged */
 #planningTableBody tr.dragging {
-    opacity: 0.5;
-    border: 2px dashed var(--theme-text-muted);
-    background-color: var(--theme-bg-secondary);
+  opacity: 0.5;
+  border: 2px dashed var(--theme-text-muted);
+  background-color: var(--theme-bg-secondary);
 }
 
 /* Drop zone indicator - shows where the row will be placed */
 #planningTableBody tr.drag-over {
-    border-top: 3px solid var(--theme-primary);
-    box-shadow: 0 -2px 4px var(--theme-card-shadow);
+  border-top: 3px solid var(--theme-primary);
+  box-shadow: 0 -2px 4px var(--theme-card-shadow);
 }
 
 /* ============================================
@@ -145,24 +145,34 @@
    ============================================ */
 
 .year-plan-toolbar-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .year-plan-toolbar-group--right {
-    margin-left: auto;
+  margin-left: auto;
+}
+
+.year-plan-toolbar-group--snapshots {
+  gap: 6px;
 }
 
 .year-plan-toolbar-label {
-    font-weight: 600;
-    color: var(--theme-text-primary);
+  font-weight: 600;
+  color: var(--theme-text-primary);
 }
 
 .year-plan-toggle-label {
-    cursor: pointer;
-    user-select: none;
-    color: var(--theme-text-primary);
+  cursor: pointer;
+  user-select: none;
+  color: var(--theme-text-primary);
+}
+
+.year-plan-empty-state {
+  margin: 10px 0;
+  color: var(--theme-text-secondary);
+  font-style: italic;
 }
 
 /* ============================================
@@ -171,25 +181,25 @@
 
 /* Protected initiatives - top of list, styled distinctly */
 #planningTableBody tr.year-plan-row--protected {
-    background-color: var(--theme-bg-secondary);
+  background-color: var(--theme-bg-secondary);
 }
 
 #planningTableBody tr.year-plan-row--protected td:nth-child(2) {
-    font-weight: bold;
+  font-weight: bold;
 }
 
 /* BTL initiatives - below the line */
 #planningTableBody tr.year-plan-row--btl {
-    background-color: rgba(var(--theme-warning-rgb), 0.05);
+  background-color: rgba(var(--theme-warning-rgb), 0.05);
 }
 
 /* Draggable cursor */
-#planningTableBody tr[draggable="true"] {
-    cursor: move;
+#planningTableBody tr[draggable='true'] {
+  cursor: move;
 }
 
-#planningTableBody tr[draggable="false"] {
-    cursor: default;
+#planningTableBody tr[draggable='false'] {
+  cursor: default;
 }
 
 /* ============================================
@@ -197,32 +207,32 @@
    ============================================ */
 
 .year-plan-cell--center {
-    text-align: center;
+  text-align: center;
 }
 
 .year-plan-cell--right {
-    text-align: right;
+  text-align: right;
 }
 
 .year-plan-cell--left {
-    text-align: left;
+  text-align: left;
 }
 
 .year-plan-cell--id {
-    font-size: 0.8em;
-    color: var(--theme-text-muted);
+  font-size: 0.8em;
+  color: var(--theme-text-muted);
 }
 
 .year-plan-cell--description {
-    color: var(--theme-text-secondary);
-    max-width: 200px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  color: var(--theme-text-secondary);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .year-plan-cell--bold {
-    font-weight: bold;
+  font-weight: bold;
 }
 
 /* ============================================
@@ -230,16 +240,16 @@
    ============================================ */
 
 .year-plan-atl-status {
-    font-weight: bold;
-    text-align: center;
+  font-weight: bold;
+  text-align: center;
 }
 
 .year-plan-atl-status--atl {
-    color: var(--theme-success, #28a745);
+  color: var(--theme-success, #28a745);
 }
 
 .year-plan-atl-status--btl {
-    color: var(--theme-danger, #dc3545);
+  color: var(--theme-danger, #dc3545);
 }
 
 /* ============================================
@@ -247,15 +257,15 @@
    ============================================ */
 
 .year-plan-capacity--ok {
-    background-color: rgba(var(--theme-success-rgb), 0.15);
+  background-color: rgba(var(--theme-success-rgb), 0.15);
 }
 
 .year-plan-capacity--warning {
-    background-color: rgba(var(--theme-warning-rgb), 0.15);
+  background-color: rgba(var(--theme-warning-rgb), 0.15);
 }
 
 .year-plan-capacity--danger {
-    background-color: rgba(var(--theme-danger-rgb), 0.15);
+  background-color: rgba(var(--theme-danger-rgb), 0.15);
 }
 
 /* ============================================
@@ -263,31 +273,31 @@
    ============================================ */
 
 .year-plan-team-cell {
-    text-align: center;
-    padding: 2px !important;
+  text-align: center;
+  padding: 2px !important;
 }
 
 .year-plan-team-cell--ok {
-    background-color: rgba(var(--theme-success-rgb), 0.15);
+  background-color: rgba(var(--theme-success-rgb), 0.15);
 }
 
 .year-plan-team-cell--over {
-    background-color: rgba(var(--theme-danger-rgb), 0.15);
+  background-color: rgba(var(--theme-danger-rgb), 0.15);
 }
 
 .year-plan-estimate-input {
-    width: 60px;
-    text-align: right;
-    border: none;
-    background-color: transparent;
-    color: var(--theme-text-primary);
-    font-size: inherit;
-    padding: 2px 4px;
+  width: 60px;
+  text-align: right;
+  border: none;
+  background-color: transparent;
+  color: var(--theme-text-primary);
+  font-size: inherit;
+  padding: 2px 4px;
 }
 
 .year-plan-estimate-input:focus {
-    outline: 2px solid var(--theme-primary, #007bff);
-    border-radius: 2px;
+  outline: 2px solid var(--theme-primary, #007bff);
+  border-radius: 2px;
 }
 
 /* ============================================
@@ -295,12 +305,12 @@
    ============================================ */
 
 .year-plan-team-header {
-    text-align: center;
-    writing-mode: vertical-lr;
-    text-orientation: mixed;
-    white-space: nowrap;
-    min-width: 35px;
-    max-width: 35px;
+  text-align: center;
+  writing-mode: vertical-lr;
+  text-orientation: mixed;
+  white-space: nowrap;
+  min-width: 35px;
+  max-width: 35px;
 }
 
 /* ============================================
@@ -308,26 +318,26 @@
    ============================================ */
 
 .year-plan-value--positive {
-    color: var(--theme-success, #28a745);
+  color: var(--theme-success, #28a745);
 }
 
 .year-plan-value--negative {
-    color: var(--theme-danger, #dc3545);
+  color: var(--theme-danger, #dc3545);
 }
 
 .year-plan-status-text--ok {
-    color: var(--theme-success, #28a745);
-    font-weight: bold;
+  color: var(--theme-success, #28a745);
+  font-weight: bold;
 }
 
 .year-plan-status-text--warning {
-    color: var(--theme-warning-alt, darkorange);
-    font-weight: bold;
+  color: var(--theme-warning-alt, darkorange);
+  font-weight: bold;
 }
 
 .year-plan-status-text--danger {
-    color: var(--theme-danger, #dc3545);
-    font-weight: bold;
+  color: var(--theme-danger, #dc3545);
+  font-weight: bold;
 }
 
 /* ============================================
@@ -335,7 +345,7 @@
    ============================================ */
 
 .year-plan-scenario-btn {
-    border: 1px solid var(--theme-border-color);
+  border: 1px solid var(--theme-border-color);
 }
 
 /* ============================================
@@ -343,5 +353,5 @@
    ============================================ */
 
 .year-plan-checkbox {
-    cursor: pointer;
+  cursor: pointer;
 }

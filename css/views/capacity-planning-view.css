@@ -2,441 +2,442 @@
 
 /* --- Shell --- */
 .capacity-planning-content {
-    padding: 20px;
+  padding: 20px;
 }
 
 .capacity-planning-toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    gap: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 16px;
 }
 
 .capacity-planning-toolbar__left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 /* --- Dashboard --- */
 .capacity-dashboard-view {
-    padding: 20px;
+  padding: 20px;
 }
 
 .capacity-dashboard-controls-container {
-    background-color: var(--theme-bg-secondary);
-    padding: 15px;
-    border-radius: 6px;
-    margin-bottom: 20px;
-    border: 1px solid var(--theme-border-color);
+  background-color: var(--theme-bg-secondary);
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  border: 1px solid var(--theme-border-color);
 }
 
 .capacity-dashboard-controls {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 30px;
-    margin-bottom: 10px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 30px;
+  margin-bottom: 10px;
 }
 
 .capacity-control-group {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .capacity-dashboard-controls__label {
-    font-weight: 600;
-    color: var(--theme-text-secondary);
-    font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--theme-text-secondary);
+  font-size: 0.95rem;
 }
 
 .capacity-dashboard-controls__select {
-    width: auto;
-    display: inline-block;
-    min-width: 200px;
+  width: auto;
+  display: inline-block;
+  min-width: 200px;
 }
 
 .capacity-dashboard-context-heading {
-    font-size: 1.1rem;
-    color: var(--theme-text-primary);
-    padding-top: 10px;
-    border-top: 1px solid var(--theme-border-color);
-    margin-top: 5px;
+  font-size: 1.1rem;
+  color: var(--theme-text-primary);
+  padding-top: 10px;
+  border-top: 1px solid var(--theme-border-color);
+  margin-top: 5px;
 }
 
 .capacity-dashboard-context-heading strong {
-    color: var(--theme-primary);
+  color: var(--theme-primary);
 }
 
 .capacity-kpi-row {
-    display: flex;
-    gap: 20px;
-    margin-bottom: 30px;
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 30px;
 }
 
 .capacity-kpi-card {
-    flex: 1;
-    padding: 15px;
+  flex: 1 1 220px;
+  padding: 15px;
 }
 
 .capacity-kpi-card__title {
-    font-size: 0.9rem;
-    opacity: 0.9;
+  font-size: 0.9rem;
+  opacity: 0.9;
 }
 
 .capacity-kpi-card__value {
-    font-size: 2rem;
-    font-weight: bold;
+  font-size: 2rem;
+  font-weight: bold;
 }
 
 .capacity-kpi-card__subtext {
-    font-size: 0.8rem;
-    opacity: 0.8;
+  font-size: 0.8rem;
+  opacity: 0.8;
 }
 
 .capacity-chart-section {
-    margin-bottom: 30px;
-    padding: 20px;
+  margin-bottom: 30px;
+  padding: 20px;
 }
 
 .capacity-chart-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
 }
 
 .capacity-chart-filter {
-    width: 200px;
+  width: 200px;
 }
 
 .capacity-chart-container {
-    height: 400px;
-    position: relative;
+  height: 400px;
+  position: relative;
 }
 
 .capacity-summary-table {
-    margin-top: 15px;
+  margin-top: 15px;
 }
 
 .capacity-summary-deduction {
-    color: var(--theme-danger);
+  color: var(--theme-danger);
 }
 
 .capacity-summary-gain {
-    color: var(--theme-success);
+  color: var(--theme-success);
 }
 
 .capacity-summary-net {
-    font-weight: bold;
+  font-weight: bold;
 }
 
 .capacity-summary-net--negative {
-    background-color: color-mix(in srgb, var(--theme-danger), transparent 85%);
+  background-color: color-mix(in srgb, var(--theme-danger), transparent 85%);
 }
 
 /* --- Narrative --- */
 .capacity-narrative-content {
-    padding: 20px;
-    line-height: 1.6;
-    color: var(--theme-text-primary);
+  padding: 20px;
+  line-height: 1.6;
+  color: var(--theme-text-primary);
 }
 
 .capacity-narrative-heading {
-    margin: 0 0 15px;
-    font-size: 1.1rem;
-    font-weight: 600;
+  margin: 0 0 15px;
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 
 .capacity-narrative-divider {
-    margin: 25px 0;
-    border: none;
-    border-top: 1px solid var(--theme-border-light);
+  margin: 25px 0;
+  border: none;
+  border-top: 1px solid var(--theme-border-light);
 }
 
 .capacity-narrative-team-paragraph {
-    margin-bottom: 10px;
+  margin-bottom: 10px;
 }
 
 /* --- Configuration --- */
 .capacity-configuration-view {
-    padding: 20px;
-    max-width: 1200px;
-    margin: 0;
-    /* Shift left (was 0 auto) */
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0;
+  /* Shift left (was 0 auto) */
 }
 
 .capacity-config-header {
-    margin-bottom: 20px;
-    border-bottom: 1px solid var(--theme-border-color);
-    padding-bottom: 10px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--theme-border-color);
+  padding-bottom: 10px;
 }
 
 .capacity-section-title {
-    color: var(--theme-primary);
-    margin: 0;
-    font-size: 1.2rem;
+  color: var(--theme-primary);
+  margin: 0;
+  font-size: 1.2rem;
 }
 
 .capacity-section-desc {
-    color: var(--theme-text-secondary);
-    margin-bottom: 0;
-    font-size: 0.9rem;
-    margin-top: 5px;
+  color: var(--theme-text-secondary);
+  margin-bottom: 0;
+  font-size: 0.9rem;
+  margin-top: 5px;
 }
 
 /* Collapsible Main Sections */
 .capacity-collapsible-section {
-    margin-bottom: 20px;
-    border: none;
-    /* Remove border to blend in */
-    border-radius: 6px;
-    overflow: hidden;
-    background-color: transparent;
-    /* Remove white bg */
+  margin-bottom: 20px;
+  border: none;
+  /* Remove border to blend in */
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: transparent;
+  /* Remove white bg */
 }
 
 .capacity-collapsible-header {
-    padding: 15px 0;
-    /* Remove horizontal padding to align with text */
-    background-color: transparent;
-    /* Remove header bg */
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid var(--theme-border-color);
-    /* Keep separator */
-    transition: opacity 0.2s;
+  padding: 15px 0;
+  /* Remove horizontal padding to align with text */
+  background-color: transparent;
+  /* Remove header bg */
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--theme-border-color);
+  /* Keep separator */
+  transition: opacity 0.2s;
 }
 
 .capacity-collapsible-header:hover {
-    opacity: 0.8;
-    background-color: transparent;
+  opacity: 0.8;
+  background-color: transparent;
 }
 
 .capacity-collapsible-header--active {
-    border-bottom-color: var(--theme-border-color);
-    background-color: transparent;
+  border-bottom-color: var(--theme-border-color);
+  background-color: transparent;
 }
 
 .capacity-collapsible-body {
-    display: none;
-    padding: 20px 0;
-    /* Remove horizontal padding */
+  display: none;
+  padding: 20px 0;
+  /* Remove horizontal padding */
 }
 
 .capacity-collapsible-body--visible {
-    display: block;
+  display: block;
 }
 
 .capacity-collapsible-icon {
-    color: var(--theme-text-muted);
-    transition: transform 0.2s;
+  color: var(--theme-text-muted);
+  transition: transform 0.2s;
 }
 
 .capacity-collapsible-header--active .capacity-collapsible-icon {
-    transform: rotate(180deg);
+  transform: rotate(180deg);
 }
 
 .capacity-subsection-title {
-    font-size: 1rem;
-    font-weight: bold;
-    margin-bottom: 10px;
-    color: var(--theme-text-secondary);
-    border-bottom: 1px solid var(--theme-border-color);
-    padding-bottom: 5px;
+  font-size: 1rem;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: var(--theme-text-secondary);
+  border-bottom: 1px solid var(--theme-border-color);
+  padding-bottom: 5px;
 }
 
 .capacity-config-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 30px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
 }
 
 .capacity-form-group {
-    margin-bottom: 15px;
+  margin-bottom: 15px;
 }
 
 .capacity-form-label {
-    font-weight: bold;
-    display: block;
-    margin-bottom: 5px;
+  font-weight: bold;
+  display: block;
+  margin-bottom: 5px;
 }
 
 .capacity-org-events-table th:nth-child(2) {
-    width: 150px;
+  width: 150px;
 }
 
 .capacity-org-events-table th:nth-child(3) {
-    width: 100px;
+  width: 100px;
 }
 
 /* Accordion Styling (Minimalist) */
 .capacity-accordion {
-    border-top: 1px solid var(--theme-border-light);
+  border-top: 1px solid var(--theme-border-light);
 }
 
 .capacity-team-item {
-    border-bottom: 1px solid var(--theme-border-light);
-    transition: background-color 0.2s;
+  border-bottom: 1px solid var(--theme-border-light);
+  transition: background-color 0.2s;
 }
 
 .capacity-team-item:hover {
-    background-color: var(--theme-bg-tertiary);
-    /* Subtle hover */
+  background-color: var(--theme-bg-tertiary);
+  /* Subtle hover */
 }
 
 .capacity-team-item--active {
-    background-color: transparent;
+  background-color: transparent;
 }
 
 .capacity-team-header {
-    padding: 15px 0;
-    /* Align left */
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  padding: 15px 0;
+  /* Align left */
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .capacity-team-title {
-    font-weight: 600;
-    font-size: 1.05rem;
+  font-weight: 600;
+  font-size: 1.05rem;
 }
 
 .capacity-team-icon {
-    color: var(--theme-text-muted);
-    transition: transform 0.2s;
+  color: var(--theme-text-muted);
+  transition: transform 0.2s;
 }
 
 .capacity-team-body {
-    display: none;
-    padding: 20px 0;
-    /* Align left */
-    background-color: transparent;
-    /* Remove white bg */
-    border-top: 1px solid var(--theme-border-color);
+  display: none;
+  padding: 20px 0;
+  /* Align left */
+  background-color: transparent;
+  /* Remove white bg */
+  border-top: 1px solid var(--theme-border-color);
 }
 
 .capacity-team-body--visible {
-    display: block;
+  display: block;
 }
 
 .capacity-team-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 30px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
 }
 
 .capacity-engineer-empty {
-    padding: 15px;
-    color: var(--theme-text-muted);
-    font-style: italic;
+  padding: 15px;
+  color: var(--theme-text-muted);
+  font-style: italic;
 }
 
 .capacity-subsection-title--spaced {
-    margin-top: 20px;
+  margin-top: 20px;
 }
 
 /* Variable Leave Section */
 .capacity-variable-leave-grid {
-    display: grid;
-    grid-template-columns: 120px 1fr 1fr;
-    gap: 10px;
-    align-items: center;
-    margin-bottom: 15px;
+  display: grid;
+  grid-template-columns: 120px 1fr 1fr;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 15px;
 }
 
 .capacity-variable-leave-header {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--theme-text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding-bottom: 5px;
-    border-bottom: 1px solid var(--theme-border-color);
-    margin-bottom: 5px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--theme-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--theme-border-color);
+  margin-bottom: 5px;
 }
 
 .capacity-variable-leave-row {
-    display: contents;
-    /* Allows children to participate in the grid */
+  display: contents;
+  /* Allows children to participate in the grid */
 }
 
 .capacity-variable-leave-label {
-    font-weight: 500;
-    color: var(--theme-text-secondary);
-    text-transform: capitalize;
+  font-weight: 500;
+  color: var(--theme-text-secondary);
+  text-transform: capitalize;
 }
 
 .capacity-input-group {
-    position: relative;
-    display: flex;
-    align-items: center;
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
 .capacity-input-suffix {
-    position: absolute;
-    right: 10px;
-    color: var(--theme-text-muted);
-    font-size: 0.8rem;
-    pointer-events: none;
+  position: absolute;
+  right: 10px;
+  color: var(--theme-text-muted);
+  font-size: 0.8rem;
+  pointer-events: none;
 }
 
 .capacity-input-with-suffix {
-    padding-right: 40px;
-    /* Space for suffix */
+  padding-right: 40px;
+  /* Space for suffix */
 }
 
 /* Engineer Leave Plans */
 .capacity-engineer-leave-container {
-    max-height: 250px;
-    overflow-y: auto;
-    border: 1px solid var(--theme-border-color);
-    border-radius: 6px;
-    background-color: var(--theme-bg-primary);
+  max-height: 250px;
+  overflow-y: auto;
+  border: 1px solid var(--theme-border-color);
+  border-radius: 6px;
+  background-color: var(--theme-bg-primary);
 }
 
 .capacity-engineer-leave-header {
-    display: grid;
-    grid-template-columns: 1fr 100px;
-    padding: 6px 15px;
-    /* Reduced from 10px */
-    background-color: var(--theme-bg-secondary);
-    border-bottom: 1px solid var(--theme-border-color);
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--theme-text-secondary);
-    position: sticky;
-    top: 0;
+  display: grid;
+  grid-template-columns: 1fr 100px;
+  padding: 6px 15px;
+  /* Reduced from 10px */
+  background-color: var(--theme-bg-secondary);
+  border-bottom: 1px solid var(--theme-border-color);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--theme-text-secondary);
+  position: sticky;
+  top: 0;
 }
 
 .capacity-engineer-row {
-    display: grid;
-    grid-template-columns: 1fr 100px;
-    padding: 5px 15px;
-    /* Reduced from 8px */
-    align-items: center;
-    border-bottom: 1px solid var(--theme-border-light);
+  display: grid;
+  grid-template-columns: 1fr 100px;
+  padding: 5px 15px;
+  /* Reduced from 8px */
+  align-items: center;
+  border-bottom: 1px solid var(--theme-border-light);
 }
 
 .capacity-engineer-row:last-child {
-    border-bottom: none;
+  border-bottom: none;
 }
 
 .capacity-engineer-row:hover {
-    background-color: var(--theme-bg-secondary);
+  background-color: var(--theme-bg-secondary);
 }
 
 .capacity-engineer-name {
-    font-size: 0.9rem;
-    color: var(--theme-text-primary);
+  font-size: 0.9rem;
+  color: var(--theme-text-primary);
 }
 
 .capacity-separator {
-    border: 0;
-    border-top: 1px solid var(--theme-border-light);
-    margin: 30px 0;
+  border: 0;
+  border-top: 1px solid var(--theme-border-light);
+  margin: 30px 0;
 }

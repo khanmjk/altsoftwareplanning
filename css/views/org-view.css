@@ -348,6 +348,31 @@
   stroke: var(--theme-border-light);
 }
 
+/* Depth cues for D3 chart to make hierarchy visually explicit */
+.org-node.org-depth-0 .org-node-rect {
+  stroke-width: 2.4px;
+}
+
+.org-node.org-depth-1 .org-node-rect {
+  stroke-width: 2px;
+}
+
+.org-node.org-depth-2 .org-node-rect {
+  stroke-width: 1.8px;
+}
+
+.org-node.org-depth-3 .org-node-rect {
+  stroke-width: 1.6px;
+  stroke-dasharray: 2 1;
+}
+
+.org-node.org-depth-4 .org-node-rect,
+.org-node.org-depth-5 .org-node-rect,
+.org-node.org-depth-6 .org-node-rect {
+  stroke-width: 1.4px;
+  stroke-dasharray: 3 2;
+}
+
 /* Text inside SVG Nodes */
 .org-node-label-wrapper {
   display: flex;

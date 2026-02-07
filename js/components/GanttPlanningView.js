@@ -383,6 +383,29 @@ class GanttPlanningView {
     };
     toolbar.appendChild(refreshBtn);
 
+    // Auto-Schedule (dependency-aware)
+    const autoScheduleBtn = document.createElement('button');
+    autoScheduleBtn.textContent = 'Auto-Schedule';
+    autoScheduleBtn.className = 'btn btn-warning btn-sm';
+    autoScheduleBtn.title = 'Shift work packages forward to satisfy dependencies';
+    autoScheduleBtn.onclick = () => this.handleAutoSchedule();
+    toolbar.appendChild(autoScheduleBtn);
+
+    // Conflict indicator
+    const conflictSummary = this.getDependencyConflictSummary();
+    const conflictBadge = document.createElement('span');
+    conflictBadge.className = `gantt-conflict-badge ${
+      conflictSummary.count > 0 ? 'gantt-conflict-badge--warning' : 'gantt-conflict-badge--ok'
+    }`;
+    conflictBadge.textContent =
+      conflictSummary.count > 0
+        ? `${conflictSummary.count} dependency conflict${conflictSummary.count === 1 ? '' : 's'}`
+        : 'No dependency conflicts';
+    if (conflictSummary.details) {
+      conflictBadge.title = conflictSummary.details;
+    }
+    toolbar.appendChild(conflictBadge);
+
     // Renderer Toggle
     const rendererWrap = document.createElement('div');
     rendererWrap.className = 'gantt-toolbar__renderer';
@@ -425,6 +448,70 @@ class GanttPlanningView {
     toolbar.appendChild(legendDiv);
 
     return toolbar;
+  }
+
+  handleAutoSchedule() {
+    const systemData = SystemService.getCurrentSystem();
+    if (!systemData) return;
+
+    const result = GanttService.autoScheduleFromDependenciesInPlace(
+      systemData,
+      this.currentGanttYear,
+      { minGapDays: 1 }
+    );
+
+    if (result.shifted > 0) {
+      this.markDirty();
+      this.renderGanttTable();
+      this.renderGanttChart();
+      const message = `Auto-schedule shifted ${result.shifted} work package${result.shifted === 1 ? '' : 's'}. Remaining conflicts: ${result.conflictCount}.`;
+      if (notificationManager?.showToast) {
+        notificationManager.showToast(message, result.conflictCount > 0 ? 'warning' : 'success');
+      } else {
+        ToastComponent.show(message, result.conflictCount > 0 ? 'warning' : 'success');
+      }
+      return;
+    }
+
+    const noChangeMessage = `No schedule changes were required. Current conflicts: ${result.conflictCount}.`;
+    if (notificationManager?.showToast) {
+      notificationManager.showToast(noChangeMessage, result.conflictCount > 0 ? 'warning' : 'info');
+    } else {
+      ToastComponent.show(noChangeMessage, result.conflictCount > 0 ? 'warning' : 'info');
+    }
+  }
+
+  getDependencyConflictSummary() {
+    const workPackages = this.getScopedWorkPackagesForCurrentYear();
+    const conflicts = GanttService.getDependencySchedulingConflicts(workPackages);
+    const preview = conflicts
+      .slice(0, 5)
+      .map((conflict) => {
+        if (conflict.type === 'workPackage') {
+          return `${conflict.workPackageId} starts ${conflict.startDate} before ${conflict.dependencyId} ends ${conflict.dependencyEndDate}`;
+        }
+        return `${conflict.workPackageId}/${conflict.assignmentTeamId} starts ${conflict.startDate} before predecessor ends ${conflict.dependencyEndDate}`;
+      })
+      .join('\n');
+    const details = conflicts.length > 5 ? `${preview}\n...` : preview;
+
+    return {
+      count: conflicts.length,
+      details,
+    };
+  }
+
+  getScopedWorkPackagesForCurrentYear() {
+    const systemData = SystemService.getCurrentSystem();
+    if (!systemData) return [];
+    const initiativeIdsForYear = new Set(
+      (systemData.yearlyInitiatives || [])
+        .filter((initiative) => initiative.attributes?.planningYear == this.currentGanttYear)
+        .map((initiative) => initiative.initiativeId)
+    );
+    return (systemData.workPackages || []).filter((wp) =>
+      initiativeIdsForYear.has(wp.initiativeId)
+    );
   }
 
   /**

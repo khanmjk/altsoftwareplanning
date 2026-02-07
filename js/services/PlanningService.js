@@ -445,6 +445,132 @@ const PlanningService = {
     );
     return { updated: changes.length, changes };
   },
+
+  /**
+   * Creates a snapshot of planning data for a specific year and keeps latest 5 snapshots.
+   *
+   * @param {object} systemData - The global system data object.
+   * @param {object} options
+   * @param {number} options.planningYear - Planning year to snapshot.
+   * @param {string} [options.scenario] - Scenario active at snapshot time.
+   * @param {boolean} [options.applyConstraints] - Constraints toggle state.
+   * @param {string} [options.label] - Optional snapshot label.
+   * @returns {object|null} Snapshot object.
+   */
+  createPlanSnapshot(systemData, { planningYear, scenario, applyConstraints, label = '' } = {}) {
+    if (!systemData || !Array.isArray(systemData.yearlyInitiatives)) {
+      console.error('PlanningService.createPlanSnapshot: Invalid systemData.');
+      return null;
+    }
+    if (!planningYear) {
+      console.error('PlanningService.createPlanSnapshot: planningYear is required.');
+      return null;
+    }
+
+    if (!Array.isArray(systemData.archivedYearlyPlans)) {
+      systemData.archivedYearlyPlans = [];
+    }
+
+    const initiativesForYear = (systemData.yearlyInitiatives || []).filter(
+      (init) => init.attributes?.planningYear == planningYear
+    );
+    const initiativeIds = new Set(initiativesForYear.map((init) => init.initiativeId));
+    const workPackagesForYear = (systemData.workPackages || []).filter((wp) =>
+      initiativeIds.has(wp.initiativeId)
+    );
+
+    const snapshot = {
+      snapshotId: `plan-${planningYear}-${Date.now()}`,
+      planningYear: Number(planningYear),
+      createdAt: new Date().toISOString(),
+      label: label || `Snapshot ${new Date().toISOString()}`,
+      scenario: scenario || null,
+      applyConstraints: !!applyConstraints,
+      initiatives: this._clone(initiativesForYear),
+      workPackages: this._clone(workPackagesForYear),
+    };
+
+    systemData.archivedYearlyPlans.push(snapshot);
+
+    // Keep latest 5 snapshots per planning year.
+    const yearlySnapshots = systemData.archivedYearlyPlans
+      .filter((entry) => entry.planningYear == planningYear)
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    const overflow = yearlySnapshots.slice(5).map((entry) => entry.snapshotId);
+    if (overflow.length > 0) {
+      const overflowSet = new Set(overflow);
+      systemData.archivedYearlyPlans = systemData.archivedYearlyPlans.filter(
+        (entry) => !overflowSet.has(entry.snapshotId)
+      );
+    }
+
+    return snapshot;
+  },
+
+  /**
+   * Gets snapshots for a planning year sorted by newest first.
+   *
+   * @param {object} systemData - The global system data object.
+   * @param {number} planningYear - Planning year.
+   * @returns {Array}
+   */
+  getPlanSnapshots(systemData, planningYear) {
+    if (!systemData || !Array.isArray(systemData.archivedYearlyPlans)) return [];
+    return systemData.archivedYearlyPlans
+      .filter((entry) => entry.planningYear == planningYear)
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  },
+
+  /**
+   * Restores a saved planning snapshot into active system data.
+   *
+   * @param {object} systemData - The global system data object.
+   * @param {string} snapshotId - Snapshot identifier.
+   * @returns {{success: boolean, snapshot?: object, restoredInitiatives?: number, error?: string}}
+   */
+  restorePlanSnapshotInPlace(systemData, snapshotId) {
+    if (!systemData || !Array.isArray(systemData.archivedYearlyPlans)) {
+      return { success: false, error: 'No archived snapshots are available.' };
+    }
+
+    const snapshot = systemData.archivedYearlyPlans.find(
+      (entry) => entry.snapshotId === snapshotId
+    );
+    if (!snapshot) {
+      return { success: false, error: `Snapshot "${snapshotId}" was not found.` };
+    }
+
+    const planningYear = snapshot.planningYear;
+    const existingYearInitiatives = (systemData.yearlyInitiatives || []).filter(
+      (init) => init.attributes?.planningYear == planningYear
+    );
+    const existingYearIds = new Set(existingYearInitiatives.map((init) => init.initiativeId));
+
+    const restoredInitiatives = this._clone(snapshot.initiatives || []);
+    const restoredWorkPackages = this._clone(snapshot.workPackages || []);
+    const restoredIds = new Set(restoredInitiatives.map((init) => init.initiativeId));
+
+    systemData.yearlyInitiatives = (systemData.yearlyInitiatives || []).filter(
+      (init) => init.attributes?.planningYear != planningYear
+    );
+    restoredInitiatives.forEach((initiative) => systemData.yearlyInitiatives.push(initiative));
+
+    systemData.workPackages = (systemData.workPackages || []).filter(
+      (wp) => !existingYearIds.has(wp.initiativeId) && !restoredIds.has(wp.initiativeId)
+    );
+    restoredWorkPackages.forEach((wp) => systemData.workPackages.push(wp));
+
+    return {
+      success: true,
+      snapshot,
+      restoredInitiatives: restoredInitiatives.length,
+    };
+  },
+
+  _clone(value) {
+    return JSON.parse(JSON.stringify(value));
+  },
 };
 
 // Export for ES modules (future migration)

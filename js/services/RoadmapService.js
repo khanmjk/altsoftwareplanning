@@ -166,6 +166,49 @@ const RoadmapService = {
     return initiatives.filter((init) => init.attributes?.planningYear == year);
   },
 
+  /**
+   * Filters initiatives by linked goal.
+   *
+   * @param {Array} initiatives - Array of initiative objects
+   * @param {string} goalId - Goal ID or 'all'
+   * @returns {Array} Filtered initiatives
+   */
+  filterByGoal(initiatives, goalId) {
+    if (!goalId || goalId === 'all') return initiatives;
+    return initiatives.filter((init) => {
+      if (init.primaryGoalId === goalId) return true;
+      if (init.goalId === goalId) return true;
+      if (Array.isArray(init.goalIds) && init.goalIds.includes(goalId)) return true;
+      return false;
+    });
+  },
+
+  /**
+   * Filters initiatives by status list.
+   *
+   * @param {Array} initiatives - Array of initiative objects
+   * @param {Array<string>} statuses - Status values (case-insensitive)
+   * @returns {Array} Filtered initiatives
+   */
+  filterByStatuses(initiatives, statuses) {
+    if (!Array.isArray(statuses) || statuses.length === 0) return initiatives;
+    const allowed = new Set(
+      statuses.map((status) =>
+        String(status || '')
+          .trim()
+          .toLowerCase()
+      )
+    );
+    if (allowed.has('all')) return initiatives;
+    return initiatives.filter((init) =>
+      allowed.has(
+        String(init.status || '')
+          .trim()
+          .toLowerCase()
+      )
+    );
+  },
+
   // =========================================================================
   // ROADMAP DATA STRUCTURING (Pure)
   // =========================================================================
@@ -183,7 +226,7 @@ const RoadmapService = {
    * @returns {object} Structured data { ThemeName: { Q1: [], Q2: [], Q3: [], Q4: [] } }
    */
   getQuarterlyRoadmapData({ initiatives, sdms, teams, definedThemes, filters }) {
-    const { year, orgId, teamId, themeIds } = filters || {};
+    const { year, orgId, teamId, themeIds, goalId, statuses } = filters || {};
     const allThemeIds = (definedThemes || []).map((t) => t.themeId);
 
     // Apply filters
@@ -191,6 +234,8 @@ const RoadmapService = {
     filtered = this.filterByYear(filtered, year);
     filtered = this.filterByOrganization(filtered, sdms, teams, orgId);
     filtered = this.filterByTeam(filtered, teamId);
+    filtered = this.filterByGoal(filtered, goalId);
+    filtered = this.filterByStatuses(filtered, statuses);
     filtered = this.filterByThemes(filtered, themeIds, allThemeIds);
 
     // Structure data by theme and quarter
@@ -239,13 +284,15 @@ const RoadmapService = {
    * @returns {object} Structured data { ThemeName: { 'Current Year': [], 'Next Year': [], 'Future': [] } }
    */
   get3YearPlanData({ initiatives, sdms, teams, definedThemes, currentYear, filters }) {
-    const { orgId, teamId, themeIds } = filters || {};
+    const { orgId, teamId, themeIds, goalId, statuses } = filters || {};
     const allThemeIds = (definedThemes || []).map((t) => t.themeId);
 
     // Apply filters
     let filtered = [...(initiatives || [])];
     filtered = this.filterByOrganization(filtered, sdms, teams, orgId);
     filtered = this.filterByTeam(filtered, teamId);
+    filtered = this.filterByGoal(filtered, goalId);
+    filtered = this.filterByStatuses(filtered, statuses);
     filtered = this.filterByThemes(filtered, themeIds, allThemeIds);
 
     // Structure data by theme and year bucket

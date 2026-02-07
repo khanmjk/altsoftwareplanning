@@ -1,268 +1,274 @@
 /* Dashboard View Component Styles */
 
 .dashboard-view {
-    padding: var(--space-xl);
-    /* max-width: 1400px; Removed to allow full width like other views, or keep max-width but remove auto margin for left align */
-    max-width: 1600px;
-    /* Optional: Keep some readability limit but align left */
-    margin: 0;
-    /* Left align */
+  padding: var(--space-xl);
+  /* max-width: 1400px; Removed to allow full width like other views, or keep max-width but remove auto margin for left align */
+  max-width: 1600px;
+  /* Optional: Keep some readability limit but align left */
+  margin: 0;
+  /* Left align */
 }
 
 /* Toolbar */
 .dashboard-toolbar-global {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .dashboard-toolbar__pill-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .dashboard-toolbar__filter-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .dashboard-toolbar__label {
-    font-weight: 600;
+  font-weight: 600;
 }
 
 .dashboard-context-toolbar {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    margin-left: 20px;
-    padding-left: 20px;
-    border-left: 1px solid var(--theme-border-color);
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-left: 20px;
+  padding-left: 20px;
+  border-left: 1px solid var(--theme-border-color);
+}
+
+.dashboard-context-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .impact-toolbar {
-    display: flex;
-    align-items: center;
-    gap: 15px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
 }
 
 .impact-toolbar__label {
-    font-weight: 600;
-    margin-bottom: 0;
+  font-weight: 600;
+  margin-bottom: 0;
 }
 
 /* Year Selector */
 .dashboard-filter-bar {
-    display: flex;
-    align-items: center;
-    gap: var(--space-md);
-    margin-bottom: var(--space-xl);
-    padding: var(--space-md);
-    background: var(--theme-bg-secondary);
-    border-radius: var(--radius-md);
-    border: 1px solid var(--theme-border-color);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+  padding: var(--space-md);
+  background: var(--theme-bg-secondary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--theme-border-color);
 }
 
 .dashboard-filter-label {
-    font-weight: 600;
-    color: var(--theme-text-primary);
+  font-weight: 600;
+  color: var(--theme-text-primary);
 }
 
 .dashboard-filter-select {
-    padding: var(--space-sm) var(--space-md);
-    border: 1px solid var(--theme-border-color);
-    border-radius: var(--radius-sm);
-    font-size: var(--font-size-base);
-    min-width: 150px;
-    background-color: var(--theme-bg-primary);
-    color: var(--theme-text-primary);
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--theme-border-color);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-base);
+  min-width: 150px;
+  background-color: var(--theme-bg-primary);
+  color: var(--theme-text-primary);
 }
 
 /* Carousel Container */
 .dashboard-carousel {
-    background: var(--theme-card-bg);
-    border-radius: var(--radius-lg);
-    padding: var(--space-xl);
-    box-shadow: var(--theme-card-shadow);
-    border: 1px solid var(--theme-card-border);
+  background: var(--theme-card-bg);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  box-shadow: var(--theme-card-shadow);
+  border: 1px solid var(--theme-card-border);
 }
 
 /* Carousel Navigation */
 .dashboard-carousel__nav {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: var(--space-xl);
-    margin-bottom: var(--space-xl);
-    padding-bottom: var(--space-lg);
-    border-bottom: 2px solid var(--theme-border-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-xl);
+  margin-bottom: var(--space-xl);
+  padding-bottom: var(--space-lg);
+  border-bottom: 2px solid var(--theme-border-color);
 }
 
 .dashboard-carousel__title {
-    font-size: var(--font-size-2xl);
-    font-weight: 700;
-    color: var(--theme-text-primary);
-    text-align: center;
-    min-width: 400px;
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--theme-text-primary);
+  text-align: center;
+  min-width: 400px;
 }
 
 .dashboard-carousel__btn {
-    padding: var(--space-sm) var(--space-lg);
-    background: var(--theme-primary);
-    color: var(--theme-bg-primary, #ffffff);
-    border: none;
-    border-radius: var(--radius-md);
-    font-weight: 600;
-    cursor: pointer;
-    transition: all var(--transition-base);
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-lg);
+  background: var(--theme-primary);
+  color: var(--theme-bg-primary, #ffffff);
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
 }
 
 .dashboard-carousel__btn:hover {
-    background: var(--theme-primary-hover);
-    transform: translateY(-1px);
-    box-shadow: var(--theme-card-shadow);
+  background: var(--theme-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--theme-card-shadow);
 }
 
 .dashboard-carousel__btn:active {
-    transform: translateY(0);
+  transform: translateY(0);
 }
 
 .dashboard-carousel__btn--prev::before {
-    content: "←";
-    margin-right: var(--space-xs);
+  content: '←';
+  margin-right: var(--space-xs);
 }
 
 .dashboard-carousel__btn--next::after {
-    content: "→";
-    margin-left: var(--space-xs);
+  content: '→';
+  margin-left: var(--space-xs);
 }
 
 /* Carousel Item (Widget) */
 .dashboard-carousel-item {
-    display: none;
-    animation: fadeIn 0.3s ease-in;
+  display: none;
+  animation: fadeIn 0.3s ease-in;
 }
 
 .dashboard-carousel-item.active {
-    display: block;
+  display: block;
 }
 
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
 
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Widget Styles */
 .widget-subtitle {
-    color: var(--theme-text-secondary);
-    font-size: var(--font-size-sm);
-    margin-bottom: var(--space-md);
-    text-align: center;
+  color: var(--theme-text-secondary);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-md);
+  text-align: center;
 }
 
 .chart-container {
-    position: relative;
-    height: 400px;
-    margin: var(--space-xl) 0;
+  position: relative;
+  height: 400px;
+  margin: var(--space-xl) 0;
 }
 
 .chart-container--tall {
-    height: 500px;
+  height: 500px;
 }
 
 /* Investment Table */
 .investment-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: var(--space-lg);
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    box-shadow: var(--theme-card-shadow);
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: var(--space-lg);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--theme-card-shadow);
 }
 
 .investment-table thead {
-    background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-info) 100%);
-    color: var(--theme-bg-primary, #ffffff);
+  background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-info) 100%);
+  color: var(--theme-bg-primary, #ffffff);
 }
 
 .investment-table th {
-    padding: var(--space-md);
-    text-align: left;
-    font-weight: 600;
-    font-size: var(--font-size-sm);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+  padding: var(--space-md);
+  text-align: left;
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .investment-table th:nth-child(2),
 .investment-table th:nth-child(3) {
-    text-align: right;
+  text-align: right;
 }
 
 .investment-table td {
-    padding: var(--space-md);
-    border-bottom: 1px solid var(--theme-border-color);
-    color: var(--theme-text-primary);
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--theme-border-color);
+  color: var(--theme-text-primary);
 }
 
 .investment-table td:nth-child(2),
 .investment-table td:nth-child(3) {
-    text-align: right;
-    font-variant-numeric: tabular-nums;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .investment-table tbody tr:hover {
-    background: var(--theme-bg-tertiary);
+  background: var(--theme-bg-tertiary);
 }
 
 .investment-table tfoot {
-    background: var(--theme-bg-secondary);
-    font-weight: 700;
+  background: var(--theme-bg-secondary);
+  font-weight: 700;
 }
 
 .investment-table tfoot td {
-    padding: var(--space-md);
-    border-top: 2px solid var(--theme-border-color);
-    border-bottom: none;
+  padding: var(--space-md);
+  border-top: 2px solid var(--theme-border-color);
+  border-bottom: none;
 }
 
 /* Widget Filter Bar (for specific widgets like Team Demand) */
 .widget-filter-bar {
-    display: flex;
-    gap: var(--space-md);
-    flex-wrap: wrap;
-    margin-bottom: var(--space-lg);
-    padding: var(--space-md);
-    background: var(--theme-bg-secondary);
-    border-radius: var(--radius-sm);
+  display: flex;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-lg);
+  padding: var(--space-md);
+  background: var(--theme-bg-secondary);
+  border-radius: var(--radius-sm);
 }
 
 /* Empty State */
 .dashboard-empty-state {
-    text-align: center;
-    padding: var(--space-3xl);
-    color: var(--theme-text-secondary);
+  text-align: center;
+  padding: var(--space-3xl);
+  color: var(--theme-text-secondary);
 }
 
 .dashboard-empty-state__icon {
-    font-size: 3rem;
-    margin-bottom: var(--space-md);
-    color: var(--theme-text-muted);
+  font-size: 3rem;
+  margin-bottom: var(--space-md);
+  color: var(--theme-text-muted);
 }
 
 .dashboard-empty-state__message {
-    font-size: var(--font-size-lg);
-    margin: 0;
+  font-size: var(--font-size-lg);
+  margin: 0;
 }

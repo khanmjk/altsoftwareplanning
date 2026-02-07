@@ -646,6 +646,15 @@ CONTEXT DATA (for this question only, from your current UI view): ${contextJson}
         const target = payload?.targetSdmId || payload?.toSdmId;
         return `Moved ${moved} teams from ${source} to ${target}.`;
       }
+      case 'analyzeGoalAlignment': {
+        const noGoal = result?.summary?.initiativesWithoutGoalCount ?? 0;
+        const noInit = result?.summary?.goalsWithoutInitiativesCount ?? 0;
+        return `Alignment analysis complete: ${noGoal} initiatives without goals, ${noInit} goals without initiatives.`;
+      }
+      case 'analyzeGoalRisk': {
+        const atRisk = result?.summary?.atRiskGoalCount ?? 0;
+        return `Risk analysis complete: ${atRisk} goals currently at risk.`;
+      }
       default:
         return `Executed ${command} (step ${index + 1}).`;
     }

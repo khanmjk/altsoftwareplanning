@@ -47,4 +47,39 @@ describe('GanttService', () => {
     expect(GanttService.wouldCreateDependencyCycle('wp-2', 'wp-1', workPackages)).toBe(true);
     expect(GanttService.wouldCreateDependencyCycle('wp-1', 'wp-2', workPackages)).toBe(false);
   });
+
+  it('detects dependency scheduling conflicts and auto-schedules forward', () => {
+    const system = {
+      yearlyInitiatives: [{ initiativeId: 'init-1', attributes: { planningYear: 2026 } }],
+      workPackages: [
+        {
+          workPackageId: 'wp-1',
+          initiativeId: 'init-1',
+          startDate: '2026-01-01',
+          endDate: '2026-01-10',
+          dependencies: [],
+          impactedTeamAssignments: [],
+        },
+        {
+          workPackageId: 'wp-2',
+          initiativeId: 'init-1',
+          startDate: '2026-01-05',
+          endDate: '2026-01-12',
+          dependencies: ['wp-1'],
+          impactedTeamAssignments: [],
+        },
+      ],
+    };
+
+    const conflictsBefore = GanttService.getDependencySchedulingConflicts(system.workPackages);
+    expect(conflictsBefore.length).toBe(1);
+
+    const result = GanttService.autoScheduleFromDependenciesInPlace(system, 2026, {
+      minGapDays: 1,
+    });
+    expect(result.shifted).toBe(1);
+
+    const shiftedWp = system.workPackages.find((wp) => wp.workPackageId === 'wp-2');
+    expect(shiftedWp.startDate).toBe('2026-01-11');
+  });
 });
