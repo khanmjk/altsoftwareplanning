@@ -233,6 +233,9 @@ class YearPlanningView {
     const snapshotGroup = this.createSnapshotControls();
     if (snapshotGroup) rightGroup.appendChild(snapshotGroup);
 
+    const exportGroup = this.createExportControls();
+    if (exportGroup) rightGroup.appendChild(exportGroup);
+
     // Save Plan Button
     const saveBtn = document.createElement('button');
     saveBtn.className = 'btn btn-danger btn-sm';
@@ -288,6 +291,33 @@ class YearPlanningView {
       },
     });
     group.appendChild(this.teamFocusSelect.render());
+
+    return group;
+  }
+
+  createExportControls() {
+    const group = document.createElement('div');
+    group.className = 'year-plan-toolbar-group year-plan-toolbar-group--exports';
+
+    const exportCsvBtn = document.createElement('button');
+    exportCsvBtn.type = 'button';
+    exportCsvBtn.className = 'btn btn-secondary btn-sm';
+    const csvIcon = document.createElement('i');
+    csvIcon.className = 'fas fa-file-csv';
+    exportCsvBtn.appendChild(csvIcon);
+    exportCsvBtn.appendChild(document.createTextNode(' Export CSV'));
+    exportCsvBtn.addEventListener('click', () => this.handleExportYearPlanCsv());
+    group.appendChild(exportCsvBtn);
+
+    const exportXlsxBtn = document.createElement('button');
+    exportXlsxBtn.type = 'button';
+    exportXlsxBtn.className = 'btn btn-secondary btn-sm';
+    const xlsxIcon = document.createElement('i');
+    xlsxIcon.className = 'fas fa-file-excel';
+    exportXlsxBtn.appendChild(xlsxIcon);
+    exportXlsxBtn.appendChild(document.createTextNode(' Export XLSX'));
+    exportXlsxBtn.addEventListener('click', () => this.handleExportYearPlanXlsx());
+    group.appendChild(exportXlsxBtn);
 
     return group;
   }
@@ -1199,6 +1229,124 @@ class YearPlanningView {
     SystemService.save();
     notificationManager?.showToast('Plan snapshot saved.', 'success');
     this.render();
+  }
+
+  handleExportYearPlanCsv() {
+    this.exportYearPlan('csv');
+  }
+
+  handleExportYearPlanXlsx() {
+    this.exportYearPlan('xlsx');
+  }
+
+  exportYearPlan(format) {
+    const systemData = SystemService.getCurrentSystem();
+    if (!systemData) {
+      notificationManager?.showToast('Load a system before exporting.', 'warning');
+      return;
+    }
+
+    const exportData = this._buildYearPlanExportData();
+    const fileName = this._buildYearPlanExportFileName(format);
+
+    try {
+      if (format === 'csv') {
+        const csv = PlanningService.serializeYearPlanExportToCsv(exportData);
+        this._downloadBlob(fileName, new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+        notificationManager?.showToast(`Exported ${fileName}`, 'success');
+        return;
+      }
+
+      if (format === 'xlsx') {
+        if (typeof XLSX === 'undefined') {
+          notificationManager?.showToast(
+            'XLSX export requires SheetJS (xlsx.full.min.js).',
+            'error'
+          );
+          return;
+        }
+
+        const workbook = XLSX.utils.book_new();
+        const metadataRows = [['Year Plan Export'], [], ...(exportData.metadata || [])];
+        const summaryRows = [exportData.summary.headers || [], ...(exportData.summary.rows || [])];
+        const initiativeRows = [
+          exportData.initiatives.headers || [],
+          ...(exportData.initiatives.rows || []),
+        ];
+
+        const metadataSheet = XLSX.utils.aoa_to_sheet(metadataRows);
+        const summarySheet = XLSX.utils.aoa_to_sheet(summaryRows);
+        const initiativesSheet = XLSX.utils.aoa_to_sheet(initiativeRows);
+
+        XLSX.utils.book_append_sheet(workbook, metadataSheet, 'Metadata');
+        XLSX.utils.book_append_sheet(workbook, summarySheet, 'Team Summary');
+        XLSX.utils.book_append_sheet(workbook, initiativesSheet, 'Initiatives');
+
+        const bytes = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+        this._downloadBlob(
+          fileName,
+          new Blob([bytes], {
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          })
+        );
+        notificationManager?.showToast(`Exported ${fileName}`, 'success');
+        return;
+      }
+
+      notificationManager?.showToast(`Unsupported export format: ${format}`, 'error');
+    } catch (error) {
+      console.error('YearPlanningView export error:', error);
+      notificationManager?.showToast(`Export failed: ${error.message}`, 'error');
+    }
+  }
+
+  _buildYearPlanExportData() {
+    const teams = SystemService.getCurrentSystem()?.teams || [];
+    const tableData = Array.isArray(this.tableData) ? this.tableData : this.calculateTableData();
+    const summaryData = this.summaryData?.rows ? this.summaryData : this.calculateSummaryData();
+
+    return PlanningService.buildYearPlanExportData({
+      tableData,
+      summaryData,
+      teams,
+      planningYear: this.currentYear,
+      scenario: this.scenario,
+      applyConstraints: this.applyConstraints,
+      teamFilter: this.selectedTeamFilter,
+    });
+  }
+
+  _buildYearPlanExportFileName(format) {
+    const scenarioName =
+      this.scenario === 'funded'
+        ? 'funded-hc'
+        : this.scenario === 'team_bis'
+          ? 'team-bis'
+          : 'effective-bis';
+    const constraintsName = this.applyConstraints ? 'net' : 'gross';
+    const teamName = this._sanitizeExportToken(this.selectedTeamFilter || 'all');
+    return `year-plan-${this.currentYear}-${scenarioName}-${constraintsName}-${teamName}.${format}`;
+  }
+
+  _sanitizeExportToken(value) {
+    return (
+      String(value || 'all')
+        .toLowerCase()
+        .replace(/[^a-z0-9_-]+/g, '-')
+        .replace(/^-+|-+$/g, '') || 'all'
+    );
+  }
+
+  _downloadBlob(fileName, blob) {
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.download = fileName;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   }
 
   async handleLoadSnapshot() {

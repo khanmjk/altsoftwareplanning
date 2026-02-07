@@ -272,7 +272,7 @@ TO DO
 [Partial] [Feature] More integrated planning tuning using capacity tuning feature - account for team member leave calendars.
 [Partial] [Feature] More intelligent scheduling in gantt table planning, assign resources and calculate end dates automatically.
 [Partial] [AI] Tune the system prompt so AI-created systems include rich planning metadata for goals, initiatives, work packages, tasks, start date, end date, etc.
-[Not Done] [AI] Ability to export the year plan (ATL/BTL logic) to Excel using LLM-generated formulas.
+[Partial] [AI] Ability to export the year plan (ATL/BTL logic) to Excel using LLM-generated formulas (base CSV/XLSX export shipped; LLM formula generation pending).
 
 Utilities
 [Partial] Now that we've got export to excel, csv and json working, we need a utility to generate these files from other places: planning table, overall system data dump, etc.
@@ -284,7 +284,7 @@ Year Planning
 -- View planning by teams - for individual manager team planning.
 -- Allow managers to tune their teams estimates which will update the data model, year plan page uses latest changes)
 -- Add versioning when saving plans (up to 5 previous versions) - need to update data model structure
--- Add ability to export the plan to CSV or Excel
+[Done] -- Add ability to export the plan to CSV or Excel
 
 Team Editing
 -- We support away team only from an incoming perspective (i.e. help provided to the team), but we could also consider concept of outgoing away team (I.e. the team lends engineers to other teams)

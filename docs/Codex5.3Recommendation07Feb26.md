@@ -38,13 +38,14 @@ All three analyses agree the architecture is stable enough to ship significant b
 8. Scheduling baseline: dependency conflict visibility plus auto-schedule shift behavior.
 9. Capacity intelligence: Hiring Gap KPI and corrected sink assumptions for open positions.
 10. AI planning copilots: goal alignment and goal risk analysis tools.
+11. Year Plan export actions: CSV and XLSX export from the Year Plan toolbar (metadata, team summary, initiatives).
 
 ### Partially delivered / still open
 
 1. Initiative add/edit workflow unification is partially complete (management flow unified; roadmap modal still separate).
 2. Year Planning MVC refactor remains partial.
 3. Leave-calendar and richer scheduling sophistication are still iterative.
-4. CSV/XLSX-wide export utility standardization remains open.
+4. CSV/XLSX-wide export utility standardization remains open (Year Plan CSV/XLSX is delivered; cross-view standardization remains).
 5. Multi-LLM/provider expansion and backend image proxy remain out of this delivered pass.
 
 ---
@@ -333,7 +334,7 @@ Until then, the highest ROI remains feature completion and execution intelligenc
 | BL-22 | View planning by team                                    | `Backlog.txt:282` | Covered  | Sprint 3           | Planned          | Explicit team-filtered planning view.                                                            |
 | BL-23 | Managers tune team estimates                             | `Backlog.txt:283` | Partial  | Sprint 3           | Planned          | Team planning focus included; estimate editing workflows not explicit.                           |
 | BL-24 | Plan versioning (keep last 5)                            | `Backlog.txt:284` | Covered  | Sprint 2           | Planned          | Explicit snapshot versioning requirement.                                                        |
-| BL-25 | Export plan to CSV/Excel                                 | `Backlog.txt:285` | Covered  | Sprint 2           | Planned          | Explicit Year Plan CSV/XLSX export.                                                              |
+| BL-25 | Export plan to CSV/Excel                                 | `Backlog.txt:285` | Covered  | Sprint 2           | Done             | Year Plan CSV/XLSX export delivered via toolbar actions and export payload serialization.        |
 | BL-26 | Outgoing away-team concept                               | `Backlog.txt:288` | Missing  | Unassigned         | Planned          | No explicit mention in this phase.                                                               |
 | BL-27 | AI-generated delivery plan (gantt) per team              | `Backlog.txt:291` | Partial  | Stretch            | Planned          | AI gantt work is stretch only.                                                                   |
 | BL-28 | AI recurring tasks for initiative status updates         | `Backlog.txt:292` | Missing  | Unassigned         | Planned          | Not included in this phase.                                                                      |

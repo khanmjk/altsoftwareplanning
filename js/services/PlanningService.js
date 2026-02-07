@@ -222,6 +222,194 @@ const PlanningService = {
   },
 
   /**
+   * Builds normalized export data for Year Plan CSV/XLSX downloads.
+   *
+   * @param {object} params
+   * @param {Array} params.tableData - Planning table data (typically from calculatePlanningTableData).
+   * @param {object} params.summaryData - Team load summary ({ rows, totals }).
+   * @param {Array} params.teams - Team list from system data.
+   * @param {number|string} params.planningYear - Active planning year.
+   * @param {string} params.scenario - 'funded' | 'team_bis' | 'effective'
+   * @param {boolean} params.applyConstraints - Net/gross toggle state.
+   * @param {string} [params.teamFilter='all'] - Team focus filter.
+   * @returns {object} Export payload with metadata, summary, and initiatives sections.
+   */
+  buildYearPlanExportData({
+    tableData = [],
+    summaryData = {},
+    teams = [],
+    planningYear,
+    scenario,
+    applyConstraints,
+    teamFilter = 'all',
+  }) {
+    const filteredTeams =
+      teamFilter && teamFilter !== 'all'
+        ? teams.filter((team) => team?.teamId === teamFilter)
+        : [...teams];
+
+    const teamColumns = filteredTeams.map((team) => ({
+      teamId: team.teamId,
+      label: team.teamIdentity || team.teamName || team.teamId,
+    }));
+
+    const displayTableData =
+      teamFilter && teamFilter !== 'all'
+        ? (tableData || []).filter((initiative) =>
+            (initiative.assignments || []).some((assignment) => assignment.teamId === teamFilter)
+          )
+        : tableData || [];
+
+    const summaryRowsRaw = Array.isArray(summaryData?.rows) ? summaryData.rows : [];
+    const summaryRows =
+      teamFilter && teamFilter !== 'all'
+        ? summaryRowsRaw.filter((row) => row.teamId === teamFilter)
+        : summaryRowsRaw;
+
+    const summaryHeaders = [
+      'Team ID',
+      'Team',
+      'Funded HC',
+      'Team BIS (Humans)',
+      'Away BIS (Humans)',
+      'AI Engineers',
+      'Sinks (SDE/Yrs)',
+      'Hire Ramp-up Sink',
+      'New Hire Gain',
+      'AI Productivity Gain',
+      'AI Gain %',
+      'Scenario Capacity',
+      'Assigned ATL SDEs',
+      'Remaining Capacity',
+      'ATL Status',
+    ];
+
+    const summaryMatrix = summaryRows.map((row) => [
+      row.teamId || '',
+      row.teamName || '',
+      this._formatExportNumber(row.fundedHC),
+      this._formatExportNumber(row.teamBISHumans),
+      this._formatExportNumber(row.awayBISHumans),
+      this._formatExportNumber(row.aiEngineers),
+      this._formatExportNumber(row.sinks),
+      this._formatExportNumber(row.hiringRampUpSink),
+      this._formatExportNumber(row.newHireGain),
+      this._formatExportNumber(row.productivityGain),
+      this._formatExportNumber(row.productivityPercent),
+      this._formatExportNumber(row.scenarioCapacity),
+      this._formatExportNumber(row.assignedAtlSde),
+      this._formatExportNumber(row.remainingCapacity),
+      row.status || '',
+    ]);
+
+    const initiativeHeaders = [
+      'Initiative ID',
+      'Title',
+      'Description',
+      'Status',
+      'Protected',
+      'Total SDE Years',
+      'Cumulative SDE Years',
+      'ATL/BTL',
+      'Capacity Status',
+      'Primary Goal ID',
+      'Target Due Date',
+      ...teamColumns.map((column) => `${column.label} (SDE Years)`),
+    ];
+
+    const initiativeMatrix = (displayTableData || []).map((initiative) => {
+      const assignments = new Map(
+        (initiative.assignments || []).map((assignment) => [
+          assignment.teamId,
+          assignment.sdeYears || 0,
+        ])
+      );
+
+      const totalSde = Number.isFinite(initiative.calculatedInitiativeTotalSde)
+        ? initiative.calculatedInitiativeTotalSde
+        : (initiative.assignments || []).reduce(
+            (sum, assignment) => sum + (assignment.sdeYears || 0),
+            0
+          );
+
+      const cumulativeSde = Number.isFinite(initiative.calculatedCumulativeSde)
+        ? initiative.calculatedCumulativeSde
+        : '';
+
+      return [
+        initiative.initiativeId || '',
+        initiative.title || '',
+        initiative.description || '',
+        initiative.status || '',
+        initiative.isProtected ? 'Yes' : 'No',
+        this._formatExportNumber(totalSde),
+        cumulativeSde === '' ? '' : this._formatExportNumber(cumulativeSde),
+        initiative.calculatedAtlBtlStatus || (initiative.isBTL ? 'BTL' : 'ATL'),
+        initiative.isBTL ? 'Beyond Capacity (BTL)' : 'Within Capacity (ATL)',
+        initiative.primaryGoalId || '',
+        initiative.targetDueDate || '',
+        ...teamColumns.map((column) =>
+          this._formatExportNumber(assignments.get(column.teamId) || 0)
+        ),
+      ];
+    });
+
+    const scenarioLabel =
+      scenario === 'funded' ? 'Funded HC' : scenario === 'team_bis' ? 'Team BIS' : 'Effective BIS';
+    const filteredTeamName =
+      teamFilter && teamFilter !== 'all' ? teamColumns[0]?.label || teamFilter : 'All Teams';
+
+    return {
+      metadata: [
+        ['Planning Year', planningYear ?? ''],
+        ['Scenario', scenarioLabel],
+        [
+          'Constraints Mode',
+          applyConstraints ? 'Net (constraints applied)' : 'Gross (no constraints)',
+        ],
+        ['Team Focus', filteredTeamName],
+        ['Generated At', new Date().toISOString()],
+      ],
+      summary: {
+        headers: summaryHeaders,
+        rows: summaryMatrix,
+      },
+      initiatives: {
+        headers: initiativeHeaders,
+        rows: initiativeMatrix,
+      },
+    };
+  },
+
+  /**
+   * Serializes Year Plan export payload to CSV text.
+   *
+   * @param {object} exportData - Payload from buildYearPlanExportData().
+   * @returns {string} CSV content.
+   */
+  serializeYearPlanExportToCsv(exportData) {
+    const rows = [];
+    rows.push(['Year Plan Export']);
+    rows.push([]);
+
+    rows.push(...(exportData?.metadata || []));
+    rows.push([]);
+
+    rows.push(['Team Load Summary']);
+    rows.push(exportData?.summary?.headers || []);
+    rows.push(...(exportData?.summary?.rows || []));
+    rows.push([]);
+
+    rows.push(['Initiatives']);
+    rows.push(exportData?.initiatives?.headers || []);
+    rows.push(...(exportData?.initiatives?.rows || []));
+
+    return rows
+      .map((row) => (row || []).map((cell) => this._escapeCsvCell(cell)).join(','))
+      .join('\n');
+  },
+
+  /**
    * Reorders initiatives based on drag-drop operation.
    * Pure function - returns new array, does not mutate input.
    *
@@ -570,6 +758,17 @@ const PlanningService = {
 
   _clone(value) {
     return JSON.parse(JSON.stringify(value));
+  },
+
+  _formatExportNumber(value) {
+    if (!Number.isFinite(value)) return '';
+    return Number(value).toFixed(2);
+  },
+
+  _escapeCsvCell(value) {
+    const text = value === null || value === undefined ? '' : String(value);
+    if (!/[",\n]/.test(text)) return text;
+    return `"${text.replace(/"/g, '""')}"`;
   },
 };
 

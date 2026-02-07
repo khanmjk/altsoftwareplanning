@@ -522,6 +522,7 @@ Mermaid-based diagrams are available across the app and via the AI Assistant.
 - **Plan & Track:** Assign estimates and monitor capacity (ATL/BTL).
 - **Team Focus:** Filter planning views to a selected team while preserving totals.
 - **Snapshots:** Save and restore plan snapshots for the current planning year (latest 5 retained).
+- **Export:** Download the active year plan to **CSV** or **XLSX** (metadata, team summary, and initiatives).
 - **AI Optimization:** Use the **🤖 Optimize This Plan** button to have the AI analyze and propose scope adjustments.
 
 ### Dynamic Theming (UX)
@@ -579,8 +580,9 @@ Mermaid-based diagrams are available across the app and via the AI Assistant.
 - [x] **Unit Testing Suite**: Implemented a TDD framework for Services.
 - [x] **System Export/Import (JSON)**: Schema-versioned JSON export and compatibility-checked import.
 - [x] **Year Plan Snapshots**: Save/load snapshots with automatic retention (latest 5 per planning year).
+- [x] **Year Plan CSV/XLSX Export**: Export current year-plan view (metadata, team summary, initiatives) to spreadsheet formats.
 - [x] **Goal Lifecycle Management**: Goal status matrix + lifecycle CRUD in Product Management.
-- [ ] **System/Plan CSV + XLSX Interop**: Expand export beyond JSON for all key planning views.
+- [ ] **Cross-View CSV/XLSX Export Utility**: Standardize reusable export generation across additional planning/system views.
 - [ ] **Visual Editors**: Enhanced drag-and-drop for Org Charts.
 - [ ] **Architecture Diagrams**: Expanded auto-generation of system maps.
 
