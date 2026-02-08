@@ -39,7 +39,10 @@ describe('SettingsService', () => {
 
   it('updates and persists settings', () => {
     SettingsService.load();
-    SettingsService.update({ theme: 'dark', ai: { isEnabled: true } });
+    SettingsService.update({
+      theme: 'dark',
+      ai: { isEnabled: true },
+    });
 
     const stored = repo.getSettings();
     expect(stored.theme).toBe('dark');

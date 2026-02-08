@@ -2,6 +2,8 @@
 
 Cloudflare Worker that proxies feedback submissions from the SMT Platform to GitHub Issues.
 
+Important: GitHub issues are created using the identity associated with the worker's `GITHUB_TOKEN` (typically the project maintainer/bot). Users do not authenticate with GitHub; any reporter details are included in the issue body.
+
 ## Prerequisites
 
 1. [Cloudflare account](https://dash.cloudflare.com/sign-up) (free)
@@ -45,6 +47,7 @@ wrangler deploy
 ```
 
 After deployment, you'll see output like:
+
 ```
 Published smt-feedback-worker (1.23 sec)
   https://smt-feedback-worker.<your-subdomain>.workers.dev

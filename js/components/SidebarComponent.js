@@ -423,9 +423,42 @@ class SidebarComponent {
 
     const reader = new FileReader();
     reader.onload = () => {
-      const importResult = SystemService.importFromJson(String(reader.result || ''), {
-        activateFirst: true,
-      });
+      const rawText = String(reader.result || '');
+      let parsed = null;
+      try {
+        parsed = JSON.parse(rawText);
+      } catch (error) {
+        notificationManager?.showToast(`Invalid JSON: ${error.message}`, 'error');
+        return;
+      }
+
+      const expectedBlueprintFormat = BlueprintPackageService.getPackageFormat();
+      if (parsed?.format === expectedBlueprintFormat) {
+        const blueprintResult = BlueprintPackageService.installBlueprintPackage(parsed, {
+          activateFirst: true,
+        });
+
+        if (!blueprintResult.success) {
+          notificationManager?.showToast(
+            blueprintResult.error || 'Blueprint package install failed.',
+            'error'
+          );
+          return;
+        }
+
+        const warningSuffix = blueprintResult.warnings?.length
+          ? ` (${blueprintResult.warnings.length} warning${blueprintResult.warnings.length === 1 ? '' : 's'})`
+          : '';
+        notificationManager?.showToast(
+          `Installed blueprint as "${blueprintResult.importedSystemId}"${warningSuffix}.`,
+          'success'
+        );
+        navigationManager.navigateTo('visualizationCarousel');
+        this.updateState();
+        return;
+      }
+
+      const importResult = SystemService.importFromJson(parsed, { activateFirst: true });
 
       if (!importResult.success) {
         notificationManager?.showToast(importResult.error || 'Import failed.', 'error');

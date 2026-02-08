@@ -25,6 +25,7 @@ export default [
     ignores: [
       '**/node_modules/**',
       '**/.git/**',
+      '**/.wrangler/**',
       '**/dist/**',
       '**/coverage/**',
       '**/gitstoryline/**'
@@ -55,6 +56,16 @@ export default [
   },
   {
     files: ['smt-feedback-worker/**/*.js'],
+    languageOptions: {
+      sourceType: 'module',
+      globals: {
+        ...globals.node,
+        ...globals.es2021
+      }
+    }
+  },
+  {
+    files: ['smt-blueprints-worker/**/*.js'],
     languageOptions: {
       sourceType: 'module',
       globals: {

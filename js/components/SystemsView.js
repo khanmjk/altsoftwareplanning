@@ -417,7 +417,7 @@ class SystemsView {
       publishBtn.className = 'btn btn-secondary system-card__button--publish';
       publishBtn.setAttribute('data-action', 'publish-system');
       publishBtn.setAttribute('data-system-id', sys.id);
-      publishBtn.title = 'Publish to Community Blueprints';
+      publishBtn.title = 'Publish to your local Blueprints catalog';
       const publishIcon = document.createElement('i');
       publishIcon.className = 'fas fa-upload';
       publishBtn.appendChild(publishIcon);

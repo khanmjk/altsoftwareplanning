@@ -4,7 +4,7 @@ Document purpose: single source of truth for concept, requirements, UX, artifact
 
 Status: MVP Implemented (Launch-25 credibility mode, iteration ongoing)
 Feature owner: SMT Product + Engineering
-Last updated: 2026-02-07
+Last updated: 2026-02-08
 Tracking mode: Living document (update at every implementation session)
 
 Related references:
@@ -13,8 +13,10 @@ Related references:
 - `/Users/khanmjk/Documents/GitHub/altsoftwareplanning/Backlog.txt`
 - `/Users/khanmjk/Documents/GitHub/altsoftwareplanning/docs/Codex5.3Recommendation07Feb26.md`
 - `/Users/khanmjk/Documents/GitHub/altsoftwareplanning/docs/AppStoreLiteUseCaseJourney.md`
+- `/Users/khanmjk/Documents/GitHub/altsoftwareplanning/docs/appstore-lite/community-marketplace-cloud.md`
 - `/Users/khanmjk/Documents/GitHub/altsoftwareplanning/docs/coding-agent-contract.md`
 - `/Users/khanmjk/Documents/GitHub/altsoftwareplanning/docs/workspace-canvas-contract.md`
+- `/Users/khanmjk/Documents/GitHub/altsoftwareplanning/smt-blueprints-worker/README.md`
 
 ---
 
@@ -68,10 +70,27 @@ Turn SMT into an educational and community platform for learning how to design s
 5. Validation and trust labels (`Verified`, `Community`, `Experimental`).
 6. Curated starter set rollout plan to reach top 100 archetypes.
 
+### 3.1.1 Cloud Marketplace Extension (Optional, Implemented In-Repo)
+
+The local-first exchange supports offline-first browsing/installation and local publishing.
+To enable true community sharing (publish -> global discovery -> install), the repo also includes an optional cloud marketplace:
+
+- Cloudflare Worker backend (`smt-blueprints-worker/`) with D1 + optional R2 storage
+- GitHub OAuth sign-in (popup + postMessage session token)
+- Attribution: GitHub is used for identity only; marketplace social activity is stored in D1 and does not create GitHub issues/PRs/comments
+- Public publishing with:
+  - monotonic version numbers per blueprint
+  - moderation status (`approved|pending`) with low-risk auto-approve
+  - server-side secret scanning (blocks publishes)
+- Social: stars + comments
+- Free-tier friendly search: token normalization in D1 (no paid search services)
+
+See: `docs/appstore-lite/community-marketplace-cloud.md`
+
 ### 3.2 Out of Scope (MVP)
 
 1. Full monetized marketplace.
-2. Ratings, comments, social feeds.
+2. Ratings and social feeds.
 3. Real-time moderation dashboard.
 4. Multi-tenant auth and private blueprint ACLs.
 5. Auto-generated legal review of all user-submitted content.

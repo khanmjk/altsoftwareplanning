@@ -152,6 +152,25 @@
   font-size: 0.75rem;
 }
 
+.community-blueprint-card__social {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.1rem;
+  color: var(--color-text-secondary, #4a5568);
+  font-size: 0.82rem;
+}
+
+.community-blueprint-card__social-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid var(--color-border, #d7dde5);
+  border-radius: 999px;
+  padding: 0.12rem 0.5rem;
+  background: var(--theme-bg-secondary);
+}
+
 .community-blueprint-card__actions {
   margin-top: auto;
   display: flex;
@@ -357,6 +376,56 @@
   display: grid;
   gap: 0.5rem;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.community-blueprint-preview__comments {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+
+.community-blueprint-preview__comments p {
+  margin: 0;
+  color: var(--color-text-secondary, #4a5568);
+}
+
+.community-blueprint-preview__comment {
+  border: 1px solid var(--color-border, #d7dde5);
+  border-radius: 8px;
+  padding: 0.55rem 0.65rem;
+  background: var(--color-surface, #fff);
+}
+
+.community-blueprint-preview__comment-meta {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary, #4a5568);
+  margin-bottom: 0.35rem;
+}
+
+.community-blueprint-preview__comment-body {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.45;
+}
+
+.community-blueprint-preview__comment-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-top: 1px solid var(--color-border, #d7dde5);
+  padding-top: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.community-blueprint-preview__comment-input {
+  width: 100%;
+  border: 1px solid var(--color-border, #d7dde5);
+  border-radius: 8px;
+  padding: 0.55rem 0.65rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  resize: vertical;
 }
 
 .community-blueprint-preview__variant {

@@ -15,12 +15,16 @@ class CommunityBlueprintsView {
     this.filters = {
       query: '',
       category: 'all',
+      sort: 'newest',
       trustLabel: 'all',
       complexity: 'all',
       companyStage: 'all',
       sourceType: 'all',
     };
     this.filteredCatalog = [];
+    this.catalogEntries = [];
+    this.remoteCatalog = [];
+    this.remoteCatalogStatus = { loaded: false, error: null };
     this.selectedBlueprintId = null;
     this.selectedBlueprintEntry = null;
     this.publishDraftPackage = null;
@@ -32,6 +36,9 @@ class CommunityBlueprintsView {
     this.publishSystemSelect = null;
     this.publishTrustSelect = null;
     this._boundContainer = null;
+    this._remoteFetchTimer = null;
+    this.previewComments = [];
+    this.previewCommentsCursor = null;
 
     this._boundClick = this.handleClick.bind(this);
     this._boundChange = this.handleChange.bind(this);
@@ -146,6 +153,30 @@ class CommunityBlueprintsView {
       this.downloadPublishDraft();
       return;
     }
+    if (action === 'publish-save-remote') {
+      this.publishDraftToMarketplace();
+      return;
+    }
+    if (action === 'marketplace-sign-in') {
+      this.signInToMarketplace();
+      return;
+    }
+    if (action === 'marketplace-sign-out') {
+      this.signOutOfMarketplace();
+      return;
+    }
+    if (action === 'preview-star-toggle') {
+      this.togglePreviewStar();
+      return;
+    }
+    if (action === 'preview-add-comment') {
+      this.submitPreviewComment();
+      return;
+    }
+    if (action === 'preview-load-more-comments') {
+      this.loadMorePreviewComments();
+      return;
+    }
     if (action === 'navigate-systems') {
       navigationManager.navigateTo('systemsView');
       return;
@@ -160,7 +191,7 @@ class CommunityBlueprintsView {
     if (key !== 'query') return;
 
     this.filters.query = filterTarget.value;
-    this.renderCatalogGrid();
+    this.refreshCatalog();
   }
 
   handleChange(event) {
@@ -169,48 +200,77 @@ class CommunityBlueprintsView {
       const key = filterTarget.getAttribute('data-filter');
       if (key && this.filters[key] !== undefined) {
         this.filters[key] = filterTarget.value;
-        this.renderCatalogGrid();
+        this.refreshCatalog();
       }
       return;
     }
   }
 
   refreshCatalog() {
-    this.filteredCatalog = BlueprintCatalogService.searchCatalog(this.filters);
-    this.populateFilterOptions();
+    this._applyCatalogAndRender();
+    this._scheduleRemoteCatalogFetch();
+  }
+
+  _applyCatalogAndRender() {
+    this.catalogEntries = this._buildMergedCatalog();
+    this.filteredCatalog = this._filterCatalog(this.catalogEntries, this.filters);
+    this._populateFilterOptionsFromCatalog(this.catalogEntries);
     this.renderCatalogGrid();
   }
 
-  populateFilterOptions() {
-    const options = BlueprintCatalogService.getFilterOptions();
+  _populateFilterOptionsFromCatalog(catalog) {
+    const categories = new Set();
+    const trustLabels = new Set();
+    const complexity = new Set();
+    const companyStages = new Set();
+    const sourceTypes = new Set();
+
+    (Array.isArray(catalog) ? catalog : []).forEach((entry) => {
+      categories.add(entry.category);
+      trustLabels.add(entry.trustLabel);
+      complexity.add(entry.complexity);
+      companyStages.add(entry.companyStage);
+      sourceTypes.add(entry.sourceType);
+    });
+
     this._renderFilterSelect(
       'blueprintCategoryFilter',
       'category',
-      options.categories,
+      Array.from(categories).sort(),
       this.filters.category
+    );
+    this._renderFilterSelect(
+      'blueprintSortFilter',
+      'sort',
+      [
+        { value: 'newest', text: 'Newest' },
+        { value: 'trending', text: 'Trending' },
+        { value: 'title', text: 'Title' },
+      ],
+      this.filters.sort
     );
     this._renderFilterSelect(
       'blueprintTrustFilter',
       'trustLabel',
-      options.trustLabels,
+      Array.from(trustLabels).sort(),
       this.filters.trustLabel
     );
     this._renderFilterSelect(
       'blueprintComplexityFilter',
       'complexity',
-      options.complexity,
+      Array.from(complexity).sort(),
       this.filters.complexity
     );
     this._renderFilterSelect(
       'blueprintStageFilter',
       'companyStage',
-      options.companyStages,
+      Array.from(companyStages).sort(),
       this.filters.companyStage
     );
     this._renderFilterSelect(
       'blueprintSourceFilter',
       'sourceType',
-      options.sourceTypes,
+      Array.from(sourceTypes).sort(),
       this.filters.sourceType
     );
   }
@@ -219,10 +279,20 @@ class CommunityBlueprintsView {
     const host = this.container.querySelector(`#${hostId}`);
     if (!host) return;
 
-    const options = [{ value: 'all', text: 'All' }].concat(
-      values.map((value) => ({ value, text: value }))
-    );
-    const currentValue = selectedValue || 'all';
+    const isSort = filterKey === 'sort';
+    const normalizedValues = (Array.isArray(values) ? values : [])
+      .map((value) => {
+        if (value && typeof value === 'object') {
+          return { value: value.value, text: value.text || value.value };
+        }
+        return { value, text: value };
+      })
+      .filter((option) => option.value);
+
+    const options = isSort
+      ? normalizedValues
+      : [{ value: 'all', text: 'All' }].concat(normalizedValues);
+    const currentValue = selectedValue || (isSort ? options[0]?.value || 'newest' : 'all');
 
     const existing = this.filterSelectInstances[filterKey];
     if (existing) {
@@ -239,8 +309,8 @@ class CommunityBlueprintsView {
       id: `${hostId}Input`,
       name: `${hostId}Input`,
       onChange: (value) => {
-        this.filters[filterKey] = value || 'all';
-        this.renderCatalogGrid();
+        this.filters[filterKey] = value || (isSort ? 'newest' : 'all');
+        this.refreshCatalog();
       },
     });
 
@@ -249,9 +319,217 @@ class CommunityBlueprintsView {
     host.appendChild(themedSelect.render());
   }
 
+  _scheduleRemoteCatalogFetch() {
+    if (!BlueprintMarketplaceService.isEnabled()) return;
+    if (this._remoteFetchTimer) {
+      clearTimeout(this._remoteFetchTimer);
+    }
+    this._remoteFetchTimer = setTimeout(() => {
+      this._remoteFetchTimer = null;
+      this._fetchRemoteCatalog();
+    }, 400);
+  }
+
+  async _fetchRemoteCatalog() {
+    if (!BlueprintMarketplaceService.isEnabled()) return;
+
+    const remoteSort = this.filters.sort === 'title' ? 'newest' : this.filters.sort;
+    const result = await BlueprintMarketplaceService.getCatalog({
+      ...this.filters,
+      sort: remoteSort,
+      limit: 50,
+    });
+
+    if (!result?.success) {
+      this.remoteCatalogStatus = { loaded: true, error: result?.error || 'Remote fetch failed.' };
+      this.remoteCatalog = [];
+      this._applyCatalogAndRender();
+      return;
+    }
+
+    this.remoteCatalogStatus = { loaded: true, error: null };
+    this.remoteCatalog = Array.isArray(result.items) ? result.items : [];
+    this._applyCatalogAndRender();
+  }
+
+  _buildMergedCatalog() {
+    const localCatalog = BlueprintCatalogService.getCatalog();
+    const remoteItems = Array.isArray(this.remoteCatalog) ? this.remoteCatalog : [];
+    const remoteMap = new Map(remoteItems.map((item) => [item.blueprintId, item]));
+    const seen = new Set();
+
+    const merged = localCatalog.map((entry) => {
+      const remote = remoteMap.get(entry.blueprintId) || null;
+      seen.add(entry.blueprintId);
+      if (!remote) return entry;
+
+      const latestVersionNumber = Number(remote.latestVersionNumber || 0);
+      const hasRemotePackage = latestVersionNumber > 0;
+
+      return {
+        ...entry,
+        availabilityStatus: hasRemotePackage ? 'Available' : entry.availabilityStatus,
+        isInstallable: hasRemotePackage ? true : entry.isInstallable,
+        updatedAt: remote.updatedAt || entry.updatedAt,
+        marketplace: {
+          isPublished: true,
+          starsCount: Number(remote.starsCount || 0),
+          downloadsCount: Number(remote.downloadsCount || 0),
+          commentsCount: Number(remote.commentsCount || 0),
+          latestVersionNumber,
+          updatedAt: remote.updatedAt || null,
+          author: remote.author || null,
+        },
+      };
+    });
+
+    remoteItems.forEach((item) => {
+      if (seen.has(item.blueprintId)) return;
+      merged.push({
+        blueprintId: item.blueprintId,
+        title: item.title,
+        summary: item.summary,
+        category: item.category,
+        tags: Array.isArray(item.tags) ? item.tags : [],
+        trustLabel: item.trustLabel || 'Community',
+        complexity: item.complexity || 'Intermediate',
+        companyStage: item.companyStage || 'Growth',
+        targetTeamSize: item.targetTeamSize || '50-150',
+        roadmapHorizonYears: Number(item.roadmapHorizonYears || 3),
+        schemaVersion: 13,
+        appCompatibility: null,
+        templateSystemKey: 'community',
+        promptPack: { seedPrompt: '', variants: [], authorNotes: '' },
+        learningOutcomes: [],
+        author: item.author ? { name: item.author.handle, contact: '' } : null,
+        license: 'CC-BY-4.0',
+        sourceType: item.sourceType || 'community',
+        availabilityStatus: 'Available',
+        isInstallable: true,
+        createdAt: item.updatedAt || null,
+        updatedAt: item.updatedAt || null,
+        marketplace: {
+          isPublished: true,
+          starsCount: Number(item.starsCount || 0),
+          downloadsCount: Number(item.downloadsCount || 0),
+          commentsCount: Number(item.commentsCount || 0),
+          latestVersionNumber: Number(item.latestVersionNumber || 0),
+          updatedAt: item.updatedAt || null,
+          author: item.author || null,
+        },
+      });
+    });
+
+    return merged;
+  }
+
+  _normalizeSearchText(value) {
+    return String(value || '')
+      .toLowerCase()
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  _tokenizeSearchText(value) {
+    return String(value || '')
+      .toLowerCase()
+      .split(/[^a-z0-9]+/g)
+      .filter(Boolean);
+  }
+
+  _buildSearchHaystack(entry) {
+    const promptVariants = Array.isArray(entry.promptPack?.variants)
+      ? entry.promptPack.variants
+      : [];
+    const learningOutcomes = Array.isArray(entry.learningOutcomes) ? entry.learningOutcomes : [];
+    const tags = Array.isArray(entry.tags) ? entry.tags : [];
+
+    return this._normalizeSearchText(
+      [
+        entry.blueprintId,
+        entry.title,
+        entry.summary,
+        entry.category,
+        entry.trustLabel,
+        entry.availabilityStatus,
+        entry.complexity,
+        entry.companyStage,
+        entry.sourceType,
+        entry.targetTeamSize,
+        entry.license,
+        entry.templateSystemKey,
+        entry.promptPack?.seedPrompt,
+        entry.promptPack?.authorNotes,
+        entry.author?.name,
+        entry.author?.contact,
+        entry.marketplace?.author?.handle,
+        entry.marketplace?.isPublished ? 'marketplace published' : 'local only',
+        ...tags,
+        ...learningOutcomes,
+        ...promptVariants.flatMap((variant) => [variant.name, variant.prompt]),
+      ].join(' ')
+    );
+  }
+
+  _matchesQuery(entry, query) {
+    const normalizedQuery = this._normalizeSearchText(query);
+    if (!normalizedQuery) return true;
+
+    const haystackText = this._buildSearchHaystack(entry);
+    if (!haystackText) return false;
+
+    const haystackTokenSet = new Set(this._tokenizeSearchText(haystackText));
+    const queryTokens = this._tokenizeSearchText(normalizedQuery);
+    if (queryTokens.length === 0) return true;
+
+    if (queryTokens.length === 1) {
+      return haystackTokenSet.has(queryTokens[0]);
+    }
+
+    if (haystackText.includes(normalizedQuery)) {
+      return true;
+    }
+
+    return queryTokens.every((token) => haystackTokenSet.has(token));
+  }
+
+  _filterCatalog(catalog, filters) {
+    const {
+      query = '',
+      category = 'all',
+      trustLabel = 'all',
+      complexity = 'all',
+      companyStage = 'all',
+      sourceType = 'all',
+      sort = 'newest',
+    } = filters || {};
+
+    const filtered = (Array.isArray(catalog) ? catalog : []).filter((entry) => {
+      if (category !== 'all' && entry.category !== category) return false;
+      if (trustLabel !== 'all' && entry.trustLabel !== trustLabel) return false;
+      if (complexity !== 'all' && entry.complexity !== complexity) return false;
+      if (companyStage !== 'all' && entry.companyStage !== companyStage) return false;
+      if (sourceType !== 'all' && entry.sourceType !== sourceType) return false;
+      return this._matchesQuery(entry, query);
+    });
+
+    if (sort === 'title') {
+      return filtered.sort((a, b) => a.title.localeCompare(b.title));
+    }
+    if (sort === 'trending') {
+      return filtered.sort((a, b) => {
+        const starsA = Number(a.marketplace?.starsCount || 0);
+        const starsB = Number(b.marketplace?.starsCount || 0);
+        if (starsA !== starsB) return starsB - starsA;
+        return this._toTimestamp(b.updatedAt) - this._toTimestamp(a.updatedAt);
+      });
+    }
+
+    return filtered.sort((a, b) => this._toTimestamp(b.updatedAt) - this._toTimestamp(a.updatedAt));
+  }
+
   renderCatalogGrid() {
     this._refreshInstalledBlueprintStateIndex();
-    this.filteredCatalog = BlueprintCatalogService.searchCatalog(this.filters);
     const grid = this.container.querySelector('#communityBlueprintGrid');
     const countLabel = this.container.querySelector('#communityBlueprintCount');
     if (!grid || !countLabel) return;
@@ -260,8 +538,13 @@ class CommunityBlueprintsView {
     const curatedCount = this.filteredCatalog.filter(
       (entry) => entry.sourceType === 'curated'
     ).length;
-    const communityCount = this.filteredCatalog.length - curatedCount;
-    countLabel.textContent = `${this.filteredCatalog.length} blueprint${this.filteredCatalog.length === 1 ? '' : 's'} found (${curatedCount} curated, ${communityCount} local)`;
+    const marketplaceCount = this.filteredCatalog.filter(
+      (entry) => entry.marketplace?.isPublished
+    ).length;
+    const localDraftCount = this.filteredCatalog.filter(
+      (entry) => entry.sourceType === 'community' && !entry.marketplace?.isPublished
+    ).length;
+    countLabel.textContent = `${this.filteredCatalog.length} blueprint${this.filteredCatalog.length === 1 ? '' : 's'} found (${curatedCount} curated, ${marketplaceCount} marketplace, ${localDraftCount} local drafts)`;
 
     if (this.filteredCatalog.length === 0) {
       grid.appendChild(this._buildEmptyState());
@@ -301,7 +584,7 @@ class CommunityBlueprintsView {
     const subtitle = document.createElement('p');
     subtitle.className = 'community-blueprints-header__subtitle';
     subtitle.textContent =
-      'Install from a curated Top-100 catalog, inspect prompt packs, and publish your local systems back to the community.';
+      'Install from a curated Top-100 catalog, inspect prompt packs, and publish locally or publicly to share with the community.';
     textWrap.appendChild(subtitle);
 
     const actions = document.createElement('div');
@@ -320,6 +603,23 @@ class CommunityBlueprintsView {
     systemsBtn.appendChild(this._createIcon('fas fa-layer-group'));
     systemsBtn.appendChild(document.createTextNode(' My Systems'));
     actions.appendChild(systemsBtn);
+
+    if (BlueprintMarketplaceService.isEnabled()) {
+      const session = MarketplaceAuthService.getSession();
+      const authBtn = document.createElement('button');
+      authBtn.id = 'marketplaceAuthBtn';
+      authBtn.className = 'btn btn--secondary';
+      if (session?.user?.handle) {
+        authBtn.setAttribute('data-action', 'marketplace-sign-out');
+        authBtn.appendChild(this._createIcon('fas fa-sign-out-alt'));
+        authBtn.appendChild(document.createTextNode(` Sign out @${session.user.handle}`));
+      } else {
+        authBtn.setAttribute('data-action', 'marketplace-sign-in');
+        authBtn.appendChild(this._createIcon('fab fa-github'));
+        authBtn.appendChild(document.createTextNode(' Sign in to Publish'));
+      }
+      actions.appendChild(authBtn);
+    }
 
     header.appendChild(textWrap);
     header.appendChild(actions);
@@ -347,6 +647,7 @@ class CommunityBlueprintsView {
     dropdownWrap.appendChild(
       this._buildFilterSelect('Category', 'blueprintCategoryFilter', 'category')
     );
+    dropdownWrap.appendChild(this._buildFilterSelect('Sort', 'blueprintSortFilter', 'sort'));
     dropdownWrap.appendChild(
       this._buildFilterSelect('Trust', 'blueprintTrustFilter', 'trustLabel')
     );
@@ -470,6 +771,34 @@ class CommunityBlueprintsView {
       tagList.appendChild(chip);
     });
 
+    let social = null;
+    if (entry.marketplace?.isPublished) {
+      social = document.createElement('div');
+      social.className = 'community-blueprint-card__social';
+
+      const stars = document.createElement('span');
+      stars.className = 'community-blueprint-card__social-item';
+      stars.appendChild(this._createIcon('fas fa-star'));
+      stars.appendChild(document.createTextNode(` ${Number(entry.marketplace.starsCount || 0)}`));
+      social.appendChild(stars);
+
+      const comments = document.createElement('span');
+      comments.className = 'community-blueprint-card__social-item';
+      comments.appendChild(this._createIcon('fas fa-comments'));
+      comments.appendChild(
+        document.createTextNode(` ${Number(entry.marketplace.commentsCount || 0)}`)
+      );
+      social.appendChild(comments);
+
+      const downloads = document.createElement('span');
+      downloads.className = 'community-blueprint-card__social-item';
+      downloads.appendChild(this._createIcon('fas fa-cloud-download-alt'));
+      downloads.appendChild(
+        document.createTextNode(` ${Number(entry.marketplace.downloadsCount || 0)}`)
+      );
+      social.appendChild(downloads);
+    }
+
     const actions = document.createElement('div');
     actions.className = 'community-blueprint-card__actions';
 
@@ -577,6 +906,9 @@ class CommunityBlueprintsView {
     card.appendChild(meta);
     card.appendChild(summary);
     card.appendChild(tagList);
+    if (social) {
+      card.appendChild(social);
+    }
     card.appendChild(actions);
 
     return card;
@@ -750,6 +1082,13 @@ class CommunityBlueprintsView {
     contributeBtn.appendChild(this._createIcon('fas fa-hand-holding-heart'));
     contributeBtn.appendChild(document.createTextNode(' Contribute Package'));
 
+    const starBtn = document.createElement('button');
+    starBtn.id = 'blueprintPreviewStarBtn';
+    starBtn.className = 'btn btn--secondary is-hidden';
+    starBtn.setAttribute('data-action', 'preview-star-toggle');
+    starBtn.appendChild(this._createIcon('fas fa-star'));
+    starBtn.appendChild(document.createTextNode(' Star'));
+
     const closeFooterBtn = document.createElement('button');
     closeFooterBtn.className = 'btn btn--secondary';
     closeFooterBtn.setAttribute('data-action', 'close-preview');
@@ -758,6 +1097,7 @@ class CommunityBlueprintsView {
     footer.appendChild(installBtn);
     footer.appendChild(openInstalledBtn);
     footer.appendChild(contributeBtn);
+    footer.appendChild(starBtn);
     footer.appendChild(closeFooterBtn);
 
     dialog.appendChild(header);
@@ -769,7 +1109,9 @@ class CommunityBlueprintsView {
   }
 
   openPreviewModal(blueprintId) {
-    const entry = BlueprintCatalogService.getBlueprintById(blueprintId);
+    const entry =
+      (this.catalogEntries || []).find((item) => item.blueprintId === blueprintId) ||
+      BlueprintCatalogService.getBlueprintById(blueprintId);
     if (!entry) {
       notificationManager.showToast('Blueprint not found.', 'error');
       return;
@@ -777,18 +1119,243 @@ class CommunityBlueprintsView {
 
     this.selectedBlueprintId = blueprintId;
     this.selectedBlueprintEntry = entry;
+    this.previewComments = [];
+    this.previewCommentsCursor = null;
     this.renderPreviewContent(entry);
     this.updatePreviewModalActions(entry);
 
     const modal = this.container.querySelector('#blueprintPreviewModal');
     if (modal) modal.classList.remove('is-hidden');
+
+    if (entry.marketplace?.isPublished) {
+      this._hydrateMarketplacePreview(blueprintId);
+    }
   }
 
   closePreviewModal() {
     this.selectedBlueprintId = null;
     this.selectedBlueprintEntry = null;
+    this.previewComments = [];
+    this.previewCommentsCursor = null;
     const modal = this.container.querySelector('#blueprintPreviewModal');
     if (modal) modal.classList.add('is-hidden');
+  }
+
+  async _hydrateMarketplacePreview(blueprintId) {
+    const detail = await BlueprintMarketplaceService.getBlueprintDetail(blueprintId);
+    if (!detail?.success) {
+      return;
+    }
+
+    const latestManifest = detail.latestVersion?.manifest || null;
+    const blueprint = detail.blueprint || null;
+    const viewer = detail.viewer || null;
+
+    const current =
+      this.selectedBlueprintEntry && this.selectedBlueprintEntry.blueprintId === blueprintId
+        ? this.selectedBlueprintEntry
+        : (this.catalogEntries || []).find((item) => item.blueprintId === blueprintId) || null;
+    if (!current) return;
+
+    const nextEntry = {
+      ...current,
+      title: latestManifest?.title || blueprint?.title || current.title,
+      summary: latestManifest?.summary || blueprint?.summary || current.summary,
+      category: latestManifest?.category || blueprint?.category || current.category,
+      tags: Array.isArray(latestManifest?.tags)
+        ? latestManifest.tags
+        : Array.isArray(blueprint?.tags)
+          ? blueprint.tags
+          : current.tags,
+      trustLabel: latestManifest?.trustLabel || blueprint?.trustLabel || current.trustLabel,
+      complexity: latestManifest?.complexity || blueprint?.complexity || current.complexity,
+      companyStage: latestManifest?.companyStage || blueprint?.companyStage || current.companyStage,
+      targetTeamSize:
+        latestManifest?.targetTeamSize || blueprint?.targetTeamSize || current.targetTeamSize,
+      roadmapHorizonYears:
+        Number(latestManifest?.roadmapHorizonYears || blueprint?.roadmapHorizonYears) ||
+        current.roadmapHorizonYears,
+      promptPack: latestManifest?.promptPack || current.promptPack,
+      learningOutcomes: latestManifest?.learningOutcomes || current.learningOutcomes,
+      author: latestManifest?.author || current.author,
+      license: latestManifest?.license || current.license,
+      updatedAt: blueprint?.updatedAt || current.updatedAt,
+      marketplace: {
+        ...(current.marketplace || {}),
+        isPublished: true,
+        starsCount: Number(blueprint?.starsCount || current.marketplace?.starsCount || 0),
+        downloadsCount: Number(
+          blueprint?.downloadsCount || current.marketplace?.downloadsCount || 0
+        ),
+        commentsCount: Number(blueprint?.commentsCount || current.marketplace?.commentsCount || 0),
+        latestVersionNumber: Number(
+          blueprint?.latestVersionNumber || current.marketplace?.latestVersionNumber || 0
+        ),
+        updatedAt: blueprint?.updatedAt || current.marketplace?.updatedAt || null,
+        author: blueprint?.author || current.marketplace?.author || null,
+        viewerHasStarred: !!viewer?.hasStarred,
+      },
+    };
+
+    this.selectedBlueprintEntry = nextEntry;
+    this.renderPreviewContent(nextEntry);
+    this.updatePreviewModalActions(nextEntry);
+    await this._loadPreviewComments({ reset: true });
+  }
+
+  async _loadPreviewComments(options = {}) {
+    const { reset = false } = options;
+    const entry = this.selectedBlueprintEntry;
+    const blueprintId = entry?.blueprintId || this.selectedBlueprintId;
+    if (!blueprintId || !entry?.marketplace?.isPublished) return;
+
+    const cursor = reset ? null : this.previewCommentsCursor;
+    const result = await BlueprintMarketplaceService.listComments(blueprintId, {
+      cursor,
+      limit: 20,
+    });
+    if (!result?.success) return;
+
+    const items = Array.isArray(result.items) ? result.items : [];
+    if (reset) {
+      this.previewComments = items;
+    } else {
+      this.previewComments = (this.previewComments || []).concat(items);
+    }
+    this.previewCommentsCursor = result.nextCursor || null;
+
+    const currentEntry = this.selectedBlueprintEntry;
+    if (currentEntry && currentEntry.blueprintId === blueprintId) {
+      this.renderPreviewContent(currentEntry);
+      this.updatePreviewModalActions(currentEntry);
+    }
+  }
+
+  loadMorePreviewComments() {
+    return this._loadPreviewComments({ reset: false });
+  }
+
+  async submitPreviewComment() {
+    const entry = this.selectedBlueprintEntry;
+    if (!entry?.marketplace?.isPublished) return;
+
+    if (!MarketplaceAuthService.isLoggedIn()) {
+      const login = await this.signInToMarketplace();
+      if (!login) return;
+    }
+
+    const field = this.container.querySelector('#blueprintPreviewCommentInput');
+    const body = field ? String(field.value || '').trim() : '';
+    if (!body) {
+      notificationManager.showToast('Comment cannot be empty.', 'warning');
+      return;
+    }
+
+    const result = await BlueprintMarketplaceService.createComment(entry.blueprintId, body);
+    if (!result?.success) {
+      notificationManager.showToast(result?.error || 'Failed to post comment.', 'error');
+      return;
+    }
+
+    const session = MarketplaceAuthService.getSession();
+    this.previewComments = [
+      {
+        commentId: result.commentId,
+        body,
+        createdAt: result.createdAt || new Date().toISOString(),
+        author: { handle: session?.user?.handle || 'me' },
+      },
+    ].concat(this.previewComments || []);
+    this.previewCommentsCursor = this.previewCommentsCursor || null;
+
+    if (field) field.value = '';
+    entry.marketplace.commentsCount = Number(entry.marketplace.commentsCount || 0) + 1;
+    this.renderPreviewContent(entry);
+    this.updatePreviewModalActions(entry);
+    this._fetchRemoteCatalog();
+  }
+
+  async togglePreviewStar() {
+    const entry = this.selectedBlueprintEntry;
+    if (!entry?.marketplace?.isPublished) return;
+
+    if (!MarketplaceAuthService.isLoggedIn()) {
+      const login = await this.signInToMarketplace();
+      if (!login) return;
+    }
+
+    const starBtn = this.container.querySelector('#blueprintPreviewStarBtn');
+    if (starBtn) {
+      starBtn.disabled = true;
+      this._setButtonContent(starBtn, 'fas fa-spinner fa-spin', 'Working...');
+    }
+
+    const currentlyStarred = !!entry.marketplace.viewerHasStarred;
+    const result = currentlyStarred
+      ? await BlueprintMarketplaceService.unstarBlueprint(entry.blueprintId)
+      : await BlueprintMarketplaceService.starBlueprint(entry.blueprintId);
+
+    if (!result?.success) {
+      notificationManager.showToast(result?.error || 'Star action failed.', 'error');
+      if (starBtn) {
+        starBtn.disabled = false;
+      }
+      this.updatePreviewModalActions(entry);
+      return;
+    }
+
+    entry.marketplace.viewerHasStarred = !currentlyStarred;
+    entry.marketplace.starsCount = Math.max(
+      0,
+      Number(entry.marketplace.starsCount || 0) + (currentlyStarred ? -1 : 1)
+    );
+    this.renderPreviewContent(entry);
+    this.updatePreviewModalActions(entry);
+    this._fetchRemoteCatalog();
+  }
+
+  async signInToMarketplace() {
+    const result = await MarketplaceAuthService.loginWithGitHub();
+    if (!result?.success) {
+      notificationManager.showToast(result?.error || 'Sign-in failed.', 'error');
+      return false;
+    }
+    const handle = result.session?.user?.handle;
+    notificationManager.showToast(handle ? `Signed in as @${handle}.` : 'Signed in.', 'success');
+    this._refreshMarketplaceAuthButton();
+    this._updatePublishRemoteButton();
+    this.refreshCatalog();
+    if (this.selectedBlueprintId) {
+      const entry =
+        this.selectedBlueprintEntry ||
+        (this.catalogEntries || []).find((item) => item.blueprintId === this.selectedBlueprintId);
+      if (entry?.marketplace?.isPublished) {
+        this._hydrateMarketplacePreview(this.selectedBlueprintId);
+      }
+    }
+    return true;
+  }
+
+  async signOutOfMarketplace() {
+    const confirmed = await notificationManager.confirm(
+      'Sign out of the Community Marketplace on this device?',
+      'Sign Out',
+      { confirmText: 'Sign Out', cancelText: 'Cancel', confirmStyle: 'danger' }
+    );
+    if (!confirmed) return;
+    MarketplaceAuthService.logout();
+    notificationManager.showToast('Signed out.', 'success');
+    this._refreshMarketplaceAuthButton();
+    this._updatePublishRemoteButton();
+    this.refreshCatalog();
+    if (this.selectedBlueprintEntry) {
+      const entry = this.selectedBlueprintEntry;
+      if (entry.marketplace) {
+        entry.marketplace.viewerHasStarred = false;
+      }
+      this.renderPreviewContent(entry);
+      this.updatePreviewModalActions(entry);
+    }
   }
 
   renderPreviewContent(entry) {
@@ -812,6 +1379,32 @@ class CommunityBlueprintsView {
     metadata.appendChild(this._createMetaItem('Horizon', `${entry.roadmapHorizonYears} years`));
     bodyEl.appendChild(metadata);
 
+    if (entry.marketplace?.isPublished) {
+      const marketplaceMeta = document.createElement('div');
+      marketplaceMeta.className = 'community-blueprint-preview__summary';
+      marketplaceMeta.appendChild(
+        this._createMetaItem('Stars', String(Number(entry.marketplace.starsCount || 0)))
+      );
+      marketplaceMeta.appendChild(
+        this._createMetaItem('Downloads', String(Number(entry.marketplace.downloadsCount || 0)))
+      );
+      marketplaceMeta.appendChild(
+        this._createMetaItem('Comments', String(Number(entry.marketplace.commentsCount || 0)))
+      );
+      marketplaceMeta.appendChild(
+        this._createMetaItem(
+          'Latest Version',
+          entry.marketplace.latestVersionNumber ? `v${entry.marketplace.latestVersionNumber}` : 'v1'
+        )
+      );
+      if (entry.marketplace.author?.handle) {
+        marketplaceMeta.appendChild(
+          this._createMetaItem('Author', `@${entry.marketplace.author.handle}`)
+        );
+      }
+      bodyEl.appendChild(marketplaceMeta);
+    }
+
     if (!this._isEntryInstallable(entry)) {
       const callout = document.createElement('div');
       callout.className = 'community-blueprint-preview__availability-callout';
@@ -830,14 +1423,16 @@ class CommunityBlueprintsView {
       bodyEl.appendChild(installedCallout);
     }
 
-    const metrics = BlueprintPackageService.getTemplateMetrics(entry.templateSystemKey);
-    const summary = document.createElement('div');
-    summary.className = 'community-blueprint-preview__summary';
-    summary.appendChild(this._createMetaItem('Services', String(metrics.services)));
-    summary.appendChild(this._createMetaItem('Teams', String(metrics.teams)));
-    summary.appendChild(this._createMetaItem('Goals', String(metrics.goals)));
-    summary.appendChild(this._createMetaItem('Initiatives', String(metrics.initiatives)));
-    bodyEl.appendChild(summary);
+    if (entry.sourceType === 'curated') {
+      const metrics = BlueprintPackageService.getTemplateMetrics(entry.templateSystemKey);
+      const summary = document.createElement('div');
+      summary.className = 'community-blueprint-preview__summary';
+      summary.appendChild(this._createMetaItem('Services', String(metrics.services)));
+      summary.appendChild(this._createMetaItem('Teams', String(metrics.teams)));
+      summary.appendChild(this._createMetaItem('Goals', String(metrics.goals)));
+      summary.appendChild(this._createMetaItem('Initiatives', String(metrics.initiatives)));
+      bodyEl.appendChild(summary);
+    }
 
     const promptSection = document.createElement('section');
     promptSection.className = 'community-blueprint-preview__section';
@@ -884,13 +1479,88 @@ class CommunityBlueprintsView {
     });
     outcomesSection.appendChild(list);
     bodyEl.appendChild(outcomesSection);
+
+    const discussionSection = document.createElement('section');
+    discussionSection.className = 'community-blueprint-preview__section';
+    const discussionTitle = document.createElement('h4');
+    discussionTitle.textContent = 'Discussion';
+    discussionSection.appendChild(discussionTitle);
+
+    if (!entry.marketplace?.isPublished) {
+      const note = document.createElement('p');
+      note.textContent = 'Publish publicly to enable stars and discussion.';
+      discussionSection.appendChild(note);
+      bodyEl.appendChild(discussionSection);
+      return;
+    }
+
+    const commentsList = document.createElement('div');
+    commentsList.className = 'community-blueprint-preview__comments';
+    if (this.previewComments.length === 0) {
+      const empty = document.createElement('p');
+      empty.textContent = 'No comments yet. Be the first to share feedback.';
+      commentsList.appendChild(empty);
+    } else {
+      this.previewComments.forEach((comment) => {
+        const row = document.createElement('div');
+        row.className = 'community-blueprint-preview__comment';
+
+        const meta = document.createElement('div');
+        meta.className = 'community-blueprint-preview__comment-meta';
+        meta.textContent = `@${comment.author?.handle || 'unknown'} · ${new Date(
+          comment.createdAt
+        ).toLocaleString()}`;
+        row.appendChild(meta);
+
+        const body = document.createElement('p');
+        body.className = 'community-blueprint-preview__comment-body';
+        body.textContent = comment.body;
+        row.appendChild(body);
+
+        commentsList.appendChild(row);
+      });
+    }
+    discussionSection.appendChild(commentsList);
+
+    if (this.previewCommentsCursor) {
+      const loadMore = document.createElement('button');
+      loadMore.className = 'btn btn--secondary';
+      loadMore.setAttribute('data-action', 'preview-load-more-comments');
+      loadMore.appendChild(this._createIcon('fas fa-chevron-down'));
+      loadMore.appendChild(document.createTextNode(' Load More'));
+      discussionSection.appendChild(loadMore);
+    }
+
+    const canComment = MarketplaceAuthService.isLoggedIn();
+    const commentBox = document.createElement('div');
+    commentBox.className = 'community-blueprint-preview__comment-box';
+
+    const textarea = document.createElement('textarea');
+    textarea.id = 'blueprintPreviewCommentInput';
+    textarea.className = 'community-blueprint-preview__comment-input';
+    textarea.rows = 3;
+    textarea.placeholder = canComment ? 'Write a comment...' : 'Sign in to leave a comment.';
+    textarea.disabled = !canComment;
+    commentBox.appendChild(textarea);
+
+    const submit = document.createElement('button');
+    submit.className = 'btn btn--primary';
+    submit.setAttribute('data-action', 'preview-add-comment');
+    submit.appendChild(this._createIcon('fas fa-paper-plane'));
+    submit.appendChild(document.createTextNode(' Post Comment'));
+    submit.disabled = !canComment;
+    commentBox.appendChild(submit);
+
+    discussionSection.appendChild(commentBox);
+    bodyEl.appendChild(discussionSection);
   }
 
   updatePreviewModalActions(entry) {
     const installBtn = this.container.querySelector('#blueprintPreviewInstallBtn');
     const openInstalledBtn = this.container.querySelector('#blueprintPreviewOpenInstalledBtn');
     const contributeBtn = this.container.querySelector('#blueprintPreviewContributeBtn');
-    if (!installBtn || !openInstalledBtn || !contributeBtn) return;
+    const starBtn = this.container.querySelector('#blueprintPreviewStarBtn');
+    if (!installBtn || !openInstalledBtn || !contributeBtn || !starBtn) return;
 
     const canInstall = this._isEntryInstallable(entry);
     const installState = this._getBlueprintInstallState(entry);
@@ -899,6 +1569,7 @@ class CommunityBlueprintsView {
     installBtn.classList.remove('btn--primary', 'btn--secondary', 'is-disabled');
     openInstalledBtn.classList.remove('btn--primary', 'btn--secondary', 'is-hidden');
     contributeBtn.classList.remove('btn--primary', 'btn--secondary', 'is-hidden');
+    starBtn.classList.remove('btn--primary', 'btn--secondary', 'is-hidden', 'is-disabled');
     installBtn.removeAttribute('data-blueprint-id');
     openInstalledBtn.removeAttribute('data-blueprint-id');
     openInstalledBtn.removeAttribute('data-system-id');
@@ -917,6 +1588,7 @@ class CommunityBlueprintsView {
       this._setButtonContent(contributeBtn, 'fas fa-magic', 'Contribute with AI');
       contributeBtn.setAttribute('data-blueprint-id', entry.blueprintId);
       contributeBtn.classList.remove('is-hidden');
+      this._updateMarketplacePreviewActions(entry, starBtn);
       return;
     }
 
@@ -932,6 +1604,7 @@ class CommunityBlueprintsView {
       this._setButtonContent(installBtn, 'fas fa-lock', 'Install Locked');
       openInstalledBtn.classList.add('is-hidden');
       openInstalledBtn.disabled = true;
+      this._updateMarketplacePreviewActions(entry, starBtn);
       return;
     }
 
@@ -946,6 +1619,7 @@ class CommunityBlueprintsView {
       this._setButtonContent(installBtn, 'fas fa-download', 'Install Blueprint');
       openInstalledBtn.classList.add('is-hidden');
       openInstalledBtn.disabled = true;
+      this._updateMarketplacePreviewActions(entry, starBtn);
       return;
     }
 
@@ -976,6 +1650,8 @@ class CommunityBlueprintsView {
       openInstalledBtn.classList.add('is-hidden');
       openInstalledBtn.disabled = true;
     }
+
+    this._updateMarketplacePreviewActions(entry, starBtn);
   }
 
   async installSelectedBlueprint() {
@@ -1009,12 +1685,14 @@ class CommunityBlueprintsView {
     }
 
     try {
-      const result = await BlueprintPackageService.installCatalogBlueprint(
-        this.selectedBlueprintId,
-        {
-          activateFirst: false,
-        }
-      );
+      const shouldUseMarketplacePackage =
+        selectedEntry.marketplace?.isPublished &&
+        Number(selectedEntry.marketplace.latestVersionNumber || 0) > 0;
+      const result = shouldUseMarketplacePackage
+        ? await this._installFromMarketplace(this.selectedBlueprintId, { activateFirst: false })
+        : await BlueprintPackageService.installCatalogBlueprint(this.selectedBlueprintId, {
+            activateFirst: false,
+          });
 
       if (!result.success) {
         notificationManager.showToast(result.error || 'Installation failed.', 'error');
@@ -1040,7 +1718,9 @@ class CommunityBlueprintsView {
   }
 
   async installBlueprintFromCard(blueprintId, installMode = 'default') {
-    const entry = BlueprintCatalogService.getBlueprintById(blueprintId);
+    const entry =
+      (this.catalogEntries || []).find((item) => item.blueprintId === blueprintId) ||
+      BlueprintCatalogService.getBlueprintById(blueprintId);
     if (!entry) {
       notificationManager.showToast('Blueprint not found.', 'error');
       return;
@@ -1055,9 +1735,13 @@ class CommunityBlueprintsView {
     }
 
     try {
-      const result = await BlueprintPackageService.installCatalogBlueprint(blueprintId, {
-        activateFirst: false,
-      });
+      const shouldUseMarketplacePackage =
+        entry.marketplace?.isPublished && Number(entry.marketplace.latestVersionNumber || 0) > 0;
+      const result = shouldUseMarketplacePackage
+        ? await this._installFromMarketplace(blueprintId, { activateFirst: false })
+        : await BlueprintPackageService.installCatalogBlueprint(blueprintId, {
+            activateFirst: false,
+          });
 
       if (!result.success) {
         notificationManager.showToast(result.error || 'Installation failed.', 'error');
@@ -1081,7 +1765,8 @@ class CommunityBlueprintsView {
     let targetSystemId = String(systemId || '').trim();
 
     if (!targetSystemId && blueprintId) {
-      const entry = BlueprintCatalogService.getBlueprintById(blueprintId);
+      const entry = (this.catalogEntries || []).find((item) => item.blueprintId === blueprintId) ||
+        BlueprintCatalogService.getBlueprintById(blueprintId) || { blueprintId };
       const installState = this._getBlueprintInstallState(entry);
       targetSystemId = installState.latestSystemId || '';
     }
@@ -1094,7 +1779,10 @@ class CommunityBlueprintsView {
     if (!SystemService.systemExists(targetSystemId)) {
       this._refreshInstalledBlueprintStateIndex();
       if (blueprintId) {
-        const entry = BlueprintCatalogService.getBlueprintById(blueprintId);
+        const entry = (this.catalogEntries || []).find(
+          (item) => item.blueprintId === blueprintId
+        ) ||
+          BlueprintCatalogService.getBlueprintById(blueprintId) || { blueprintId };
         const refreshedState = this._getBlueprintInstallState(entry);
         targetSystemId = refreshedState.latestSystemId || targetSystemId;
       }
@@ -1300,10 +1988,17 @@ class CommunityBlueprintsView {
     validateBtn.appendChild(document.createTextNode(' Validate'));
 
     const saveBtn = document.createElement('button');
-    saveBtn.className = 'btn btn--primary';
+    saveBtn.className = 'btn btn--secondary';
     saveBtn.setAttribute('data-action', 'publish-save-local');
     saveBtn.appendChild(this._createIcon('fas fa-share-square'));
-    saveBtn.appendChild(document.createTextNode(' Publish to Catalog'));
+    saveBtn.appendChild(document.createTextNode(' Publish Locally'));
+
+    const remoteBtn = document.createElement('button');
+    remoteBtn.id = 'publishRemoteBtn';
+    remoteBtn.className = 'btn btn--primary';
+    remoteBtn.setAttribute('data-action', 'publish-save-remote');
+    remoteBtn.appendChild(this._createIcon('fas fa-cloud-upload-alt'));
+    remoteBtn.appendChild(document.createTextNode(' Publish Publicly'));
 
     const downloadBtn = document.createElement('button');
     downloadBtn.className = 'btn btn--secondary';
@@ -1314,6 +2009,7 @@ class CommunityBlueprintsView {
     footer.appendChild(validateBtn);
     footer.appendChild(downloadBtn);
     footer.appendChild(saveBtn);
+    footer.appendChild(remoteBtn);
 
     dialog.appendChild(header);
     dialog.appendChild(body);
@@ -1505,6 +2201,7 @@ class CommunityBlueprintsView {
       this.prefillPublishFormFromSystem(selectedSystemId);
     }
 
+    this._updatePublishRemoteButton();
     modal.classList.remove('is-hidden');
   }
 
@@ -1722,9 +2419,153 @@ class CommunityBlueprintsView {
       return;
     }
 
-    notificationManager.showToast('Blueprint published to local community catalog.', 'success');
+    notificationManager.showToast(
+      'Blueprint published to your local catalog (this browser). Download the package to share.',
+      'success'
+    );
     this.refreshCatalog();
     this.closePublishModal();
+  }
+
+  async publishDraftToMarketplace() {
+    if (!BlueprintMarketplaceService.isEnabled()) {
+      notificationManager.showToast('Marketplace publishing is currently disabled.', 'warning');
+      return;
+    }
+
+    if (!MarketplaceAuthService.isLoggedIn()) {
+      const confirmed = await notificationManager.confirm(
+        'You must sign in with GitHub to publish publicly. Continue?',
+        'Sign In Required',
+        { confirmText: 'Sign In', cancelText: 'Cancel', confirmStyle: 'primary' }
+      );
+      if (!confirmed) return;
+      const ok = await this.signInToMarketplace();
+      if (!ok) return;
+    }
+
+    const draftResult = this.createPublishDraft();
+    if (!draftResult.success) {
+      notificationManager.showToast(draftResult.error, 'error');
+      return;
+    }
+
+    const validation = BlueprintPublishService.validateDraft(this.publishDraftPackage, {
+      failOnSecrets: true,
+    });
+    this.renderPublishValidation(validation);
+    if (!validation.isValid) {
+      notificationManager.showToast('Resolve validation errors before publishing.', 'error');
+      return;
+    }
+
+    const remoteBtn = this.container.querySelector('#publishRemoteBtn');
+    if (remoteBtn) {
+      remoteBtn.disabled = true;
+      this._setButtonContent(remoteBtn, 'fas fa-spinner fa-spin', 'Publishing...');
+    }
+
+    try {
+      const result = await BlueprintMarketplaceService.publishPackage(this.publishDraftPackage);
+      if (!result?.success) {
+        const requestId = result?.payload?.requestId || result?.requestId || '';
+        const code = result?.payload?.code || result?.code || '';
+        const suffixParts = [];
+        if (code) suffixParts.push(code);
+        if (requestId) suffixParts.push(`ref: ${requestId}`);
+        const suffix = suffixParts.length > 0 ? ` (${suffixParts.join(', ')})` : '';
+        console.error('Public publish failed:', result);
+        notificationManager.showToast(
+          `${result?.error || 'Public publish failed.'}${suffix}`,
+          'error'
+        );
+        return;
+      }
+
+      const versionLabel = result.versionNumber ? `v${result.versionNumber}` : 'new version';
+      const statusLabel = result.status || (result.autoApproved ? 'approved' : 'pending');
+      const toastMessage =
+        statusLabel === 'approved'
+          ? `Published publicly (${versionLabel}).`
+          : `Submitted for review (${versionLabel}).`;
+      notificationManager.showToast(toastMessage, statusLabel === 'approved' ? 'success' : 'info');
+
+      await this._fetchRemoteCatalog();
+      this.closePublishModal();
+    } catch (error) {
+      notificationManager.showToast(error?.message || 'Public publish failed.', 'error');
+    } finally {
+      this._updatePublishRemoteButton();
+    }
+  }
+
+  _updatePublishRemoteButton() {
+    const remoteBtn = this.container.querySelector('#publishRemoteBtn');
+    if (!remoteBtn) return;
+
+    if (!BlueprintMarketplaceService.isEnabled()) {
+      remoteBtn.classList.add('is-hidden');
+      remoteBtn.disabled = true;
+      return;
+    }
+
+    remoteBtn.classList.remove('is-hidden');
+    remoteBtn.disabled = false;
+
+    const session = MarketplaceAuthService.getSession();
+    const handle = session?.user?.handle ? `@${session.user.handle}` : '';
+    const label = handle ? `Publish Publicly (${handle})` : 'Sign in to Publish Publicly';
+    this._setButtonContent(remoteBtn, 'fas fa-cloud-upload-alt', label);
+  }
+
+  _refreshMarketplaceAuthButton() {
+    const authBtn = this.container.querySelector('#marketplaceAuthBtn');
+    if (!authBtn) return;
+
+    const session = MarketplaceAuthService.getSession();
+    authBtn.className = 'btn btn--secondary';
+    if (session?.user?.handle) {
+      authBtn.setAttribute('data-action', 'marketplace-sign-out');
+      this._setButtonContent(authBtn, 'fas fa-sign-out-alt', `Sign out @${session.user.handle}`);
+      return;
+    }
+
+    authBtn.setAttribute('data-action', 'marketplace-sign-in');
+    this._setButtonContent(authBtn, 'fab fa-github', 'Sign in to Publish');
+  }
+
+  _updateMarketplacePreviewActions(entry, starBtn) {
+    if (!entry?.marketplace?.isPublished) {
+      starBtn.classList.add('is-hidden');
+      starBtn.disabled = true;
+      return;
+    }
+
+    starBtn.classList.remove('is-hidden');
+    starBtn.classList.add('btn--secondary');
+
+    if (!MarketplaceAuthService.isLoggedIn()) {
+      starBtn.disabled = true;
+      starBtn.classList.add('is-disabled');
+      this._setButtonContent(starBtn, 'fab fa-github', 'Sign in to Star');
+      return;
+    }
+
+    starBtn.disabled = false;
+    starBtn.classList.remove('is-disabled');
+    const hasStarred = !!entry.marketplace.viewerHasStarred;
+    this._setButtonContent(starBtn, 'fas fa-star', hasStarred ? 'Unstar' : 'Star');
+  }
+
+  async _installFromMarketplace(blueprintId, options = {}) {
+    const packageResult = await BlueprintMarketplaceService.fetchBlueprintPackage(
+      blueprintId,
+      'latest'
+    );
+    if (!packageResult.success) {
+      return packageResult;
+    }
+    return BlueprintPackageService.installBlueprintPackage(packageResult.packageData, options);
   }
 
   downloadPublishDraft() {

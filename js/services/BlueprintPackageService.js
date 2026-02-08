@@ -210,6 +210,76 @@ function attachInstalledBlueprintMetadata(systemData, manifest, packageData) {
   return cloned;
 }
 
+function listPackageSecretFindings(packageData) {
+  const findings = [];
+
+  const hardPatterns = [
+    { id: 'openai', re: /\bsk-[A-Za-z0-9]{20,}\b/g },
+    { id: 'github_pat', re: /\bgithub_pat_[A-Za-z0-9_]{20,}\b/g },
+    { id: 'github_ghp', re: /\bghp_[A-Za-z0-9]{20,}\b/g },
+    { id: 'google_api', re: /\bAIza[0-9A-Za-z\-_]{30,}\b/g },
+    { id: 'aws_access', re: /\bAKIA[0-9A-Z]{16}\b/g },
+    { id: 'private_key', re: /-----BEGIN (?:RSA |EC |)PRIVATE KEY-----/g },
+    { id: 'jwt', re: /\beyJ[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}\b/g },
+  ];
+
+  const suspiciousKeyRe = /(api[_-]?key|secret|token|password|private[_-]?key)/i;
+  const placeholderRe =
+    /^(?:redacted|tbd|todo|your[_ -]?api[_ -]?key|change[_ -]?me|replace[_ -]?me|example)$/i;
+
+  const visit = (value, path, depth) => {
+    if (depth > 14) return;
+    if (value === null || value === undefined) return;
+
+    if (typeof value === 'string') {
+      const text = value;
+      for (const pattern of hardPatterns) {
+        const matches = text.match(pattern.re);
+        if (matches && matches.length > 0) {
+          findings.push({
+            type: 'hard',
+            pattern: pattern.id,
+            path,
+          });
+          break;
+        }
+      }
+      return;
+    }
+
+    if (typeof value !== 'object') return;
+
+    if (Array.isArray(value)) {
+      value.slice(0, 50).forEach((entry, index) => {
+        visit(entry, `${path}[${index}]`, depth + 1);
+      });
+      return;
+    }
+
+    const entries = Object.entries(value).slice(0, 80);
+    entries.forEach(([key, entryValue]) => {
+      const nextPath = path ? `${path}.${key}` : key;
+
+      if (suspiciousKeyRe.test(key) && typeof entryValue === 'string') {
+        const candidate = entryValue.trim();
+        const looksLikePlaceholder = !candidate || placeholderRe.test(candidate);
+        if (!looksLikePlaceholder && candidate.length >= 12) {
+          findings.push({
+            type: 'suspicious',
+            pattern: 'suspicious_key_value',
+            path: nextPath,
+          });
+        }
+      }
+
+      visit(entryValue, nextPath, depth + 1);
+    });
+  };
+
+  visit(packageData, '', 0);
+  return findings;
+}
+
 const BlueprintPackageService = {
   getPackageFormat() {
     return BLUEPRINT_PACKAGE_FORMAT;
@@ -270,7 +340,7 @@ const BlueprintPackageService = {
   },
 
   validatePackage(packageData, options = {}) {
-    const { strictCurated = false } = options;
+    const { strictCurated = false, failOnSecrets = false } = options;
     const errors = [];
     const warnings = [];
     const payload = packageData || {};
@@ -325,10 +395,27 @@ const BlueprintPackageService = {
       errors.push('System payload must include capacityConfiguration.');
     }
 
-    const secretLikePattern = /(api[_-]?key|secret|token)/i;
-    const manifestText = JSON.stringify(manifest);
-    if (secretLikePattern.test(manifestText)) {
-      warnings.push('Manifest may include secret-like strings. Verify before publishing.');
+    const secretFindings = listPackageSecretFindings(payload);
+    if (secretFindings.length > 0) {
+      const uniquePatterns = Array.from(new Set(secretFindings.map((item) => item.pattern))).slice(
+        0,
+        5
+      );
+      const samplePaths = secretFindings
+        .map((item) => item.path)
+        .filter(Boolean)
+        .slice(0, 4);
+      const detailSuffix = `patterns: ${uniquePatterns.join(', ')}; examples: ${samplePaths.join(
+        ', '
+      )}`;
+      const message = failOnSecrets
+        ? `Public publish blocked: package may contain secrets (${detailSuffix}).`
+        : `Package may contain secrets (${detailSuffix}). Verify before sharing.`;
+      if (failOnSecrets) {
+        errors.push(message);
+      } else {
+        warnings.push(message);
+      }
     }
 
     const compatibilityMax = Number(manifest.appCompatibility?.maxSystemSchemaVersion || 0);

@@ -5,8 +5,8 @@
   "description": "SMT Platform tooling",
   "scripts": {
     "prepare": "husky",
-    "lint": "eslint \"js/**/*.js\" \"ai/**/*.js\" \"smt-feedback-worker/**/*.js\"",
-    "lint:fix": "eslint \"js/**/*.js\" \"ai/**/*.js\" \"smt-feedback-worker/**/*.js\" --fix",
+    "lint": "eslint \"js/**/*.js\" \"ai/**/*.js\" \"smt-feedback-worker/**/*.js\" \"smt-blueprints-worker/**/*.js\"",
+    "lint:fix": "eslint \"js/**/*.js\" \"ai/**/*.js\" \"smt-feedback-worker/**/*.js\" \"smt-blueprints-worker/**/*.js\" --fix",
     "format": "prettier --write \"**/*.{js,css,md,html,json}\"",
     "format:check": "prettier --check \"**/*.{js,css,md,html,json}\"",
     "stylelint": "stylelint \"css/**/*.css\"",

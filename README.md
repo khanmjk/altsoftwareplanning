@@ -60,6 +60,11 @@ smt-feedback-worker/
 ├── src/index.js      # Worker entry point
 ├── wrangler.toml     # Cloudflare configuration
 └── README.md         # Deployment instructions
+
+smt-blueprints-worker/
+├── src/index.js      # Marketplace worker entry point
+├── wrangler.toml     # Cloudflare configuration (D1 binding; optional R2 supported in code)
+└── README.md         # Deployment instructions
 ```
 
 **Feedback Submission Flow:**
@@ -69,6 +74,18 @@ User → FeedbackModal → FeedbackService → Cloudflare Worker → GitHub Issu
 ```
 
 The worker acts as a secure proxy, holding the GitHub API token server-side so users never need to authenticate or store credentials.
+Issues are created using the worker's GitHub token identity (typically the project maintainer/bot), with any reporter details included in the issue body.
+
+**Community Blueprints Marketplace Flow (Optional Cloud Extension):**
+
+```
+User → Community Blueprints View → BlueprintMarketplaceService → Cloudflare Worker → D1 (optional R2)
+```
+
+Public publishing uses GitHub OAuth in a popup flow. The worker callback returns an inline HTML response that `postMessage`s a signed session token back to the app (avoids cross-site cookie issues).
+
+The app uses a single canonical worker endpoint baked into the marketplace services (no user-facing Settings override), matching the existing feedback-worker pattern.
+Marketplace social actions (publish, stars, comments) are stored in Cloudflare D1 and attributed to the user inside the marketplace UI. The worker does not create GitHub issues/PRs/comments on behalf of the user or the app owner.
 
 **YouTube API Proxy Flow:**
 
@@ -228,6 +245,11 @@ For a full list of AI features, see **Section 4: Key Features**.
   - validate package shape and required metadata
   - download portable package JSON
   - publish into local community catalog storage for discoverability
+- Optional public sharing (true community marketplace):
+  - sign in with GitHub (popup OAuth)
+  - **Publish Publicly** uploads your blueprint package to the marketplace worker so other users can browse/install it
+  - stars + comments are enabled for publicly published blueprints (use **Preview** to star/comment; cards show social counts)
+  - this is backed by a deployed Cloudflare Worker backend (`smt-blueprints-worker/`) and requires no per-user configuration
 
 ---
 
@@ -593,6 +615,7 @@ Mermaid-based diagrams are available across the app and via the AI Assistant.
   - **App Context:** Optionally include debugging context (current view, theme, system name) to help diagnose issues.
 - **Privacy:** No sensitive data (API keys, user data) is ever shared. Only basic app state is included if you opt-in.
 - **Architecture:** Submissions are routed through a Cloudflare Worker that securely holds the GitHub API token, so you never need to authenticate.
+- **Attribution:** GitHub issues are created using the worker token identity (project maintainer/bot). Any reporter details are included in the issue body.
 
 ---
 
