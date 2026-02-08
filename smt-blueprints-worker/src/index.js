@@ -675,6 +675,77 @@ async function handleMe(request, env, origin) {
   return withCors(jsonResponse({ success: true, user: session.user }), origin, allowedOrigins);
 }
 
+async function handleHealth(request, env, origin) {
+  const allowedOrigins = parseAllowedOrigins(env);
+
+  const startedAt = Date.now();
+  const hasR2 = !!env.PACKAGES && typeof env.PACKAGES.get === 'function';
+
+  const responseBody = {
+    ok: false,
+    service: 'smt-blueprints-worker',
+    time: nowIso(),
+    latencyMs: 0,
+    checks: {
+      d1: { ok: false, schemaOk: false, missingTables: [] },
+      r2: { bound: hasR2 },
+      oauth: {
+        configured:
+          !!normalizeString(env.GITHUB_CLIENT_ID) && !!normalizeString(env.GITHUB_CLIENT_SECRET),
+      },
+      jwt: {
+        configured: !!normalizeString(env.JWT_SECRET),
+      },
+    },
+  };
+
+  try {
+    await env.DB.prepare('SELECT 1 as ok').first();
+    responseBody.checks.d1.ok = true;
+
+    const requiredTables = [
+      'users',
+      'blueprints',
+      'blueprint_versions',
+      'blueprint_package_chunks',
+      'blueprint_search_tokens',
+      'stars',
+      'comments',
+    ];
+
+    const master = await env.DB.prepare(
+      "SELECT name FROM sqlite_master WHERE type = 'table'"
+    ).all();
+    const existing = new Set(
+      (master?.results || [])
+        .map((row) => row?.name)
+        .filter((value) => typeof value === 'string' && value.length > 0)
+    );
+    const missing = requiredTables.filter((table) => !existing.has(table));
+    responseBody.checks.d1.missingTables = missing;
+    responseBody.checks.d1.schemaOk = missing.length === 0;
+  } catch (error) {
+    responseBody.checks.d1.ok = false;
+    responseBody.checks.d1.schemaOk = false;
+    responseBody.checks.d1.missingTables = [];
+    console.error('[Health] D1 check failed:', error);
+  }
+
+  responseBody.ok =
+    !!responseBody.checks.d1.ok &&
+    !!responseBody.checks.d1.schemaOk &&
+    !!responseBody.checks.jwt.configured &&
+    !!responseBody.checks.oauth.configured;
+
+  responseBody.latencyMs = Date.now() - startedAt;
+
+  return withCors(
+    jsonResponse(responseBody, responseBody.ok ? 200 : 503, { 'Cache-Control': 'no-store' }),
+    origin,
+    allowedOrigins
+  );
+}
+
 async function handlePublish(request, env, origin) {
   const allowedOrigins = parseAllowedOrigins(env);
   const session = await requireSession(request, env);
@@ -1668,6 +1739,9 @@ async function routeRequest(request, env) {
   // API (XHR)
   if (request.method === 'GET' && path === '/api/me') {
     return handleMe(request, env, origin);
+  }
+  if (request.method === 'GET' && path === '/api/health') {
+    return handleHealth(request, env, origin);
   }
   if (request.method === 'GET' && path === '/api/catalog') {
     return handleCatalog(request, env, origin);

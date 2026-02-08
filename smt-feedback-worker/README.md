@@ -63,6 +63,14 @@ wrangler dev
 
 ## Testing
 
+Health check:
+
+```bash
+curl https://smt-feedback-worker.<your-subdomain>.workers.dev/health
+```
+
+Feedback submit:
+
 ```bash
 curl -X POST https://smt-feedback-worker.<your-subdomain>.workers.dev \
   -H "Content-Type: application/json" \

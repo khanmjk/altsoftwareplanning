@@ -173,6 +173,7 @@ Read:
 - `GET /api/blueprints/:blueprintId`
 - `GET /api/blueprints/:blueprintId/comments?cursor=&limit=`
 - `GET /api/blueprints/:blueprintId/package?versionNumber=latest|<n>`
+- `GET /api/health` (observability; safe, no secrets)
 - `GET /api/availability?ids=bp-001-...` (optional optimization for curated unlock)
 
 Auth:

@@ -1,0 +1,29 @@
+name: Backend health
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Synthetic uptime check for workers.dev endpoints (free tier friendly).
+    - cron: "*/30 * * * *"
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check marketplace worker
+        env:
+          URL: https://smt-blueprints-worker.khanmjk.workers.dev/api/health
+        run: |
+          set -euo pipefail
+          echo "GET $URL"
+          curl -fsS --max-time 15 "$URL" | node -e "const fs=require('fs');const j=JSON.parse(fs.readFileSync(0,'utf8'));if(!j||j.ok!==true){console.error('Marketplace health check failed:',j);process.exit(1)};console.log('Marketplace ok')"
+
+      - name: Check feedback worker
+        env:
+          URL: https://smt-feedback-worker.khanmjk.workers.dev/health
+        run: |
+          set -euo pipefail
+          echo "GET $URL"
+          curl -fsS --max-time 15 "$URL" | node -e "const fs=require('fs');const j=JSON.parse(fs.readFileSync(0,'utf8'));if(!j||j.ok!==true){console.error('Feedback health check failed:',j);process.exit(1)};console.log('Feedback ok')"
+

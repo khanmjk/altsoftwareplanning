@@ -7,6 +7,7 @@ Cloudflare Worker that powers the Community Blueprints Marketplace:
 - Public publish of blueprint packages (stored as blobs)
 - Social: stars + comments
 - Moderation: auto-approve low-risk accounts
+- Observability: `GET /api/health` (safe checks; no secrets)
 
 This worker is intentionally scoped to _published blueprint packages_, not full user workspace sync.
 

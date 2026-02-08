@@ -1,5 +1,7 @@
 # Software Management & Planning Tool (SMT) - v2.0
 
+[![Backend health](https://github.com/khanmjk/altsoftwareplanning/actions/workflows/backend-health.yml/badge.svg)](https://github.com/khanmjk/altsoftwareplanning/actions/workflows/backend-health.yml)
+
 **Welcome to the Software Management & Planning Tool!** This application is designed to help software engineering leaders and managers model, visualize, and plan their software systems, organizational structures, and yearly initiatives.
 
 > **v2.0 "Engineered" Release**: This codebase has moved from a prototype to a robust **Service-Based Architecture**. While the UI remains familiar, the underlying engine is now governed by strict Contracts.
@@ -66,6 +68,13 @@ smt-blueprints-worker/
 ├── wrangler.toml     # Cloudflare configuration (D1 binding; optional R2 supported in code)
 └── README.md         # Deployment instructions
 ```
+
+**Observability / Health Checks:**
+
+- `smt-blueprints-worker`: `GET /api/health`
+- `smt-feedback-worker`: `GET /health`
+- The app renders an advisory **Cloud** status badge in the sidebar (local-first UX is never blocked).
+- Repo badge (top of this README) is powered by a scheduled GitHub Actions synthetic check.
 
 **Feedback Submission Flow:**
 

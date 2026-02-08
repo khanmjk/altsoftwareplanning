@@ -7,6 +7,7 @@ class SidebarComponent {
     this.container = document.getElementById(containerId);
     this.navManager = navigationManager;
     this.isCollapsed = false;
+    this.backendStatusUnsubscribe = null;
 
     // Bind methods
     this.toggleDropdown = this.toggleDropdown.bind(this);
@@ -19,6 +20,7 @@ class SidebarComponent {
     }
     this.render();
     this.attachEventListeners();
+    this._initBackendStatusBadge();
   }
 
   render() {
@@ -41,6 +43,7 @@ class SidebarComponent {
     this.container.appendChild(this._buildLogoArea());
     this.container.appendChild(this._buildSystemSwitcher());
     this.container.appendChild(this._buildNavGroups());
+    this.container.appendChild(this._buildFooter());
   }
 
   _buildLogoArea() {
@@ -202,6 +205,30 @@ class SidebarComponent {
     return navGroups;
   }
 
+  _buildFooter() {
+    const footer = document.createElement('div');
+    footer.className = 'sidebar__footer';
+
+    const badge = document.createElement('button');
+    badge.id = 'sidebarBackendStatusBadge';
+    badge.type = 'button';
+    badge.className = 'sidebar__backend-badge sidebar__backend-badge--unknown';
+    badge.setAttribute('aria-label', 'Backend status');
+
+    const dot = document.createElement('span');
+    dot.className = 'sidebar__backend-dot';
+
+    const label = document.createElement('span');
+    label.className = 'sidebar__backend-label';
+    label.textContent = 'Cloud: Checking...';
+
+    badge.appendChild(dot);
+    badge.appendChild(label);
+    footer.appendChild(badge);
+
+    return footer;
+  }
+
   _buildNavItem(item) {
     const link = document.createElement('a');
     link.href = '#';
@@ -311,6 +338,11 @@ class SidebarComponent {
         e.preventDefault();
         FeedbackModal.getInstance().open();
       });
+    }
+
+    const backendBadge = this.container.querySelector('#sidebarBackendStatusBadge');
+    if (backendBadge) {
+      backendBadge.addEventListener('click', () => this.showBackendStatusDetails());
     }
 
     // System Dropdown Actions
@@ -485,6 +517,73 @@ class SidebarComponent {
     };
 
     reader.readAsText(file);
+  }
+
+  _initBackendStatusBadge() {
+    const badge = this.container.querySelector('#sidebarBackendStatusBadge');
+    if (!badge || typeof BackendStatusService === 'undefined') return;
+
+    const apply = (state) => this._applyBackendStatusBadgeState(state);
+    apply(BackendStatusService.getState());
+
+    if (typeof this.backendStatusUnsubscribe === 'function') {
+      this.backendStatusUnsubscribe();
+      this.backendStatusUnsubscribe = null;
+    }
+    this.backendStatusUnsubscribe = BackendStatusService.subscribe(apply);
+  }
+
+  _applyBackendStatusBadgeState(state) {
+    const badge = this.container.querySelector('#sidebarBackendStatusBadge');
+    if (!badge) return;
+
+    const label = badge.querySelector('.sidebar__backend-label');
+    const status = state?.overall?.status || 'unknown';
+
+    badge.classList.remove(
+      'sidebar__backend-badge--unknown',
+      'sidebar__backend-badge--ok',
+      'sidebar__backend-badge--degraded',
+      'sidebar__backend-badge--down'
+    );
+    badge.classList.add(`sidebar__backend-badge--${status}`);
+
+    if (!label) return;
+    if (status === 'ok') label.textContent = 'Cloud: OK';
+    else if (status === 'degraded') label.textContent = 'Cloud: Degraded';
+    else if (status === 'down') label.textContent = 'Cloud: Down';
+    else label.textContent = 'Cloud: Checking...';
+  }
+
+  showBackendStatusDetails() {
+    if (typeof BackendStatusService === 'undefined') {
+      notificationManager?.showToast('Backend status service is unavailable.', 'warning');
+      return;
+    }
+
+    const state = BackendStatusService.getState();
+    const summary = this._formatBackendStatusSummary(state);
+    const type =
+      state?.overall?.status === 'ok'
+        ? 'success'
+        : state?.overall?.status === 'unknown'
+          ? 'info'
+          : 'warning';
+    notificationManager?.showToast(summary, type);
+  }
+
+  _formatBackendStatusSummary(state) {
+    const format = (name, svc) => {
+      if (!svc) return `${name}: unknown`;
+      if (svc.ok === true) return `${name}: OK (${Math.round(svc.latencyMs || 0)}ms)`;
+      if (svc.ok === null) return `${name}: checking`;
+      const err = svc.error ? ` - ${svc.error}` : '';
+      return `${name}: down${err}`;
+    };
+
+    const marketplace = format('Marketplace', state?.services?.marketplace);
+    const feedback = format('Feedback', state?.services?.feedback);
+    return `${marketplace}. ${feedback}.`;
   }
 
   _clearElement(element) {
