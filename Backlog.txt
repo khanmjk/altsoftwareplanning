@@ -277,6 +277,15 @@ TO DO
 [Partial] [AI] Tune the system prompt so AI-created systems include rich planning metadata for goals, initiatives, work packages, tasks, start date, end date, etc.
 [Partial] [AI] Ability to export the year plan (ATL/BTL logic) to Excel using LLM-generated formulas (base CSV/XLSX export shipped; LLM formula generation pending).
 [Partial] [Feature] AppStore-lite hardening: remote moderation/submission workflow, per-blueprint CI smoke-import checks, and stricter quality scoring for `Verified` entries.
+[Not Done] [Feature] AppStore-lite marketplace safety: rate limit publish/comment/star endpoints (Worker) + basic spam heuristics.
+[Not Done] [Feature] AppStore-lite marketplace reporting: report/flag blueprint + comments; auto-hide on threshold; admin review flow.
+[Not Done] [Feature] AppStore-lite marketplace profiles: "My publishes" and "My stars" views (endpoints + UI).
+[Not Done] [Feature] AppStore-lite marketplace collections: curated playlists (simple D1 rows) + UI surfacing.
+[Not Done] [Feature] AppStore-lite marketplace remix lineage: "Remixed from..." + remix counts + remix graph UI.
+[Not Done] [Feature] AppStore-lite marketplace moderation console: approve/reject/remove/ban + audit trail.
+[Not Done] [Feature] AppStore-lite marketplace version UX: changelog notes, browse versions, pin version, and basic diff summaries.
+[Not Done] [Ops] Marketplace performance hardening: ETag/Cache-Control for catalog endpoints, D1 query/index review, and (optional) KV caching for hot pages.
+[Not Done] [Ops] Marketplace durability: automated D1 export/backup + restore procedure.
 
 Utilities
 [Partial] Now that we've got export to excel, csv and json working, we need a utility to generate these files from other places: planning table, overall system data dump, etc.

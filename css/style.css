@@ -19,7 +19,6 @@
 @import url('foundation-components/legends.css');
 @import url('foundation-components/d3-visualizations.css');
 
-
 @import url('foundation-components/cards.css');
 @import url('foundation-components/dual-list.css');
 @import url('foundation-components/dropdowns.css');
@@ -44,7 +43,6 @@
 @import url('components/sidebar-enhanced.css');
 @import url('components/systems-view.css');
 
-
 /* Views Layer - Page-specific styles */
 @import url('views/welcome-view.css');
 @import url('views/dashboard-view.css');
@@ -64,3 +62,4 @@
 
 /* Utilities Layer - Helpers and overrides */
 @import url('utilities/animations.css');
+@import url('utilities/helpers.css');

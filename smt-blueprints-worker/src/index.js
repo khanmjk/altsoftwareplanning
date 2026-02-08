@@ -1147,7 +1147,7 @@ async function handleCatalog(request, env, origin) {
     sort === 'top'
       ? 'b.stars_count DESC, b.updated_at DESC, b.blueprint_id DESC'
       : sort === 'trending'
-        ? 'b.stars_count DESC, b.updated_at DESC, b.blueprint_id DESC'
+        ? 'b.stars_count DESC, b.downloads_count DESC, b.comments_count DESC, b.updated_at DESC, b.blueprint_id DESC'
         : 'b.updated_at DESC, b.blueprint_id DESC';
 
   let sql = '';

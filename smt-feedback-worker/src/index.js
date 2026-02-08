@@ -235,6 +235,9 @@ function buildIssueBody(data) {
   // Metadata
   sections.push('## Metadata');
   sections.push(`- **Submitted by**: ${data.email || 'Anonymous'}`);
+  if (data.reporterHandle) {
+    sections.push(`- **GitHub handle**: @${data.reporterHandle} (via SMT marketplace sign-in)`);
+  }
   sections.push(`- **Submitted at**: ${new Date().toISOString()}`);
   if (data.userAgent) {
     sections.push(`- **User Agent**: ${data.userAgent}`);

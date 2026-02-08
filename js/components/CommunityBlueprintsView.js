@@ -39,6 +39,7 @@ class CommunityBlueprintsView {
     this._remoteFetchTimer = null;
     this.previewComments = [];
     this.previewCommentsCursor = null;
+    this._lastDeepLinkBlueprintId = '';
 
     this._boundClick = this.handleClick.bind(this);
     this._boundChange = this.handleChange.bind(this);
@@ -72,6 +73,14 @@ class CommunityBlueprintsView {
 
     if (params.publishSystemId) {
       this.openPublishModal(params.publishSystemId);
+    }
+
+    const deepLinkBlueprintId =
+      this._normalizeBlueprintId(params.blueprintId) ||
+      this._normalizeBlueprintId(this._readBlueprintIdFromUrl());
+    if (deepLinkBlueprintId && deepLinkBlueprintId !== this._lastDeepLinkBlueprintId) {
+      this._lastDeepLinkBlueprintId = deepLinkBlueprintId;
+      this._openPreviewFromDeepLink(deepLinkBlueprintId);
     }
   }
 
@@ -175,6 +184,10 @@ class CommunityBlueprintsView {
     }
     if (action === 'preview-load-more-comments') {
       this.loadMorePreviewComments();
+      return;
+    }
+    if (action === 'preview-copy-link') {
+      this.copyPreviewShareLink();
       return;
     }
     if (action === 'navigate-systems') {
@@ -521,6 +534,12 @@ class CommunityBlueprintsView {
         const starsA = Number(a.marketplace?.starsCount || 0);
         const starsB = Number(b.marketplace?.starsCount || 0);
         if (starsA !== starsB) return starsB - starsA;
+        const downloadsA = Number(a.marketplace?.downloadsCount || 0);
+        const downloadsB = Number(b.marketplace?.downloadsCount || 0);
+        if (downloadsA !== downloadsB) return downloadsB - downloadsA;
+        const commentsA = Number(a.marketplace?.commentsCount || 0);
+        const commentsB = Number(b.marketplace?.commentsCount || 0);
+        if (commentsA !== commentsB) return commentsB - commentsA;
         return this._toTimestamp(b.updatedAt) - this._toTimestamp(a.updatedAt);
       });
     }
@@ -756,7 +775,11 @@ class CommunityBlueprintsView {
 
     const meta = document.createElement('p');
     meta.className = 'community-blueprint-card__meta';
-    meta.textContent = `${entry.category} · ${entry.companyStage} · ${entry.complexity}`;
+    const marketplaceHandle = entry.marketplace?.author?.handle
+      ? `@${entry.marketplace.author.handle}`
+      : '';
+    const authorSuffix = marketplaceHandle ? ` · by ${marketplaceHandle}` : '';
+    meta.textContent = `${entry.category} · ${entry.companyStage} · ${entry.complexity}${authorSuffix}`;
 
     const summary = document.createElement('p');
     summary.className = 'community-blueprint-card__summary';
@@ -1082,6 +1105,13 @@ class CommunityBlueprintsView {
     contributeBtn.appendChild(this._createIcon('fas fa-hand-holding-heart'));
     contributeBtn.appendChild(document.createTextNode(' Contribute Package'));
 
+    const shareBtn = document.createElement('button');
+    shareBtn.id = 'blueprintPreviewShareBtn';
+    shareBtn.className = 'btn btn--secondary';
+    shareBtn.setAttribute('data-action', 'preview-copy-link');
+    shareBtn.appendChild(this._createIcon('fas fa-link'));
+    shareBtn.appendChild(document.createTextNode(' Copy Link'));
+
     const starBtn = document.createElement('button');
     starBtn.id = 'blueprintPreviewStarBtn';
     starBtn.className = 'btn btn--secondary is-hidden';
@@ -1097,6 +1127,7 @@ class CommunityBlueprintsView {
     footer.appendChild(installBtn);
     footer.appendChild(openInstalledBtn);
     footer.appendChild(contributeBtn);
+    footer.appendChild(shareBtn);
     footer.appendChild(starBtn);
     footer.appendChild(closeFooterBtn);
 
@@ -1108,8 +1139,9 @@ class CommunityBlueprintsView {
     return overlay;
   }
 
-  openPreviewModal(blueprintId) {
+  openPreviewModal(blueprintId, entryOverride = null) {
     const entry =
+      entryOverride ||
       (this.catalogEntries || []).find((item) => item.blueprintId === blueprintId) ||
       BlueprintCatalogService.getBlueprintById(blueprintId);
     if (!entry) {
@@ -1127,6 +1159,12 @@ class CommunityBlueprintsView {
     const modal = this.container.querySelector('#blueprintPreviewModal');
     if (modal) modal.classList.remove('is-hidden');
 
+    if (this._isEntryShareable(entry)) {
+      this._setUrlBlueprintId(blueprintId);
+    } else {
+      this._setUrlBlueprintId(null);
+    }
+
     if (entry.marketplace?.isPublished) {
       this._hydrateMarketplacePreview(blueprintId);
     }
@@ -1139,6 +1177,180 @@ class CommunityBlueprintsView {
     this.previewCommentsCursor = null;
     const modal = this.container.querySelector('#blueprintPreviewModal');
     if (modal) modal.classList.add('is-hidden');
+    this._setUrlBlueprintId(null);
+  }
+
+  _normalizeBlueprintId(value) {
+    const raw = String(value || '').trim();
+    return raw || '';
+  }
+
+  _readBlueprintIdFromUrl() {
+    try {
+      const url = new URL(window.location.href);
+      return url.searchParams.get('blueprintId') || '';
+    } catch {
+      return '';
+    }
+  }
+
+  _setUrlBlueprintId(blueprintId) {
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('view', 'communityBlueprintsView');
+      if (blueprintId) {
+        url.searchParams.set('blueprintId', blueprintId);
+      } else {
+        url.searchParams.delete('blueprintId');
+      }
+      window.history.replaceState(window.history.state || {}, '', url);
+    } catch {
+      // ignore URL sync failures
+    }
+  }
+
+  _isEntryShareable(entry) {
+    if (!entry) return false;
+    return entry.sourceType === 'curated' || !!entry.marketplace?.isPublished;
+  }
+
+  async _openPreviewFromDeepLink(blueprintId) {
+    const resolvedId = this._normalizeBlueprintId(blueprintId);
+    if (!resolvedId) return;
+
+    const alreadyOpen = this.selectedBlueprintId === resolvedId && !!this.selectedBlueprintEntry;
+    if (alreadyOpen) return;
+
+    const entry =
+      (this.catalogEntries || []).find((item) => item.blueprintId === resolvedId) ||
+      BlueprintCatalogService.getBlueprintById(resolvedId) ||
+      null;
+
+    if (entry) {
+      this.openPreviewModal(resolvedId, entry);
+      return;
+    }
+
+    if (!BlueprintMarketplaceService.isEnabled()) {
+      notificationManager.showToast('Blueprint not found in local catalog.', 'warning');
+      this._setUrlBlueprintId(null);
+      return;
+    }
+
+    const detail = await BlueprintMarketplaceService.getBlueprintDetail(resolvedId);
+    if (!detail?.success || !detail.blueprint) {
+      notificationManager.showToast(detail?.error || 'Blueprint not found.', 'error');
+      this._setUrlBlueprintId(null);
+      return;
+    }
+
+    const marketplaceEntry = this._buildMarketplaceEntryFromDetail(detail);
+    this.openPreviewModal(resolvedId, marketplaceEntry);
+  }
+
+  _buildMarketplaceEntryFromDetail(detail) {
+    const blueprint = detail?.blueprint || {};
+    const manifest = detail?.latestVersion?.manifest || null;
+
+    const tags = Array.isArray(manifest?.tags)
+      ? manifest.tags
+      : Array.isArray(blueprint.tags)
+        ? blueprint.tags
+        : [];
+
+    const blueprintId = this._normalizeBlueprintId(blueprint.blueprintId || manifest?.blueprintId);
+    const updatedAt = blueprint.updatedAt || new Date().toISOString();
+
+    return {
+      blueprintId,
+      title: manifest?.title || blueprint.title || blueprintId || 'Community Blueprint',
+      summary: manifest?.summary || blueprint.summary || '',
+      category: manifest?.category || blueprint.category || 'Community',
+      tags,
+      trustLabel: manifest?.trustLabel || blueprint.trustLabel || 'Community',
+      complexity: manifest?.complexity || blueprint.complexity || 'Intermediate',
+      companyStage: manifest?.companyStage || blueprint.companyStage || 'Growth',
+      targetTeamSize: manifest?.targetTeamSize || blueprint.targetTeamSize || '50-150',
+      roadmapHorizonYears:
+        Number(manifest?.roadmapHorizonYears || blueprint.roadmapHorizonYears || 3) || 3,
+      sourceType: blueprint.sourceType || 'community',
+      availabilityStatus: 'Available',
+      isInstallable: true,
+      updatedAt,
+      promptPack: manifest?.promptPack || null,
+      learningOutcomes: Array.isArray(manifest?.learningOutcomes) ? manifest.learningOutcomes : [],
+      author: manifest?.author || null,
+      license: manifest?.license || null,
+      marketplace: {
+        isPublished: true,
+        starsCount: Number(blueprint.starsCount || 0),
+        downloadsCount: Number(blueprint.downloadsCount || 0),
+        commentsCount: Number(blueprint.commentsCount || 0),
+        latestVersionNumber: Number(blueprint.latestVersionNumber || 0),
+        updatedAt,
+        author: blueprint.author || null,
+        viewerHasStarred: !!detail?.viewer?.hasStarred,
+      },
+    };
+  }
+
+  async copyPreviewShareLink() {
+    const entry = this.selectedBlueprintEntry;
+    if (!entry || !entry.blueprintId) return;
+
+    if (!this._isEntryShareable(entry)) {
+      notificationManager.showToast(
+        'This blueprint is local-only. Publish publicly (or download the package) to share it with others.',
+        'info'
+      );
+      return;
+    }
+
+    const shareUrl = this._buildShareUrl(entry.blueprintId);
+    const ok = await this._copyToClipboard(shareUrl);
+    if (!ok) {
+      notificationManager.showToast(
+        'Could not copy link. Your browser may block clipboard access.',
+        'warning'
+      );
+      return;
+    }
+    notificationManager.showToast('Share link copied to clipboard.', 'success');
+  }
+
+  _buildShareUrl(blueprintId) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('view', 'communityBlueprintsView');
+    url.searchParams.set('blueprintId', blueprintId);
+    return url.toString();
+  }
+
+  async _copyToClipboard(text) {
+    const value = String(text || '');
+    if (!value) return false;
+
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      try {
+        await navigator.clipboard.writeText(value);
+        return true;
+      } catch {
+        // fall back
+      }
+    }
+
+    try {
+      const textarea = document.createElement('textarea');
+      textarea.value = value;
+      textarea.setAttribute('readonly', 'true');
+      textarea.className = 'u-offscreen';
+      document.body.appendChild(textarea);
+      textarea.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      return !!ok;
+    } catch {
+      return false;
+    }
   }
 
   async _hydrateMarketplacePreview(blueprintId) {

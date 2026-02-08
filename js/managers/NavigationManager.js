@@ -327,6 +327,9 @@ class NavigationManager {
     if (!isPopState) {
       const url = new URL(window.location);
       url.searchParams.set('view', viewId);
+      if (viewId !== 'communityBlueprintsView') {
+        url.searchParams.delete('blueprintId');
+      }
       window.history.pushState({ viewId: viewId }, '', url);
     }
 

@@ -555,13 +555,13 @@ class SidebarComponent {
     else label.textContent = 'Cloud: Checking...';
   }
 
-  showBackendStatusDetails() {
+  async showBackendStatusDetails() {
     if (typeof BackendStatusService === 'undefined') {
       notificationManager?.showToast('Backend status service is unavailable.', 'warning');
       return;
     }
 
-    const state = BackendStatusService.getState();
+    const state = await BackendStatusService.refresh();
     const summary = this._formatBackendStatusSummary(state);
     const type =
       state?.overall?.status === 'ok'
@@ -583,7 +583,11 @@ class SidebarComponent {
 
     const marketplace = format('Marketplace', state?.services?.marketplace);
     const feedback = format('Feedback', state?.services?.feedback);
-    return `${marketplace}. ${feedback}.`;
+    const checkedAt = state?.lastCheckedAt
+      ? new Date(state.lastCheckedAt).toLocaleTimeString()
+      : '';
+    const prefix = checkedAt ? `Last check ${checkedAt}. ` : '';
+    return `${prefix}${marketplace}. ${feedback}.`;
   }
 
   _clearElement(element) {

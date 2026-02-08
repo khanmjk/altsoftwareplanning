@@ -258,6 +258,7 @@ For a full list of AI features, see **Section 4: Key Features**.
   - sign in with GitHub (popup OAuth)
   - **Publish Publicly** uploads your blueprint package to the marketplace worker so other users can browse/install it
   - stars + comments are enabled for publicly published blueprints (use **Preview** to star/comment; cards show social counts)
+  - use **Preview → Copy Link** to share a curated or marketplace blueprint deep-link
   - this is backed by a deployed Cloudflare Worker backend (`smt-blueprints-worker/`) and requires no per-user configuration
 
 ---

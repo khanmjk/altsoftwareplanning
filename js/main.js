@@ -85,8 +85,15 @@ window.onload = function () {
 
   // Check for view in URL
   const urlParams = new URLSearchParams(window.location.search);
-  const initialView = urlParams.get('view');
+  const initialBlueprintId = urlParams.get('blueprintId');
+  const initialView =
+    urlParams.get('view') || (initialBlueprintId ? 'communityBlueprintsView' : null);
   console.log(`Attempting initial navigation. URL View: ${initialView}`);
 
-  navigationManager.navigateTo(initialView || 'welcomeView');
+  const initialParams = {};
+  if (initialView === 'communityBlueprintsView' && initialBlueprintId) {
+    initialParams.blueprintId = initialBlueprintId;
+  }
+
+  navigationManager.navigateTo(initialView || 'welcomeView', initialParams);
 };
